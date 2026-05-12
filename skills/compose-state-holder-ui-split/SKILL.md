@@ -1,6 +1,6 @@
 ---
 name: compose-state-holder-ui-split
-description: Use when writing or reviewing Jetpack Compose screens that mix state holders, state collection, navigation, effects, callbacks, and UI rendering in the same composable.
+description: Use when a Jetpack Compose screen-level composable takes a ViewModel/component/controller, collects state or effects, handles navigation/snackbars, or wires callbacks while also rendering layout.
 ---
 
 # Compose: state holder/UI split
@@ -95,6 +95,8 @@ private fun ProfileContent(
 
 The "no collection in UI composables" rule is about app/business state and side-effect streams. Plain UI composables can still own UI-local framework state: `rememberScrollState`, `rememberLazyListState`, `FocusRequester`, focus state, animation state, `TextFieldState`, `MutableInteractionSource.collectIsPressedAsState()`, and similar behavior that belongs to the rendered widget.
 
+If that UI-local state grows into coordinated behavior with multiple related fields and operations, use [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md) to decide whether it should become a plain state holder class remembered in composition.
+
 ## What to pass
 
 Pass the smallest useful UI contract:
@@ -150,4 +152,5 @@ If effect handling grows, extract `ProfileEffects(component, snackbarHostState)`
 ## Related
 
 - [`compose-ui-testing-patterns`](../compose-ui-testing-patterns/SKILL.md) — testing plain state-driven UI composables without the full app graph.
+- [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md) — deciding where UI element state and UI logic should live, including plain state holder classes.
 - [`kotlin-multiplatform-expect-actual`](../kotlin-multiplatform-expect-actual/SKILL.md) — platform services, native views, and expect/interface boundaries when shared UI meets platform-specific leaves.
