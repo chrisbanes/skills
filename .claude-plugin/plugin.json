@@ -1,0 +1,11 @@
+{
+  "name": "chrisbanes-skills",
+  "description": "Skills for Kotlin, Android, JVM, and Jetpack Compose development by Chris Banes.",
+  "version": "0.6.1",
+  "author": {
+    "name": "Chris Banes",
+    "url": "https://github.com/chrisbanes"
+  },
+  "repository": "https://github.com/chrisbanes/skills",
+  "license": "Apache-2.0"
+}

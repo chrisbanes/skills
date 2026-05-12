@@ -1,0 +1,10 @@
+{
+  "name": "chrisbanes-skills",
+  "owner": {
+    "name": "Chris Banes",
+    "url": "https://github.com/chrisbanes"
+  },
+  "plugins": [
+    { "name": "chrisbanes-skills", "source": "./" }
+  ]
+}
