@@ -5,7 +5,7 @@ Instructions for AI agents (Claude Code, etc.) working in this repo.
 ## When adding, renaming, or removing a skill
 
 1. **Update `README.md`** — keep the "Skills" list in sync. Each entry links to the skill's `SKILL.md` and summarises what it covers. If you add a skill and don't update the README, the change is incomplete.
-2. **Bump `version` in `.claude-plugin/plugin.json`** — semver. Patch for fixes/wording, minor for a new skill or new triggers, major for removals or breaking renames. Installed users won't see updates otherwise.
+2. **Do not update plugin or skill versions unless explicitly asked.** If the user asks for a release/version bump, use semver in `.claude-plugin/plugin.json`: patch for fixes/wording, minor for a new skill or new triggers, major for removals or breaking renames.
 
 ## Skill layout
 

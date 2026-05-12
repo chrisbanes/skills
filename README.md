@@ -21,7 +21,7 @@ Or install as a Claude Code plugin:
 
 ### Start here
 
-- Working on Compose state or effects? Start with [`compose-state-authoring`](skills/compose-state-authoring/SKILL.md), [`compose-state-holder-ui-split`](skills/compose-state-holder-ui-split/SKILL.md), or [`compose-side-effects`](skills/compose-side-effects/SKILL.md).
+- Working on Compose state or effects? Start with [`compose-state-authoring`](skills/compose-state-authoring/SKILL.md), [`compose-state-hoisting`](skills/compose-state-hoisting/SKILL.md), [`compose-state-holder-ui-split`](skills/compose-state-holder-ui-split/SKILL.md), or [`compose-side-effects`](skills/compose-side-effects/SKILL.md).
 - Investigating recomposition, stability, or jank? Start with [`compose-recomposition-performance`](skills/compose-recomposition-performance/SKILL.md).
 - Reviewing Flow or coroutine architecture? Start with [`kotlin-flow-state-event-modeling`](skills/kotlin-flow-state-event-modeling/SKILL.md) or [`kotlin-coroutines-structured-concurrency`](skills/kotlin-coroutines-structured-concurrency/SKILL.md).
 
@@ -30,6 +30,7 @@ Or install as a Claude Code plugin:
 #### State and side effects
 
 - [`compose-state-authoring`](skills/compose-state-authoring/SKILL.md) — author Compose local mutable state and read-only composable accessors correctly.
+- [`compose-state-hoisting`](skills/compose-state-hoisting/SKILL.md) — decide whether Compose UI element state belongs in local remember state, hoisted parameters, a plain state holder class, or a screen-level state holder.
 - [`compose-state-holder-ui-split`](skills/compose-state-holder-ui-split/SKILL.md) — split Compose state-holder wiring from plain-state UI for previewable and testable screens.
 - [`compose-side-effects`](skills/compose-side-effects/SKILL.md) — choose and key Compose effect APIs for event Flow collection, callbacks, cleanup, navigation, snackbar, analytics, and other side effects.
 
