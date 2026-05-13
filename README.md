@@ -49,7 +49,7 @@ Or install as a Claude Code plugin:
 
 #### Testing
 
-- [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) — choose between plain UI tests, semantics assertions, key/focus tests, screenshot tests, and integration tests.
+- [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) — choose between plain UI tests, semantics assertions, key/focus tests, interaction state tests with MutableInteractionSource, screenshot tests, and integration tests.
 
 ### Kotlin
 
