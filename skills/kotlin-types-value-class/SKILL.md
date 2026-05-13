@@ -65,10 +65,29 @@ data class UiState(val userId: UserId)
 ## Gotchas
 
 - **Autoboxing**: Value classes are unboxed at compile time but boxed (allocated) when used as nullable (`UserId?`), generic type arguments (`List<UserId>`), or vararg parameters. In hot paths these allocations matter; in most code they don't.
+- **No backing fields**: You cannot use `init` blocks, `lateinit`, or delegated properties like `by lazy`. The class body is extremely constrained — only the single constructor parameter exists.
+- **No data-class conveniences**: No `copy()`, no `component1()` for destructuring, and no way to customize `toString()`. If you need any of these, use a data class.
 - **No custom equals/hashCode/toString**: These always delegate to the underlying type. Need custom equality → use a data class.
 - **when exhaustiveness**: Sealed hierarchies of value classes work differently than data class hierarchies. Test `when` branches carefully.
+- **Serialization semantics**: With kotlinx.serialization, a `@Serializable data class A(val value: String)` serializes as `{"value":"..."}`, but a `@Serializable value class A(val value: String)` serializes as the underlying value (`"..."`). Replacing a single-field data class with a value class is a breaking change for your API/JSON contract.
 - **Serialization**: Some serialization frameworks need explicit support for value classes (e.g., kotlinx.serialization's `@Serializable` works, but Jackson may need configuration).
 - **Interoperability**: From Java, value classes appear as their underlying type. Java callers bypass the type-safety wrapper.
+- **Reflection and runtime erasure**: When passed as `Any` or used in generic contexts, value classes box into a synthetic wrapper class. Java reflection sees mangled method signatures, and frameworks that rely on raw runtime types (some ORMs, DI containers, or serializers) may see the underlying type rather than the value class.
+
+## Packing multiple values
+
+A value class can only declare one field, but Compose provides `packFloats`, `packInts`, and matching `unpack*` functions in `androidx.compose.ui.util` to store multiple primitives in a single `Long`. This lets you represent composite values (e.g., a 2D point, size, or padding) as a zero-allocation value class instead of a multi-field data class.
+
+```kotlin
+@JvmInline value class Offset(val packedValue: Long)
+
+fun Offset(x: Float, y: Float): Offset = Offset(packFloats(x, y))
+val Offset.x: Float get() = unpackFloat1(packedValue)
+val Offset.y: Float get() = unpackFloat2(packedValue)
+```
+
+- **Only use this in performance-critical paths** — manual bit-packing is error-prone. A data class is simpler and safer for most UI types.
+- **Available in `androidx.compose.ui.util`** — `packFloats`, `packInts`, `unpackFloat1`, `unpackFloat2`, `unpackInt1`, `unpackInt2`.
 
 ## Common mistakes
 
