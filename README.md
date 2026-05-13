@@ -56,6 +56,7 @@ Or install as a Claude Code plugin:
 - [`kotlin-coroutines-structured-concurrency`](skills/kotlin-coroutines-structured-concurrency/SKILL.md) — review coroutine scope ownership, init and fire-and-forget boundaries, cancellation handling, and blocking boundaries.
 - [`kotlin-flow-state-event-modeling`](skills/kotlin-flow-state-event-modeling/SKILL.md) — model `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, sharing policy, and one-shot events without lossy defaults.
 - [`kotlin-multiplatform-expect-actual`](skills/kotlin-multiplatform-expect-actual/SKILL.md) — design semantic expect/actual and interface boundaries for Kotlin Multiplatform platform interop.
+- [`kotlin-types-value-class`](skills/kotlin-types-value-class/SKILL.md) — choose `@JvmInline value class` over data class for single-field domain types, including Compose stability implications.
 
 ## Contributing
 
