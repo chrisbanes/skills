@@ -1,6 +1,6 @@
 ---
 name: compose-state-hoisting
-description: Use when deciding where Jetpack Compose UI element state or UI logic should live: local remember state, hoisted composable parameters, a plain state holder class, or a screen-level ViewModel/component.
+description: "Use when deciding where Jetpack Compose UI element state or UI logic should live: local remember state, hoisted composable parameters, a plain state holder class, or a screen-level ViewModel/component."
 ---
 
 # Compose state hoisting
