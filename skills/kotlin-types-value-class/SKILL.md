@@ -23,7 +23,7 @@ Prefer `@JvmInline value class` for single-field types that carry domain meaning
 | Single field + domain-meaningful (`UserId`, `EmailAddress`, `Percentage`) | `@JvmInline value class` |
 | Single field + no domain meaning (just grouping) | Type alias or keep the primitive |
 | Multiple fields | Data class |
-| Needs custom `equals`/`hashCode`/`toString` beyond the wrapped value | Data class (value classes delegate to the underlying type) |
+| Needs custom `equals`/`hashCode` beyond the wrapped value | Data class (value classes delegate to the underlying type) |
 | Used as a generic type argument or nullable in hot paths | Data class or primitive (autoboxing cost) |
 
 ```kotlin
@@ -66,8 +66,8 @@ data class UiState(val userId: UserId)
 
 - **Autoboxing**: Value classes are unboxed at compile time but boxed (allocated) when used as nullable (`UserId?`), generic type arguments (`List<UserId>`), or vararg parameters. In hot paths these allocations matter; in most code they don't.
 - **No backing fields**: You cannot use `init` blocks, `lateinit`, or delegated properties like `by lazy`. The class body is extremely constrained — only the single constructor parameter exists.
-- **No data-class conveniences**: No `copy()`, no `component1()` for destructuring, and no way to customize `toString()`. If you need any of these, use a data class.
-- **No custom equals/hashCode/toString**: These always delegate to the underlying type. Need custom equality → use a data class.
+- **No data-class conveniences**: No `copy()`, no `component1()` for destructuring. If you need these, use a data class. You *can* override `toString()` in a value class, but the default is `ClassName(fieldName=value)` — it does not delegate to the underlying type's `toString()`. Override it yourself if you need a different representation.
+- **No custom equals/hashCode**: These always delegate to the underlying type. Need custom equality → use a data class.
 - **when exhaustiveness**: Sealed hierarchies of value classes work differently than data class hierarchies. Test `when` branches carefully.
 - **Serialization semantics**: With kotlinx.serialization, a `@Serializable data class A(val value: String)` serializes as `{"value":"..."}`, but a `@Serializable value class A(val value: String)` serializes as the underlying value (`"..."`). Replacing a single-field data class with a value class is a breaking change for your API/JSON contract.
 - **Serialization**: Some serialization frameworks need explicit support for value classes (e.g., kotlinx.serialization's `@Serializable` works, but Jackson may need configuration).
@@ -110,7 +110,7 @@ val Offset.y: Float get() = unpackFloat2(packedValue)
 ## When NOT to apply
 
 - The type needs multiple fields → data class
-- The type needs custom `equals`/`hashCode`/`toString` → data class
+- The type needs custom `equals`/`hashCode` → data class
 - The type is used heavily as a nullable or generic in performance-critical code → measure autoboxing cost first
 - The project does not need the type-safety distinction → a type alias or primitive is sufficient
 
