@@ -116,6 +116,33 @@ kotlinx.datetime.*
 
 Only list types you are willing to promise are immutable. Do not list mutable types such as `java.util.Date`.
 
+## 4. Stabilize lazy item inputs
+
+Lazy list items recompose when their lambda inputs change identity, even if the visible data is unchanged.
+
+Hoist and remember per-item inputs that are stable for the item's lifetime:
+
+```kotlin
+// ❌ BAD — new lambda instances when parent recomposes
+items(list, key = { it.id }) { item ->
+    RowCard(
+        onClick = { onItemClick(item.id) },
+        isHighlighted = { item.id == selectedId },
+    )
+}
+
+// ✅ GOOD — stable captures for this item instance
+items(list, key = { it.id }) { item ->
+    val onClick = remember(item.id) { { onItemClick(item.id) } }
+    val isHighlighted = remember(item.id, selectedId) { item.id == selectedId }
+    RowCard(onClick = onClick, isHighlighted = isHighlighted)
+}
+```
+
+Also hoist row position metadata (`isFirst`, `isLast`, corner radii) with `remember(index) { … }` when the value depends only on index — but do not expect this alone to fix back-writing or cross-row measurement bugs.
+
+Verify focus moves and insertions with recomposition-count assertions after hoisting.
+
 ## Quick reference
 
 | Symptom | Diagnosis | Fix |
@@ -125,11 +152,13 @@ Only list types you are willing to promise are immutable. Do not list mutable ty
 | `unstable val price: BigDecimal` | External immutable type | Add to stability config |
 | `@Immutable` on a type with mutable internals | False promise | Fix the model or remove the annotation |
 | Composable skips poorly despite strong skipping | New unstable instance each recomposition | Remember, hoist, or make the type stable/equality-based |
+| Lazy items recompose on parent recompose despite unchanged data | New lambda or derived-value instance per parent recompose (§4) | Hoist per-item with `remember(item.id) { … }` |
 | Reports not generated | Compose compiler plugin missing or flag not set | Apply `org.jetbrains.kotlin.plugin.compose` and enable destinations |
 
 ## When NOT to apply
 
-- The issue is a fast-changing `State` read in composition, such as scroll or animation. Use `compose-state-deferred-reads`.
+- The issue is back-writing across phases or cross-row measurement reads. Use [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md).
+- The issue is a fast-changing `State` read in composition, such as scroll or animation. Use [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md).
 - The recomposition count matches real data changes.
 - The bug is wrong data or stale state, not excess work.
 - The code is test-only and readability is more important than report cleanliness.

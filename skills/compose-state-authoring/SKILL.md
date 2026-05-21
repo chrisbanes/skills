@@ -67,6 +67,25 @@ Two pieces and both matter:
 
 For collections, prefer `mutableStateListOf` / `mutableStateMapOf` (also `remember`-ed). They emit Snapshot reads on every read and Snapshot writes on every mutation. A `remember { mutableStateOf(mutableListOf<X>()) }` followed by `list.add(x)` will *not* recompose, because `MutableList.add` doesn't go through the State setter — you'd have to replace the value (`state = state + x`).
 
+### Back-writing snapshot state during composition
+
+**Back-writing** means writing observable state in a phase that triggers invalidation of an earlier (or the current) phase. Mutating `mutableState*` from the composable body back-writes into the same composition pass and schedules another. Do not rebuild derived data this way:
+
+```kotlin
+// ❌ BAD — clear + putAll on every composition
+val merged = remember { mutableStateMapOf<Key, ViewState>() }
+merged.clear()
+merged.putAll(parent)
+merged.putAll(overlay)
+
+// ✅ GOOD — immutable snapshot remembered from inputs
+val merged = remember(parent, overlay) {
+    if (overlay.isEmpty()) parent else parent + overlay
+}
+```
+
+If the result is read-only for the current inputs, `remember(keys) { … }` is enough. See [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) for cross-row measurement and measure-phase fixes.
+
 ### When this rule does NOT apply
 
 - **Inside `remember { … }`'s producer block.** That runs once per key change, not on every recompose. A local `var` there is fine: `val builder = remember { mutableListOf<X>().apply { var n = 0; … } }`.
@@ -141,6 +160,7 @@ This skill is about authoring Compose state correctly. `rememberUpdatedState` is
 | `var x = …` inside `@Composable fun` body | Not recomposition-safe (§1) | `var x by remember { mutableStateOf(…) }` |
 | `var x = …` inside `Column { … }` / `Row { … }` content lambda | Same — content lambdas are `@Composable` (§1) | Same fix |
 | `remember { mutableStateOf(list) }` then `.add(x)` not recomposing | Mutation bypasses State setter | Use `mutableStateListOf`, or replace the value: `state = state + x` |
+| `stateMap.clear(); stateMap.putAll(...)` in composable body | Back-writing composition → composition | `remember(keys) { derivedSnapshot }` |
 | `@Composable fun` with no `Text`/`Box`/`remember`/effect calls | Could be `@ReadOnlyComposable` (§2) | Add `@ReadOnlyComposable` above `@Composable` |
 | `@ReadOnlyComposable` function that calls `Box {}` / `Column {}` / a normal composable | Contract violation (§2) | Remove `@ReadOnlyComposable` |
 

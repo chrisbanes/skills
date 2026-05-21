@@ -36,9 +36,9 @@ Or install as a Claude Code plugin:
 
 #### Performance
 
-- [`compose-recomposition-performance`](skills/compose-recomposition-performance/SKILL.md) — choose between the two recomposition investigation paths: stability/equality or deferred state reads.
+- [`compose-recomposition-performance`](skills/compose-recomposition-performance/SKILL.md) — route stability, deferred reads, and cross-phase back-writing.
 - [`compose-stability-diagnostics`](skills/compose-stability-diagnostics/SKILL.md) — diagnose Compose compiler reports, strong skipping behavior, unstable parameters, and stability fixes.
-- [`compose-state-deferred-reads`](skills/compose-state-deferred-reads/SKILL.md) — move frame-rate scroll, animation, and gesture reads out of composition into layout or draw.
+- [`compose-state-deferred-reads`](skills/compose-state-deferred-reads/SKILL.md) — move frame-rate reads out of composition; avoid back-writing snapshot state across phases and cross-row measurement reads in composition.
 
 #### UI API design and layout
 

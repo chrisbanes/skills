@@ -281,6 +281,46 @@ The benefit isn't a performance win — the runtime handles both fine — it's t
   }
   ```
 
+## 7. Measure-phase constraint decoration
+
+When composable A captures a size and composable B must match it, **do not read the captured size in B's composable body** (`Modifier.height(state.dp)`). That ties B to composition whenever the measurement state changes.
+
+Capture in a layout callback on A; apply on B inside `Modifier.layout` so only layout invalidates:
+
+```kotlin
+fun Modifier.decorateMeasureConstraints(
+    decorate: (Constraints) -> Constraints,
+): Modifier = layout { measurable, incoming ->
+    val constraints = decorate(incoming).constrain(incoming)
+    val placeable = measurable.measure(constraints)
+    layout(placeable.width, placeable.height) {
+        placeable.placeRelative(0, 0)
+    }
+}
+```
+
+```kotlin
+// Hoisted at the common parent of both rows:
+//   var anchorHeightPx by remember { mutableIntStateOf(0) }
+
+// Measured row — write state only from onSizeChanged
+RowAnchor(Modifier.onSizeChanged { size -> if (size.height != anchorHeightPx) anchorHeightPx = size.height })
+
+// Sibling rows — read anchorHeightPx only inside layout
+RowSibling(
+    Modifier.decorateMeasureConstraints { incoming ->
+        if (anchorHeightPx > 0) {
+            // Clamp to incoming bounds so the constraint never exceeds the parent's max.
+            incoming.copy(minHeight = anchorHeightPx, maxHeight = anchorHeightPx)
+        } else {
+            incoming
+        }
+    },
+)
+```
+
+Use a composition-time fallback (fixed height) only while `anchorHeightPx` is `0`. See [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) for the full cross-row pattern.
+
 ## Quick reference
 
 | Symptom | Diagnosis | Fix |
@@ -299,6 +339,7 @@ The benefit isn't a performance win — the runtime handles both fine — it's t
 | `Layout { if (cond) X() }` with no other content and no layout-tuning args | Hoist (§6) | Move the `if` outside the layout |
 | `Box(modifier = …) { if (cond) X() }` | Layout carries semantics — leave (§6 carve-out) | Keep as-is |
 | `Box { if (cond) X() else Y() }` | Both branches contribute — leave (§6 carve-out) | Keep as-is |
+| Sibling lazy row reads `height(state)` from another row's measurement | Composition-time size coupling (§7) | Capture on measured row; apply via `decorateMeasureConstraints` on siblings |
 
 ## When NOT to apply
 
@@ -331,3 +372,4 @@ The declaration-side rules (§1–§3) should not be skipped merely because "thi
 ## Related
 
 - [`compose-slot-api-pattern`](../compose-slot-api-pattern/SKILL.md) — the other half of declaring a reusable composable's public API: take `@Composable () -> Unit` slots for variable content. A reusable component takes both a `modifier` parameter *and* slots — caller owns placement *and* what to place.
+- [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) — back-writing across phases and deferred measurement reads.

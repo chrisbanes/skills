@@ -163,6 +163,37 @@ Every registration path should have a matching `onDispose` cleanup path.
 | `LaunchedEffect(...) { nonSuspendSetter() }` | Usually `SideEffect`; keep `LaunchedEffect` only for keyed one-shot/deferred work |
 | Listener added in `LaunchedEffect` with no cleanup | Use `DisposableEffect` |
 | Launching from click by setting `shouldShowSnackbar = true` | Use `rememberCoroutineScope()` in the click callback |
+| `if (isFocused) { … }` or focus read in composable body for side work | Side work during composition | `LaunchedEffect(focused) { … }` or `snapshotFlow` |
+| `onSizeChanged { heightState = it.height }` on measured composable | OK in isolation — but layout → composition back-write if a sibling reads `heightState` in composition | Siblings must consume height in measure phase, not `Modifier.height(state.dp)` in composition |
+
+## Focus and measurement
+
+**Focus:** Reading focus in the composable body to drive **side work** (preloading, analytics, toasts) runs that work during composition. Observe focus in an effect instead:
+
+```kotlin
+// ❌ BAD — side work runs during composition every time `focused` is true,
+// including transient focus passes; `SideEffect` re-runs after every successful recomposition
+@Composable
+fun Preloader(interactionSource: MutableInteractionSource) {
+    val focused by interactionSource.collectIsFocusedAsState()
+    if (focused) {
+        preloadImages()
+    }
+}
+
+// ✅ GOOD — side work in a keyed effect
+@Composable
+fun Preloader(interactionSource: MutableInteractionSource) {
+    val focused by interactionSource.collectIsFocusedAsState()
+    LaunchedEffect(focused) {
+        if (focused) preloadImages()
+    }
+}
+```
+
+Use `snapshotFlow { … }` inside `LaunchedEffect` when you need to sample multiple snapshot reads or debounce rapid changes without keying the effect on every derived value. For TV/D-pad focus navigation semantics, see [`compose-focus-navigation`](../compose-focus-navigation/SKILL.md).
+
+**Measurement:** `onSizeChanged` / `onGloballyPositioned` are valid **callbacks**, but they fire during the layout phase. Writing snapshot state there is only safe if no earlier phase reads it. If a sibling reads that state in composition, layout is back-writing into composition and the sibling will recompose every measure pass. Apply captured dimensions in `Modifier.layout` (see [`compose-modifier-and-layout-style`](../compose-modifier-and-layout-style/SKILL.md) §7 and [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md)).
 
 ## Red flags during review
 
