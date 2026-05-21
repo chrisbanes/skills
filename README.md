@@ -62,6 +62,17 @@ Or install as a Claude Code plugin:
 
 Skills live at `skills/<skill-name>/SKILL.md`, flat (no language nesting). The `name:` in the SKILL.md frontmatter must match the directory name.
 
+Frontmatter is validated against [`skills.schema.json`](skills.schema.json) — `name` and `description` are required, `name` must be kebab-case.
+
+Before pushing, lint skills (frontmatter schema + markdown):
+
+```
+npm install
+npm run lint
+```
+
+This also runs on CI for all PRs.
+
 ## License
 
 [Apache 2.0](LICENSE)
