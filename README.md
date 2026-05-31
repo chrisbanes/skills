@@ -58,6 +58,10 @@ Or install as a Claude Code plugin:
 - [`kotlin-multiplatform-expect-actual`](skills/kotlin-multiplatform-expect-actual/SKILL.md) — design semantic expect/actual and interface boundaries for Kotlin Multiplatform platform interop.
 - [`kotlin-types-value-class`](skills/kotlin-types-value-class/SKILL.md) — choose `@JvmInline value class` over data class for single-field domain types, including Compose stability implications.
 
+### Workflows
+
+- [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, detect and fix CI failures, and keep PRs moving forward.
+
 ## Contributing
 
 Skills live at `skills/<skill-name>/SKILL.md`, flat (no language nesting). The `name:` in the SKILL.md frontmatter must match the directory name.
