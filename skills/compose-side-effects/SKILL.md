@@ -181,21 +181,21 @@ Every registration path should have a matching `onDispose` cleanup path.
 
 ## Common mistakes
 
-| Mistake | Fix |
-|---|---|
-| Network request directly in the composable body | Usually move to a ViewModel/state holder; use `LaunchedEffect` only for UI-owned keyed work |
-| Analytics property written from the composable body | Use `SideEffect` when it should publish after every successful recomposition |
-| Impression/event logged from the composable body | Use `LaunchedEffect(key)` when it should run once for that key |
-| `LaunchedEffect(Unit)` captures changing `id` | Key by `id`, or use `rememberUpdatedState` if it must not restart |
+| Mistake | Diagnosis | Fix |
+|---|---|---|
+| Network request directly in the composable body | Side work in composition | Usually move to a ViewModel/state holder; use `LaunchedEffect` only for UI-owned keyed work |
+| Analytics property written from the composable body | Side work in composition | Use `SideEffect` when it should publish after every successful recomposition |
+| Impression/event logged from the composable body | Side work in composition | Use `LaunchedEffect(key)` when it should run once for that key |
+| `LaunchedEffect(Unit)` captures changing `id` | Missing key | Key by `id`, or use `rememberUpdatedState` if it must not restart |
 | `rememberUpdatedState(id)` used so `LaunchedEffect(Unit)` keeps running after `id` changes | Hidden lifecycle bug | Key the effect by `id` |
 | Long-lived effect invokes an old callback after recomposition | Stale capture | Wrap the callback with `rememberUpdatedState` and call the wrapper inside the effect |
 | `rememberUpdatedState` delegate read directly in `remember {}` (e.g. `Destination(id = latestId)`) | Value captured once, never refreshed | Make the value a `remember` key: `remember(id) { Destination(id = id) }` |
-| `LaunchedEffect(state) { ... }` restarts too often | Key by the specific property |
-| `LaunchedEffect(...) { nonSuspendSetter() }` | Usually `SideEffect`; keep `LaunchedEffect` only for keyed one-shot/deferred work |
-| Listener added in `LaunchedEffect` with no cleanup | Use `DisposableEffect` |
-| Launching from click by setting `shouldShowSnackbar = true` | Use `rememberCoroutineScope()` in the click callback |
+| `LaunchedEffect(state) { ... }` restarts too often | Overly broad key | Key by the specific property |
+| `LaunchedEffect(...) { nonSuspendSetter() }` | Wrong effect type | Usually `SideEffect`; keep `LaunchedEffect` only for keyed one-shot/deferred work |
+| Listener added in `LaunchedEffect` with no cleanup | Missing disposal | Use `DisposableEffect` |
+| Launching from click by setting `shouldShowSnackbar = true` | Event flag anti-pattern | Use `rememberCoroutineScope()` in the click callback |
 | `if (isFocused) { … }` or focus read in composable body for side work | Side work during composition | `LaunchedEffect(focused) { … }` or `snapshotFlow` |
-| `onSizeChanged { heightState = it.height }` on measured composable | OK in isolation — but layout → composition back-write if a sibling reads `heightState` in composition | Siblings must consume height in measure phase, not `Modifier.height(state.dp)` in composition |
+| `onSizeChanged { heightState = it.height }` on measured composable | Layout → composition back-write if a sibling reads `heightState` in composition | Siblings must consume height in measure phase, not `Modifier.height(state.dp)` in composition |
 
 ## Focus and measurement
 
