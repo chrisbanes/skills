@@ -90,12 +90,17 @@ val latestChannelId by rememberUpdatedState(channelId)
 // ❌ BAD — channelId is read once when remember's lambda executes;
 // the destination holds the initial value forever
 val destination = remember {
-    Destination(channelId = latestChannelId, screenId = screenId)
+    Destination(channelId = latestChannelId)
 }
 
 // ✅ GOOD — skip rememberUpdatedState; key remember on the changing value
 val destination = remember(channelId) {
-    Destination(channelId = channelId, screenId = screenId)
+    Destination(channelId = channelId)
+}
+
+// ✅ ALSO GOOD — wrapping lambda defers the read to each invocation
+val destination = remember {
+    Destination(channelId = { latestChannelId })
 }
 ```
 
