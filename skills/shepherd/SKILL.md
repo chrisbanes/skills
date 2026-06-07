@@ -7,7 +7,7 @@ description: "Use when asked to shepherd, babysit, monitor, or poll open pull re
 
 ## Core principle
 
-Poll open PRs (GitHub) and MRs (GitLab) in a loop, triage events by type, act on what you can fix, and report what you can't. Never sit idle when a PR has unaddressed feedback or a failing CI check.
+Poll open PRs (GitHub) and MRs (GitLab) in a loop, fix all outstanding issues locally first, then push fixes, then resolve review threads, then wait for CI. Never sit idle when a PR has unaddressed feedback or a failing CI check.
 
 ## Platform detection
 
@@ -54,9 +54,11 @@ While the user wants monitoring:
   2. For each PR:
      a. Check for new comments
      b. Triage comments (see Comment Triage below)
-     c. Check CI (see CI Fix Workflow below)
-     d. If CI failing, follow CI Fix Workflow
-     e. If changes pushed and CI green, comment "ready for re-review" if requested
+     c. Fix ALL actionable issues locally — do not push yet
+     d. If any changes made, push once with [autofix] prefix in the message
+     e. Check CI status (see CI Fix Workflow below)
+     f. If CI failing, follow CI Fix Workflow
+     g. If changes pushed and CI green, comment "ready for re-review" if requested
   3. Wait an appropriate interval before polling again
 ```
 
@@ -73,13 +75,16 @@ Track which comments you've already seen to avoid re-processing. Compare against
 | Comment type | Signal | Action |
 |---|---|---|
 | Approval / LGTM | "LGTM", "ship it", `APPROVED` review / GitLab approval | Check CI is green, then offer to merge or merge if instructed |
-| Change request | "please change", "request changes", `REQUEST_CHANGES` | Read the specific feedback, implement changes, push, comment "addressed" |
+| Change request | "please change", "request changes", `REQUEST_CHANGES` | Read the specific feedback, fix locally |
 | Nit / suggestion | "nit", "optional", "consider" | Apply if trivial (rename, formatting). Skip if debatable — ask user |
 | Question | "why", "what about", "did you consider" | Answer the question. If unsure, relay to user |
-| CI reminder | "tests failing", "CI is red", "pipeline failed" | Follow CI Fix Workflow below |
+| CI reminder | "tests failing", "CI is red", "pipeline failed" | Note the failure, then follow CI Fix Workflow after pushing |
 | Merge conflict | "needs rebase", "conflicts" | Rebase on base branch, push. If conflicts are complex, report to user |
 
-**Commenting rules:**
+**Comment resolution rules:**
+- Fix ALL actionable issues on a PR before pushing any changes
+- Do NOT push after each comment — batch all fixes into a single push
+- Resolve review threads (mark resolved) only AFTER the push succeeds — not while fixes are still local
 - Do NOT comment just to say "polling" or "checking in" — those are noise
 - Do NOT comment if nothing has changed since your last comment
 - Batch related responses into a single comment
@@ -160,6 +165,8 @@ Stop polling and report to user when:
 | Commenting "I checked, everything looks good" every cycle | Only comment when you took action or when asked for status. |
 | Merging after approval without checking CI | Approval ≠ ready to merge. Always check CI first. |
 | Fixing a test you don't understand | "Obvious fix" means you can explain WHY. If you can't, don't fix. |
+| Pushing after each comment fix | Fix ALL issues first, then push once. |
+| Resolving review threads before pushing | Mark threads resolved only AFTER the push succeeds. |
 | Re-pushing without addressing all feedback | Triage ALL unaddressed comments before pushing. |
 | Using the wrong CLI tool | Detect platform first (see Platform detection). |
 | Not tracking which comments are new | Compare against your last poll's comment timestamps/IDs. Don't re-answer old comments. |
