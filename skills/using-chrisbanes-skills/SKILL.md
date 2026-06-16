@@ -1,6 +1,6 @@
 ---
 name: using-chrisbanes-skills
-description: Use when starting broad Kotlin, Android, or Jetpack Compose work and the right focused chrisbanes skill is not obvious, especially for general review, refactor, architecture, state, performance, testing, or UI API design tasks.
+description: Use when a Kotlin, Android, or Jetpack Compose task is too broad for any single focused skill to obviously apply, especially for general review, refactor, architecture, state, performance, testing, or UI API design work.
 ---
 
 # Using chrisbanes skills
@@ -36,5 +36,6 @@ If a request already clearly matches a focused skill, use that skill directly. I
 
 - For Compose event handling from a ViewModel or component, use [`compose-state-holder-ui-split`](../compose-state-holder-ui-split/SKILL.md), [`compose-side-effects`](../compose-side-effects/SKILL.md), and, if the event primitive matters, [`kotlin-flow-state-event-modeling`](../kotlin-flow-state-event-modeling/SKILL.md).
 - For performance work, start with [`compose-recomposition-performance`](../compose-recomposition-performance/SKILL.md). It routes deeper to stability or deferred-read fixes.
+- For animations triggered by state, use [`compose-animations`](../compose-animations/SKILL.md) together with [`compose-state-holder-ui-split`](../compose-state-holder-ui-split/SKILL.md); for frame-rate-driven animation values, also load [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md).
 - For reusable UI components, pair [`compose-modifier-and-layout-style`](../compose-modifier-and-layout-style/SKILL.md) with [`compose-slot-api-pattern`](../compose-slot-api-pattern/SKILL.md) when both placement and content flexibility are in play.
 - For tests around focus behavior, use [`compose-focus-navigation`](../compose-focus-navigation/SKILL.md) first, then [`compose-ui-testing-patterns`](../compose-ui-testing-patterns/SKILL.md) for test shape.
