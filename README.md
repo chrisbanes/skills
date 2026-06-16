@@ -25,6 +25,10 @@ Or install as a Claude Code plugin:
 - Investigating recomposition, stability, or jank? Start with [`compose-recomposition-performance`](skills/compose-recomposition-performance/SKILL.md).
 - Reviewing Flow or coroutine architecture? Start with [`kotlin-flow-state-event-modeling`](skills/kotlin-flow-state-event-modeling/SKILL.md) or [`kotlin-coroutines-structured-concurrency`](skills/kotlin-coroutines-structured-concurrency/SKILL.md).
 
+### Routing
+
+- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route broad Kotlin, Android, and Jetpack Compose tasks to the focused skills.
+
 ### Jetpack Compose
 
 #### State and side effects
