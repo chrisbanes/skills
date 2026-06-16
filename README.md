@@ -21,9 +21,14 @@ Or install as a Claude Code plugin:
 
 ### Start here
 
+- Not sure which skill applies? Start with [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) to route broad Kotlin, Android, and Jetpack Compose tasks to the focused skills.
 - Working on Compose state or effects? Start with [`compose-state-authoring`](skills/compose-state-authoring/SKILL.md), [`compose-state-hoisting`](skills/compose-state-hoisting/SKILL.md), [`compose-state-holder-ui-split`](skills/compose-state-holder-ui-split/SKILL.md), or [`compose-side-effects`](skills/compose-side-effects/SKILL.md).
 - Investigating recomposition, stability, or jank? Start with [`compose-recomposition-performance`](skills/compose-recomposition-performance/SKILL.md).
 - Reviewing Flow or coroutine architecture? Start with [`kotlin-flow-state-event-modeling`](skills/kotlin-flow-state-event-modeling/SKILL.md) or [`kotlin-coroutines-structured-concurrency`](skills/kotlin-coroutines-structured-concurrency/SKILL.md).
+
+### Routing
+
+- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route broad Kotlin, Android, and Jetpack Compose tasks to the focused skills.
 
 ### Jetpack Compose
 
