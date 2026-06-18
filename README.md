@@ -17,6 +17,13 @@ Or install as a Claude Code plugin:
 /plugin install chrisbanes-skills@chrisbanes-skills
 ```
 
+Or install as a Codex plugin:
+
+```
+codex plugin marketplace add chrisbanes/skills --ref main
+codex plugin add chrisbanes-skills@chrisbanes-skills
+```
+
 ## Skills
 
 ### Start here
@@ -71,6 +78,14 @@ Or install as a Claude Code plugin:
 Skills live at `skills/<skill-name>/SKILL.md`, flat (no language nesting). The `name:` in the SKILL.md frontmatter must match the directory name.
 
 Frontmatter is validated against [`skills.schema.json`](skills.schema.json) — `name` and `description` are required, `name` must be kebab-case.
+
+### Releases
+
+Release versions use SemVer-compatible CalVer: `YYYY.M.D` without zero-padded month or day values, for example `2026.6.17`.
+
+Keep `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and new Git release tags on the same version. Existing zero-padded tags from before this policy map to the non-padded manifest version, so `2026.06.16` maps to `2026.6.16`. Only bump versions when publishing an installable release.
+
+To publish a release, run the **Release** workflow from GitHub Actions. Leave the version input empty to use today's UTC `YYYY.M.D` version, or provide a specific non-zero-padded CalVer value. Use the dry-run option to validate without creating a commit, tag, or GitHub release.
 
 Before pushing, lint skills (frontmatter schema + markdown):
 

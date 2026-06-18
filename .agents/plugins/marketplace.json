@@ -1,0 +1,21 @@
+{
+  "name": "chrisbanes-skills",
+  "interface": {
+    "displayName": "Chris Banes Skills"
+  },
+  "plugins": [
+    {
+      "name": "chrisbanes-skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/chrisbanes/skills",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

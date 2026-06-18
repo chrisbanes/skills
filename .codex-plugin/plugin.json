@@ -1,0 +1,34 @@
+{
+  "name": "chrisbanes-skills",
+  "version": "2026.6.16",
+  "description": "Skills for Kotlin, Android, JVM, and Jetpack Compose development by Chris Banes.",
+  "author": {
+    "name": "Chris Banes",
+    "url": "https://github.com/chrisbanes"
+  },
+  "repository": "https://github.com/chrisbanes/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "kotlin",
+    "android",
+    "jetpack-compose",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Chris Banes Skills",
+    "shortDescription": "Kotlin, Android, and Jetpack Compose development skills.",
+    "longDescription": "A set of Codex skills for Kotlin, Android, JVM, and Jetpack Compose development.",
+    "developerName": "Chris Banes",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Skills"
+    ],
+    "websiteURL": "https://github.com/chrisbanes/skills",
+    "defaultPrompt": [
+      "Review this Compose state model.",
+      "Check this Flow event design.",
+      "Diagnose Compose recomposition issues."
+    ]
+  }
+}

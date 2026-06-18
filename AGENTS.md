@@ -5,7 +5,17 @@ Instructions for AI agents (Claude Code, etc.) working in this repo.
 ## When adding, renaming, or removing a skill
 
 1. **Update `README.md`** — keep the "Skills" list in sync. Each entry links to the skill's `SKILL.md` and summarises what it covers. If you add a skill and don't update the README, the change is incomplete.
-2. **Do not update plugin or skill versions unless explicitly asked.** If the user asks for a release/version bump, use semver in `.claude-plugin/plugin.json`: patch for fixes/wording, minor for a new skill or new triggers, major for removals or breaking renames.
+2. **Do not update plugin or skill versions unless explicitly asked.** If the user asks for a release/version bump, use the release system below.
+
+## Release/version system
+
+- Use SemVer-compatible CalVer: `YYYY.M.D`.
+- Do not zero-pad month or day values. Use `2026.6.17`, not `2026.06.17`.
+- Keep `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` on the same version.
+- New Git release tags should match the manifest version exactly.
+- Existing zero-padded tags from before this policy map to the non-padded manifest version. For example, origin tag `2026.06.16` maps to manifest version `2026.6.16`.
+- Only cut a release when publishing installable changes. Skill wording/fixes, new skills/triggers, removals, and renames all use the publication date as the version.
+- Call out removals and renames clearly in release notes because they break existing user references.
 
 ## Skill layout
 
@@ -15,7 +25,7 @@ Instructions for AI agents (Claude Code, etc.) working in this repo.
 
 ## Manifests
 
-- `.claude-plugin/marketplace.json` and `.claude-plugin/plugin.json` are both JSON (not JSONC). Validate with `jq . <file>` before committing.
+- `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `.agents/plugins/marketplace.json`, and `.codex-plugin/plugin.json` are all JSON (not JSONC). Validate with `jq . <file>` before committing.
 - The plugin `name` field in both manifests must stay `chrisbanes-skills`.
 
 ## Commits and PRs

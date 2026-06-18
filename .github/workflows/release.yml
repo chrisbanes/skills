@@ -1,0 +1,153 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version as YYYY.M.D. Leave empty to use today's UTC date."
+        required: false
+        type: string
+      dry_run:
+        description: "Validate and show changes without pushing or creating a release."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          VERSION="$(python3 scripts/release.py resolve-version "$INPUT_VERSION")"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved release version: $VERSION"
+
+      - name: Check existing tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          git fetch --tags origin
+
+          if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+            echo "Tag already exists: $VERSION" >&2
+            exit 1
+          fi
+
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "GitHub release already exists: $VERSION" >&2
+            exit 1
+          fi
+
+      - name: Update manifests
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python3 scripts/release.py update-manifests "$VERSION"
+
+      - name: Validate manifests
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          jq . .claude-plugin/plugin.json
+          jq . .claude-plugin/marketplace.json
+          jq . .codex-plugin/plugin.json
+          jq . .agents/plugins/marketplace.json
+
+          python3 scripts/release.py validate-manifests "$VERSION"
+
+      - name: Lint skills
+        run: npm run lint
+
+      - name: Check release diff
+        id: diff
+        run: |
+          set -euo pipefail
+
+          git diff --check
+
+          if git diff --quiet -- .claude-plugin/plugin.json .codex-plugin/plugin.json; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No manifest version changes needed."
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            git diff -- .claude-plugin/plugin.json .codex-plugin/plugin.json
+          fi
+
+      - name: Stop before publishing
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "Dry run requested. Release validation completed; no commit, tag, or GitHub release was created."
+
+      - name: Configure Git author
+        if: ${{ !inputs.dry_run && steps.diff.outputs.has_changes == 'true' }}
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Commit and push version bump
+        if: ${{ !inputs.dry_run && steps.diff.outputs.has_changes == 'true' }}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          git add .claude-plugin/plugin.json .codex-plugin/plugin.json
+          git commit -m "Bump version to $VERSION"
+          git push origin HEAD:main
+
+      - name: Resolve release target
+        if: ${{ !inputs.dry_run }}
+        id: release_target
+        run: |
+          set -euo pipefail
+
+          LATEST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          if [ -n "$LATEST_TAG" ]; then
+            COMMITS_SINCE_TAG="$(git rev-list --count "$LATEST_TAG"..HEAD)"
+            if [ "$COMMITS_SINCE_TAG" = "0" ]; then
+              echo "No commits since latest tag: $LATEST_TAG" >&2
+              exit 1
+            fi
+          fi
+
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        if: ${{ !inputs.dry_run }}
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          target_commitish: ${{ steps.release_target.outputs.sha }}
+          name: ${{ steps.version.outputs.version }}
+          generate_release_notes: true
