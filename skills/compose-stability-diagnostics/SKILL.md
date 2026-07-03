@@ -7,18 +7,20 @@ description: Use when writing or reviewing Jetpack Compose parameter stability, 
 
 ## Core principle
 
-Compose performance problems from parameters are about **whether inputs compare cheaply and predictably across recompositions**. With Kotlin 2.0.20+ strong skipping is enabled by default, so unstable parameters no longer automatically make restartable composables non-skippable. That does not make stability irrelevant: unstable parameters are compared by instance identity (`===`), stable parameters by equality (`equals`), and churny instances can still defeat skipping.
+Compose parameter fixes start from evidence. First identify the compiler mode and the parameter comparison behavior, then change the model or call site that is actually defeating skipping.
 
-First identify the compiler mode you are on, then read reports in that context.
+With Kotlin 2.0.20+ strong skipping is enabled by default. Unstable parameters no longer automatically make restartable composables non-skippable, but unstable parameters compare by instance identity (`===`) while stable parameters compare by equality (`equals`). Churny unstable instances can still defeat skipping.
 
-## When to use this skill
+## Diagnostic procedure
 
-- A composable or screen recomposes more than expected and parameter churn is suspected.
-- A UI-state/model class is passed to composables and contains `List`, `Set`, `Map`, ranges, Java time/money types, or third-party types.
-- `composables.txt` / `classes.txt` shows unstable parameters or non-skippable composables.
-- A project uses Kotlin < 2.0.20, disables strong skipping, or has old Compose compiler report guidance.
+1. Confirm the symptom: recomposition counts, compiler report output, or a suspected churny parameter.
+2. Identify compiler mode: Kotlin/Compose compiler version and whether strong skipping is enabled.
+3. Generate or read the Compose compiler reports for the shipped variant.
+4. For each suspicious parameter, decide whether the problem is stability semantics, instance churn, or a caller-created lambda/derived value.
+5. Apply the lightest fix that makes the type/call site truthful.
+6. Re-measure the same interaction or re-read the same report before claiming the issue is fixed.
 
-## 1. Start with strong skipping
+## 1. Interpret strong skipping first
 
 On Kotlin 2.0.20+, strong skipping is enabled by default. In that mode:
 
@@ -27,7 +29,7 @@ On Kotlin 2.0.20+, strong skipping is enabled by default. In that mode:
 - Unstable parameters compare with instance equality (`===`).
 - Lambdas inside composables are automatically remembered based on captures.
 
-That means the question changes from "is this composable skippable at all?" to "will these parameters compare the way I expect, and are callers creating new unstable instances every frame?"
+Ask: "will these parameters compare the way I expect, and are callers creating new unstable instances every frame?"
 
 For older compiler setups or strong skipping disabled, the legacy rule still matters: a restartable composable with unstable parameters may be restartable but not skippable.
 
@@ -67,13 +69,13 @@ Key files:
 | `<module>-composables.csv` | Same data in sortable form |
 | `<module>-module.json` | Aggregate metrics |
 
-## 3. Fix stability where semantics need it
+## 3. Fix only the proven parameter problem
 
 Pick the lightest fix that makes the type's immutability or equality semantics true.
 
 ### Immutable collections
 
-`kotlin.collections.List` is an interface; Compose cannot know the runtime implementation is immutable. Prefer `kotlinx.collections.immutable` at UI-state boundaries:
+If reports show collection interfaces on UI state, prefer `kotlinx.collections.immutable` at UI-state boundaries:
 
 ```kotlin
 // Before: unstable collection interfaces
@@ -97,7 +99,7 @@ Do not annotate to silence a report. A false stability promise can produce stale
 
 ### Third-party immutable types
 
-For types you cannot annotate, use `stabilityConfigurationFiles`:
+For types you cannot annotate but can truthfully treat as immutable, use `stabilityConfigurationFiles`:
 
 ```kotlin
 composeCompiler {
@@ -118,7 +120,7 @@ Only list types you are willing to promise are immutable. Do not list mutable ty
 
 ## 4. Stabilize lazy item inputs
 
-Lazy list items recompose when their lambda inputs change identity, even if the visible data is unchanged.
+When lazy item recomposition comes from call-site churn, stabilize the values passed to each item instead of annotating models blindly.
 
 Hoist and remember per-item inputs that are stable for the item's lifetime:
 

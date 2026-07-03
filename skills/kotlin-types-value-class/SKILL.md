@@ -7,14 +7,15 @@ description: Use when writing or reviewing Kotlin type declarations to choose @J
 
 ## Core principle
 
-Prefer `@JvmInline value class` for single-field types that carry domain meaning. Data classes are for aggregating multiple fields. A value class gives you type safety (you can't mix up `UserId` and `String`) without the allocation overhead of a data class.
+Prefer `@JvmInline value class` for single-field types that carry domain meaning. Data classes are for aggregating multiple fields.
 
-## When to use this skill
+## Review procedure
 
-- Writing a new Kotlin type that wraps a single value
-- Reviewing a data class that has only one property
-- Seeing primitive types (`String`, `Long`, `Int`, etc.) used where a domain type would prevent misuse
-- Compose compiler reports showing unstable parameters that could be value classes
+1. Find single-property wrappers, primitive-heavy APIs, and `@Immutable` wrappers in UI state.
+2. Decide whether the single value is a real domain distinction. If not, keep the primitive or use a typealias.
+3. Check whether replacing the type changes equality, serialization, Java interop, or hot-path boxing.
+4. Convert only when the domain meaning is clear and the contract changes are acceptable.
+5. Re-run the affected compiler/tests; for Compose performance work, re-check compiler reports or recomposition evidence.
 
 ## Decision flow
 
@@ -24,7 +25,7 @@ Prefer `@JvmInline value class` for single-field types that carry domain meaning
 | Single field + no domain meaning (just grouping) | Type alias or keep the primitive |
 | Multiple fields | Data class |
 | Needs custom `equals`/`hashCode` beyond the wrapped value | Data class (value classes delegate to the underlying type) |
-| Used as a generic type argument or nullable in hot paths | Data class or primitive (autoboxing cost) |
+| Used as a generic type argument or nullable in a proven hot path | Data class or primitive |
 
 ```kotlin
 // GOOD: domain-meaningful single field
@@ -32,9 +33,8 @@ Prefer `@JvmInline value class` for single-field types that carry domain meaning
 @JvmInline value class EmailAddress(val value: String)
 @JvmInline value class Percentage(val value: Float)
 
-// BAD: data class wrapping a single field
-data class UserId(val value: String) // unnecessary allocation
-data class EmailAddress(val value: String) // type safety without the overhead is available
+// BAD: data class wrapping a single domain field
+data class UserId(val value: String)
 
 // BAD: value class with no domain meaning
 @JvmInline value class Wrapper(val value: String) // just use the String, or a type alias
@@ -45,38 +45,39 @@ data class EmailAddress(val value: String) // type safety without the overhead i
 // Use a data class if you need different equality semantics
 ```
 
-## Compose stability
+## Compose stability procedure
 
-`@JvmInline value class` is treated as `Stable` by the Compose compiler when its underlying type is stable (primitives, `String`, and other stable types). This means:
+When a Compose report points at a single-field wrapper:
 
-- Value classes passed as composable parameters avoid "unstable parameter" warnings
-- No need for `@Immutable` annotations at Compose boundaries when wrapping primitives or strings
-- Replacing single-field data classes with value classes at UI boundaries improves skippability
+1. Confirm the underlying type is stable (`String`, primitives, or another stable type).
+2. Prefer a value class over `@Immutable` on a wrapper whose only job is type distinction.
+3. Do not change public serialization/API contracts just to silence a report.
 
 ```kotlin
-// Before: data class wrapping a single field
-data class UiState(val userId: String) // works, but allocates a wrapper object
+// Before: primitive value can be mixed up with other strings
+data class UiState(val userId: String)
 
-// After: value class is stable and zero-allocation at runtime
+// After: domain type is stable at the Compose boundary
 @JvmInline value class UserId(val value: String)
 data class UiState(val userId: UserId)
 ```
 
-## Gotchas
+## Refactor checks
 
-- **Autoboxing**: Value classes are unboxed at compile time but boxed (allocated) when used as nullable (`UserId?`), generic type arguments (`List<UserId>`), or vararg parameters. In hot paths these allocations matter; in most code they don't.
-- **No backing fields**: You cannot use `init` blocks, `lateinit`, or delegated properties like `by lazy`. The class body is extremely constrained — only the single constructor parameter exists.
-- **No data-class conveniences**: No `copy()`, no `component1()` for destructuring. If you need these, use a data class. You *can* override `toString()` in a value class, but the default is `ClassName(fieldName=value)` — it does not delegate to the underlying type's `toString()`. Override it yourself if you need a different representation.
-- **No custom equals/hashCode**: These always delegate to the underlying type. Need custom equality → use a data class.
-- **when exhaustiveness**: Sealed hierarchies of value classes work differently than data class hierarchies. Test `when` branches carefully.
-- **Serialization semantics**: With kotlinx.serialization, a `@Serializable data class A(val value: String)` serializes as `{"value":"..."}`, but a `@Serializable value class A(val value: String)` serializes as the underlying value (`"..."`). Replacing a single-field data class with a value class is a breaking change for your API/JSON contract.
-- **Serialization**: Some serialization frameworks need explicit support for value classes (e.g., kotlinx.serialization's `@Serializable` works, but Jackson may need configuration).
-- **Interoperability**: From Java, value classes appear as their underlying type. Java callers bypass the type-safety wrapper.
-- **Reflection and runtime erasure**: When passed as `Any` or used in generic contexts, value classes box into a synthetic wrapper class. Java reflection sees mangled method signatures, and frameworks that rely on raw runtime types (some ORMs, DI containers, or serializers) may see the underlying type rather than the value class.
+Before replacing an existing wrapper, check the contract that callers observe:
 
-## Packing multiple values
+| Check | Action |
+|---|---|
+| JSON/API format matters | Verify serialization. `@Serializable data class A(val value: String)` encodes as an object; a value class encodes as the wrapped value. |
+| Custom equality or hashing is required | Keep a data class. Value-class equality follows the wrapped value. |
+| Callers use `copy()` or destructuring | Keep a data class or update callers deliberately. Value classes do not provide data-class conveniences. |
+| Java or reflection-heavy framework boundary | Verify interop. Java callers see the underlying type; generic/`Any` use boxes. |
+| Nullable/generic/vararg hot path | Measure before converting; those uses box. |
+| Constructor body, `lateinit`, delegated properties, backing fields | Keep a data class or redesign; value classes only store the constructor value. |
 
-A value class can only declare one field, but Compose provides `packFloats`, `packInts`, and matching `unpack*` functions in `androidx.compose.ui.util` to store multiple primitives in a single `Long`. This lets you represent composite values (e.g., a 2D point, size, or padding) as a zero-allocation value class instead of a multi-field data class.
+## Packing multiple values only after evidence
+
+Do not replace a clear multi-field data class with bit-packing unless profiling shows allocation cost on a hot path. If needed, Compose provides `packFloats`, `packInts`, and matching `unpack*` functions in `androidx.compose.ui.util`:
 
 ```kotlin
 @JvmInline value class Offset(val packedValue: Long)
@@ -86,9 +87,6 @@ val Offset.x: Float get() = unpackFloat1(packedValue)
 val Offset.y: Float get() = unpackFloat2(packedValue)
 ```
 
-- **Only use this in performance-critical paths** — manual bit-packing is error-prone. A data class is simpler and safer for most UI types.
-- **Available in `androidx.compose.ui.util`** — `packFloats`, `packInts`, `unpackFloat1`, `unpackFloat2`, `unpackInt1`, `unpackInt2`.
-
 ## Common mistakes
 
 | Mistake | Fix |
@@ -96,8 +94,8 @@ val Offset.y: Float get() = unpackFloat2(packedValue)
 | Data class wrapping a single domain field | Replace with `@JvmInline value class` |
 | Value class with no domain meaning (just a wrapper) | Use a type alias or the primitive directly |
 | Value class needing custom equality | Use a data class instead |
-| Value class as generic type argument in hot path | Accept autoboxing cost or use the primitive |
-| `@Immutable` annotation on a type that could be a value class | Replace with value class — it's Stable by default |
+| Value class as generic type argument in a hot path | Measure boxing cost; keep the primitive/data class if it matters |
+| `@Immutable` annotation on a type that could be a value class | Replace with a value class when the underlying type is stable |
 | Forgetting `@JvmInline` annotation | Always pair `value class` with `@JvmInline` for single-field classes |
 
 ## Red flags during review
@@ -113,6 +111,7 @@ val Offset.y: Float get() = unpackFloat2(packedValue)
 - The type needs custom `equals`/`hashCode` → data class
 - The type is used heavily as a nullable or generic in performance-critical code → measure autoboxing cost first
 - The project does not need the type-safety distinction → a type alias or primitive is sufficient
+- The replacement would silently change JSON, Java, reflection, or framework behavior
 
 ## Related
 

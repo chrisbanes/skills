@@ -7,21 +7,17 @@ description: Use when designing or reviewing a reusable Jetpack Compose componen
 
 ## Core principle
 
-A reusable Compose component's job is to lay things out, not to enumerate what it lays out. The moment you write `title: String, subtitle: String?, leadingIcon: ImageVector?, trailingIcon: ImageVector?, trailingText: String?, showSwitch: Boolean, switchValue: Boolean, onSwitchChange: (Boolean) -> Unit?, badge: String?, …`, the component has stopped describing a layout and started enumerating call sites — and the next call site will need a parameter the component doesn't have.
+A reusable Compose component describes layout structure. Callers provide variable visual content through slots.
 
-The fix is to **delegate content to the caller** via `@Composable` lambda parameters. The component contributes structure (where the leading bit, headline, supporting bit, trailing bit go). The caller contributes everything that goes *in* those slots.
+## API review procedure
 
-Material 3's `ListItem` is the canonical example: every visual piece is a slot (`headlineContent`, `supportingContent`, `leadingContent`, `trailingContent`, `overlineContent`), not a primitive. That's not over-engineering — it's the design that scales to every list-item shape the design system needs without ever editing `ListItem` again.
-
-## When to use this skill
-
-You're designing or reviewing a Compose component intended for reuse (more than one call site, now or planned), its visual content varies by caller, and any of these is true:
-
-- Its signature has `title: String`, `icon: ImageVector`, `actionText: String?`, etc. — primitive types describing *content*.
-- It has multiple optional-content parameters that vary by call site (`subtitle: String?`, `leadingIcon: ImageVector?`, `trailingText: String?`).
-- It has boolean flags whose only purpose is to switch between content shapes (`showChevron: Boolean`, `showSwitch: Boolean`, `mode: Mode.Text | Mode.Switch | …`).
-- It accepts a `String` parameter where one caller would want a `Text` with custom style, a second caller a `Text` with a `Badge`, a third caller a row of icons.
-- It already has *one* slot (often `trailing` or `content`) and the rest of the parameters are still primitives.
+1. Confirm the component is reusable. For a true single-use composable, do not add slot ceremony.
+2. Mark which regions vary by caller: headline, supporting text, leading visual, trailing visual, actions, body.
+3. Replace caller-controlled primitive content and shape flags with slots.
+4. Add receiver scopes only when the slot is emitted inside a layout whose scope APIs callers should use.
+5. Make absent optional regions nullable (`null`), so the component can omit their containers and spacing.
+6. Put repeated default content or tokens in `XxxDefaults`.
+7. Pair this with the `modifier` rules in `compose-modifier-and-layout-style`.
 
 ## 1. Replace primitive content with `@Composable` slots
 
@@ -40,8 +36,6 @@ fun SettingsRow(
 ) { … }
 ```
 
-This shape *seems* fine because the call sites today fit (`title` is always single-line text, `leadingIcon` is always an `ImageVector`). The problem is the *next* call site: a row with a `Badge` next to the title, a leading slot that's a circular avatar (not an `ImageVector`), a subtitle that's a row of chips. Each forces either a new parameter, a new flag, or a workaround.
-
 ```kotlin
 // ✅ GOOD — every visual region is a slot; the row describes structure, not content
 @Composable
@@ -55,7 +49,7 @@ fun SettingsRow(
 ) { … }
 ```
 
-Call sites stay short because the typical content is a one-liner:
+Call sites stay short when the typical content is a one-liner:
 
 ```kotlin
 SettingsRow(
@@ -66,7 +60,7 @@ SettingsRow(
 )
 ```
 
-And the awkward cases that *would* have required new primitive parameters now don't:
+The unusual cases no longer require new component parameters:
 
 ```kotlin
 SettingsRow(
@@ -125,9 +119,7 @@ leadingContent: @Composable () -> Unit = {}
 leadingContent: (@Composable () -> Unit)? = null
 ```
 
-Why: with a nullable slot, the *component* can branch on `leadingContent != null` and skip the slot's container, spacing, padding entirely. With an empty default, the layout still allocates the slot — sometimes you see a stray padding or spacer around content that turned out to be nothing. The nullable form makes the "absent" case structurally distinct, which is almost always what you want.
-
-The trade-off: callers who pass an explicit empty `{}` to silence a slot now have to pass `null` or omit the argument. That's the right answer either way — they shouldn't be passing `{}`.
+With a nullable slot, the component can branch on `leadingContent != null` and skip the slot's container, spacing, and padding entirely. With an empty default, the layout often still allocates space for absent content.
 
 ## 4. Defaults live in `XxxDefaults`
 

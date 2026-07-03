@@ -5,11 +5,18 @@ description: "Use when writing or reviewing Jetpack Compose motion: visibility e
 
 # Compose: animations
 
-Official reference: [Quick guide to Animations in Compose](https://developer.android.com/develop/ui/compose/animation/quick-guide). See also [Choose an animation API](https://developer.android.com/develop/ui/compose/animation/choose-api), [Value-based animations](https://developer.android.com/develop/ui/compose/animation/value-based), [Animation modifiers and composables](https://developer.android.com/develop/ui/compose/animation/composables-modifiers).
-
 ## Core principle
 
 Pick the **smallest API that matches the problem**: built-in visibility and layout transitions first, then a single animated value, then a shared transition object when several values must move together, then gesture-level or imperative APIs when the framework cannot express the motion.
+
+## Review procedure
+
+1. Identify the visual job: show/hide, one value, coordinated values, content swap, size change, or gesture-driven motion.
+2. Choose the smallest API from the table below.
+3. Check lifecycle semantics: should hidden content leave composition, keep focus/state, or only become transparent?
+4. Check identity: for state-holder wrappers, choose `AnimatedContent.contentKey` by visual shape rather than payload churn.
+5. Check performance: keep frame-rate animation values as `State` and read them in layout/draw block modifiers when possible.
+6. Escalate to `Animatable` or lower-level APIs only when target-state animation cannot express the motion.
 
 ## Pick the smallest animation API
 
@@ -88,7 +95,7 @@ Avoid multiple independent `animate*AsState` calls that should stay visually syn
 
 ## Choosing between content-level APIs
 
-Use the official [Choose an animation API](https://developer.android.com/develop/ui/compose/animation/choose-api) tree when unsure. Compressed rules:
+Use the official [Choose an animation API](https://developer.android.com/develop/ui/compose/animation/choose-api) tree when the table is not enough. Compressed rules:
 
 | Situation | Prefer |
 |---|---|
@@ -97,7 +104,7 @@ Use the official [Choose an animation API](https://developer.android.com/develop
 | Pager-like **swipe between pages** | Horizontal pager APIs from the animation docs / Material—follow the choose-api guidance |
 | Transitions **owned by Navigation Compose** | Use navigation’s built-in transitions rather than bolting `AnimatedContent` on top of the same destination swap |
 
-**Art-based motion** (illustrations, Lottie, complex vector timelines) is outside this skill; use dedicated libraries and the “additional resources” links on [Animations](https://developer.android.com/develop/ui/compose/animation/resources).
+**Art-based motion** (illustrations, Lottie, complex vector timelines) is outside this skill; use dedicated libraries.
 
 ## Decision flow (high level)
 
@@ -158,11 +165,16 @@ Choose keys by visual shape:
 
 If recomposition counters spike during motion unrelated to bad stability, see [`compose-recomposition-performance`](../compose-recomposition-performance/SKILL.md).
 
-## Advanced pointers (read the linked docs)
+## Escalation points
 
-- **Gesture-driven or cancelable motion**: [`Animatable`](https://developer.android.com/reference/kotlin/androidx/compose/animation/core/Animatable) with `snapTo`, decay, and `pointerInput`—[Advanced animation example: Gestures](https://developer.android.com/develop/ui/compose/animation/advanced) and [Drag, swipe, and fling](https://developer.android.com/develop/ui/compose/touch-input/pointer-input/drag-swipe-fling).
-- **Infinite or repeating cycles**: [`rememberInfiniteTransition`](https://developer.android.com/reference/kotlin/androidx/compose/animation/core/rememberInfiniteTransition).
-- **Seekable / test-controlled progress**: [`SeekableTransitionState`](https://developer.android.com/reference/kotlin/androidx/compose/animation/core/SeekableTransitionState) and related APIs for predictable timelines in tests or tooling.
+Load the official docs when one of these applies:
+
+| Need | Start with |
+|---|---|
+| API tree is still ambiguous | [Choose an animation API](https://developer.android.com/develop/ui/compose/animation/choose-api) |
+| Gesture-driven, interruptible, or cancelable motion | [`Animatable`](https://developer.android.com/reference/kotlin/androidx/compose/animation/core/Animatable), pointer input, decay |
+| Infinite or repeating cycles | [`rememberInfiniteTransition`](https://developer.android.com/reference/kotlin/androidx/compose/animation/core/rememberInfiniteTransition) |
+| Seekable or test-controlled progress | [`SeekableTransitionState`](https://developer.android.com/reference/kotlin/androidx/compose/animation/core/SeekableTransitionState) and related APIs |
 
 ## Common mistakes
 

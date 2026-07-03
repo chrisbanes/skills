@@ -9,15 +9,14 @@ description: Use when designing Kotlin Multiplatform expect/actual or interface 
 
 Keep common APIs semantic and stable. Put platform mechanics behind small `expect`/`actual` declarations or interfaces, and keep Android/iOS/Desktop details out of `commonMain`.
 
-## When to use this skill
+## Boundary procedure
 
-Use this when common code needs:
-
-- Permissions, settings, intents, share sheets, deep links, haptics, biometrics, or clipboard.
-- Files, paths, clocks, locale, network reachability, sensors, crypto, media, maps, camera, native SDKs, or platform services.
-- Native platform views, controllers, or Compose Multiplatform interop.
-- Different implementation details on Android, iOS, Desktop, or Wasm while preserving one shared call site.
-- A decision between `expect/actual`, dependency injection, interfaces, or separate platform code.
+1. Name the product capability in common terms: share text, read clipboard, request haptic feedback, resolve current region.
+2. Check whether common callers need fakes, injected dependencies, lifecycle ownership, or runtime implementation choice.
+3. Pick the smallest boundary from the table below.
+4. Keep the common signature free of platform types and platform vocabulary.
+5. Put business branching in common code; keep actuals/platform bindings as translation layers.
+6. Validate by compiling every affected source set and testing common code with a fake where possible.
 
 ## Choose the boundary
 
@@ -31,7 +30,7 @@ Use this when common code needs:
 
 ## Keep common APIs semantic
 
-Common code should describe what the product needs, not how the platform does it:
+Write common APIs so callers describe intent, not platform mechanics:
 
 ```kotlin
 // GOOD: common API is semantic
@@ -43,11 +42,11 @@ expect fun currentRegion(): Region
 expect fun currentRegionFromAndroidLocale(context: Context): Region
 ```
 
-The Android actual can use `Locale` APIs. The iOS actual can use Foundation APIs. Callers should not know.
+The Android actual can use `Locale` APIs. The iOS actual can use Foundation APIs. Common callers should not know.
 
 ## Keep actuals thin
 
-Actual implementations should translate the semantic API into platform calls. If the operation needs an Activity, view controller, lifecycle owner, DI, or fakes, prefer an interface supplied by platform code instead of an `expect class`:
+Actual implementations should translate the semantic API into platform calls. If the operation needs an Activity, view controller, lifecycle owner, DI, or fakes, stop and use an interface supplied by platform code instead of an `expect class`:
 
 ```kotlin
 // commonMain
@@ -70,7 +69,7 @@ class AndroidShareSheet(
 }
 ```
 
-The Android implementation is explicitly Activity-owned. A generic `Context` may need `FLAG_ACTIVITY_NEW_TASK` and usually hides the UI lifecycle requirement. Define what `suspend` means: for many platform UI actions it means "the sheet was launched", not "the user completed sharing."
+The Android implementation is explicitly Activity-owned. A generic `Context` often hides the UI lifecycle requirement. Define what `suspend` means: for many platform UI actions it means "the sheet was launched", not "the user completed sharing."
 
 If the actual starts accumulating business rules, move those rules back to common code and leave only platform translation in the actual.
 
@@ -88,12 +87,14 @@ Platform modules bind `Clipboard` to Android/iOS implementations. Common tests u
 
 ## Compose-specific guidance
 
-- Keep platform-specific Composables at leaf nodes.
-- Pass `Modifier` through every expected Composable that emits UI.
-- Avoid platform types in `commonMain` signatures (`Context`, `Activity`, Android resource IDs, `Uri`, `Bundle`, `UIViewController`, `NSBundle`, platform permission enums, etc.).
-- If native view lifecycle matters, hide it inside the platform actual and use the right interop container (`AndroidView`, `UIKitView`, etc.).
-- Do not launch platform work directly from a Composable body. Use `remember`, `LaunchedEffect`, `DisposableEffect`, and stable keys inside actual Composables just as you would in common Compose code.
-- Make previews/tests use common plain UI composables with fake platform services where possible.
+When shared UI reaches a platform leaf:
+
+1. Keep platform-specific composables at leaf nodes.
+2. Pass `Modifier` through every expected composable that emits UI.
+3. Reject platform types in `commonMain` signatures (`Context`, `Activity`, Android resource IDs, `Uri`, `Bundle`, `UIViewController`, `NSBundle`, platform permission enums, etc.).
+4. Hide native view lifecycle inside the platform actual and use the right interop container (`AndroidView`, `UIKitView`, etc.).
+5. Do not launch platform work directly from a composable body. Use `remember`, `LaunchedEffect`, `DisposableEffect`, and stable keys inside actual composables just as you would in common Compose code.
+6. Preview/test the common plain UI composable with fake platform services where possible.
 
 ## Common mistakes
 
@@ -105,6 +106,7 @@ Platform modules bind `Clipboard` to Android/iOS implementations. Common tests u
 | One huge `Platform` expect object | Split by capability: `Clipboard`, `ShareSheet`, `Haptics` |
 | Platform UI leaks high in the tree | Push platform-specific Composable to a leaf |
 | No fakeable boundary for common tests | Use an interface instead of direct `expect` call |
+| Only one target compiles after the change | Compile all affected source sets before finishing |
 
 ## Red flags during review
 
