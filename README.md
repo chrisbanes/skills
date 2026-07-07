@@ -65,6 +65,7 @@ codex plugin add chrisbanes-skills@chrisbanes-skills
 ### Kotlin
 
 - [`kotlin-coroutines-structured-concurrency`](skills/kotlin-coroutines-structured-concurrency/SKILL.md) — review coroutine scope ownership, init and fire-and-forget boundaries, cancellation handling, and blocking boundaries.
+- [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) — write and review Kotlin branching with subject `when`, guard conditions, sealed exhaustiveness, smart casts, nullable branching, and early returns.
 - [`kotlin-flow-state-event-modeling`](skills/kotlin-flow-state-event-modeling/SKILL.md) — model `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, sharing policy, and one-shot events without lossy defaults.
 - [`kotlin-multiplatform-expect-actual`](skills/kotlin-multiplatform-expect-actual/SKILL.md) — design semantic expect/actual and interface boundaries for Kotlin Multiplatform platform interop.
 - [`kotlin-types-value-class`](skills/kotlin-types-value-class/SKILL.md) — choose `@JvmInline value class` over data class for single-field domain types, including Compose stability implications.
