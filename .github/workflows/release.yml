@@ -79,6 +79,7 @@ jobs:
         run: |
           set -euo pipefail
 
+          jq . package.json
           jq . .claude-plugin/plugin.json
           jq . .claude-plugin/marketplace.json
           jq . .codex-plugin/plugin.json
@@ -96,12 +97,12 @@ jobs:
 
           git diff --check
 
-          if git diff --quiet -- .claude-plugin/plugin.json .codex-plugin/plugin.json; then
+          if git diff --quiet -- package.json .claude-plugin/plugin.json .codex-plugin/plugin.json; then
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
             echo "No manifest version changes needed."
           else
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            git diff -- .claude-plugin/plugin.json .codex-plugin/plugin.json
+            git diff -- package.json .claude-plugin/plugin.json .codex-plugin/plugin.json
           fi
 
       - name: Stop before publishing
@@ -122,7 +123,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          git add .claude-plugin/plugin.json .codex-plugin/plugin.json
+          git add package.json .claude-plugin/plugin.json .codex-plugin/plugin.json
           git commit -m "Bump version to $VERSION"
           git push origin HEAD:main
 

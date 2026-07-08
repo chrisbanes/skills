@@ -24,6 +24,16 @@ codex plugin marketplace add chrisbanes/skills --ref main
 codex plugin add chrisbanes-skills@chrisbanes-skills
 ```
 
+Or install as an OpenCode plugin:
+
+```json
+{
+  "plugin": ["chrisbanes-skills@git+https://github.com/chrisbanes/skills.git"]
+}
+```
+
+See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
+
 ## Skills
 
 ### Start here

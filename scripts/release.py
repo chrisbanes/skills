@@ -9,6 +9,7 @@ import sys
 
 VERSION_PATTERN = re.compile(r"^[0-9]{4}\.([1-9]|1[0-2])\.([1-9]|[12][0-9]|3[01])$")
 PLUGIN_NAME = "chrisbanes-skills"
+OPENCODE_MAIN = ".opencode/plugins/chrisbanes-skills.js"
 
 
 def validate_version(version):
@@ -44,13 +45,16 @@ def validate_manifests(root, version):
 
     claude = read_json(root / ".claude-plugin" / "plugin.json")
     codex = read_json(root / ".codex-plugin" / "plugin.json")
+    package = read_json(root / "package.json")
     claude_marketplace = read_json(root / ".claude-plugin" / "marketplace.json")
     codex_marketplace = read_json(root / ".agents" / "plugins" / "marketplace.json")
 
     require(claude.get("name") == PLUGIN_NAME, "Claude plugin name must be chrisbanes-skills")
     require(codex.get("name") == PLUGIN_NAME, "Codex plugin name must be chrisbanes-skills")
+    require(package.get("name") == PLUGIN_NAME, "OpenCode package name must be chrisbanes-skills")
     require(claude.get("version") == version, f"Claude plugin version mismatch: {claude.get('version')}")
     require(codex.get("version") == version, f"Codex plugin version mismatch: {codex.get('version')}")
+    require(package.get("version") == version, f"OpenCode package version mismatch: {package.get('version')}")
     require(
         claude_marketplace.get("name") == PLUGIN_NAME,
         "Claude marketplace name must be chrisbanes-skills",
@@ -60,12 +64,14 @@ def validate_manifests(root, version):
         "Codex marketplace name must be chrisbanes-skills",
     )
     require(codex.get("skills") == "./skills/", "Codex plugin skills path must be ./skills/")
+    require(package.get("main") == OPENCODE_MAIN, f"OpenCode package main must be {OPENCODE_MAIN}")
 
 
 def plugin_manifest_paths(root):
     return [
         root / ".claude-plugin" / "plugin.json",
         root / ".codex-plugin" / "plugin.json",
+        root / "package.json",
     ]
 
 
