@@ -82,6 +82,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### Workflows
 
+- [`implement-github-issue`](skills/implement-github-issue/SKILL.md) — review and implement a specific GitHub issue through safe intake, planning, implementation, review, verification, and branch completion.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, detect and fix CI failures, and keep PRs moving forward.
 
 ## Contributing
