@@ -33,9 +33,10 @@ Complete forge selection before issue access. Detection, probing, repository mat
 
 ### 2. Classify The Normalized Host
 
-- A hostname containing `github` selects GitHub and `gh`.
-- A hostname containing `gitlab` selects GitLab and `glab`.
-- Any other host is ambiguous and requires the probes below. Match the normalized host only, case-insensitively; never classify from a repository path.
+- Treat `github` or `gitlab` as a provider token only when it is a complete hostname label or hyphen-delimited token within a hostname label.
+- Select a forge only if exactly one provider token matches: a single `github` token selects GitHub and `gh`; a single `gitlab` token selects GitLab and `glab`.
+- If both provider tokens or neither match, treat the host as ambiguous and run the read-only probes below; multiple matches are also ambiguous. This prevents `notgithub.example` from selecting GitHub and `gitlab-github.example` from silently selecting either forge.
+- Match the normalized host only, case-insensitively; never classify from a repository path.
 
 ### 3. Probe An Unknown Host
 
@@ -72,14 +73,16 @@ Select one adapter during intake and use it for every forge operation. Use suppo
 | Operation | GitHub | GitLab |
 |---|---|---|
 | Authentication | `gh auth status --hostname <host>` | `glab auth status --hostname <host>` |
-| Repository metadata | `gh repo view` and `gh api` | `glab repo view --output json` and `glab api` |
-| Issue details | `gh issue view` with supported JSON fields | `glab issue view <iid> --comments --system-logs --output json -R <namespace/project>` |
-| Extra metadata | `gh api` or GraphQL | `glab api` REST or GraphQL |
-| Hierarchy | `gh sub-issue list <issue>` and available metadata | Available GitLab work-item or hierarchy metadata through `glab api` |
-| Blocking relations | Available GitHub dependency metadata | `glab api` issue links with `blocks` and `is_blocked_by` types |
-| PR/MR actions | `gh` | `glab` |
+| Repository metadata | `gh repo view --repo <host>/<owner/repo>` and `gh api --hostname <host>` | `glab repo view <repository-url> --output json` and `glab api --hostname <host>` |
+| Issue details | `gh issue view <number> --repo <host>/<owner/repo>` with supported JSON fields | `glab issue view <iid> --comments --system-logs --output json -R <repository-url>` |
+| Extra metadata | `gh api --hostname <host>` or GraphQL | `glab api --hostname <host>` REST or GraphQL |
+| Hierarchy | `gh sub-issue list <issue> --repo <host>/<owner/repo>` and available metadata | Available GitLab work-item or hierarchy metadata through `glab api --hostname <host>` |
+| Blocking relations | Available GitHub dependency metadata through `gh api --hostname <host>` | `glab api --hostname <host>` issue links with `blocks` and `is_blocked_by` types |
+| PR/MR actions | `gh`, bound to the selected host and repository | `glab`, bound to the selected host and repository |
 
-For GitLab, use the primary `glab issue view <iid> --comments --system-logs --output json -R <namespace/project>` command for issue intake. Use `glab api` only for missing metadata. Collect the canonical host, namespace/project, IID, URL, title, description, state, author, assignees, labels, milestone, comments, system activity, available duplicate/movement/epic/parent/child/link/blocking evidence, and repository/fork/upstream metadata.
+For selected-forge operations, `<repository-url>` is a host-qualified repository URL, and the current checkout/default host must not override the selected host. Bind GitHub issue and repository calls with `--repo <host>/<owner/repo>` and GitHub API calls with `gh api --hostname <host>` where applicable. Bind GitLab issue and repository calls with the host-qualified `-R <repository-url>` and GitLab API calls with `glab api --hostname <host>`.
+
+For GitLab, use the primary `glab issue view <iid> --comments --system-logs --output json -R <repository-url>` command for issue intake. Use `glab api --hostname <host>` only for missing metadata. Collect the canonical host, namespace/project, IID, URL, title, description, state, author, assignees, labels, milestone, comments, system activity, available duplicate/movement/epic/parent/child/link/blocking evidence, and repository/fork/upstream metadata.
 
 ## Required Skills
 
@@ -109,9 +112,10 @@ Do not create a worktree or edit files during intake.
 2. Select the candidate and forge as described in [Forge Selection](#forge-selection); verify the selected CLI is installed and authenticated for the target host and repository.
 3. Resolve the canonical host, project, issue number or IID, URL, selected forge, and selected CLI.
 4. Fetch the issue title, body, state, labels, author, assignees, milestone, comments, system activity where available, and relationship or dependency metadata through the selected adapter.
-5. Read the closest repository instructions and the smallest relevant workflow, architecture, code, test, documentation, and recent-history scope.
-6. After access, repository, state, and dependency guards pass, invoke `systematic-debugging` for bug-like reports. Keep diagnosis read-only until the design-and-plan gate allows changes.
-7. Invoke `using-chrisbanes-skills` before domain work when the scope is broad Kotlin, Android, JVM, or Compose.
+5. Immediately after fetching GitHub issue details, stop if the response identifies a pull request or the canonical URL path contains `/pull/`; report that the reference is not an actionable issue. Do not continue through the issue workflow for a pull request.
+6. Read the closest repository instructions and the smallest relevant workflow, architecture, code, test, documentation, and recent-history scope.
+7. After access, repository, state, and dependency guards pass, invoke `systematic-debugging` for bug-like reports. Keep diagnosis read-only until the design-and-plan gate allows changes.
+8. Invoke `using-chrisbanes-skills` before domain work when the scope is broad Kotlin, Android, JVM, or Compose.
 
 ### 2. Interpret Relationships
 
