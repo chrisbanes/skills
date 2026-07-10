@@ -73,14 +73,14 @@ Select one adapter during intake and use it for every forge operation. Use suppo
 | Operation | GitHub | GitLab |
 |---|---|---|
 | Authentication | `gh auth status --hostname <host>` | `glab auth status --hostname <host>` |
-| Repository metadata | `gh repo view --repo <host>/<owner/repo>` and `gh api --hostname <host>` | `glab repo view <repository-url> --output json` and `glab api --hostname <host>` |
+| Repository metadata | `gh repo view <host>/<owner/repo>` and `gh api --hostname <host>` | `glab repo view <repository-url> --output json` and `glab api --hostname <host>` |
 | Issue details | `gh issue view <number> --repo <host>/<owner/repo>` with supported JSON fields | `glab issue view <iid> --comments --system-logs --output json -R <repository-url>` |
 | Extra metadata | `gh api --hostname <host>` or GraphQL | `glab api --hostname <host>` REST or GraphQL |
-| Hierarchy | `gh sub-issue list <issue> --repo <host>/<owner/repo>` and available metadata | Available GitLab work-item or hierarchy metadata through `glab api --hostname <host>` |
+| Hierarchy | `GH_HOST=<host> gh sub-issue list <issue> --repo <owner/repo>` and available metadata | Available GitLab work-item or hierarchy metadata through `glab api --hostname <host>` |
 | Blocking relations | Available GitHub dependency metadata through `gh api --hostname <host>` | `glab api --hostname <host>` issue links with `blocks` and `is_blocked_by` types |
 | PR/MR actions | `gh`, bound to the selected host and repository | `glab`, bound to the selected host and repository |
 
-For selected-forge operations, `<repository-url>` is a host-qualified repository URL, and the current checkout/default host must not override the selected host. Bind GitHub issue and repository calls with `--repo <host>/<owner/repo>` and GitHub API calls with `gh api --hostname <host>` where applicable. Bind GitLab issue and repository calls with the host-qualified `-R <repository-url>` and GitLab API calls with `glab api --hostname <host>`.
+For selected-forge operations, `<repository-url>` is a host-qualified repository URL, and the current checkout/default host must not override the selected host. Bind GitHub issue calls with `--repo <host>/<owner/repo>`, repository metadata with `gh repo view <host>/<owner/repo>`, and API calls with `gh api --hostname <host>` where applicable. For `gh sub-issue`, `GH_HOST` binds the extension host and `--repo` remains unqualified. Bind GitLab issue and repository calls with the host-qualified `-R <repository-url>` and GitLab API calls with `glab api --hostname <host>`.
 
 For GitLab, use the primary `glab issue view <iid> --comments --system-logs --output json -R <repository-url>` command for issue intake. Use `glab api --hostname <host>` only for missing metadata. Collect the canonical host, namespace/project, IID, URL, title, description, state, author, assignees, labels, milestone, comments, system activity, available duplicate/movement/epic/parent/child/link/blocking evidence, and repository/fork/upstream metadata.
 
