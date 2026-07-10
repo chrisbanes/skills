@@ -1,6 +1,0 @@
-interface:
-  display_name: "Implement GitHub Issue"
-  short_description: "Review and implement a specific GitHub issue."
-  default_prompt: "Use $implement-github-issue to review and implement GitHub issue <issue-reference>."
-policy:
-  allow_implicit_invocation: true
