@@ -16,6 +16,7 @@ This design broadens that workflow to GitLab, renames the skill to `implement-is
 - Infer the forge from an explicit issue URL or the current repository's Git remote URLs.
 - Prefer hostname classification, then use read-only CLI probes when the hostname is ambiguous.
 - Use `gh` for GitHub operations and `glab` for GitLab operations.
+- Parse remote URLs without shell interpolation, redact URL userinfo, and bind every provider API call to the canonical target project.
 - Support GitLab.com and self-managed GitLab instances.
 - Preserve all existing trust, ambiguity, actionability, review, verification, and mutation gates.
 - Treat forge-specific relationship metadata accurately, including GitLab blocking issue links.
@@ -67,14 +68,16 @@ Forge detection happens before issue access and remains read-only.
 
 - For a full issue URL, use the issue URL's host as the candidate host.
 - For shorthand, inspect configured Git remote URLs and normalize SSH, SCP-style, and HTTPS forms into host plus project path.
+- Parse remote URLs structurally, not with shell substitution. Reject malformed values and values containing control characters; remove and redact HTTP URL userinfo before reporting or using a canonical host.
+- Pass normalized hosts and project paths to CLI tools as argument values, never interpolated shell fragments.
 - Preserve nested namespace paths rather than reducing every project to two path segments.
 - If configured remotes identify multiple unrelated repositories or forges for shorthand, ask the user to choose before probing issue data.
 
 ### 2. Classify By Hostname
 
-- `github.com` or a hostname containing `github` selects GitHub.
-- `gitlab.com` or a hostname containing `gitlab` selects GitLab.
-- Any other hostname is ambiguous and proceeds to read-only probing.
+- A provider token is `github` or `gitlab` when it is a complete hostname label or hyphen-delimited token in a hostname label.
+- Exactly one matching provider token selects that forge.
+- Hosts with both provider tokens, repeated provider tokens, or no provider token are ambiguous and proceed to read-only probing.
 
 Hostname matching is case-insensitive and applies to the normalized host only, never the repository path.
 
@@ -118,14 +121,14 @@ The orchestrator selects one adapter during intake and uses it for all forge ope
 | Operation | GitHub | GitLab |
 |---|---|---|
 | Authentication | `gh auth status --hostname <host>` | `glab auth status --hostname <host>` |
-| Repository metadata | `gh repo view` and `gh api` | `glab repo view --output json` and `glab api` |
-| Issue details | `gh issue view` with supported JSON fields | `glab issue view <iid> --comments --system-logs --output json -R <namespace/project>` |
-| Extra issue metadata | `gh api` or GraphQL | `glab api` REST or GraphQL |
-| Parent and child hierarchy | `gh sub-issue list <issue>` and available metadata | Available GitLab work-item or hierarchy metadata through `glab api` |
-| Blocking relationships | Available GitHub dependency metadata | `glab api` issue links with `blocks` and `is_blocked_by` link types |
+| Repository metadata | `gh repo view <host>/<owner/repo>` and `gh api --hostname <host>` | `glab repo view <repository-url> --output json` and `glab api --hostname <host>` |
+| Issue details | `gh issue view <number> --repo <host>/<owner/repo>` with supported JSON fields | `glab issue view <iid> --comments --system-logs --output json -R <repository-url>` |
+| Extra issue metadata | `gh api --hostname <host>` with explicit `repos/<owner>/<repo>/...` paths | `glab api --hostname <host>` with explicit `projects/<URL-encoded-project>/...` paths |
+| Parent and child hierarchy | `GH_HOST=<host> gh sub-issue list <issue> --repo <owner/repo>` and available metadata | Available GitLab work-item or hierarchy metadata through canonical-project `glab api` paths |
+| Blocking relationships | Available GitHub dependency metadata or repository policy | Canonical-project `glab api` issue links with `blocks` and `is_blocked_by` link types |
 | Pull request or merge request action | `gh` | `glab` |
 
-Commands shown here establish ownership and intent, not a requirement to duplicate full CLI reference documentation inside the skill. Use supported fields for the installed CLI and forge version, and report unavailable metadata rather than inventing it.
+Commands shown here establish ownership and intent, not a requirement to duplicate full CLI reference documentation inside the skill. Do not use checkout-derived `gh api` placeholders or `glab api` placeholders such as `:fullpath`; use canonical-project-qualified paths. Use supported fields for the installed CLI and forge version, and report unavailable metadata rather than inventing it.
 
 ## GitLab Issue Intake
 
@@ -142,7 +145,7 @@ Use `glab issue view` for the primary issue and `glab api` only for metadata not
 
 Relationship names differ across forges, but the actionability rule remains precise.
 
-- GitHub parent/sub-issue hierarchy is not automatically a blocking dependency.
+- GitHub parent/sub-issue hierarchy is not automatically a blocking dependency unless official dependency metadata or repository policy says it blocks the target.
 - GitLab hierarchy, epic membership, `relates_to` links, and textual task lists are not automatically blocking dependencies.
 - An open GitLab issue linked as `is_blocked_by` is a blocker for the target issue.
 - An issue linked as `blocks` is work the target issue blocks, not a reason to stop the target.
@@ -161,11 +164,12 @@ After forge selection and issue packet construction, the existing phases remain 
 6. Run focused review, receive feedback critically, and verify with fresh evidence.
 7. Use `finishing-a-development-branch` for user-selected integration.
 
-The selected forge, host, project identity, and CLI remain part of the internal issue packet through completion. If the selected integration performs a remote pull-request or merge-request action, use `gh` for GitHub and `glab` for GitLab. Do not let a delegated workflow silently default to the wrong forge CLI.
+The selected forge, host, project identity, and CLI remain part of the internal issue packet through completion. GitHub invokes `finishing-a-development-branch` unchanged. GitLab uses a local completion adapter because `finishing-a-development-branch` hardcodes `gh pr create`: after fresh verification, present the same four integration choices, replace "Pull Request" with "Merge Request", and use `glab mr create` only after the user chooses the remote integration option. Do not let a delegated workflow silently default to the wrong forge CLI.
 
 ## Failure Handling
 
 - Missing selected CLI: stop before issue access or edits and name the required installation or authentication action.
+- Malformed, control-character-containing, or credential-bearing remote: stop before CLI invocation after redacting the remote from the report.
 - Ambiguous hostname with both successful probes: ask the user to select GitHub or GitLab.
 - Ambiguous hostname with no successful probe: report both read-only probe results and stop.
 - Mixed unrelated remotes for shorthand: ask which repository and forge the issue belongs to.
@@ -222,6 +226,10 @@ Use fresh agents with the renamed skill for:
 13. Missing or unauthenticated `glab` stopping before edits.
 14. Renamed `$implement-issue` discovery and default prompt.
 15. Existing GitHub pressure and routing scenarios continuing to pass.
+16. A credential-bearing or shell-syntax-bearing remote stopping without exposing userinfo or executing a shell fragment.
+17. An explicit upstream issue and different current checkout using canonical-project API paths rather than placeholders.
+18. A GitLab remote integration choice creating an MR through `glab mr create`, never `gh pr create`.
+19. A repository policy blocking an open GitHub sub-issue stopping planning without dependency metadata.
 
 Because `glab` is not installed in the current development environment, implementation must not claim a live GitLab CLI integration test. Static checks and fresh-agent simulations can validate routing and commands; a missing-CLI scenario must also pass. Live `glab` verification remains residual risk unless the environment gains an authenticated GitLab CLI during implementation.
 
