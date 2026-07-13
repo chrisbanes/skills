@@ -7,6 +7,17 @@ Instructions for AI agents (Claude Code, etc.) working in this repo.
 1. **Update `README.md`** — keep the "Skills" list in sync. Each entry links to the skill's `SKILL.md` and summarises what it covers. If you add a skill and don't update the README, the change is incomplete.
 2. **Do not update plugin or skill versions unless explicitly asked.** If the user asks for a release/version bump, use the release system below.
 
+## Skill authoring checklist
+
+Before considering any skill addition or edit complete, verify:
+
+1. The frontmatter description starts with `Use when` and contains concrete trigger conditions only.
+2. The body states one core principle and gives ordered, imperative steps.
+3. Tables support rather than replace the procedure; failed checks specify the next action, and the procedure has an explicit finish gate.
+4. Examples are minimal and behavior-preserving; exceptions and non-applicable cases are explicit.
+5. RED/GREEN agent scenarios test the change, including a novel case and a counterexample against over-application.
+6. README and router integration are updated where applicable, `npm run lint` passes, and versions remain unchanged unless requested.
+
 ## Release/version system
 
 - Use SemVer-compatible CalVer: `YYYY.M.D`.
