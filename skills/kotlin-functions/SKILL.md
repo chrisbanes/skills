@@ -51,15 +51,11 @@ Move the implementation, then update calls, imports, and function references. Pr
 // Before: String falsely owns UserId construction.
 fun String.toUserId(): UserId = UserId(this)
 
-// After: UserId owns construction and validation.
+// After: UserId owns construction.
 @JvmInline
 value class UserId private constructor(val value: String) {
     companion object {
-        fun parse(raw: String): UserId {
-            val value = raw.trim()
-            require(value.isNotEmpty() && value.all { it.isLetterOrDigit() || it == '_' })
-            return UserId(value)
-        }
+        fun parse(raw: String): UserId = UserId(raw)
     }
 }
 
