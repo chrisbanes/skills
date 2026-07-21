@@ -1,6 +1,6 @@
 interface:
   display_name: "Implement Issue"
-  short_description: "Review and implement a GitHub or GitLab issue."
+  short_description: "Implement a GitHub, GitLab, Jira, or Linear issue."
   default_prompt: "Use $implement-issue to review and implement issue <issue-reference>."
 policy:
   allow_implicit_invocation: true
