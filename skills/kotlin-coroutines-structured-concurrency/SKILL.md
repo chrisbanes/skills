@@ -23,6 +23,7 @@ You're writing or reviewing Kotlin code and you see any of these:
 - `runBlocking { ... }` in suspend-capable application code, or in tests where `runTest` should apply
 - `runCatching { suspendCall() }` or a `catch` on `Exception` / `Throwable` around a `suspend` call without rethrowing `CancellationException`
 - A `catch (e: CancellationException)` (or equivalent) around suspension that does not rethrow
+- `Thread { ... }.start()`, `Executors.newSingleThreadExecutor()`, or similar raw JVM threading in a class that already lives in a coroutine-capable context
 
 ## The silent-cancellation bug
 
@@ -386,6 +387,44 @@ class MyProvider : ContentProvider() {
 
 This carve-out is for `android.content.ContentProvider` subclasses *only*. "It's like a `ContentProvider`" doesn't apply, and a `runBlocking` in a `ContentProvider`'s companion object is still a regular violation — the helper isn't part of the framework's synchronous surface.
 
+### 8. Raw `Thread` / `Executor` in coroutine-capable code
+
+When a class already participates in a coroutine context — it has `suspend` functions, accepts a `CoroutineScope`, or is wired into a DI graph that provides dispatchers — reaching for `Thread { ... }.start()` or `Executors.newSingleThreadExecutor()` bypasses structured concurrency entirely. The spawned work is invisible to cancellation, has no parent job, and can't propagate errors through the coroutine hierarchy.
+
+This is easy to miss because `Thread` doesn't trigger any of the coroutine-specific signals (stored scope, `runBlocking`, swallowed cancellation). But the effect is identical to §4's ad-hoc scope: an unowned, uncancellable unit of work.
+
+```kotlin
+// ❌ BAD — raw Thread in a class that already uses coroutines
+class DiskCache(private val dispatcher: CoroutineDispatcher) {
+    init {
+        Thread { evictOldEntries() }.start()
+    }
+}
+
+// ❌ ALSO BAD — Executor hiding the same problem
+class DiskCache {
+    private val executor = Executors.newSingleThreadExecutor()
+    fun startEviction() {
+        executor.submit { evictOldEntries() }
+    }
+}
+```
+
+```kotlin
+// ✅ GOOD — caller-owned scope, cancellable, visible
+class DiskCache {
+    fun startEviction(scope: CoroutineScope) {
+        scope.launch { evictOldEntries() }
+    }
+}
+```
+
+The fix follows the same principle as every other section: **let the caller own the lifecycle.** Accept a `CoroutineScope` parameter or make the function `suspend`. Use a dispatcher (`Dispatchers.IO`, a limited-parallelism dispatcher) for blocking work — that's what dispatchers are for.
+
+#### Carve-out
+
+Raw threads are appropriate when coroutines genuinely cannot reach: JNI callbacks, `shutdown` hooks, code that must run after all coroutine machinery is torn down, or interop with libraries that require a specific thread identity (e.g., AWT's EDT via `SwingUtilities.invokeLater`). If the surrounding code is coroutine-capable, prefer `withContext(dispatcher)` or `scope.launch(dispatcher)`.
+
 ## Quick reference
 
 | Symptom | Anti-pattern | Fix |
@@ -402,6 +441,7 @@ This carve-out is for `android.content.ContentProvider` subclasses *only*. "It's
 | `runBlocking { … }` inside suspend-capable app code | Thread-blocking bridge (§7) | Make caller `suspend`; or use a lifecycle scope at the boundary |
 | `runBlocking { … }` in a test | Same — real-time bridging (§7) | Use `runTest { … }` |
 | `runBlocking { … }` inside a `ContentProvider.query`/`insert`/… member | Carve-out (§7) | Acceptable; keep the body minimal |
+| `Thread { ... }.start()` or `Executors.new*()` in coroutine-capable code | Raw JVM threading bypassing structured concurrency (§8) | Use `scope.launch(dispatcher)` or make the function `suspend` |
 
 ## Refactoring guidance
 
@@ -434,6 +474,7 @@ These thoughts mean the anti-pattern is back:
 | "We caught and logged the exception, so we're fine" | Did the catch rethrow `CancellationException`? If no, the coroutine is silently un-cancelled. (§6) |
 | "It's just one `runBlocking`, in a non-critical path" | Every `runBlocking` asserts the caller has no async option. If they do, it's the wrong primitive. (§7) |
 | "Tests are simpler with `runBlocking`" | They run in real time, can't fast-forward `delay`, and lose `TestDispatcher` semantics. Use `runTest`. (§7) |
+| "It's just a background thread for non-critical cleanup" | The thread is invisible to the coroutine hierarchy — no cancellation, no error propagation, no lifecycle. Use a dispatcher on a caller-owned scope. (§8) |
 
 ## Related
 
