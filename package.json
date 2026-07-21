@@ -1,6 +1,6 @@
 {
   "name": "chrisbanes-skills",
-  "version": "2026.7.8",
+  "version": "2026.7.21",
   "description": "Skills for Kotlin, Android, JVM, and Jetpack Compose development by Chris Banes.",
   "type": "module",
   "main": ".opencode/plugins/chrisbanes-skills.js",
