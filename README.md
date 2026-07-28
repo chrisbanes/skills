@@ -83,7 +83,6 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### Workflows
 
-- [`implement-issue`](skills/implement-issue/SKILL.md) — review and implement a GitHub, GitLab, Jira, or Linear issue through independent tracker inference, repository-aware completion, planning, implementation, review, and verification. Requires [Superpowers](https://github.com/obra/superpowers) workflow skills.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, detect and fix CI failures, and keep PRs moving forward.
 
 ## Contributing
