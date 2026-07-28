@@ -83,6 +83,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### Workflows
 
+- [`to-plan`](skills/to-plan/SKILL.md) — add repository-aware issue planning to [Matt Pocock's agent skills](https://github.com/mattpocock/skills); requires his `/implement` and `/code-review` skills, which are not bundled here.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, detect and fix CI failures, and keep PRs moving forward.
 
 ## Contributing
