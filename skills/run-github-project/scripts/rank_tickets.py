@@ -11,9 +11,6 @@ from datetime import datetime
 from typing import Any
 
 
-DEFAULT_READY_STATUS = "Ready for agent"
-
-
 class InputError(ValueError):
     """Raised when a normalized query violates the queue contract."""
 
@@ -46,7 +43,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--ready-status",
-        default=DEFAULT_READY_STATUS,
+        default="Ready for agent",
         help="Configured GitHub Project status value that marks an item ready.",
     )
     parser.add_argument(
@@ -73,18 +70,16 @@ def parse_args() -> argparse.Namespace:
 def string_values(values: Any, field: str, number: Any) -> list[str]:
     if not isinstance(values, list):
         raise InputError(f"ticket {number}: {field} must be an array")
-    result: list[str] = []
-    for value in values:
-        if (
-            not isinstance(value, (str, int))
-            or isinstance(value, bool)
-            or value == ""
-        ):
-            raise InputError(
-                f"ticket {number}: {field} entries must be strings or integers",
-            )
-        result.append(str(value))
-    return result
+    if any(
+        isinstance(value, bool)
+        or not isinstance(value, (str, int))
+        or value == ""
+        for value in values
+    ):
+        raise InputError(
+            f"ticket {number}: {field} entries must be strings or integers",
+        )
+    return [str(value) for value in values]
 
 
 def assignee_values(values: Any, number: Any) -> list[str]:
@@ -220,12 +215,12 @@ def has_current_user_assignment(ticket: Any, current_user: str) -> bool:
     assignees = ticket.get("assignees")
     if not isinstance(assignees, list):
         return False
-    for assignee in assignees:
-        if assignee == current_user:
-            return True
-        if isinstance(assignee, dict) and assignee.get("login") == current_user:
-            return True
-    return False
+    return any(
+        assignee == current_user
+        or isinstance(assignee, dict)
+        and assignee.get("login") == current_user
+        for assignee in assignees
+    )
 
 
 def analyze_ticket(
@@ -525,17 +520,13 @@ def main() -> int:
             )
             return 2
 
-        unassigned = [
-            item for item in eligible if not item["assignedToCurrentUser"]
-        ]
-        unassigned.sort(key=ticket_rank)
-        resumable_prs = [
-            item for item in unassigned if item["resumeAction"] == "resume-pr"
-        ]
-        new_candidates = [
-            item for item in unassigned if item["resumeAction"] != "resume-pr"
-        ]
-        candidates = resumable_prs + new_candidates
+        candidates = sorted(
+            (item for item in eligible if not item["assignedToCurrentUser"]),
+            key=lambda item: (
+                item["resumeAction"] != "resume-pr",
+                *ticket_rank(item),
+            ),
+        )
 
         excluded = invalid_unclaimed + [
             {
@@ -569,7 +560,6 @@ def main() -> int:
                 }
                 for item in candidates
             ],
-            "eligible": sorted(item["ticket"]["number"] for item in eligible),
             "excluded": excluded,
         }
         print(json.dumps(output, indent=2, sort_keys=True))

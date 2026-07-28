@@ -65,7 +65,6 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
     {"ticket": {"number": 41}, "action": "resume-pr"},
     {"ticket": {"number": 42}, "action": "claim"}
   ],
-  "eligible": [40, 41, 42],
   "excluded": []
 }
 ```

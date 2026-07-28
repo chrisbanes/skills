@@ -133,6 +133,7 @@ class RankTicketsTest(unittest.TestCase):
         )
 
         self.assertEqual(0, returncode)
+        self.assertNotIn("eligible", output)
         self.assertEqual(
             [2, 1],
             [entry["ticket"]["number"] for entry in output["claims"]],
@@ -168,32 +169,39 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual([6, 7], output["claimed"])
 
     def test_returns_all_candidates_in_scheduler_order(self) -> None:
-        resumable = ticket(
+        resumable_later = ticket(
             8,
             projectPriority="Low",
             projectPosition=99,
             openPullRequests=[pull_request(800)],
         )
+        resumable_earlier = ticket(
+            11,
+            projectPriority="High",
+            projectPosition=3,
+            openPullRequests=[pull_request(1100)],
+        )
         high = ticket(9, projectPriority="High", projectPosition=2)
         critical = ticket(10, projectPriority="Critical", projectPosition=20)
 
-        returncode, output = run_ranker([high, resumable, critical])
+        returncode, output = run_ranker(
+            [resumable_later, high, critical, resumable_earlier],
+        )
 
         self.assertEqual(0, returncode)
         self.assertEqual(
-            [8, 10, 9],
+            [11, 8, 10, 9],
             [entry["ticket"]["number"] for entry in output["candidates"]],
         )
         self.assertEqual(
-            ["resume-pr", "claim", "claim"],
+            ["resume-pr", "resume-pr", "claim", "claim"],
             [entry["action"] for entry in output["candidates"]],
         )
 
     def test_resumes_current_users_in_progress_item_before_ready_work(self) -> None:
-        ready = ticket(1, title="Critical ready work", projectPriority="Critical")
+        ready = ticket(1, projectPriority="Critical")
         in_progress = ticket(
             2,
-            title="Resume this first",
             projectStatus="In progress",
             projectPriority="Low",
             projectPosition=99,
@@ -227,28 +235,14 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(0, returncode)
         self.assertEqual(4, first_entry(output)["ticket"]["number"])
 
-    def test_does_not_require_issue_category_labels(self) -> None:
-        maintenance = ticket(
-            6,
-            title="Update build infrastructure",
-            projectPriority="Medium",
-            projectPosition=1,
-        )
-
-        returncode, output = run_ranker([maintenance])
-
-        self.assertEqual(0, returncode)
-        self.assertEqual(6, first_entry(output)["ticket"]["number"])
-
     def test_open_descendants_make_a_parent_ineligible(self) -> None:
         parent = ticket(
             10,
-            title="Umbrella issue",
             projectPriority="Critical",
             projectPosition=1,
             openDescendants=[11, 12],
         )
-        child = ticket(11, title="Executable child", projectPosition=2)
+        child = ticket(11, projectPosition=2)
 
         returncode, output = run_ranker([parent, child])
 
@@ -262,13 +256,11 @@ class RankTicketsTest(unittest.TestCase):
     def test_invalid_unclaimed_item_does_not_stop_other_ready_work(self) -> None:
         invalid = ticket(
             20,
-            title="Unknown priority",
             projectPriority="Emergency",
             projectPosition=1,
         )
         valid = ticket(
             21,
-            title="Valid ready work",
             projectPriority="Low",
             projectPosition=2,
         )
@@ -282,40 +274,15 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
-    def test_resumes_current_users_unambiguous_existing_pr(self) -> None:
-        issue = ticket(
-            30,
-            title="PR exists but assignment was missed",
-            projectPriority="Low",
-            projectPosition=50,
-            openPullRequests=[
-                pull_request(300),
-            ],
-        )
-        new_work = ticket(
-            31,
-            title="Higher-priority unstarted work",
-            projectPriority="Critical",
-            projectPosition=1,
-        )
-
-        returncode, output = run_ranker([new_work, issue])
-
-        self.assertEqual(0, returncode)
-        self.assertEqual(30, first_entry(output)["ticket"]["number"])
-        self.assertEqual("resume-pr", first_entry(output)["action"])
-
     def test_unassigned_in_progress_item_is_stale_not_claimable(self) -> None:
         stale = ticket(
             40,
-            title="Stale active item",
             projectStatus="In progress",
             projectPriority="Critical",
             projectPosition=1,
         )
         ready = ticket(
             41,
-            title="Claimable ready item",
             projectPriority="Low",
             projectPosition=2,
         )
@@ -332,7 +299,6 @@ class RankTicketsTest(unittest.TestCase):
     def test_current_users_partial_claim_blocks_its_slot(self) -> None:
         partial_claim = ticket(
             50,
-            title="Assignment succeeded but status did not",
             projectPosition=1,
             assignees=["chris"],
         )
@@ -355,17 +321,15 @@ class RankTicketsTest(unittest.TestCase):
     def test_invalid_claim_blocks_only_its_slot(self) -> None:
         invalid_claim = ticket(
             51,
-            title="Claim needs reconciliation",
             projectPosition=1,
             assignees=["chris"],
         )
         valid_claim = ticket(
             52,
-            title="Valid implementation continues",
             projectStatus="In progress",
             assignees=["chris"],
         )
-        candidate = ticket(53, title="Free slot can claim this")
+        candidate = ticket(53)
 
         returncode, output = run_ranker(
             [invalid_claim, valid_claim, candidate],
@@ -390,7 +354,6 @@ class RankTicketsTest(unittest.TestCase):
     def test_does_not_resume_own_pr_that_does_not_close_issue(self) -> None:
         unrelated_pr = ticket(
             60,
-            title="PR is linked but not closing",
             projectPriority="Critical",
             projectPosition=1,
             openPullRequests=[
@@ -399,7 +362,6 @@ class RankTicketsTest(unittest.TestCase):
         )
         valid = ticket(
             61,
-            title="Actually claimable work",
             projectPriority="Low",
             projectPosition=2,
         )
@@ -424,14 +386,9 @@ class RankTicketsTest(unittest.TestCase):
     def test_malformed_unclaimed_item_is_reported_without_stopping(self) -> None:
         malformed = {
             "number": 70,
-            "title": "Missing normalized fields",
             "assignees": [],
         }
-        valid = ticket(
-            71,
-            title="Valid work survives malformed neighbor",
-            projectPosition=1,
-        )
+        valid = ticket(71, projectPosition=1)
 
         returncode, output = run_ranker([malformed, valid])
 
@@ -452,7 +409,6 @@ class RankTicketsTest(unittest.TestCase):
     def test_malformed_claimed_item_blocks_its_slot(self) -> None:
         malformed_claim = {
             "number": 90,
-            "title": "Claimed but missing normalized fields",
             "assignees": [{"login": "chris"}],
         }
 
