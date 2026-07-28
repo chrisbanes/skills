@@ -38,16 +38,17 @@ Store human-readable names beside GitHub IDs. At startup, resolve and verify
 every pair. Treat a renamed display value as repairable drift; stop if an ID
 resolves to a different object.
 
-If the file is missing, discover the repository's linked Projects and their
-fields, then ask the user unresolved questions one at a time. Show the complete
-draft and write it only after confirmation. If an existing file is stale, show
-a minimal diff and patch only confirmed mappings while preserving comments,
-formatting, and unrelated additions.
+If the file is missing or the trusted instructions do not reference it,
+discover the repository's linked Projects and their fields, then ask the user
+unresolved questions one at a time. Present the complete configuration draft
+and the minimal trusted-instruction reference together. Write both only after
+confirmation, preserving comments, formatting, and unrelated content. If
+either already exists, show and apply only the missing or stale portion.
 
-Creating or repairing this repository file pauses execution until the
-configuration is committed to the verified base. Do not commit it implicitly.
-Continue the same invocation after the user commits it or explicitly authorizes
-a dedicated configuration commit and the base contains it.
+Creating or repairing either file pauses execution until both are committed to
+the verified base. Do not commit them implicitly. Continue the same invocation
+after the user commits them or explicitly authorizes a dedicated configuration
+commit and the base contains both.
 
 Record the committed configuration digest. Recheck it before every claim and
 merge. Stop and preserve current work if it changes during the invocation.
@@ -483,3 +484,6 @@ over-application counterexample for every behavioral change.
 19. RED resumes an owned PR for a current-user-assigned Ready item; GREEN blocks
     the partial claim until its In progress transition is verified.
     Counterexample: an unassigned Ready item with one owned PR remains resumable.
+20. RED creates the Project configuration without wiring it into trusted
+    instructions; GREEN presents and writes both changes after one confirmation.
+    Counterexample: preserve an existing valid trusted-instruction reference.
