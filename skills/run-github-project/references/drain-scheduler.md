@@ -4,10 +4,9 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 
 ## Slot Model
 
-1. Default to three slots. Accept a user-specified limit of one or two; never
-   exceed three.
-2. Give each occupied slot one issue, authority lease, warm worktree, branch,
-   PR, last verified SHA, remote-wait deadline, and fix-round count.
+1. Default to three slots. Accept a user-specified limit of one or two; never exceed three.
+2. Give each occupied slot one ticket agent, issue, authority lease, warm
+   worktree, branch, PR, verified SHA, remote-wait deadline, and fix-round count.
 3. Keep every claimed issue `In progress` until merge reconciliation. Derive
    operational state from its slot, PR, checks, and reviews; require no extra
    Project Status values.
@@ -19,8 +18,8 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 
 ## Mutation Lane
 
-Permit exactly one slot to mutate local or remote state at a time. Read-only
-analysis and review may run concurrently against an immutable commit SHA.
+Permit exactly one slot agent to mutate local or remote state at a time. Keep
+other slot agents idle; read-only work may run concurrently at an immutable SHA.
 Invalidate and repeat a review contract whenever its SHA changes.
 Keep claims, pushes, merges, and Project mutations under one controller.
 
@@ -32,9 +31,10 @@ Switch slots only after a recoverable checkpoint:
 - a reconciled push or merge; or
 - an explicit preserved stop.
 
-Preserve durable slot evidence rather than a growing conversation. Start each
-implementation or feedback turn in a fresh ticket-specific context from the
-worktree, lease, last verified SHA, and relevant PR events.
+Keep each slot's ticket agent idle between passes; resume it with refreshed
+durable state and discard it only when the slot frees, reconstructing if lost.
+Nested agents are read-only at immutable SHAs, return findings to the owning
+ticket agent, and never own or mutate tickets.
 
 ## Scheduling
 

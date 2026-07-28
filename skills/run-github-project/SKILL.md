@@ -11,9 +11,10 @@ Treat the configured GitHub Project as the live execution control plane. Claim
 only human-approved issues, take every claim just in time, and never infer
 approval from Status alone.
 
-Use one warm worktree per occupied slot. Keep one mutation lane while remote CI
-and reviews run concurrently across slots. Never carry implementation context
-between tickets or feedback turns.
+Pair every occupied slot with one warm worktree and one persistent ticket agent.
+Keep one mutation lane while remote CI and reviews run concurrently across
+slots. Preserve implementation context across one ticket's passes, but never
+reuse it for another ticket.
 
 ## Configure The Project
 
@@ -252,7 +253,7 @@ lease value before every material write, including push, review-thread
 mutation, or merge. Treat any change as authority revocation and stop, except
 for post-merge reconciliation to Done.
 
-## Implement In Fresh Context
+## Implement In Ticket Context
 
 For each occupied slot:
 
@@ -265,13 +266,16 @@ For each occupied slot:
    fetch and check out its exact head repository, ref, and SHA in the stable
    worktree; do not create a replacement branch. Stop on divergence, ambiguous
    write access, or a changed head SHA.
-4. Start a fresh ticket-specific task or agent context with no inherited turns
-   for every implementation or feedback pass.
-   Pass only:
+4. When the slot becomes occupied, start one fresh ticket-specific task or agent
+   context with no inherited turns. Keep it paired until that slot frees, and
+   resume it for every implementation or feedback pass.
+   Before each pass, refresh and pass only:
    - repository, worktree, branch, and verified base identity;
    - ticket identity and approved Agent Brief;
    - the recorded authority-lease values;
+   - current `HEAD`, checks, reviews, and relevant PR events;
    - the worker contract below.
+   Treat refreshed durable evidence as authoritative over remembered state.
 5. Verify the worker produced one focused, reviewed, freshly verified commit
    and no unrelated changes.
 
@@ -296,8 +300,10 @@ Use this worker contract:
 7. Create one focused commit only after review and fresh verification. Return
    the commit, changed scope, test evidence, review result, and residual risks.
 
-If fresh isolated contexts are unavailable, stop. Reconstruct each turn from
-the slot's durable evidence; worktree reuse does not permit context reuse.
+If an isolated resumable context is unavailable before claiming, stop. If an
+existing ticket agent is lost or unusable, reconstruct a replacement from the
+slot's durable evidence. Worktree and context reuse are valid only while the
+same ticket occupies the slot.
 
 ## Pass The Pre-Push Review Gate
 
@@ -331,8 +337,8 @@ that includes:
 - tests and verification performed;
 - residual risks.
 
-Keep the ticket claimed in its slot while its PR is open. After a reconciled
-push, release the mutation lane and schedule another slot.
+Keep the ticket claimed and its agent idle in the slot while its PR is open.
+After a reconciled push, release the mutation lane and schedule another slot.
 For a resumed draft PR, leave it draft until all implementation, review, and
 pre-push gates pass; then mark it ready and verify the resulting state before
 merge.
@@ -392,7 +398,7 @@ isolation rules from the drain scheduler.
    that exact tip. Never run `git clean` or discard ignored build outputs.
 6. After confirmed merge and base detachment, delete only the skill-created
    local ticket branch. Follow repository policy for the remote branch.
-7. Discard the implementation context, refresh every other PR's mergeability,
+7. Discard the ticket agent, refresh every other PR's mergeability,
    and perform a complete live Project query. Do not update every branch
    automatically; follow the scheduler's base-drift rules.
 
@@ -455,9 +461,9 @@ over-application counterexample for every behavioral change.
    and continues with valid work.
 5. RED repeats a timed-out assignment, comment, or merge; GREEN refetches the
    authoritative state and reconciles the mutation before any retry.
-6. RED reuses implementation context across tickets or creates disposable
-   worktrees; GREEN uses a fresh context per issue and one warm worktree per
-   slot.
+6. RED discards context between one ticket's implementation and feedback, or
+   reuses it for another ticket; GREEN resumes one ticket agent and warm
+   worktree until that slot frees; agent loss reconstructs from durable evidence.
 7. RED treats any Ready value as approval; GREEN requires a non-automated
    transition by a configured approver after the unchanged Agent Brief.
 8. RED starts a second ticket for a `next` request; GREEN stops after one.
@@ -475,9 +481,10 @@ over-application counterexample for every behavioral change.
     lightweight batched data, then deeply hydrates contenders in order.
     Counterexample: one bounded hydration batch is allowed when it is cheaper
     and remains within GitHub limits.
-14. RED waits idly while a PR runs CI; GREEN releases the mutation lane and
-    fills up to three just-in-time slots. Novel case: feedback returns to its
-    owning slot at the next checkpoint without interrupting a RED/GREEN slice.
+14. RED waits idly while a PR runs CI; GREEN leaves its ticket agent idle,
+    releases the mutation lane, and fills up to three just-in-time slots. Novel
+    case: feedback resumes the owning agent with refreshed authoritative state
+    at the next checkpoint without interrupting a RED/GREEN slice.
 15. RED treats a second valid claim as fatal; GREEN resumes claims up to the
     slot limit and stops only when claims exceed it.
 16. RED lets one blocked ticket stop unrelated work; GREEN preserves only that
@@ -485,4 +492,8 @@ over-application counterexample for every behavioral change.
     slots.
 17. Over-application counterexample: RED invokes this skill for an ordinary
     single-issue request or PR-monitoring request; GREEN leaves those tasks to
-    `implement-issue` or `shepherd`.
+    the repository's issue workflow or `shepherd`.
+18. RED lets a nested agent own or mutate a ticket; GREEN limits nested agents
+    to read-only immutable-SHA work returned to the ticket agent. Novel case: a
+    nested reviewer checks the exact pushed SHA. Counterexample: the owning
+    ticket agent may mutate while its slot holds the mutation lane.
