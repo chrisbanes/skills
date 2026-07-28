@@ -42,11 +42,11 @@ that approval pause; every other gate remains identical.
 
 ## Workflow
 
-Maintain one blocker set throughout the workflow. Add every safely discoverable
-readiness, ownership, baseline, validation, or decision failure to it. An
-instruction below to stop means stop mutations and unsafe dependent work, then
-continue independent read-only checks when safe. Before drafting or publishing,
-return every accumulated blocker together with its impact, recommended
+Maintain one planning-blocker set throughout the workflow. Add every safely
+discoverable readiness, ownership, baseline, validation, or decision failure to
+it. An instruction below to stop means stop mutations and unsafe dependent work,
+then continue independent read-only checks when safe. Before drafting or
+publishing, return every planning blocker together with its impact, recommended
 resolution, and required upstream change.
 
 ### 1. Establish trusted repository context
@@ -70,12 +70,13 @@ Fetch live GitHub state and read:
 - The complete issue body and every comment.
 - The linked specification or parent issue, when present.
 - Official blocking relationships and any textual `Blocked by` contract.
-- Completed blockers and their delivered outcomes.
+- Completed issue blockers and their delivered outcomes.
 - Linked or closing pull requests.
 
 Treat acceptance criteria and recorded upstream decisions as authoritative.
 Use compatible comments as clarification. When comments conflict with the
-ticket or each other and no explicit later resolution exists, record a blocker.
+ticket or each other and no explicit later resolution exists, record a planning
+blocker.
 
 Find comments containing this exact ownership marker:
 
@@ -84,14 +85,14 @@ Find comments containing this exact ownership marker:
 ```
 
 Require zero or one marker-owned comment. If one exists, verify that the active
-GitHub identity can edit it and record its body and permalink. Record a blocker
-for multiple marker comments or an uneditable marker comment; never create a
-duplicate.
+GitHub identity can edit it and record its body and permalink. Record a planning
+blocker for multiple marker comments or an uneditable marker comment; never
+create a duplicate.
 
 Treat an unmarked implementation plan as context, never as an editable target.
 If it conflicts with the proposed plan or could reasonably be mistaken for the
-active execution contract, record a blocker requiring the ambiguity to be
-resolved.
+active execution contract, record a planning blocker requiring the ambiguity
+to be resolved.
 
 ### 3. Enforce readiness
 
@@ -99,32 +100,29 @@ Require all of the following:
 
 - The issue is open.
 - It has the `ready-for-agent` label.
-- Every blocker is complete.
-- Every blocker's required outcome is present in the checked-out baseline.
+- Every issue blocker is complete.
+- Every issue blocker's required outcome is present in the checked-out baseline.
 - No linked open pull request is already implementing the issue.
 - The issue contains one or more explicit, complete acceptance criteria.
 - Every criterion maps to an observable automated or precise manual
   verification.
 
-Do not infer readiness from a closed blocker alone. Inspect the baseline for
-the blocker outcome.
+Do not infer readiness from a closed issue blocker alone. Inspect the baseline
+for its delivered outcome.
 
 Return all readiness failures together. Do not draft or publish a plan when any
 readiness check fails.
 
 ### 4. Check the working tree
 
-Inspect tracked and untracked changes before planning. Start with status,
-name-status, and untracked-path summaries. Use paths to exclude changes that
-cannot plausibly affect the ticket's behavior, files, symbols, seams, contracts,
-or validation. Inspect contents only when a path may overlap or the path alone
-cannot establish that the change is unrelated. Stop when uncertainty remains.
-Record the resulting path inventory for the pre-publication refresh.
+Build one path inventory covering tracked and untracked changes. Exclude paths
+that cannot plausibly affect the ticket's behavior, files, symbols, seams,
+contracts, or validation; inspect contents only for potential overlap. Stop
+when any change overlaps the ticket or overlap is uncertain. Retain the
+inventory for the pre-publication refresh.
 
-- Allow unrelated changes and record their presence without exposing their
-  contents in the GitHub comment.
-- Stop when any change overlaps the ticket or when overlap is uncertain.
-- Never stash, reset, clean, delete, or commit user changes.
+Allow unrelated changes without exposing their contents in the GitHub comment.
+Never stash, reset, clean, delete, or commit user changes.
 
 The plan baseline is the committed `HEAD`; it never includes an in-progress
 diff or diff fingerprint.
@@ -135,17 +133,11 @@ Inspect the smallest sufficient scope of repository context, domain glossary,
 ADRs, code, tests, configuration, and history. Prefer established public seams
 and relevant testing prior art.
 
-For non-trivial scopes, delegate one or two genuinely independent, bounded
-searches to low-cost read-only discovery subagents. Good tasks include locating
-named files and symbols, finding testing or validation precedents, and inspecting
-focused history for a known seam. Give each subagent the trusted repository
-context and an exact search question. Require paths, symbols, line references,
-commands, and uncertainty; treat every result as a lead that the main agent must
-verify. Keep small scopes local when delegation overhead would exceed the search.
-
-Keep issue interpretation, working-tree overlap decisions, durable planning
-decisions, final synthesis, refresh checks, and all mutations with the main
-agent. Never let a discovery subagent edit files or mutate external state.
+For non-trivial scopes, delegate up to two independent, bounded, read-only
+searches to low-cost discovery subagents. Require paths, symbols, line
+references, commands, and uncertainty; the main agent verifies every result.
+Keep small scopes local and keep all interpretation, decisions, synthesis,
+refresh checks, and mutations with the main agent.
 
 Choose an unnamed testing seam only when one highest practical seam is
 unambiguous. Treat materially different seams as a durable missing decision.
@@ -184,7 +176,7 @@ ADR before planning resumes. The plan comment must not become the sole durable
 record of such a decision.
 
 Do not interrupt discovery with piecemeal questions. If blocked, return one
-consolidated report containing every blocker, its impact, the recommended
+consolidated report containing every planning blocker, its impact, the recommended
 resolution, and the upstream artifact that must change. Publish nothing.
 
 Do not reject, resize, or split the issue solely because it may exceed one
@@ -247,7 +239,7 @@ existing valid draft is publishable input.
 Immediately before any GitHub write, refresh:
 
 - Issue body and comments.
-- Readiness label and blocker state.
+- Readiness label and issue-blocker state.
 - Linked implementation pull requests.
 - Current `HEAD` and the working-tree path inventory. Inspect contents only for
   newly listed or plausibly overlapping entries, and stop when overlap is
@@ -257,8 +249,10 @@ Immediately before any GitHub write, refresh:
 If the refresh requires a substantive change to decisions, slices, files,
 tests, commands, coverage, guardrails, deviations, or review focus:
 
-- Normal mode: update the draft and require approval again.
-- `--auto` mode: regenerate, revalidate, and continue when every gate passes.
+- Update code-derived details while preserving compatible user edits; stop on
+  conflict.
+- Normal mode: require approval again.
+- `--auto` mode: revalidate and continue when every gate passes.
 
 Refresh incidental metadata without renewed approval only when the substantive
 plan remains identical.
@@ -304,11 +298,8 @@ when behavior, decisions, seams, and validation remain intact. It must report
 those deviations at handoff. It must stop instead of invoking `/to-plan` when a
 re-plan trigger is reached.
 
-Before re-planning after partial implementation, require a clean working tree
-whose `HEAD` contains all retained work. The user may reach that state by
-committing coherent validated work or manually removing incomplete changes;
-`/to-plan` performs neither action. Use a separate clean worktree when isolation
-helps. Never re-plan against, fingerprint, or accommodate an overlapping
+Re-plan only from a clean working tree whose `HEAD` contains all retained work.
+Use a separate clean worktree when helpful; never accommodate an overlapping
 in-progress diff.
 
 ## Plan Comment Template
@@ -391,14 +382,15 @@ then restore the skill and require the GREEN outcome.
    draft; explicit approval publishes the exact body, verifies it, deletes the
    file, and returns the comment permalink and fresh-session handoff.
 2. Novel case: `--auto` receives a valid manually edited draft plus an unrelated
-   local documentation change. It preserves the edit, validates the unrelated
-   change, publishes without pausing, and deletes the verified draft.
+   local documentation change. It preserves the edit, screens and records the
+   documentation change as unrelated, validates the plan, publishes without
+   pausing, and deletes the verified draft.
 3. An existing editable marker comment is updated in place. An identical plan
    is a no-op; an uneditable marker, duplicate marker, or conflicting unmarked
    plan blocks without creating another comment.
-4. An open issue labelled `ready-for-agent` has a closed blocker whose outcome
-   is absent from the baseline, or has a linked open implementation PR. Planning
-   stops with all readiness failures and performs no GitHub mutation.
+4. An open issue labelled `ready-for-agent` has a closed issue blocker whose
+   outcome is absent from the baseline, or has a linked open implementation PR.
+   Planning stops with all readiness failures and performs no GitHub mutation.
 5. The checkout contains an unrelated dirty file and an overlapping untracked
    file. The unrelated file alone would be allowed, but the overlapping file
    makes planning stop without stashing, deleting, or fingerprinting it.
