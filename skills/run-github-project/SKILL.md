@@ -7,13 +7,13 @@ description: Use when asked to execute the next approved issue or drain all appr
 
 ## Core Principle
 
-Treat the configured GitHub Project as the live execution control plane. Run
-one explicitly selected mode, claim exactly one human-approved issue at a time,
-and never infer approval from Status alone.
+Treat the configured GitHub Project as the live execution control plane. Claim
+only human-approved issues, take every claim just in time, and never infer
+approval from Status alone.
 
-Use one stable worktree for the invocation and snap it to the verified base tip
-after every merge so ignored build outputs and local caches remain warm. Never
-carry implementation context between issues.
+Use one warm worktree per occupied slot. Keep one mutation lane while remote CI
+and reviews run concurrently across slots. Never carry implementation context
+between tickets or feedback turns.
 
 ## Configure The Project
 
@@ -73,10 +73,13 @@ merge. Stop and preserve current work if it changes during the invocation.
 7. Select and record a run mode:
    - `next` is the default and processes at most one selected issue;
    - `drain` is allowed only when the user explicitly asks to drain, run all,
-     repeat, or continue until empty.
+     repeat, or continue until empty. Default to three slots and accept only a
+     lower user-specified limit.
 8. Require explicit merge authority for the mode's scope: the one selected
    issue in `next`, or every eligible issue encountered in `drain`. Without it,
    stop before claiming work.
+9. For `drain`, read and follow
+   [references/drain-scheduler.md](references/drain-scheduler.md).
 
 Do not support a publish-only mode. Treat standing authority as valid only for
 the active invocation and expired by any stop, timeout, crash, or interruption.
@@ -95,8 +98,8 @@ review, check, comment, PR, or merge is absent.
    with short exponential backoff, honor `Retry-After`, and use the
    environment's wait mechanism between attempts.
 2. Treat authentication, authorization, validation, and unsupported-operation
-   errors as terminal. Stop and report them without consuming the transient
-   retry budget.
+   errors as terminal. Apply the scheduler's failure-isolation rules and report
+   them without consuming the transient retry budget.
 3. Discard partial paginated or multi-call results after any transient failure.
    Retry the complete logical read.
 4. After a transient failure from a mutating request, assume its outcome is
@@ -111,11 +114,12 @@ review, check, comment, PR, or merge is absent.
    thread resolution, and merges against their resulting state. Never emit a
    duplicate comment or perform a second merge because the original response
    was lost.
-6. After an ambiguous merge response, do not advance the worktree, clean it up,
-   or select another ticket until the PR's merged state, closed ticket, and
-   refreshed base tip are verified.
-7. If bounded retries are exhausted, stop the queue, preserve its claim and
-   worktree, and report the last confirmed GitHub and Project state.
+6. After an ambiguous merge response, do not advance or clean up that slot
+   until the PR's merged state, closed ticket, and refreshed base tip are
+   verified.
+7. If bounded retries are exhausted, block the affected slot unless the failed
+   operation is global. Preserve its claim and worktree, and report the last
+   confirmed GitHub and Project state.
 
 ## Discover And Rank The Queue
 
@@ -129,26 +133,40 @@ the next invocation.
    configured field and option IDs against their expected names. Use ProjectV2
    GraphQL when CLI output does not expose required IDs, positions, or complete
    pagination.
-2. Read every Project item through complete pagination. Apply the optional
-   trusted Project filter, then always intersect it with:
+2. Phase one: read every Project item through complete pagination and batch the
+   lightweight fields needed to order work:
+   - Project item ID, Status, Priority, and visible position;
+   - canonical issue identity, title, URL, state, draft state, and exact
+     assignees;
+   - linked open implementation PR number, author, closing relationship, head
+     repository/ref/SHA, base repository/ref, and draft state.
+3. Apply the optional trusted Project filter, then always intersect it with:
    - membership in the configured repository;
    - an open, non-draft GitHub issue;
    - the configured Ready or In progress Status.
-3. Record draft, pull-request, redacted, cross-repository, closed, malformed,
+4. Record draft, pull-request, redacted, cross-repository, closed, malformed,
    or filter-excluded items as ineligible. Never convert draft items into
    tickets or use a named Project view implicitly.
-4. Join each candidate to fresh issue, dependency, sub-issue, comment, and PR
-   reads. Gather:
-   - Project item ID, Status, Priority, and visible position;
-   - canonical issue identity, title, URL, state, and exact assignees;
+5. Build the contender order from phase-one data:
+   - every In progress item assigned exclusively to the current user, ordered
+     by Priority, visible position, then issue number;
+   - current-user closing PRs targeting the configured base in the same order;
+   - unassigned Ready items in the same order.
+   Stop when current-user claims exceed the mode's slot limit. Do not preempt a
+   valid claim.
+6. Phase two: hydrate contenders in order with fresh, preferably nested or
+   batched GraphQL reads. Gather:
    - native open `blocked by` relationships;
    - all open descendants in the issue's sub-issue tree;
-   - linked open implementation PR number, author, closing relationship, head
-     repository/ref/SHA, base repository/ref, and draft state;
    - the latest `ProjectV2ItemStatusChangedEvent` entering Ready, including
      event ID, actor login, `createdAt`, resulting Status, and `wasAutomated`;
    - the latest comment headed `## Agent Brief`, including comment ID and
      content digest, `createdAt`, and `updatedAt`.
+   Preserve an invalid claimed contender as a blocked slot. Report and advance
+   when an unclaimed contender is invalid. Hydrate all contenders together
+   only when one bounded batch is cheaper and remains within GitHub rate and
+   GraphQL complexity budgets. Never perform serial deep-read fan-out across
+   the whole Project.
 
 Treat an open parent as blocked by every open descendant even without an
 explicit dependency. Do not treat siblings as implicit blockers.
@@ -160,7 +178,8 @@ and the Brief existed and was last updated no later than the transition. An
 automated or unapproved transition is not approval. A later Brief edit revokes
 approval until a configured approver performs a new Ready transition.
 
-Normalize the live query as a JSON array and run:
+Normalize all hydrated existing claims plus the current contender batch as a
+JSON array and run:
 
 ```text
 python3 <skill-dir>/scripts/rank_tickets.py \
@@ -171,6 +190,7 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --ready-status <ready-option> \
   --in-progress-status <in-progress-option> \
   --priority <highest-option> [--priority <next-option> ...] \
+  --max-claims <mode-slot-limit> \
   < normalized-tickets.json
 ```
 
@@ -183,19 +203,19 @@ Pass configured Priority options in descending order. Rank unset Priority after
 every configured value. Report labels only as classification evidence; never
 use them to gate eligibility.
 
-Resume exactly one eligible In progress item assigned exclusively to the
-current user before selecting Ready work. Stop for reconciliation if more than
-one current-user claim exists. Leave an In progress item assigned to someone
-else alone. Report an unassigned In progress item as stale and ineligible.
+Hydrate every current-user In progress claim before unclaimed contenders.
+Preserve returned `blockedClaims` in occupied slots, resume returned `claims`,
+then fill free slots from returned `candidates`. Leave an In progress item
+assigned to someone else alone. Report an unassigned In progress item as stale
+and ineligible.
 
-After resuming In progress work, reconcile and resume an unambiguous
-current-user PR before starting new work. Otherwise rank unassigned Ready
-tickets by Priority, visible Project position, then issue number. Do not
-preempt an active ticket if higher-priority work appears later.
+When no claim exists, hydrate current-user PR contenders before new work.
+Otherwise preserve the phase-one Priority, visible-position, and issue-number
+order. Do not preempt an active ticket if higher-priority work appears later.
 
 Report and skip an unclaimed malformed, blocked, unsupported, or missing-brief
-Ready item without stopping valid work. Stop and preserve state when a claimed
-or resumed item becomes ineligible.
+Ready item without stopping valid work. Block and preserve only the affected
+slot when a claimed or resumed item becomes ineligible.
 
 Resume a linked PR only when exactly one open PR clearly closes the issue, its
 author is the authenticated user, it targets the configured repository and
@@ -222,9 +242,9 @@ selected issue and Project item.
    event ID/actor/time/Status/automation flag, and Agent Brief
    ID/digest/created/updated timestamps as the authority lease.
 
-After observing In progress, treat ambiguity or invalidation as a stop rather
-than a skippable claim race. Preserve the claim. Never move a ticket back to
-Ready automatically; require an explicit user decision to release it.
+After observing In progress, treat ambiguity or invalidation as a blocked slot
+rather than a skippable claim race. Preserve the claim. Never move a ticket
+back to Ready automatically; require an explicit user decision to release it.
 
 Revalidate Project membership, In progress Status, exclusive assignment,
 configuration digest, the recorded latest Ready event, and every Agent Brief
@@ -234,18 +254,19 @@ for post-merge reconciliation to Done.
 
 ## Implement In Fresh Context
 
-For each selected ticket:
+For each occupied slot:
 
 1. Refresh the verified base branch.
-2. Create or reuse exactly one clean, skill-owned worktree at a stable path for
-   the invocation. Verify repository identity, ownership, and exact base tip.
-   Never create overlapping per-ticket worktrees.
+2. Create or reuse that slot's clean, skill-owned worktree at a stable path.
+   Verify repository identity, ownership, and exact base tip. Never share a
+   worktree between occupied slots.
 3. For new work, create `cb/issue-<number>-<short-slug>` from the verified base
    tip unless repository instructions specify another prefix. For a resumed PR,
    fetch and check out its exact head repository, ref, and SHA in the stable
    worktree; do not create a replacement branch. Stop on divergence, ambiguous
    write access, or a changed head SHA.
-4. Start a fresh task or agent context with no inherited conversation turns.
+4. Start a fresh ticket-specific task or agent context with no inherited turns
+   for every implementation or feedback pass.
    Pass only:
    - repository, worktree, branch, and verified base identity;
    - ticket identity and approved Agent Brief;
@@ -275,9 +296,8 @@ Use this worker contract:
 7. Create one focused commit only after review and fresh verification. Return
    the commit, changed scope, test evidence, review result, and residual risks.
 
-If fresh isolated contexts are unavailable, stop. Never drain multiple tickets
-through the controller's growing context. Worktree reuse does not permit
-implementation-context reuse.
+If fresh isolated contexts are unavailable, stop. Reconstruct each turn from
+the slot's durable evidence; worktree reuse does not permit context reuse.
 
 ## Pass The Pre-Push Review Gate
 
@@ -311,7 +331,8 @@ that includes:
 - tests and verification performed;
 - residual risks.
 
-Keep the ticket claimed and pause queue selection while its PR is open.
+Keep the ticket claimed in its slot while its PR is open. After a reconciled
+push, release the mutation lane and schedule another slot.
 For a resumed draft PR, leave it draft until all implementation, review, and
 pre-push gates pass; then mark it ready and verify the resulting state before
 merge.
@@ -319,8 +340,8 @@ merge.
 Poll reviews and CI without emitting no-op comments.
 
 - Batch clear actionable feedback in the same ticket worktree. Reapply TDD for
-  behavior changes, rerun checks and `code-review`, pass the pre-push gate, then
-  push once.
+  behavior changes, rerun checks and the correctness-and-standards contract,
+  pass the pre-push gate, then push once.
 - Reply to every addressed code-review comment inline when supported. State
   what changed or answer with evidence. Fall back to a concise PR-level reply
   only when inline replies are unavailable.
@@ -334,9 +355,6 @@ Poll reviews and CI without emitting no-op comments.
 - Stop after three non-converging fix rounds, repeated unexplained CI failures,
   or conflicts in unrelated files.
 
-Do not start another ticket until the current PR is merged or explicitly
-abandoned.
-
 Distinguish silence from approval:
 
 - If no review is required, internal review passed, CI is terminal-green, the
@@ -346,10 +364,9 @@ Distinguish silence from approval:
 - If review is required but absent, keep waiting.
 - Wait for configured review bots and checks to reach a terminal state.
 
-Use the environment's wait or scheduling mechanism instead of a long blocking
-sleep. Default the review timeout to 24 hours unless repository instructions or
-the user specify another value. On timeout, preserve the worktree, branch, PR,
-assignment, and In progress Status; stop and report.
+Use the environment's wait or scheduling mechanism across all remote slots
+instead of a long blocking sleep. Apply the per-push deadline and failure
+isolation rules from the drain scheduler.
 
 ## Merge, Reconcile, And Continue
 
@@ -357,7 +374,8 @@ assignment, and In progress Status; stop and report.
    configuration, and standing merge authority.
 2. Follow the configured merge method or merge-queue policy. Do not hardcode
    squash. Treat a queued PR as pending until GitHub confirms its merged state
-   and exact merge commit.
+   and exact merge commit. Serialize merges and merge the oldest ready slot
+   first unless an explicit dependency requires another order.
 3. Verify the PR closed the issue through its closing link. If the issue
    remains open, leave the item In progress and stop. Do not close it manually.
 4. Refetch the Project item by node ID and inspect Status plus `isArchived`.
@@ -374,16 +392,15 @@ assignment, and In progress Status; stop and report.
    that exact tip. Never run `git clean` or discard ignored build outputs.
 6. After confirmed merge and base detachment, delete only the skill-created
    local ticket branch. Follow repository policy for the remote branch.
-7. Discard the implementation context and perform a complete live Project
-   query. In `next`, finish after reporting that query. In `drain`, select the
-   next eligible ticket.
+7. Discard the implementation context, refresh every other PR's mergeability,
+   and perform a complete live Project query. Do not update every branch
+   automatically; follow the scheduler's base-drift rules.
 
 Finish `next` after one selected issue reaches a confirmed terminal outcome and
-the post-merge live query succeeds. Finish `drain` on the first complete
-successful live query with no eligible ticket. If the invocation created the
-worktree, require it to be clean and snapped to the verified base tip, remove
-it through repository worktree tooling, and verify both its path and
-registration are gone.
+the post-merge live query succeeds. Finish `drain` only when the live queue is
+empty and every slot is reconciled and free. Clean up each free skill-created
+worktree after verifying it is clean and snapped to the base. Preserve blocked
+slots and report a partial drain.
 
 Preserve the worktree, branch, PR, assignment, and In progress Status on every
 blocked or ambiguous stop. Never release or clean up a failed ticket
@@ -391,7 +408,7 @@ automatically.
 
 ## Stop Conditions
 
-Stop the entire queue and preserve resumable state when:
+Block only the affected slot and preserve its resumable state when:
 
 - a ticket is already implemented, superseded, or contradicts an ADR;
 - a claimed Agent Brief is missing, changed, ambiguous, or conflicts with
@@ -401,16 +418,20 @@ Stop the entire queue and preserve resumable state when:
 - verification cannot pass without expanding scope;
 - Project membership, Status, assignment, configuration, tracker, repository,
   branch, PR, or merge state cannot be verified;
-- bounded GitHub retries are exhausted or a mutation outcome remains ambiguous;
-- the current ticket cannot be merged cleanly.
+- bounded GitHub retries are exhausted for that slot;
+- a mutation outcome remains ambiguous for that slot;
+- the ticket cannot be merged cleanly.
 
-List invalid unclaimed tickets as ineligible and continue. Once a ticket is
-claimed, never silently skip it and continue with lower-priority work.
+Stop the whole drain for changed configuration, lost permissions, invalid base
+state, merge-policy drift, correlated CI failure, or another global integrity
+problem. List invalid unclaimed tickets as ineligible and continue. Never
+silently release or skip a claimed ticket.
 
 ## Final Report
 
-Report the run mode, Project configuration digest, live queries, merge-authority
-outcome, worktree result, and one row per selected ticket containing:
+Report the run mode, slot limit, Project configuration digest, live queries,
+merge-authority outcome, scheduler result, and one row per occupied ticket
+containing:
 
 - Project item, Status, Priority, position, and selection reason;
 - Ready approval event and Agent Brief lease values;
@@ -430,14 +451,15 @@ over-application counterexample for every behavioral change.
    Priority, visible Project position, then issue number.
 2. Novel case: RED starts a new ticket while one current-user In progress item
    exists; GREEN resumes the existing claim and its unambiguous PR first.
-3. RED skips a claimed item after its brief or assignment changes; GREEN stops
-   the queue and preserves resumable state.
+3. RED skips a claimed item after its brief or assignment changes; GREEN blocks
+   its slot and preserves resumable state.
 4. RED stops on one malformed unclaimed item; GREEN reports it as ineligible
    and continues with valid work.
 5. RED repeats a timed-out assignment, comment, or merge; GREEN refetches the
    authoritative state and reconciles the mutation before any retry.
-6. RED reuses implementation context or creates one worktree per ticket; GREEN
-   uses a fresh context per issue and one warm worktree for the invocation.
+6. RED reuses implementation context across tickets or creates disposable
+   worktrees; GREEN uses a fresh context per issue and one warm worktree per
+   slot.
 7. RED treats any Ready value as approval; GREEN requires a non-automated
    transition by a configured approver after the unchanged Agent Brief.
 8. RED starts a second ticket for a `next` request; GREEN stops after one.
@@ -451,6 +473,18 @@ over-application counterexample for every behavioral change.
     Counterexample: tests alone never satisfy a review contract.
 12. RED invokes `test-driven-development`; GREEN invokes `tdd`, agrees the
     public test seam, and works in vertical RED/GREEN slices.
-13. Over-application counterexample: RED invokes this skill for an ordinary
+13. RED serially hydrates every Project candidate before ranking; GREEN ranks
+    lightweight batched data, then deeply hydrates contenders in order.
+    Counterexample: one bounded hydration batch is allowed when it is cheaper
+    and remains within GitHub limits.
+14. RED waits idly while a PR runs CI; GREEN releases the mutation lane and
+    fills up to three just-in-time slots. Novel case: feedback returns to its
+    owning slot at the next checkpoint without interrupting a RED/GREEN slice.
+15. RED treats a second valid claim as fatal; GREEN resumes claims up to the
+    slot limit and stops only when claims exceed it.
+16. RED lets one blocked ticket stop unrelated work; GREEN preserves only that
+    slot and continues, while a changed Project configuration still stops all
+    slots.
+17. Over-application counterexample: RED invokes this skill for an ordinary
     single-issue request or PR-monitoring request; GREEN leaves those tasks to
     `implement-issue` or `shepherd`.

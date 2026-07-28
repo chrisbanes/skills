@@ -20,7 +20,7 @@ class InputError(ValueError):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Select the next eligible ready-for-agent ticket.",
+        description="Validate claims and rank eligible GitHub Project tickets.",
     )
     parser.add_argument(
         "--current-user",
@@ -60,6 +60,12 @@ def parse_args() -> argparse.Namespace:
         dest="priorities",
         required=True,
         help="GitHub Project priority value in descending order. Repeat for each rank.",
+    )
+    parser.add_argument(
+        "--max-claims",
+        type=int,
+        default=1,
+        help="Maximum current-user claims allowed in this run, from 1 to 3.",
     )
     return parser.parse_args()
 
@@ -435,6 +441,8 @@ def main() -> int:
         ready_approvers = tuple(args.ready_approvers)
         if len(set(ready_approvers)) != len(ready_approvers):
             raise InputError("ready approvers must be unique")
+        if not 1 <= args.max_claims <= 3:
+            raise InputError("max claims must be between 1 and 3")
 
         seen_numbers: set[int] = set()
         analyses: list[dict[str, Any]] = []
@@ -469,7 +477,7 @@ def main() -> int:
                 else:
                     invalid_unclaimed.append(invalid)
 
-        claimed_but_ineligible = invalid_claimed + [
+        blocked_claims = invalid_claimed + [
             {
                 "number": item["ticket"]["number"],
                 "reasons": item["errors"] + item["exclusions"],
@@ -477,31 +485,37 @@ def main() -> int:
             for item in analyses
             if item["assignedToCurrentUser"] and (item["errors"] or item["exclusions"])
         ]
-        if claimed_but_ineligible:
-            print(
-                json.dumps(
-                    {
-                        "selected": None,
-                        "reason": "claimed-item-ineligible",
-                        "claimedButIneligible": claimed_but_ineligible,
-                    },
-                    indent=2,
-                    sort_keys=True,
-                ),
-            )
-            return 2
 
         eligible = [
             item for item in analyses if not item["errors"] and not item["exclusions"]
         ]
         claimed = [item for item in eligible if item["assignedToCurrentUser"]]
-        if len(claimed) > 1:
+        claimed.sort(
+            key=lambda item: (
+                item["priorityRank"],
+                item["projectPosition"],
+                item["ticket"]["number"],
+            ),
+        )
+        claim_numbers = [
+            item["ticket"]["number"] for item in claimed
+        ] + [
+            item["number"] for item in blocked_claims
+        ]
+        claim_numbers.sort(
+            key=lambda number: (
+                (0, number)
+                if isinstance(number, int) and not isinstance(number, bool)
+                else (1, str(number))
+            ),
+        )
+        if len(claim_numbers) > args.max_claims:
             print(
                 json.dumps(
                     {
-                        "selected": None,
-                        "reason": "multiple-claims",
-                        "claimed": sorted(item["ticket"]["number"] for item in claimed),
+                        "reason": "over-capacity-claims",
+                        "claimLimit": args.max_claims,
+                        "claimed": claim_numbers,
                     },
                     indent=2,
                     sort_keys=True,
@@ -509,32 +523,23 @@ def main() -> int:
             )
             return 2
 
-        if claimed:
-            selected = claimed[0]
-            reason = selected["resumeAction"]
-        else:
-            unassigned = [
-                item for item in eligible if not item["assignedToCurrentUser"]
-            ]
-            unassigned.sort(
-                key=lambda item: (
-                    item["priorityRank"],
-                    item["projectPosition"],
-                    item["ticket"]["number"],
-                ),
-            )
-            resumable_prs = [
-                item for item in unassigned if item["resumeAction"] == "resume-pr"
-            ]
-            selected = resumable_prs[0] if resumable_prs else (
-                unassigned[0] if unassigned else None
-            )
-            if selected is None:
-                reason = "queue-empty"
-            elif selected["resumeAction"] == "resume-pr":
-                reason = "resume-pr"
-            else:
-                reason = "next-by-priority"
+        unassigned = [
+            item for item in eligible if not item["assignedToCurrentUser"]
+        ]
+        unassigned.sort(
+            key=lambda item: (
+                item["priorityRank"],
+                item["projectPosition"],
+                item["ticket"]["number"],
+            ),
+        )
+        resumable_prs = [
+            item for item in unassigned if item["resumeAction"] == "resume-pr"
+        ]
+        new_candidates = [
+            item for item in unassigned if item["resumeAction"] != "resume-pr"
+        ]
+        candidates = resumable_prs + new_candidates
 
         excluded = invalid_unclaimed + [
             {
@@ -542,18 +547,39 @@ def main() -> int:
                 "reasons": item["errors"] + item["exclusions"],
             }
             for item in analyses
-            if item["errors"] or item["exclusions"]
+            if (
+                not item["assignedToCurrentUser"]
+                and (item["errors"] or item["exclusions"])
+            )
         ]
         output = {
-            "selected": selected["ticket"] if selected else None,
-            "reason": reason,
+            "claimLimit": args.max_claims,
+            "blockedClaims": blocked_claims,
+            "claims": [
+                {
+                    "ticket": item["ticket"],
+                    "action": item["resumeAction"],
+                }
+                for item in claimed
+            ],
+            "candidates": [
+                {
+                    "ticket": item["ticket"],
+                    "action": (
+                        "resume-pr"
+                        if item["resumeAction"] == "resume-pr"
+                        else "claim"
+                    ),
+                }
+                for item in candidates
+            ],
             "eligible": sorted(item["ticket"]["number"] for item in eligible),
             "excluded": excluded,
         }
         print(json.dumps(output, indent=2, sort_keys=True))
         return 0
     except (InputError, json.JSONDecodeError) as error:
-        print(json.dumps({"selected": None, "reason": "invalid-input", "error": str(error)}))
+        print(json.dumps({"reason": "invalid-input", "error": str(error)}))
         return 2
 
 

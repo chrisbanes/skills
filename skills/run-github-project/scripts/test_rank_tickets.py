@@ -104,7 +104,91 @@ def pull_request(number: int, **overrides: object) -> dict:
     return result
 
 
+def first_entry(output: dict) -> dict:
+    entries = output["claims"] or output["candidates"]
+    return entries[0]
+
+
 class RankTicketsTest(unittest.TestCase):
+    def test_returns_multiple_claims_and_candidates_up_to_limit(self) -> None:
+        implementation = ticket(
+            1,
+            projectStatus="In progress",
+            projectPriority="Low",
+            assignees=["chris"],
+        )
+        pull_request_claim = ticket(
+            2,
+            projectStatus="In progress",
+            projectPriority="High",
+            assignees=["chris"],
+            openPullRequests=[pull_request(200)],
+        )
+        candidate = ticket(3, projectPriority="Critical")
+
+        returncode, output = run_ranker(
+            [implementation, pull_request_claim, candidate],
+            "--max-claims",
+            "3",
+        )
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [2, 1],
+            [entry["ticket"]["number"] for entry in output["claims"]],
+        )
+        self.assertEqual(
+            [3],
+            [entry["ticket"]["number"] for entry in output["candidates"]],
+        )
+
+    def test_stops_when_claims_exceed_limit(self) -> None:
+        first = ticket(4, projectStatus="In progress", assignees=["chris"])
+        second = ticket(5, projectStatus="In progress", assignees=["chris"])
+
+        returncode, output = run_ranker([first, second])
+
+        self.assertEqual(2, returncode)
+        self.assertEqual("over-capacity-claims", output["reason"])
+        self.assertEqual(1, output["claimLimit"])
+        self.assertEqual([4, 5], output["claimed"])
+
+    def test_blocked_claims_count_toward_the_limit(self) -> None:
+        blocked = ticket(6, assignees=["chris"])
+        valid = ticket(7, projectStatus="In progress", assignees=["chris"])
+
+        returncode, output = run_ranker(
+            [blocked, valid],
+            "--max-claims",
+            "1",
+        )
+
+        self.assertEqual(2, returncode)
+        self.assertEqual("over-capacity-claims", output["reason"])
+        self.assertEqual([6, 7], output["claimed"])
+
+    def test_returns_all_candidates_in_scheduler_order(self) -> None:
+        resumable = ticket(
+            8,
+            projectPriority="Low",
+            projectPosition=99,
+            openPullRequests=[pull_request(800)],
+        )
+        high = ticket(9, projectPriority="High", projectPosition=2)
+        critical = ticket(10, projectPriority="Critical", projectPosition=20)
+
+        returncode, output = run_ranker([high, resumable, critical])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [8, 10, 9],
+            [entry["ticket"]["number"] for entry in output["candidates"]],
+        )
+        self.assertEqual(
+            ["resume-pr", "claim", "claim"],
+            [entry["action"] for entry in output["candidates"]],
+        )
+
     def test_resumes_current_users_in_progress_item_before_ready_work(self) -> None:
         ready = ticket(1, title="Critical ready work", projectPriority="Critical")
         in_progress = ticket(
@@ -119,8 +203,8 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([ready, in_progress])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(2, output["selected"]["number"])
-        self.assertEqual("resume-implementation", output["reason"])
+        self.assertEqual(2, first_entry(output)["ticket"]["number"])
+        self.assertEqual("resume-implementation", first_entry(output)["action"])
 
     def test_ranks_ready_items_by_priority_then_project_position(self) -> None:
         later_on_board = ticket(3, projectPosition=20)
@@ -136,12 +220,12 @@ class RankTicketsTest(unittest.TestCase):
         )
 
         self.assertEqual(0, returncode)
-        self.assertEqual(5, output["selected"]["number"])
+        self.assertEqual(5, first_entry(output)["ticket"]["number"])
 
         returncode, output = run_ranker([later_on_board, earlier_on_board])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(4, output["selected"]["number"])
+        self.assertEqual(4, first_entry(output)["ticket"]["number"])
 
     def test_does_not_require_issue_category_labels(self) -> None:
         maintenance = ticket(
@@ -154,7 +238,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([maintenance])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(6, output["selected"]["number"])
+        self.assertEqual(6, first_entry(output)["ticket"]["number"])
 
     def test_open_descendants_make_a_parent_ineligible(self) -> None:
         parent = ticket(
@@ -169,7 +253,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([parent, child])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(11, output["selected"]["number"])
+        self.assertEqual(11, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [{"number": 10, "reasons": ["open descendants ['11', '12']"]}],
             output["excluded"],
@@ -192,7 +276,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([invalid, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(21, output["selected"]["number"])
+        self.assertEqual(21, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [{"number": 20, "reasons": ["unknown project priority 'Emergency'"]}],
             output["excluded"],
@@ -218,8 +302,8 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([new_work, issue])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(30, output["selected"]["number"])
-        self.assertEqual("resume-pr", output["reason"])
+        self.assertEqual(30, first_entry(output)["ticket"]["number"])
+        self.assertEqual("resume-pr", first_entry(output)["action"])
 
     def test_unassigned_in_progress_item_is_stale_not_claimable(self) -> None:
         stale = ticket(
@@ -239,13 +323,13 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([stale, ready])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(41, output["selected"]["number"])
+        self.assertEqual(41, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [{"number": 40, "reasons": ["in progress without an assignee"]}],
             output["excluded"],
         )
 
-    def test_current_users_assignment_without_in_progress_or_pr_stops(self) -> None:
+    def test_current_users_partial_claim_blocks_its_slot(self) -> None:
         partial_claim = ticket(
             50,
             title="Assignment succeeded but status did not",
@@ -255,8 +339,7 @@ class RankTicketsTest(unittest.TestCase):
 
         returncode, output = run_ranker([partial_claim])
 
-        self.assertEqual(2, returncode)
-        self.assertEqual("claimed-item-ineligible", output["reason"])
+        self.assertEqual(0, returncode)
         self.assertEqual(
             [
                 {
@@ -266,7 +349,42 @@ class RankTicketsTest(unittest.TestCase):
                     ],
                 },
             ],
-            output["claimedButIneligible"],
+            output["blockedClaims"],
+        )
+
+    def test_invalid_claim_blocks_only_its_slot(self) -> None:
+        invalid_claim = ticket(
+            51,
+            title="Claim needs reconciliation",
+            projectPosition=1,
+            assignees=["chris"],
+        )
+        valid_claim = ticket(
+            52,
+            title="Valid implementation continues",
+            projectStatus="In progress",
+            assignees=["chris"],
+        )
+        candidate = ticket(53, title="Free slot can claim this")
+
+        returncode, output = run_ranker(
+            [invalid_claim, valid_claim, candidate],
+            "--max-claims",
+            "3",
+        )
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [51],
+            [claim["number"] for claim in output["blockedClaims"]],
+        )
+        self.assertEqual(
+            [52],
+            [claim["ticket"]["number"] for claim in output["claims"]],
+        )
+        self.assertEqual(
+            [53],
+            [entry["ticket"]["number"] for entry in output["candidates"]],
         )
 
     def test_does_not_resume_own_pr_that_does_not_close_issue(self) -> None:
@@ -289,7 +407,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([unrelated_pr, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(61, output["selected"]["number"])
+        self.assertEqual(61, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [
                 {
@@ -318,7 +436,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([malformed, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(71, output["selected"]["number"])
+        self.assertEqual(71, first_entry(output)["ticket"]["number"])
         self.assertEqual(70, output["excluded"][0]["number"])
         self.assertIn("missing", output["excluded"][0]["reasons"][0])
 
@@ -329,9 +447,9 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([unset, low])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(81, output["selected"]["number"])
+        self.assertEqual(81, first_entry(output)["ticket"]["number"])
 
-    def test_malformed_claimed_item_stops(self) -> None:
+    def test_malformed_claimed_item_blocks_its_slot(self) -> None:
         malformed_claim = {
             "number": 90,
             "title": "Claimed but missing normalized fields",
@@ -340,9 +458,9 @@ class RankTicketsTest(unittest.TestCase):
 
         returncode, output = run_ranker([malformed_claim, ticket(91)])
 
-        self.assertEqual(2, returncode)
-        self.assertEqual("claimed-item-ineligible", output["reason"])
-        self.assertEqual(90, output["claimedButIneligible"][0]["number"])
+        self.assertEqual(0, returncode)
+        self.assertEqual(90, output["blockedClaims"][0]["number"])
+        self.assertEqual(91, output["candidates"][0]["ticket"]["number"])
 
     def test_priority_order_is_required(self) -> None:
         result = subprocess.run(
@@ -372,8 +490,8 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([claimed])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(100, output["selected"]["number"])
-        self.assertEqual("resume-implementation", output["reason"])
+        self.assertEqual(100, first_entry(output)["ticket"]["number"])
+        self.assertEqual("resume-implementation", first_entry(output)["action"])
 
     def test_automated_ready_transition_is_not_approval(self) -> None:
         automated = ticket(
@@ -391,7 +509,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([automated, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(111, output["selected"]["number"])
+        self.assertEqual(111, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [{"number": 110, "reasons": ["ready transition was automated"]}],
             output["excluded"],
@@ -413,7 +531,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([unapproved, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(121, output["selected"]["number"])
+        self.assertEqual(121, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [{"number": 120, "reasons": ["ready transition actor 'outsider' is not approved"]}],
             output["excluded"],
@@ -434,7 +552,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([stale_approval, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(131, output["selected"]["number"])
+        self.assertEqual(131, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [{"number": 130, "reasons": ["agent brief changed after ready approval"]}],
             output["excluded"],
@@ -452,7 +570,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([wrong_base, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(141, output["selected"]["number"])
+        self.assertEqual(141, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [
                 {
@@ -472,7 +590,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([ambiguous, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(151, output["selected"]["number"])
+        self.assertEqual(151, first_entry(output)["ticket"]["number"])
         self.assertEqual(150, output["excluded"][0]["number"])
         self.assertIn("assignee", output["excluded"][0]["reasons"][0])
 
@@ -483,7 +601,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([invalid, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(161, output["selected"]["number"])
+        self.assertEqual(161, first_entry(output)["ticket"]["number"])
         self.assertEqual(
             [{"number": 160, "reasons": ["ticket 160: projectPosition must be finite"]}],
             output["excluded"],
@@ -496,7 +614,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([invalid, valid])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(171, output["selected"]["number"])
+        self.assertEqual(171, first_entry(output)["ticket"]["number"])
         self.assertEqual(170, output["excluded"][0]["number"])
         self.assertIn("strings or integers", output["excluded"][0]["reasons"][0])
 
