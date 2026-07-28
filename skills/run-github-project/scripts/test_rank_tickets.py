@@ -296,11 +296,12 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
-    def test_current_users_partial_claim_blocks_its_slot(self) -> None:
+    def test_ready_assignment_blocks_even_with_owned_pr(self) -> None:
         partial_claim = ticket(
             50,
             projectPosition=1,
             assignees=["chris"],
+            openPullRequests=[pull_request(500)],
         )
 
         returncode, output = run_ranker([partial_claim])

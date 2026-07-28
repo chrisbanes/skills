@@ -381,11 +381,7 @@ def analyze_ticket(
         pull_request for pull_request in pull_requests
         if pull_request["author"] != current_user
     ]
-    if (
-        assigned_to_current_user
-        and project_status == ready_status
-        and not own_pull_requests
-    ):
+    if assigned_to_current_user and project_status == ready_status:
         errors.append(
             "assigned to current user while project status is still ready",
         )

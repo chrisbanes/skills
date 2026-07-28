@@ -480,3 +480,6 @@ over-application counterexample for every behavioral change.
     to read-only immutable-SHA work returned to the ticket agent. Novel case: a
     nested reviewer checks the exact pushed SHA. Counterexample: the owning
     ticket agent may mutate while its slot holds the mutation lane.
+19. RED resumes an owned PR for a current-user-assigned Ready item; GREEN blocks
+    the partial claim until its In progress transition is verified.
+    Counterexample: an unassigned Ready item with one owned PR remains resumable.

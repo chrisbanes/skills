@@ -45,5 +45,7 @@ Before considering any skill addition or edit complete, verify:
 
 ## What not to do
 
-- Don't add CI, build tooling, or scripts unless asked — this is a content repo.
+- Don't add CI, repository-wide build tooling, or standalone scripts unless
+  asked. Skill-local scripts are allowed when they are part of an explicitly
+  requested skill and provide deterministic behavior; test them.
 - Don't reorganise existing skills "for consistency" without a concrete reason; renames break user references.
