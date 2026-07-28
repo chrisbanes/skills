@@ -397,14 +397,12 @@ isolation rules from the drain scheduler.
    automatically; follow the scheduler's base-drift rules.
 
 Finish `next` after one selected issue reaches a confirmed terminal outcome and
-the post-merge live query succeeds. Finish `drain` only when the live queue is
-empty and every slot is reconciled and free. Clean up each free skill-created
-worktree after verifying it is clean and snapped to the base. Preserve blocked
-slots and report a partial drain.
-
-Preserve the worktree, branch, PR, assignment, and In progress Status on every
-blocked or ambiguous stop. Never release or clean up a failed ticket
-automatically.
+the post-merge live query succeeds. For `drain`, treat
+[Failure Isolation And Finish Gate](references/drain-scheduler.md#failure-isolation-and-finish-gate)
+as the authoritative success, partial-drain, preservation, and cleanup
+procedure. In `next`, preserve the worktree, branch, PR, assignment, and In
+progress Status on every blocked or ambiguous stop; never release or clean up a
+failed ticket automatically.
 
 ## Stop Conditions
 

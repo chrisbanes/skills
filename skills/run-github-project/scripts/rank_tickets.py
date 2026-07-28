@@ -428,6 +428,14 @@ def analyze_ticket(
     }
 
 
+def ticket_rank(item: dict[str, Any]) -> tuple[int, float, int]:
+    return (
+        item["priorityRank"],
+        item["projectPosition"],
+        item["ticket"]["number"],
+    )
+
+
 def main() -> int:
     args = parse_args()
     try:
@@ -490,13 +498,7 @@ def main() -> int:
             item for item in analyses if not item["errors"] and not item["exclusions"]
         ]
         claimed = [item for item in eligible if item["assignedToCurrentUser"]]
-        claimed.sort(
-            key=lambda item: (
-                item["priorityRank"],
-                item["projectPosition"],
-                item["ticket"]["number"],
-            ),
-        )
+        claimed.sort(key=ticket_rank)
         claim_numbers = [
             item["ticket"]["number"] for item in claimed
         ] + [
@@ -526,13 +528,7 @@ def main() -> int:
         unassigned = [
             item for item in eligible if not item["assignedToCurrentUser"]
         ]
-        unassigned.sort(
-            key=lambda item: (
-                item["priorityRank"],
-                item["projectPosition"],
-                item["ticket"]["number"],
-            ),
-        )
+        unassigned.sort(key=ticket_rank)
         resumable_prs = [
             item for item in unassigned if item["resumeAction"] == "resume-pr"
         ]
