@@ -33,8 +33,10 @@ Switch slots only after a recoverable checkpoint:
 
 Keep each slot's ticket agent idle between passes; resume it with refreshed
 durable state and discard it only when the slot frees, reconstructing if lost.
-Nested agents are read-only at immutable SHAs, return findings to the owning
-ticket agent, and never own or mutate tickets.
+Descendant agents at any depth use only currently spare agent capacity and
+yield it before an occupied slot agent must resume. They are read-only at
+immutable SHAs, route findings to the owning ticket agent, and never own or
+mutate tickets.
 
 ## Scheduling
 

@@ -159,8 +159,8 @@ the next invocation.
    - unassigned Ready items in the same order.
    Stop when current-user claims exceed the mode's slot limit. Do not preempt a
    valid claim.
-6. Phase two: hydrate contenders in order with fresh, preferably nested or
-   batched GraphQL reads. Gather:
+6. Phase two: hydrate contenders in order with fresh batched GraphQL reads.
+   Gather:
    - native open `blocked by` relationships;
    - all open descendants in the issue's sub-issue tree;
    - the latest `ProjectV2ItemStatusChangedEvent` entering Ready, including
@@ -484,9 +484,9 @@ over-application counterexample for every behavioral change.
 17. Over-application counterexample: RED invokes this skill for an ordinary
     single-issue request or PR-monitoring request; GREEN leaves those tasks to
     the repository's issue workflow or `shepherd`.
-18. RED lets a nested agent own or mutate a ticket; GREEN limits nested agents
-    to read-only immutable-SHA work returned to the ticket agent. Novel case: a
-    nested reviewer checks the exact pushed SHA. Counterexample: the owning
+18. RED lets a descendant agent own or mutate a ticket; GREEN limits every
+    descendant to spare-capacity, read-only immutable-SHA work returned to the
+    ticket agent. Novel case: review the exact pushed SHA. Counterexample: the
     ticket agent may mutate while its slot holds the mutation lane.
 19. RED resumes an owned PR for a current-user-assigned Ready item; GREEN blocks
     the partial claim until its In progress transition is verified.
