@@ -24,7 +24,7 @@ file explicitly. Use
 [references/project-config.md](references/project-config.md) as its structure.
 Require:
 
-- repository identity and base branch;
+- repository identity, default and base branches, and issue-closure policy;
 - Project owner, number, URL, and node ID;
 - Status field name and ID plus Ready, In progress, and Done option names and
   IDs;
@@ -37,6 +37,8 @@ Require:
 Store human-readable names beside GitHub IDs. At startup, resolve and verify
 every pair. Treat a renamed display value as repairable drift; stop if an ID
 resolves to a different object.
+Permit `closing-keyword` only when the configured base is the current default
+branch; require `close-after-merge` otherwise.
 
 If the file is missing or the trusted instructions do not reference it,
 discover the repository's linked Projects and their fields, then ask the user
@@ -50,8 +52,8 @@ the verified base. Do not commit them implicitly. Continue the same invocation
 after the user commits them or explicitly authorizes a dedicated configuration
 commit and the base contains both.
 
-Record the committed configuration digest. Recheck it before every claim and
-merge. Stop and preserve current work if it changes during the invocation.
+Record the committed configuration digest and current default branch. Recheck
+both before every claim and merge. Stop and preserve work if either changes.
 
 ## Check Preconditions
 
@@ -68,7 +70,7 @@ merge. Stop and preserve current work if it changes during the invocation.
    contracts. Record the provider for each contract. Do not stop solely because
    a preferred provider is unavailable.
 5. Confirm the authenticated GitHub identity, Project read/write access,
-   GitHub CLI `project` scope, verified base, and clean starting state.
+   GitHub CLI `project` scope, current default, verified base, and clean state.
 6. Inspect repository automation that can change Project Status or archive Done
    items. Stop if it conflicts with the configured Ready, In progress, and Done
    lifecycle.
@@ -79,7 +81,8 @@ merge. Stop and preserve current work if it changes during the invocation.
      lower user-specified limit.
 8. Require explicit merge authority for the mode's scope: the one selected
    issue in `next`, or every eligible issue encountered in `drain`. Without it,
-   stop before claiming work.
+   stop before claiming work. Also require explicit issue-close authority when
+   `close-after-merge` is configured.
 9. For `drain`, read and follow
    [references/drain-scheduler.md](references/drain-scheduler.md).
 
@@ -387,8 +390,12 @@ isolation rules from the drain scheduler.
    squash. Treat a queued PR as pending until GitHub confirms its merged state
    and exact merge commit. Serialize merges and merge the oldest ready slot
    first unless an explicit dependency requires another order.
-3. Verify the PR closed the issue through its closing link. If the issue
-   remains open, leave the item In progress and stop. Do not close it manually.
+3. Reconcile the configured issue-closure policy:
+   - for `closing-keyword`, verify the PR closed the issue through its link;
+   - for `close-after-merge`, refetch the issue; when open, revalidate issue-close
+     authority, close it with PR and merge-commit evidence, then verify it closed;
+   - reconcile an ambiguous close before retrying; never repeat it when confirmed;
+   - if the issue remains open, leave the item In progress and stop.
 4. Refetch the Project item by node ID and inspect Status plus `isArchived`.
    Reconcile against the configured Done automation:
    - when automation is expected, use bounded retries for its configured Done
@@ -487,3 +494,6 @@ over-application counterexample for every behavioral change.
 20. RED creates the Project configuration without wiring it into trusted
     instructions; GREEN presents and writes both changes after one confirmation.
     Counterexample: preserve an existing valid trusted-instruction reference.
+21. RED relies on a closing keyword after a non-default merge; GREEN uses
+    configured `close-after-merge` authority and verifies closure. Novel case:
+    do not repeat an automated close. Counterexample: keep default-base keywords.

@@ -11,6 +11,7 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 
 - Host: `github.com`
 - Repository: `<owner>/<repository>`
+- Default branch: `<branch>`
 - Base branch: `<branch>`
 
 ## Project
@@ -46,6 +47,7 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 ## Merge Policy
 
 - Method: `<merge, squash, rebase, or merge queue>`
+- Issue closure: `<closing-keyword or close-after-merge>`
 - Required reviews: `<repository rule>`
 - Required checks: `<repository rule>`
 - Done automation: `<none, set-status, or set-status-and-archive>`
