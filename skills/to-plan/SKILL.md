@@ -238,13 +238,21 @@ existing valid draft is publishable input.
 
 Immediately before any GitHub write, refresh:
 
-- Issue body and comments.
-- Readiness label and issue-blocker state.
+- Issue state, body, comments, readiness label, and issue-blocker state.
 - Linked implementation pull requests.
 - Current `HEAD` and the working-tree path inventory. Inspect contents only for
-  newly listed or plausibly overlapping entries, and stop when overlap is
-  uncertain.
+  newly listed or plausibly overlapping entries. Stop when any change overlaps
+  the ticket or overlap is uncertain.
 - The marker-owned comment and edit permission.
+
+Reapply Step 3's live GitHub gates to the refreshed state; any failure blocks
+publication. Retain baseline-outcome evidence only while `HEAD` matches the
+draft's planned SHA.
+
+If `HEAD` differs, inspect the committed delta from the planned SHA for overlap.
+Rerun checkout identity, Step 4 overlap checks, and only the baseline or
+validation checks from Steps 3 and 5 whose evidence may be affected. Update the
+planned SHA only after every check passes, and treat the change as substantive.
 
 If the refresh requires a substantive change to decisions, slices, files,
 tests, commands, coverage, guardrails, deviations, or review focus:
@@ -415,3 +423,10 @@ then restore the skill and require the GREEN outcome.
     subagents locate the relevant symbols and testing precedents in parallel;
     the main agent verifies their evidence and owns every decision. A small
     one-file ticket stays local rather than paying delegation overhead.
+12. During the normal approval pause, the issue closes and `HEAD` advances.
+    Refresh blocks publication while the issue is closed. After it reopens, the
+    workflow screens the committed delta, revalidates affected baseline
+    evidence, updates the draft, and requires approval again.
+13. A broad Kotlin or Android request to plan one ready GitHub issue routes from
+    `using-chrisbanes-skills` to `/to-plan`. A request to implement an issue
+    directly does not.
