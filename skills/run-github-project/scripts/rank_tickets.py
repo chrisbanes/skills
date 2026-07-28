@@ -69,26 +69,15 @@ def string_values(values: Any, field: str, number: Any) -> list[str]:
         raise InputError(f"ticket {number}: {field} must be an array")
     result: list[str] = []
     for value in values:
-        if isinstance(value, str):
-            result.append(value)
-            continue
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
-            result.append(str(value))
-            continue
-        if isinstance(value, dict):
-            candidate = (
-                value.get("login")
-                or value.get("name")
-                or value.get("url")
-                or value.get("number")
+        if (
+            not isinstance(value, (str, int))
+            or isinstance(value, bool)
+            or value == ""
+        ):
+            raise InputError(
+                f"ticket {number}: {field} entries must be strings or integers",
             )
-            if isinstance(candidate, str):
-                result.append(candidate)
-                continue
-            if isinstance(candidate, (int, float)) and not isinstance(candidate, bool):
-                result.append(str(candidate))
-                continue
-        raise InputError(f"ticket {number}: unsupported {field} entry {value!r}")
+        result.append(str(value))
     return result
 
 
@@ -148,57 +137,25 @@ def pull_request_values(values: Any, number: Any) -> list[dict[str, Any]]:
             raise InputError(
                 f"ticket {number}: pull request number must be a positive integer",
             )
-        url = nonempty_string(value.get("url"), "pull request url", number)
-        author = nonempty_string(value.get("author"), "pull request author", number)
-        closes_issue = value.get("closesIssue")
-        if not isinstance(closes_issue, bool):
+        for field in (
+            "url",
+            "author",
+            "headRepository",
+            "headRefName",
+            "headSha",
+            "baseRepository",
+            "baseRefName",
+        ):
+            nonempty_string(value.get(field), f"pull request {field}", number)
+        if not isinstance(value.get("closesIssue"), bool):
             raise InputError(
                 f"ticket {number}: pull request closesIssue must be a boolean",
             )
-        head_repository = nonempty_string(
-            value.get("headRepository"),
-            "pull request headRepository",
-            number,
-        )
-        head_ref_name = nonempty_string(
-            value.get("headRefName"),
-            "pull request headRefName",
-            number,
-        )
-        head_sha = nonempty_string(
-            value.get("headSha"),
-            "pull request headSha",
-            number,
-        )
-        base_repository = nonempty_string(
-            value.get("baseRepository"),
-            "pull request baseRepository",
-            number,
-        )
-        base_ref_name = nonempty_string(
-            value.get("baseRefName"),
-            "pull request baseRefName",
-            number,
-        )
-        is_draft = value.get("isDraft")
-        if not isinstance(is_draft, bool):
+        if not isinstance(value.get("isDraft"), bool):
             raise InputError(
                 f"ticket {number}: pull request isDraft must be a boolean",
             )
-        result.append(
-            {
-                "number": pr_number,
-                "url": url,
-                "author": author,
-                "closesIssue": closes_issue,
-                "headRepository": head_repository,
-                "headRefName": head_ref_name,
-                "headSha": head_sha,
-                "baseRepository": base_repository,
-                "baseRefName": base_ref_name,
-                "isDraft": is_draft,
-            },
-        )
+        result.append(value)
     return result
 
 
@@ -293,7 +250,7 @@ def analyze_ticket(
     ready_transition = ticket["readyTransition"]
     if not isinstance(ready_transition, dict):
         raise InputError(f"ticket {number}: readyTransition must be an object")
-    transition_id = nonempty_string(
+    nonempty_string(
         ready_transition.get("id"),
         "readyTransition.id",
         number,
@@ -322,12 +279,12 @@ def analyze_ticket(
     agent_brief = ticket["agentBrief"]
     if not isinstance(agent_brief, dict):
         raise InputError(f"ticket {number}: agentBrief must be an object")
-    brief_comment_id = nonempty_string(
+    nonempty_string(
         agent_brief.get("commentId"),
         "agentBrief.commentId",
         number,
     )
-    brief_digest = nonempty_string(
+    nonempty_string(
         agent_brief.get("digest"),
         "agentBrief.digest",
         number,
@@ -456,23 +413,10 @@ def analyze_ticket(
     action = "resume-pr" if resumable_pull_requests else "resume-implementation"
     return {
         "ticket": ticket,
-        "assignees": assignees,
         "priorityRank": priority_rank,
-        "projectPriority": project_priority,
         "projectPosition": project_position,
         "assignedToCurrentUser": assigned_to_current_user,
         "resumeAction": action,
-        "readyApproval": {
-            "transitionId": transition_id,
-            "actor": transition_actor,
-            "createdAt": ready_transition["createdAt"],
-            "status": transition_status,
-            "wasAutomated": transition_was_automated,
-            "briefCommentId": brief_comment_id,
-            "briefDigest": brief_digest,
-            "briefCreatedAt": agent_brief["createdAt"],
-            "briefUpdatedAt": agent_brief["updatedAt"],
-        },
         "errors": errors,
         "exclusions": exclusions,
     }
@@ -601,13 +545,7 @@ def main() -> int:
             if item["errors"] or item["exclusions"]
         ]
         output = {
-            "selected": (
-                {
-                    **selected["ticket"],
-                }
-                if selected
-                else None
-            ),
+            "selected": selected["ticket"] if selected else None,
             "reason": reason,
             "eligible": sorted(item["ticket"]["number"] for item in eligible),
             "excluded": excluded,

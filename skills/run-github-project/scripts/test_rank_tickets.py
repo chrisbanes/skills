@@ -27,6 +27,12 @@ DEFAULT_PROJECT_ARGUMENTS = (
     "--ready-approver",
     "maintainer",
 )
+DEFAULT_STATUS_ARGUMENTS = (
+    "--ready-status",
+    "Ready",
+    "--in-progress-status",
+    "In progress",
+)
 
 
 def run_ranker(items: list[dict], *arguments: str) -> tuple[int, dict]:
@@ -38,6 +44,7 @@ def run_ranker(items: list[dict], *arguments: str) -> tuple[int, dict]:
             "chris",
             *DEFAULT_PROJECT_ARGUMENTS,
             *DEFAULT_PRIORITY_ARGUMENTS,
+            *DEFAULT_STATUS_ARGUMENTS,
             *arguments,
         ],
         input=json.dumps(items),
@@ -109,13 +116,7 @@ class RankTicketsTest(unittest.TestCase):
             assignees=["chris"],
         )
 
-        returncode, output = run_ranker(
-            [ready, in_progress],
-            "--ready-status",
-            "Ready",
-            "--in-progress-status",
-            "In progress",
-        )
+        returncode, output = run_ranker([ready, in_progress])
 
         self.assertEqual(0, returncode)
         self.assertEqual(2, output["selected"]["number"])
@@ -132,18 +133,12 @@ class RankTicketsTest(unittest.TestCase):
 
         returncode, output = run_ranker(
             [later_on_board, earlier_on_board, critical],
-            "--ready-status",
-            "Ready",
         )
 
         self.assertEqual(0, returncode)
         self.assertEqual(5, output["selected"]["number"])
 
-        returncode, output = run_ranker(
-            [later_on_board, earlier_on_board],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([later_on_board, earlier_on_board])
 
         self.assertEqual(0, returncode)
         self.assertEqual(4, output["selected"]["number"])
@@ -156,11 +151,7 @@ class RankTicketsTest(unittest.TestCase):
             projectPosition=1,
         )
 
-        returncode, output = run_ranker(
-            [maintenance],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([maintenance])
 
         self.assertEqual(0, returncode)
         self.assertEqual(6, output["selected"]["number"])
@@ -175,11 +166,7 @@ class RankTicketsTest(unittest.TestCase):
         )
         child = ticket(11, title="Executable child", projectPosition=2)
 
-        returncode, output = run_ranker(
-            [parent, child],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([parent, child])
 
         self.assertEqual(0, returncode)
         self.assertEqual(11, output["selected"]["number"])
@@ -202,11 +189,7 @@ class RankTicketsTest(unittest.TestCase):
             projectPosition=2,
         )
 
-        returncode, output = run_ranker(
-            [invalid, valid],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([invalid, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(21, output["selected"]["number"])
@@ -232,11 +215,7 @@ class RankTicketsTest(unittest.TestCase):
             projectPosition=1,
         )
 
-        returncode, output = run_ranker(
-            [new_work, issue],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([new_work, issue])
 
         self.assertEqual(0, returncode)
         self.assertEqual(30, output["selected"]["number"])
@@ -257,13 +236,7 @@ class RankTicketsTest(unittest.TestCase):
             projectPosition=2,
         )
 
-        returncode, output = run_ranker(
-            [stale, ready],
-            "--ready-status",
-            "Ready",
-            "--in-progress-status",
-            "In progress",
-        )
+        returncode, output = run_ranker([stale, ready])
 
         self.assertEqual(0, returncode)
         self.assertEqual(41, output["selected"]["number"])
@@ -280,13 +253,7 @@ class RankTicketsTest(unittest.TestCase):
             assignees=["chris"],
         )
 
-        returncode, output = run_ranker(
-            [partial_claim],
-            "--ready-status",
-            "Ready",
-            "--in-progress-status",
-            "In progress",
-        )
+        returncode, output = run_ranker([partial_claim])
 
         self.assertEqual(2, returncode)
         self.assertEqual("claimed-item-ineligible", output["reason"])
@@ -319,11 +286,7 @@ class RankTicketsTest(unittest.TestCase):
             projectPosition=2,
         )
 
-        returncode, output = run_ranker(
-            [unrelated_pr, valid],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([unrelated_pr, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(61, output["selected"]["number"])
@@ -352,11 +315,7 @@ class RankTicketsTest(unittest.TestCase):
             projectPosition=1,
         )
 
-        returncode, output = run_ranker(
-            [malformed, valid],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([malformed, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(71, output["selected"]["number"])
@@ -367,11 +326,7 @@ class RankTicketsTest(unittest.TestCase):
         unset = ticket(80, projectPriority=None, projectPosition=1)
         low = ticket(81, projectPriority="Low", projectPosition=100)
 
-        returncode, output = run_ranker(
-            [unset, low],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([unset, low])
 
         self.assertEqual(0, returncode)
         self.assertEqual(81, output["selected"]["number"])
@@ -383,11 +338,7 @@ class RankTicketsTest(unittest.TestCase):
             "assignees": [{"login": "chris"}],
         }
 
-        returncode, output = run_ranker(
-            [malformed_claim, ticket(91)],
-            "--ready-status",
-            "Ready",
-        )
+        returncode, output = run_ranker([malformed_claim, ticket(91)])
 
         self.assertEqual(2, returncode)
         self.assertEqual("claimed-item-ineligible", output["reason"])
@@ -418,13 +369,7 @@ class RankTicketsTest(unittest.TestCase):
             assignees=[{"login": "chris", "name": "Chris Banes"}],
         )
 
-        returncode, output = run_ranker(
-            [claimed],
-            "--ready-status",
-            "Ready",
-            "--in-progress-status",
-            "In progress",
-        )
+        returncode, output = run_ranker([claimed])
 
         self.assertEqual(0, returncode)
         self.assertEqual(100, output["selected"]["number"])
@@ -443,7 +388,7 @@ class RankTicketsTest(unittest.TestCase):
         )
         valid = ticket(111)
 
-        returncode, output = run_ranker([automated, valid], "--ready-status", "Ready")
+        returncode, output = run_ranker([automated, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(111, output["selected"]["number"])
@@ -465,7 +410,7 @@ class RankTicketsTest(unittest.TestCase):
         )
         valid = ticket(121)
 
-        returncode, output = run_ranker([unapproved, valid], "--ready-status", "Ready")
+        returncode, output = run_ranker([unapproved, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(121, output["selected"]["number"])
@@ -486,7 +431,7 @@ class RankTicketsTest(unittest.TestCase):
         )
         valid = ticket(131)
 
-        returncode, output = run_ranker([stale_approval, valid], "--ready-status", "Ready")
+        returncode, output = run_ranker([stale_approval, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(131, output["selected"]["number"])
@@ -504,7 +449,7 @@ class RankTicketsTest(unittest.TestCase):
         )
         valid = ticket(141)
 
-        returncode, output = run_ranker([wrong_base, valid], "--ready-status", "Ready")
+        returncode, output = run_ranker([wrong_base, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(141, output["selected"]["number"])
@@ -524,7 +469,7 @@ class RankTicketsTest(unittest.TestCase):
         ambiguous = ticket(150, assignees=[{"name": "chris"}])
         valid = ticket(151)
 
-        returncode, output = run_ranker([ambiguous, valid], "--ready-status", "Ready")
+        returncode, output = run_ranker([ambiguous, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(151, output["selected"]["number"])
@@ -535,7 +480,7 @@ class RankTicketsTest(unittest.TestCase):
         invalid = ticket(160, projectPosition=float("nan"))
         valid = ticket(161)
 
-        returncode, output = run_ranker([invalid, valid], "--ready-status", "Ready")
+        returncode, output = run_ranker([invalid, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(161, output["selected"]["number"])
@@ -543,6 +488,17 @@ class RankTicketsTest(unittest.TestCase):
             [{"number": 160, "reasons": ["ticket 160: projectPosition must be finite"]}],
             output["excluded"],
         )
+
+    def test_blocker_objects_must_be_normalized_to_identifiers(self) -> None:
+        invalid = ticket(170, blockedBy=[{"number": 171}])
+        valid = ticket(171)
+
+        returncode, output = run_ranker([invalid, valid])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(171, output["selected"]["number"])
+        self.assertEqual(170, output["excluded"][0]["number"])
+        self.assertIn("strings or integers", output["excluded"][0]["reasons"][0])
 
 
 if __name__ == "__main__":
