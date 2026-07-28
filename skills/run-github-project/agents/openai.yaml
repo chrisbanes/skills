@@ -1,0 +1,7 @@
+interface:
+  display_name: "Run GitHub Project"
+  short_description: "Execute approved work from a GitHub Project"
+  default_prompt: "Use $run-github-project in next mode to execute one approved issue from this repository's configured GitHub Project after confirming merge authority."
+
+policy:
+  allow_implicit_invocation: false
