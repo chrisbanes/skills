@@ -309,12 +309,10 @@ Use this worker contract:
    otherwise stop for confirmation before writing a test. Establish RED, then
    implement one minimal vertical slice at a time.
 5. Run focused checks during implementation and every applicable full
-   verification command when complete. Before a command uses a declared or
-   discovered scarce resource, send its canonical resource key, non-secret
-   operation label, and command digest to the controller and wait for an atomic
-   grant. Afterward, report the result with that grant ID and wait for release
-   acknowledgement. Never assume timeout or agent loss released the resource.
-   Stop if verification requires expanding scope.
+   verification command when complete. Follow
+   [Named Resource Locks](references/drain-scheduler.md#named-resource-locks)
+   before a command uses a declared or discovered scarce resource. Stop if
+   verification requires expanding scope.
 6. Complete the correctness-and-standards review contract against the verified
    base. Prefer `code-review` when available. Fix or disposition every finding
    except those explicitly classified as very low priority, then reverify
@@ -519,26 +517,27 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
 19. RED keeps every non-owning slot idle behind one global mutation lane; GREEN
     lets independent ticket agents edit, test, commit, push, and manage their
     own non-merge PR actions concurrently while the controller serializes
-    claims, Project mutations, merges, and reconciliation. Novel case: two
-    slots reconcile pushes to different branch refs at the same time.
-    Counterexample: `next` remains single-ticket.
+    claims, Project mutations, slot setup and cleanup, merges, and
+    reconciliation. Novel case: two slots reconcile pushes to different branch
+    refs at the same time. Counterexample: `next` remains single-ticket.
 20. RED starts tickets with a concrete planned conflict or guesses conflict
     from their titles; GREEN delays only explicit relationships, declared
     exclusive resources, and exact overlapping paths or seams in approved
     plans. Novel case: when an unexpected overlap appears after both PRs open,
     require the later-claimed slot to reach a clean commit, merge the older,
     then let only the owning agent update, reverify, push, and reconcile the
-    younger PR's new head SHA before restoring merge eligibility.
-    Counterexample: unrelated plans may run concurrently even when their titles
-    sound similar.
+    younger PR's new head SHA before restoring merge eligibility. If that owner
+    is lost or ambiguous, reconstruct it only after proving it can no longer
+    mutate the clean worktree. Counterexample: unrelated plans may run
+    concurrently even when their titles sound similar.
 21. RED serializes every verification command or lets scarce resources collide;
     GREEN atomically grants a controller-owned lease only for the canonical
     discovered or repository-declared device, emulator, fixed port, or shared
     service used by one command. Novel case: two Android tickets share one
     physical device while independent compilation continues, then the lock
     holder is lost and the controller keeps the device locked until it verifies
-    release. Counterexample: independent builds in isolated worktrees need no
-    shared-resource lock.
+    release, rejecting a stale grant ID. Counterexample: independent builds in
+    isolated worktrees need no shared-resource lock.
 22. RED makes each worker yield at every local gate or occupy active capacity
     during remote waits; GREEN runs a ticket pass through a reconciled push,
     then idles its persistent context while the occupied slot awaits remote

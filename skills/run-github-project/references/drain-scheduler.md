@@ -38,11 +38,10 @@ addressed threads concurrently. Invalidate and repeat a review contract
 whenever that ticket's SHA changes.
 
 Keep one controller lane for just-in-time claims and assignment, Project Status
-mutations, worktree and branch lifecycle reservations, merges or merge-queue
-admission, issue closure, Done reconciliation, and cleanup. Serialize those
-actions and reconcile every ambiguous remote mutation before the next
-controller mutation. Ticket agents never mutate another slot or the
-controller-owned Project state.
+mutations, slot setup and cleanup, merges or merge-queue admission, issue
+closure, and Done reconciliation. Serialize those actions and reconcile every
+ambiguous remote mutation before the next controller mutation. Ticket agents
+never mutate another slot or the controller-owned Project state.
 
 For each ticket pass, continue through implementation, verification, all review
 contracts, a focused commit, and a reconciled push plus PR creation or update.
@@ -73,63 +72,49 @@ the younger slot; do not begin automated base repair from a dirty worktree.
 
 After that clean checkpoint, pause the younger slot without releasing its
 claim, and revoke its merge eligibility. Merge the older slot first, refresh
-the verified base, then have the controller grant an exclusive branch-lifecycle
-reservation to the younger slot's owning ticket agent. Only that agent may
-update its branch and worktree to the new base using repository policy; the
-controller coordinates the reservation but never edits the agent-owned branch.
+the verified base, then resume the younger slot's owning ticket agent. Under
+its existing exclusive slot ownership, only that agent may update its branch
+and worktree to the new base using repository policy; the controller never
+edits the agent-owned branch.
 
 The owning agent must revalidate the authority lease and approved plan, repeat
 full applicable verification and every review gate against the updated SHA,
 push the exact commit, and reconcile the remote result. Refetch the PR and
 require its head SHA to equal that pushed SHA before restoring merge
-eligibility or evaluating its new checks and reviews. Release the lifecycle
-reservation only after the update is reconciled or explicitly preserved.
+eligibility or evaluating its new checks and reviews.
 
-If the reservation holder is lost or its mutation outcome is ambiguous, keep
-the reservation and stop the prior agent when possible. Inspect the worktree,
-branch HEAD, locks, and active Git processes. Only after confirming the prior
-agent can no longer mutate them may the controller record revocation,
-reconstruct the owning ticket agent from that exact clean HEAD, and issue a new
-reservation. Otherwise preserve and block the younger slot. Never expire,
-steal, or transfer a lifecycle reservation by elapsed time.
+If the owning agent is lost or its mutation outcome is ambiguous, stop it when
+possible and inspect the worktree, branch HEAD, locks, and active Git processes.
+Reconstruct its replacement from that exact clean HEAD only after confirming
+the prior agent can no longer mutate them. Otherwise preserve and block the
+younger slot.
 
 ### Named Resource Locks
 
-Discover repository-declared or operationally evident scarce resources before
-launching commands. Canonicalize each resource by its stable identity, such as
-a device serial, emulator instance, host and port, or non-secret service
-identity. Never use a worker-chosen alias or secret-bearing value as the lock
-key.
+Before a command uses a repository-declared or discovered exclusive resource,
+derive a canonical non-secret key from its stable identity, such as a device
+serial, emulator instance, host and port, or service identity. Never use a
+worker-chosen alias.
 
-Use the controller lane as an atomic lock registry:
+Keep only `resource key -> (grant ID, holder slot)` in the controller's atomic
+registry and durable slot evidence:
 
-1. Require the worker to request a canonical resource key plus its slot,
-   ticket, agent, non-secret operation label, and command digest before launch.
-2. When the key is free, record one grant ID, holder, operation, command digest,
-   and grant time, then return that grant to the worker. When occupied, queue
-   the request and let unrelated work continue. Never start the command before
-   the grant. Never store raw commands, tokens, or secret-bearing arguments in
-   lock evidence.
-3. After the command ends, require the holder to report its result with the
-   matching grant ID. Clear the registry entry, acknowledge release, then grant
-   the next waiter.
-4. After worker loss, controller restart, or an ambiguous acquire or release,
-   keep the key locked. Stop the prior worker when possible and inspect the
-   actual process, device, port, or service state. Clear the grant only after
-   confirming the prior operation no longer owns or uses the resource.
-5. When ownership cannot be distinguished safely, block only passes requiring
-   that resource, preserve their slots, report the grant and waiters, and
-   continue unrelated work. Never expire or steal a grant by elapsed time.
-
-Hold only the matching lock for the command that needs it; do not serialize
-unrelated editing, building, testing, commits, pushes, or PR work. Include live
-grants and waiters in durable slot evidence so recovery treats every
-unreconciled pre-interruption grant as held.
+1. Grant a free key to one requesting slot; otherwise wait while unrelated work
+   continues. Generate a fresh unique grant ID; never start the command without
+   its grant.
+2. After the command, clear only the entry matching both the holder and grant
+   ID, acknowledge release, then reschedule waiting slots. Reject and report a
+   stale or mismatched release without clearing the current grant.
+3. After worker loss, controller restart, or an ambiguous acquire or release,
+   keep the key held until the actual process, device, port, or service is
+   confirmed unused.
+4. When ownership remains unknown, block only dependent passes and continue
+   unrelated work. Never expire or steal a grant by elapsed time.
 
 Keep each slot's ticket agent idle between passes; resume it with refreshed
 durable state and discard it only when the slot frees, reconstructing if lost.
-Reconcile any branch-lifecycle reservation and named resource grant before
-reconstructing or resuming a lost ticket agent.
+Reconcile any named resource grant before reconstructing or resuming a lost
+ticket agent.
 Descendant agents at any depth use only currently spare agent capacity and
 are read-only at immutable SHAs, route findings to the owning ticket or planning
 agent, and never own or mutate tickets. An implementation helper yields before
@@ -174,8 +159,8 @@ those execution failures as semantic blockers.
 
 After a reconciled push:
 
-1. Preserve the slot and verify it holds no branch-lifecycle reservation or
-   named resource grant. Reconcile either before entering remote wait.
+1. Preserve the slot and verify it holds no named resource grant. Reconcile one
+   before entering remote wait.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
    capacity. Monitor all PRs without no-op comments or sequential polling.
 3. Give that PR a 24-hour deadline from its latest push unless the user or
