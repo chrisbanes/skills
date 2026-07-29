@@ -151,13 +151,9 @@ In `next`, selecting a Planning item commits the invocation to that one issue:
 plan it, hand it off, implement it, merge it, and reconcile it before finishing.
 Do not select another issue.
 
-In `drain`, run at most one planning agent from otherwise spare capacity while
-up to three implementation slot agents proceed concurrently. Maximize runnable
-implementation instead of reserving capacity for Planning. Once a planner
-starts, never interrupt it for an implementation event; the event waits until
-planning finishes or bounded liveness recovery blocks it and releases capacity.
-Planning may itself wait at its publish boundary while the controller lane is
-occupied.
+In `drain`, follow the
+[Drain Scheduler](drain-scheduler.md#scheduling) for planner dispatch,
+active-agent capacity, and non-preemption.
 
 ## Migration Gate
 

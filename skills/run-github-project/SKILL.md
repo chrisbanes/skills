@@ -309,7 +309,7 @@ Use this worker contract:
    otherwise stop for confirmation before writing a test. Establish RED, then
    implement one minimal vertical slice at a time.
 5. Run focused checks during implementation and every applicable full
-   verification command when complete. Follow
+   verification command when complete. In `drain`, follow
    [Named Resource Locks](references/drain-scheduler.md#named-resource-locks)
    before a command uses a declared or discovered scarce resource. Stop if
    verification requires expanding scope.
@@ -536,8 +536,9 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     service used by one command. Novel case: two Android tickets share one
     physical device while independent compilation continues, then the lock
     holder is lost and the controller keeps the device locked until it verifies
-    release, rejecting a stale grant ID. Counterexample: independent builds in
-    isolated worktrees need no shared-resource lock.
+    release, rejecting a stale grant ID. Counterexamples: `next` remains
+    single-ticket with no resource lock, and independent builds in isolated
+    worktrees need no shared-resource lock.
 22. RED makes each worker yield at every local gate or occupy active capacity
     during remote waits; GREEN runs a ticket pass through a reconciled push,
     then idles its persistent context while the occupied slot awaits remote
