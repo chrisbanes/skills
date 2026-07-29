@@ -836,13 +836,10 @@ class RankTicketsTest(unittest.TestCase):
             197,
             projectStatus="Planning",
             assignees=["chris"],
-            planningTransition={
-                "id": "PVTE_197_requeue",
-                "actor": "chris",
-                "createdAt": "2026-07-28T12:00:00Z",
-                "status": "Planning",
-                "wasAutomated": False,
-            },
+        )
+        requeued["planningTransition"].update(
+            actor="chris",
+            createdAt="2026-07-28T12:00:00Z",
         )
 
         returncode, output = run_ranker([requeued])
@@ -855,24 +852,12 @@ class RankTicketsTest(unittest.TestCase):
             198,
             projectStatus="Planning",
             assignees=["chris"],
-            planningTransition={
-                "id": "PVTE_198_requeue",
-                "actor": "chris",
-                "createdAt": "2026-07-28T12:00:00Z",
-                "status": "Planning",
-                "wasAutomated": False,
-            },
-            implementationPlan={
-                "commentId": "IC_plan_198",
-                "permalink": "https://github.com/acme/repo/issues/198#issuecomment-plan",
-                "author": "chris",
-                "digest": "sha256:plan-198-edited",
-                "createdAt": "2026-07-28T09:00:00Z",
-                "updatedAt": "2026-07-28T11:00:00Z",
-                "plannedBranch": "main",
-                "plannedSha": "base-198",
-            },
         )
+        invalid_requeue["planningTransition"].update(
+            actor="chris",
+            createdAt="2026-07-28T12:00:00Z",
+        )
+        invalid_requeue["implementationPlan"]["updatedAt"] = "2026-07-28T11:00:00Z"
 
         returncode, output = run_ranker([invalid_requeue])
 

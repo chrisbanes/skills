@@ -8,26 +8,16 @@ import json
 import math
 import sys
 from datetime import datetime
-from typing import Any, NamedTuple
+from typing import Any
 
 
 class InputError(ValueError):
     """Raised when a normalized query violates the queue contract."""
 
 
-class ActionMetadata(NamedTuple):
-    planning_lane: bool
-    candidate_rank: int | None
-    candidate_action: str | None
-
-
-ACTION_METADATA = {
-    "resume-pr": ActionMetadata(False, 0, "resume-pr"),
-    "resume-implementation": ActionMetadata(False, 1, "claim"),
-    "plan": ActionMetadata(True, 2, "plan"),
-    "resume-planning": ActionMetadata(True, None, None),
-    "resume-planning-handoff": ActionMetadata(True, None, None),
-}
+IMPLEMENTATION_ACTIONS = {"resume-pr", "resume-implementation"}
+CANDIDATE_ACTION_ORDER = ("resume-pr", "resume-implementation", "plan")
+CANDIDATE_OUTPUT_ACTIONS = {"resume-implementation": "claim"}
 
 
 def parse_args() -> argparse.Namespace:
@@ -674,14 +664,14 @@ def main() -> int:
         claimed = [item for item in eligible if item["assignedToCurrentUser"]]
         claimed.sort(
             key=lambda item: (
-                ACTION_METADATA[item["resumeAction"]].planning_lane,
+                item["resumeAction"] not in IMPLEMENTATION_ACTIONS,
                 *ticket_rank(item),
             ),
         )
         claim_numbers = [
             item["ticket"]["number"]
             for item in claimed
-            if not ACTION_METADATA[item["resumeAction"]].planning_lane
+            if item["resumeAction"] in IMPLEMENTATION_ACTIONS
         ] + [
             item["number"] for item in blocked_claims
         ]
@@ -709,7 +699,7 @@ def main() -> int:
         candidates = sorted(
             (item for item in eligible if not item["assignedToCurrentUser"]),
             key=lambda item: (
-                ACTION_METADATA[item["resumeAction"]].candidate_rank,
+                CANDIDATE_ACTION_ORDER.index(item["resumeAction"]),
                 *ticket_rank(item),
             ),
         )
@@ -739,7 +729,10 @@ def main() -> int:
             "candidates": [
                 {
                     "ticket": item["ticket"],
-                    "action": ACTION_METADATA[item["resumeAction"]].candidate_action,
+                    "action": CANDIDATE_OUTPUT_ACTIONS.get(
+                        item["resumeAction"],
+                        item["resumeAction"],
+                    ),
                 }
                 for item in candidates
             ],
