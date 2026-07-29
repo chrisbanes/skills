@@ -4,9 +4,17 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 
 ## Slot Model
 
-1. Default to three slots. Accept a user-specified limit of one or two; never exceed three.
+1. Default to three slots. Accept a user-specified limit of one or two; never
+   exceed three. Treat the limit as both the maximum number of claimed,
+   in-flight tickets and the maximum number of concurrently active ticket
+   agents.
+   Define active-agent capacity as the environment-reported number of
+   non-controller agents that can run simultaneously. Running ticket agents,
+   the planner, and descendants consume it; idle persistent contexts do not.
 2. Give each occupied slot one ticket agent, issue, authority lease, warm
    worktree, branch, PR, verified SHA, remote-wait deadline, and fix-round count.
+   Start unrelated ticket agents concurrently by default when agent capacity
+   permits.
 3. Keep every claimed issue `In progress` until merge reconciliation. Derive
    operational state from its slot, PR, checks, and reviews; require no extra
    Project Status values.
@@ -18,22 +26,62 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 6. Keep one separate planning lane. It preserves assignment and planning
    handoff claims but never consumes one of the three implementation slots.
    Follow [Planning Lane](planning-lane.md) for its worktree, agent, authority,
-   handoff, and blocker rules.
+   handoff, and blocker rules. Do not reserve agent capacity for Planning;
+   start it only from currently spare capacity, then never preempt it.
 
-## Mutation Lane
+## Parallel Workers And Controller Lane
 
-Permit exactly one slot agent to mutate local or remote state at a time. Keep
-other slot agents idle; read-only work may run concurrently at an immutable SHA.
-Invalidate and repeat a review contract whenever its SHA changes.
-Keep claims, pushes, merges, and Project mutations under one controller.
+Give each ticket agent exclusive ownership of its skill-owned worktree, branch,
+and PR. Permit independent ticket agents to edit, test, commit, push different
+branch refs, open or update their PRs, reply to review comments, and resolve
+addressed threads concurrently. Invalidate and repeat a review contract
+whenever that ticket's SHA changes.
 
-Switch slots only after a recoverable checkpoint:
+Keep one controller lane for just-in-time claims and assignment, Project Status
+mutations, worktree and branch lifecycle, merges or merge-queue admission,
+issue closure, Done reconciliation, and cleanup. Serialize those actions and
+reconcile every ambiguous remote mutation before the next controller mutation.
+Ticket agents never mutate another slot or the controller-owned Project state.
+
+For each ticket pass, continue through implementation, verification, all review
+contracts, a focused commit, and a reconciled push plus PR creation or update.
+Then yield durable evidence to the controller and idle that persistent context.
+Resume the same agent for actionable feedback or base repair.
+
+Before starting agents concurrently, delay a candidate when it has any of:
+
+- an explicit dependency declared in repository metadata or either approved
+  plan, including a `blocked by` or parent-child relationship to an occupied
+  ticket;
+- a declared exclusive resource shared with an occupied ticket; or
+- an exact overlapping path or seam stated in both approved implementation
+  plans.
+
+Leave a delayed candidate unclaimed and consider the next ranked runnable
+candidate. Never infer a conflict from titles, briefs, predicted scope, or
+similarity alone.
+
+When running agents discover a concrete overlap that was absent from their
+plans, define the later-claimed slot as younger. Let its agent finish only the
+current atomic operation and reach its next recoverable checkpoint:
 
 - a complete RED/GREEN vertical slice;
 - a completed verification command;
 - a clean commit;
-- a reconciled push or merge; or
+- a reconciled push; or
 - an explicit preserved stop.
+
+Pause the younger slot there without releasing its claim. Merge the older slot
+first, refresh the verified base, update the younger branch to that base using
+repository policy, revalidate its authority lease and approved plan, repeat
+full applicable verification and every review gate against its new SHA, and
+resume its persistent agent.
+
+Discover repository-declared or operationally evident scarce resources before
+launching commands. Use a named lock for a physical device, emulator, fixed
+port, shared test service, or other exclusive resource. Hold only the matching
+lock for the command that needs it; do not serialize unrelated editing,
+building, testing, commits, pushes, or PR work.
 
 Keep each slot's ticket agent idle between passes; resume it with refreshed
 durable state and discard it only when the slot frees, reconstructing if lost.
@@ -49,39 +97,46 @@ bounded liveness recovery releases capacity.
 Before starting new work, recover and select claim classes in the order defined
 by [Planning Lane](planning-lane.md#scheduling).
 
-At every checkpoint, choose one action:
+At every controller event or worker yield, perform all independent runnable
+actions that fit the slot and active-agent limits. Exhaust each class before
+dispatching the next:
 
 1. Merge the oldest merge-ready slot, unless an explicit dependency requires a
-   different order.
-2. Service the oldest actionable review or CI event.
-3. Resume existing local implementation.
-4. Finish a current plan or verified planning handoff.
-5. Claim the next ranked `Ready to implement` ticket just in time when a slot
-   is free.
-6. Start the next ranked `Planning` item when the planning lane and spare agent
-   capacity are free.
-7. Wait on all remote slots together only when no local action remains.
+   different order. Admit or merge only one at a time.
+2. Resume owning ticket agents for actionable review, CI, or base-repair events
+   in oldest-event order.
+3. Resume paused local implementation slots in claim order.
+4. Finish a current plan or verified planning handoff without preemption.
+5. Claim ranked `Ready to implement` tickets one at a time, skip temporarily
+   conflict-delayed candidates, and launch unrelated slot agents until the
+   in-flight or active-agent limit is reached.
+6. Start the next ranked `Planning` item only when the planning lane and active
+   agent capacity are free after maximizing runnable implementation.
+7. Monitor all remote slots together only when no local or controller action
+   remains.
 
 Never preempt a valid occupied slot for newly higher-priority work. Requery and
 rank live data before every just-in-time claim.
 
-Planning runs read-only beside implementation, waits for the mutation lane only
+Planning runs read-only beside implementation, enters the controller lane only
 at assignment, comment publication, and Status transitions, and continues to
 completion without preemption. Once handed off, the same assigned issue enters
 the next available implementation slot. Apply the planning lane's reconciled
-three-attempt recovery to planner loss, crash, or timeout; do not classify those
-execution failures as semantic blockers.
+three-attempt recovery to planner loss, crash, or timeout; do not classify
+those execution failures as semantic blockers.
 
 Do not concurrently claim tickets connected by `blocked by`, a parent-child
-relationship, or a declared exclusive resource. Do not guess conflicts from
-titles, briefs, or predicted file overlap.
+relationship, another explicit dependency, a declared exclusive resource, or
+a concrete planned path or seam overlap. Do not guess conflicts from titles,
+briefs, or predicted file overlap.
 
 ## Remote Waiting
 
 After a reconciled push:
 
-1. Preserve the slot and release the mutation lane.
-2. Monitor all PRs without no-op comments or sequential polling.
+1. Preserve the slot and release every named resource lock.
+2. Idle its persistent ticket agent so remote waiting consumes no active-agent
+   capacity. Monitor all PRs without no-op comments or sequential polling.
 3. Give that PR a 24-hour deadline from its latest push unless the user or
    repository specifies another duration.
 4. Reset only that PR's deadline after a fix push.
@@ -104,7 +159,7 @@ After a merge:
 2. Refresh mergeability for every other PR.
 3. Update and rerun CI for another branch only when repository policy requires
    the latest base, a conflict appears, or the merge invalidates a tested
-   assumption. Never rebase every branch automatically.
+   assumption or planned seam. Never rebase every branch automatically.
 4. Snap the merged slot's clean worktree to the verified base and reuse it.
 5. Delete only that slot's merged local ticket branch.
 
@@ -114,6 +169,11 @@ Preserve a ticket-local blocker in its occupied slot and continue unrelated
 slots. Stop the whole drain for changed configuration, lost permissions,
 invalid base state, merge-policy drift, correlated CI failure, or another
 integrity problem that affects every claim.
+
+Treat an unexplained scarce-resource collision as slot-local on its first
+occurrence. Discover and add the narrow named lock before retrying. Pause new
+claims when the same collision or infrastructure failure affects two slots or
+the verified base.
 
 Finish successfully only when a complete live query is empty and every slot is
 free after merge reconciliation. If no runnable work remains but a slot is

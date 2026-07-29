@@ -47,9 +47,9 @@ second marker.
 
 ## Plan A Planning Item
 
-1. Acquire the mutation lane, assign the issue exclusively to the authenticated
-   user, refetch and verify the assignment, then release the lane. Reconcile an
-   ambiguous assignment before retrying. Preserve the assignment through
+1. Enter the controller lane, assign the issue exclusively to the authenticated
+   user, refetch and verify the assignment, then release the lane. Reconcile
+   an ambiguous assignment before retrying. Preserve the assignment through
    planning and implementation.
 2. Use one dedicated, reusable, clean planning worktree at a stable
    controller-recorded path outside the checkout, detached at the configured
@@ -63,10 +63,10 @@ second marker.
 4. Allow bounded read-only discovery descendants from currently spare agent
    capacity. They never own the ticket or mutate state.
 5. Never preempt planning after it starts. Planning does not occupy an
-   implementation slot and does not reserve the mutation lane during read-only
+   implementation slot and does not reserve the controller lane during read-only
    work.
-6. At the publish boundary, wait for the mutation lane. Let `to-plan` create or
-   update only its marker comment, then refetch it from GitHub.
+6. At the publish boundary, wait for the controller lane. Let `to-plan` create
+   or update only its marker comment, then refetch it from GitHub.
 7. Verify the exact marker, authenticated-runner author, digest, permalink,
    planned branch, planned SHA, and timestamps. Treat missing `to-plan` as an
    issue-local planning blocker; it must not block implementation items with
@@ -152,10 +152,12 @@ plan it, hand it off, implement it, merge it, and reconcile it before finishing.
 Do not select another issue.
 
 In `drain`, run at most one planning agent from otherwise spare capacity while
-up to three implementation slots proceed. Never interrupt that planner for an
-implementation event; the event waits until planning finishes or bounded
-liveness recovery blocks it and releases capacity. Planning may itself wait at
-its publish boundary while the mutation lane is occupied.
+up to three implementation slot agents proceed concurrently. Maximize runnable
+implementation instead of reserving capacity for Planning. Once a planner
+starts, never interrupt it for an implementation event; the event waits until
+planning finishes or bounded liveness recovery blocks it and releases capacity.
+Planning may itself wait at its publish boundary while the controller lane is
+occupied.
 
 ## Migration Gate
 

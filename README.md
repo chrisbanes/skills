@@ -84,7 +84,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 ### Workflows
 
 - [`to-plan`](skills/to-plan/SKILL.md) — publish a repository-aware implementation plan for one ready GitHub issue with a provider-neutral implementation handoff.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — plan and execute the next authorized issue or drain a configured GitHub Project through one planning lane and a bounded three-slot CI/review pipeline. Requires `tdd` and supports [preferred review providers](skills/run-github-project/references/workflow-providers.md) without depending on them.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — plan and execute the next authorized issue or drain a configured GitHub Project through one planning lane and a bounded three-slot parallel implementation, CI, and review pipeline. Requires `tdd` and supports [preferred review providers](skills/run-github-project/references/workflow-providers.md) without depending on them.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, detect and fix CI failures, and keep PRs moving forward.
 
 ## Contributing
