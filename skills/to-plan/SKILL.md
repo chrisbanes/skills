@@ -119,7 +119,8 @@ Build one path inventory covering tracked and untracked changes. Exclude paths
 that cannot plausibly affect the ticket's behavior, files, symbols, seams,
 contracts, or validation; inspect contents only for potential overlap. Stop
 when any change overlaps the ticket or overlap is uncertain. Retain the
-inventory for the pre-publication refresh.
+inventory and whether each allowed entry was excluded by path alone or required
+content inspection for the pre-publication refresh.
 
 Allow unrelated changes without exposing their contents in the GitHub comment.
 Never stash, reset, clean, delete, or commit user changes.
@@ -240,9 +241,12 @@ Immediately before any GitHub write, refresh:
 
 - Issue state, body, comments, readiness label, and issue-blocker state.
 - Linked implementation pull requests.
-- Current `HEAD` and the working-tree path inventory. Inspect contents only for
-  newly listed or plausibly overlapping entries. Stop when any change overlaps
-  the ticket or overlap is uncertain.
+- Current `HEAD` and a freshly rebuilt working-tree path inventory. Repeat Step
+  4's overlap check for every current entry. Reuse only path-only exclusions;
+  reinspect every entry whose classification previously required content
+  inspection, even when its path and status are unchanged. Never treat matching
+  path inventories as proof that contents are unchanged. Stop when any change
+  overlaps the ticket or overlap is uncertain.
 - The marker-owned comment and edit permission.
 
 Reapply Step 3's live GitHub gates to the refreshed state; any failure blocks
@@ -414,8 +418,8 @@ then restore the skill and require the GREEN outcome.
 9. A checkout has a large unrelated generated diff plus one ticket-adjacent
    change. Path screening avoids reading the generated contents, inspects the
    adjacent change, and blocks if its overlap remains uncertain. A
-   pre-publication refresh repeats the path inventory without rescanning
-   unchanged unrelated contents.
+   pre-publication refresh repeats the path inventory, reuses the generated
+   path's path-only exclusion, and reinspects the adjacent change.
 10. Matt Pocock's `/implement` skill is unavailable. Planning stops before
     reading the issue or repository and directs the user to the canonical skill
     source. With both prerequisites available, planning proceeds normally.
@@ -430,3 +434,7 @@ then restore the skill and require the GREEN outcome.
 13. A broad Kotlin or Android request to plan one ready GitHub issue routes from
     `using-chrisbanes-skills` to `/to-plan`. A request to implement an issue
     directly does not.
+14. During the approval pause, an already-dirty ticket-adjacent file keeps the
+    same path and status but gains ticket-overlapping contents. Refresh
+    reinspects it, blocks publication, and does not rely on the unchanged path
+    inventory.
