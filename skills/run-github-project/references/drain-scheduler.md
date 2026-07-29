@@ -38,10 +38,11 @@ addressed threads concurrently. Invalidate and repeat a review contract
 whenever that ticket's SHA changes.
 
 Keep one controller lane for just-in-time claims and assignment, Project Status
-mutations, worktree and branch lifecycle, merges or merge-queue admission,
-issue closure, Done reconciliation, and cleanup. Serialize those actions and
-reconcile every ambiguous remote mutation before the next controller mutation.
-Ticket agents never mutate another slot or the controller-owned Project state.
+mutations, worktree and branch lifecycle reservations, merges or merge-queue
+admission, issue closure, Done reconciliation, and cleanup. Serialize those
+actions and reconcile every ambiguous remote mutation before the next
+controller mutation. Ticket agents never mutate another slot or the
+controller-owned Project state.
 
 For each ticket pass, continue through implementation, verification, all review
 contracts, a focused commit, and a reconciled push plus PR creation or update.
@@ -63,28 +64,62 @@ similarity alone.
 
 When running agents discover a concrete overlap that was absent from their
 plans, define the later-claimed slot as younger. Let its agent finish only the
-current atomic operation and reach its next recoverable checkpoint:
+current atomic operation, complete and verify its current vertical slice, and
+reach a clean focused commit checkpoint. A reconciled push of that commit is
+also valid. If the agent cannot reach a clean commit safely, preserve and block
+the younger slot; do not begin automated base repair from a dirty worktree.
 
-- a complete RED/GREEN vertical slice;
-- a completed verification command;
-- a clean commit;
-- a reconciled push; or
-- an explicit preserved stop.
+After that clean checkpoint, pause the younger slot without releasing its
+claim, and revoke its merge eligibility. Merge the older slot first, refresh
+the verified base, then have the controller grant an exclusive branch-lifecycle
+reservation to the younger slot's owning ticket agent. Only that agent may
+update its branch and worktree to the new base using repository policy; the
+controller coordinates the reservation but never edits the agent-owned branch.
 
-Pause the younger slot there without releasing its claim. Merge the older slot
-first, refresh the verified base, update the younger branch to that base using
-repository policy, revalidate its authority lease and approved plan, repeat
-full applicable verification and every review gate against its new SHA, and
-resume its persistent agent.
+The owning agent must revalidate the authority lease and approved plan, repeat
+full applicable verification and every review gate against the updated SHA,
+push the exact commit, and reconcile the remote result. Refetch the PR and
+require its head SHA to equal that pushed SHA before restoring merge
+eligibility or evaluating its new checks and reviews. Release the lifecycle
+reservation only after the update is reconciled or explicitly preserved.
+
+### Named Resource Locks
 
 Discover repository-declared or operationally evident scarce resources before
-launching commands. Use a named lock for a physical device, emulator, fixed
-port, shared test service, or other exclusive resource. Hold only the matching
-lock for the command that needs it; do not serialize unrelated editing,
-building, testing, commits, pushes, or PR work.
+launching commands. Canonicalize each resource by its stable identity, such as
+a device serial, emulator instance, host and port, or non-secret service
+identity. Never use a worker-chosen alias or secret-bearing value as the lock
+key.
+
+Use the controller lane as an atomic lock registry:
+
+1. Require the worker to request a canonical resource key plus its slot,
+   ticket, agent, non-secret operation label, and command digest before launch.
+2. When the key is free, record one grant ID, holder, operation, command digest,
+   and grant time, then return that grant to the worker. When occupied, queue
+   the request and let unrelated work continue. Never start the command before
+   the grant. Never store raw commands, tokens, or secret-bearing arguments in
+   lock evidence.
+3. After the command ends, require the holder to report its result with the
+   matching grant ID. Clear the registry entry, acknowledge release, then grant
+   the next waiter.
+4. After worker loss, controller restart, or an ambiguous acquire or release,
+   keep the key locked. Stop the prior worker when possible and inspect the
+   actual process, device, port, or service state. Clear the grant only after
+   confirming the prior operation no longer owns or uses the resource.
+5. When ownership cannot be distinguished safely, block only passes requiring
+   that resource, preserve their slots, report the grant and waiters, and
+   continue unrelated work. Never expire or steal a grant by elapsed time.
+
+Hold only the matching lock for the command that needs it; do not serialize
+unrelated editing, building, testing, commits, pushes, or PR work. Include live
+grants and waiters in durable slot evidence so recovery treats every
+unreconciled pre-interruption grant as held.
 
 Keep each slot's ticket agent idle between passes; resume it with refreshed
 durable state and discard it only when the slot frees, reconstructing if lost.
+Reconcile any branch-lifecycle reservation and named resource grant before
+reconstructing or resuming a lost ticket agent.
 Descendant agents at any depth use only currently spare agent capacity and
 are read-only at immutable SHAs, route findings to the owning ticket or planning
 agent, and never own or mutate tickets. An implementation helper yields before
@@ -134,7 +169,8 @@ briefs, or predicted file overlap.
 
 After a reconciled push:
 
-1. Preserve the slot and release every named resource lock.
+1. Preserve the slot and verify it holds no branch-lifecycle reservation or
+   named resource grant. Reconcile either before entering remote wait.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
    capacity. Monitor all PRs without no-op comments or sequential polling.
 3. Give that PR a 24-hour deadline from its latest push unless the user or
