@@ -8,12 +8,15 @@ into implementation.
 Require both:
 
 1. the exact `ready-for-agent` label; and
-2. the latest transition into `Planning` to be a non-automated event by a
-   configured execution approver.
+2. the latest transition into `Planning` to be either:
+   - a non-automated event by a configured execution approver; or
+   - the authenticated runner's non-automated machine requeue backed by its
+     verified earlier Ready handoff.
 
-That human transition authorizes autonomous plan publication and subsequent
-implementation. Ordinary issue-body or comment edits do not revoke it. A newer
-human transition into `Planning` explicitly requests a new plan.
+The human transition authorizes autonomous plan publication and implementation.
+The verified Ready handoff carries that authority across a machine requeue.
+Ordinary issue-body or comment edits do not revoke it. A newer human transition
+into `Planning` explicitly requests a new plan.
 
 Recognize exactly one implementation-plan comment containing:
 
@@ -27,6 +30,8 @@ Classify it as:
 - **current in Planning** when the authenticated runner authored it, it was last
   updated at or after the authorizing Planning event, and its planned branch
   matches the configured base;
+- **stale after requeue** whenever the runner moved the item back to Planning,
+  even when the marker itself is unchanged;
 - **stale** when a newer authorizing Planning event exists, the comment was
   edited after its runner-authored Ready handoff, its author differs, or its
   planned branch no longer
@@ -46,13 +51,13 @@ second marker.
    user, refetch and verify the assignment, then release the lane. Reconcile an
    ambiguous assignment before retrying. Preserve the assignment through
    planning and implementation.
-2. Use one dedicated, reusable, clean planning worktree detached at the
-   configured base. Refresh it only between tickets; never discard ignored
-   build state.
+2. Use one dedicated, reusable, clean planning worktree at a stable
+   controller-recorded path outside the checkout, detached at the configured
+   base. Refresh it only between tickets; never discard ignored build state.
 3. Start a fresh ephemeral planning agent and invoke:
 
    ```text
-   to-plan --auto <canonical issue URL>
+   /to-plan --auto <canonical issue URL>
    ```
 
 4. Allow bounded read-only discovery descendants from currently spare agent
@@ -75,6 +80,11 @@ second marker.
    `In progress`, verify the full authority lease, and start its slot. Otherwise
    preserve the assigned verified Ready handoff, release the planner, and
    resume that handoff before new claims when a slot frees.
+
+After a successful handoff, require the planning worktree to be clean with no
+retained draft, detach it, snap it to the verified base, and keep it for reuse.
+Preserve its exact path, base, and draft only when planning blocks and recovery
+requires them.
 
 Project schema mutations are never part of this procedure. Stop with the
 required configuration repair when an expected field or option is missing.
@@ -109,9 +119,11 @@ current base:
   symbols, seams, contracts, and validation;
 - move the item back to `Planning` when drift overlaps or overlap is uncertain.
 
-That machine requeue is the only automatic backward Status transition. It
-retains the original Planning authority. Any fresh human Planning transition
-supersedes it and requests a new plan.
+That runner-authored machine requeue is the only automatic backward Status
+transition. The ranker requires its verified prior Ready handoff, retains that
+authority, and always resumes planning rather than handing the old plan back
+directly. Any fresh human Planning transition supersedes it and requests a new
+plan.
 
 For a plan edit or another live-eligibility invalidation after Ready, preserve
 the blocked handoff and require a human transition to Planning. That new event

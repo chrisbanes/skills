@@ -65,8 +65,12 @@ configured repository or `owner/repository#number` strings for cross-repository
 issues; never pass GraphQL objects. Use a finite non-negative numeric Project
 position. An empty PR array is valid.
 
-For a `Planning` item, `readyTransition` may be `null`. For any other accepted
-Status it must be the latest transition into `Ready to implement`.
+For a first-time or human-reauthorized `Planning` item, `readyTransition` may be
+`null`. A runner-authored Planning requeue must include its preceding verified
+Ready transition. For any other accepted Status it must be the latest
+transition into `Ready to implement`. `planningTransition` is always the latest
+event entering Planning; the ranker distinguishes human authorization from a
+runner requeue by actor and the preceding Ready handoff.
 `implementationPlan` may be `null`; when present it must represent the only
 comment containing `<!-- to-plan:implementation-plan:v1 -->` and `author` must
 be the authenticated runner's GitHub login.

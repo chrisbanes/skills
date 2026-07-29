@@ -150,10 +150,9 @@ after that query for the next invocation.
 4. Record draft, pull-request, redacted, cross-repository, closed, malformed,
    or filter-excluded items as ineligible. Never convert draft items into
    tickets or use a named Project view implicitly.
-5. Build contender classes in this order: existing implementation/PR claims,
-   resumable Planning/handoff claims, new Ready-to-implement work, then new
-   Planning work. Within each class use Priority, visible position, then issue
-   number. Do not preempt a valid claim.
+5. Build contender classes in the exact order defined by
+   [Planning Lane](references/planning-lane.md#scheduling). Within each class
+   use Priority, visible position, then issue number. Do not preempt a claim.
 6. Phase two: hydrate contenders in order with fresh batched GraphQL reads.
    Gather:
    - native open `blocked by` relationships;

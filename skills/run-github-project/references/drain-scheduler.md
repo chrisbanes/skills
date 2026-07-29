@@ -46,9 +46,8 @@ bounded liveness recovery releases capacity.
 
 ## Scheduling
 
-Before starting new work, recover existing implementation claims, then
-resumable Planning or verified handoff claims. Fill free implementation slots
-from `Ready to implement` before starting a new `Planning` item.
+Before starting new work, recover and select claim classes in the order defined
+by [Planning Lane](planning-lane.md#scheduling).
 
 At every checkpoint, choose one action:
 

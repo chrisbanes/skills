@@ -797,7 +797,7 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual([], output["blockedPlanningClaims"])
         self.assertEqual("resume-planning", output["claims"][0]["action"])
 
-    def test_planning_item_with_another_authors_marker_is_replanned(self) -> None:
+    def test_planning_item_with_another_authors_marker_is_blocked(self) -> None:
         planning = ticket(
             193,
             projectStatus="Planning",
@@ -817,7 +817,78 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([planning])
 
         self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual(
+            [
+                {
+                    "number": 193,
+                    "reasons": [
+                        "implementation plan author 'mallory' "
+                        "does not match current user 'chris'",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
+    def test_resumes_verified_runner_requeue_in_planning(self) -> None:
+        requeued = ticket(
+            197,
+            projectStatus="Planning",
+            assignees=["chris"],
+            planningTransition={
+                "id": "PVTE_197_requeue",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Planning",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([requeued])
+
+        self.assertEqual(0, returncode)
         self.assertEqual("resume-planning", output["claims"][0]["action"])
+
+    def test_runner_requeue_requires_verified_prior_ready_handoff(self) -> None:
+        invalid_requeue = ticket(
+            198,
+            projectStatus="Planning",
+            assignees=["chris"],
+            planningTransition={
+                "id": "PVTE_198_requeue",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Planning",
+                "wasAutomated": False,
+            },
+            implementationPlan={
+                "commentId": "IC_plan_198",
+                "permalink": "https://github.com/acme/repo/issues/198#issuecomment-plan",
+                "author": "chris",
+                "digest": "sha256:plan-198-edited",
+                "createdAt": "2026-07-28T09:00:00Z",
+                "updatedAt": "2026-07-28T11:00:00Z",
+                "plannedBranch": "main",
+                "plannedSha": "base-198",
+            },
+        )
+
+        returncode, output = run_ranker([invalid_requeue])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual(
+            [
+                {
+                    "number": 198,
+                    "reasons": [
+                        "runner Planning requeue lacks a verified prior Ready handoff",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
 
     def test_ready_handoff_rejects_another_authors_marker(self) -> None:
         handoff = ticket(
