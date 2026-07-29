@@ -1,4 +1,4 @@
 interface:
   display_name: "To Plan"
-  short_description: "Add planning to Matt Pocock's issue workflow"
+  short_description: "Publish a repository-aware issue plan"
   default_prompt: "Use $to-plan to create an implementation plan for this ready GitHub issue."

@@ -10,6 +10,10 @@ Never install a provider implicitly.
 
 If `tdd` is unavailable, stop and report its source and exact install command.
 
+`to-plan` is required only while processing `Planning`. If it is unavailable,
+block those planning items locally and continue implementation items whose
+marker-owned plans and handoffs are current.
+
 ## Preferred Review Providers
 
 These providers are optional. Prefer them when installed; otherwise use an

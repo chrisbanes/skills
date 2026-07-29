@@ -21,14 +21,16 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 - URL: `<url>`
 - Node ID: `<PVT_...>`
 - Filter: `<optional trusted Project filter, or none>`
-- Ready approver logins: `<login, login, ...>`
+- Execution approver logins: `<login, login, ...>`
 
 ## Status
 
 - Field name: `<Status>`
 - Field ID: `<PVTSSF_...>`
-- Ready name: `<Ready for agent>`
-- Ready option ID: `<option-id>`
+- Planning name: `<Planning>`
+- Planning option ID: `<option-id>`
+- Ready to implement name: `<Ready to implement>`
+- Ready to implement option ID: `<option-id>`
 - In progress name: `<In progress>`
 - In progress option ID: `<option-id>`
 - Done name: `<Done>`
@@ -57,3 +59,9 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 Keep human-readable names beside IDs so startup validation can distinguish a
 rename from an ID that now identifies a different object. Preserve repository-
 specific comments and additions when repairing stale mappings.
+
+Humans own the Project schema. Never create or rename Status options from the
+runner. Before migrating an existing queue, require zero `In progress` items
+and have an execution approver move every legacy Ready item to `Planning`.
+Revalidate even an existing marker plan through the planning lane before its
+runner-authored Ready handoff.

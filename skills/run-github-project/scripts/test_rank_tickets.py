@@ -24,7 +24,7 @@ DEFAULT_PROJECT_ARGUMENTS = (
     "acme/repo",
     "--base-branch",
     "main",
-    "--ready-approver",
+    "--execution-approver",
     "maintainer",
 )
 DEFAULT_STATUS_ARGUMENTS = (
@@ -65,22 +65,34 @@ def ticket(number: int, **overrides: object) -> dict:
         "projectStatus": "Ready",
         "projectPriority": "High",
         "projectPosition": number,
+        "labels": ["ready-for-agent"],
         "assignees": [],
         "blockedBy": [],
         "openDescendants": [],
         "openPullRequests": [],
-        "readyTransition": {
-            "id": f"PVTE_{number}",
+        "planningTransition": {
+            "id": f"PVTE_{number}_planning",
             "actor": "maintainer",
+            "createdAt": "2026-07-28T08:00:00Z",
+            "status": "Planning",
+            "wasAutomated": False,
+        },
+        "readyTransition": {
+            "id": f"PVTE_{number}_ready",
+            "actor": "chris",
             "createdAt": "2026-07-28T10:00:00Z",
             "status": "Ready",
             "wasAutomated": False,
         },
-        "agentBrief": {
-            "commentId": f"IC_{number}",
-            "digest": f"sha256:brief-{number}",
+        "implementationPlan": {
+            "commentId": f"IC_plan_{number}",
+            "permalink": f"https://github.com/acme/repo/issues/{number}#issuecomment-plan",
+            "author": "chris",
+            "digest": f"sha256:plan-{number}",
             "createdAt": "2026-07-28T09:00:00Z",
             "updatedAt": "2026-07-28T09:00:00Z",
+            "plannedBranch": "main",
+            "plannedSha": f"base-{number}",
         },
     }
     result.update(overrides)
@@ -155,7 +167,12 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual([4, 5], output["claimed"])
 
     def test_blocked_claims_count_toward_the_limit(self) -> None:
-        blocked = ticket(6, assignees=["chris"])
+        blocked = ticket(
+            6,
+            projectStatus="In progress",
+            assignees=["chris"],
+            labels=[],
+        )
         valid = ticket(7, projectStatus="In progress", assignees=["chris"])
 
         returncode, output = run_ranker(
@@ -296,12 +313,13 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
-    def test_ready_assignment_blocks_even_with_owned_pr(self) -> None:
+    def test_ready_assignment_without_verified_handoff_blocks_even_with_owned_pr(self) -> None:
         partial_claim = ticket(
             50,
             projectPosition=1,
             assignees=["chris"],
             openPullRequests=[pull_request(500)],
+            implementationPlan=None,
         )
 
         returncode, output = run_ranker([partial_claim])
@@ -313,10 +331,11 @@ class RankTicketsTest(unittest.TestCase):
                     "number": 50,
                     "reasons": [
                         "assigned to current user while project status is still ready",
+                        "missing current implementation plan",
                     ],
                 },
             ],
-            output["blockedClaims"],
+            output["blockedPlanningClaims"],
         )
 
     def test_invalid_claim_blocks_only_its_slot(self) -> None:
@@ -324,6 +343,8 @@ class RankTicketsTest(unittest.TestCase):
             51,
             projectPosition=1,
             assignees=["chris"],
+            projectStatus="In progress",
+            labels=[],
         )
         valid_claim = ticket(
             52,
@@ -450,7 +471,7 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(100, first_entry(output)["ticket"]["number"])
         self.assertEqual("resume-implementation", first_entry(output)["action"])
 
-    def test_automated_ready_transition_is_not_approval(self) -> None:
+    def test_ready_handoff_rejects_project_workflow_automation(self) -> None:
         automated = ticket(
             110,
             readyTransition={
@@ -468,18 +489,27 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(0, returncode)
         self.assertEqual(111, first_entry(output)["ticket"]["number"])
         self.assertEqual(
-            [{"number": 110, "reasons": ["ready transition was automated"]}],
+            [
+                {
+                    "number": 110,
+                    "reasons": [
+                        "ready transition came from Project workflow automation",
+                    ],
+                },
+            ],
             output["excluded"],
         )
 
-    def test_ready_transition_requires_configured_approver(self) -> None:
+    def test_planning_transition_requires_configured_execution_approver(self) -> None:
         unapproved = ticket(
             120,
-            readyTransition={
-                "id": "PVTE_120",
+            projectStatus="Planning",
+            implementationPlan=None,
+            planningTransition={
+                "id": "PVTE_120_planning",
                 "actor": "outsider",
-                "createdAt": "2026-07-28T10:00:00Z",
-                "status": "Ready",
+                "createdAt": "2026-07-28T08:00:00Z",
+                "status": "Planning",
                 "wasAutomated": False,
             },
         )
@@ -490,28 +520,46 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(0, returncode)
         self.assertEqual(121, first_entry(output)["ticket"]["number"])
         self.assertEqual(
-            [{"number": 120, "reasons": ["ready transition actor 'outsider' is not approved"]}],
+            [
+                {
+                    "number": 120,
+                    "reasons": [
+                        "planning transition actor 'outsider' is not approved",
+                    ],
+                },
+            ],
             output["excluded"],
         )
 
-    def test_agent_brief_must_not_change_after_ready_approval(self) -> None:
-        stale_approval = ticket(
+    def test_plan_edit_after_ready_invalidates_handoff(self) -> None:
+        stale_handoff = ticket(
             130,
-            agentBrief={
-                "commentId": "IC_130",
-                "digest": "sha256:brief-130",
+            implementationPlan={
+                "commentId": "IC_plan_130",
+                "permalink": "https://github.com/acme/repo/issues/130#issuecomment-plan",
+                "author": "chris",
+                "digest": "sha256:plan-130-edited",
                 "createdAt": "2026-07-28T09:00:00Z",
                 "updatedAt": "2026-07-28T11:00:00Z",
+                "plannedBranch": "main",
+                "plannedSha": "base-130",
             },
         )
         valid = ticket(131)
 
-        returncode, output = run_ranker([stale_approval, valid])
+        returncode, output = run_ranker([stale_handoff, valid])
 
         self.assertEqual(0, returncode)
         self.assertEqual(131, first_entry(output)["ticket"]["number"])
         self.assertEqual(
-            [{"number": 130, "reasons": ["agent brief changed after ready approval"]}],
+            [
+                {
+                    "number": 130,
+                    "reasons": [
+                        "ready transition predates the current implementation plan",
+                    ],
+                },
+            ],
             output["excluded"],
         )
 
@@ -574,6 +622,340 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(171, first_entry(output)["ticket"]["number"])
         self.assertEqual(170, output["excluded"][0]["number"])
         self.assertIn("strings or integers", output["excluded"][0]["reasons"][0])
+
+    def test_returns_authorized_planning_item_after_implementation_work(self) -> None:
+        planning = ticket(
+            180,
+            projectStatus="Planning",
+            projectPriority="Critical",
+            projectPosition=1,
+            labels=["ready-for-agent"],
+            planningTransition={
+                "id": "PVTE_180_planning",
+                "actor": "maintainer",
+                "createdAt": "2026-07-28T08:00:00Z",
+                "status": "Planning",
+                "wasAutomated": False,
+            },
+            implementationPlan=None,
+        )
+        implementation = ticket(
+            181,
+            projectPriority="Low",
+            projectPosition=99,
+        )
+
+        returncode, output = run_ranker([planning, implementation])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [(181, "claim"), (180, "plan")],
+            [
+                (entry["ticket"]["number"], entry["action"])
+                for entry in output["candidates"]
+            ],
+        )
+
+    def test_planning_requires_ready_for_agent_label(self) -> None:
+        planning = ticket(
+            182,
+            projectStatus="Planning",
+            labels=[],
+            implementationPlan=None,
+        )
+
+        returncode, output = run_ranker([planning])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["candidates"])
+        self.assertEqual(
+            [{"number": 182, "reasons": ["missing ready-for-agent label"]}],
+            output["excluded"],
+        )
+
+    def test_planning_requires_human_execution_approver_transition(self) -> None:
+        planning = ticket(
+            183,
+            projectStatus="Planning",
+            implementationPlan=None,
+            planningTransition={
+                "id": "PVTE_183_planning",
+                "actor": "github-project-automation",
+                "createdAt": "2026-07-28T08:00:00Z",
+                "status": "Planning",
+                "wasAutomated": True,
+            },
+        )
+
+        returncode, output = run_ranker([planning])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["candidates"])
+        self.assertEqual(
+            [{"number": 183, "reasons": ["planning transition was automated"]}],
+            output["excluded"],
+        )
+
+    def test_resumes_assigned_planning_claim(self) -> None:
+        planning = ticket(
+            184,
+            projectStatus="Planning",
+            assignees=["chris"],
+            implementationPlan=None,
+        )
+
+        returncode, output = run_ranker([planning])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [(184, "resume-planning")],
+            [
+                (entry["ticket"]["number"], entry["action"])
+                for entry in output["claims"]
+            ],
+        )
+
+    def test_planning_claim_does_not_consume_implementation_slot(self) -> None:
+        planning = ticket(
+            185,
+            projectStatus="Planning",
+            assignees=["chris"],
+            implementationPlan=None,
+        )
+        implementation = ticket(
+            186,
+            projectStatus="In progress",
+            assignees=["chris"],
+        )
+
+        returncode, output = run_ranker(
+            [planning, implementation],
+            "--max-claims",
+            "1",
+        )
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            ["resume-implementation", "resume-planning"],
+            [entry["action"] for entry in output["claims"]],
+        )
+
+    def test_resumes_planning_handoff_when_current_plan_is_published(self) -> None:
+        planning = ticket(
+            187,
+            projectStatus="Planning",
+            assignees=["chris"],
+        )
+
+        returncode, output = run_ranker([planning])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            "resume-planning-handoff",
+            output["claims"][0]["action"],
+        )
+
+    def test_new_human_planning_transition_requests_replanning(self) -> None:
+        planning = ticket(
+            189,
+            projectStatus="Planning",
+            assignees=["chris"],
+            planningTransition={
+                "id": "PVTE_189_replan",
+                "actor": "maintainer",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Planning",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([planning])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual("resume-planning", output["claims"][0]["action"])
+
+    def test_planning_item_with_wrong_branch_is_replanned(self) -> None:
+        planning = ticket(
+            192,
+            projectStatus="Planning",
+            assignees=["chris"],
+            implementationPlan={
+                "commentId": "IC_plan_192",
+                "permalink": "https://github.com/acme/repo/issues/192#issuecomment-plan",
+                "author": "chris",
+                "digest": "sha256:plan-192",
+                "createdAt": "2026-07-28T09:00:00Z",
+                "updatedAt": "2026-07-28T09:00:00Z",
+                "plannedBranch": "release",
+                "plannedSha": "base-192",
+            },
+        )
+
+        returncode, output = run_ranker([planning])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["blockedPlanningClaims"])
+        self.assertEqual("resume-planning", output["claims"][0]["action"])
+
+    def test_planning_item_with_another_authors_marker_is_replanned(self) -> None:
+        planning = ticket(
+            193,
+            projectStatus="Planning",
+            assignees=["chris"],
+            implementationPlan={
+                "commentId": "IC_plan_193",
+                "permalink": "https://github.com/acme/repo/issues/193#issuecomment-plan",
+                "author": "mallory",
+                "digest": "sha256:plan-193",
+                "createdAt": "2026-07-28T09:00:00Z",
+                "updatedAt": "2026-07-28T09:00:00Z",
+                "plannedBranch": "main",
+                "plannedSha": "base-193",
+            },
+        )
+
+        returncode, output = run_ranker([planning])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual("resume-planning", output["claims"][0]["action"])
+
+    def test_ready_handoff_rejects_another_authors_marker(self) -> None:
+        handoff = ticket(
+            196,
+            assignees=["chris"],
+            implementationPlan={
+                "commentId": "IC_plan_196",
+                "permalink": "https://github.com/acme/repo/issues/196#issuecomment-plan",
+                "author": "mallory",
+                "digest": "sha256:plan-196",
+                "createdAt": "2026-07-28T09:00:00Z",
+                "updatedAt": "2026-07-28T09:00:00Z",
+                "plannedBranch": "main",
+                "plannedSha": "base-196",
+            },
+        )
+
+        returncode, output = run_ranker([handoff])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [
+                {
+                    "number": 196,
+                    "reasons": [
+                        "assigned to current user while project status is still ready",
+                        "implementation plan author 'mallory' "
+                        "does not match current user 'chris'",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
+    def test_resumes_verified_runner_authored_ready_handoff(self) -> None:
+        handoff = ticket(
+            188,
+            assignees=["chris"],
+            readyTransition={
+                "id": "PVTE_188_ready",
+                "actor": "chris",
+                "createdAt": "2026-07-28T10:00:00Z",
+                "status": "Ready",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([handoff])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["blockedClaims"])
+        self.assertEqual(
+            "resume-planning-handoff",
+            output["claims"][0]["action"],
+        )
+
+    def test_ready_handoff_does_not_consume_implementation_slot(self) -> None:
+        handoff = ticket(190, assignees=["chris"])
+        implementation = ticket(
+            191,
+            projectStatus="In progress",
+            assignees=["chris"],
+        )
+
+        returncode, output = run_ranker(
+            [handoff, implementation],
+            "--max-claims",
+            "1",
+        )
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            ["resume-implementation", "resume-planning-handoff"],
+            [entry["action"] for entry in output["claims"]],
+        )
+
+    def test_ready_handoff_attests_reuse_of_an_older_verified_plan(self) -> None:
+        handoff = ticket(
+            194,
+            assignees=["chris"],
+            implementationPlan={
+                "commentId": "IC_plan_194",
+                "permalink": "https://github.com/acme/repo/issues/194#issuecomment-plan",
+                "author": "chris",
+                "digest": "sha256:plan-194",
+                "createdAt": "2026-07-28T07:00:00Z",
+                "updatedAt": "2026-07-28T07:00:00Z",
+                "plannedBranch": "main",
+                "plannedSha": "base-194",
+            },
+        )
+
+        returncode, output = run_ranker([handoff])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            "resume-planning-handoff",
+            output["claims"][0]["action"],
+        )
+
+    def test_ready_handoff_must_follow_latest_planning_authorization(self) -> None:
+        stale_handoff = ticket(
+            195,
+            assignees=["chris"],
+            readyTransition={
+                "id": "PVTE_195_ready",
+                "actor": "chris",
+                "createdAt": "2026-07-28T07:30:00Z",
+                "status": "Ready",
+                "wasAutomated": False,
+            },
+            implementationPlan={
+                "commentId": "IC_plan_195",
+                "permalink": "https://github.com/acme/repo/issues/195#issuecomment-plan",
+                "author": "chris",
+                "digest": "sha256:plan-195",
+                "createdAt": "2026-07-28T07:00:00Z",
+                "updatedAt": "2026-07-28T07:00:00Z",
+                "plannedBranch": "main",
+                "plannedSha": "base-195",
+            },
+        )
+
+        returncode, output = run_ranker([stale_handoff])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [
+                {
+                    "number": 195,
+                    "reasons": [
+                        "assigned to current user while project status is still ready",
+                        "ready transition predates the latest planning authorization",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
 
 
 if __name__ == "__main__":

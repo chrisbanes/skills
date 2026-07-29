@@ -35,28 +35,33 @@ def parse_args() -> argparse.Namespace:
         help="Configured base branch targeted by resumable pull requests.",
     )
     parser.add_argument(
-        "--ready-approver",
+        "--execution-approver",
         action="append",
-        dest="ready_approvers",
+        dest="execution_approvers",
         required=True,
-        help="GitHub login allowed to approve Ready transitions. Repeat as needed.",
+        help="GitHub login allowed to authorize Planning transitions. Repeat as needed.",
+    )
+    parser.add_argument(
+        "--planning-status",
+        default="Planning",
+        help="Configured GitHub Project status display name that queues planning.",
     )
     parser.add_argument(
         "--ready-status",
-        default="Ready for agent",
-        help="Configured GitHub Project status value that marks an item ready.",
+        default="Ready to implement",
+        help="Configured Project status display name that marks implementation-ready work.",
     )
     parser.add_argument(
         "--in-progress-status",
         default="In progress",
-        help="Configured GitHub Project status value that marks an item active.",
+        help="Configured GitHub Project status display name that marks an item active.",
     )
     parser.add_argument(
         "--priority",
         action="append",
         dest="priorities",
         required=True,
-        help="GitHub Project priority value in descending order. Repeat for each rank.",
+        help="Project priority display name in descending order. Repeat for each rank.",
     )
     parser.add_argument(
         "--max-claims",
@@ -182,12 +187,14 @@ def require_ticket_shape(ticket: Any) -> dict[str, Any]:
         "projectStatus",
         "projectPriority",
         "projectPosition",
+        "labels",
         "assignees",
         "blockedBy",
         "openDescendants",
         "openPullRequests",
+        "planningTransition",
         "readyTransition",
-        "agentBrief",
+        "implementationPlan",
     }
     missing = sorted(required - ticket.keys())
     if missing:
@@ -227,15 +234,17 @@ def analyze_ticket(
     ticket: dict[str, Any],
     *,
     current_user: str,
+    planning_status: str,
     ready_status: str,
     in_progress_status: str,
     priorities: tuple[str, ...],
     repository: str,
     base_branch: str,
-    ready_approvers: tuple[str, ...],
+    execution_approvers: tuple[str, ...],
 ) -> dict[str, Any]:
     number = ticket["number"]
     assignees = assignee_values(ticket["assignees"], number)
+    labels = string_values(ticket["labels"], "labels", number)
     blockers = string_values(ticket["blockedBy"], "blockedBy", number)
     open_descendants = string_values(
         ticket["openDescendants"],
@@ -244,89 +253,179 @@ def analyze_ticket(
     )
     pull_requests = pull_request_values(ticket["openPullRequests"], number)
     project_position = parse_project_position(ticket["projectPosition"], number)
+    project_status = ticket["projectStatus"]
 
     errors: list[str] = []
     exclusions: list[str] = []
+    if "ready-for-agent" not in labels:
+        exclusions.append("missing ready-for-agent label")
 
-    ready_transition = ticket["readyTransition"]
-    if not isinstance(ready_transition, dict):
-        raise InputError(f"ticket {number}: readyTransition must be an object")
+    planning_transition = ticket["planningTransition"]
+    if not isinstance(planning_transition, dict):
+        raise InputError(f"ticket {number}: planningTransition must be an object")
     nonempty_string(
-        ready_transition.get("id"),
-        "readyTransition.id",
+        planning_transition.get("id"),
+        "planningTransition.id",
         number,
     )
-    transition_actor = nonempty_string(
-        ready_transition.get("actor"),
-        "readyTransition.actor",
+    planning_actor = nonempty_string(
+        planning_transition.get("actor"),
+        "planningTransition.actor",
         number,
     )
-    transition_created_at = timestamp(
-        ready_transition.get("createdAt"),
-        "readyTransition.createdAt",
+    planning_created_at = timestamp(
+        planning_transition.get("createdAt"),
+        "planningTransition.createdAt",
         number,
     )
-    transition_status = nonempty_string(
-        ready_transition.get("status"),
-        "readyTransition.status",
+    planning_transition_status = nonempty_string(
+        planning_transition.get("status"),
+        "planningTransition.status",
         number,
     )
-    transition_was_automated = ready_transition.get("wasAutomated")
-    if not isinstance(transition_was_automated, bool):
+    planning_was_automated = planning_transition.get("wasAutomated")
+    if not isinstance(planning_was_automated, bool):
         raise InputError(
-            f"ticket {number}: readyTransition.wasAutomated must be a boolean",
+            f"ticket {number}: planningTransition.wasAutomated must be a boolean",
         )
-
-    agent_brief = ticket["agentBrief"]
-    if not isinstance(agent_brief, dict):
-        raise InputError(f"ticket {number}: agentBrief must be an object")
-    nonempty_string(
-        agent_brief.get("commentId"),
-        "agentBrief.commentId",
-        number,
-    )
-    nonempty_string(
-        agent_brief.get("digest"),
-        "agentBrief.digest",
-        number,
-    )
-    brief_created_at = timestamp(
-        agent_brief.get("createdAt"),
-        "agentBrief.createdAt",
-        number,
-    )
-    brief_updated_at = timestamp(
-        agent_brief.get("updatedAt"),
-        "agentBrief.updatedAt",
-        number,
-    )
-    if brief_updated_at < brief_created_at:
-        raise InputError(
-            f"ticket {number}: agentBrief.updatedAt precedes agentBrief.createdAt",
-        )
-    if transition_status != ready_status:
+    if planning_transition_status != planning_status:
         errors.append(
-            f"latest ready transition status {transition_status!r} "
-            f"does not match {ready_status!r}",
+            f"latest planning transition status {planning_transition_status!r} "
+            f"does not match {planning_status!r}",
         )
-    if transition_was_automated:
-        exclusions.append("ready transition was automated")
-    elif transition_actor not in ready_approvers:
+    if planning_was_automated:
+        exclusions.append("planning transition was automated")
+    elif planning_actor not in execution_approvers:
         exclusions.append(
-            f"ready transition actor {transition_actor!r} is not approved",
+            f"planning transition actor {planning_actor!r} is not approved",
         )
-    if brief_created_at > transition_created_at:
-        exclusions.append("agent brief was posted after ready approval")
-    elif brief_updated_at > transition_created_at:
-        exclusions.append("agent brief changed after ready approval")
+
+    implementation_plan = ticket["implementationPlan"]
+    plan_is_usable = False
+    plan_is_current_in_planning = False
+    plan_updated_at: datetime | None = None
+    if implementation_plan is not None:
+        if not isinstance(implementation_plan, dict):
+            raise InputError(
+                f"ticket {number}: implementationPlan must be an object or null",
+            )
+        for field in (
+            "commentId",
+            "permalink",
+            "author",
+            "digest",
+            "plannedBranch",
+            "plannedSha",
+        ):
+            nonempty_string(
+                implementation_plan.get(field),
+                f"implementationPlan.{field}",
+                number,
+            )
+        plan_created_at = timestamp(
+            implementation_plan.get("createdAt"),
+            "implementationPlan.createdAt",
+            number,
+        )
+        plan_updated_at = timestamp(
+            implementation_plan.get("updatedAt"),
+            "implementationPlan.updatedAt",
+            number,
+        )
+        if plan_updated_at < plan_created_at:
+            raise InputError(
+                f"ticket {number}: implementationPlan.updatedAt "
+                "precedes implementationPlan.createdAt",
+            )
+        plan_targets_base = implementation_plan["plannedBranch"] == base_branch
+        plan_authored_by_runner = implementation_plan["author"] == current_user
+        if not plan_targets_base and project_status != planning_status:
+            exclusions.append(
+                "implementation plan targets "
+                f"{implementation_plan['plannedBranch']!r}, expected {base_branch!r}",
+            )
+        if not plan_authored_by_runner and project_status != planning_status:
+            exclusions.append(
+                "implementation plan author "
+                f"{implementation_plan['author']!r} does not match "
+                f"current user {current_user!r}",
+            )
+        plan_is_usable = (
+            plan_targets_base
+            and plan_authored_by_runner
+        )
+        plan_is_current_in_planning = (
+            plan_updated_at >= planning_created_at
+            and plan_is_usable
+        )
+
+    valid_ready_handoff = False
+    ready_transition = ticket["readyTransition"]
+    if project_status != planning_status:
+        if not isinstance(ready_transition, dict):
+            raise InputError(f"ticket {number}: readyTransition must be an object")
+        nonempty_string(
+            ready_transition.get("id"),
+            "readyTransition.id",
+            number,
+        )
+        transition_actor = nonempty_string(
+            ready_transition.get("actor"),
+            "readyTransition.actor",
+            number,
+        )
+        transition_created_at = timestamp(
+            ready_transition.get("createdAt"),
+            "readyTransition.createdAt",
+            number,
+        )
+        transition_status = nonempty_string(
+            ready_transition.get("status"),
+            "readyTransition.status",
+            number,
+        )
+        transition_was_automated = ready_transition.get("wasAutomated")
+        if not isinstance(transition_was_automated, bool):
+            raise InputError(
+                f"ticket {number}: readyTransition.wasAutomated must be a boolean",
+            )
+        if transition_status != ready_status:
+            errors.append(
+                f"latest ready transition status {transition_status!r} "
+                f"does not match {ready_status!r}",
+            )
+        if transition_was_automated:
+            exclusions.append("ready transition came from Project workflow automation")
+        elif transition_actor != current_user:
+            exclusions.append(
+                f"ready transition actor {transition_actor!r} "
+                f"does not match current user {current_user!r}",
+            )
+        if plan_updated_at is None:
+            exclusions.append("missing current implementation plan")
+        elif plan_is_usable:
+            if transition_created_at < plan_updated_at:
+                exclusions.append(
+                    "ready transition predates the current implementation plan",
+                )
+            elif transition_created_at < planning_created_at:
+                exclusions.append(
+                    "ready transition predates the latest planning authorization",
+                )
+            else:
+                valid_ready_handoff = (
+                    transition_status == ready_status
+                    and not transition_was_automated
+                    and transition_actor == current_user
+                )
 
     if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
 
-    project_status = ticket["projectStatus"]
-    if project_status not in (ready_status, in_progress_status):
+    if project_status not in (planning_status, ready_status, in_progress_status):
         errors.append(
-            f"expected project status {ready_status!r} or {in_progress_status!r}, "
+            "expected project status "
+            f"{planning_status!r}, {ready_status!r}, or {in_progress_status!r}, "
             f"found {project_status!r}",
         )
 
@@ -381,7 +480,11 @@ def analyze_ticket(
         pull_request for pull_request in pull_requests
         if pull_request["author"] != current_user
     ]
-    if assigned_to_current_user and project_status == ready_status:
+    if (
+        assigned_to_current_user
+        and project_status == ready_status
+        and not valid_ready_handoff
+    ):
         errors.append(
             "assigned to current user while project status is still ready",
         )
@@ -407,7 +510,20 @@ def analyze_ticket(
             f"{[pull_request['url'] for pull_request in pull_requests]}",
         )
 
-    action = "resume-pr" if resumable_pull_requests else "resume-implementation"
+    if project_status == planning_status:
+        action = (
+            "resume-planning-handoff"
+            if assigned_to_current_user and plan_is_current_in_planning
+            else ("resume-planning" if assigned_to_current_user else "plan")
+        )
+    elif (
+        project_status == ready_status
+        and assigned_to_current_user
+        and valid_ready_handoff
+    ):
+        action = "resume-planning-handoff"
+    else:
+        action = "resume-pr" if resumable_pull_requests else "resume-implementation"
     return {
         "ticket": ticket,
         "priorityRank": priority_rank,
@@ -437,9 +553,9 @@ def main() -> int:
         priorities = tuple(args.priorities)
         if len(set(priorities)) != len(priorities):
             raise InputError("project priorities must be unique")
-        ready_approvers = tuple(args.ready_approvers)
-        if len(set(ready_approvers)) != len(ready_approvers):
-            raise InputError("ready approvers must be unique")
+        execution_approvers = tuple(args.execution_approvers)
+        if len(set(execution_approvers)) != len(execution_approvers):
+            raise InputError("execution approvers must be unique")
         if not 1 <= args.max_claims <= 3:
             raise InputError("max claims must be between 1 and 3")
 
@@ -447,6 +563,7 @@ def main() -> int:
         analyses: list[dict[str, Any]] = []
         invalid_unclaimed: list[dict[str, Any]] = []
         invalid_claimed: list[dict[str, Any]] = []
+        invalid_planning_claimed: list[dict[str, Any]] = []
         for raw_ticket in payload:
             try:
                 ticket = require_ticket_shape(raw_ticket)
@@ -457,12 +574,13 @@ def main() -> int:
                     analyze_ticket(
                         ticket,
                         current_user=args.current_user,
+                        planning_status=args.planning_status,
                         ready_status=args.ready_status,
                         in_progress_status=args.in_progress_status,
                         priorities=priorities,
                         repository=args.repository,
                         base_branch=args.base_branch,
-                        ready_approvers=ready_approvers,
+                        execution_approvers=execution_approvers,
                     ),
                 )
             except InputError as error:
@@ -472,7 +590,14 @@ def main() -> int:
                     "reasons": [str(error)],
                 }
                 if has_current_user_assignment(raw_ticket, args.current_user):
-                    invalid_claimed.append(invalid)
+                    if (
+                        isinstance(raw_ticket, dict)
+                        and raw_ticket.get("projectStatus")
+                        in (args.planning_status, args.ready_status)
+                    ):
+                        invalid_planning_claimed.append(invalid)
+                    else:
+                        invalid_claimed.append(invalid)
                 else:
                     invalid_unclaimed.append(invalid)
 
@@ -482,16 +607,42 @@ def main() -> int:
                 "reasons": item["errors"] + item["exclusions"],
             }
             for item in analyses
-            if item["assignedToCurrentUser"] and (item["errors"] or item["exclusions"])
+            if (
+                item["assignedToCurrentUser"]
+                and item["ticket"]["projectStatus"] == args.in_progress_status
+                and (item["errors"] or item["exclusions"])
+            )
+        ]
+        blocked_planning_claims = invalid_planning_claimed + [
+            {
+                "number": item["ticket"]["number"],
+                "reasons": item["errors"] + item["exclusions"],
+            }
+            for item in analyses
+            if (
+                item["assignedToCurrentUser"]
+                and item["ticket"]["projectStatus"]
+                in (args.planning_status, args.ready_status)
+                and (item["errors"] or item["exclusions"])
+            )
         ]
 
         eligible = [
             item for item in analyses if not item["errors"] and not item["exclusions"]
         ]
         claimed = [item for item in eligible if item["assignedToCurrentUser"]]
-        claimed.sort(key=ticket_rank)
+        claimed.sort(
+            key=lambda item: (
+                item["resumeAction"]
+                in ("resume-planning", "resume-planning-handoff"),
+                *ticket_rank(item),
+            ),
+        )
         claim_numbers = [
-            item["ticket"]["number"] for item in claimed
+            item["ticket"]["number"]
+            for item in claimed
+            if item["resumeAction"]
+            not in ("resume-planning", "resume-planning-handoff")
         ] + [
             item["number"] for item in blocked_claims
         ]
@@ -519,7 +670,11 @@ def main() -> int:
         candidates = sorted(
             (item for item in eligible if not item["assignedToCurrentUser"]),
             key=lambda item: (
-                item["resumeAction"] != "resume-pr",
+                {
+                    "resume-pr": 0,
+                    "resume-implementation": 1,
+                    "plan": 2,
+                }[item["resumeAction"]],
                 *ticket_rank(item),
             ),
         )
@@ -538,6 +693,7 @@ def main() -> int:
         output = {
             "claimLimit": args.max_claims,
             "blockedClaims": blocked_claims,
+            "blockedPlanningClaims": blocked_planning_claims,
             "claims": [
                 {
                     "ticket": item["ticket"],
@@ -551,7 +707,11 @@ def main() -> int:
                     "action": (
                         "resume-pr"
                         if item["resumeAction"] == "resume-pr"
-                        else "claim"
+                        else (
+                            "plan"
+                            if item["resumeAction"] == "plan"
+                            else "claim"
+                        )
                     ),
                 }
                 for item in candidates

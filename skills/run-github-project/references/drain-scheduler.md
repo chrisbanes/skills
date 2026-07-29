@@ -15,6 +15,10 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 5. Preserve invalid current-user claims as blocked slots, resume every valid
    claim, then fill free slots. Stop for reconciliation when all claims
    together exceed the invocation's slot limit.
+6. Keep one separate planning lane. It preserves assignment and planning
+   handoff claims but never consumes one of the three implementation slots.
+   Follow [Planning Lane](planning-lane.md) for its worktree, agent, authority,
+   handoff, and blocker rules.
 
 ## Mutation Lane
 
@@ -34,11 +38,17 @@ Switch slots only after a recoverable checkpoint:
 Keep each slot's ticket agent idle between passes; resume it with refreshed
 durable state and discard it only when the slot frees, reconstructing if lost.
 Descendant agents at any depth use only currently spare agent capacity and
-yield it before an occupied slot agent must resume. They are read-only at
-immutable SHAs, route findings to the owning ticket agent, and never own or
-mutate tickets.
+are read-only at immutable SHAs, route findings to the owning ticket or planning
+agent, and never own or mutate tickets. An implementation helper yields before
+its occupied slot agent must resume. Never preempt a planning agent after
+planning starts; queue the implementation event until planning finishes or its
+bounded liveness recovery releases capacity.
 
 ## Scheduling
+
+Before starting new work, recover existing implementation claims, then
+resumable Planning or verified handoff claims. Fill free implementation slots
+from `Ready to implement` before starting a new `Planning` item.
 
 At every checkpoint, choose one action:
 
@@ -46,11 +56,22 @@ At every checkpoint, choose one action:
    different order.
 2. Service the oldest actionable review or CI event.
 3. Resume existing local implementation.
-4. Claim the next ranked ticket just in time when a slot is free.
-5. Wait on all remote slots together only when no local action remains.
+4. Finish a current plan or verified planning handoff.
+5. Claim the next ranked `Ready to implement` ticket just in time when a slot
+   is free.
+6. Start the next ranked `Planning` item when the planning lane and spare agent
+   capacity are free.
+7. Wait on all remote slots together only when no local action remains.
 
 Never preempt a valid occupied slot for newly higher-priority work. Requery and
 rank live data before every just-in-time claim.
+
+Planning runs read-only beside implementation, waits for the mutation lane only
+at assignment, comment publication, and Status transitions, and continues to
+completion without preemption. Once handed off, the same assigned issue enters
+the next available implementation slot. Apply the planning lane's reconciled
+three-attempt recovery to planner loss, crash, or timeout; do not classify those
+execution failures as semantic blockers.
 
 Do not concurrently claim tickets connected by `blocked by`, a parent-child
 relationship, or a declared exclusive resource. Do not guess conflicts from

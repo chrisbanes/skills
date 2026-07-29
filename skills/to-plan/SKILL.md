@@ -1,19 +1,9 @@
 ---
 name: to-plan
-description: Use when one ready GitHub issue needs a repository-aware implementation plan published as a single issue comment before a separate implementation session.
+description: Use when one ready GitHub issue needs a repository-aware implementation plan published as a single issue comment for a later implementation workflow.
 ---
 
 # To Plan
-
-## Dependency
-
-Use this skill as an add-on to
-[Matt Pocock's agent skills](https://github.com/mattpocock/skills). Before doing
-any issue or repository work, verify that `/implement` and `/code-review` are
-available. This skill extends that workflow but does not bundle or replace
-those commands. If either command is unavailable, stop, name the missing
-prerequisite, and direct the user to install Matt Pocock's skills before
-re-running `/to-plan`.
 
 ## Core Principle
 
@@ -85,9 +75,9 @@ Find comments containing this exact ownership marker:
 ```
 
 Require zero or one marker-owned comment. If one exists, verify that the active
-GitHub identity can edit it and record its body and permalink. Record a planning
-blocker for multiple marker comments or an uneditable marker comment; never
-create a duplicate.
+GitHub identity authored and can edit it, then record its author login, body,
+and permalink. Record a planning blocker for multiple marker comments or a
+foreign or uneditable marker comment; never create a duplicate.
 
 Treat an unmarked implementation plan as context, never as an editable target.
 If it conflicts with the proposed plan or could reasonably be mistaken for the
@@ -284,7 +274,8 @@ If the published comment already has the same body, perform no GitHub write.
 After creating, editing, or finding an identical comment:
 
 1. Retrieve the comment again.
-2. Verify that its body exactly matches the draft.
+2. Verify that its author is the active GitHub identity and its body exactly
+   matches the draft.
 3. Record its stable permalink.
 4. Delete only the exact draft file after verification succeeds.
 
@@ -295,10 +286,10 @@ broad `.scratch` cleanup.
 
 Return the issue URL, plan-comment permalink, baseline, validation evidence,
 publication mode, and whether the operation created, edited, or reused the
-comment. Then provide this copy-ready fresh-session handoff:
+comment. Then provide this provider-neutral fresh-session handoff:
 
 ```text
-/implement <issue URL> using the approved implementation plan at <comment permalink>
+Implement <issue URL> using the approved implementation plan at <comment permalink>.
 ```
 
 The implementation checkout may descend from the planned SHA only when
@@ -361,7 +352,7 @@ in-progress diff.
 
 ### Review focus
 
-- <Ticket-specific risk for `/code-review`.>
+- <Ticket-specific risk for implementation review.>
 
 ### Allowed deviations
 
@@ -379,7 +370,7 @@ Finish in exactly one state:
 1. **Awaiting approval:** a complete validated draft exists, GitHub is
    unchanged, and normal mode is waiting for an explicit publish decision.
 2. **Published:** the comment and draft matched exactly, the draft was deleted,
-   and the stable permalink plus `/implement` handoff were returned.
+   and the stable permalink plus implementation handoff were returned.
 3. **No-op:** the existing comment was already current, any matching temporary
    draft was deleted after verification, and its permalink was returned.
 4. **Blocked:** one consolidated actionable report was returned, no GitHub
@@ -420,9 +411,9 @@ then restore the skill and require the GREEN outcome.
    adjacent change, and blocks if its overlap remains uncertain. A
    pre-publication refresh repeats the path inventory, reuses the generated
    path's path-only exclusion, and reinspects the adjacent change.
-10. Matt Pocock's `/implement` skill is unavailable. Planning stops before
-    reading the issue or repository and directs the user to the canonical skill
-    source. With both prerequisites available, planning proceeds normally.
+10. No named implementation or review provider is installed. Planning still
+    publishes a provider-neutral handoff. Counterexample: this planning
+    workflow does not claim to perform implementation or implementation review.
 11. A ticket spans two independent modules. Two low-cost read-only discovery
     subagents locate the relevant symbols and testing precedents in parallel;
     the main agent verifies their evidence and owns every decision. A small

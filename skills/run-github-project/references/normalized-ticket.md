@@ -10,24 +10,36 @@ paginated GitHub and Project reads:
   "url": "https://github.com/owner/repository/issues/42",
   "state": "OPEN",
   "projectItemId": "PVTI_example",
-  "projectStatus": "Ready",
+  "projectStatus": "Ready to implement",
   "projectPriority": "High",
   "projectPosition": 17,
+  "labels": ["ready-for-agent"],
   "assignees": [{"login": "octocat"}],
   "blockedBy": [41, "other/repository#7"],
   "openDescendants": [43],
-  "readyTransition": {
-    "id": "PVTE_example",
+  "planningTransition": {
+    "id": "PVTE_planning",
     "actor": "maintainer",
-    "createdAt": "2026-07-28T10:00:00Z",
-    "status": "Ready",
+    "createdAt": "2026-07-28T08:00:00Z",
+    "status": "Planning",
     "wasAutomated": false
   },
-  "agentBrief": {
-    "commentId": "IC_example",
-    "digest": "sha256:...",
+  "readyTransition": {
+    "id": "PVTE_ready",
+    "actor": "octocat",
+    "createdAt": "2026-07-28T10:00:00Z",
+    "status": "Ready to implement",
+    "wasAutomated": false
+  },
+  "implementationPlan": {
+    "commentId": "IC_plan",
+    "permalink": "https://github.com/owner/repository/issues/42#issuecomment-1",
+    "author": "octocat",
+    "digest": "sha256:plan-body",
     "createdAt": "2026-07-28T09:00:00Z",
-    "updatedAt": "2026-07-28T09:00:00Z"
+    "updatedAt": "2026-07-28T09:00:00Z",
+    "plannedBranch": "main",
+    "plannedSha": "0123456789abcdef"
   },
   "openPullRequests": [
     {
@@ -46,11 +58,18 @@ paginated GitHub and Project reads:
 }
 ```
 
-Use GitHub logins, never display names, for assignees, PR authors, and Ready
-actors. Normalize `blockedBy` and `openDescendants` entries to integer issue
-numbers for the configured repository or `owner/repository#number` strings for
-cross-repository issues; never pass GraphQL objects. Use a finite non-negative
-numeric Project position. An empty PR array is valid.
+Use GitHub logins, never display names, for assignees, PR authors, and
+transition actors. Normalize `labels` to exact label names. Normalize
+`blockedBy` and `openDescendants` entries to integer issue numbers for the
+configured repository or `owner/repository#number` strings for cross-repository
+issues; never pass GraphQL objects. Use a finite non-negative numeric Project
+position. An empty PR array is valid.
+
+For a `Planning` item, `readyTransition` may be `null`. For any other accepted
+Status it must be the latest transition into `Ready to implement`.
+`implementationPlan` may be `null`; when present it must represent the only
+comment containing `<!-- to-plan:implementation-plan:v1 -->` and `author` must
+be the authenticated runner's GitHub login.
 
 The ranker returns valid current-user claims and ordered unclaimed candidates:
 
@@ -58,12 +77,19 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
 {
   "claimLimit": 3,
   "blockedClaims": [
-    {"number": 39, "reasons": ["assigned to current user while project status is still ready"]}
+    {"number": 39, "reasons": ["missing ready-for-agent label"]}
   ],
-  "claims": [{"ticket": {"number": 40}, "action": "resume-pr"}],
+  "blockedPlanningClaims": [
+    {"number": 40, "reasons": ["missing current implementation plan"]}
+  ],
+  "claims": [
+    {"ticket": {"number": 41}, "action": "resume-implementation"},
+    {"ticket": {"number": 42}, "action": "resume-planning-handoff"}
+  ],
   "candidates": [
-    {"ticket": {"number": 41}, "action": "resume-pr"},
-    {"ticket": {"number": 42}, "action": "claim"}
+    {"ticket": {"number": 43}, "action": "resume-pr"},
+    {"ticket": {"number": 44}, "action": "claim"},
+    {"ticket": {"number": 45}, "action": "plan"}
   ],
   "excluded": []
 }
@@ -72,4 +98,6 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
 Treat each `ticket` as the complete normalized object shown above. The
 controller owns scheduling; the ranker only validates claims and orders
 candidates. Each `blockedClaims` entry occupies a slot and preserves a claimed
-ticket that requires reconciliation.
+implementation ticket that requires reconciliation. Planning claims and
+`blockedPlanningClaims` preserve ownership but do not consume an implementation
+slot.
