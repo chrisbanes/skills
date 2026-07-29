@@ -362,11 +362,13 @@ verified branch, and open a focused PR that includes:
 - residual risks.
 
 Keep the ticket claimed and its agent idle in the slot while its PR is open.
-After a reconciled push, apply the scheduler's
+After a reconciled push in `drain`, apply the scheduler's
 [Remote Waiting](references/drain-scheduler.md#remote-waiting) gate, then
 continue unrelated slot agents. The occupied remote-wait slot still counts
 toward the in-flight limit but consumes no active worker capacity until an
 event resumes it.
+In `next`, shepherd the single PR directly without a drain slot, drain
+deadline, or unrelated ticket dispatch.
 For a resumed draft PR, leave it draft until all implementation, review, and
 pre-push gates pass; then mark it ready and verify the resulting state before
 merge.
@@ -539,13 +541,15 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     release, rejecting a stale grant ID. Counterexamples: `next` remains
     single-ticket with no resource lock, and independent builds in isolated
     worktrees need no shared-resource lock.
-22. RED makes each worker yield at every local gate or occupy active capacity
-    during remote waits; GREEN runs a ticket pass through a reconciled push,
-    then idles its persistent context while the occupied slot awaits remote
-    events. Novel case: one remote-wait slot stays claimed while two other
-    ticket agents remain active. Counterexample: that waiting slot still
-    prevents claiming a fourth ticket because the three-slot in-flight cap
-    remains.
+22. RED makes each worker yield at every local gate, occupy active capacity
+    during remote waits, or applies drain scheduling to `next`; GREEN runs a
+    `drain` ticket pass through a reconciled push, then idles its persistent
+    context while the occupied slot awaits remote events. Novel case: one
+    remote-wait slot stays claimed while two other ticket agents remain active.
+    Counterexamples: that waiting slot still prevents claiming a fourth ticket
+    because the three-slot in-flight cap remains, while `next` shepherds its
+    single PR directly without creating a drain slot or dispatching another
+    ticket.
 23. RED refreshes every parallel branch after each merge; GREEN refreshes and
     repeats affected gates only when repository policy requires the latest
     base, GitHub reports a conflict, or the merge overlaps a tested assumption
