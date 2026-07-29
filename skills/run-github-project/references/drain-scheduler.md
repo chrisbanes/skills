@@ -49,6 +49,8 @@ contracts, a focused commit, and a reconciled push plus PR creation or update.
 Then yield durable evidence to the controller and idle that persistent context.
 Resume the same agent for actionable feedback or base repair.
 
+### Conflict Admission Gate
+
 Before starting agents concurrently, delay a candidate when it has any of:
 
 - an explicit dependency declared in repository metadata or either approved
@@ -82,6 +84,14 @@ push the exact commit, and reconcile the remote result. Refetch the PR and
 require its head SHA to equal that pushed SHA before restoring merge
 eligibility or evaluating its new checks and reviews. Release the lifecycle
 reservation only after the update is reconciled or explicitly preserved.
+
+If the reservation holder is lost or its mutation outcome is ambiguous, keep
+the reservation and stop the prior agent when possible. Inspect the worktree,
+branch HEAD, locks, and active Git processes. Only after confirming the prior
+agent can no longer mutate them may the controller record revocation,
+reconstruct the owning ticket agent from that exact clean HEAD, and issue a new
+reservation. Otherwise preserve and block the younger slot. Never expire,
+steal, or transfer a lifecycle reservation by elapsed time.
 
 ### Named Resource Locks
 
@@ -142,9 +152,9 @@ dispatching the next:
    in oldest-event order.
 3. Resume paused local implementation slots in claim order.
 4. Finish a current plan or verified planning handoff without preemption.
-5. Claim ranked `Ready to implement` tickets one at a time, skip temporarily
-   conflict-delayed candidates, and launch unrelated slot agents until the
-   in-flight or active-agent limit is reached.
+5. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
+   `Ready to implement` tickets one at a time, and launch unrelated slot agents
+   until the in-flight or active-agent limit is reached.
 6. Start the next ranked `Planning` item only when the planning lane and active
    agent capacity are free after maximizing runnable implementation.
 7. Monitor all remote slots together only when no local or controller action
@@ -159,11 +169,6 @@ completion without preemption. Once handed off, the same assigned issue enters
 the next available implementation slot. Apply the planning lane's reconciled
 three-attempt recovery to planner loss, crash, or timeout; do not classify
 those execution failures as semantic blockers.
-
-Do not concurrently claim tickets connected by `blocked by`, a parent-child
-relationship, another explicit dependency, a declared exclusive resource, or
-a concrete planned path or seam overlap. Do not guess conflicts from titles,
-briefs, or predicted file overlap.
 
 ## Remote Waiting
 

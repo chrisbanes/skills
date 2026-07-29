@@ -364,10 +364,11 @@ verified branch, and open a focused PR that includes:
 - residual risks.
 
 Keep the ticket claimed and its agent idle in the slot while its PR is open.
-After a reconciled push, idle that persistent ticket context, release any named
-resource lock, and continue unrelated slot agents. The occupied remote-wait
-slot still counts toward the in-flight limit but consumes no active worker
-capacity until an event resumes it.
+After a reconciled push, apply the scheduler's
+[Remote Waiting](references/drain-scheduler.md#remote-waiting) gate, then
+continue unrelated slot agents. The occupied remote-wait slot still counts
+toward the in-flight limit but consumes no active worker capacity until an
+event resumes it.
 For a resumed draft PR, leave it draft until all implementation, review, and
 pre-push gates pass; then mark it ready and verify the resulting state before
 merge.
