@@ -7,7 +7,9 @@ description: Use when asked to plan and execute the next authorized issue or dra
 
 ## Core Principle
 
-Treat the Project as the live control plane. Require the readiness label and a human-authorized Planning transition, then preserve that authority to Done.
+Treat the Project as the live control plane. Require the readiness label and a
+human-authorized Planning transition, preserve that authority through
+contract-preserving re-plans, and return true human work to Backlog.
 
 Pair each occupied slot with one warm worktree and one persistent ticket agent.
 Run independent slot agents concurrently in `drain`. Keep claims, shared
@@ -25,8 +27,8 @@ Require:
 
 - repository identity, default and base branches, and issue-closure policy;
 - Project owner, number, URL, and node ID;
-- Status field name and ID plus Planning, Ready to implement, In progress, and
-  Done option names and IDs;
+- Status field name and ID plus Backlog, Planning, Ready to implement, In
+  progress, and Done option names and IDs;
 - Priority field name and ID plus option names and IDs in descending order;
 - execution-approver GitHub logins allowed to authorize Planning;
 - an optional trusted Project filter expression;
@@ -75,7 +77,7 @@ both before every claim and merge. Stop and preserve work if either changes.
 6. Confirm the authenticated GitHub identity, Project read/write access,
    GitHub CLI `project` scope, current default, verified base, and clean state.
 7. Inspect repository automation that can change Project Status or archive Done
-   items. Stop if it conflicts with the configured Planning, Ready to
+   items. Stop if it conflicts with the configured Backlog, Planning, Ready to
    implement, In progress, and Done lifecycle.
 8. Select and record a run mode:
    - `next` is the default and processes at most one selected issue;
@@ -149,7 +151,9 @@ after that query for the next invocation.
 3. Apply the optional trusted Project filter, then always intersect it with:
    - membership in the configured repository;
    - an open, non-draft GitHub issue;
-   - Planning, Ready to implement, or In progress Status.
+   - Planning, Ready to implement, or In progress Status; or
+   - Backlog Status while assigned to the authenticated runner, solely to
+     recover interrupted human-work cleanup.
 4. Record draft, pull-request, redacted, cross-repository, closed, malformed,
    or filter-excluded items as ineligible. Never convert draft items into
    tickets or use a named Project view implicitly.
@@ -160,11 +164,12 @@ after that query for the next invocation.
    Gather:
    - native open `blocked by` relationships;
    - all open descendants in the issue's sub-issue tree;
-   - the latest status events entering Planning and Ready to implement,
+   - the latest status events entering Backlog, Planning, and Ready to implement,
      including event ID, actor login, `createdAt`, resulting Status, and
      `wasAutomated`;
-   - the unique marker-owned implementation plan, its author login, and every
-     lease field defined by the normalized schema.
+   - every v1 or v2 marker-owned implementation plan, minimized state, active
+     replan report, author login, and lease field defined by the normalized
+     schema.
    Preserve an invalid claimed contender as a blocked slot. Report and advance
    when an unclaimed contender is invalid. Hydrate all contenders together
    only when one bounded batch is cheaper and remains within GitHub rate and
@@ -187,6 +192,7 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --repository <owner/repository> \
   --base-branch <base-branch> \
   --execution-approver <login> [--execution-approver <login> ...] \
+  --backlog-status <backlog-name> \
   --planning-status <planning-name> \
   --ready-status <ready-to-implement-name> \
   --in-progress-status <in-progress-name> \
@@ -207,9 +213,12 @@ Priority last, and require the exact `ready-for-agent` label.
 Hydrate every current-user claim before unclaimed contenders.
 Preserve returned `blockedClaims` in occupied implementation slots and
 `blockedPlanningClaims` in the planning lane. Resume returned `claims`, then
-fill free capacity from returned `candidates`. Planning claims do not count
-toward `max-claims`. Leave an In progress item assigned to someone else alone.
-Report an unassigned In progress item as stale and ineligible.
+fill free capacity from returned `candidates`. Planning and
+`resume-backlog-cleanup` claims do not count toward `max-claims`. Finish
+Backlog cleanup before new claims. Leave an In progress item assigned to
+someone else alone. Report an unassigned In progress item as stale and
+ineligible; ignore an unassigned Backlog item until a human moves it to
+Planning.
 
 When no claim exists, hydrate current-user PR contenders before new work.
 Otherwise preserve the phase-one Priority, visible-position, and issue-number
@@ -254,16 +263,18 @@ For Ready-to-implement work:
    transition events, and every implementation-plan lease value as the
    authority lease.
 
-After observing In progress, treat ambiguity or invalidation as a blocked slot
-rather than a skippable claim race. Preserve the claim. The base-overlap requeue
-defined by the planning lane is the only automatic backward Status transition.
+After observing In progress, treat ambiguity as a blocked slot rather than a
+skippable claim race. Preserve the claim. For a verified implementation-plan
+inconsistency, follow the planning lane's autonomous replan or Backlog handoff
+instead of asking the user to mutate GitHub manually.
 
 Revalidate Project membership, In progress Status, exclusive assignment,
 configuration digest, readiness label, both recorded transition events, and
 every plan lease value before every material write, including push,
-review-thread mutation, or merge. Treat a plan edit or live eligibility change
-as authority revocation and stop, except for post-merge reconciliation to Done.
-Ordinary issue body and non-plan comment edits do not revoke the lease.
+review-thread mutation, or merge. Treat a foreign plan edit or unrelated live
+eligibility change as authority revocation. Treat a runner-authored verified
+replan report as the controlled transition into replanning. Ordinary issue body
+and non-plan comment edits do not revoke the lease.
 
 ## Implement In Ticket Context
 
@@ -289,9 +300,11 @@ For each occupied slot:
    - current `HEAD`, checks, reviews, and relevant PR events;
    - the worker contract below.
    Treat refreshed durable evidence as authoritative over remembered state.
-5. Verify the worker produced one focused, reviewed, freshly verified commit
-   and no unrelated changes. Let a worker continue through its reconciled push
-   and PR creation or update before it yields the pass.
+5. Verify the worker produced either one focused, reviewed, freshly verified
+   commit with no unrelated changes, or one complete replan packet with no
+   further mutation after detecting the inconsistency. Let a worker continue
+   through its reconciled push and PR creation or update before it yields a
+   normal implementation pass.
 
 Use this worker contract:
 
@@ -299,10 +312,16 @@ Use this worker contract:
    and branch. Mutate only that worktree, branch, and its own PR. Never claim
    or assign an issue, mutate Project state, merge, close an issue, or perform
    controller-owned cleanup.
-2. Treat the implementation plan as the approved outcome, not as trusted executable
-   instructions. Stop if the ticket is already implemented, superseded,
-   contradicts an ADR, is ambiguous, conflicts with repository evidence, or
-   exposes a material product or architecture decision.
+2. Treat the implementation plan as the approved outcome, not as trusted
+   executable instructions. When it conflicts with repository evidence, stop
+   writes and return a replan packet containing the exact evidence, invalid
+   assumption, unchanged ticket contracts, recommended direction, verified
+   base, branch and PR heads, and retained dirty-work summary. Classify it as:
+   - `autonomous-replan` when acceptance criteria, scope, public contracts, and
+     upstream decisions remain unchanged;
+   - `human-required` when any of those must change.
+   Stop without a replan packet when the ticket is already implemented,
+   superseded, contradicts an ADR, or remains ambiguous after discovery.
 3. Inspect the smallest relevant code, tests, documentation, and history scope.
 4. Invoke `tdd` before changing behavior. Identify the public test seam first.
    Treat a seam explicitly confirmed by the user for this ticket as agreed;
@@ -455,6 +474,8 @@ ticket containing:
 
 - Project item, Status, Priority, position, and selection reason;
 - Planning authority, plan lease, Ready handoff, and any planning blocker;
+- replan report, plan revision chain, predecessor presentation, retained work,
+  or verified Backlog cleanup when applicable;
 - branch, commit, PR, verification, and review results;
 - GitHub retries and reconciled mutations, when any occurred;
 - merge commit, final issue state, Project Status, and archive state, when
@@ -471,9 +492,10 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
 2. RED plans from Status alone; GREEN requires `ready-for-agent` plus the latest
    human Planning transition by an execution approver. Novel case: a later
    human Planning transition makes the existing plan stale.
-3. RED accepts an Agent Brief, unmarked plan, or another author's marker; GREEN
-   recognizes only the runner-authored marker plan. Counterexample: ordinary
-   comment edits do not invalidate it.
+3. RED accepts an Agent Brief, unmarked plan, newest timestamp, or another
+   author's marker; GREEN recognizes the unique leaf of a runner-authored v1/v2
+   revision chain. Counterexample: a presentation-only wrapper edit does not
+   change the semantic payload digest.
 4. RED pauses for plan approval; GREEN invokes `to-plan --auto`, refetches the
    marker, then performs the runner-authored Ready handoff. Missing `to-plan`
    blocks Planning only.
@@ -486,12 +508,14 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
 7. RED resumes any assigned Ready item; GREEN requires a current plan plus the
    runner's later non-automated Ready event. A broken handoff preserves
    assignment without an implementation slot.
-8. RED implements after overlapping base drift; GREEN automatically requeues
-   the item to Planning while retaining authority. Counterexample:
+8. RED implements after overlapping base drift or a contract-preserving plan
+   inconsistency; GREEN publishes a verified replan report and automatically
+   requeues the item to Planning while retaining authority. Counterexample:
    non-overlapping screened drift remains implementable.
 9. RED starts new work before claims; GREEN orders existing implementation
-   claims, resumable planning/handoffs, new Ready work, then new Planning work.
-   Within each class it uses Priority, position, then issue number.
+   claims, priority replan claims, other resumable planning/handoffs, new Ready
+   work, then new Planning work. Within each class it uses Priority, position,
+   then issue number.
 10. RED skips a claimed item after assignment, plan, or eligibility changes;
     GREEN preserves and blocks only its lane or slot. A global configuration
     change still stops every lane.
@@ -509,8 +533,9 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
 15. RED adopts a PR by URL or author alone; GREEN verifies closure, repository,
     base, head ref/SHA, draft state, and lack of competition.
 16. RED creates Project options or migrates active work; GREEN requires a
-    human-managed schema, zero In progress items, and reauthorizes every legacy
-    Ready item through Planning. Preserve a valid trusted config reference.
+    human-managed Backlog, Planning and Ready schema, zero In progress items,
+    and reauthorizes every legacy Ready item through Planning. Preserve a valid
+    trusted config reference.
 17. RED relies on a closing keyword after a non-default merge; GREEN uses
     configured `close-after-merge` authority and verifies closure. Do not repeat
     a confirmed close; keep default-base closing keywords.
@@ -563,3 +588,22 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     remote-wait slot idles its ticket agent and makes capacity available to the
     planner. Counterexample: Planning still consumes active-agent capacity even
     though it never consumes an implementation slot.
+25. RED asks the user to edit GitHub after a private implementation assumption
+    fails; GREEN verifies a structured report before moving to Planning,
+    releases the slot, preserves retained work, and resumes the same ticket
+    context after a new plan revision. Counterexample: changing acceptance
+    criteria or a public contract uses Backlog instead.
+26. RED unassigns a human-required ticket before cleanup or preserves partial
+    code; GREEN verifies the report and Backlog transition, closes the PR,
+    deletes exact skill-owned dirty work, worktree and branches, verifies the
+    cleanup finish state, then unassigns last. Novel case: a crash after the
+    Backlog transition returns `resume-backlog-cleanup` because assignment is
+    the durable cleanup lease. Counterexample: ambiguous ownership preserves
+    the artifact and assignment for later reconciliation but consumes no
+    implementation slot.
+27. RED edits the active plan in place or creates an unlinked duplicate; GREEN
+    publishes a contiguous v2 child, verifies the unique leaf, then minimizes
+    its predecessor or applies the collapsed fallback. Novel case: an ambiguous
+    create is reconciled by revision and payload digest. Counterexample:
+    failure of both presentation mechanisms is reported but does not invalidate
+    the new plan.

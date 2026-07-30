@@ -28,11 +28,36 @@ DEFAULT_PROJECT_ARGUMENTS = (
     "maintainer",
 )
 DEFAULT_STATUS_ARGUMENTS = (
+    "--backlog-status",
+    "Backlog",
     "--ready-status",
     "Ready",
     "--in-progress-status",
     "In progress",
 )
+
+
+def implementation_plan(number: int, **overrides: object) -> dict:
+    result = {
+        "commentId": f"IC_plan_{number}",
+        "permalink": (
+            f"https://github.com/acme/repo/issues/{number}#issuecomment-plan"
+        ),
+        "author": "chris",
+        "digest": f"sha256:plan-{number}",
+        "createdAt": "2026-07-28T09:00:00Z",
+        "publishedAt": "2026-07-28T09:00:00Z",
+        "updatedAt": "2026-07-28T09:00:00Z",
+        "plannedBranch": "main",
+        "plannedSha": f"base-{number}",
+        "markerVersion": 2,
+        "revision": 1,
+        "supersedes": None,
+        "replanRequest": None,
+        "isMinimized": False,
+    }
+    result.update(overrides)
+    return result
 
 
 def run_ranker(items: list[dict], *arguments: str) -> tuple[int, dict]:
@@ -84,17 +109,27 @@ def ticket(number: int, **overrides: object) -> dict:
             "status": "Ready",
             "wasAutomated": False,
         },
-        "implementationPlan": {
-            "commentId": f"IC_plan_{number}",
-            "permalink": f"https://github.com/acme/repo/issues/{number}#issuecomment-plan",
-            "author": "chris",
-            "digest": f"sha256:plan-{number}",
-            "createdAt": "2026-07-28T09:00:00Z",
-            "updatedAt": "2026-07-28T09:00:00Z",
-            "plannedBranch": "main",
-            "plannedSha": f"base-{number}",
-        },
+        "implementationPlans": [implementation_plan(number)],
     }
+    if "implementationPlans" in overrides:
+        overrides.pop("implementationPlan", None)
+    elif "implementationPlan" in overrides:
+        legacy = overrides.pop("implementationPlan")
+        overrides["implementationPlans"] = (
+            []
+            if legacy is None
+            else [
+                {
+                    **legacy,
+                    "publishedAt": legacy["updatedAt"],
+                    "markerVersion": 1,
+                    "revision": 1,
+                    "supersedes": None,
+                    "replanRequest": None,
+                    "isMinimized": False,
+                },
+            ]
+        )
     result.update(overrides)
     return result
 
@@ -116,12 +151,294 @@ def pull_request(number: int, **overrides: object) -> dict:
     return result
 
 
+def replan_request(
+    number: int,
+    *,
+    disposition: str = "autonomous-replan",
+    **overrides: object,
+) -> dict:
+    result = {
+        "commentId": f"IC_replan_{number}",
+        "permalink": (
+            f"https://github.com/acme/repo/issues/{number}#issuecomment-replan"
+        ),
+        "author": "chris",
+        "createdAt": "2026-07-28T11:00:00Z",
+        "disposition": disposition,
+        "previousPlanPermalink": (
+            f"https://github.com/acme/repo/issues/{number}#issuecomment-plan"
+        ),
+        "previousPlanDigest": f"sha256:plan-{number}",
+        "baseSha": f"base-{number}",
+        "implementationHeadSha": None,
+        "pullRequestUrl": None,
+    }
+    result.update(overrides)
+    return result
+
+
 def first_entry(output: dict) -> dict:
     entries = output["claims"] or output["candidates"]
     return entries[0]
 
 
 class RankTicketsTest(unittest.TestCase):
+    def test_selects_the_unique_unsuperseded_plan_revision(self) -> None:
+        old_permalink = (
+            "https://github.com/acme/repo/issues/202#issuecomment-plan-v1"
+        )
+        replan_permalink = (
+            "https://github.com/acme/repo/issues/202#issuecomment-replan"
+        )
+        versioned = ticket(
+            202,
+            implementationPlan=None,
+            implementationPlans=[
+                {
+                    "commentId": "IC_plan_202_v1",
+                    "permalink": old_permalink,
+                    "author": "chris",
+                    "digest": "sha256:plan-202-v1",
+                    "createdAt": "2026-07-28T09:00:00Z",
+                    "publishedAt": "2026-07-28T09:00:00Z",
+                    "updatedAt": "2026-07-28T13:30:00Z",
+                    "plannedBranch": "main",
+                    "plannedSha": "base-202",
+                    "markerVersion": 1,
+                    "revision": 1,
+                    "supersedes": None,
+                    "replanRequest": None,
+                    "isMinimized": True,
+                },
+                {
+                    "commentId": "IC_plan_202_v2",
+                    "permalink": (
+                        "https://github.com/acme/repo/issues/202#issuecomment-plan-v2"
+                    ),
+                    "author": "chris",
+                    "digest": "sha256:plan-202-v2",
+                    "createdAt": "2026-07-28T13:00:00Z",
+                    "publishedAt": "2026-07-28T13:00:00Z",
+                    "updatedAt": "2026-07-28T13:00:00Z",
+                    "plannedBranch": "main",
+                    "plannedSha": "base-202",
+                    "markerVersion": 2,
+                    "revision": 2,
+                    "supersedes": old_permalink,
+                    "replanRequest": replan_permalink,
+                    "isMinimized": False,
+                },
+            ],
+            readyTransition={
+                "id": "PVTE_202_ready",
+                "actor": "chris",
+                "createdAt": "2026-07-28T14:00:00Z",
+                "status": "Ready",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([versioned])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual("claim", output["candidates"][0]["action"])
+
+    def test_requeued_ticket_hands_off_after_a_new_plan_revision(self) -> None:
+        old_permalink = (
+            "https://github.com/acme/repo/issues/203#issuecomment-plan-v1"
+        )
+        replan = replan_request(
+            203,
+            previousPlanPermalink=old_permalink,
+            previousPlanDigest="sha256:plan-203-v1",
+        )
+        requeued = ticket(
+            203,
+            projectStatus="Planning",
+            assignees=["chris"],
+            implementationPlan=None,
+            implementationPlans=[
+                {
+                    "commentId": "IC_plan_203_v1",
+                    "permalink": old_permalink,
+                    "author": "chris",
+                    "digest": "sha256:plan-203-v1",
+                    "createdAt": "2026-07-28T09:00:00Z",
+                    "publishedAt": "2026-07-28T09:00:00Z",
+                    "updatedAt": "2026-07-28T13:30:00Z",
+                    "plannedBranch": "main",
+                    "plannedSha": "base-203",
+                    "markerVersion": 1,
+                    "revision": 1,
+                    "supersedes": None,
+                    "replanRequest": None,
+                    "isMinimized": True,
+                },
+                {
+                    "commentId": "IC_plan_203_v2",
+                    "permalink": (
+                        "https://github.com/acme/repo/issues/203#issuecomment-plan-v2"
+                    ),
+                    "author": "chris",
+                    "digest": "sha256:plan-203-v2",
+                    "createdAt": "2026-07-28T13:00:00Z",
+                    "publishedAt": "2026-07-28T13:00:00Z",
+                    "updatedAt": "2026-07-28T13:00:00Z",
+                    "plannedBranch": "main",
+                    "plannedSha": "base-203",
+                    "markerVersion": 2,
+                    "revision": 2,
+                    "supersedes": old_permalink,
+                    "replanRequest": replan["permalink"],
+                    "isMinimized": False,
+                },
+            ],
+            replanRequest=replan,
+        )
+        requeued["planningTransition"].update(
+            actor="chris",
+            createdAt="2026-07-28T12:00:00Z",
+        )
+
+        returncode, output = run_ranker([requeued])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            "resume-planning-handoff",
+            output["claims"][0]["action"],
+        )
+
+        requeued["implementationPlans"][1]["replanRequest"] = None
+        returncode, output = run_ranker([requeued])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual(
+            [
+                {
+                    "number": 203,
+                    "reasons": [
+                        "active plan revision does not link the verified "
+                        "replan report",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
+    def test_assigned_backlog_item_resumes_cleanup_without_consuming_slot(self) -> None:
+        backlog = ticket(
+            200,
+            projectStatus="Backlog",
+            assignees=["chris"],
+            replanRequest=replan_request(200, disposition="human-required"),
+            backlogTransition={
+                "id": "PVTE_200_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+        implementation = ticket(
+            201,
+            projectStatus="In progress",
+            assignees=["chris"],
+        )
+
+        returncode, output = run_ranker(
+            [backlog, implementation],
+            "--max-claims",
+            "1",
+        )
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            ["resume-implementation", "resume-backlog-cleanup"],
+            [entry["action"] for entry in output["claims"]],
+        )
+
+    def test_unassigned_backlog_item_waits_for_human_planning_transition(self) -> None:
+        backlog = ticket(
+            204,
+            projectStatus="Backlog",
+            assignees=[],
+            replanRequest=replan_request(204, disposition="human-required"),
+            backlogTransition={
+                "id": "PVTE_204_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([backlog])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["candidates"])
+        self.assertEqual(
+            [
+                {
+                    "number": 204,
+                    "reasons": ["human work required in Backlog"],
+                },
+            ],
+            output["excluded"],
+        )
+
+    def test_human_planning_transition_after_backlog_starts_fresh(self) -> None:
+        planning = ticket(
+            205,
+            projectStatus="Planning",
+            assignees=[],
+            replanRequest=replan_request(205, disposition="human-required"),
+            backlogTransition={
+                "id": "PVTE_205_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+            planningTransition={
+                "id": "PVTE_205_planning",
+                "actor": "maintainer",
+                "createdAt": "2026-07-28T15:00:00Z",
+                "status": "Planning",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([planning])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual("plan", output["candidates"][0]["action"])
+
+    def test_broken_plan_revision_chain_is_ineligible(self) -> None:
+        broken = ticket(
+            206,
+            implementationPlans=[
+                implementation_plan(
+                    206,
+                    revision=2,
+                    supersedes=(
+                        "https://github.com/acme/repo/issues/206"
+                        "#issuecomment-missing"
+                    ),
+                ),
+            ],
+        )
+
+        returncode, output = run_ranker([broken])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["candidates"])
+        self.assertIn(
+            "implementation plan chain must have exactly one root",
+            output["excluded"][0]["reasons"][0],
+        )
+
     def test_returns_multiple_claims_and_candidates_up_to_limit(self) -> None:
         implementation = ticket(
             1,
@@ -836,6 +1153,7 @@ class RankTicketsTest(unittest.TestCase):
             197,
             projectStatus="Planning",
             assignees=["chris"],
+            replanRequest=replan_request(197),
         )
         requeued["planningTransition"].update(
             actor="chris",
@@ -847,9 +1165,9 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(0, returncode)
         self.assertEqual("resume-planning", output["claims"][0]["action"])
 
-    def test_runner_requeue_requires_verified_prior_ready_handoff(self) -> None:
+    def test_runner_requeue_requires_verified_replan_report(self) -> None:
         invalid_requeue = ticket(
-            198,
+            199,
             projectStatus="Planning",
             assignees=["chris"],
         )
@@ -857,7 +1175,40 @@ class RankTicketsTest(unittest.TestCase):
             actor="chris",
             createdAt="2026-07-28T12:00:00Z",
         )
-        invalid_requeue["implementationPlan"]["updatedAt"] = "2026-07-28T11:00:00Z"
+
+        returncode, output = run_ranker([invalid_requeue])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual(
+            [
+                {
+                    "number": 199,
+                    "reasons": [
+                        "runner Planning requeue lacks a verified replan report",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
+    def test_runner_requeue_requires_verified_prior_ready_handoff(self) -> None:
+        invalid_requeue = ticket(
+            198,
+            projectStatus="Planning",
+            assignees=["chris"],
+            replanRequest=replan_request(198),
+        )
+        invalid_requeue["planningTransition"].update(
+            actor="chris",
+            createdAt="2026-07-28T12:00:00Z",
+        )
+        invalid_requeue["implementationPlans"][0]["publishedAt"] = (
+            "2026-07-28T11:00:00Z"
+        )
+        invalid_requeue["implementationPlans"][0]["updatedAt"] = (
+            "2026-07-28T11:00:00Z"
+        )
 
         returncode, output = run_ranker([invalid_requeue])
 

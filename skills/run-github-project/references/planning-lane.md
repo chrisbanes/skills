@@ -11,39 +11,38 @@ Require both:
 2. the latest transition into `Planning` to be either:
    - a non-automated event by a configured execution approver; or
    - the authenticated runner's non-automated machine requeue backed by its
-     verified earlier Ready handoff.
+     verified earlier Ready handoff and runner-authored replan report.
 
 The human transition authorizes autonomous plan publication and implementation.
-The verified Ready handoff carries that authority across a machine requeue.
-Ordinary issue-body or comment edits do not revoke it. A newer human transition
-into `Planning` explicitly requests a new plan.
+The verified Ready handoff carries that authority across a contract-preserving
+machine requeue. Ordinary issue-body or comment edits do not revoke it. A newer
+human transition into `Planning` explicitly requests a new plan.
 
-Recognize exactly one implementation-plan comment containing:
+Recognize implementation-plan comments containing either:
 
 ```html
 <!-- to-plan:implementation-plan:v1 -->
+<!-- to-plan:implementation-plan:v2 -->
 ```
 
-Classify it as:
+Treat a v1 comment as a revision-one root. Require each v2 comment to record a
+positive revision, the predecessor permalink or `none`, and the triggering
+replan-report permalink or `none`. Hydrate minimized comments too. Require one
+runner-authored root, contiguous revisions, no forks, and one unminimized leaf.
+That leaf is the active implementation plan. A missing predecessor, duplicate
+revision, fork, foreign marker, or minimized leaf is a semantic planning
+blocker.
 
-- **missing** when no marker comment exists;
-- **current in Planning** when the authenticated runner authored it, it was last
-  updated at or after the authorizing Planning event, and its planned branch
-  matches the configured base;
-- **stale after requeue** whenever the runner moved the item back to Planning,
-  even when the marker itself is unchanged;
-- **stale** when a newer authorizing Planning event exists, the comment was
-  edited after its runner-authored Ready handoff, its author differs, or its
-  planned branch no longer
-  matches.
+Classify the active leaf as current in Planning only when its semantic payload
+was published at or after the authorizing Planning event and its planned branch
+matches the configured base. Treat the predecessor as stale immediately after
+a machine requeue. Compute its lease digest from the semantic plan payload,
+excluding a superseded banner or presentation-only `<details>` wrapper.
 
-Do not recognize `## Agent Brief` or any legacy fallback. Record the plan
-comment ID, permalink, author login, digest, creation and update times, planned
-branch, and planned SHA in the authority lease.
-
-A foreign-authored marker is a semantic planning blocker. Preserve assignment
-and require its author or a maintainer to remove it; never edit it or create a
-second marker.
+Do not recognize `## Agent Brief` or any unmarked fallback. Record the active
+and predecessor comment IDs, permalinks, revisions, authors, payload digests,
+creation, publication and update times, planned branch and SHA, replan report,
+and minimized state in the authority lease.
 
 ## Plan A Planning Item
 
@@ -66,11 +65,18 @@ second marker.
    implementation slot and does not reserve the controller lane during read-only
    work.
 6. At the publish boundary, wait for the controller lane. Let `to-plan` create
-   or update only its marker comment, then refetch it from GitHub.
-7. Verify the exact marker, authenticated-runner author, digest, permalink,
-   planned branch, planned SHA, and timestamps. Treat missing `to-plan` as an
-   issue-local planning blocker; it must not block implementation items with
-   current plans.
+   a new v2 revision when the substantive plan changed, or return the identical
+   active leaf as a no-op. Never edit a semantic plan payload in place.
+7. Refetch all marker comments and verify the unique active leaf, revision
+   chain, authenticated-runner author, payload digest, permalink, planned
+   branch, planned SHA, replan-report link, and timestamps. After a new leaf is
+   verified, minimize its predecessor as `OUTDATED`. When native minimization
+   is unavailable, prepend a superseded banner and wrap the unchanged payload
+   in `<details>`, then refetch and verify its payload digest. If both
+   presentation operations fail after bounded reconciliation, report the
+   hygiene failure but continue because the chain is authoritative. Treat
+   missing `to-plan` as an issue-local planning blocker; it must not block
+   implementation items with current plans.
 8. Move the item to `Ready to implement` as the authenticated runner. Refetch
    and require a non-automated Ready transition by that runner after both the
    Planning event and the plan's latest update. That reconciled event attests
@@ -117,17 +123,72 @@ current base:
 
 - accept non-overlapping committed drift after screening the changed files,
   symbols, seams, contracts, and validation;
-- move the item back to `Planning` when drift overlaps or overlap is uncertain.
+- use the autonomous replan path when drift overlaps or overlap is uncertain.
 
-That runner-authored machine requeue is the only automatic backward Status
-transition. The ranker requires its verified prior Ready handoff, retains that
-authority, and always resumes planning rather than handing the old plan back
-directly. Any fresh human Planning transition supersedes it and requests a new
-plan.
+### Re-plan A Contract-Preserving Inconsistency
 
-For a plan edit or another live-eligibility invalidation after Ready, preserve
-the blocked handoff and require a human transition to Planning. That new event
-authorizes re-planning; never silently bless the changed plan.
+When the owning ticket agent returns an `autonomous-replan` packet:
+
+1. Enter the controller lane and revalidate the current authority lease,
+   verified base, assignment, Status, plan leaf, branch, worktree and PR.
+2. Publish one new comment containing
+   `<!-- run-github-project:replan-request:v1 -->`, disposition
+   `autonomous-replan`, the active plan permalink and payload digest, exact
+   evidence and invalid assumption, unchanged acceptance criteria, scope,
+   public contracts and upstream decisions, recommended direction, base SHA,
+   retained branch or PR head, and dirty-work summary. Refetch and verify it.
+   If publication or verification fails, keep the ticket In progress and its
+   slot occupied.
+3. Move the item to Planning as the runner, refetch it, and require the new
+   transition to follow the verified report and preceding Ready handoff.
+4. Release the implementation slot without preempting another worker. Preserve
+   exclusive assignment, deterministic branch and worktree, open PR, dirty
+   partial work, and idle ticket context as one priority replan claim. These
+   artifacts no longer count toward the implementation-slot limit.
+5. Plan against the current verified base. Pass the retained branch or PR head
+   and dirty-work summary as evidence, not as the planning baseline. Permit
+   exactly that runner-owned implementation PR during this replan; competing
+   or foreign PRs still block.
+6. Publish and verify the next plan revision, perform the Ready handoff, then
+   reacquire the next free implementation slot ahead of new claims. Resume the
+   same ticket context and let it reconcile retained work to the new plan.
+
+The ranker requires the verified report, preceding Ready handoff, and
+runner-authored Planning transition. A missing or mismatched link preserves a
+blocked planning claim. Any fresh human Planning transition supersedes the
+machine requeue and requests a new plan.
+
+### Return Human Work To Backlog
+
+When the packet is `human-required` because acceptance criteria, scope, a
+public contract, or an upstream decision must change:
+
+1. Publish and verify the same marker-owned report with disposition
+   `human-required`, the exact decision and authoritative issue, specification
+   or ADR that must change, plus all useful diagnostic evidence.
+2. Move the item to the configured Backlog option and verify the transition.
+   Do not clean anything when either the report or transition is ambiguous.
+3. Comment on and close any runner-owned implementation PR, linking the durable
+   report. Reconcile an ambiguous close before continuing.
+4. Resolve active processes and named-resource grants, verify exact skill
+   ownership, then deliberately remove the dirty or clean ticket worktree and
+   delete its skill-created local and remote branches. Never delete a foreign
+   or ambiguously owned artifact.
+5. Refetch and require no active process or resource grant, no open runner PR,
+   and no exact skill-owned worktree, local branch, or remote branch. Treat
+   absent artifacts as an idempotent cleanup success after a restart.
+6. Unassign the runner only after that cleanup finish state is verified, then
+   refetch and require that it no longer owns the issue. Until this final
+   mutation reconciles, the assignment is the durable cleanup lease returned
+   by `resume-backlog-cleanup`.
+7. Discard the ticket agent and release every scheduler resource. Report any
+   residue that could not be reconciled, but do not retain a claim or slot for
+   the Backlog item.
+
+A later non-automated Backlog-to-Planning transition by an execution approver
+is fresh authority. Start from the verified base, recover no deleted partial
+code, and publish a new plan revision that supersedes the historical leaf.
+Never move a human-owned Backlog item to Planning automatically.
 
 Semantic planning blockers are issue-local. Preserve the assignment and retry
 them only when authoritative inputs change. Retry transient planner/tool
@@ -139,10 +200,12 @@ implementation slot merely to wait for a planning blocker.
 Use the ranker as the single selector for both lanes. Process classes in this
 order:
 
-1. existing implementation and PR claims;
-2. resumable Planning and verified handoff claims;
-3. new `Ready to implement` candidates;
-4. new `Planning` candidates.
+1. interrupted Backlog cleanup claims;
+2. existing implementation and PR claims;
+3. contract-preserving replan claims;
+4. other resumable Planning and verified handoff claims;
+5. new `Ready to implement` candidates;
+6. new `Planning` candidates.
 
 Within a class, use configured Priority, visible Project position, then issue
 number.
@@ -160,7 +223,8 @@ active-agent capacity, and non-preemption.
 Before adopting this schema:
 
 1. require zero existing `In progress` items;
-2. have a human create and verify `Planning` and `Ready to implement`;
+2. have a human create and verify `Backlog`, `Planning`, and
+   `Ready to implement`;
 3. configure their option IDs and execution approver logins;
 4. have an execution approver move every legacy Ready item to `Planning`;
 5. run `to-plan --auto` for each item, including those with an existing marker,

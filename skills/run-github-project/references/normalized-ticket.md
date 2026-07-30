@@ -24,6 +24,7 @@ paginated GitHub and Project reads:
     "status": "Planning",
     "wasAutomated": false
   },
+  "backlogTransition": null,
   "readyTransition": {
     "id": "PVTE_ready",
     "actor": "octocat",
@@ -31,16 +32,25 @@ paginated GitHub and Project reads:
     "status": "Ready to implement",
     "wasAutomated": false
   },
-  "implementationPlan": {
-    "commentId": "IC_plan",
-    "permalink": "https://github.com/owner/repository/issues/42#issuecomment-1",
-    "author": "octocat",
-    "digest": "sha256:plan-body",
-    "createdAt": "2026-07-28T09:00:00Z",
-    "updatedAt": "2026-07-28T09:00:00Z",
-    "plannedBranch": "main",
-    "plannedSha": "0123456789abcdef"
-  },
+  "replanRequest": null,
+  "implementationPlans": [
+    {
+      "commentId": "IC_plan",
+      "permalink": "https://github.com/owner/repository/issues/42#issuecomment-1",
+      "author": "octocat",
+      "digest": "sha256:plan-payload",
+      "createdAt": "2026-07-28T09:00:00Z",
+      "publishedAt": "2026-07-28T09:00:00Z",
+      "updatedAt": "2026-07-28T09:00:00Z",
+      "plannedBranch": "main",
+      "plannedSha": "0123456789abcdef",
+      "markerVersion": 2,
+      "revision": 1,
+      "supersedes": null,
+      "replanRequest": null,
+      "isMinimized": false
+    }
+  ],
   "openPullRequests": [
     {
       "number": 91,
@@ -70,10 +80,52 @@ For a first-time or human-reauthorized `Planning` item, `readyTransition` may be
 Ready transition. For any other accepted Status it must be the latest
 transition into `Ready to implement`. `planningTransition` is always the latest
 event entering Planning; the ranker distinguishes human authorization from a
-runner requeue by actor and the preceding Ready handoff.
-`implementationPlan` may be `null`; when present it must represent the only
-comment containing `<!-- to-plan:implementation-plan:v1 -->` and `author` must
-be the authenticated runner's GitHub login.
+runner requeue by actor, the preceding Ready handoff, and `replanRequest`.
+
+Use `backlogTransition` only for an item currently in Backlog. It must be the
+latest transition into Backlog. An assigned Backlog item also requires a
+runner-authored `replanRequest` with `disposition: "human-required"` so cleanup
+can resume after interruption. Keep that assignment as the durable cleanup
+lease until the controller verifies that every exact runner-owned artifact is
+absent and unassigns last. An unassigned Backlog item is human-owned and
+ineligible.
+
+Normalize every runner-owned v1 or v2 plan marker, including minimized
+comments, into `implementationPlans`. A v1 comment is a revision-one root. A v2
+comment records its positive `revision`, predecessor permalink in
+`supersedes`, triggering report permalink in `replanRequest` when applicable,
+and payload publication time in `publishedAt`. Compute `digest` from the
+semantic plan payload, excluding any superseded banner or `<details>` wrapper,
+so presentation-only edits do not invalidate history.
+
+Require one root, contiguous revisions, one child per revision, and one
+unminimized leaf. The ranker returns that leaf as the synthesized
+`implementationPlan` in each selected ticket. Reject forks, gaps, duplicate
+revisions, missing predecessors, foreign marker authors, and a minimized active
+leaf. For compatibility, the ranker also accepts the former singular
+`implementationPlan` input as one v1 root.
+
+For an automatic requeue, normalize the verified report comment as:
+
+```json
+{
+  "commentId": "IC_replan",
+  "permalink": "https://github.com/owner/repository/issues/42#issuecomment-2",
+  "author": "octocat",
+  "createdAt": "2026-07-28T11:00:00Z",
+  "disposition": "autonomous-replan",
+  "previousPlanPermalink": "https://github.com/owner/repository/issues/42#issuecomment-1",
+  "previousPlanDigest": "sha256:plan-payload",
+  "baseSha": "0123456789abcdef",
+  "implementationHeadSha": "fedcba9876543210",
+  "pullRequestUrl": null
+}
+```
+
+Use `human-required` instead of `autonomous-replan` for the Backlog path.
+Retained head and PR fields may be null but must identify exact durable state
+when present. The report must precede the resulting Status transition and
+identify the plan that authorized the prior Ready handoff.
 
 The ranker returns valid current-user claims and ordered unclaimed candidates:
 
@@ -88,12 +140,13 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
   ],
   "claims": [
     {"ticket": {"number": 41}, "action": "resume-implementation"},
-    {"ticket": {"number": 42}, "action": "resume-planning-handoff"}
+    {"ticket": {"number": 42}, "action": "resume-planning-handoff"},
+    {"ticket": {"number": 43}, "action": "resume-backlog-cleanup"}
   ],
   "candidates": [
-    {"ticket": {"number": 43}, "action": "resume-pr"},
-    {"ticket": {"number": 44}, "action": "claim"},
-    {"ticket": {"number": 45}, "action": "plan"}
+    {"ticket": {"number": 44}, "action": "resume-pr"},
+    {"ticket": {"number": 45}, "action": "claim"},
+    {"ticket": {"number": 46}, "action": "plan"}
   ],
   "excluded": []
 }
@@ -104,4 +157,7 @@ controller owns scheduling; the ranker only validates claims and orders
 candidates. Each `blockedClaims` entry occupies a slot and preserves a claimed
 implementation ticket that requires reconciliation. Planning claims and
 `blockedPlanningClaims` preserve ownership but do not consume an implementation
-slot.
+slot. `resume-backlog-cleanup` also consumes no implementation slot and must
+finish before new claims. Its cleanup is idempotent: already-absent owned
+artifacts satisfy their individual finish checks, but the assignment remains
+until the complete cleanup state is verified.

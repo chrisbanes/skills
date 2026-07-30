@@ -28,6 +28,11 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    Follow [Planning Lane](planning-lane.md) for its worktree, agent, authority,
    handoff, and blocker rules. Do not reserve agent capacity for Planning;
    start it only from currently spare capacity, then never preempt it.
+7. When an implementation slot requeues for contract-preserving planning,
+   release the slot but park its assignment, branch, worktree, PR, dirty work
+   and idle ticket context on the planning claim. Restore that same ownership
+   when the handoff reacquires a slot. A Backlog handoff instead removes all
+   skill-owned artifacts and retains no claim.
 
 ## Parallel Workers And Controller Lane
 
@@ -131,18 +136,21 @@ At every controller event or worker yield, perform all independent runnable
 actions that fit the slot and active-agent limits. Exhaust each class before
 dispatching the next:
 
-1. Merge the oldest merge-ready slot, unless an explicit dependency requires a
+1. Finish any interrupted assigned-Backlog cleanup before new claims.
+2. Merge the oldest merge-ready slot, unless an explicit dependency requires a
    different order. Admit or merge only one at a time.
-2. Resume owning ticket agents for actionable review, CI, or base-repair events
+3. Resume owning ticket agents for actionable review, CI, or base-repair events
    in oldest-event order.
-3. Resume paused local implementation slots in claim order.
-4. Finish a current plan or verified planning handoff without preemption.
-5. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
+4. Resume paused local implementation slots in claim order.
+5. Finish a current contract-preserving replan, other plan, or verified
+   planning handoff without preemption. Choose preserved replan claims before
+   other Planning claims.
+6. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
    `Ready to implement` tickets one at a time, and launch unrelated slot agents
    until the in-flight or active-agent limit is reached.
-6. Start the next ranked `Planning` item only when the planning lane and active
+7. Start the next ranked `Planning` item only when the planning lane and active
    agent capacity are free after maximizing runnable implementation.
-7. Monitor all remote slots together only when no local or controller action
+8. Monitor all remote slots together only when no local or controller action
    remains.
 
 Never preempt a valid occupied slot for newly higher-priority work. Requery and
@@ -154,6 +162,11 @@ completion without preemption. Once handed off, the same assigned issue enters
 the next available implementation slot. Apply the planning lane's reconciled
 three-attempt recovery to planner loss, crash, or timeout; do not classify
 those execution failures as semantic blockers.
+
+Contract-preserving replan claims outrank all new Ready and Planning work but
+never preempt an active agent. They retain their original claim order when
+several slots requeue. Backlog items are never queue candidates; only an
+interrupted current-runner cleanup is recoverable.
 
 ## Remote Waiting
 
@@ -200,6 +213,14 @@ Treat an unexplained scarce-resource collision as slot-local on its first
 occurrence. Discover and add the narrow named lock before retrying. Pause new
 claims when the same collision or infrastructure failure affects two slots or
 the verified base.
+
+After a verified Backlog handoff, cleanup failure is ticket-local. Release
+scheduler capacity, report the exact unreconciled artifact, and never delete it
+by guess. Keep the runner assigned as the durable cleanup lease until the
+idempotent finish state proves that its PR, processes, resource grants,
+worktree, and branches are gone; unassign last. A later run may finish only an
+assigned Backlog cleanup with verified runner provenance; an unassigned Backlog
+item remains human-owned.
 
 Finish successfully only when a complete live query is empty and every slot is
 free after merge reconciliation. If no runnable work remains but a slot is

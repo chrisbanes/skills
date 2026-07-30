@@ -27,6 +27,8 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 
 - Field name: `<Status>`
 - Field ID: `<PVTSSF_...>`
+- Backlog name: `<Backlog>`
+- Backlog option ID: `<option-id>`
 - Planning name: `<Planning>`
 - Planning option ID: `<option-id>`
 - Ready to implement name: `<Ready to implement>`
