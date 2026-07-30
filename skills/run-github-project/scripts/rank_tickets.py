@@ -16,6 +16,11 @@ class InputError(ValueError):
 
 
 IMPLEMENTATION_ACTIONS = {"resume-pr", "resume-implementation"}
+CLAIM_ACTION_RANK = {
+    "resume-backlog-cleanup": 0,
+    "resume-pr": 1,
+    "resume-implementation": 1,
+}
 CANDIDATE_ACTION_ORDER = ("resume-pr", "resume-implementation", "plan")
 CANDIDATE_OUTPUT_ACTIONS = {"resume-implementation": "claim"}
 
@@ -468,10 +473,14 @@ def analyze_ticket(
     pull_requests = pull_request_values(ticket["openPullRequests"], number)
     project_position = parse_project_position(ticket["projectPosition"], number)
     project_status = ticket["projectStatus"]
+    assigned_to_current_user = current_user in assignees
+    recovering_backlog_cleanup = (
+        project_status == backlog_status and assigned_to_current_user
+    )
 
     errors: list[str] = []
     exclusions: list[str] = []
-    if "ready-for-agent" not in labels:
+    if "ready-for-agent" not in labels and not recovering_backlog_cleanup:
         exclusions.append("missing ready-for-agent label")
 
     planning_transition = parse_transition(
@@ -512,10 +521,16 @@ def analyze_ticket(
     plan_is_usable = False
     plan_is_current_in_planning = False
     plan_published_at: datetime | None = None
+    plan_updated_at: datetime | None = None
     if implementation_plan is not None:
         plan_published_at = timestamp(
             implementation_plan.get("publishedAt"),
             "implementationPlan.publishedAt",
+            number,
+        )
+        plan_updated_at = timestamp(
+            implementation_plan.get("updatedAt"),
+            "implementationPlan.updatedAt",
             number,
         )
         plan_targets_base = implementation_plan["plannedBranch"] == base_branch
@@ -622,11 +637,36 @@ def analyze_ticket(
         and replan_request["createdAt"] >= ready_transition["createdAt"]
         and replan_request["createdAt"] <= planning_transition["createdAt"]
     )
+    own_pull_requests = [
+        pull_request for pull_request in pull_requests
+        if pull_request["author"] == current_user
+    ]
+    own_closing_pull_requests = [
+        pull_request for pull_request in own_pull_requests
+        if pull_request["closesIssue"]
+    ]
+    retained_pr_matches_report = (
+        replan_request is not None
+        and (
+            (
+                replan_request["pullRequestUrl"] is None
+                and not own_closing_pull_requests
+            )
+            or (
+                len(own_closing_pull_requests) == 1
+                and replan_request["pullRequestUrl"]
+                == own_closing_pull_requests[0]["url"]
+                and replan_request["implementationHeadSha"]
+                == own_closing_pull_requests[0]["headSha"]
+            )
+        )
+    )
     planning_is_runner_requeue = (
         project_status == planning_status
         and planning_actor_is_runner
         and valid_prior_ready_handoff
         and valid_autonomous_replan_report
+        and retained_pr_matches_report
     )
     planning_is_human_authority = (
         planning_actor_is_approver
@@ -654,6 +694,10 @@ def analyze_ticket(
         elif not valid_autonomous_replan_report:
             exclusions.append(
                 "runner Planning requeue lacks a verified replan report",
+            )
+        elif not retained_pr_matches_report:
+            exclusions.append(
+                "runner Planning requeue lacks verified retained PR evidence",
             )
     if (
         planning_is_runner_requeue
@@ -688,10 +732,10 @@ def analyze_ticket(
                 f"ready transition actor {ready_transition['actor']!r} "
                 f"does not match current user {current_user!r}",
             )
-        if plan_published_at is None:
+        if plan_updated_at is None:
             exclusions.append("missing current implementation plan")
         elif plan_is_usable:
-            if ready_transition["createdAt"] < plan_published_at:
+            if ready_transition["createdAt"] < plan_updated_at:
                 exclusions.append(
                     "ready transition predates the current implementation plan",
                 )
@@ -702,7 +746,10 @@ def analyze_ticket(
             else:
                 valid_ready_handoff = ready_has_runner_provenance
 
-    if str(ticket["state"]).upper() != "OPEN":
+    if (
+        str(ticket["state"]).upper() != "OPEN"
+        and not recovering_backlog_cleanup
+    ):
         exclusions.append("not open")
 
     if project_status not in (
@@ -727,12 +774,11 @@ def analyze_ticket(
         else len(priorities)
     )
 
-    if blockers:
+    if blockers and not recovering_backlog_cleanup:
         exclusions.append(f"blocked by {blockers}")
-    if open_descendants:
+    if open_descendants and not recovering_backlog_cleanup:
         exclusions.append(f"open descendants {open_descendants}")
 
-    assigned_to_current_user = current_user in assignees
     other_assignees = [assignee for assignee in assignees if assignee != current_user]
     if other_assignees:
         exclusions.append(f"assigned to {other_assignees}")
@@ -785,14 +831,6 @@ def analyze_ticket(
         if not assigned_to_current_user:
             exclusions.append("human work required in Backlog")
 
-    own_pull_requests = [
-        pull_request for pull_request in pull_requests
-        if pull_request["author"] == current_user
-    ]
-    own_closing_pull_requests = [
-        pull_request for pull_request in own_pull_requests
-        if pull_request["closesIssue"]
-    ]
     wrong_target_pull_requests = [
         pull_request for pull_request in own_closing_pull_requests
         if (
@@ -979,7 +1017,7 @@ def main() -> int:
         claimed = [item for item in eligible if item["assignedToCurrentUser"]]
         claimed.sort(
             key=lambda item: (
-                item["resumeAction"] not in IMPLEMENTATION_ACTIONS,
+                CLAIM_ACTION_RANK.get(item["resumeAction"], 2),
                 *ticket_rank(item),
             ),
         )

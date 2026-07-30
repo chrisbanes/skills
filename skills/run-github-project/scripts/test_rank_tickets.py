@@ -313,8 +313,35 @@ class RankTicketsTest(unittest.TestCase):
 
         self.assertEqual(0, returncode)
         self.assertEqual(
-            ["resume-implementation", "resume-backlog-cleanup"],
+            ["resume-backlog-cleanup", "resume-implementation"],
             [entry["action"] for entry in output["claims"]],
+        )
+
+    def test_backlog_cleanup_ignores_implementation_readiness_changes(self) -> None:
+        backlog = ticket(
+            209,
+            state="CLOSED",
+            projectStatus="Backlog",
+            labels=[],
+            assignees=["chris"],
+            blockedBy=[99],
+            openDescendants=[100],
+            replanRequest=replan_request(209, disposition="human-required"),
+            backlogTransition={
+                "id": "PVTE_209_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([backlog])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            "resume-backlog-cleanup",
+            output["claims"][0]["action"],
         )
 
     def test_unassigned_backlog_item_waits_for_human_planning_transition(self) -> None:
@@ -396,6 +423,19 @@ class RankTicketsTest(unittest.TestCase):
         self.assertIn(
             "implementation plan chain must have exactly one root",
             output["excluded"][0]["reasons"][0],
+        )
+
+    def test_ready_handoff_rejects_active_plan_edited_after_transition(self) -> None:
+        handoff = ticket(207)
+        handoff["implementationPlans"][0]["updatedAt"] = "2026-07-28T11:00:00Z"
+
+        returncode, output = run_ranker([handoff])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["candidates"])
+        self.assertIn(
+            "ready transition predates the current implementation plan",
+            output["excluded"][0]["reasons"],
         )
 
     def test_returns_multiple_claims_and_candidates_up_to_limit(self) -> None:
@@ -1150,6 +1190,38 @@ class RankTicketsTest(unittest.TestCase):
             ],
             output["blockedPlanningClaims"],
         )
+
+    def test_runner_requeue_requires_report_to_name_retained_pr(self) -> None:
+        invalid_requeue = ticket(
+            208,
+            projectStatus="Planning",
+            assignees=["chris"],
+            replanRequest=replan_request(
+                208,
+                pullRequestUrl="https://github.com/acme/repo/pull/208",
+                implementationHeadSha="wrong-head",
+            ),
+            openPullRequests=[pull_request(208)],
+        )
+        invalid_requeue["planningTransition"].update(
+            actor="chris",
+            createdAt="2026-07-28T12:00:00Z",
+        )
+
+        returncode, output = run_ranker([invalid_requeue])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertIn(
+            "runner Planning requeue lacks verified retained PR evidence",
+            output["blockedPlanningClaims"][0]["reasons"],
+        )
+
+        invalid_requeue["replanRequest"]["implementationHeadSha"] = "head-208"
+        returncode, output = run_ranker([invalid_requeue])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual("resume-planning", output["claims"][0]["action"])
 
     def test_runner_requeue_requires_verified_prior_ready_handoff(self) -> None:
         invalid_requeue = ticket(
