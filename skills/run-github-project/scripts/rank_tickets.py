@@ -264,47 +264,26 @@ def parse_replan_request(value: Any, number: Any) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise InputError(f"ticket {number}: replanRequest must be an object")
     result = {
-        "commentId": nonempty_string(
-            value.get("commentId"),
-            "replanRequest.commentId",
+        field: nonempty_string(
+            value.get(field),
+            f"replanRequest.{field}",
             number,
-        ),
-        "permalink": nonempty_string(
-            value.get("permalink"),
-            "replanRequest.permalink",
-            number,
-        ),
-        "author": nonempty_string(
-            value.get("author"),
-            "replanRequest.author",
-            number,
-        ),
-        "createdAt": timestamp(
-            value.get("createdAt"),
-            "replanRequest.createdAt",
-            number,
-        ),
-        "disposition": nonempty_string(
-            value.get("disposition"),
-            "replanRequest.disposition",
-            number,
-        ),
-        "previousPlanPermalink": nonempty_string(
-            value.get("previousPlanPermalink"),
-            "replanRequest.previousPlanPermalink",
-            number,
-        ),
-        "previousPlanDigest": nonempty_string(
-            value.get("previousPlanDigest"),
-            "replanRequest.previousPlanDigest",
-            number,
-        ),
-        "baseSha": nonempty_string(
-            value.get("baseSha"),
-            "replanRequest.baseSha",
-            number,
-        ),
+        )
+        for field in (
+            "commentId",
+            "permalink",
+            "author",
+            "disposition",
+            "previousPlanPermalink",
+            "previousPlanDigest",
+            "baseSha",
+        )
     }
+    result["createdAt"] = timestamp(
+        value.get("createdAt"),
+        "replanRequest.createdAt",
+        number,
+    )
     for field in ("implementationHeadSha", "pullRequestUrl"):
         optional = value.get(field)
         if optional is not None and (not isinstance(optional, str) or not optional):
@@ -435,45 +414,28 @@ def parse_implementation_plan_chain(
     if len(set(revisions)) != len(revisions):
         raise InputError(f"ticket {number}: duplicate implementation plan revision")
 
-    by_permalink = {plan["permalink"]: plan for plan in plans}
-    roots = [plan for plan in plans if plan.get("supersedes") is None]
-    if len(roots) != 1:
+    chain = sorted(plans, key=lambda plan: plan["revision"])
+    if (
+        chain[0]["supersedes"] is not None
+        or any(plan["supersedes"] is None for plan in chain[1:])
+    ):
         raise InputError(
             f"ticket {number}: implementation plan chain must have exactly one root",
         )
-
-    child_counts = {permalink: 0 for permalink in permalinks}
-    for plan in plans:
-        supersedes = plan.get("supersedes")
-        if supersedes is None:
-            if plan["revision"] != 1:
-                raise InputError(
-                    f"ticket {number}: implementation plan root must be revision 1",
-                )
+    if [plan["revision"] for plan in chain] != list(range(1, len(chain) + 1)):
+        raise InputError(
+            f"ticket {number}: implementation plan revisions must be contiguous",
+        )
+    for parent, child in zip(chain, chain[1:]):
+        if child["supersedes"] == parent["permalink"]:
             continue
-        parent = by_permalink.get(supersedes)
-        if parent is None:
+        if child["supersedes"] not in permalinks:
             raise InputError(
                 f"ticket {number}: implementation plan revision "
-                f"{plan['revision']} has a missing predecessor",
+                f"{child['revision']} has a missing predecessor",
             )
-        if plan["revision"] != parent["revision"] + 1:
-            raise InputError(
-                f"ticket {number}: implementation plan revisions must be contiguous",
-            )
-        child_counts[supersedes] += 1
-
-    if any(count > 1 for count in child_counts.values()):
         raise InputError(f"ticket {number}: implementation plan chain forks")
-    leaves = [
-        plan for plan in plans
-        if child_counts[plan["permalink"]] == 0
-    ]
-    if len(leaves) != 1:
-        raise InputError(
-            f"ticket {number}: implementation plan chain must have one active leaf",
-        )
-    active = leaves[0]
+    active = chain[-1]
     if active["isMinimized"]:
         raise InputError(
             f"ticket {number}: active implementation plan is minimized",

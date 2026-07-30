@@ -111,25 +111,8 @@ def ticket(number: int, **overrides: object) -> dict:
         },
         "implementationPlans": [implementation_plan(number)],
     }
-    if "implementationPlans" in overrides:
-        overrides.pop("implementationPlan", None)
-    elif "implementationPlan" in overrides:
-        legacy = overrides.pop("implementationPlan")
-        overrides["implementationPlans"] = (
-            []
-            if legacy is None
-            else [
-                {
-                    **legacy,
-                    "publishedAt": legacy["updatedAt"],
-                    "markerVersion": 1,
-                    "revision": 1,
-                    "supersedes": None,
-                    "replanRequest": None,
-                    "isMinimized": False,
-                },
-            ]
-        )
+    if "implementationPlan" in overrides:
+        result.pop("implementationPlans")
     result.update(overrides)
     return result
 
@@ -192,42 +175,30 @@ class RankTicketsTest(unittest.TestCase):
         )
         versioned = ticket(
             202,
-            implementationPlan=None,
             implementationPlans=[
-                {
-                    "commentId": "IC_plan_202_v1",
-                    "permalink": old_permalink,
-                    "author": "chris",
-                    "digest": "sha256:plan-202-v1",
-                    "createdAt": "2026-07-28T09:00:00Z",
-                    "publishedAt": "2026-07-28T09:00:00Z",
-                    "updatedAt": "2026-07-28T13:30:00Z",
-                    "plannedBranch": "main",
-                    "plannedSha": "base-202",
-                    "markerVersion": 1,
-                    "revision": 1,
-                    "supersedes": None,
-                    "replanRequest": None,
-                    "isMinimized": True,
-                },
-                {
-                    "commentId": "IC_plan_202_v2",
-                    "permalink": (
+                implementation_plan(
+                    202,
+                    commentId="IC_plan_202_v1",
+                    permalink=old_permalink,
+                    digest="sha256:plan-202-v1",
+                    updatedAt="2026-07-28T13:30:00Z",
+                    markerVersion=1,
+                    isMinimized=True,
+                ),
+                implementation_plan(
+                    202,
+                    commentId="IC_plan_202_v2",
+                    permalink=(
                         "https://github.com/acme/repo/issues/202#issuecomment-plan-v2"
                     ),
-                    "author": "chris",
-                    "digest": "sha256:plan-202-v2",
-                    "createdAt": "2026-07-28T13:00:00Z",
-                    "publishedAt": "2026-07-28T13:00:00Z",
-                    "updatedAt": "2026-07-28T13:00:00Z",
-                    "plannedBranch": "main",
-                    "plannedSha": "base-202",
-                    "markerVersion": 2,
-                    "revision": 2,
-                    "supersedes": old_permalink,
-                    "replanRequest": replan_permalink,
-                    "isMinimized": False,
-                },
+                    digest="sha256:plan-202-v2",
+                    createdAt="2026-07-28T13:00:00Z",
+                    publishedAt="2026-07-28T13:00:00Z",
+                    updatedAt="2026-07-28T13:00:00Z",
+                    revision=2,
+                    supersedes=old_permalink,
+                    replanRequest=replan_permalink,
+                ),
             ],
             readyTransition={
                 "id": "PVTE_202_ready",
@@ -256,42 +227,30 @@ class RankTicketsTest(unittest.TestCase):
             203,
             projectStatus="Planning",
             assignees=["chris"],
-            implementationPlan=None,
             implementationPlans=[
-                {
-                    "commentId": "IC_plan_203_v1",
-                    "permalink": old_permalink,
-                    "author": "chris",
-                    "digest": "sha256:plan-203-v1",
-                    "createdAt": "2026-07-28T09:00:00Z",
-                    "publishedAt": "2026-07-28T09:00:00Z",
-                    "updatedAt": "2026-07-28T13:30:00Z",
-                    "plannedBranch": "main",
-                    "plannedSha": "base-203",
-                    "markerVersion": 1,
-                    "revision": 1,
-                    "supersedes": None,
-                    "replanRequest": None,
-                    "isMinimized": True,
-                },
-                {
-                    "commentId": "IC_plan_203_v2",
-                    "permalink": (
+                implementation_plan(
+                    203,
+                    commentId="IC_plan_203_v1",
+                    permalink=old_permalink,
+                    digest="sha256:plan-203-v1",
+                    updatedAt="2026-07-28T13:30:00Z",
+                    markerVersion=1,
+                    isMinimized=True,
+                ),
+                implementation_plan(
+                    203,
+                    commentId="IC_plan_203_v2",
+                    permalink=(
                         "https://github.com/acme/repo/issues/203#issuecomment-plan-v2"
                     ),
-                    "author": "chris",
-                    "digest": "sha256:plan-203-v2",
-                    "createdAt": "2026-07-28T13:00:00Z",
-                    "publishedAt": "2026-07-28T13:00:00Z",
-                    "updatedAt": "2026-07-28T13:00:00Z",
-                    "plannedBranch": "main",
-                    "plannedSha": "base-203",
-                    "markerVersion": 2,
-                    "revision": 2,
-                    "supersedes": old_permalink,
-                    "replanRequest": replan["permalink"],
-                    "isMinimized": False,
-                },
+                    digest="sha256:plan-203-v2",
+                    createdAt="2026-07-28T13:00:00Z",
+                    publishedAt="2026-07-28T13:00:00Z",
+                    updatedAt="2026-07-28T13:00:00Z",
+                    revision=2,
+                    supersedes=old_permalink,
+                    replanRequest=replan["permalink"],
+                ),
             ],
             replanRequest=replan,
         )
