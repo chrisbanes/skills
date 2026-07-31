@@ -32,12 +32,27 @@ Reject pull requests and stop when the reference or repository identity is
 ambiguous. Do not select GitHub mode from issue links mentioned earlier in the
 conversation.
 
-With no issue reference, use conversation mode only when a completed `grill-me`
-session in the current conversation ended with the user's explicit confirmation
-of shared understanding. Otherwise stop and direct the user to `grill-me`. If
-Plan mode is still active, stop before writing and ask the user to switch to
-Default mode, then invoke `/to-plan` again. Do not reconstruct a specification
-from a partial or unconfirmed interview.
+With no issue reference, use conversation mode only when the conversation
+contains a compact decision-complete summary followed by the user's explicit
+confirmation of shared understanding. That summary may come from `grill-me` or
+the fallback interview below. Do not reconstruct a specification from a partial
+or unconfirmed interview. Once the summary is confirmed, if Plan mode is still
+active, stop before writing and ask the user to switch to Default mode, then
+invoke `/to-plan` again.
+
+When the summary or confirmation is missing:
+
+1. If `grill-me` is installed, direct the user to invoke it.
+2. Otherwise ask the user to switch to Plan mode, then conduct the equivalent
+   interview directly. Ask one decision question at a time, provide a
+   recommended answer, wait for the response, and look up discoverable facts
+   instead of asking for them.
+3. Continue until goal, success criteria, scope, constraints, decisions,
+   trade-offs, repository target, validation, and re-plan boundaries are
+   decision-complete.
+4. Present one compact self-contained summary and require explicit confirmation.
+5. After confirmation, ask the user to switch to Default mode and invoke
+   `/to-plan` again. Write nothing during the interview.
 
 `--auto` is GitHub-only and requires an issue reference. GitHub normal mode
 requires explicit approval before publishing. `--auto` skips only that approval
@@ -127,16 +142,16 @@ to be resolved.
 Read the compact shared-understanding summary immediately preceding the user's
 explicit confirmation, then read only subsequent messages to detect changes or
 conflicts. Require that summary to state the goal, success criteria, scope,
-constraints, decisions, and trade-offs. Consult earlier `grill-me` messages only
-when the summary explicitly depends on missing context. Treat rejected options,
-linked issues, and other referenced material as context, not as a competing
-source or instruction.
+constraints, decisions, and trade-offs. Consult earlier `grill-me` or fallback
+interview messages only when the summary explicitly depends on missing context.
+Treat rejected options, linked issues, and other referenced material as
+context, not as a competing source or instruction.
 
 Record a planning blocker when the confirmation is missing, later user text
 contradicts it without resolving the conflict, or the conversation does not
-contain a self-contained summary for one implementation outcome. Return to
-`grill-me` for a compact summary or any unresolved product or architectural
-decision; do not fill gaps with assumptions inside `to-plan`.
+contain a self-contained summary for one implementation outcome. Return to the
+conversation prerequisite for a compact summary or any unresolved product or
+architectural decision; do not fill gaps with assumptions inside `to-plan`.
 
 ### 3. Enforce readiness
 
@@ -231,9 +246,9 @@ Stop when a missing decision could materially change:
 
 In GitHub mode, require the resolution to be recorded in the upstream issue,
 specification, or ADR before planning resumes. The plan comment must not become
-the sole durable record of such a decision. In conversation mode, return to
-`grill-me` and require a new explicit shared-understanding confirmation that
-includes the resolution.
+the sole durable record of such a decision. In conversation mode, return to the
+conversation prerequisite and require a new explicit shared-understanding
+confirmation that includes the resolution.
 
 Do not interrupt discovery with piecemeal questions. If blocked, return one
 consolidated report containing every planning blocker, its impact, the recommended
@@ -499,16 +514,19 @@ then restore the skill and require the GREEN outcome.
     selects the next numeric suffix; a missing or mismatched marker on the
     established path blocks.
 19. Conversation mode is invoked before shared understanding is confirmed. It
-    lacks a self-contained summary and returns to `grill-me` without writing.
-    When invoked while Plan mode remains active, it requests a switch to
-    Default mode and writes nothing.
+    lacks a self-contained summary and directs the user to invoke `grill-me`
+    when available. With no provider installed, it conducts the
+    one-question-at-a-time fallback in Plan mode, confirms a compact summary,
+    then requests a switch to Default mode and writes nothing until `/to-plan`
+    is invoked again.
 20. The current invocation supplies one issue reference after a grilling
     session. GitHub mode wins and retains every issue readiness and publication
     gate. Counterexample: an issue link mentioned only inside the confirmed
     conversation remains context and does not override conversation mode.
 21. A confirmed conversation omits a public API decision or gains conflicting
-    later instructions. Planning returns to `grill-me` for a new confirmation
-    rather than inventing an assumption or writing a partial draft.
+    later instructions. Planning returns to the conversation prerequisite for a
+    new confirmation rather than inventing an assumption or writing a partial
+    draft.
 22. A fresh implementation session succeeds from the scratch handoff and
     deletes only that plan file. A blocked implementation preserves it, and
     neither outcome performs broad `.scratch` cleanup.
