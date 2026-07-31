@@ -38,6 +38,10 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 - Done name: `<Done>`
 - Done option ID: `<option-id>`
 
+## Triage
+
+- Needs-triage label: `<repository label mapped to needs-triage>`
+
 ## Priority
 
 - Field name: `<Priority>`

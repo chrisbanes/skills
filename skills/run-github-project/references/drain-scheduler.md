@@ -33,6 +33,10 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    and idle ticket context on the planning claim. Restore that same ownership
    when the handoff reacquires a slot. A Backlog handoff instead removes all
    skill-owned artifacts and retains no claim.
+8. Keep Backlog triage as a tail lane. Follow
+   the authoritative execution-clear predicate in
+   [Backlog Triage Lane](triage-lane.md#dispatch). It consumes no implementation
+   slot and processes one issue at a time.
 
 ## Parallel Workers And Controller Lane
 
@@ -152,6 +156,9 @@ dispatching the next:
    agent capacity are free after maximizing runnable implementation.
 8. Monitor all remote slots together only when no local or controller action
    remains.
+9. After the authoritative execution-clear predicate in
+   [Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, process the next
+   unblocked Backlog `needs-triage` item through the triage tail lane.
 
 Never preempt a valid occupied slot for newly higher-priority work. Requery and
 rank live data before every just-in-time claim.
@@ -219,11 +226,15 @@ scheduler capacity, report the exact unreconciled artifact, and never delete it
 by guess. Keep the runner assigned as the durable cleanup lease until the
 idempotent finish state proves that its PR, processes, resource grants,
 worktree, and branches are gone; unassign last. A later run may finish only an
-assigned Backlog cleanup with verified runner provenance; an unassigned Backlog
-item remains human-owned.
+assigned Backlog cleanup with verified runner provenance. An unassigned Backlog
+item without the configured `needs-triage` label remains human-owned; an
+eligible labeled item belongs only to the triage tail lane.
 
-Finish successfully only when a complete live query is empty and every slot is
-free after merge reconciliation. If no runnable work remains but a slot is
-blocked or timed out, stop with a partial-drain report, preserve every affected
-worktree, branch, PR, assignment, and `In progress` Status, and never report
-success.
+Finish successfully only when the authoritative execution-clear predicate in
+[Backlog Triage Lane](triage-lane.md#dispatch) is satisfied and a complete live
+query has no non-deferred triage candidate after merge reconciliation.
+Dependency-parked Backlog items do not prevent success; report their live
+blockers. If no runnable work remains but a claim or slot is blocked or timed
+out, or the triage provider cannot complete an eligible item, stop with a
+partial-drain report, preserve every affected worktree, branch, PR, assignment,
+and `In progress` Status, and never report success.

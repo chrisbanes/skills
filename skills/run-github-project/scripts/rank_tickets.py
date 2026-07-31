@@ -52,14 +52,14 @@ def parse_args() -> argparse.Namespace:
         help="GitHub login allowed to authorize Planning transitions. Repeat as needed.",
     )
     parser.add_argument(
+        "--backlog-status",
+        default="Backlog",
+        help="Configured Project status display name for untriaged or human work.",
+    )
+    parser.add_argument(
         "--planning-status",
         default="Planning",
         help="Configured GitHub Project status display name that queues planning.",
-    )
-    parser.add_argument(
-        "--backlog-status",
-        default="Backlog",
-        help="Configured Project status display name that requires human work.",
     )
     parser.add_argument(
         "--ready-status",
@@ -70,6 +70,11 @@ def parse_args() -> argparse.Namespace:
         "--in-progress-status",
         default="In progress",
         help="Configured GitHub Project status display name that marks an item active.",
+    )
+    parser.add_argument(
+        "--needs-triage-label",
+        default="needs-triage",
+        help="Configured issue label that queues an unblocked Backlog item for triage.",
     )
     parser.add_argument(
         "--priority",
@@ -140,7 +145,12 @@ def timestamp(value: Any, field: str, number: Any) -> datetime:
     return result
 
 
-def pull_request_values(values: Any, number: Any) -> list[dict[str, Any]]:
+def pull_request_values(
+    values: Any,
+    number: Any,
+    *,
+    require_execution_fields: bool,
+) -> list[dict[str, Any]]:
     if not isinstance(values, list):
         raise InputError(f"ticket {number}: openPullRequests must be an array")
     result: list[dict[str, Any]] = []
@@ -158,8 +168,15 @@ def pull_request_values(values: Any, number: Any) -> list[dict[str, Any]]:
             raise InputError(
                 f"ticket {number}: pull request number must be a positive integer",
             )
+        nonempty_string(value.get("url"), "pull request url", number)
+        if not isinstance(value.get("closesIssue"), bool):
+            raise InputError(
+                f"ticket {number}: pull request closesIssue must be a boolean",
+            )
+        if not require_execution_fields:
+            result.append(value)
+            continue
         for field in (
-            "url",
             "author",
             "headRepository",
             "headRefName",
@@ -168,10 +185,6 @@ def pull_request_values(values: Any, number: Any) -> list[dict[str, Any]]:
             "baseRefName",
         ):
             nonempty_string(value.get(field), f"pull request {field}", number)
-        if not isinstance(value.get("closesIssue"), bool):
-            raise InputError(
-                f"ticket {number}: pull request closesIssue must be a boolean",
-            )
         if not isinstance(value.get("isDraft"), bool):
             raise InputError(
                 f"ticket {number}: pull request isDraft must be a boolean",
@@ -188,6 +201,19 @@ def parse_project_position(value: Any, number: Any) -> float:
     if value < 0:
         raise InputError(f"ticket {number}: projectPosition must be a non-negative number")
     return float(value)
+
+
+def project_priority_rank(
+    project_priority: str | None,
+    priorities: tuple[str, ...],
+) -> tuple[int, str | None]:
+    if project_priority is not None and project_priority not in priorities:
+        return len(priorities), f"unknown project priority {project_priority!r}"
+    return (
+        priorities.index(project_priority)
+        if project_priority is not None
+        else len(priorities)
+    ), None
 
 
 def require_ticket_shape(ticket: Any) -> dict[str, Any]:
@@ -448,6 +474,41 @@ def parse_implementation_plan_chain(
     return plans, active
 
 
+def analyze_common_ticket(
+    ticket: dict[str, Any],
+    priorities: tuple[str, ...],
+    *,
+    require_execution_pr_fields: bool,
+) -> dict[str, Any]:
+    number = ticket["number"]
+    priority_rank, priority_error = project_priority_rank(
+        ticket["projectPriority"],
+        priorities,
+    )
+    return {
+        "assignees": assignee_values(ticket["assignees"], number),
+        "labels": string_values(ticket["labels"], "labels", number),
+        "blockers": string_values(ticket["blockedBy"], "blockedBy", number),
+        "openDescendants": string_values(
+            ticket["openDescendants"],
+            "openDescendants",
+            number,
+        ),
+        "pullRequests": pull_request_values(
+            ticket["openPullRequests"],
+            number,
+            require_execution_fields=require_execution_pr_fields,
+        ),
+        "projectPosition": parse_project_position(
+            ticket["projectPosition"],
+            number,
+        ),
+        "priorityRank": priority_rank,
+        "errors": [priority_error] if priority_error is not None else [],
+        "exclusions": [],
+    }
+
+
 def analyze_ticket(
     ticket: dict[str, Any],
     *,
@@ -462,24 +523,26 @@ def analyze_ticket(
     execution_approvers: tuple[str, ...],
 ) -> dict[str, Any]:
     number = ticket["number"]
-    assignees = assignee_values(ticket["assignees"], number)
-    labels = string_values(ticket["labels"], "labels", number)
-    blockers = string_values(ticket["blockedBy"], "blockedBy", number)
-    open_descendants = string_values(
-        ticket["openDescendants"],
-        "openDescendants",
-        number,
+    common = analyze_common_ticket(
+        ticket,
+        priorities,
+        require_execution_pr_fields=True,
     )
-    pull_requests = pull_request_values(ticket["openPullRequests"], number)
-    project_position = parse_project_position(ticket["projectPosition"], number)
+    assignees = common["assignees"]
+    labels = common["labels"]
+    blockers = common["blockers"]
+    open_descendants = common["openDescendants"]
+    pull_requests = common["pullRequests"]
+    project_position = common["projectPosition"]
+    priority_rank = common["priorityRank"]
     project_status = ticket["projectStatus"]
     assigned_to_current_user = current_user in assignees
     recovering_backlog_cleanup = (
         project_status == backlog_status and assigned_to_current_user
     )
 
-    errors: list[str] = []
-    exclusions: list[str] = []
+    errors = common["errors"]
+    exclusions = common["exclusions"]
     if "ready-for-agent" not in labels and not recovering_backlog_cleanup:
         exclusions.append("missing ready-for-agent label")
 
@@ -765,15 +828,6 @@ def analyze_ticket(
             f"found {project_status!r}",
         )
 
-    project_priority = ticket["projectPriority"]
-    if project_priority is not None and project_priority not in priorities:
-        errors.append(f"unknown project priority {project_priority!r}")
-    priority_rank = (
-        priorities.index(project_priority)
-        if project_priority is not None and project_priority in priorities
-        else len(priorities)
-    )
-
     if blockers and not recovering_backlog_cleanup:
         exclusions.append(f"blocked by {blockers}")
     if open_descendants and not recovering_backlog_cleanup:
@@ -910,6 +964,55 @@ def analyze_ticket(
     }
 
 
+def analyze_backlog_ticket(
+    ticket: dict[str, Any],
+    *,
+    needs_triage_label: str,
+    priorities: tuple[str, ...],
+) -> dict[str, Any]:
+    common = analyze_common_ticket(
+        ticket,
+        priorities,
+        require_execution_pr_fields=False,
+    )
+    assignees = common["assignees"]
+    labels = common["labels"]
+    blockers = common["blockers"]
+    open_descendants = common["openDescendants"]
+    pull_requests = common["pullRequests"]
+    project_position = common["projectPosition"]
+    priority_rank = common["priorityRank"]
+
+    errors = common["errors"]
+    exclusions = common["exclusions"]
+    blocker_reasons: list[str] = []
+    if str(ticket["state"]).upper() != "OPEN":
+        exclusions.append("not open")
+    if needs_triage_label not in labels:
+        exclusions.append("human work required in Backlog")
+
+    if assignees:
+        exclusions.append(f"assigned to {assignees}")
+    if pull_requests:
+        exclusions.append(
+            "has open implementation PRs "
+            f"{[pull_request['url'] for pull_request in pull_requests]}",
+        )
+    if blockers:
+        blocker_reasons.append(f"blocked by {blockers}")
+    if open_descendants:
+        blocker_reasons.append(f"open descendants {open_descendants}")
+
+    return {
+        "ticket": ticket,
+        "priorityRank": priority_rank,
+        "projectPosition": project_position,
+        "blockerReasons": blocker_reasons,
+        "errors": errors,
+        "exclusions": exclusions,
+    }
+
+
 def ticket_rank(item: dict[str, Any]) -> tuple[int, float, int]:
     return (
         item["priorityRank"],
@@ -931,11 +1034,22 @@ def main() -> int:
         execution_approvers = tuple(args.execution_approvers)
         if len(set(execution_approvers)) != len(execution_approvers):
             raise InputError("execution approvers must be unique")
+        statuses = (
+            args.backlog_status,
+            args.planning_status,
+            args.ready_status,
+            args.in_progress_status,
+        )
+        if len(set(statuses)) != len(statuses):
+            raise InputError("project statuses must be unique")
+        if not args.needs_triage_label:
+            raise InputError("needs-triage label must be non-empty")
         if not 1 <= args.max_claims <= 3:
             raise InputError("max claims must be between 1 and 3")
 
         seen_numbers: set[int] = set()
-        analyses: list[dict[str, Any]] = []
+        execution_analyses: list[dict[str, Any]] = []
+        triage_analyses: list[dict[str, Any]] = []
         invalid_unclaimed: list[dict[str, Any]] = []
         invalid_claimed: list[dict[str, Any]] = []
         invalid_planning_claimed: list[dict[str, Any]] = []
@@ -945,20 +1059,35 @@ def main() -> int:
                 if ticket["number"] in seen_numbers:
                     raise InputError(f"duplicate ticket number {ticket['number']}")
                 seen_numbers.add(ticket["number"])
-                analyses.append(
-                    analyze_ticket(
+                if (
+                    ticket["projectStatus"] == args.backlog_status
+                    and not has_current_user_assignment(
                         ticket,
-                        current_user=args.current_user,
-                        backlog_status=args.backlog_status,
-                        planning_status=args.planning_status,
-                        ready_status=args.ready_status,
-                        in_progress_status=args.in_progress_status,
-                        priorities=priorities,
-                        repository=args.repository,
-                        base_branch=args.base_branch,
-                        execution_approvers=execution_approvers,
-                    ),
-                )
+                        args.current_user,
+                    )
+                ):
+                    triage_analyses.append(
+                        analyze_backlog_ticket(
+                            ticket,
+                            needs_triage_label=args.needs_triage_label,
+                            priorities=priorities,
+                        ),
+                    )
+                else:
+                    execution_analyses.append(
+                        analyze_ticket(
+                            ticket,
+                            current_user=args.current_user,
+                            backlog_status=args.backlog_status,
+                            planning_status=args.planning_status,
+                            ready_status=args.ready_status,
+                            in_progress_status=args.in_progress_status,
+                            priorities=priorities,
+                            repository=args.repository,
+                            base_branch=args.base_branch,
+                            execution_approvers=execution_approvers,
+                        ),
+                    )
             except InputError as error:
                 number = raw_ticket.get("number", "?") if isinstance(raw_ticket, dict) else "?"
                 invalid = {
@@ -978,6 +1107,11 @@ def main() -> int:
                         invalid_planning_claimed.append(invalid)
                     else:
                         invalid_claimed.append(invalid)
+                elif (
+                    isinstance(raw_ticket, dict)
+                    and raw_ticket.get("projectStatus") == args.backlog_status
+                ):
+                    invalid_unclaimed.append(invalid)
                 else:
                     invalid_unclaimed.append(invalid)
 
@@ -986,7 +1120,7 @@ def main() -> int:
                 "number": item["ticket"]["number"],
                 "reasons": item["errors"] + item["exclusions"],
             }
-            for item in analyses
+            for item in execution_analyses
             if (
                 item["assignedToCurrentUser"]
                 and item["ticket"]["projectStatus"] == args.in_progress_status
@@ -998,7 +1132,7 @@ def main() -> int:
                 "number": item["ticket"]["number"],
                 "reasons": item["errors"] + item["exclusions"],
             }
-            for item in analyses
+            for item in execution_analyses
             if (
                 item["assignedToCurrentUser"]
                 and item["ticket"]["projectStatus"]
@@ -1012,7 +1146,9 @@ def main() -> int:
         ]
 
         eligible = [
-            item for item in analyses if not item["errors"] and not item["exclusions"]
+            item
+            for item in execution_analyses
+            if not item["errors"] and not item["exclusions"]
         ]
         claimed = [item for item in eligible if item["assignedToCurrentUser"]]
         claimed.sort(
@@ -1062,12 +1198,32 @@ def main() -> int:
                 "number": item["ticket"]["number"],
                 "reasons": item["errors"] + item["exclusions"],
             }
-            for item in analyses
+            for item in execution_analyses
             if (
                 not item["assignedToCurrentUser"]
                 and (item["errors"] or item["exclusions"])
             )
+        ] + [
+            {
+                "number": item["ticket"]["number"],
+                "reasons": item["errors"] + item["exclusions"],
+            }
+            for item in triage_analyses
+            if item["errors"] or item["exclusions"]
         ]
+        eligible_triage = [
+            item
+            for item in triage_analyses
+            if not item["errors"] and not item["exclusions"]
+        ]
+        triage_candidates = sorted(
+            (item for item in eligible_triage if not item["blockerReasons"]),
+            key=ticket_rank,
+        )
+        parked_blocked = sorted(
+            (item for item in eligible_triage if item["blockerReasons"]),
+            key=ticket_rank,
+        )
         output = {
             "claimLimit": args.max_claims,
             "blockedClaims": blocked_claims,
@@ -1088,6 +1244,20 @@ def main() -> int:
                     ),
                 }
                 for item in candidates
+            ],
+            "triageCandidates": [
+                {
+                    "ticket": item["ticket"],
+                    "action": "triage",
+                }
+                for item in triage_candidates
+            ],
+            "parkedBlocked": [
+                {
+                    "ticket": item["ticket"],
+                    "reasons": item["blockerReasons"],
+                }
+                for item in parked_blocked
             ],
             "excluded": excluded,
         }

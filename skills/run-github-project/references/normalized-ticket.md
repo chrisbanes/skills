@@ -1,7 +1,7 @@
 # Normalized Ticket Schema
 
 Provide every field below to `scripts/rank_tickets.py` from fresh, completely
-paginated GitHub and Project reads:
+paginated GitHub and Project reads. Use this shape for execution contenders:
 
 ```json
 {
@@ -68,6 +68,34 @@ paginated GitHub and Project reads:
 }
 ```
 
+Use the same canonical shape for Backlog triage contenders, with transition and
+replan fields set to `null` and `implementationPlans` empty when absent. Backlog
+`openPullRequests` entries need only `number`, `url`, and `closesIssue`; omit
+execution-only author, draft, head, and base fields:
+
+```json
+{
+  "number": 43,
+  "title": "Unblocked issue awaiting triage",
+  "url": "https://github.com/owner/repository/issues/43",
+  "state": "OPEN",
+  "projectItemId": "PVTI_backlog",
+  "projectStatus": "Backlog",
+  "projectPriority": "High",
+  "projectPosition": 18,
+  "labels": ["needs-triage"],
+  "assignees": [],
+  "blockedBy": [],
+  "openDescendants": [],
+  "backlogTransition": null,
+  "planningTransition": null,
+  "readyTransition": null,
+  "replanRequest": null,
+  "implementationPlans": [],
+  "openPullRequests": []
+}
+```
+
 Use GitHub logins, never display names, for assignees, PR authors, and
 transition actors. Normalize `labels` to exact label names. Normalize
 `blockedBy` and `openDescendants` entries to integer issue numbers for the
@@ -87,8 +115,9 @@ latest transition into Backlog. An assigned Backlog item also requires a
 runner-authored `replanRequest` with `disposition: "human-required"` so cleanup
 can resume after interruption. Keep that assignment as the durable cleanup
 lease until the controller verifies that every exact runner-owned artifact is
-absent and unassigns last. An unassigned Backlog item is human-owned and
-ineligible.
+absent and unassigns last. An unassigned Backlog item without the configured
+`needs-triage` label is human-owned and ineligible for runner execution; an
+eligible labeled item belongs only to the triage inventory.
 
 Normalize every runner-owned v1 or v2 plan marker, including minimized
 comments, into `implementationPlans`. A v1 comment is a revision-one root. A v2
@@ -127,6 +156,12 @@ Retained head and PR fields may be null but must identify exact durable state
 when present. The report must precede the resulting Status transition and
 identify the plan that authorized the prior Ready handoff.
 
+For Backlog triage contenders, the ranker ignores historical Planning, Ready,
+and plan fields. Require the configured `needs-triage` label, no assignee, and
+no open implementation pull request. Return an otherwise valid item with open
+native blockers or descendants as `parkedBlocked`; return an unblocked item as
+`triageCandidates`. Never feed either collection into an implementation slot.
+
 The ranker returns valid current-user claims and ordered unclaimed candidates:
 
 ```json
@@ -148,6 +183,15 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
     {"ticket": {"number": 45}, "action": "claim"},
     {"ticket": {"number": 46}, "action": "plan"}
   ],
+  "triageCandidates": [
+    {"ticket": {"number": 47}, "action": "triage"}
+  ],
+  "parkedBlocked": [
+    {
+      "ticket": {"number": 48},
+      "reasons": ["blocked by ['owner/repository#41']"]
+    }
+  ],
   "excluded": []
 }
 ```
@@ -157,7 +201,11 @@ controller owns scheduling; the ranker only validates claims and orders
 candidates. Each `blockedClaims` entry occupies a slot and preserves a claimed
 implementation ticket that requires reconciliation. Planning claims and
 `blockedPlanningClaims` preserve ownership but do not consume an implementation
-slot. `resume-backlog-cleanup` also consumes no implementation slot and must
-finish before new claims. Its cleanup is idempotent: already-absent owned
-artifacts satisfy their individual finish checks, but the assignment remains
-until the complete cleanup state is verified.
+slot; both still prevent the Backlog triage tail from starting. Triage
+`resume-backlog-cleanup` also consumes no implementation slot, must finish
+before new claims, and prevents the triage tail from starting. Its cleanup is
+idempotent: already-absent owned artifacts satisfy their individual finish
+checks, but the assignment remains until the complete cleanup state is
+verified. Triage candidates are ordered separately and run only through
+[Backlog Triage Lane](triage-lane.md); parked items consume neither a slot nor
+an agent.

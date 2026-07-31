@@ -1,6 +1,6 @@
 ---
 name: run-github-project
-description: Use when asked to plan and execute the next authorized issue or drain authorized issues from a configured GitHub Project through implementation, review, merge, and reconciliation.
+description: Use when asked to triage Backlog work, plan and execute the next authorized issue, or drain authorized issues from a configured GitHub Project through implementation, review, merge, and reconciliation.
 ---
 
 # Run GitHub Project
@@ -10,6 +10,10 @@ description: Use when asked to plan and execute the next authorized issue or dra
 Treat the Project as the live control plane. Require the readiness label and a
 human-authorized Planning transition, preserve that authority through
 contract-preserving re-plans, and return true human work to Backlog.
+
+Park dependency-blocked Backlog items. After authorized execution is empty,
+route unblocked `needs-triage` items through the unchanged `triage` approval
+gate without manufacturing Planning authority.
 
 Pair each occupied slot with one warm worktree and one persistent ticket agent.
 Run independent slot agents concurrently in `drain`. Keep claims, shared
@@ -29,6 +33,7 @@ Require:
 - Project owner, number, URL, and node ID;
 - Status field name and ID plus Backlog, Planning, Ready to implement, In
   progress, and Done option names and IDs;
+- the exact repository label mapped to the `needs-triage` role;
 - Priority field name and ID plus option names and IDs in descending order;
 - execution-approver GitHub logins allowed to authorize Planning;
 - an optional trusted Project filter expression;
@@ -62,34 +67,40 @@ both before every claim and merge. Stop and preserve work if either changes.
 
 1. Read the closest trusted repository instructions.
 2. Configure and validate the repository's Project binding.
-3. Require `tdd`. Follow
+3. Require `tdd` before implementation work. Follow
    [references/workflow-providers.md](references/workflow-providers.md); stop
-   with its exact source and install command if `tdd` is unavailable. Never
-   install it implicitly or approximate it.
+   the execution lane with its exact source and install command if `tdd` is
+   unavailable. Permit a triage-only tail run to continue. Never install it
+   implicitly or approximate it.
 4. Read [references/planning-lane.md](references/planning-lane.md). Verify
    `to-plan` before planning work; if missing, block only the planning lane.
-5. Read [references/review-contracts.md](references/review-contracts.md).
+5. Read [references/triage-lane.md](references/triage-lane.md). Verify
+   `triage` before Backlog work; if missing, block only the triage lane.
+6. Read [references/review-contracts.md](references/review-contracts.md).
    Prefer the named review providers in
    [references/workflow-providers.md](references/workflow-providers.md), but
    permit equivalent installed skills or direct execution of the bundled
    contracts. Record the provider for each contract. Do not stop solely because
    a preferred provider is unavailable.
-6. Confirm the authenticated GitHub identity, Project read/write access,
+7. Confirm the authenticated GitHub identity, Project read/write access,
    GitHub CLI `project` scope, current default, verified base, and clean state.
-7. Inspect repository automation that can change Project Status or archive Done
+8. Inspect repository automation that can change Project Status or archive Done
    items. Stop if it conflicts with the configured Backlog, Planning, Ready to
    implement, In progress, and Done lifecycle.
-8. Select and record a run mode:
+9. Select and record a run mode:
    - `next` is the default and processes at most one selected issue;
    - `drain` is allowed only when the user explicitly asks to drain, run all,
      repeat, or continue until empty. Run occupied slots concurrently by
      default. Use three as both the maximum in-flight ticket count and ticket
      agent concurrency limit, and accept only a lower user-specified limit.
-9. Require explicit merge authority for the mode's scope: the one selected
-   issue in `next`, or every eligible issue encountered in `drain`. Without it,
-   stop before claiming work. Also require explicit issue-close authority when
-   `close-after-merge` is configured.
-10. For `drain`, read and follow
+10. Before any execution claim, require explicit merge authority for the
+   mode's scope: the one selected issue in `next`, or every eligible issue
+   encountered in `drain`. Without it, stop before claiming execution; never
+   bypass an executable ticket by entering triage. A triage-only selection
+   requires no merge authority, and triage approval never supplies it. Also
+   require explicit issue-close authority when `close-after-merge` is
+   configured.
+11. For `drain`, read and follow
    [references/drain-scheduler.md](references/drain-scheduler.md).
 
 Do not support publish-only mode or impose a ticket cap in `drain`. Standing
@@ -120,10 +131,10 @@ review, check, comment, PR, or merge is absent.
      then refetch;
    - stop and preserve resumable state when the outcome cannot be distinguished
      safely.
-5. Reconcile assignments, Status changes, PR creation, comments, replies,
-   thread resolution, and merges against their resulting state. Never emit a
-   duplicate comment or perform a second merge because the original response
-   was lost.
+5. Reconcile assignments, labels, issue closure, Status changes, PR creation,
+   comments, replies, thread resolution, and merges against their resulting
+   state. Never emit a duplicate comment, repeat a close, or perform a second
+   merge because the original response was lost.
 6. After an ambiguous merge response, do not advance or clean up that slot
    until the PR's merged state, closed ticket, and refreshed base tip are
    verified.
@@ -136,8 +147,9 @@ review, check, comment, PR, or merge is absent.
 Query the live Project at startup and after every confirmed merge. In `next`,
 use the post-merge query only for reconciliation and reporting; do not claim a
 second ticket. In `drain`, include newly added, Planning, and Ready-to-implement
-items until the first complete successful empty query. Leave tickets added
-after that query for the next invocation.
+items plus Backlog `needs-triage` items until the first complete successful
+empty executable-and-triage query. Leave tickets added after that query for the
+next invocation.
 
 1. Run `gh project field-list <number> --owner <owner> --format json` and verify
    configured field and option IDs against their expected names. Use ProjectV2
@@ -147,29 +159,37 @@ after that query for the next invocation.
    lightweight fields required by
    [references/normalized-ticket.md](references/normalized-ticket.md), including
    Project position, exact labels and assignees, and linked implementation PR
-   identity, closure relationship, head SHA, and base target.
+   identity and closure relationship.
 3. Apply the optional trusted Project filter, then always intersect it with:
    - membership in the configured repository;
    - an open, non-draft GitHub issue;
    - Planning, Ready to implement, or In progress Status; or
    - Backlog Status while assigned to the authenticated runner, solely to
-     recover interrupted human-work cleanup.
+     recover interrupted human-work cleanup; or
+   - Backlog Status plus the exact configured `needs-triage` label for the
+     triage inventory.
 4. Record draft, pull-request, redacted, cross-repository, closed, malformed,
    or filter-excluded items as ineligible. Never convert draft items into
    tickets or use a named Project view implicitly.
-5. Build contender classes in the exact order defined by
-   [Planning Lane](references/planning-lane.md#scheduling). Within each class
-   use Priority, visible position, then issue number. Do not preempt a claim.
+5. Build execution contender classes in the exact order defined by
+   [Planning Lane](references/planning-lane.md#scheduling). Build the separate
+   triage inventory through
+   [Backlog Triage Lane](references/triage-lane.md). Within each class use
+   Priority, visible position, then issue number. Do not preempt a claim.
 6. Phase two: hydrate contenders in order with fresh batched GraphQL reads.
    Gather:
    - native open `blocked by` relationships;
    - all open descendants in the issue's sub-issue tree;
-   - the latest status events entering Backlog, Planning, and Ready to implement,
+   - for execution and assigned-Backlog cleanup contenders, the latest status
+     events entering Backlog, Planning, and Ready to implement,
      including event ID, actor login, `createdAt`, resulting Status, and
      `wasAutomated`;
-   - every v1 or v2 marker-owned implementation plan, minimized state, active
-     replan report, author login, and lease field defined by the normalized
-     schema.
+   - for execution and assigned-Backlog cleanup contenders, every v1 or v2
+     marker-owned implementation plan, minimized state, active replan report,
+     author login, and lease field defined by the normalized schema; and
+   - for execution and assigned-Backlog cleanup contenders, complete linked
+     implementation PR metadata, including author, draft state, head repository,
+     ref, SHA, and base target.
    Preserve an invalid claimed contender as a blocked slot. Report and advance
    when an unclaimed contender is invalid. Hydrate all contenders together
    only when one bounded batch is cheaper and remains within GitHub rate and
@@ -196,6 +216,7 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --planning-status <planning-name> \
   --ready-status <ready-to-implement-name> \
   --in-progress-status <in-progress-name> \
+  --needs-triage-label <needs-triage-label> \
   --priority <highest-name> [--priority <next-name> ...] \
   --max-claims <mode-slot-limit> \
   < normalized-tickets.json
@@ -208,7 +229,8 @@ Project positions.
 
 Pass configured Status and Priority display names, never option IDs; use IDs
 only for Project mutations. Pass Priority names in descending order, rank unset
-Priority last, and require the exact `ready-for-agent` label.
+Priority last, and require the exact configured `needs-triage` label for the
+triage inventory plus the exact `ready-for-agent` label for execution.
 
 Hydrate every current-user claim before unclaimed contenders.
 Preserve returned `blockedClaims` in occupied implementation slots and
@@ -217,8 +239,8 @@ fill free capacity from returned `candidates`. Planning and
 `resume-backlog-cleanup` claims do not count toward `max-claims`. Finish
 Backlog cleanup before new claims. Leave an In progress item assigned to
 someone else alone. Report an unassigned In progress item as stale and
-ineligible; ignore an unassigned Backlog item until a human moves it to
-Planning.
+ineligible; ignore an unassigned Backlog item without the exact configured
+`needs-triage` label until a human moves it to Planning.
 
 When no claim exists, hydrate current-user PR contenders before new work.
 Otherwise preserve the phase-one Priority, visible-position, and issue-number
@@ -228,6 +250,12 @@ Report and skip an unclaimed malformed, blocked, unsupported, or unauthorized
 item without stopping valid work. Preserve a claimed planning blocker without
 an implementation slot; block only the affected implementation slot when
 claimed implementation becomes ineligible.
+
+Preserve returned `parkedBlocked` items without invoking `triage`. Keep returned
+`triageCandidates` outside the execution scheduler until the authoritative
+execution-clear predicate in
+[Backlog Triage Lane](references/triage-lane.md#dispatch) is satisfied. Then
+follow that lane one issue at a time.
 
 Resume a linked PR only when exactly one open PR clearly closes the issue, its
 author is the authenticated user, it targets the configured repository and
@@ -457,8 +485,10 @@ isolation rules from the drain scheduler.
    and perform a complete live Project query. Do not update every branch
    automatically; follow the scheduler's base-drift rules.
 
-Finish `next` after one selected issue reaches a confirmed terminal outcome and
-the post-merge live query succeeds. For `drain`, treat
+Finish `next` after one selected execution issue reaches a confirmed terminal
+outcome and the post-merge live query succeeds, or after one tail-lane triage
+issue reaches a reconciled outcome when no executable issue exists. For
+`drain`, treat
 [Failure Isolation And Finish Gate](references/drain-scheduler.md#failure-isolation-and-finish-gate)
 as the authoritative success, partial-drain, preservation, and cleanup
 procedure. In `next`, preserve the worktree, branch, PR, assignment, and In
@@ -469,8 +499,9 @@ failed ticket automatically.
 
 Report the run mode, slot limit, Project configuration digest, live queries,
 merge-authority outcome, scheduler result, peak ticket-agent concurrency,
-named resource-lock grants, waits, and recoveries, and one row per occupied
-ticket containing:
+named resource-lock grants, waits, recoveries, triage provider result,
+`parkedBlocked` inventory, triage recommendations and reconciled outcomes, and
+one row per occupied ticket containing:
 
 - Project item, Status, Priority, position, and selection reason;
 - Planning authority, plan lease, Ready handoff, and any planning blocker;
@@ -607,3 +638,24 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     create is reconciled by revision and payload digest. Counterexample:
     failure of both presentation mechanisms is reported but does not invalidate
     the new plan.
+28. RED hides Backlog `needs-triage` items or repeatedly triages them while
+    blocked; GREEN ranks unblocked items separately and returns blockers or
+    open descendants as `parkedBlocked`. Novel case: the final blocker closes
+    after a merge and the dependant enters `triageCandidates` on refresh.
+    Counterexample: a body-only `Blocked by` claim without configured fallback
+    evidence never supplies the live gate.
+29. RED treats automatic triage dispatch as permission to change labels,
+    comment, or close; GREEN invokes the exact `triage` provider through its
+    recommendation boundary and waits for the maintainer's decision. Novel
+    case: an approved `ready-for-agent` outcome leaves the item in Backlog
+    awaiting a human Planning transition. Counterexample: standing merge or
+    issue-close authority never approves triage mutations.
+30. RED pauses occupied execution or assigned Backlog cleanup for triage, lets
+    a blocked Planning claim slip past the tail gate, or lets parked work
+    prevent a successful drain; GREEN starts the one-item triage tail lane only
+    after all valid and blocked execution and Planning claims, assigned Backlog
+    cleanup, Planning work, and slots are clear, and records a deferred
+    recommendation once without looping. Novel case: `blockedPlanningClaims`
+    prevents triage even though it consumes no implementation slot.
+    Counterexample: an unassigned Backlog item without `needs-triage` never
+    enters the triage lane.

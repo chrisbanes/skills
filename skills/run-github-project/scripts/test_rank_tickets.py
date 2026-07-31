@@ -34,6 +34,8 @@ DEFAULT_STATUS_ARGUMENTS = (
     "Ready",
     "--in-progress-status",
     "In progress",
+    "--needs-triage-label",
+    "needs-triage",
 )
 
 
@@ -113,6 +115,19 @@ def ticket(number: int, **overrides: object) -> dict:
     }
     if "implementationPlan" in overrides:
         result.pop("implementationPlans")
+    result.update(overrides)
+    return result
+
+
+def backlog_ticket(number: int, **overrides: object) -> dict:
+    result = ticket(
+        number,
+        projectStatus="Backlog",
+        labels=["needs-triage"],
+        planningTransition=None,
+        readyTransition=None,
+        implementationPlan=None,
+    )
     result.update(overrides)
     return result
 
@@ -315,6 +330,37 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(
             ["resume-backlog-cleanup", "resume-implementation"],
             [entry["action"] for entry in output["claims"]],
+        )
+
+    def test_keeps_assigned_cleanup_separate_from_unassigned_triage(self) -> None:
+        cleanup = ticket(
+            205,
+            projectStatus="Backlog",
+            assignees=["chris"],
+            replanRequest=replan_request(205, disposition="human-required"),
+            backlogTransition={
+                "id": "PVTE_205_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+        triage = backlog_ticket(206)
+
+        returncode, output = run_ranker([triage, cleanup])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            ["resume-backlog-cleanup"],
+            [entry["action"] for entry in output["claims"]],
+        )
+        self.assertEqual(
+            [206],
+            [
+                entry["ticket"]["number"]
+                for entry in output["triageCandidates"]
+            ],
         )
 
     def test_backlog_cleanup_ignores_implementation_readiness_changes(self) -> None:
@@ -586,6 +632,126 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
+    def test_ranks_unblocked_backlog_triage_candidates_separately(self) -> None:
+        later = backlog_ticket(12, projectPosition=20)
+        earlier = backlog_ticket(13, projectPosition=2)
+        critical = backlog_ticket(
+            14,
+            projectPriority="Critical",
+            projectPosition=200,
+        )
+        implementation = ticket(15, projectPriority="Low")
+
+        returncode, output = run_ranker(
+            [later, earlier, critical, implementation],
+        )
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [14, 13, 12],
+            [
+                entry["ticket"]["number"]
+                for entry in output["triageCandidates"]
+            ],
+        )
+        self.assertEqual(
+            ["triage", "triage", "triage"],
+            [entry["action"] for entry in output["triageCandidates"]],
+        )
+        self.assertEqual(
+            [15],
+            [entry["ticket"]["number"] for entry in output["candidates"]],
+        )
+
+    def test_parks_backlog_item_with_open_native_blocker(self) -> None:
+        blocked = backlog_ticket(16, blockedBy=[17])
+
+        returncode, output = run_ranker([blocked])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["triageCandidates"])
+        self.assertEqual(
+            [
+                {
+                    "ticket": blocked,
+                    "reasons": ["blocked by ['17']"],
+                },
+            ],
+            output["parkedBlocked"],
+        )
+        self.assertEqual([], output["excluded"])
+
+    def test_parks_backlog_parent_with_open_descendant(self) -> None:
+        parent = backlog_ticket(18, openDescendants=[19])
+
+        returncode, output = run_ranker([parent])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["triageCandidates"])
+        self.assertEqual(
+            [
+                {
+                    "ticket": parent,
+                    "reasons": ["open descendants ['19']"],
+                },
+            ],
+            output["parkedBlocked"],
+        )
+
+    def test_does_not_triage_backlog_item_without_needs_triage_label(self) -> None:
+        ready = backlog_ticket(22, labels=["ready-for-agent"])
+
+        returncode, output = run_ranker([ready])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["triageCandidates"])
+        self.assertEqual([], output["parkedBlocked"])
+        self.assertEqual(
+            [{"number": 22, "reasons": ["human work required in Backlog"]}],
+            output["excluded"],
+        )
+
+    def test_does_not_automatically_triage_assigned_backlog_item(self) -> None:
+        assigned = backlog_ticket(23, assignees=["maintainer"])
+
+        returncode, output = run_ranker([assigned])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["triageCandidates"])
+        self.assertEqual(
+            [{"number": 23, "reasons": ["assigned to ['maintainer']"]}],
+            output["excluded"],
+        )
+
+    def test_does_not_automatically_triage_backlog_item_with_open_pr(self) -> None:
+        with_pull_request = backlog_ticket(
+            24,
+            openPullRequests=[
+                {
+                    "number": 240,
+                    "url": "https://github.com/acme/repo/pull/240",
+                    "closesIssue": True,
+                },
+            ],
+        )
+
+        returncode, output = run_ranker([with_pull_request])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["triageCandidates"])
+        self.assertEqual(
+            [
+                {
+                    "number": 24,
+                    "reasons": [
+                        "has open implementation PRs "
+                        "['https://github.com/acme/repo/pull/240']",
+                    ],
+                },
+            ],
+            output["excluded"],
+        )
+
     def test_invalid_unclaimed_item_does_not_stop_other_ready_work(self) -> None:
         invalid = ticket(
             20,
@@ -773,6 +939,17 @@ class RankTicketsTest(unittest.TestCase):
 
         self.assertEqual(2, result.returncode)
         self.assertIn("--priority", result.stderr)
+
+    def test_status_names_must_be_unique(self) -> None:
+        returncode, output = run_ranker(
+            [],
+            "--backlog-status",
+            "Ready",
+        )
+
+        self.assertEqual(2, returncode)
+        self.assertEqual("invalid-input", output["reason"])
+        self.assertEqual("project statuses must be unique", output["error"])
 
     def test_assignee_objects_use_login_as_identity(self) -> None:
         claimed = ticket(

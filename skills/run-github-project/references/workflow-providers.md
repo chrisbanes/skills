@@ -7,12 +7,23 @@ Never install a provider implicitly.
 | Skill | Source | Install |
 | --- | --- | --- |
 | `tdd` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill tdd` |
+| `triage` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill triage` |
 
-If `tdd` is unavailable, stop and report its source and exact install command.
+If `tdd` is unavailable, stop the execution lane and report its source and
+exact install command. Permit a triage-only tail run to continue.
 
 `to-plan` is required only while processing `Planning`. If it is unavailable,
 block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
+
+`triage` is required only while processing an unblocked Backlog
+`needs-triage` item. If it is unavailable, block only the triage lane, continue
+authorized execution, and report its source and exact install command from the
+table.
+
+The explicit `run-github-project` procedure may dispatch `triage` to its
+recommendation boundary. Its disabled implicit invocation and maintainer
+approval gate still prohibit automatic label, comment, or close mutations.
 
 ## Preferred Review Providers
 

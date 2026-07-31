@@ -1,7 +1,7 @@
 interface:
   display_name: "Run GitHub Project"
-  short_description: "Plan and execute authorized Project work"
-  default_prompt: "Use $run-github-project in next mode to plan if needed and execute one authorized issue from this repository's configured GitHub Project after confirming merge authority."
+  short_description: "Triage and execute authorized Project work"
+  default_prompt: "Use $run-github-project in next mode to execute one authorized issue, or triage one unblocked Backlog issue when no executable work remains, after confirming the required authority."
 
 policy:
   allow_implicit_invocation: false
