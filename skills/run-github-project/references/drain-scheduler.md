@@ -4,10 +4,10 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 
 ## Slot Model
 
-1. Default to three slots. Accept a user-specified limit of one or two; never
-   exceed three. Treat the limit as both the maximum number of claimed,
-   in-flight tickets and the maximum number of concurrently active ticket
-   agents.
+1. Default to two slots. Accept any positive user-specified limit and impose no
+   skill-defined maximum. Treat the limit as both the maximum number of
+   claimed, in-flight tickets and the maximum number of concurrently active
+   ticket agents.
    Define active-agent capacity as the environment-reported number of
    non-controller agents that can run simultaneously. Running ticket agents,
    the planner, and descendants consume it; idle persistent contexts do not.
@@ -24,7 +24,7 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    claim, then fill free slots. Stop for reconciliation when all claims
    together exceed the invocation's slot limit.
 6. Keep one separate planning lane. It preserves assignment and planning
-   handoff claims but never consumes one of the three implementation slots.
+   handoff claims but never consumes one of the configured implementation slots.
    Follow [Planning Lane](planning-lane.md) for its worktree, agent, authority,
    handoff, and blocker rules. Do not reserve agent capacity for Planning;
    start it only from currently spare capacity, then never preempt it.
@@ -56,6 +56,9 @@ For each ticket pass, continue through implementation, verification, all review
 contracts, a focused commit, and a reconciled push plus PR creation or update.
 Then yield durable evidence to the controller and idle that persistent context.
 Resume the same agent for actionable feedback or base repair.
+
+Apply [Route Agents By Task](../SKILL.md#route-agents-by-task) when selecting
+each persistent ticket agent and its helpers.
 
 ### Conflict Admission Gate
 

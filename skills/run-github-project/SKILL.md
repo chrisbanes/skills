@@ -91,8 +91,9 @@ both before every claim and merge. Stop and preserve work if either changes.
    - `next` is the default and processes at most one selected issue;
    - `drain` is allowed only when the user explicitly asks to drain, run all,
      repeat, or continue until empty. Run occupied slots concurrently by
-     default. Use three as both the maximum in-flight ticket count and ticket
-     agent concurrency limit, and accept only a lower user-specified limit.
+     default. Use two as both the default in-flight ticket count and ticket
+     agent concurrency limit. Accept any positive user-specified limit; impose
+     no skill-defined maximum.
 10. Before any execution claim, require explicit merge authority for the
    mode's scope: the one selected issue in `next`, or every eligible issue
    encountered in `drain`. Without it, stop before claiming execution; never
@@ -304,6 +305,45 @@ eligibility change as authority revocation. Treat a runner-authored verified
 replan report as the controlled transition into replanning. Ordinary issue body
 and non-plan comment edits do not revoke the lease.
 
+## Route Agents By Task
+
+Choose the lowest model level that can safely own the task and escalate when
+repository evidence reveals broader ambiguity. Treat the roles and levels below
+as portable capabilities, not required profile or model names:
+
+| Task | Subagent role | Suggested model capability |
+| --- | --- | --- |
+| Locate files, seams, tests, or ownership without edits | Read-only discovery | Fast, low-cost model with low or medium reasoning |
+| Summarize CI, logs, reviews, configuration, or other mechanical evidence | Routine evidence analysis | Fast, low-cost model with medium reasoning |
+| Own a normal ticket implementation or review-fix pass | Standard ticket owner | Balanced coding model with medium reasoning |
+| Resolve ambiguous architecture, security, rendering, performance, or cross-cutting failures | Deep investigator or ticket owner | Strongest suitable model with high reasoning |
+
+Inspect the environment's available subagent types and model controls, then map
+these capabilities onto them. Never require a machine-local profile name. When
+only a generic subagent is available, encode the role and boundaries in its
+prompt. When the model or reasoning level cannot be selected, use the runtime
+default and continue.
+
+Default a ticket agent to standard capability. Use routine capability only when
+the approved outcome is mechanical and low risk. Start with deep capability
+when a mistake could invalidate public contracts, security, data integrity, or
+the approved plan; otherwise escalate to it only after standard-level discovery
+exposes that risk.
+
+Delegate a specific read-only subtask whenever it can produce independent
+evidence while the owning ticket agent continues useful work. Prefer helpers
+for codebase discovery, independent subsystem questions, CI or trace analysis,
+and review of a clean immutable commit. Give each helper one bounded question,
+the repository and worktree identity, an immutable SHA, the relevant ticket
+contract, and the exact evidence to return. Launch multiple helpers only for
+genuinely independent questions and only from currently spare agent capacity.
+
+The owning ticket agent reconciles every helper result and remains accountable
+for the implementation, verification, and PR. Descendants at any depth stay
+read-only and never edit, claim, push, comment, resolve, merge, or mutate
+Project state. Do not delegate a tiny lookup that is cheaper to perform inline,
+and do not use descendants to split mutation ownership inside one ticket.
+
 ## Implement In Ticket Context
 
 For each occupied slot:
@@ -317,8 +357,9 @@ For each occupied slot:
    fetch and check out its exact head repository, ref, and SHA in the stable
    worktree; do not create a replacement branch. Stop on divergence, ambiguous
    write access, or a changed head SHA.
-4. When the slot becomes occupied, start one fresh ticket-specific task or agent
-   context with no inherited turns. Launch unrelated occupied slots
+4. When the slot becomes occupied, start one fresh ticket-specific agent
+   context with no inherited turns, selected through
+   [Route Agents By Task](#route-agents-by-task). Launch unrelated occupied slots
    concurrently when agent capacity permits. Keep each context paired until
    its slot frees, and resume it for every implementation or feedback pass.
    Before each pass, refresh and pass only:
@@ -555,6 +596,10 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
 12. RED discards ticket context between implementation and feedback; GREEN
     resumes one agent and warm worktree until that slot frees. Descendants stay
     spare-capacity, read-only, immutable-SHA helpers and never own tickets.
+    Novel case: the ticket agent delegates independent codebase discovery and
+    CI-log analysis to separate bounded helpers, then reconciles both results.
+    Counterexample: it performs a one-file lookup inline and never delegates a
+    mutating implementation slice.
 13. RED stops because a preferred review skill is absent; GREEN executes the
     same bundled contract. Counterexample: missing `tdd` still blocks behavior
     changes, and tests alone never satisfy review.
@@ -600,12 +645,13 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
 22. RED makes each worker yield at every local gate, occupy active capacity
     during remote waits, or applies drain scheduling to `next`; GREEN runs a
     `drain` ticket pass through a reconciled push, then idles its persistent
-    context while the occupied slot awaits remote events. Novel case: one
-    remote-wait slot stays claimed while two other ticket agents remain active.
-    Counterexamples: that waiting slot still prevents claiming a fourth ticket
-    because the three-slot in-flight cap remains, while `next` shepherds its
-    single PR directly without creating a drain slot or dispatching another
-    ticket.
+    context while the occupied slot awaits remote events. Novel case: with the
+    default two-slot limit, one remote-wait slot stays claimed while the other
+    ticket agent remains active and spare active-agent capacity is used for a
+    bounded helper. Counterexamples: that waiting slot still prevents claiming
+    a third ticket by default, an explicit higher limit permits additional
+    tickets up to that user-selected limit, and `next` shepherds its single PR
+    directly without creating a drain slot or dispatching another ticket.
 23. RED refreshes every parallel branch after each merge; GREEN refreshes and
     repeats affected gates only when repository policy requires the latest
     base, GitHub reports a conflict, or the merge overlaps a tested assumption
@@ -659,3 +705,12 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     prevents triage even though it consumes no implementation slot.
     Counterexample: an unassigned Backlog item without `needs-triage` never
     enters the triage lane.
+31. RED assigns every ticket and helper the same model level; GREEN defaults
+    normal implementation to standard, uses routine for mechanical evidence,
+    and selects or escalates to deep for architecture, security, rendering,
+    performance, or cross-cutting ambiguity. Novel case: a standard ticket
+    agent delegates file discovery to a read-only discovery helper and asks a
+    deep read-only helper to test a newly discovered public-contract risk.
+    Counterexamples: a mechanical documentation ticket stays routine and does
+    not escalate merely because deep capacity is available, and a runtime with
+    only generic subagents expresses the same roles in prompts without stopping.
