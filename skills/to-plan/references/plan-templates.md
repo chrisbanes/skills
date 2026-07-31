@@ -67,6 +67,8 @@ Use exactly one source-appropriate template.
 ## Conversation plan
 
 ```markdown
+<!-- to-plan:conversation-plan:v1 id=<lowercase UUIDv4> -->
+
 # <Confirmed task title>
 
 **Planned against:** `<branch>` at `<full SHA>`
