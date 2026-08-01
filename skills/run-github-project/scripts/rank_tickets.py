@@ -1150,7 +1150,15 @@ def main() -> int:
                     "number": number,
                     "reasons": [str(error)],
                 }
-                if has_current_user_assignment(raw_ticket, args.current_user):
+                is_human_frontier_item = (
+                    isinstance(raw_ticket, dict)
+                    and raw_ticket.get("projectStatus") == args.backlog_status
+                    and isinstance(raw_ticket.get("labels"), list)
+                    and args.human_work_label in raw_ticket["labels"]
+                )
+                if is_human_frontier_item:
+                    invalid_unclaimed.append(invalid)
+                elif has_current_user_assignment(raw_ticket, args.current_user):
                     if (
                         isinstance(raw_ticket, dict)
                         and raw_ticket.get("projectStatus")

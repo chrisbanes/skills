@@ -86,7 +86,9 @@ authority source.
 
 ## Finish Gate
 
-Finish successfully only when the ordinary drain finish gate passes and no
-human action remains. Return partial drain only for a failed, ambiguous,
-blocked, or timed-out claimed lane. Never call a human frontier a failure or
-successful empty drain.
+Use the authoritative drain finish gate in
+[Drain Scheduler](drain-scheduler.md#failure-isolation-and-finish-gate),
+including its partial-drain result for an eligible triage item that the triage
+provider cannot complete. Finish successfully only when that gate passes and no
+human action remains. Never call a human frontier a failure or successful empty
+drain.

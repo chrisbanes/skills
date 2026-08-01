@@ -791,6 +791,23 @@ class RankTicketsTest(unittest.TestCase):
             output["humanActions"],
         )
 
+    def test_malformed_assigned_human_work_is_not_a_planning_claim(self) -> None:
+        human_work = backlog_ticket(
+            24,
+            labels=["ready-for-human"],
+            assignees=["chris"],
+        )
+        del human_work["projectPosition"]
+
+        returncode, output = run_ranker([human_work])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["blockedPlanningClaims"])
+        self.assertEqual(
+            [{"number": 24, "reasons": ["ticket 24: missing projectPosition"]}],
+            output["excluded"],
+        )
+
     def test_ready_for_agent_backlog_item_requests_planning_transition(self) -> None:
         ready = backlog_ticket(22, labels=["ready-for-agent"])
 
