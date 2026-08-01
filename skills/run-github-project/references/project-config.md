@@ -42,6 +42,13 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 
 - Needs-triage label: `<repository label mapped to needs-triage>`
 
+## Work Roles
+
+- Epic label: `<repository label mapped to epic>`
+- Epic label ID: `<LA_...>`
+- Human-work label: `<repository label mapped to ready-for-human>`
+- Human-work label ID: `<LA_...>`
+
 ## Priority
 
 - Field name: `<Priority>`
@@ -65,6 +72,11 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 Keep human-readable names beside IDs so startup validation can distinguish a
 rename from an ID that now identifies a different object. Preserve repository-
 specific comments and additions when repairing stale mappings.
+
+Treat the epic label as a work-shape declaration and the human-work label as a
+next-action role. Require both mappings even when the current Project has no
+matching issue. Never infer either role from issue titles or bodies. Humans
+create and rename role labels; never do so from this workflow.
 
 Humans own the Project schema. Never create or rename Status options from the
 runner. Before migrating an existing queue, require zero `In progress` items

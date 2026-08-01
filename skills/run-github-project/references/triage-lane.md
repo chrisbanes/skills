@@ -32,7 +32,10 @@ claim, runnable Planning or Ready candidate, active planning handoff, or
 occupied implementation slot. Treat `resume-backlog-cleanup` and
 `blockedPlanningClaims` as unresolved work even though they consume no
 implementation slot. Malformed or excluded unclaimed items do not block the
-tail lane. Never pause authorized execution to ask for a triage decision.
+tail lane. Ready epics run in the controller lane before triage. Human actions
+do not block triage; include any newly approved human-work or Planning action in
+the current frontier packet. Never pause authorized execution to ask for a
+triage decision.
 
 In `next`, process at most the first ranked triage contender when no executable
 ticket exists. In `drain`, process contenders one at a time until none remain,
@@ -78,8 +81,9 @@ Use the batched post-mutation read to reconcile the approved outcome:
 - For `ready-for-agent`, require the provider's durable agent brief and exact
   label transition. Leave the item in Backlog and report that it awaits a
   human Planning transition; never manufacture execution authority.
-- For `ready-for-human`, `needs-info`, or `wontfix`, require the provider's
-  approved comment, label, and closure result as applicable.
+- For the configured human-work label, `needs-info`, or `wontfix`, require the
+  provider's approved comment, label, and closure result as applicable. Leave
+  open human work in Backlog for the human frontier.
 - For `needs-triage`, a rejected recommendation, or a deferred decision, leave
   the item unchanged and mark it deferred for this invocation so it cannot
   loop.
@@ -94,6 +98,7 @@ non-deferred unblocked triage contender. Report:
 
 - every triaged issue and reconciled outcome;
 - every issue awaiting human Planning authorization;
+- every human action added to the frontier;
 - every deferred or blocked triage attempt;
 - every `parkedBlocked` issue and its live blockers; and
 - provider or GitHub failures that left the lane incomplete.

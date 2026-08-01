@@ -1,6 +1,6 @@
 ---
 name: run-github-project
-description: Use when asked to triage Backlog work, plan and execute the next authorized issue, or drain authorized issues from a configured GitHub Project through implementation, review, merge, and reconciliation.
+description: Use when asked to reconcile GitHub Project epics or human checkpoints, triage Backlog work, plan and execute the next authorized issue, or drain authorized issues through implementation, review, merge, and reconciliation.
 ---
 
 # Run GitHub Project
@@ -14,6 +14,12 @@ contract-preserving re-plans, and return true human work to Backlog.
 Park dependency-blocked Backlog items. After authorized execution is empty,
 route unblocked `needs-triage` items through the unchanged `triage` approval
 gate without manufacturing Planning authority.
+
+Treat configured epics and human work as a separate live frontier. Reconcile a
+bare epic only after its native dependencies close and issue-close authority is
+present. Surface every currently actionable human step without assigning it or
+pausing independent work. Return `waiting-for-human` when that frontier is the
+only work left.
 
 Pair each occupied slot with one warm worktree and one persistent ticket agent.
 Run independent slot agents concurrently in `drain`. Keep claims, shared
@@ -34,6 +40,8 @@ Require:
 - Status field name and ID plus Backlog, Planning, Ready to implement, In
   progress, and Done option names and IDs;
 - the exact repository label mapped to the `needs-triage` role;
+- the exact repository label name and ID mapped to the epic work shape;
+- the exact repository label name and ID mapped to the human-work role;
 - Priority field name and ID plus option names and IDs in descending order;
 - execution-approver GitHub logins allowed to authorize Planning;
 - an optional trusted Project filter expression;
@@ -70,38 +78,40 @@ both before every claim and merge. Stop and preserve work if either changes.
 3. Require `tdd` before implementation work. Follow
    [references/workflow-providers.md](references/workflow-providers.md); stop
    the execution lane with its exact source and install command if `tdd` is
-   unavailable. Permit a triage-only tail run to continue. Never install it
+   unavailable. Permit controller-only epic reconciliation, human-frontier
+   reporting, and a triage-only tail run to continue. Never install it
    implicitly or approximate it.
-4. Read [references/planning-lane.md](references/planning-lane.md). Verify
+4. Read [references/human-frontier.md](references/human-frontier.md).
+5. Read [references/planning-lane.md](references/planning-lane.md). Verify
    `to-plan` before planning work; if missing, block only the planning lane.
-5. Read [references/triage-lane.md](references/triage-lane.md). Verify
+6. Read [references/triage-lane.md](references/triage-lane.md). Verify
    `triage` before Backlog work; if missing, block only the triage lane.
-6. Read [references/review-contracts.md](references/review-contracts.md).
+7. Read [references/review-contracts.md](references/review-contracts.md).
    Prefer the named review providers in
    [references/workflow-providers.md](references/workflow-providers.md), but
    permit equivalent installed skills or direct execution of the bundled
    contracts. Record the provider for each contract. Do not stop solely because
    a preferred provider is unavailable.
-7. Confirm the authenticated GitHub identity, Project read/write access,
+8. Confirm the authenticated GitHub identity, Project read/write access,
    GitHub CLI `project` scope, current default, verified base, and clean state.
-8. Inspect repository automation that can change Project Status or archive Done
+9. Inspect repository automation that can change Project Status or archive Done
    items. Stop if it conflicts with the configured Backlog, Planning, Ready to
    implement, In progress, and Done lifecycle.
-9. Select and record a run mode:
-   - `next` is the default and processes at most one selected issue;
-   - `drain` is allowed only when the user explicitly asks to drain, run all,
-     repeat, or continue until empty. Run occupied slots concurrently by
-     default. Use two as both the default in-flight ticket count and ticket
-     agent concurrency limit. Accept any positive user-specified limit; impose
-     no skill-defined maximum.
-10. Before any execution claim, require explicit merge authority for the
+10. Select and record a run mode. Use `next` by default and process at most one
+    selected issue. Allow `drain` only when the user explicitly asks to drain,
+    run all, repeat, or continue until empty. Run occupied slots concurrently
+    by default. Use two as both the default in-flight ticket count and ticket
+    agent concurrency limit. Accept any positive user-specified limit; impose
+    no skill-defined maximum.
+11. Before any execution claim, require explicit merge authority for the
    mode's scope: the one selected issue in `next`, or every eligible issue
    encountered in `drain`. Without it, stop before claiming execution; never
    bypass an executable ticket by entering triage. A triage-only selection
    requires no merge authority, and triage approval never supplies it. Also
-   require explicit issue-close authority when `close-after-merge` is
-   configured.
-11. For `drain`, read and follow
+    require explicit issue-close authority when `close-after-merge` is
+    configured. Before reconciling an epic, require explicit issue-close
+    authority covering every eligible epic in the mode's scope.
+12. For `drain`, read and follow
    [references/drain-scheduler.md](references/drain-scheduler.md).
 
 Do not support publish-only mode or impose a ticket cap in `drain`. Standing
@@ -167,19 +177,21 @@ next invocation.
    - Planning, Ready to implement, or In progress Status; or
    - Backlog Status while assigned to the authenticated runner, solely to
      recover interrupted human-work cleanup; or
-   - Backlog Status plus the exact configured `needs-triage` label for the
-     triage inventory.
+   - Backlog Status plus the exact `ready-for-agent`, configured epic,
+     configured human-work, or configured `needs-triage` label for the Backlog
+     frontier.
 4. Record draft, pull-request, redacted, cross-repository, closed, malformed,
    or filter-excluded items as ineligible. Never convert draft items into
    tickets or use a named Project view implicitly.
 5. Build execution contender classes in the exact order defined by
    [Planning Lane](references/planning-lane.md#scheduling). Build the separate
-   triage inventory through
+   Backlog frontier through
+   [Epics And Human Frontier](references/human-frontier.md) and
    [Backlog Triage Lane](references/triage-lane.md). Within each class use
    Priority, visible position, then issue number. Do not preempt a claim.
 6. Phase two: hydrate contenders in order with fresh batched GraphQL reads.
    Gather:
-   - native open `blocked by` relationships;
+   - native open `blocked by` and `blocking` relationships;
    - all open descendants in the issue's sub-issue tree;
    - for execution and assigned-Backlog cleanup contenders, the latest status
      events entering Backlog, Planning, and Ready to implement,
@@ -218,6 +230,8 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --ready-status <ready-to-implement-name> \
   --in-progress-status <in-progress-name> \
   --needs-triage-label <needs-triage-label> \
+  --epic-label <epic-label> \
+  --human-work-label <human-work-label> \
   --priority <highest-name> [--priority <next-name> ...] \
   --max-claims <mode-slot-limit> \
   < normalized-tickets.json
@@ -240,8 +254,10 @@ fill free capacity from returned `candidates`. Planning and
 `resume-backlog-cleanup` claims do not count toward `max-claims`. Finish
 Backlog cleanup before new claims. Leave an In progress item assigned to
 someone else alone. Report an unassigned In progress item as stale and
-ineligible; ignore an unassigned Backlog item without the exact configured
-`needs-triage` label until a human moves it to Planning.
+ineligible. Route an unassigned Backlog item with an exact frontier role label
+through the epic, human, Planning-authorization, or triage collection. Ignore
+an unlabelled Backlog item as human-owned until a human adds a role label or
+moves it to Planning.
 
 When no claim exists, hydrate current-user PR contenders before new work.
 Otherwise preserve the phase-one Priority, visible-position, and issue-number
@@ -252,7 +268,9 @@ item without stopping valid work. Preserve a claimed planning blocker without
 an implementation slot; block only the affected implementation slot when
 claimed implementation becomes ineligible.
 
-Preserve returned `parkedBlocked` items without invoking `triage`. Keep returned
+Preserve returned role-tagged `parkedBlocked` items without invoking `triage`.
+Process returned `readyEpics` and `humanActions` through
+[Epics And Human Frontier](references/human-frontier.md). Keep returned
 `triageCandidates` outside the execution scheduler until the authoritative
 execution-clear predicate in
 [Backlog Triage Lane](references/triage-lane.md#dispatch) is satisfied. Then
@@ -262,6 +280,11 @@ Resume a linked PR only when exactly one open PR clearly closes the issue, its
 author is the authenticated user, it targets the configured repository and
 base branch, and no competing implementation PR exists. Never adopt another
 author's PR.
+
+In `next`, reconcile at most one ready epic when no existing claim or execution
+candidate is selected, then finish after its live Project reconciliation. In
+`drain`, reconcile ready epics through the controller lane and immediately
+refresh the graph before selecting more work.
 
 ## Claim And Revalidate
 
@@ -528,8 +551,9 @@ isolation rules from the drain scheduler.
 
 Finish `next` after one selected execution issue reaches a confirmed terminal
 outcome and the post-merge live query succeeds, or after one tail-lane triage
-issue reaches a reconciled outcome when no executable issue exists. For
-`drain`, treat
+issue or ready epic reaches a reconciled outcome when no executable issue
+exists. Return `waiting-for-human` instead when no autonomous action exists and
+the live human frontier is non-empty. For `drain`, treat
 [Failure Isolation And Finish Gate](references/drain-scheduler.md#failure-isolation-and-finish-gate)
 as the authoritative success, partial-drain, preservation, and cleanup
 procedure. In `next`, preserve the worktree, branch, PR, assignment, and In
@@ -541,6 +565,7 @@ failed ticket automatically.
 Report the run mode, slot limit, Project configuration digest, live queries,
 merge-authority outcome, scheduler result, peak ticket-agent concurrency,
 named resource-lock grants, waits, recoveries, triage provider result,
+ready-epic reconciliations, the current human frontier packet,
 `parkedBlocked` inventory, triage recommendations and reconciled outcomes, and
 one row per occupied ticket containing:
 
@@ -714,3 +739,27 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     Counterexamples: a mechanical documentation ticket stays routine and does
     not escalate merely because deep capacity is available, and a runtime with
     only generic subagents expresses the same roles in prompts without stopping.
+32. RED sends every Backlog parent through triage or implementation; GREEN
+    returns a bare configured epic as `readyEpics` only after its native open
+    blockers and descendants clear, then closes it in the controller lane with
+    explicit authority and reconciles Done. Novel case: its closure exposes a
+    downstream Planning-authorization action on the refreshed graph.
+    Counterexample: an epic with configured human work is never auto-closed.
+33. RED hides `ready-for-agent` Backlog work or treats conversation approval as
+    Planning authority; GREEN returns `move-to-planning` in `humanActions` and
+    waits for the approver's live Project transition. Novel case: several
+    independent human actions appear in one ordered frontier packet while an
+    unrelated implementation slot continues. Counterexample: an unchanged
+    frontier packet is not repeated.
+34. RED treats a human frontier as a failed partial drain or a successful empty
+    drain; GREEN returns `waiting-for-human` only after controller, planning,
+    implementation, monitoring, and triage work clear. Novel case: resumption
+    reconstructs the graph after a long pause and obtains fresh merge and epic-
+    close authority. Counterexample: a blocked claimed slot remains a partial
+    drain.
+35. RED parses issue prose as a dependency or permits conflicting role labels;
+    GREEN schedules only from native relationships, reports prose drift, and
+    rejects epic-plus-agent or multiple next-action roles. Novel case: an
+    assigned human gate remains a human action rather than interrupted runner
+    cleanup. Counterexample: an unassigned bare epic needs no next-action role
+    label.

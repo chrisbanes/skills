@@ -96,6 +96,11 @@ execution-only author, draft, head, and base fields:
 }
 ```
 
+Use that same Backlog shape for configured epics, human work, and
+`ready-for-agent` items awaiting Planning authorization. Preserve every exact
+label. The ranker derives the work shape and next action from configured label
+names; never add a synthetic role to its input.
+
 Use GitHub logins, never display names, for assignees, PR authors, and
 transition actors. Normalize `labels` to exact label names. Normalize
 `blockedBy` and `openDescendants` entries to integer issue numbers for the
@@ -162,6 +167,12 @@ no open implementation pull request. Return an otherwise valid item with open
 native blockers or descendants as `parkedBlocked`; return an unblocked item as
 `triageCandidates`. Never feed either collection into an implementation slot.
 
+For other unassigned Backlog work, apply
+[Epics And Human Frontier](human-frontier.md). Return a bare unblocked epic as
+`readyEpics`, and return unblocked human work or agent work awaiting Planning
+as `humanActions`. Permit an existing assignee only on human work. Role-tag
+every dependency-blocked Backlog result in `parkedBlocked`.
+
 The ranker returns valid current-user claims and ordered unclaimed candidates:
 
 ```json
@@ -186,9 +197,17 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
   "triageCandidates": [
     {"ticket": {"number": 47}, "action": "triage"}
   ],
+  "readyEpics": [
+    {"ticket": {"number": 48}, "action": "close-epic"}
+  ],
+  "humanActions": [
+    {"ticket": {"number": 49}, "action": "move-to-planning"},
+    {"ticket": {"number": 50}, "action": "perform-human-work"}
+  ],
   "parkedBlocked": [
     {
-      "ticket": {"number": 48},
+      "ticket": {"number": 51},
+      "role": "human-epic",
       "reasons": ["blocked by ['owner/repository#41']"]
     }
   ],
@@ -201,11 +220,13 @@ controller owns scheduling; the ranker only validates claims and orders
 candidates. Each `blockedClaims` entry occupies a slot and preserves a claimed
 implementation ticket that requires reconciliation. Planning claims and
 `blockedPlanningClaims` preserve ownership but do not consume an implementation
-slot; both still prevent the Backlog triage tail from starting. Triage
+slot; both still prevent the Backlog triage tail from starting. Ready epics and
+human actions consume neither slots nor agent capacity. Triage
 `resume-backlog-cleanup` also consumes no implementation slot, must finish
 before new claims, and prevents the triage tail from starting. Its cleanup is
 idempotent: already-absent owned artifacts satisfy their individual finish
 checks, but the assignment remains until the complete cleanup state is
 verified. Triage candidates are ordered separately and run only through
-[Backlog Triage Lane](triage-lane.md); parked items consume neither a slot nor
-an agent.
+[Backlog Triage Lane](triage-lane.md). Process ready epics and human actions
+through [Epics And Human Frontier](human-frontier.md); parked items consume
+neither a slot nor an agent.

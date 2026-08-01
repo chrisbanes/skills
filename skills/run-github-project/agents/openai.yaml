@@ -1,7 +1,7 @@
 interface:
   display_name: "Run GitHub Project"
-  short_description: "Triage and execute authorized Project work"
-  default_prompt: "Use $run-github-project in next mode to execute one authorized issue, or triage one unblocked Backlog issue when no executable work remains, after confirming the required authority."
+  short_description: "Reconcile, triage, and execute Project work"
+  default_prompt: "Use $run-github-project in next mode to reconcile one ready epic, execute one authorized issue, or surface the current human checkpoint; use explicit drain mode to continue until success, waiting-for-human, or a partial drain."
 
 policy:
   allow_implicit_invocation: false

@@ -16,6 +16,7 @@ class InputError(ValueError):
 
 
 IMPLEMENTATION_ACTIONS = {"resume-pr", "resume-implementation"}
+AGENT_WORK_LABEL = "ready-for-agent"
 CLAIM_ACTION_RANK = {
     "resume-backlog-cleanup": 0,
     "resume-pr": 1,
@@ -75,6 +76,16 @@ def parse_args() -> argparse.Namespace:
         "--needs-triage-label",
         default="needs-triage",
         help="Configured issue label that queues an unblocked Backlog item for triage.",
+    )
+    parser.add_argument(
+        "--epic-label",
+        required=True,
+        help="Configured issue label that identifies a non-implementation parent.",
+    )
+    parser.add_argument(
+        "--human-work-label",
+        required=True,
+        help="Configured issue label that identifies work a human must perform.",
     )
     parser.add_argument(
         "--priority",
@@ -543,8 +554,8 @@ def analyze_ticket(
 
     errors = common["errors"]
     exclusions = common["exclusions"]
-    if "ready-for-agent" not in labels and not recovering_backlog_cleanup:
-        exclusions.append("missing ready-for-agent label")
+    if AGENT_WORK_LABEL not in labels and not recovering_backlog_cleanup:
+        exclusions.append(f"missing {AGENT_WORK_LABEL} label")
 
     planning_transition = parse_transition(
         ticket["planningTransition"],
@@ -968,6 +979,8 @@ def analyze_backlog_ticket(
     ticket: dict[str, Any],
     *,
     needs_triage_label: str,
+    epic_label: str,
+    human_work_label: str,
     priorities: tuple[str, ...],
 ) -> dict[str, Any]:
     common = analyze_common_ticket(
@@ -988,12 +1001,37 @@ def analyze_backlog_ticket(
     blocker_reasons: list[str] = []
     if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
-    if needs_triage_label not in labels:
-        exclusions.append("human work required in Backlog")
+    is_epic = epic_label in labels
+    is_agent_work = AGENT_WORK_LABEL in labels
+    is_human_work = human_work_label in labels
+    needs_triage = needs_triage_label in labels
+    action_roles = [is_agent_work, is_human_work, needs_triage]
+    if sum(action_roles) > 1:
+        exclusions.append("conflicting Backlog action labels")
+    if is_epic and is_agent_work:
+        exclusions.append("epic cannot be ready for agent implementation")
 
-    if assignees:
+    role: str | None = None
+    action: str | None = None
+    if not exclusions:
+        if is_human_work:
+            role = "human-epic" if is_epic else "human"
+            action = "perform-human-work"
+        elif needs_triage:
+            role = "triage"
+            action = "triage"
+        elif is_agent_work:
+            role = "agent"
+            action = "move-to-planning"
+        elif is_epic:
+            role = "epic"
+            action = "close-epic"
+        else:
+            exclusions.append("unclassified Backlog work")
+
+    if assignees and role not in ("human", "human-epic"):
         exclusions.append(f"assigned to {assignees}")
-    if pull_requests:
+    if pull_requests and role not in ("human", "human-epic"):
         exclusions.append(
             "has open implementation PRs "
             f"{[pull_request['url'] for pull_request in pull_requests]}",
@@ -1007,6 +1045,8 @@ def analyze_backlog_ticket(
         "ticket": ticket,
         "priorityRank": priority_rank,
         "projectPosition": project_position,
+        "role": role,
+        "action": action,
         "blockerReasons": blocker_reasons,
         "errors": errors,
         "exclusions": exclusions,
@@ -1042,14 +1082,22 @@ def main() -> int:
         )
         if len(set(statuses)) != len(statuses):
             raise InputError("project statuses must be unique")
-        if not args.needs_triage_label:
-            raise InputError("needs-triage label must be non-empty")
+        role_labels = (
+            args.needs_triage_label,
+            args.epic_label,
+            args.human_work_label,
+            AGENT_WORK_LABEL,
+        )
+        if any(not label for label in role_labels):
+            raise InputError("role labels must be non-empty")
+        if len(set(role_labels)) != len(role_labels):
+            raise InputError("role labels must be unique")
         if not 1 <= args.max_claims <= 3:
             raise InputError("max claims must be between 1 and 3")
 
         seen_numbers: set[int] = set()
         execution_analyses: list[dict[str, Any]] = []
-        triage_analyses: list[dict[str, Any]] = []
+        backlog_analyses: list[dict[str, Any]] = []
         invalid_unclaimed: list[dict[str, Any]] = []
         invalid_claimed: list[dict[str, Any]] = []
         invalid_planning_claimed: list[dict[str, Any]] = []
@@ -1061,15 +1109,23 @@ def main() -> int:
                 seen_numbers.add(ticket["number"])
                 if (
                     ticket["projectStatus"] == args.backlog_status
-                    and not has_current_user_assignment(
-                        ticket,
-                        args.current_user,
+                    and (
+                        not has_current_user_assignment(
+                            ticket,
+                            args.current_user,
+                        )
+                        or (
+                            isinstance(ticket["labels"], list)
+                            and args.human_work_label in ticket["labels"]
+                        )
                     )
                 ):
-                    triage_analyses.append(
+                    backlog_analyses.append(
                         analyze_backlog_ticket(
                             ticket,
                             needs_triage_label=args.needs_triage_label,
+                            epic_label=args.epic_label,
+                            human_work_label=args.human_work_label,
                             priorities=priorities,
                         ),
                     )
@@ -1208,20 +1264,38 @@ def main() -> int:
                 "number": item["ticket"]["number"],
                 "reasons": item["errors"] + item["exclusions"],
             }
-            for item in triage_analyses
+            for item in backlog_analyses
             if item["errors"] or item["exclusions"]
         ]
-        eligible_triage = [
+        eligible_backlog = [
             item
-            for item in triage_analyses
+            for item in backlog_analyses
             if not item["errors"] and not item["exclusions"]
         ]
         triage_candidates = sorted(
-            (item for item in eligible_triage if not item["blockerReasons"]),
+            (
+                item for item in eligible_backlog
+                if item["action"] == "triage" and not item["blockerReasons"]
+            ),
+            key=ticket_rank,
+        )
+        ready_epics = sorted(
+            (
+                item for item in eligible_backlog
+                if item["action"] == "close-epic" and not item["blockerReasons"]
+            ),
+            key=ticket_rank,
+        )
+        human_actions = sorted(
+            (
+                item for item in eligible_backlog
+                if item["action"] in ("move-to-planning", "perform-human-work")
+                and not item["blockerReasons"]
+            ),
             key=ticket_rank,
         )
         parked_blocked = sorted(
-            (item for item in eligible_triage if item["blockerReasons"]),
+            (item for item in eligible_backlog if item["blockerReasons"]),
             key=ticket_rank,
         )
         output = {
@@ -1248,13 +1322,28 @@ def main() -> int:
             "triageCandidates": [
                 {
                     "ticket": item["ticket"],
-                    "action": "triage",
+                    "action": item["action"],
                 }
                 for item in triage_candidates
+            ],
+            "readyEpics": [
+                {
+                    "ticket": item["ticket"],
+                    "action": item["action"],
+                }
+                for item in ready_epics
+            ],
+            "humanActions": [
+                {
+                    "ticket": item["ticket"],
+                    "action": item["action"],
+                }
+                for item in human_actions
             ],
             "parkedBlocked": [
                 {
                     "ticket": item["ticket"],
+                    "role": item["role"],
                     "reasons": item["blockerReasons"],
                 }
                 for item in parked_blocked

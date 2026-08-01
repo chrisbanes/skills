@@ -36,6 +36,10 @@ DEFAULT_STATUS_ARGUMENTS = (
     "In progress",
     "--needs-triage-label",
     "needs-triage",
+    "--epic-label",
+    "epic",
+    "--human-work-label",
+    "ready-for-human",
 )
 
 
@@ -413,11 +417,11 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(
             [
                 {
-                    "number": 204,
-                    "reasons": ["human work required in Backlog"],
+                    "ticket": backlog,
+                    "action": "move-to-planning",
                 },
             ],
-            output["excluded"],
+            output["humanActions"],
         )
 
     def test_human_planning_transition_after_backlog_starts_fresh(self) -> None:
@@ -674,6 +678,7 @@ class RankTicketsTest(unittest.TestCase):
             [
                 {
                     "ticket": blocked,
+                    "role": "triage",
                     "reasons": ["blocked by ['17']"],
                 },
             ],
@@ -692,13 +697,101 @@ class RankTicketsTest(unittest.TestCase):
             [
                 {
                     "ticket": parent,
+                    "role": "triage",
                     "reasons": ["open descendants ['19']"],
                 },
             ],
             output["parkedBlocked"],
         )
 
-    def test_does_not_triage_backlog_item_without_needs_triage_label(self) -> None:
+    def test_unblocked_epic_is_ready_for_reconciliation(self) -> None:
+        epic = backlog_ticket(19, labels=["epic"])
+
+        returncode, output = run_ranker([epic])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [{"ticket": epic, "action": "close-epic"}],
+            output["readyEpics"],
+        )
+
+    def test_parks_epic_until_its_native_descendants_close(self) -> None:
+        epic = backlog_ticket(
+            20,
+            labels=["epic"],
+            openDescendants=[21],
+        )
+
+        returncode, output = run_ranker([epic])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["readyEpics"])
+        self.assertEqual(
+            [
+                {
+                    "ticket": epic,
+                    "role": "epic",
+                    "reasons": ["open descendants ['21']"],
+                },
+            ],
+            output["parkedBlocked"],
+        )
+
+    def test_human_gated_epic_is_never_automatically_closed(self) -> None:
+        epic = backlog_ticket(
+            21,
+            labels=["epic", "ready-for-human"],
+        )
+
+        returncode, output = run_ranker([epic])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["readyEpics"])
+        self.assertEqual(
+            [{"ticket": epic, "action": "perform-human-work"}],
+            output["humanActions"],
+        )
+
+    def test_human_work_waits_for_native_blockers(self) -> None:
+        human_work = backlog_ticket(
+            22,
+            labels=["ready-for-human"],
+            blockedBy=[20],
+        )
+
+        returncode, output = run_ranker([human_work])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["humanActions"])
+        self.assertEqual(
+            [
+                {
+                    "ticket": human_work,
+                    "role": "human",
+                    "reasons": ["blocked by ['20']"],
+                },
+            ],
+            output["parkedBlocked"],
+        )
+
+    def test_current_user_assignment_does_not_turn_human_work_into_cleanup(self) -> None:
+        human_work = backlog_ticket(
+            23,
+            labels=["ready-for-human"],
+            assignees=["chris"],
+        )
+
+        returncode, output = run_ranker([human_work])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["blockedPlanningClaims"])
+        self.assertEqual(
+            [{"ticket": human_work, "action": "perform-human-work"}],
+            output["humanActions"],
+        )
+
+    def test_ready_for_agent_backlog_item_requests_planning_transition(self) -> None:
         ready = backlog_ticket(22, labels=["ready-for-agent"])
 
         returncode, output = run_ranker([ready])
@@ -707,7 +800,47 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual([], output["triageCandidates"])
         self.assertEqual([], output["parkedBlocked"])
         self.assertEqual(
-            [{"number": 22, "reasons": ["human work required in Backlog"]}],
+            [{"ticket": ready, "action": "move-to-planning"}],
+            output["humanActions"],
+        )
+
+    def test_human_action_does_not_hide_runnable_agent_work(self) -> None:
+        human_work = backlog_ticket(24, labels=["ready-for-human"])
+        agent_work = ticket(25)
+
+        returncode, output = run_ranker([human_work, agent_work])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [25],
+            [entry["ticket"]["number"] for entry in output["candidates"]],
+        )
+        self.assertEqual(
+            [24],
+            [entry["ticket"]["number"] for entry in output["humanActions"]],
+        )
+
+    def test_rejects_conflicting_backlog_action_labels(self) -> None:
+        conflicting = backlog_ticket(
+            26,
+            labels=["ready-for-agent", "ready-for-human"],
+        )
+        implementation_epic = backlog_ticket(
+            27,
+            labels=["epic", "ready-for-agent"],
+        )
+
+        returncode, output = run_ranker([conflicting, implementation_epic])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [
+                {"number": 26, "reasons": ["conflicting Backlog action labels"]},
+                {
+                    "number": 27,
+                    "reasons": ["epic cannot be ready for agent implementation"],
+                },
+            ],
             output["excluded"],
         )
 

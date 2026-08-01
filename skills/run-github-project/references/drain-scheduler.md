@@ -37,6 +37,10 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    the authoritative execution-clear predicate in
    [Backlog Triage Lane](triage-lane.md#dispatch). It consumes no implementation
    slot and processes one issue at a time.
+9. Keep ready epics and human actions in the separate
+   [Epics And Human Frontier](human-frontier.md). They consume neither a slot
+   nor agent capacity. Serialize epic closure in the controller lane, surface
+   changed human actions immediately, and continue independent work.
 
 ## Parallel Workers And Controller Lane
 
@@ -146,22 +150,28 @@ dispatching the next:
 1. Finish any interrupted assigned-Backlog cleanup before new claims.
 2. Merge the oldest merge-ready slot, unless an explicit dependency requires a
    different order. Admit or merge only one at a time.
-3. Resume owning ticket agents for actionable review, CI, or base-repair events
+3. Reconcile the highest-ranked ready epic with issue-close authority, then
+   refresh the complete Project graph before taking another action.
+4. Resume owning ticket agents for actionable review, CI, or base-repair events
    in oldest-event order.
-4. Resume paused local implementation slots in claim order.
-5. Finish a current contract-preserving replan, other plan, or verified
+5. Resume paused local implementation slots in claim order.
+6. Finish a current contract-preserving replan, other plan, or verified
    planning handoff without preemption. Choose preserved replan claims before
    other Planning claims.
-6. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
+7. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
    `Ready to implement` tickets one at a time, and launch unrelated slot agents
    until the in-flight or active-agent limit is reached.
-7. Start the next ranked `Planning` item only when the planning lane and active
+8. Start the next ranked `Planning` item only when the planning lane and active
    agent capacity are free after maximizing runnable implementation.
-8. Monitor all remote slots together only when no local or controller action
+9. Monitor all remote slots together only when no local or controller action
    remains.
-9. After the authoritative execution-clear predicate in
+10. After the authoritative execution-clear predicate in
    [Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, process the next
    unblocked Backlog `needs-triage` item through the triage tail lane.
+
+At startup and after every refreshed query, present the changed human frontier
+packet from [Epics And Human Frontier](human-frontier.md). Never wait for its
+actions while any step above remains runnable.
 
 Never preempt a valid occupied slot for newly higher-priority work. Requery and
 rank live data before every just-in-time claim.
@@ -234,10 +244,12 @@ item without the configured `needs-triage` label remains human-owned; an
 eligible labeled item belongs only to the triage tail lane.
 
 Finish successfully only when the authoritative execution-clear predicate in
-[Backlog Triage Lane](triage-lane.md#dispatch) is satisfied and a complete live
-query has no non-deferred triage candidate after merge reconciliation.
-Dependency-parked Backlog items do not prevent success; report their live
-blockers. If no runnable work remains but a claim or slot is blocked or timed
-out, or the triage provider cannot complete an eligible item, stop with a
-partial-drain report, preserve every affected worktree, branch, PR, assignment,
-and `In progress` Status, and never report success.
+[Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, a complete live
+query has no non-deferred triage candidate after merge reconciliation, and no
+human action remains. Dependency-parked Backlog items do not prevent success;
+report their live blockers. If only human actions remain, return
+`waiting-for-human` through [Epics And Human Frontier](human-frontier.md). If no
+runnable work remains but a claim or slot is blocked or timed out, or the
+triage provider cannot complete an eligible item, stop with a partial-drain
+report, preserve every affected worktree, branch, PR, assignment, and
+`In progress` Status, and never report success.
