@@ -37,15 +37,24 @@ Select and record the mode before checking execution preconditions:
 - Use `drain` only when the user explicitly asks to drain, run all, repeat, or
   continue until empty.
 
-In `setup`, follow only [Configure The Project](#configure-the-project). Perform
-the repository, authentication, Project, field, label, branch, automation, and
-cutover reads needed to produce and validate the configuration. Do not require
-`tdd`, `to-plan`, `triage`, review providers, merge authority, issue-close
-authority, an execution-clean worktree, or ticket-agent capacity. Never rank or
-claim work; assign or transition an issue; mutate a Project item, issue, or PR;
-create a ticket worktree; plan or implement a ticket; push; or merge. Finish
-with `configuration-valid`, `configuration-ready-to-commit`, or
-`configuration-blocked`; never continue into [Check Preconditions](#check-preconditions).
+In `setup`, follow [Configure The Project](#configure-the-project) plus the
+read-only retry, pagination, unknown-state, and bounded-failure rules in
+[Handle GitHub Access Failures](#handle-github-access-failures). Discard a
+partial logical read and report `configuration-blocked` when a complete live
+configuration read cannot be established. Never apply mutation-reconciliation
+rules because setup permits no remote mutation.
+
+Perform the repository, authentication, Project, field, label, branch,
+automation, and cutover reads needed to produce and validate the configuration.
+Do not require `tdd`, `to-plan`, `triage`, review providers, merge authority,
+issue-close authority, an execution-clean worktree, or ticket-agent capacity.
+Never rank or claim work; assign or transition an issue; mutate a Project item,
+issue, or PR; create a ticket worktree; plan or implement a ticket; push; or
+merge. Finish `configuration-valid` only when the verified base contains the
+live-validated pair. Finish `configuration-ready-to-commit` when the validated
+pair is not on the verified base, whether it is uncommitted or committed only
+on another branch. Otherwise finish `configuration-blocked`. Never continue
+into [Check Preconditions](#check-preconditions).
 
 ## Configure The Project
 
@@ -87,10 +96,12 @@ Creating or repairing either file pauses `next` or `drain` until both are
 committed to the verified base. Do not commit them implicitly. In `setup`,
 validate the written pair against live state and finish
 `configuration-ready-to-commit`; if the user explicitly authorizes a dedicated
-configuration commit, make only that commit, verify whether the base contains
-both files, and finish without running Project work. In `next` or `drain`,
-continue the same invocation only after the user commits them or explicitly
-authorizes a dedicated configuration commit and the base contains both.
+configuration commit, make only that commit and verify whether the base contains
+both files. Finish `configuration-valid` when it does; otherwise finish
+`configuration-ready-to-commit` with the exact commit and missing-base evidence.
+Do not run Project work. In `next` or `drain`, continue the same invocation only
+after the user commits them or explicitly authorizes a dedicated configuration
+commit and the base contains both.
 
 Record the committed configuration digest and current default branch. Recheck
 both before every claim and merge. Stop and preserve work if either changes.
@@ -793,11 +804,20 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     assigned human gate remains a human action rather than interrupted runner
     cleanup. Counterexample: an unassigned bare epic needs no next-action role
     label.
-36. RED lets `setup` fall through execution preconditions or queue processing;
-    GREEN discovers, writes, and live-validates only the configuration pair,
+36. RED lets `setup` fall through execution preconditions, trust a partial live
+    read, or skip bounded retries; GREEN applies read-only failure handling,
+    discovers, writes, and live-validates only the complete configuration pair,
     then returns its configuration result without claims or remote mutations.
-    Novel case: missing `tdd` and merge authority do not block a complete
-    `configuration-ready-to-commit` result. Counterexample: discovering missing
-    configuration during `next` performs the same bootstrap but remains a
-    paused `next` invocation until the committed base contains both files; it
-    does not silently switch modes or begin execution from uncommitted config.
+    Novel case: a partial paginated field read is discarded and the complete
+    logical read is retried. Counterexamples: mutation reconciliation never
+    applies in `setup`, and missing `tdd` or merge authority does not block a
+    complete `configuration-ready-to-commit` result.
+37. RED leaves an authorized configuration commit without a terminal result
+    when it is not on the verified base; GREEN returns `configuration-valid`
+    only when the base contains both files and otherwise returns
+    `configuration-ready-to-commit` with the exact commit and missing-base
+    evidence. Novel case: a valid configuration commit on a feature branch
+    remains ready to land while `next` and `drain` stay paused. Counterexample:
+    a base that already contains the live-validated pair is valid, not ready to
+    commit. Discovering missing configuration during `next` never silently
+    switches modes or begins execution from uncommitted configuration.
