@@ -84,7 +84,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 ### Workflows
 
 - [`to-plan`](skills/to-plan/SKILL.md) — create a repository-aware implementation plan from one ready GitHub issue or a confirmed conversation specification, with a provider-neutral implementation handoff.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — reconcile epics, surface resumable human checkpoints, triage unblocked Backlog work, and plan and execute authorized GitHub Project issues through one planning lane and a two-slot-by-default parallel pipeline. Requires `tdd` for implementation and preserves human Planning and triage approval gates.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — set up or repair the repository's GitHub Project binding without running work, reconcile epics, surface resumable human checkpoints, triage unblocked Backlog work, and plan and execute authorized issues through one planning lane and a two-slot-by-default parallel pipeline. Requires `tdd` for implementation and preserves human Planning and triage approval gates.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, detect and fix CI failures, and keep PRs moving forward.
 
 ## Contributing

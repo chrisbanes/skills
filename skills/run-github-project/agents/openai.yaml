@@ -1,7 +1,7 @@
 interface:
   display_name: "Run GitHub Project"
-  short_description: "Reconcile, triage, and execute Project work"
-  default_prompt: "Use $run-github-project in next mode to reconcile one ready epic, execute one authorized issue, or surface the current human checkpoint; use explicit drain mode to continue until success, waiting-for-human, or a partial drain."
+  short_description: "Set up, reconcile, and execute Project work"
+  default_prompt: "Use $run-github-project in setup mode for configuration only, next mode to reconcile one ready epic, execute one authorized issue, or surface the current human checkpoint, and explicit drain mode to continue until success, waiting-for-human, or a partial drain."
 
 policy:
   allow_implicit_invocation: false
