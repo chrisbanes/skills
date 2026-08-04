@@ -61,8 +61,11 @@ contracts, a focused commit, and a reconciled push plus PR creation or update.
 Then yield durable evidence to the controller and idle that persistent context.
 Resume the same agent for actionable feedback or base repair.
 
-Apply [Route Agents By Task](../SKILL.md#route-agents-by-task) when selecting
-each persistent ticket agent and its helpers.
+Apply [Route Agents By Task](../SKILL.md#route-agents-by-task) and append its
+routing-ledger entry when selecting each persistent ticket agent and helper.
+Use the portable default-owner capability for every normal ticket owner and
+planner; never infer exceptional capability from topic, scope, plan size,
+module count, or language count.
 
 ### Conflict Admission Gate
 
@@ -161,8 +164,9 @@ dispatching the next:
 7. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
    `Ready to implement` tickets one at a time, and launch unrelated slot agents
    until the in-flight or active-agent limit is reached.
-8. Start the next ranked `Planning` item only when the planning lane and active
-   agent capacity are free after maximizing runnable implementation.
+8. Start the next ranked `Planning` item with the default-owner capability only
+   when the planning lane and active agent capacity are free after maximizing
+   runnable implementation.
 9. Monitor all remote slots together only when no local or controller action
    remains.
 10. After the authoritative execution-clear predicate in

@@ -330,28 +330,47 @@ and non-plan comment edits do not revoke the lease.
 
 ## Route Agents By Task
 
-Choose the lowest model level that can safely own the task and escalate when
-repository evidence reveals broader ambiguity. Treat the roles and levels below
-as portable capabilities, not required profile or model names:
+Route by behavioral capability, not by machine-local profile or model names:
 
-| Task | Subagent role | Suggested model capability |
+| Portable role | Use | Required capability |
 | --- | --- | --- |
-| Locate files, seams, tests, or ownership without edits | Read-only discovery | Fast, low-cost model with low or medium reasoning |
-| Summarize CI, logs, reviews, configuration, or other mechanical evidence | Routine evidence analysis | Fast, low-cost model with medium reasoning |
-| Own a normal ticket implementation or review-fix pass | Standard ticket owner | Balanced coding model with medium reasoning |
-| Resolve ambiguous architecture, security, rendering, performance, or cross-cutting failures | Deep investigator or ticket owner | Strongest suitable model with high reasoning |
+| Discovery helper | Locate files, seams, tests, or ownership without edits | Fast read-only discovery |
+| Evidence helper | Summarize CI, logs, reviews, configuration, or other mechanical evidence | Bounded low-cost analysis |
+| Default owner | Plan a ticket or own a normal implementation or review-fix pass | Balanced general-purpose coding and reasoning |
+| Exceptional investigator | Investigate a demonstrated unresolved architecture, security, rendering, performance, or data-integrity problem | Strongest suitable reasoning available |
 
-Inspect the environment's available subagent types and model controls, then map
-these capabilities onto them. Never require a machine-local profile name. When
-only a generic subagent is available, encode the role and boundaries in its
-prompt. When the model or reasoning level cannot be selected, use the runtime
-default and continue.
+Before every dispatch, select a portable role and record the task, portable
+role, and actual runtime selection in a routing ledger. Map the role onto the
+environment's available agent types and model controls. When only a generic
+agent is available, encode the role and boundaries in its prompt. When model or
+reasoning controls are unavailable, use the runtime default and continue.
 
-Default a ticket agent to standard capability. Use routine capability only when
-the approved outcome is mechanical and low risk. Start with deep capability
-when a mistake could invalidate public contracts, security, data integrity, or
-the approved plan; otherwise escalate to it only after standard-level discovery
-exposes that risk.
+Use the default owner for every planning agent and normal ticket owner. Use
+discovery and evidence helpers only for bounded read-only subtasks; never make
+either the owner of an otherwise normal ticket merely because its diff is
+small or mechanical.
+
+Before selecting an exceptional investigator, also record concrete repository
+evidence of one specific unresolved architecture, security, rendering,
+performance, or data-integrity problem and why the default owner cannot safely
+proceed or stop at the decision boundary. Without both entries, use the default
+owner.
+
+Do not treat public API, rendering or graphics, persistence or data safety,
+multiple modules or languages, destructive operations, a large plan, or
+cross-cutting scope as exceptional evidence by themselves. Keep the planner and
+ticket owner on the default-owner capability when the approved plan is
+decision-complete with explicit seams, acceptance criteria, and validation,
+including for those topics. Replace an entire ticket owner with exceptional
+capability only when the recorded unresolved problem controls implementation
+and a bounded read-only investigation cannot resolve it.
+
+Keep every planning agent on the default-owner capability. When planning
+discovers one question that passes the exceptional evidence gate, use a bounded
+read-only exceptional investigator for that question from spare capacity. If
+the question requires a missing product, public contract, architecture, or
+safety decision, stop at the durable decision boundary instead. Never upgrade
+the whole planner merely because one exceptional question exists.
 
 Delegate a specific read-only subtask whenever it can produce independent
 evidence while the owning ticket agent continues useful work. Prefer helpers
@@ -567,7 +586,9 @@ merge-authority outcome, scheduler result, peak ticket-agent concurrency,
 named resource-lock grants, waits, recoveries, triage provider result,
 ready-epic reconciliations, the current human frontier packet,
 `parkedBlocked` inventory, triage recommendations and reconciled outcomes, and
-one row per occupied ticket containing:
+the routing ledger with task, portable role, actual runtime selection, and
+concrete exceptional justification (`none` for non-exceptional dispatches),
+plus one row per occupied ticket containing:
 
 - Project item, Status, Priority, position, and selection reason;
 - Planning authority, plan lease, Ready handoff, and any planning blocker;
@@ -730,15 +751,27 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     prevents triage even though it consumes no implementation slot.
     Counterexample: an unassigned Backlog item without `needs-triage` never
     enters the triage lane.
-31. RED assigns every ticket and helper the same model level; GREEN defaults
-    normal implementation to standard, uses routine for mechanical evidence,
-    and selects or escalates to deep for architecture, security, rendering,
-    performance, or cross-cutting ambiguity. Novel case: a standard ticket
-    agent delegates file discovery to a read-only discovery helper and asks a
-    deep read-only helper to test a newly discovered public-contract risk.
-    Counterexamples: a mechanical documentation ticket stays routine and does
-    not escalate merely because deep capacity is available, and a runtime with
-    only generic subagents expresses the same roles in prompts without stopping.
+31. RED routes planners or ticket owners from machine-local profile names,
+    topic nouns, risk labels, or plan size; GREEN selects a portable role,
+    records its actual runtime mapping, defaults every planner and normal ticket
+    owner to the default-owner capability, and requires concrete repository
+    evidence of one unresolved architecture, security, rendering, performance,
+    or data-integrity problem plus why the default owner is insufficient before
+    selecting an exceptional investigator. Novel cases: conflicting
+    persisted-format contracts with no migration precedence and demonstrated
+    data-loss exposure justify a bounded exceptional investigation; competing
+    renderer coordinate models supported by different tests and no chosen
+    invariant justify it only after default-owner discovery records that
+    ambiguity. If either requires a new public or product decision, planning
+    stops at the durable decision boundary instead of upgrading the planner.
+    Counterexamples that remain with the default owner: a bounded public-API
+    change with specified compatibility seams; rendering work with an explicit
+    algorithm, acceptance criteria, and visual validation; graphics tests or
+    documentation with no production diff; and a decision-complete
+    cross-language migration with explicit ownership, ordering, rollback, and
+    validation. Discovery and evidence roles remain bounded read-only helpers.
+    A runtime with only generic agents expresses every role in prompts and
+    records that runtime mapping without stopping.
 32. RED sends every Backlog parent through triage or implementation; GREEN
     returns a bare configured epic as `readyEpics` only after its native open
     blockers and descendants clear, then closes it in the controller lane with

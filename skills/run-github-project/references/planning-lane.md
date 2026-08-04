@@ -53,14 +53,22 @@ and minimized state in the authority lease.
 2. Use one dedicated, reusable, clean planning worktree at a stable
    controller-recorded path outside the checkout, detached at the configured
    base. Refresh it only between tickets; never discard ignored build state.
-3. Start a fresh ephemeral planning agent and invoke:
+3. Start a fresh ephemeral planning agent using the default-owner capability
+   from [Route Agents By Task](../SKILL.md#route-agents-by-task) and invoke:
 
    ```text
    /to-plan --auto <canonical issue URL>
    ```
 
 4. Allow bounded read-only discovery descendants from currently spare agent
-   capacity. They never own the ticket or mutate state.
+   capacity. They never own the ticket or mutate state. When repository
+   evidence exposes one specific unresolved architecture, security, rendering,
+   performance, or data-integrity question, record why the default owner is
+   insufficient and permit one bounded read-only exceptional investigator for
+   that question. Topic, scope, plan size, or language count never supplies
+   that evidence. Stop at the durable decision boundary when the answer
+   requires a new product, public contract, architecture, or safety decision;
+   never replace the whole planner.
 5. Never preempt planning after it starts. Planning does not occupy an
    implementation slot and does not reserve the controller lane during read-only
    work.
