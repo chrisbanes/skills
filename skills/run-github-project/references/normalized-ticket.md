@@ -228,5 +228,12 @@ idempotent: already-absent owned artifacts satisfy their individual finish
 checks, but the assignment remains until the complete cleanup state is
 verified. Triage candidates are ordered separately and run only through
 [Backlog Triage Lane](triage-lane.md). Process ready epics and human actions
-through [Epics And Human Frontier](human-frontier.md); parked items consume
-neither a slot nor an agent.
+through [Epics And Human Frontier](human-frontier.md); Backlog `parkedBlocked`
+items consume neither a slot nor an agent.
+
+Before invoking the ranker, apply the drain scheduler's
+[Terminal Required-CI Parking](drain-scheduler.md#terminal-required-ci-parking)
+contract. Keep a parked implementation claim with an unchanged verified
+fingerprint outside the normalized array and `max-claims` count. This inventory
+is distinct from `blockedClaims` and Backlog `parkedBlocked`; it blocks triage
+and successful drain completion without occupying an implementation slot.

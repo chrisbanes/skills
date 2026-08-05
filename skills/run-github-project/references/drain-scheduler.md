@@ -6,8 +6,8 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 
 1. Default to two slots. Accept any positive user-specified limit and impose no
    skill-defined maximum. Treat the limit as both the maximum number of
-   claimed, in-flight tickets and the maximum number of concurrently active
-   ticket agents.
+   occupied implementation slots and the maximum number of concurrently active
+   ticket agents. A preserved parked claim is not an occupied slot.
    Define active-agent capacity as the environment-reported number of
    non-controller agents that can run simultaneously. Running ticket agents,
    the planner, and descendants consume it; idle persistent contexts do not.
@@ -18,11 +18,13 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 3. Keep every claimed issue `In progress` until merge reconciliation. Derive
    operational state from its slot, PR, checks, and reviews; require no extra
    Project Status values.
-4. Reconstruct slots after restart from GitHub claims, Project items, PR heads,
-   and verified skill-owned worktrees. Use local caches only as hints.
+4. Reconstruct slots and parked claims after restart through
+   [Terminal Required-CI Parking](#terminal-required-ci-parking), using GitHub
+   claims and marker records plus verified skill-owned worktrees. Use local
+   caches only as hints.
 5. Preserve invalid current-user claims as blocked slots, resume every valid
-   claim, then fill free slots. Stop for reconciliation when all claims
-   together exceed the invocation's slot limit.
+   claim, then fill free slots. Stop for reconciliation when all active and
+   blocked-slot claims together exceed the invocation's slot limit.
 6. Keep one separate planning lane. It preserves assignment and planning
    handoff claims but never consumes one of the configured implementation slots.
    Follow [Planning Lane](planning-lane.md) for its worktree, agent, authority,
@@ -33,11 +35,14 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    and idle ticket context on the planning claim. Restore that same ownership
    when the handoff reacquires a slot. A Backlog handoff instead removes all
    skill-owned artifacts and retains no claim.
-8. Keep Backlog triage as a tail lane. Follow
+8. Apply [Terminal Required-CI Parking](#terminal-required-ci-parking) only to a
+   qualifying failure after its repair budget. Parked implementation claims
+   consume neither an implementation slot nor agent capacity.
+9. Keep Backlog triage as a tail lane. Follow
    the authoritative execution-clear predicate in
    [Backlog Triage Lane](triage-lane.md#dispatch). It consumes no implementation
    slot and processes one issue at a time.
-9. Keep ready epics and human actions in the separate
+10. Keep ready epics and human actions in the separate
    [Epics And Human Frontier](human-frontier.md). They consume neither a slot
    nor agent capacity. Serialize epic closure in the controller lane, surface
    changed human actions immediately, and continue independent work.
@@ -177,8 +182,20 @@ At startup and after every refreshed query, present the changed human frontier
 packet from [Epics And Human Frontier](human-frontier.md). Never wait for its
 actions while any step above remains runnable.
 
-Never preempt a valid occupied slot for newly higher-priority work. Requery and
-rank live data before every just-in-time claim.
+### Refresh Gate
+
+Require one successful complete Project query and verified-base refresh before
+new selection after a merge, parked or released slot, Planning or Backlog
+handoff, epic closure, user prompt, controller resumption, or other event that
+can change capacity, dependencies, or eligibility. Rebuild and rank every class
+from that snapshot before a new claim or capacity-dependent dispatch, and apply
+the same gate immediately before concluding that no runnable work remains.
+
+Do not run the gate merely to handle a targeted review, CI, or base-repair event
+for an occupied slot when no selection or finish decision follows. A successful
+complete post-mutation query satisfies the gate; reuse that snapshot until a
+later relevant mutation or event invalidates it. Never preempt a valid occupied
+slot for newly higher-priority work.
 
 Planning runs read-only beside implementation, enters the controller lane only
 at assignment, comment publication, and Status transitions, and continues to
@@ -192,6 +209,64 @@ never preempt an active agent. They retain their original claim order when
 several slots requeue. Backlog items are never queue candidates; only an
 interrupted current-runner cleanup is recoverable.
 
+## Terminal Required-CI Parking
+
+Classify only a required-CI failure isolated to one ticket as parkable. Access,
+authentication, authorization, configuration, review, base-repair, merge,
+ambiguous-mutation, shared-infrastructure, and correlated failures are not
+parkable. Preserve or stop them through their existing failure-isolation rule.
+
+Count one repair round only after the owning agent makes one bounded repair or
+evidence-supported rerun and the reconciled required check reaches a terminal
+failure at a verified PR head. Treat three rounds with the same sanitized
+failure fingerprint and no new diagnostic direction as non-converging. Before
+releasing the slot:
+
+1. Publish one runner-authored issue comment containing
+   `<!-- run-github-project:parked-implementation:v1 -->`, the issue and Project
+   item IDs, PR URL, branch and head SHA, verified base SHA, committed
+   configuration digest, and
+   [live merge-policy fingerprint](project-config.md#live-merge-policy-fingerprint),
+   required-check names and conclusions, sanitized failure fingerprint, and the
+   check-run IDs, heads, and fingerprints for all three rounds. Include the
+   preserved assignment and `In progress` Status. Never include local paths,
+   secrets, or unsanitized logs.
+2. Refetch the comment, assignment, Project Status, PR head, and checks. Require
+   the marker author to be the authenticated runner and compute a digest from
+   its immutable payload. Reconcile an ambiguous create before retrying. Keep
+   the slot occupied when the record cannot be verified.
+3. Preserve the verified record permalink and digest with the branch, worktree,
+   PR, failed-check evidence, and repair history. Release every named resource,
+   idle or discard the ticket agent, release the implementation slot, then pass
+   the [Refresh Gate](#refresh-gate).
+
+On startup and every refresh, honor the latest validated global configuration
+and live merge-policy fingerprint before parked-claim recovery. Do not reread
+either solely for an unchanged parked claim. Compare the lightweight live PR
+head and required-check fingerprint with the latest verified parking record.
+Keep an exact match parked without deep hydration. Deeply hydrate it only when
+reconstructing the record, a marker changes, that ticket-local fingerprint
+differs, or the user explicitly authorizes a focused investigation.
+
+Before restoring a parked claim, publish and verify one runner-authored
+`<!-- run-github-project:resume-parked-implementation:v1 -->` issue comment that
+references the parking permalink and digest, records either the exact changed
+fingerprint or a reference to the explicit investigation authority, and
+captures the current PR head, checks, base, configuration, and merge-policy
+evidence. An ambiguous resume record leaves the claim parked. Before publishing
+that record, freshly revalidate the committed configuration digest and canonical
+live merge-policy fingerprint. Any mismatch or unknown read stops the drain and
+preserves the parked claim; it is never an autonomous resumption signal. After
+verification, return the claim to the next free slot ahead of new claims,
+reconstruct its owning agent if needed, and reset its repair-round count. A user
+prompt, controller wake, global drift, or unchanged refetch alone is not a
+resumption signal.
+
+Treat a verified parking record as active only until a later verified resume
+record references its permalink and digest. On restart, keep an active matching
+record parked; restore a claim with a valid later resume record without
+publishing another one. Ignore foreign, malformed, or mismatched markers.
+
 ## Remote Waiting
 
 After a reconciled push:
@@ -204,7 +279,8 @@ After a reconciled push:
    repository specifies another duration.
 4. Reset only that PR's deadline after a fix push.
 5. Return actionable events to the owning slot at the next checkpoint.
-6. Block only that slot after three non-converging fix rounds.
+6. After three non-converging required-CI repair rounds, apply
+   [Terminal Required-CI Parking](#terminal-required-ci-parking).
 
 Treat the first unexplained CI failure as slot-local. If the same failure
 appears in two slots or on the verified base, pause new claims and treat it as
@@ -228,10 +304,13 @@ After a merge:
 
 ## Failure Isolation And Finish Gate
 
-Preserve a ticket-local blocker in its occupied slot and continue unrelated
-slots. Stop the whole drain for changed configuration, lost permissions,
-invalid base state, merge-policy drift, correlated CI failure, or another
-integrity problem that affects every claim.
+Preserve a ticket-local blocker in its occupied slot while repair remains
+within budget. Only a qualifying terminal required-CI failure follows
+[Terminal Required-CI Parking](#terminal-required-ci-parking); other terminal
+ticket blockers remain preserved in their slots. Stop the whole drain for
+changed configuration, lost permissions, invalid base state, merge-policy
+drift, correlated CI failure, or another integrity problem that affects every
+claim.
 
 Treat an unexplained scarce-resource collision as slot-local on its first
 occurrence. Discover and add the narrow named lock before retrying. Pause new
@@ -247,13 +326,14 @@ assigned Backlog cleanup with verified runner provenance. An unassigned Backlog
 item without the configured `needs-triage` label remains human-owned; an
 eligible labeled item belongs only to the triage tail lane.
 
-Finish successfully only when the authoritative execution-clear predicate in
-[Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, a complete live
+Pass the refresh gate before evaluating the finish state. Finish successfully
+only when the authoritative execution-clear predicate in
+[Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, the complete live
 query has no non-deferred triage candidate after merge reconciliation, and no
 human action remains. Dependency-parked Backlog items do not prevent success;
 report their live blockers. If only human actions remain, return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md). If no
-runnable work remains but a claim or slot is blocked or timed out, or the
-triage provider cannot complete an eligible item, stop with a partial-drain
+runnable work remains but a parked implementation claim, blocked or timed-out
+slot, or incomplete eligible triage item remains, stop with a partial-drain
 report, preserve every affected worktree, branch, PR, assignment, and
 `In progress` Status, and never report success.

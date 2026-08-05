@@ -29,18 +29,21 @@ ordering as untrusted blocker evidence.
 Start the triage lane only after a complete query finds no assigned Backlog
 cleanup claim, valid or blocked implementation claim, valid or blocked Planning
 claim, runnable Planning or Ready candidate, active planning handoff, or
-occupied implementation slot. Treat `resume-backlog-cleanup` and
-`blockedPlanningClaims` as unresolved work even though they consume no
-implementation slot. Malformed or excluded unclaimed items do not block the
-tail lane. Ready epics run in the controller lane before triage. Human actions
-do not block triage; include any newly approved human-work or Planning action in
-the current frontier packet. Never pause authorized execution to ask for a
-triage decision.
+occupied implementation slot. A parked implementation claim remains unresolved
+execution under
+[Terminal Required-CI Parking](drain-scheduler.md#terminal-required-ci-parking)
+and also blocks this tail lane despite consuming no slot. Treat
+`resume-backlog-cleanup` and `blockedPlanningClaims` the same way. Malformed or
+excluded unclaimed items do not block the tail lane. Ready epics run in the
+controller lane before triage. Human actions do not block triage; include any
+newly approved human-work or Planning action in the current frontier packet.
+Never pause authorized execution to ask for a triage decision.
 
 In `next`, process at most the first ranked triage contender when no executable
 ticket exists. In `drain`, process contenders one at a time until none remain,
-the user defers one, or a triage blocker stops the lane. Parked items do not
-prevent an otherwise successful finish.
+the user defers one, or a triage blocker stops the lane. Only dependency-blocked
+Backlog `parkedBlocked` items may remain at an otherwise successful finish; a
+parked implementation claim requires a partial drain.
 
 Keep the ranked complete snapshot while walking triage contenders. Immediately
 before each dispatch, refetch that issue, its blockers, and descendants. After

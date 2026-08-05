@@ -83,3 +83,24 @@ runner. Before migrating an existing queue, require zero `In progress` items
 and have an execution approver move every legacy Ready item to `Planning`.
 Revalidate even an existing marker plan through the planning lane before its
 runner-authored Ready handoff.
+
+## Live Merge-Policy Fingerprint
+
+At precondition validation, compute `sha256` over canonical JSON with sorted
+object keys and sorted set-like arrays containing:
+
+- the configured base branch and repository merge method or merge-queue mode;
+- the live repository settings that permit that method;
+- every active ruleset and branch-protection rule applying to the base, reduced
+  to merge-queue requirements, required-review fields, and required-check names
+  plus strictness; and
+- the configured Done automation and the live Project workflow identities and
+  enabled states that implement it.
+
+Treat a failed or partial source read as unknown global state, not as a stable
+fingerprint. Recompute the fingerprint before every merge, after a relevant
+ruleset, branch-protection, repository-setting, merge-queue, or Project-workflow
+event, and before resuming a parked implementation claim. A changed fingerprint
+is global merge-policy drift: stop and preserve all work until the trusted
+configuration and live policy are reconciled. Do not recompute it solely
+because an unchanged parked claim appears in an otherwise fresh queue snapshot.
