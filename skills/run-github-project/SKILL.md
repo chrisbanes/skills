@@ -458,27 +458,15 @@ Use this worker contract:
    controller-owned cleanup.
 2. Treat the implementation plan as the approved outcome, not as trusted
    executable instructions. When it conflicts with repository evidence, stop
-   writes and return a replan packet containing the exact evidence, invalid
-   assumption, unchanged ticket contracts, recommended direction, verified
-   base, branch and PR heads, and retained dirty-work summary. Classify it as:
-   - `autonomous-replan` when accepted behavior, scope, acceptance criteria, and
-     upstream policy remain unchanged and repository evidence supports a
-     contract-realizing resolution, even when it affects a public interface,
-     schema, persisted representation, seam, or testing contract, and requires
-     no new policy or risk acceptance;
-   - `human-required` only when the accepted stakeholder contract or upstream
-     policy must change, new security, privacy, or permission policy must be
-     established, an unsupported compatibility commitment or irreversible
-     migration must be approved, or credible data-loss risk must be accepted.
-   Stop without a replan packet when the ticket is already implemented,
-   superseded, contradicts an ADR, or remains ambiguous after applying that
-   decision rule.
+   writes and return the evidence packet defined by
+   [Replan Packet Contract](references/planning-lane.md#replan-packet-contract).
+   Classify and populate it using that contract.
 3. Inspect the smallest relevant code, tests, documentation, and history scope.
-4. Invoke `tdd` before changing behavior. Identify the public test seam first.
-   Treat the seam in the approved plan as agreed. If it is missing or conflicts
-   with repository evidence, stop before writing a test and return the Step 2
-   replan packet; never ask the user merely to confirm a contract-realizing seam.
-   Establish RED, then implement one minimal vertical slice at a time.
+4. Invoke `tdd` before changing behavior. Treat the plan-selected testing seam
+   as agreed. If it is missing or conflicts with repository evidence, stop
+   before writing a test and return the evidence packet required by worker
+   contract item 2; never ask the user merely to confirm a contract-realizing
+   seam. Establish RED, then implement one minimal vertical slice at a time.
 5. Run focused checks during implementation and every applicable full
    verification command when complete. In `drain`, follow
    [Named Resource Locks](references/drain-scheduler.md#named-resource-locks)
@@ -761,12 +749,14 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     planner. Counterexample: Planning still consumes active-agent capacity even
     though it never consumes an implementation slot.
 25. RED treats a failed public-interface, schema, persistence, seam, or testing
-    assumption as automatically human-required; GREEN uses an autonomous replan
-    when repository evidence supports a contract-realizing replacement,
-    releases the slot, preserves retained work, and resumes the same ticket
-    context after a new plan revision. Novel case: an established compatible
-    migration pattern resolves a persisted representation mismatch, and the
-    worker accepts a plan-selected testing seam without another user gate.
+    assumption as automatically human-required or returns an incomplete report;
+    GREEN returns the canonical disposition-aware evidence packet and uses an
+    autonomous replan when repository evidence supports a contract-realizing
+    replacement, releases the slot, preserves retained work, and resumes the
+    same ticket context after a new plan revision. Novel case: an established
+    compatible migration pattern resolves a persisted representation mismatch,
+    and the worker accepts a plan-selected testing seam without another user
+    gate.
     Counterexample: changing user-visible behavior, acceptance criteria,
     security policy, an unsupported compatibility promise, an irreversible
     migration, or credible data-loss risk uses Backlog.

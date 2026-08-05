@@ -133,6 +133,35 @@ current base:
   symbols, seams, contracts, and validation;
 - use the autonomous replan path when drift overlaps or overlap is uncertain.
 
+### Replan Packet Contract
+
+When repository evidence invalidates the approved plan, require the owning
+ticket agent to stop writes and return one packet containing:
+
+- disposition: `autonomous-replan` or `human-required`;
+- active plan permalink and payload digest;
+- exact evidence and invalid assumption;
+- current accepted stakeholder contract, upstream policy, and risk posture;
+- recommended direction;
+- verified base SHA, branch and PR heads, and retained dirty-work summary.
+
+Classify the packet as:
+
+- `autonomous-replan` when accepted behavior, scope, acceptance criteria,
+  upstream policy, and risk posture remain unchanged and repository evidence
+  supports a contract-realizing resolution, even when it affects a public
+  interface, schema, persisted representation, seam, or testing contract;
+- `human-required` only when the accepted stakeholder contract or upstream
+  policy must change, new security, privacy, or permission policy must be
+  established, an unsupported compatibility commitment or irreversible
+  migration must be approved, or credible data-loss risk must be accepted.
+
+For `autonomous-replan`, require the evidence supporting that classification.
+For `human-required`, require the exact decision plus the authoritative issue,
+specification, or ADR that must change. Return no packet when the ticket is
+already implemented, superseded, contradicts an ADR, or remains ambiguous after
+applying this rule.
+
 ### Re-plan A Contract-Preserving Inconsistency
 
 When the owning ticket agent returns an `autonomous-replan` packet:
@@ -140,12 +169,8 @@ When the owning ticket agent returns an `autonomous-replan` packet:
 1. Enter the controller lane and revalidate the current authority lease,
    verified base, assignment, Status, plan leaf, branch, worktree and PR.
 2. Publish one new comment containing
-   `<!-- run-github-project:replan-request:v1 -->`, disposition
-   `autonomous-replan`, the active plan permalink and payload digest, exact
-   evidence and invalid assumption, unchanged accepted stakeholder contract,
-   upstream policy and risk posture, recommended contract-realizing direction,
-   base SHA, retained branch or PR head, and dirty-work summary. Refetch and
-   verify it.
+   `<!-- run-github-project:replan-request:v1 -->` and the exact evidence packet.
+   Refetch and verify it.
    If publication or verification fails, keep the ticket In progress and its
    slot occupied.
 3. Move the item to Planning as the runner, refetch it, and require the new
@@ -169,14 +194,9 @@ machine requeue and requests a new plan.
 
 ### Return Human Work To Backlog
 
-When the packet is `human-required` because the accepted stakeholder contract
-or upstream policy must change, new security, privacy, or permission policy must
-be established, an unsupported compatibility commitment or irreversible
-migration must be approved, or credible data-loss risk must be accepted:
+When the verified packet disposition is `human-required`:
 
-1. Publish and verify the same marker-owned report with disposition
-   `human-required`, the exact decision and authoritative issue, specification
-   or ADR that must change, plus all useful diagnostic evidence.
+1. Publish and verify the same marker-owned exact evidence packet.
 2. Move the item to the configured Backlog option and verify the transition.
    Do not clean anything when either the report or transition is ambiguous.
 3. Comment on and close any runner-owned implementation PR, linking the durable
@@ -205,6 +225,10 @@ Semantic planning blockers are issue-local. Preserve the assignment and retry
 them only when authoritative inputs change. Retry transient planner/tool
 failures through the bounded reconciled recovery above. Never consume an
 implementation slot merely to wait for a planning blocker.
+
+Treat a `to-plan` Blocked result labelled `human-required` as one of these
+planning blockers, not as the worker packet that enters Backlog cleanup. No
+implementation slot or implementation artifact exists at that stage.
 
 ## Scheduling
 
