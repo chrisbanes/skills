@@ -461,16 +461,24 @@ Use this worker contract:
    writes and return a replan packet containing the exact evidence, invalid
    assumption, unchanged ticket contracts, recommended direction, verified
    base, branch and PR heads, and retained dirty-work summary. Classify it as:
-   - `autonomous-replan` when acceptance criteria, scope, public contracts, and
-     upstream decisions remain unchanged;
-   - `human-required` when any of those must change.
+   - `autonomous-replan` when accepted behavior, scope, acceptance criteria, and
+     upstream policy remain unchanged and repository evidence supports a
+     contract-realizing resolution, even when it affects a public interface,
+     schema, persisted representation, seam, or testing contract, and requires
+     no new policy or risk acceptance;
+   - `human-required` only when the accepted stakeholder contract or upstream
+     policy must change, new security, privacy, or permission policy must be
+     established, an unsupported compatibility commitment or irreversible
+     migration must be approved, or credible data-loss risk must be accepted.
    Stop without a replan packet when the ticket is already implemented,
-   superseded, contradicts an ADR, or remains ambiguous after discovery.
+   superseded, contradicts an ADR, or remains ambiguous after applying that
+   decision rule.
 3. Inspect the smallest relevant code, tests, documentation, and history scope.
 4. Invoke `tdd` before changing behavior. Identify the public test seam first.
-   Treat a seam explicitly confirmed by the user for this ticket as agreed;
-   otherwise stop for confirmation before writing a test. Establish RED, then
-   implement one minimal vertical slice at a time.
+   Treat the seam in the approved plan as agreed. If it is missing or conflicts
+   with repository evidence, stop before writing a test and return the Step 2
+   replan packet; never ask the user merely to confirm a contract-realizing seam.
+   Establish RED, then implement one minimal vertical slice at a time.
 5. Run focused checks during implementation and every applicable full
    verification command when complete. In `drain`, follow
    [Named Resource Locks](references/drain-scheduler.md#named-resource-locks)
@@ -752,11 +760,16 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     remote-wait slot idles its ticket agent and makes capacity available to the
     planner. Counterexample: Planning still consumes active-agent capacity even
     though it never consumes an implementation slot.
-25. RED asks the user to edit GitHub after a private implementation assumption
-    fails; GREEN verifies a structured report before moving to Planning,
+25. RED treats a failed public-interface, schema, persistence, seam, or testing
+    assumption as automatically human-required; GREEN uses an autonomous replan
+    when repository evidence supports a contract-realizing replacement,
     releases the slot, preserves retained work, and resumes the same ticket
-    context after a new plan revision. Counterexample: changing acceptance
-    criteria or a public contract uses Backlog instead.
+    context after a new plan revision. Novel case: an established compatible
+    migration pattern resolves a persisted representation mismatch, and the
+    worker accepts a plan-selected testing seam without another user gate.
+    Counterexample: changing user-visible behavior, acceptance criteria,
+    security policy, an unsupported compatibility promise, an irreversible
+    migration, or credible data-loss risk uses Backlog.
 26. RED unassigns a human-required ticket before cleanup or preserves partial
     code; GREEN verifies the report and Backlog transition, closes the PR,
     deletes exact skill-owned dirty work, worktree and branches, verifies the

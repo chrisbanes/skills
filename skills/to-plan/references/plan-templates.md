@@ -29,7 +29,8 @@ Use exactly one source-appropriate template.
 
 ### Planning decisions
 
-- <Only non-obvious decisions the implementer must preserve.>
+- <Non-obvious contract-realizing choice, supporting repository evidence, and
+  decision the implementer must preserve.>
 
 ### Implementation slices
 
@@ -85,7 +86,8 @@ Use exactly one source-appropriate template.
 
 ## Planning decisions
 
-- <Only non-obvious confirmed decisions the implementer must preserve.>
+- <Non-obvious contract-realizing choice, supporting repository evidence, and
+  decision the implementer must preserve.>
 
 ## Implementation slices
 

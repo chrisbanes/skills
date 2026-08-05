@@ -212,8 +212,10 @@ references, commands, and uncertainty; the main agent verifies every result.
 Keep small scopes local and keep all interpretation, decisions, synthesis,
 refresh checks, and mutations with the main agent.
 
-Choose an unnamed testing seam only when one highest practical seam is
-unambiguous. Treat materially different seams as a durable missing decision.
+Choose the highest practical testing seam supported by repository evidence.
+When several seams validate the same accepted contract, use prior art to choose
+one and record the rationale. Defer to Step 6 only when the seam choice would
+create or change the stakeholder contract.
 
 Run focused existing validation to confirm:
 
@@ -232,28 +234,44 @@ baseline. Do not write tests or production code.
 
 ### 6. Resolve planning decisions
 
-Make obvious, conventional, and easily reversible decisions autonomously.
-Examples include local naming, helper placement, and choosing between equivalent
-private implementation shapes.
+Treat an authorized Planning transition or confirmed conversation specification
+as authority to make contract-realizing decisions. Such a decision chooses how
+to satisfy the accepted stakeholder contract without changing its promised
+behavior, scope, acceptance criteria, or policy.
 
-Stop when a missing decision could materially change:
+Resolve those decisions autonomously:
 
-- User-visible behavior or acceptance criteria.
-- A public API, schema, command, or persisted representation.
-- A module boundary, architectural seam, or long-lived owner.
-- Compatibility, security, privacy, or permissions.
-- The authoritative testing contract.
+1. Gather constraints from the authoritative source, repository instructions,
+   domain documents, current interfaces and implementation, tests, and history.
+2. Choose the smallest coherent design supported by that evidence. When several
+   designs preserve the same contract, prefer established repository precedent.
+3. Record each non-obvious choice and its evidence in Planning decisions. The
+   versioned plan is its sufficient durable record.
 
-In GitHub mode, require the resolution to be recorded in the upstream issue,
-specification, or ADR before planning resumes. The plan comment must not become
-the sole durable record of such a decision. In conversation mode, return to the
-conversation prerequisite and require a new explicit shared-understanding
-confirmation that includes the resolution.
+Apply this authority even when the choice affects a public interface, schema,
+command, persisted representation, seam, long-lived owner, compatibility
+mechanism, security, privacy, or permission mechanism, or testing contract. Those
+categories increase the evidence and validation required; they are not automatic
+human gates.
 
-Do not interrupt discovery with piecemeal questions. If blocked, return one
-consolidated report containing every planning blocker, its impact, the recommended
-resolution, and the upstream artifact or conversation decision that must change.
-Write no draft and publish nothing.
+Require human resolution only for a contract-creating decision where proceeding
+would require one of the following:
+
+- Resolving conflicting authoritative requirements.
+- Choosing between materially different user-visible outcomes, scope, or
+  acceptance criteria without an authoritative preference.
+- Establishing or changing security, privacy, or permission policy.
+- Accepting an unsupported compatibility commitment, irreversible migration, or
+  credible data-loss risk.
+
+Finish discovery before escalating. In GitHub normal mode, ask one decision
+question at a time with a recommendation, present the resulting contract change
+for confirmation, then require the issue, specification, or ADR to record it
+before planning resumes. In conversation mode, return to the conversation
+prerequisite and require a newly confirmed summary. In GitHub `--auto` mode, ask
+nothing and return one consolidated `human-required` report with every blocker,
+its impact, recommended resolution, and required upstream change. Write no draft
+and publish nothing while a contract-creating decision remains unresolved.
 
 Do not reject, resize, or split the specification solely because it may exceed
 one context window or produce a long plan. Plan the ready source that was
@@ -461,9 +479,15 @@ then restore the skill and require the GREEN outcome.
 5. The checkout contains an unrelated dirty file and an overlapping untracked
    file. The unrelated file alone would be allowed, but the overlapping file
    makes planning stop without stashing, deleting, or fingerprinting it.
-6. The repository has one established testing seam and two equivalent private
-   helper locations. Planning chooses both routine details. A missing public API
-   or schema decision instead blocks until the upstream artifact records it.
+6. The repository has several testing seams that validate the same accepted
+   contract, one adjacent public result type convention, and two equivalent
+   private helper locations. Planning uses prior art to choose the highest
+   practical seam and repository evidence to choose the other details, recording
+   each non-obvious choice. Novel case: an internal persisted representation
+   follows an existing compatible migration pattern without escalation.
+   Counterexample: choosing a seam would make materially different behavior
+   authoritative, or two result shapes promise different user-visible behavior,
+   and no source ranks them, so planning requires human resolution.
 7. A user edits the draft before approval while the issue changes on GitHub.
    Compatible user text survives; a substantive refreshed plan is shown again
    for approval, while an autonomous run may validate and publish it directly.
@@ -523,10 +547,18 @@ then restore the skill and require the GREEN outcome.
     session. GitHub mode wins and retains every issue readiness and publication
     gate. Counterexample: an issue link mentioned only inside the confirmed
     conversation remains context and does not override conversation mode.
-21. A confirmed conversation omits a public API decision or gains conflicting
-    later instructions. Planning returns to the conversation prerequisite for a
-    new confirmation rather than inventing an assumption or writing a partial
-    draft.
+21. A confirmed conversation leaves a contract-realizing public interface
+    decision to implementation. Planning chooses the repository-supported shape
+    and records it. Conflicting later requirements or a genuine stakeholder
+    contract choice instead return to the conversation prerequisite for
+    one-question-at-a-time resolution and a newly confirmed summary.
 22. A fresh implementation session succeeds from the scratch handoff and
     deletes only that plan file. A blocked implementation preserves it, and
     neither outcome performs broad `.scratch` cleanup.
+23. A genuine stakeholder contract choice remains after complete discovery.
+    GitHub normal mode asks one recommended decision question at a time, confirms
+    the resulting contract change, and waits for its upstream record; `--auto`
+    asks nothing and returns every `human-required` blocker together.
+    Counterexample: several repository-supported implementations of one accepted
+    contract are resolved and recorded autonomously instead of entering this
+    flow.

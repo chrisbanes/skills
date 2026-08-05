@@ -142,9 +142,10 @@ When the owning ticket agent returns an `autonomous-replan` packet:
 2. Publish one new comment containing
    `<!-- run-github-project:replan-request:v1 -->`, disposition
    `autonomous-replan`, the active plan permalink and payload digest, exact
-   evidence and invalid assumption, unchanged acceptance criteria, scope,
-   public contracts and upstream decisions, recommended direction, base SHA,
-   retained branch or PR head, and dirty-work summary. Refetch and verify it.
+   evidence and invalid assumption, unchanged accepted stakeholder contract,
+   upstream policy and risk posture, recommended contract-realizing direction,
+   base SHA, retained branch or PR head, and dirty-work summary. Refetch and
+   verify it.
    If publication or verification fails, keep the ticket In progress and its
    slot occupied.
 3. Move the item to Planning as the runner, refetch it, and require the new
@@ -168,8 +169,10 @@ machine requeue and requests a new plan.
 
 ### Return Human Work To Backlog
 
-When the packet is `human-required` because acceptance criteria, scope, a
-public contract, or an upstream decision must change:
+When the packet is `human-required` because the accepted stakeholder contract
+or upstream policy must change, new security, privacy, or permission policy must
+be established, an unsupported compatibility commitment or irreversible
+migration must be approved, or credible data-loss risk must be accepted:
 
 1. Publish and verify the same marker-owned report with disposition
    `human-required`, the exact decision and authoritative issue, specification
