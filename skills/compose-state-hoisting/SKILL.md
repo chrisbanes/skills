@@ -1,13 +1,23 @@
 ---
 name: compose-state-hoisting
-description: "Use when deciding where Jetpack Compose UI element state or UI logic should live: local remember state, hoisted composable parameters, a plain state holder class, or a screen-level ViewModel/component."
+description: "Use when adding or refactoring interactive Jetpack Compose UI that introduces or moves remember state or coordinated UI logic, or when a screen mixes app dependencies or state holders with state or effect collection and layout."
 ---
 
 # Compose state hoisting
 
 ## Core principle
 
-Hoist state only as far as the logic needs it. Keep simple UI element state local, move shared UI element state to the lowest common composable owner, extract a plain state holder when UI-only behavior becomes a concept, and use a screen state holder when business logic or app data is involved.
+Hoist state only as far as the logic needs it. Keep simple UI element state local, move shared UI element state to the lowest common composable owner, extract a plain state holder when UI-only behavior becomes a concept, and use a screen state holder when business logic or app data is involved. At the screen boundary, keep state-holder wiring separate from plain state-driven UI rendering.
+
+## Review procedure
+
+1. List the state, operations, app dependencies, event streams, and imperative effects involved.
+2. Assign each item to the lowest owner that needs to read or change it using the decision guide below.
+3. Extract a plain state holder only when coordinated UI-only behavior has become a concept.
+4. When a screen mixes app wiring with layout, keep a small state-holder composable and move rendering to a plain state-driven composable.
+5. Pass immutable UI state and explicit event callbacks across that boundary; keep UI mechanics in composition unless business logic needs their values.
+6. Load focused effect, testing, focus, or deferred-read skills when those concerns need deeper treatment.
+7. Finish when the UI can be previewed and tested without app dependencies, business work remains in the screen state holder, and no state has been hoisted farther than its logic requires.
 
 ## Decision guide
 
@@ -17,6 +27,7 @@ Hoist state only as far as the logic needs it. Keep simple UI element state loca
 | Sibling or parent composables need to read/write it | Hoist state and events to their lowest common composable ancestor |
 | Related UI element state plus UI logic is making a composable hard to read, preview, or test | Extract a plain state holder class remembered in composition |
 | Repository calls, persistence, business rules, or screen UI state production are involved | Use a screen-level state holder such as a `ViewModel` or component |
+| A screen composable collects app state/effects and also owns most layout | Keep a small wiring composable and extract a plain UI composable that takes immutable state and callbacks |
 
 UI element state includes things like expansion, sheet visibility, scroll position, focus, text field editing state, selection, and animation/interaction state. Screen UI state is app data prepared for display.
 
@@ -115,6 +126,61 @@ Use `rememberSaveable` or a custom `Saver` only for values that should survive A
 
 Do not try to save runtime objects like `LazyListState`, `FocusRequester`, coroutine scopes, or callbacks directly. Save the minimal serializable values needed to rebuild behavior.
 
+## Split screen wiring from UI rendering
+
+When a screen takes a `ViewModel`, component, controller, navigator, repository, or service, keep that dependency in a small state-holder composable. Collect app state and effects there, then pass immutable UI state and explicit event callbacks to a plain UI composable.
+
+```kotlin
+@Composable
+fun ProfileScreen(component: ProfileComponent, modifier: Modifier = Modifier) {
+    val state by component.state.collectAsStateWithLifecycle()
+
+    ProfileScreen(
+        state = state,
+        onNameChange = component::onNameChange,
+        onSaveClick = component::save,
+        onBackClick = component::back,
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun ProfileScreen(
+    state: ProfileUiState,
+    onNameChange: (String) -> Unit,
+    onSaveClick: () -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Layout only.
+}
+```
+
+Use the boundary deliberately:
+
+| Concern | State-holder composable | Plain UI composable |
+|---|---|---|
+| Collect app/business state and one-shot effects | Yes | No |
+| Hold dependency-injected objects | Yes | No |
+| Accept immutable UI state and event callbacks | Usually passes them through | Yes |
+| Own layout, modifiers, semantics, and test tags | No or minimal | Yes |
+| Own Compose runtime objects such as `LazyListState` or `FocusRequester` | No | Yes, directly or in a plain UI state holder |
+| Receive business-relevant values or intents derived from UI mechanics | Yes | Supplies them without exposing runtime objects |
+
+Pass the smallest useful UI contract:
+
+- Prefer a dedicated immutable `UiState` when the screen has cohesive state.
+- Prefer explicit event callbacks over passing the whole state holder through the tree.
+- Keep navigation as callbacks that describe user intent.
+- Map domain models to UI models when direct use would pull business rules into rendering.
+- Pass provider lambdas for frame-rate values that should be read in layout or draw, per [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md).
+
+Handle navigation, snackbar, analytics, or event collection near the state holder, where the source and imperative target are available. If effect handling grows, extract a small sibling effect handler rather than passing the state holder into the UI composable. Use [`compose-side-effects`](../compose-side-effects/SKILL.md) for effect APIs, keys, cleanup, and stale captures.
+
+Do not create a state-holder/UI overload for every small composable. Split at a screen or cohesive section boundary when doing so removes app dependencies from meaningful UI that should be previewed, tested, or reused.
+
+Do not apply the split to tiny one-off composables that already take plain values and callbacks, design-system primitives that should expose slots and modifiers, or wrappers that would only forward one primitive without isolating an app dependency.
+
 ## Common mistakes
 
 | Mistake | Fix |
@@ -126,10 +192,15 @@ Do not try to save runtime objects like `LazyListState`, `FocusRequester`, corou
 | Passing a state holder deep into unrelated children | Pass plain values and callbacks unless the child truly coordinates the holder's behavior |
 | Treating the holder as a dumping ground for a whole screen | Split by cohesive UI behavior, such as search input, sheet coordination, or list controls |
 | Calling animation suspend functions from `viewModelScope` | Use a composition-scoped coroutine |
+| A screen composable takes a component and renders all layout | Extract a plain UI overload that takes state and callbacks |
+| Child composables take a `ViewModel` or component | Pass only the values and callbacks each child needs |
+| UI rendering performs navigation or collects app event flows | Handle effects beside the screen state holder |
+| Every small composable gets a state-holder overload | Split only at screen or cohesive section boundaries |
 
 ## Related
 
 - [`compose-state-authoring`](../compose-state-authoring/SKILL.md) — correct local `remember` and mutable state authoring.
-- [`compose-state-holder-ui-split`](../compose-state-holder-ui-split/SKILL.md) — split screen state-holder wiring from plain state-driven UI rendering.
 - [`compose-side-effects`](../compose-side-effects/SKILL.md) — choose effect APIs and composition-scoped coroutine boundaries.
 - [`compose-focus-navigation`](../compose-focus-navigation/SKILL.md) — focus state, requesters, and keyboard/D-pad behavior.
+- [`compose-ui-testing-patterns`](../compose-ui-testing-patterns/SKILL.md) — test plain state-driven UI without constructing the full app graph.
+- [`kotlin-multiplatform-expect-actual`](../kotlin-multiplatform-expect-actual/SKILL.md) — keep shared UI plain while platform services stay behind semantic boundaries.

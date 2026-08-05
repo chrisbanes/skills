@@ -13,6 +13,24 @@
       "type": "string",
       "description": "When this skill should be used",
       "minLength": 1
+    },
+    "paths": {
+      "description": "Claude Code path patterns that limit automatic skill activation",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      ]
     }
   },
   "required": ["name", "description"],

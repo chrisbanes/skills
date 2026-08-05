@@ -38,21 +38,20 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### Start here
 
-- Working on Compose state or effects? Start with [`compose-state-authoring`](skills/compose-state-authoring/SKILL.md), [`compose-state-hoisting`](skills/compose-state-hoisting/SKILL.md), [`compose-state-holder-ui-split`](skills/compose-state-holder-ui-split/SKILL.md), or [`compose-side-effects`](skills/compose-side-effects/SKILL.md).
+- Working on Compose state or effects? Start with [`compose-state-authoring`](skills/compose-state-authoring/SKILL.md), [`compose-state-hoisting`](skills/compose-state-hoisting/SKILL.md), or [`compose-side-effects`](skills/compose-side-effects/SKILL.md).
 - Investigating recomposition, stability, or jank? Start with [`compose-recomposition-performance`](skills/compose-recomposition-performance/SKILL.md).
 - Reviewing Flow or coroutine architecture? Start with [`kotlin-flow-state-event-modeling`](skills/kotlin-flow-state-event-modeling/SKILL.md) or [`kotlin-coroutines-structured-concurrency`](skills/kotlin-coroutines-structured-concurrency/SKILL.md).
 
 ### Routing
 
-- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route broad Kotlin, Android, and Jetpack Compose tasks to the focused skills.
+- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to the focused skills; current Claude Code versions also activate it when working with `.kt` or `.kts` files.
 
 ### Jetpack Compose
 
 #### State and side effects
 
 - [`compose-state-authoring`](skills/compose-state-authoring/SKILL.md) — author Compose local mutable state and read-only composable accessors correctly.
-- [`compose-state-hoisting`](skills/compose-state-hoisting/SKILL.md) — decide whether Compose UI element state belongs in local remember state, hoisted parameters, a plain state holder class, or a screen-level state holder.
-- [`compose-state-holder-ui-split`](skills/compose-state-holder-ui-split/SKILL.md) — split Compose state-holder wiring from plain-state UI for previewable and testable screens.
+- [`compose-state-hoisting`](skills/compose-state-hoisting/SKILL.md) — decide whether Compose UI state belongs locally, in hoisted parameters, a plain state holder, or a screen state holder, and split screen wiring from previewable, state-driven UI.
 - [`compose-side-effects`](skills/compose-side-effects/SKILL.md) — choose and key Compose effect APIs for event Flow collection, callbacks, cleanup, navigation, snackbar, analytics, and other side effects.
 
 #### Performance
@@ -91,7 +90,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 Skills live at `skills/<skill-name>/SKILL.md`, flat (no language nesting). The `name:` in the SKILL.md frontmatter must match the directory name.
 
-Frontmatter is validated against [`skills.schema.json`](skills.schema.json) — `name` and `description` are required, `name` must be kebab-case.
+Frontmatter is validated against [`skills.schema.json`](skills.schema.json) — `name` and `description` are required, `name` must be kebab-case. The router also uses Claude Code's optional `paths` extension. Clients that do not support this extension must ignore the `paths` field rather than rejecting the skill.
 
 ### Releases
 

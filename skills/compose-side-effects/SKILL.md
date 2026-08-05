@@ -122,7 +122,7 @@ LaunchedEffect(events) {
 }
 ```
 
-Do not collect render state imperatively just to mutate local state. For UI state, collect near the state holder and pass plain values into the UI composable—the **state-holder vs UI split**, `collectAsStateWithLifecycle()` / `collectAsState()`, and preview-friendly wiring are covered in [`compose-state-holder-ui-split`](../compose-state-holder-ui-split/SKILL.md). Do not duplicate that architecture here.
+Do not collect render state imperatively just to mutate local state. For UI state, collect near the state holder and pass plain values into the UI composable—the **state-holder vs UI split**, `collectAsStateWithLifecycle()` / `collectAsState()`, and preview-friendly wiring are covered in [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md). Do not duplicate that architecture here.
 
 On Android, prefer lifecycle-aware collection where available; use `collectAsState()` on targets without lifecycle-aware APIs.
 

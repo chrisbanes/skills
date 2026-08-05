@@ -202,6 +202,6 @@ Use these when the state changes where something is placed or painted. If the st
 ## Related
 
 - [`compose-state-authoring`](../compose-state-authoring/SKILL.md) — when `mutableState*` belongs in composition vs callbacks.
-- [`compose-state-holder-ui-split`](../compose-state-holder-ui-split/SKILL.md) — where state-holder vs plain UI split applies when passing providers/lambdas across boundaries.
+- [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md) — where state-holder vs plain UI split applies when passing providers/lambdas across boundaries.
 - [`compose-stability-diagnostics`](../compose-stability-diagnostics/SKILL.md) — parameter stability and compiler reports.
 - [`compose-modifier-and-layout-style`](../compose-modifier-and-layout-style/SKILL.md) — measure-phase constraint decoration helper.
