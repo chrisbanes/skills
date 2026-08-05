@@ -243,24 +243,39 @@ releasing the slot:
 On startup and every refresh, honor the latest validated global configuration
 and live merge-policy fingerprint before parked-claim recovery. Do not reread
 either solely for an unchanged parked claim. Compare the lightweight live PR
-head and required-check fingerprint with the latest verified parking record.
-Keep an exact match parked without deep hydration. Deeply hydrate it only when
-reconstructing the record, a marker changes, that ticket-local fingerprint
-differs, or the user explicitly authorizes a focused investigation.
+head and required-check observation fingerprint with the latest verified
+parking record. Keep an exact match parked without deep hydration. Deeply
+hydrate it only when reconstructing the record, a marker changes, that
+ticket-local observation fingerprint differs, or the user explicitly
+authorizes a focused investigation. Treat a changed observation fingerprint as
+a hydration trigger only, never as a resumption signal.
+
+Restore a deeply hydrated parked claim only when it proves at least one
+qualifying ticket-local recovery signal: an authority-lease-valid PR head from
+a verified repair push; the previously failing required-check set now
+terminal-success;
+a materially different sanitized failure fingerprint with one concrete new
+diagnostic direction; or explicit focused-investigation authority. A new check
+run, attempt, timestamp, status transition, or conclusion that reproduces the
+same sanitized failure is not a recovery signal and never resets the repair
+budget. For example, deeply hydrate an external rerun that creates new check-run
+IDs on the same head, but keep the claim parked when it reaches the same failure
+without new diagnostics.
 
 Before restoring a parked claim, publish and verify one runner-authored
 `<!-- run-github-project:resume-parked-implementation:v1 -->` issue comment that
-references the parking permalink and digest, records either the exact changed
-fingerprint or a reference to the explicit investigation authority, and
-captures the current PR head, checks, base, configuration, and merge-policy
+references the parking permalink and digest, records the qualifying recovery
+signal and its evidence or a reference to the explicit investigation authority,
+and captures the current PR head, checks, base, configuration, and merge-policy
 evidence. An ambiguous resume record leaves the claim parked. Before publishing
 that record, freshly revalidate the committed configuration digest and canonical
 live merge-policy fingerprint. Any mismatch or unknown read stops the drain and
 preserves the parked claim; it is never an autonomous resumption signal. After
 verification, return the claim to the next free slot ahead of new claims,
 reconstruct its owning agent if needed, and reset its repair-round count. A user
-prompt, controller wake, global drift, or unchanged refetch alone is not a
-resumption signal.
+prompt, controller wake, global drift, changed observation fingerprint without
+a qualifying recovery signal, or unchanged refetch alone is not a resumption
+signal.
 
 Treat a verified parking record as active only until a later verified resume
 record references its permalink and digest. On restart, keep an active matching

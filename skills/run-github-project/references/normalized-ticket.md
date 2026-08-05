@@ -234,6 +234,8 @@ items consume neither a slot nor an agent.
 Before invoking the ranker, apply the drain scheduler's
 [Terminal Required-CI Parking](drain-scheduler.md#terminal-required-ci-parking)
 contract. Keep a parked implementation claim with an unchanged verified
-fingerprint outside the normalized array and `max-claims` count. This inventory
-is distinct from `blockedClaims` and Backlog `parkedBlocked`; it blocks triage
-and successful drain completion without occupying an implementation slot.
+observation fingerprint outside the normalized array and `max-claims` count. A
+changed observation fingerprint triggers deep hydration but does not by itself
+resume the claim or reset its repair budget. This inventory is distinct from
+`blockedClaims` and Backlog `parkedBlocked`; it blocks triage and successful
+drain completion without occupying an implementation slot.
