@@ -181,6 +181,14 @@ Do not create a state-holder/UI overload for every small composable. Split at a 
 
 Do not apply the split to tiny one-off composables that already take plain values and callbacks, design-system primitives that should expose slots and modifiers, or wrappers that would only forward one primitive without isolating an app dependency.
 
+## RED/GREEN agent scenarios
+
+For each scenario, establish RED by omitting or reverting the relevant rule, then restore the skill and require the GREEN outcome.
+
+1. A screen takes a component, collects `StateFlow`, handles a navigation event, and owns most layout. GREEN keeps the component, collection, and effect handling in a small wiring composable, then extracts a plain UI composable with immutable state and callbacks.
+2. Novel case: a search query drives repository-backed suggestions while a `LazyListState` and `FocusRequester` coordinate the UI. GREEN moves the query and suggestion logic to the screen state holder, but keeps the Compose runtime objects in the plain UI or a plain UI state holder.
+3. Over-application counterexample: a stateless design-system badge takes plain values, slots, and a modifier. GREEN does not create a state-holder/UI overload or introduce a `ViewModel` merely for structural symmetry.
+
 ## Common mistakes
 
 | Mistake | Fix |
