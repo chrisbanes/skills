@@ -35,7 +35,7 @@ state and effects make rendering change safely.
 |---|---|
 | Bare local `var`, `remember { mutableStateOf(...) }`, state lists/maps, or reset state | [Local state](references/local-state.md) |
 | State shared by siblings, UI state holders, ViewModel/component wiring, or previewable screen boundaries | [State hoisting](references/state-hoisting.md) |
-| `LaunchedEffect`, `DisposableEffect`, `SideEffect`, `snapshotFlow`, callbacks, event Flow collection, snackbar, navigation, or analytics | [Side effects](references/side-effects.md) |
+| `LaunchedEffect`, `DisposableEffect`, `SideEffect`, `snapshotFlow`, `rememberCoroutineScope`, `rememberUpdatedState`, `produceState`, imperative `requestFocus`, callbacks, event Flow collection, snackbar, navigation, or analytics | [Side effects](references/side-effects.md) |
 | Focus ownership and keyboard/TV/D-pad behavior | [Compose focus navigation](../compose-focus-navigation/SKILL.md) |
 | Tests or previews for the resulting UI contract | [Compose UI testing patterns](../compose-ui-testing-patterns/SKILL.md) |
 

@@ -39,6 +39,7 @@ Use this result shape in the implementation issue or pull request:
 | Case | Prompt | Expected behavior |
 |---|---|---|
 | Direct | "A composable uses LaunchedEffect(Unit) to collect events for a changing user ID." | Requires an effect key that follows the user ID unless the lifecycle deliberately stays stable. |
+| Effect only | "A long-lived Compose effect calls a callback that can change after recomposition." | Routes to the side-effects reference and uses `rememberUpdatedState` only when the effect should not restart. |
 | Novel | "A search query drives repository suggestions while list and focus runtime objects coordinate the UI." | Keeps query and suggestions with screen state; keeps Compose runtime objects in plain UI state. |
 | Counterexample | "Add a private expansion Boolean to a one-off badge." | Keeps simple state local; does not introduce a state holder or effect. |
 
