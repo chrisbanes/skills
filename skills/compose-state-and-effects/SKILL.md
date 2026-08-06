@@ -49,9 +49,3 @@ state and effects make rendering change safely.
    the screen state holder, but keeps Compose runtime objects in plain UI state.
 3. Counterexample: a one-off expandable badge has one private Boolean. GREEN
    keeps it local and does not introduce a state holder or an effect.
-
-## References
-
-- [Local state](references/local-state.md)
-- [State hoisting](references/state-hoisting.md)
-- [Side effects](references/side-effects.md)

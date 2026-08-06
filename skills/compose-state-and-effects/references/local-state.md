@@ -126,4 +126,3 @@ This skill is about authoring Compose state correctly. `rememberUpdatedState` is
 | "It's a small composable, the bare `var` is fine" | Recomposition can fire at any time. The reset is non-deterministic by design — and a single bug report later. |
 | "I always reach for `LaunchedEffect` because it's the one I know" | Use [Side effects](side-effects.md); effect API choice depends on lifecycle and keys. |
 | "I'll just `.add()` to the remembered list" | A `mutableStateOf(List)` doesn't observe internal mutation — use `mutableStateListOf` or replace the value. |
-| "The override needs `@ReadOnlyComposable` to match what it does" | If the base isn't `@ReadOnlyComposable`, you can't add it to an override. Refactor the base instead. |

@@ -43,9 +43,3 @@ platform independence.
    semantic shared contract and places platform SDK calls at the native leaf.
 3. Counterexample: an internal helper has one obvious owning class. GREEN keeps
    it a member instead of extracting a factory or value type for ceremony.
-
-## References
-
-- [Function ownership](references/functions.md)
-- [Value classes](references/value-classes.md)
-- [Multiplatform boundaries](references/multiplatform-boundaries.md)

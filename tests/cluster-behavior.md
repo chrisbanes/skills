@@ -9,6 +9,23 @@ Run every case in a clean agent context with the installed skill set. A case
 passes when the selected entrypoint, required reference routing, and expected
 behavior all match. Do not require wording or example-level equivalence.
 
+## Manual evaluation procedure
+
+1. Record the candidate commit, client and model, and the client-specific
+   command or link used to install this worktree as the active skill set.
+2. Start a fresh context for each case, provide only the prompt in the matrix,
+   and let normal skill discovery run.
+3. Record the selected entrypoint, every loaded reference, the material advice,
+   and PASS or FAIL. For a failure, name the missing safeguard or extra route.
+4. Apply one correction, reinstall the same candidate, and rerun the affected
+   case in another fresh context.
+
+Use this result shape in the implementation issue or pull request:
+
+| Commit | Client/model | Case | Entrypoint | References | Result | Notes |
+|---|---|---|---|---|---|---|
+| `<sha>` | `<client/model>` | `<section: case>` | `<skill>` | `<paths>` | PASS/FAIL | `<missing safeguard or extra route>` |
+
 ## Global routing
 
 | Case | Prompt | Expected behavior |

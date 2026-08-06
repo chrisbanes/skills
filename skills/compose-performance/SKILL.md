@@ -17,9 +17,9 @@ axis begins.
    recomposition counts, compiler reports, profiler data, or a clear trace.
 2. Classify the primary axis: parameter stability and skipping, State read
    phase, or snapshot state written back into an earlier phase.
-3. Read the corresponding focused reference before proposing a change.
-4. Check for a false lead: a real data change, a correctness defect, or an
+3. Check for a false lead: a real data change, a correctness defect, or an
    unchanged lazy item that is expected to recompose.
+4. Read the corresponding focused reference before proposing a change.
 5. Change one axis at a time and re-measure the same transition.
 6. Finish when the evidence improves at the observed boundary without hiding
    state changes, caching stale values, or moving work to a less correct owner.
@@ -43,10 +43,3 @@ axis begins.
 3. Counterexample: a screen visibly recomposes because its displayed model
    actually changed. GREEN does not add stability wrappers or caches merely to
    lower a count.
-
-## References
-
-- [Diagnosis](references/diagnosis.md)
-- [Stability](references/stability.md)
-- [Deferred reads](references/deferred-reads.md)
-- [Composition contracts](references/composition-contracts.md)

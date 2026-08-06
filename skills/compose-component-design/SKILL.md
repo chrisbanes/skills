@@ -17,8 +17,9 @@ policy choices that vary by use.
    region, placement concern, and policy choice.
 2. Accept and apply a caller modifier at the component root unless a concrete
    API boundary makes another placement correct.
-3. Represent varying visual regions with slots rather than proliferating
-   primitive content parameters or Boolean shape flags.
+3. Represent caller-controlled, unconstrained visual regions with slots rather
+   than proliferating primitive content parameters or Boolean shape flags.
+   Keep semantic and design-system constraints as primitive parameters.
 4. Keep simple conditional structure inline; extract only a coherent reusable
    contract.
 5. Read the relevant focused reference below before editing public signatures.
@@ -30,7 +31,7 @@ policy choices that vary by use.
 | Signal | Read |
 |---|---|
 | Modifier parameter, root layout placement, modifier ordering, or conditional layout wrappers | [Modifier and layout](references/modifier-layout.md) |
-| Variable visual regions, optional content, primitive content parameters, or Boolean shape flags | [Slot APIs](references/slot-apis.md) |
+| Caller-controlled variable visual regions, optional content, primitive content parameters, or Boolean shape flags | [Slot APIs](references/slot-apis.md) |
 | Animation belongs to the public component contract | [Compose animations](../compose-animations/SKILL.md) |
 | State ownership changes while designing the component | [Compose state and effects](../compose-state-and-effects/SKILL.md) |
 | Semantics or screenshot coverage is needed | [Compose UI testing patterns](../compose-ui-testing-patterns/SKILL.md) |
@@ -45,8 +46,3 @@ policy choices that vary by use.
    trailing slot without leaking internal layout.
 3. Counterexample: a private screen helper has one fixed child and no callers.
    GREEN keeps it simple instead of inventing slots for hypothetical reuse.
-
-## References
-
-- [Modifier and layout](references/modifier-layout.md)
-- [Slot APIs](references/slot-apis.md)

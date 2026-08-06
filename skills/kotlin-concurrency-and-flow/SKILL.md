@@ -43,8 +43,3 @@ the product contract.
    delivery semantics.
 3. Counterexample: a suspend function already has a caller-owned scope. GREEN
    does not add an internal scope merely to make the API look asynchronous.
-
-## References
-
-- [Structured concurrency](references/structured-concurrency.md)
-- [Flow state and events](references/flow-state-events.md)

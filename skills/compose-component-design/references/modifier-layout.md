@@ -276,11 +276,10 @@ The benefit isn't a performance win — the runtime handles both fine — it's t
   }
   ```
 
-## 7. Measure-phase constraint decoration
+## 7. Measure-phase constraint helper
 
-When composable A captures a size and composable B must match it, **do not read the captured size in B's composable body** (`Modifier.height(state.dp)`). That ties B to composition whenever the measurement state changes.
-
-Capture in a layout callback on A; apply on B inside `Modifier.layout` so only layout invalidates:
+When a caller must apply captured constraints during measurement, this small
+layout helper keeps the modifier API reusable:
 
 ```kotlin
 fun Modifier.decorateMeasureConstraints(
@@ -294,27 +293,9 @@ fun Modifier.decorateMeasureConstraints(
 }
 ```
 
-```kotlin
-// Hoisted at the common parent of both rows:
-//   var anchorHeightPx by remember { mutableIntStateOf(0) }
-
-// Measured row — write state only from onSizeChanged
-RowAnchor(Modifier.onSizeChanged { size -> if (size.height != anchorHeightPx) anchorHeightPx = size.height })
-
-// Sibling rows — read anchorHeightPx only inside layout
-RowSibling(
-    Modifier.decorateMeasureConstraints { incoming ->
-        if (anchorHeightPx > 0) {
-            // Clamp to incoming bounds so the constraint never exceeds the parent's max.
-            incoming.copy(minHeight = anchorHeightPx, maxHeight = anchorHeightPx)
-        } else {
-            incoming
-        }
-    },
-)
-```
-
-Use a composition-time fallback (fixed height) only while `anchorHeightPx` is `0`. See [Compose performance](../../compose-performance/SKILL.md) for the full cross-row pattern.
+For the state ownership, phase diagnosis, fallback, and cross-row application
+recipe, use [Deferred reads](../../compose-performance/references/deferred-reads.md)
+as the canonical reference.
 
 ## Quick reference
 
