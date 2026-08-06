@@ -1,8 +1,3 @@
----
-name: compose-modifier-and-layout-style
-description: Use when writing or reviewing Jetpack Compose layout APIs, modifier parameters, modifier chain construction, hardcoded root layout decisions, or layout wrappers around a single conditional.
----
-
 # Compose modifier and layout style
 
 ## Core principle
@@ -319,7 +314,7 @@ RowSibling(
 )
 ```
 
-Use a composition-time fallback (fixed height) only while `anchorHeightPx` is `0`. See [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) for the full cross-row pattern.
+Use a composition-time fallback (fixed height) only while `anchorHeightPx` is `0`. See [Compose performance](../../compose-performance/SKILL.md) for the full cross-row pattern.
 
 ## Quick reference
 
@@ -343,7 +338,7 @@ Use a composition-time fallback (fixed height) only while `anchorHeightPx` is `0
 
 ## When NOT to apply
 
-- **Composables that don't emit layout.** A `@Composable fun computeColor(): Color` or a `@Composable @ReadOnlyComposable` accessor doesn't emit a layout node. No `modifier` parameter needed (and a `@ReadOnlyComposable` couldn't accept one — see `compose-state-authoring`).
+- **Composables that don't emit layout.** A `@Composable fun computeColor(): Color` or a `@Composable @ReadOnlyComposable` accessor doesn't emit a layout node. No `modifier` parameter needed (and a `@ReadOnlyComposable` couldn't accept one — see [composition contracts](../../compose-performance/references/composition-contracts.md)).
 - **`@Preview` functions.** Previews are throwaway entry points; the framework calls them with no caller. A `modifier` parameter would be unused dead weight.
 - **Test-only composables** inside `*Test` sources whose only caller is `composeTestRule.setContent { … }`. Same reasoning as previews.
 - **Internal layout primitives that take a `modifier` as their *first required* parameter** (very rare; framework-level). The rule is "first *optional* param"; some private utilities legitimately have `modifier` upfront as required.
@@ -371,5 +366,5 @@ The declaration-side rules (§1–§3) should not be skipped merely because "thi
 
 ## Related
 
-- [`compose-slot-api-pattern`](../compose-slot-api-pattern/SKILL.md) — the other half of declaring a reusable composable's public API: take `@Composable () -> Unit` slots for variable content. A reusable component takes both a `modifier` parameter *and* slots — caller owns placement *and* what to place.
-- [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) — back-writing across phases and deferred measurement reads.
+- [Slot APIs](slot-apis.md) — the other half of declaring a reusable composable's public API: take `@Composable () -> Unit` slots for variable content. A reusable component takes both a `modifier` parameter *and* slots — caller owns placement *and* what to place.
+- [Compose performance](../../compose-performance/SKILL.md) — back-writing across phases and deferred measurement reads.

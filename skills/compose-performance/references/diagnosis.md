@@ -1,8 +1,3 @@
----
-name: compose-recomposition-performance
-description: Use when investigating Jetpack Compose recomposition performance, skippable/restartable composables, composables.txt or compiler reports, Layout Inspector recomposition counts, back-writing snapshot state across phases, or frame-rate State reads in composition vs layout/draw, and it is not yet clear whether the cause is parameter stability, deferred reads, or cross-phase back-writing.
----
-
 # Compose recomposition performance
 
 Router only — deep fixes live in focused skills below.
@@ -19,10 +14,10 @@ Axes 2 and 3 often overlap (a sibling reading measured size in composition is bo
 
 | Primary suspicion | Next skill |
 |---|---|
-| Skipping, unstable params, compiler/`composables.txt` churn | [`compose-stability-diagnostics`](../compose-stability-diagnostics/SKILL.md) |
-| Frame-rate `State` read phase (composition vs layout/draw) | [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) |
-| `putAll` / map rebuild / cross-row `height(state)` during composition | [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) — § back-writing |
-| Focus-driven side work in composable body | [`compose-side-effects`](../compose-side-effects/SKILL.md) — `snapshotFlow` |
+| Skipping, unstable params, compiler/`composables.txt` churn | [Stability](stability.md) |
+| Frame-rate `State` read phase (composition vs layout/draw) | [Deferred reads](deferred-reads.md) |
+| `putAll` / map rebuild / cross-row `height(state)` during composition | [Deferred reads](deferred-reads.md) — § back-writing |
+| Focus-driven side work in composable body | [Compose state and effects](../../compose-state-and-effects/SKILL.md) — `snapshotFlow` |
 | Evidence for multiple axes | Apply matching skills in parallel |
 
 ## Review order
@@ -52,4 +47,4 @@ These changes often **do not** reduce recomposition count:
 
 ## Related
 
-- [`compose-state-authoring`](../compose-state-authoring/SKILL.md) — authoring `mutableState*` safely.
+- [Compose state and effects](../../compose-state-and-effects/SKILL.md) — authoring `mutableState*` safely.

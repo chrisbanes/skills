@@ -8,7 +8,11 @@ paths:
 
 # Using chrisbanes skills
 
-Router only. Inspect the Kotlin code and task, choose the smallest relevant focused skill set, then load those skills before giving detailed advice or editing code.
+## Core principle
+
+Route by the decision the code needs, not by the number of APIs mentioned in
+the prompt. Load one cluster when its shared procedure owns the concern; add a
+specialist only when its independent behavior changes the same work.
 
 ## Routing procedure
 
@@ -22,33 +26,32 @@ Router only. Inspect the Kotlin code and task, choose the smallest relevant focu
 
 | Task signal | Start with |
 |---|---|
-| Broad Compose screen review or refactor | [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md), then add effects, layout, testing, or performance skills as needed |
-| Local Compose state, bare local `var`, `remember { mutableStateOf(...) }`, `mutableStateListOf`, or `@ReadOnlyComposable` | [`compose-state-authoring`](../compose-state-authoring/SKILL.md) |
-| Deciding whether state belongs locally, hoisted, in a plain state holder, or in a screen state holder | [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md) |
-| ViewModel, component, controller, navigation, Flow collection, or dependency wiring mixed with UI layout | [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md) |
-| `LaunchedEffect`, `DisposableEffect`, `SideEffect`, `rememberCoroutineScope`, `rememberUpdatedState`, navigation, snackbar, analytics, focus requests, or event Flow collection | [`compose-side-effects`](../compose-side-effects/SKILL.md) |
-| Recomposition, jank, compiler reports, Layout Inspector counts, unstable params, scroll reads, animation reads, or back-writing state across phases | [`compose-recomposition-performance`](../compose-recomposition-performance/SKILL.md) |
-| Known Compose stability or skippability question, compiler `classes.txt` / `composables.txt`, collection parameters, or strong skipping | [`compose-stability-diagnostics`](../compose-stability-diagnostics/SKILL.md) |
-| Frame-rate state reads from scroll, animation, gestures, layout, or draw; value-form layout/draw modifiers; measurement state back-writing | [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) |
-| Modifier parameters, root layout placement, hardcoded layout decisions, or modifier chain style | [`compose-modifier-and-layout-style`](../compose-modifier-and-layout-style/SKILL.md) |
-| Reusable Compose component API with variable visual content, primitive content params, optional content params, or boolean shape flags | [`compose-slot-api-pattern`](../compose-slot-api-pattern/SKILL.md) |
+| Broad Compose screen review, local or hoisted UI state, screen state holders, effect APIs, navigation, snackbar, analytics, focus requests, or event Flow collection | [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md) |
+| Recomposition, jank, compiler reports, skippability, unstable parameters, frame-rate State reads, back-writing, or `@ReadOnlyComposable` | [`compose-performance`](../compose-performance/SKILL.md) |
+| Modifier parameters, root layout placement, variable visual content, primitive content parameters, optional content, or Boolean shape flags | [`compose-component-design`](../compose-component-design/SKILL.md) |
 | Compose visibility, value, color, size, transition, content swap, or choosing an animation API | [`compose-animations`](../compose-animations/SKILL.md) |
 | Keyboard, TV, desktop, D-pad, `FocusRequester`, `focusProperties`, key events, or initial focus behavior | [`compose-focus-navigation`](../compose-focus-navigation/SKILL.md) |
 | Compose UI tests, screenshot tests, previews, semantics, fake image loading, keyboard input, focus assertions, or interaction state tests | [`compose-ui-testing-patterns`](../compose-ui-testing-patterns/SKILL.md) |
-| Coroutine scope ownership, `init { launch }`, non-suspending APIs that launch work, `runBlocking`, or cancellation handling | [`kotlin-coroutines-structured-concurrency`](../kotlin-coroutines-structured-concurrency/SKILL.md) |
+| Coroutine scope ownership, `init { launch }`, non-suspending launch APIs, `runBlocking`, cancellation, `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, or one-shot events | [`kotlin-concurrency-and-flow`](../kotlin-concurrency-and-flow/SKILL.md) |
 | Kotlin branching, `when` expressions, guard conditions, sealed type exhaustiveness, smart casts, nullable branching, or complex `if`/`else` chains | [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) |
-| `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, `SharingStarted`, `.value`, one-shot events, sentinel initial values, or expensive `update` blocks | [`kotlin-flow-state-event-modeling`](../kotlin-flow-state-event-modeling/SKILL.md) |
-| Kotlin Multiplatform platform APIs, source set boundaries, `expect`/`actual`, interfaces for platform services, permissions, files, sensors, native SDKs, or Compose Multiplatform interop | [`kotlin-multiplatform-expect-actual`](../kotlin-multiplatform-expect-actual/SKILL.md) |
-| Kotlin function placement, member vs top-level function, extension functions, factories, primitive receivers, or extensions on String, collections, Flow, framework, or third-party types | [`kotlin-functions`](../kotlin-functions/SKILL.md) |
-| Single-field domain types, primitive obsession, or choosing `@JvmInline value class` vs `data class` | [`kotlin-types-value-class`](../kotlin-types-value-class/SKILL.md) |
+| Kotlin function placement, member versus top-level or extension functions, factories, single-field domain types, value classes, Kotlin Multiplatform source sets, expect/actual, or platform services | [`kotlin-api-design`](../kotlin-api-design/SKILL.md) |
 | One ready GitHub issue or confirmed conversation specification needs repository-aware planning before a separate implementation session | [`to-plan`](../to-plan/SKILL.md) |
 | Polling or shepherding PRs/MRs, triaging review comments, fixing CI failures, or keeping reviews moving | [`shepherd`](../shepherd/SKILL.md) |
 
 ## Combining skills
 
-- For Compose event handling from a ViewModel or component, use [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md), [`compose-side-effects`](../compose-side-effects/SKILL.md), and, if the event primitive matters, [`kotlin-flow-state-event-modeling`](../kotlin-flow-state-event-modeling/SKILL.md).
-- For performance work, start with [`compose-recomposition-performance`](../compose-recomposition-performance/SKILL.md). It routes deeper to stability or deferred-read fixes.
-- For animations triggered by state, use [`compose-animations`](../compose-animations/SKILL.md); add [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md) when state ownership changes, and [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) for frame-rate-driven values.
-- For reusable UI components, pair [`compose-modifier-and-layout-style`](../compose-modifier-and-layout-style/SKILL.md) with [`compose-slot-api-pattern`](../compose-slot-api-pattern/SKILL.md) when both placement and content flexibility are in play.
+- For Compose event handling from a component, use [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md), then add [`kotlin-concurrency-and-flow`](../kotlin-concurrency-and-flow/SKILL.md) when event delivery semantics matter.
+- For performance work, start with [`compose-performance`](../compose-performance/SKILL.md).
+- For animations triggered by state, use [`compose-animations`](../compose-animations/SKILL.md); add [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md) for ownership changes and [`compose-performance`](../compose-performance/SKILL.md) for frame-rate values.
+- For reusable UI components, use [`compose-component-design`](../compose-component-design/SKILL.md).
 - For tests around focus behavior, use [`compose-focus-navigation`](../compose-focus-navigation/SKILL.md) first, then [`compose-ui-testing-patterns`](../compose-ui-testing-patterns/SKILL.md) for test shape.
-- For Kotlin state or platform-boundary work that also changes branching shape, combine the domain skill with [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md).
+- For Kotlin state, concurrency, or platform-boundary work that also changes branching shape, combine the cluster with [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md).
+
+## RED/GREEN agent scenarios
+
+1. RED loads every Compose skill for a screen with local state and a snackbar.
+   GREEN loads [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md) first and adds another skill only for an evidenced concern.
+2. Novel case: a reusable card has a modifier problem and animated height.
+   GREEN uses [`compose-component-design`](../compose-component-design/SKILL.md) plus [`compose-animations`](../compose-animations/SKILL.md), not the state cluster by default.
+3. Counterexample: a request only changes a guard condition in common Kotlin.
+   GREEN loads [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) and does not route through API design.

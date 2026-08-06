@@ -1,8 +1,3 @@
----
-name: compose-slot-api-pattern
-description: Use when designing or reviewing a reusable Jetpack Compose component whose visual regions vary by caller, or when primitive content parameters and boolean shape flags are accumulating.
----
-
 # Compose: slot API pattern
 
 ## Core principle
@@ -17,7 +12,7 @@ A reusable Compose component describes layout structure. Callers provide variabl
 4. Add receiver scopes only when the slot is emitted inside a layout whose scope APIs callers should use.
 5. Make absent optional regions nullable (`null`), so the component can omit their containers and spacing.
 6. Put repeated default content or tokens in `XxxDefaults`.
-7. Pair this with the `modifier` rules in `compose-modifier-and-layout-style`.
+7. Pair this with the `modifier` rules in [Modifier and layout](modifier-layout.md).
 
 ## 1. Replace primitive content with `@Composable` slots
 
@@ -187,4 +182,4 @@ This matches Material 3's `ButtonDefaults`, `TopAppBarDefaults`, etc. — defaul
 
 ## Related
 
-- [`compose-modifier-and-layout-style`](../compose-modifier-and-layout-style/SKILL.md) — the modifier-parameter rule (§1–§3 there) travels with slot APIs. A reusable component takes a `modifier` parameter *and* slots its content; the caller owns both placement and what to place.
+- [Modifier and layout](modifier-layout.md) — the modifier-parameter rule (§1–§3 there) travels with slot APIs. A reusable component takes a `modifier` parameter *and* slots its content; the caller owns both placement and what to place.

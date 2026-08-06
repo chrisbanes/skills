@@ -1,8 +1,3 @@
----
-name: kotlin-multiplatform-expect-actual
-description: Use when designing Kotlin Multiplatform expect/actual or interface boundaries for platform services, native SDKs, source sets, Compose Multiplatform UI, permissions, files, settings, sensors, or platform interop.
----
-
 # Kotlin Multiplatform: expect/actual boundaries
 
 ## Core principle
@@ -120,7 +115,6 @@ When shared UI reaches a platform leaf:
 
 Stay focused on platform boundaries in this skill; wire shared UI like any other Compose target:
 
-- [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) — keeping common-code business branching explicit with `when`, guard conditions, exhaustiveness, and smart casts.
-- [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md) — shared plain UI composables vs state-holder wiring.
-- [`compose-side-effects`](../compose-side-effects/SKILL.md) — effect keys and cleanup in actual composables (`LaunchedEffect`, `DisposableEffect`, etc.).
-- [`compose-modifier-and-layout-style`](../compose-modifier-and-layout-style/SKILL.md) and [`compose-slot-api-pattern`](../compose-slot-api-pattern/SKILL.md) — reusable shared Compose APIs (modifiers, slots).
+- [Kotlin control flow](../../kotlin-control-flow/SKILL.md) — keeping common-code business branching explicit with `when`, guard conditions, exhaustiveness, and smart casts.
+- [Compose state and effects](../../compose-state-and-effects/SKILL.md) — shared plain UI composables versus state-holder wiring and effect lifecycle.
+- [Compose component design](../../compose-component-design/SKILL.md) — reusable shared Compose APIs (modifiers, slots).

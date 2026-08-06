@@ -1,8 +1,3 @@
----
-name: kotlin-functions
-description: Use when choosing Kotlin member, top-level, extension, factory, or service functions for String, primitive, collection, Flow, framework, or third-party receivers.
----
-
 # Kotlin function ownership
 
 ## Core principle
@@ -92,4 +87,4 @@ For every form, check visibility, imports, collisions, and compatibility. For ex
 
 ## Related
 
-- [`kotlin-types-value-class`](../kotlin-types-value-class/SKILL.md)
+- [Value classes](value-classes.md)

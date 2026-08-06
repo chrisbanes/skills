@@ -161,9 +161,9 @@ Choose keys by visual shape:
 
 ## Animated values and composition performance
 
-`animate*AsState` returns `State` that updates frequently. If that value feeds `Modifier.offset`, `Modifier.graphicsLayer`, scroll-adjacent layout, or other **frame-rate** paths, avoid reading it in the composable body with `by` and then passing it into value-form modifiers—use **deferred reads** (block modifiers, draw/ layout lambdas) instead. See [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md).
+`animate*AsState` returns `State` that updates frequently. If that value feeds `Modifier.offset`, `Modifier.graphicsLayer`, scroll-adjacent layout, or other **frame-rate** paths, avoid reading it in the composable body with `by` and then passing it into value-form modifiers—use **deferred reads** (block modifiers, draw/ layout lambdas) instead. See [Compose performance](../compose-performance/SKILL.md).
 
-If recomposition counters spike during motion unrelated to bad stability, see [`compose-recomposition-performance`](../compose-recomposition-performance/SKILL.md).
+If recomposition counters spike during motion unrelated to bad stability, see [Compose performance](../compose-performance/SKILL.md).
 
 ## Escalation points
 
@@ -189,5 +189,5 @@ Load the official docs when one of these applies:
 
 ## When not to use this skill
 
-- **Side-effect timing** (`LaunchedEffect`, clicks launching work): use [`compose-side-effects`](../compose-side-effects/SKILL.md).
-- **Deep performance tuning** of where snapshot state is read: use [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) as the primary reference.
+- **Side-effect timing** (`LaunchedEffect`, clicks launching work): use [Compose state and effects](../compose-state-and-effects/SKILL.md).
+- **Deep performance tuning** of where snapshot state is read: use [Compose performance](../compose-performance/SKILL.md) as the primary reference.
