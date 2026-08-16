@@ -76,8 +76,12 @@ npm test
 
 The recommended public scorecard uses:
 
-- subject: `gpt-5.6-sol` with `medium` reasoning; and
+- subject: `gpt-5.6-terra` with `medium` reasoning; and
 - judge: `gpt-5.6-sol` with `high` reasoning.
+
+The Terra subject avoids the ceiling observed when Sol-medium solved every
+calibration case without skills, while the stronger Sol judge keeps outcome
+assessment stable.
 
 Keep the pair unchanged across all arms. Use a separate, explicitly named run
 for another model or reasoning effort; never combine fingerprints in one
@@ -89,7 +93,7 @@ Preview the complete matrix and call count:
 
 ```shell
 python3 evals/run.py plan \
-  --model gpt-5.6-sol --reasoning medium \
+  --model gpt-5.6-terra --reasoning medium \
   --judge-model gpt-5.6-sol --judge-reasoning high \
   --repetitions 3
 ```
@@ -99,7 +103,7 @@ the harness deliberately does not bake in a price table that can go stale:
 
 ```shell
 python3 evals/run.py plan \
-  --model gpt-5.6-sol --reasoning medium \
+  --model gpt-5.6-terra --reasoning medium \
   --judge-model gpt-5.6-sol --judge-reasoning high \
   --subject-cost-per-call-usd <amount> \
   --judge-cost-per-call-usd <amount>
@@ -112,7 +116,7 @@ smoke run after authenticating Codex and warming the pinned Gradle distribution:
 python3 evals/run.py run \
   --case compose-state-authoring-direct \
   --arm none --arm forced --arm automatic \
-  --model gpt-5.6-sol --reasoning medium \
+  --model gpt-5.6-terra --reasoning medium \
   --judge-model gpt-5.6-sol --judge-reasoning high \
   --subject-cost-per-call-usd <amount> \
   --judge-cost-per-call-usd <amount> \
