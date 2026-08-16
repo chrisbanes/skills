@@ -14,7 +14,7 @@ Pick the **smallest API that matches the problem**: built-in visibility and layo
 1. Identify the visual job: show/hide, one value, coordinated values, content swap, size change, or gesture-driven motion.
 2. Choose the smallest API from the table below.
 3. Check lifecycle semantics: should hidden content leave composition, keep focus/state, or only become transparent?
-4. Check identity: for state-holder wrappers, choose `AnimatedContent.contentKey` by visual shape rather than payload churn.
+4. Check identity: render each `AnimatedContent` branch from its content-lambda target, then choose `contentKey` by visual shape rather than payload churn.
 5. Check performance: keep frame-rate animation values as `State` and read them in layout/draw block modifiers when possible.
 6. Escalate to `Animatable` or lower-level APIs only when target-state animation cannot express the motion.
 
@@ -124,6 +124,20 @@ flowchart TD
 
 ## AnimatedContent keys for state holders
 
+`AnimatedContent` can keep outgoing and incoming content composed at the same time. Render from the content lambda's target value, not a captured outer state value; otherwise both branches can show the latest state and effects inside them can act on the wrong content identity.
+
+```kotlin
+// Wrong: outgoing and incoming branches both read the latest selectedId.
+AnimatedContent(targetState = selectedId) {
+    Destination(selectedId)
+}
+
+// Right: each branch keeps the identity AnimatedContent assigned to it.
+AnimatedContent(targetState = selectedId) { targetId ->
+    Destination(targetId)
+}
+```
+
 When `AnimatedContent` receives a state-holder wrapper such as `AsyncResult<T>`, `Result<T>`, or a sealed `UiState`, decide what should actually trigger the transition. Usually the animation should run when the **content shape** changes (loading → content → error), not when the payload inside the same shape changes.
 
 Use `contentKey` to map rich state to the animation identity:
@@ -185,7 +199,13 @@ Load the official docs when one of these applies:
 | Animated color on `Modifier.background` causing extra work | Prefer `drawBehind { drawRect(animatedColor) }` per quick guide |
 | Chaining `LaunchedEffect` + manual `Animatable` for simple target animation | Prefer `animate*AsState` or `rememberTransition` unless gestures require `Animatable` |
 | Ignoring Navigation’s own transitions | Use Nav APIs for destination transitions; do not duplicate with `AnimatedContent` for the same swap |
+| Reading outer state inside `AnimatedContent`'s content lambda | Render from the lambda target so outgoing and incoming content retain distinct identities |
 | `AnimatedContent(targetState = asyncResult)` animates on every data refresh | Add `contentKey` based on the visual shape or stable item identity |
+
+## RED/GREEN agent scenarios
+
+1. Novel case: focus moves while `AnimatedContent` swaps between two destinations. RED renders both branches from captured outer state. GREEN renders and keys effects from the lambda target, then tests focus after the transition settles.
+2. Counterexample: a single composable only animates one color value. GREEN keeps `animateColorAsState` and does not introduce `AnimatedContent` or content identity machinery.
 
 ## When not to use this skill
 

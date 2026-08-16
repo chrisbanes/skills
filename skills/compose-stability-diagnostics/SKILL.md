@@ -17,8 +17,9 @@ With Kotlin 2.0.20+ strong skipping is enabled by default. Unstable parameters n
 2. Identify compiler mode: Kotlin/Compose compiler version and whether strong skipping is enabled.
 3. Generate or read the Compose compiler reports for the shipped variant.
 4. For each suspicious parameter, decide whether the problem is stability semantics, instance churn, or a caller-created lambda/derived value.
-5. Apply the lightest fix that makes the type/call site truthful.
-6. Re-measure the same interaction or re-read the same report before claiming the issue is fixed.
+5. If an annotation makes a false promise, fix the data contract first; only then decide whether an annotation is still needed.
+6. Apply the lightest fix that makes the type/call site truthful.
+7. Re-measure the same interaction or re-read the same report before claiming the issue is fixed.
 
 ## 1. Interpret strong skipping first
 
@@ -97,6 +98,14 @@ Producers convert once at the boundary with `.toImmutableList()` / `.toImmutable
 
 Do not annotate to silence a report. A false stability promise can produce stale UI.
 
+When an existing annotation is false, order the repair deliberately:
+
+1. Replace mutable non-snapshot properties with immutable data or observable Compose state.
+2. Re-evaluate the now-truthful model under strong-skipping comparison semantics.
+3. Retain or add `@Stable` / `@Immutable` only if the model still needs it and satisfies the full contract.
+
+Removing the annotation without fixing an accidental mutable data contract may avoid an incorrect compiler promise, but it does not make the UI state safe or observable.
+
 ### Third-party immutable types
 
 For types you cannot annotate but can truthfully treat as immutable, use `stabilityConfigurationFiles`:
@@ -164,6 +173,11 @@ Verify focus moves and insertions with recomposition-count assertions after hois
 - The recomposition count matches real data changes.
 - The bug is wrong data or stale state, not excess work.
 - The code is test-only and readability is more important than report cleanliness.
+
+## RED/GREEN agent scenarios
+
+1. Novel case: an `@Stable` class exposes a mutable non-snapshot property. RED only removes or defends the annotation. GREEN identifies the false promise and fixes the data contract before reconsidering annotations.
+2. Counterexample: an immutable model is recreated on every frame. GREEN diagnoses instance churn at the call site and does not rewrite the truthful data contract merely to add an annotation.
 
 ## Related
 

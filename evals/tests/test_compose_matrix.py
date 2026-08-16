@@ -121,6 +121,13 @@ import androidx.compose.runtime.Composable
   SearchContent(query, onQueryChange = { query = it })
 }
 """,
+            "compose-ui-testing-patterns-direct": """package example
+import androidx.compose.ui.test.junit4.createComposeRule
+class SubjectTest {
+  val composeTestRule = createComposeRule()
+  fun test() { composeTestRule.setContent {} }
+}
+""",
         }
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -130,7 +137,12 @@ import androidx.compose.runtime.Composable
                     workspace = prepare_workspace(
                         case, REPO_ROOT, Path(temp_dir) / case_id
                     )
-                    subject = workspace / "src/main/kotlin/example/Subject.kt"
+                    relative_path = (
+                        "src/test/kotlin/example/SubjectTest.kt"
+                        if case_id == "compose-ui-testing-patterns-direct"
+                        else "src/main/kotlin/example/Subject.kt"
+                    )
+                    subject = workspace / relative_path
                     subject.write_text(source, encoding="utf-8")
                     result = make_result(workspace, paths=(str(subject.relative_to(workspace)),))
                     self.assertTrue(grade_subject(case, result).objective_pass)

@@ -26,7 +26,7 @@
   "rubric": [
     {
       "id": "criterion-1",
-      "text": "Identifies that the read-only contract is invalid for a mutable snapshot read"
+      "text": "Recognizes that reading snapshot state does not violate the read-only composer contract"
     },
     {
       "id": "criterion-2",
