@@ -39,25 +39,71 @@ class SubjectResult:
     elapsed_seconds: float
 
 
-def _skill_config(case: EvalCase, arm: str, repo_root: Path) -> str:
+def discover_skill_paths(
+    repo_root: Path, *, roots: tuple[Path, ...] | None = None
+) -> tuple[Path, ...]:
+    """Return every discoverable skill file that must be explicitly configured."""
+    if roots is None:
+        user_root = Path.home()
+        roots = (
+            user_root / ".codex" / "skills",
+            user_root / ".agents" / "skills",
+            user_root / ".codex" / "plugins" / "cache",
+        )
+    candidates: set[Path] = set()
+    for root in roots:
+        if root.is_dir():
+            candidates.update(path.resolve() for path in root.rglob("SKILL.md"))
+    return tuple(sorted(candidates, key=str))
+
+
+def _enabled_skills(case: EvalCase, arm: str) -> tuple[str, ...]:
+    if arm == "none":
+        return ()
+    if arm == "forced":
+        return case.target_skills
+    if arm == "automatic":
+        return (*COMPOSE_SKILLS, ROUTER_SKILL)
+    raise ValueError(f"unknown arm: {arm}")
+
+
+def _workspace_skill_path(workspace: Path, skill: str) -> Path:
+    return (workspace / ".agents" / "skills" / skill / "SKILL.md").resolve()
+
+
+def _skill_config(
+    case: EvalCase,
+    arm: str,
+    repo_root: Path,
+    workspace: Path,
+    skill_paths: tuple[Path, ...],
+) -> str:
     if arm not in ARMS:
         raise ValueError(f"unknown arm: {arm}")
-    enabled = set(case.target_skills) if arm == "forced" else set()
-    if arm == "automatic":
-        enabled = {*COMPOSE_SKILLS, ROUTER_SKILL}
+    enabled = {
+        _workspace_skill_path(workspace, skill)
+        for skill in _enabled_skills(case, arm)
+    }
     entries = []
-    for skill in (*COMPOSE_SKILLS, ROUTER_SKILL):
-        path = json.dumps(str((repo_root / "skills" / skill).resolve()))
-        value = "true" if skill in enabled else "false"
+    configured_paths = set(skill_paths) | enabled
+    for skill_path in sorted(configured_paths, key=str):
+        path = json.dumps(str(skill_path.resolve()))
+        value = "true" if skill_path.resolve() in enabled else "false"
         entries.append(f"{{ path = {path}, enabled = {value} }}")
     return "skills.config=[" + ", ".join(entries) + "]"
 
 
 def _subject_prompt(case: EvalCase, arm: str) -> str:
-    if arm != "forced":
-        return case.prompt
-    invocations = ", ".join(f"${skill}" for skill in case.target_skills)
-    return case.prompt.rstrip() + f"\n\nUse the following skill(s) explicitly: {invocations}\n"
+    prompt = case.prompt.rstrip()
+    prompt += (
+        "\n\nIf you run Gradle, use `--offline --no-scan`. In `skills_used`, report "
+        "only skills whose SKILL.md instructions you actually read and followed during "
+        "this run; otherwise return an empty list."
+    )
+    if arm == "forced":
+        invocations = ", ".join(f"${skill}" for skill in case.target_skills)
+        prompt += f"\n\nUse the following skill(s) explicitly: {invocations}"
+    return prompt + "\n"
 
 
 def build_subject_command(
@@ -68,6 +114,7 @@ def build_subject_command(
     config: RunConfig,
     *,
     codex_executable: str = "codex",
+    skill_paths: tuple[Path, ...] | None = None,
 ) -> list[str]:
     sandbox = "read-only" if case.task_mode == "review" else "workspace-write"
     command = [
@@ -79,7 +126,7 @@ def build_subject_command(
         "--strict-config",
         "--json",
         "--output-schema",
-        str((repo_root / "evals" / "schemas" / "subject-output.schema.json").resolve()),
+        str((workspace / ".eval" / "subject-output.schema.json").resolve()),
         "--model",
         config.model,
         "-c",
@@ -87,7 +134,13 @@ def build_subject_command(
         "-c",
         "sandbox_workspace_write.network_access=false",
         "-c",
-        _skill_config(case, arm, repo_root),
+        _skill_config(
+            case,
+            arm,
+            repo_root,
+            workspace,
+            discover_skill_paths(repo_root) if skill_paths is None else skill_paths,
+        ),
         "--sandbox",
         sandbox,
     ]
@@ -105,7 +158,13 @@ def _run_git(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def prepare_workspace(case: EvalCase, repo_root: Path, destination: Path) -> Path:
+def prepare_workspace(
+    case: EvalCase,
+    repo_root: Path,
+    destination: Path,
+    *,
+    enabled_skills: tuple[str, ...] = (),
+) -> Path:
     if destination.exists():
         raise FileExistsError(f"run workspace already exists: {destination}")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -114,6 +173,17 @@ def prepare_workspace(case: EvalCase, repo_root: Path, destination: Path) -> Pat
     overlay = case.directory / "overlay"
     if overlay.is_dir():
         shutil.copytree(overlay, destination, dirs_exist_ok=True)
+    schema_dir = destination / ".eval"
+    schema_dir.mkdir()
+    shutil.copy2(
+        repo_root / "evals" / "schemas" / "subject-output.schema.json",
+        schema_dir / "subject-output.schema.json",
+    )
+    for skill in enabled_skills:
+        shutil.copytree(
+            repo_root / "skills" / skill,
+            destination / ".agents" / "skills" / skill,
+        )
     _run_git(destination, "init", "-q")
     _run_git(destination, "add", ".")
     _run_git(
@@ -208,8 +278,14 @@ def run_subject(
     config: RunConfig,
     *,
     codex_executable: str = "codex",
+    skill_paths: tuple[Path, ...] | None = None,
 ) -> SubjectResult:
-    prepare_workspace(case, repo_root, workspace)
+    prepare_workspace(
+        case,
+        repo_root,
+        workspace,
+        enabled_skills=_enabled_skills(case, arm),
+    )
     command = build_subject_command(
         case,
         arm,
@@ -217,6 +293,7 @@ def run_subject(
         workspace,
         config,
         codex_executable=codex_executable,
+        skill_paths=skill_paths,
     )
     started = time.monotonic()
     try:

@@ -57,10 +57,17 @@ def _percent(value: float | None) -> str:
 def _tool_event_count(records: Iterable[dict[str, Any]]) -> int:
     count = 0
     for record in records:
-        for event in record.get("subject", {}).get("events", []):
-            item = event.get("item", {}) if isinstance(event, dict) else {}
-            if item.get("type") in {"command_execution", "mcp_tool_call", "tool_call"}:
-                count += 1
+        for role in ("subject", "judge"):
+            for event in record.get(role, {}).get("events", []):
+                if not isinstance(event, dict) or event.get("type") != "item.completed":
+                    continue
+                item = event.get("item", {})
+                if item.get("type") in {
+                    "command_execution",
+                    "mcp_tool_call",
+                    "tool_call",
+                }:
+                    count += 1
     return count
 
 
@@ -69,12 +76,14 @@ def render_scorecard(
 ) -> str:
     records = list(records)
     input_tokens = sum(
-        int(record.get("subject", {}).get("usage", {}).get("input_tokens", 0))
+        int(record.get(role, {}).get("usage", {}).get("input_tokens", 0))
         for record in records
+        for role in ("subject", "judge")
     )
     output_tokens = sum(
-        int(record.get("subject", {}).get("usage", {}).get("output_tokens", 0))
+        int(record.get(role, {}).get("usage", {}).get("output_tokens", 0))
         for record in records
+        for role in ("subject", "judge")
     )
     elapsed = sum(
         float(record.get(role, {}).get("elapsed_seconds", 0.0))

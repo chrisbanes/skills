@@ -146,6 +146,20 @@ class DeterministicGradeTest(unittest.TestCase):
         self.assertFalse(_subject_output_valid(extra))
         self.assertFalse(_subject_output_valid(bad_evidence))
 
+    def test_subject_output_accepts_plugin_prefixed_skill_names(self):
+        from evals.harness.experiment import _subject_output_valid
+
+        result = make_result(
+            self.workspace,
+            output={
+                "summary": "done",
+                "skills_used": ["chrisbanes-skills:compose-state-authoring"],
+                "evidence": ["read the staged skill"],
+            },
+        )
+
+        self.assertTrue(_subject_output_valid(result))
+
 
 if __name__ == "__main__":
     unittest.main()

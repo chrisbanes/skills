@@ -3,8 +3,11 @@
     "src/main/kotlin/example/Subject.kt"
   ],
   "must_contain": [
-    "private set"
+    "mutableStateOf"
   ],
-  "must_contain_any": [],
+  "must_contain_any": [
+    ["private set", "private var"],
+    ["private set", "val count"]
+  ],
   "must_not_contain": []
 }

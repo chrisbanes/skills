@@ -7,21 +7,9 @@
     "summary": { "type": "string" },
     "skills_used": {
       "type": "array",
+      "description": "Only skills whose SKILL.md instructions were actually read and followed during this run.",
       "items": {
-        "enum": [
-          "compose-state-authoring",
-          "compose-state-hoisting",
-          "compose-side-effects",
-          "compose-recomposition-performance",
-          "compose-stability-diagnostics",
-          "compose-state-deferred-reads",
-          "compose-modifier-and-layout-style",
-          "compose-slot-api-pattern",
-          "compose-animations",
-          "compose-focus-navigation",
-          "compose-ui-testing-patterns",
-          "using-chrisbanes-skills"
-        ]
+        "type": "string"
       }
     },
     "evidence": { "type": "array", "items": { "type": "string" } }

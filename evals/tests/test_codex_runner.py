@@ -5,7 +5,13 @@ from dataclasses import replace
 from pathlib import Path
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase, Validator
-from evals.harness.codex import RunConfig, build_subject_command, prepare_workspace, run_subject
+from evals.harness.codex import (
+    RunConfig,
+    build_subject_command,
+    discover_skill_paths,
+    prepare_workspace,
+    run_subject,
+)
 
 
 def sample_case(root: Path, *, task_mode: str = "edit") -> EvalCase:
@@ -58,10 +64,20 @@ class CodexRunnerTest(unittest.TestCase):
     def test_builds_three_explicit_and_isolated_skill_arms(self):
         case = sample_case(self.root)
         workspace = self.root / "workspace"
+        unrelated = self.root / "global-skills" / "ponytail" / "SKILL.md"
+        unrelated.parent.mkdir(parents=True)
+        unrelated.write_text("---\nname: ponytail\n---\n", encoding="utf-8")
+        catalog = (*discover_skill_paths(self.root, roots=(unrelated.parents[1],)),)
 
-        none = build_subject_command(case, "none", self.root, workspace, self.config)
-        forced = build_subject_command(case, "forced", self.root, workspace, self.config)
-        automatic = build_subject_command(case, "automatic", self.root, workspace, self.config)
+        none = build_subject_command(
+            case, "none", self.root, workspace, self.config, skill_paths=catalog
+        )
+        forced = build_subject_command(
+            case, "forced", self.root, workspace, self.config, skill_paths=catalog
+        )
+        automatic = build_subject_command(
+            case, "automatic", self.root, workspace, self.config, skill_paths=catalog
+        )
 
         for command in (none, forced, automatic):
             rendered = " ".join(command)
@@ -72,13 +88,45 @@ class CodexRunnerTest(unittest.TestCase):
             self.assertIn("--json", command)
             self.assertIn('model_reasoning_effort="medium"', rendered)
             self.assertIn("sandbox_workspace_write.network_access=false", rendered)
-            self.assertEqual(12, rendered.count("path = "))
+            self.assertIn(str(unrelated.resolve()), rendered)
+            self.assertIn("enabled = false", rendered)
+            self.assertIn("SKILL.md", rendered)
+        self.assertEqual(1, " ".join(none).count("path = "))
+        self.assertEqual(2, " ".join(forced).count("path = "))
+        self.assertEqual(13, " ".join(automatic).count("path = "))
         self.assertEqual(0, " ".join(none).count("enabled = true"))
         self.assertEqual(1, " ".join(forced).count("enabled = true"))
         self.assertEqual(12, " ".join(automatic).count("enabled = true"))
         self.assertIn("$compose-state-authoring", forced[-1])
         self.assertNotIn("$compose-state-authoring", automatic[-1])
-        self.assertEqual(case.prompt, automatic[-1])
+        self.assertIn("If you run Gradle, use `--offline --no-scan`.", automatic[-1])
+        self.assertIn("only skills whose SKILL.md instructions you actually read", automatic[-1])
+        self.assertNotEqual(case.prompt, automatic[-1])
+
+    def test_discovers_repo_and_external_skill_files_without_duplicates(self):
+        external = self.root / "external" / "one" / "SKILL.md"
+        external.parent.mkdir(parents=True)
+        external.write_text("---\nname: one\n---\n", encoding="utf-8")
+
+        paths = discover_skill_paths(
+            self.root, roots=(external.parents[1], external.parents[1])
+        )
+
+        self.assertEqual(1, len(paths))
+        self.assertEqual(1, paths.count(external.resolve()))
+
+    def test_none_arm_does_not_disclose_repo_skill_or_schema_paths(self):
+        case = sample_case(self.root)
+        workspace = self.root / "workspace"
+
+        command = build_subject_command(
+            case, "none", self.root, workspace, self.config, skill_paths=()
+        )
+        rendered = " ".join(command)
+
+        self.assertNotIn(str(self.root / "skills"), rendered)
+        self.assertNotIn("compose-state-authoring", rendered)
+        self.assertIn(str(workspace / ".eval/subject-output.schema.json"), rendered)
 
     def test_selects_read_only_or_workspace_write_from_the_case_contract(self):
         workspace = self.root / "workspace"
@@ -141,6 +189,12 @@ class CodexRunnerTest(unittest.TestCase):
         )
 
         self.assertEqual(0, result.returncode)
+        self.assertTrue(
+            (
+                result.workspace
+                / ".agents/skills/compose-state-authoring/SKILL.md"
+            ).is_file()
+        )
         self.assertEqual("done", result.final_output["summary"])
         self.assertEqual({"input_tokens": 10, "output_tokens": 5}, result.usage)
         self.assertEqual(("src/main/kotlin/example/Subject.kt",), result.changed_paths)

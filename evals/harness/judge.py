@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase
-from evals.harness.codex import SubjectResult
+from evals.harness.cases import EvalCase
+from evals.harness.codex import SubjectResult, discover_skill_paths
 from evals.harness.grade import ObjectiveGrade
 
 
@@ -23,7 +23,9 @@ class JudgeConfig:
 @dataclass(frozen=True)
 class JudgeResult:
     returncode: int
+    events: tuple[dict[str, Any], ...]
     output: dict[str, Any]
+    usage: dict[str, int]
     stdout: str
     stderr: str
     elapsed_seconds: float
@@ -39,6 +41,8 @@ def _initial_state(workspace: Path) -> dict[str, str]:
     ).stdout.splitlines()
     state: dict[str, str] = {}
     for path in paths:
+        if path.startswith((".agents/", ".eval/")):
+            continue
         completed = subprocess.run(
             ["git", "show", f"HEAD:{path}"],
             cwd=workspace,
@@ -92,10 +96,10 @@ def build_judge_packet(
     }
 
 
-def _disabled_skill_config(repo_root: Path) -> str:
+def _disabled_skill_config(skill_paths: tuple[Path, ...]) -> str:
     entries = []
-    for skill in (*COMPOSE_SKILLS, ROUTER_SKILL):
-        path = json.dumps(str((repo_root / "skills" / skill).resolve()))
+    for skill_path in sorted(set(skill_paths), key=str):
+        path = json.dumps(str(skill_path.resolve()))
         entries.append(f"{{ path = {path}, enabled = false }}")
     return "skills.config=[" + ", ".join(entries) + "]"
 
@@ -106,6 +110,7 @@ def build_judge_command(
     config: JudgeConfig,
     *,
     codex_executable: str = "codex",
+    skill_paths: tuple[Path, ...] | None = None,
 ) -> list[str]:
     prompt = (
         f"Read {packet_path.name}. Judge only the supplied rubric and evidence. "
@@ -128,7 +133,9 @@ def build_judge_command(
         "-c",
         "sandbox_workspace_write.network_access=false",
         "-c",
-        _disabled_skill_config(repo_root),
+        _disabled_skill_config(
+            discover_skill_paths(repo_root) if skill_paths is None else skill_paths
+        ),
         "--sandbox",
         "read-only",
         "-C",
@@ -137,14 +144,28 @@ def build_judge_command(
     ]
 
 
-def _judge_output(stdout: str) -> dict[str, Any]:
+def _parse_judge_jsonl(
+    stdout: str,
+) -> tuple[tuple[dict[str, Any], ...], dict[str, Any], dict[str, int]]:
+    events: list[dict[str, Any]] = []
     output: dict[str, Any] = {}
+    usage: dict[str, int] = {}
     for line in stdout.splitlines():
         try:
             event = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if not isinstance(event, dict) or event.get("type") != "item.completed":
+        if not isinstance(event, dict):
+            continue
+        events.append(event)
+        raw_usage = event.get("usage")
+        if isinstance(raw_usage, dict):
+            usage = {
+                str(key): int(value)
+                for key, value in raw_usage.items()
+                if isinstance(value, int) and not isinstance(value, bool)
+            }
+        if event.get("type") != "item.completed":
             continue
         item = event.get("item")
         if not isinstance(item, dict) or item.get("type") != "agent_message":
@@ -158,7 +179,7 @@ def _judge_output(stdout: str) -> dict[str, Any]:
             continue
         if isinstance(candidate, dict):
             output = candidate
-    return output
+    return tuple(events), output, usage
 
 
 def judge_output_valid(output: dict[str, Any]) -> bool:
@@ -195,9 +216,14 @@ def run_judge(
     config: JudgeConfig,
     *,
     codex_executable: str = "codex",
+    skill_paths: tuple[Path, ...] | None = None,
 ) -> JudgeResult:
     command = build_judge_command(
-        packet_path, repo_root, config, codex_executable=codex_executable
+        packet_path,
+        repo_root,
+        config,
+        codex_executable=codex_executable,
+        skill_paths=skill_paths,
     )
     started = time.monotonic()
     try:
@@ -216,9 +242,12 @@ def run_judge(
         returncode = 124
         stdout = error.stdout if isinstance(error.stdout, str) else ""
         stderr = error.stderr if isinstance(error.stderr, str) else ""
+    events, output, usage = _parse_judge_jsonl(stdout)
     return JudgeResult(
         returncode=returncode,
-        output=_judge_output(stdout),
+        events=events,
+        output=output,
+        usage=usage,
         stdout=stdout,
         stderr=stderr,
         elapsed_seconds=time.monotonic() - started,

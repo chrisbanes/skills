@@ -64,6 +64,37 @@ class ComposeMatrixTest(unittest.TestCase):
                     else:
                         self.assertTrue(grade.objective_pass)
 
+    def test_state_authoring_accepts_private_backing_state_with_public_read(self):
+        report = validate_corpus(REPO_ROOT)
+        case = next(
+            case for case in report.cases if case.id == "compose-state-authoring-direct"
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = prepare_workspace(case, REPO_ROOT, Path(temp_dir) / case.id)
+            subject = workspace / "src/main/kotlin/example/Subject.kt"
+            subject.write_text(
+                """package example
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
+class Counter {
+    private var mutableCount by mutableStateOf(0)
+    val count: Int get() = mutableCount
+
+    fun increment() { mutableCount += 1 }
+}
+""",
+                encoding="utf-8",
+            )
+            result = make_result(
+                workspace, paths=("src/main/kotlin/example/Subject.kt",)
+            )
+
+            self.assertTrue(grade_subject(case, result).objective_pass)
+
 
 if __name__ == "__main__":
     unittest.main()

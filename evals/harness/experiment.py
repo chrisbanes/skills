@@ -9,7 +9,13 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase
-from evals.harness.codex import ARMS, RunConfig, SubjectResult, run_subject
+from evals.harness.codex import (
+    ARMS,
+    RunConfig,
+    SubjectResult,
+    discover_skill_paths,
+    run_subject,
+)
 from evals.harness.grade import ObjectiveGrade, grade_subject
 from evals.harness.judge import (
     JudgeConfig,
@@ -27,6 +33,20 @@ from evals.harness.results import (
     write_result,
 )
 from evals.harness.score import compute_scorecard
+
+
+def _canonical_skill_name(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    name = value.removeprefix("chrisbanes-skills:")
+    return name if name in {*COMPOSE_SKILLS, ROUTER_SKILL} else None
+
+
+def _reported_skill_names(output: dict[str, Any]) -> list[str]:
+    values = output.get("skills_used", [])
+    if not isinstance(values, list):
+        return []
+    return [name for value in values if (name := _canonical_skill_name(value))]
 
 
 def filter_cases(
@@ -116,6 +136,23 @@ def _case_digest(case: EvalCase) -> str:
     return digest.hexdigest()
 
 
+def _skill_catalog_digest(skill_paths: tuple[Path, ...]) -> str:
+    digest = hashlib.sha256()
+    for path in skill_paths:
+        digest.update(str(path).encode())
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _skill_source_paths(repo_root: Path) -> tuple[Path, ...]:
+    return tuple(
+        (repo_root / "skills" / skill / "SKILL.md").resolve()
+        for skill in (*COMPOSE_SKILLS, ROUTER_SKILL)
+    )
+
+
 def _command_output(command: list[str], *, cwd: Path) -> str:
     completed = subprocess.run(
         command, cwd=cwd, text=True, capture_output=True, check=True
@@ -143,7 +180,7 @@ def _subject_output_valid(result: SubjectResult) -> bool:
         and isinstance(output.get("summary"), str)
         and isinstance(skills, list)
         and len(skills) == len(set(skills))
-        and all(skill in {*COMPOSE_SKILLS, ROUTER_SKILL} for skill in skills)
+        and len(_reported_skill_names(output)) == len(skills)
         and isinstance(evidence, list)
         and all(isinstance(item, str) for item in evidence)
     )
@@ -173,6 +210,9 @@ def _result_payload(
     fingerprint: str,
     run_config: RunConfig,
     judge_config: JudgeConfig,
+    skill_paths: tuple[Path, ...],
+    skill_sources: tuple[Path, ...],
+    skill_catalog_digest: str,
 ) -> dict[str, Any]:
     judge_pass = (
         judge.returncode == 0
@@ -188,6 +228,9 @@ def _result_payload(
         "case_digest": case_digest,
         "codex_version": codex_version,
         "skill_sha": skill_sha,
+        "skill_catalog": [str(path) for path in skill_paths],
+        "skill_sources": [str(path) for path in skill_sources],
+        "skill_catalog_digest": skill_catalog_digest,
         "subject_model": {
             "model": run_config.model,
             "reasoning": run_config.reasoning,
@@ -201,11 +244,10 @@ def _result_payload(
         "expected_skills": list(case.expected_skills),
         "reported_skills": [
             skill
-            for skill in subject.final_output.get("skills_used", [])
+            for skill in _reported_skill_names(subject.final_output)
             if skill in COMPOSE_SKILLS
         ],
-        "reported_router": ROUTER_SKILL
-        in subject.final_output.get("skills_used", []),
+        "reported_router": ROUTER_SKILL in _reported_skill_names(subject.final_output),
         "objective_pass": grade.objective_pass,
         "judge_pass": judge_pass,
         "outcome_pass": grade.objective_pass and judge_pass,
@@ -227,7 +269,9 @@ def _result_payload(
         },
         "judge": {
             "returncode": judge.returncode,
+            "events": list(judge.events),
             "output": judge.output,
+            "usage": judge.usage,
             "elapsed_seconds": judge.elapsed_seconds,
             "stderr": judge.stderr,
             "retries": judge_retries,
@@ -248,6 +292,11 @@ def execute_experiment(
     audit_seed: int = 20260816,
 ) -> dict[str, Path]:
     codex_version, skill_sha = preflight(repo_root, codex_executable)
+    skill_paths = discover_skill_paths(repo_root)
+    skill_sources = _skill_source_paths(repo_root)
+    skill_catalog_digest = _skill_catalog_digest(
+        tuple(sorted({*skill_paths, *skill_sources}, key=str))
+    )
     records: list[dict[str, Any]] = []
     for case in cases:
         for arm in arms:
@@ -261,6 +310,7 @@ def execute_experiment(
                     reasoning=run_config.reasoning,
                     judge_model=judge_config.model,
                     judge_reasoning=judge_config.reasoning,
+                    skill_catalog_digest=skill_catalog_digest,
                 )
                 result_path = output_dir / "raw" / case.id / arm / f"{repetition}.json"
                 if result_path.is_file():
@@ -283,6 +333,7 @@ def execute_experiment(
                         workspace,
                         run_config,
                         codex_executable=codex_executable,
+                        skill_paths=skill_paths,
                     )
 
                 subject, subject_retries = run_with_one_retry(
@@ -306,6 +357,7 @@ def execute_experiment(
                         repo_root,
                         judge_config,
                         codex_executable=codex_executable,
+                        skill_paths=skill_paths,
                     ),
                     lambda result: _judge_retryable(result)
                     or not judge_covers_rubric(result.output, case.rubric),
@@ -325,6 +377,9 @@ def execute_experiment(
                     fingerprint=fingerprint,
                     run_config=run_config,
                     judge_config=judge_config,
+                    skill_paths=skill_paths,
+                    skill_sources=skill_sources,
+                    skill_catalog_digest=skill_catalog_digest,
                 )
                 write_result(result_path, fingerprint, payload)
                 records.append(payload)
@@ -338,6 +393,13 @@ def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
         document = json.loads(path.read_text(encoding="utf-8"))
         payload = document.get("payload")
         if isinstance(payload, dict):
+            subject_output = payload.get("subject", {}).get("final_output", {})
+            if isinstance(subject_output, dict):
+                reported = _reported_skill_names(subject_output)
+                payload["reported_skills"] = [
+                    skill for skill in reported if skill in COMPOSE_SKILLS
+                ]
+                payload["reported_router"] = ROUTER_SKILL in reported
             records.append(payload)
     return records
 
@@ -354,6 +416,8 @@ def rejudge_packets(
     plan = {"packet_count": len(packets), "judge_calls": len(packets), "execute": execute}
     if not execute:
         return plan
+    skill_paths = discover_skill_paths(repo_root)
+    skill_catalog_digest = _skill_catalog_digest(skill_paths)
     completed = 0
     for packet_path in packets:
         packet = json.loads(packet_path.read_text(encoding="utf-8"))
@@ -361,6 +425,7 @@ def rejudge_packets(
         fingerprint = hashlib.sha256(
             packet_path.read_bytes()
             + json.dumps(asdict(judge_config), sort_keys=True).encode()
+            + skill_catalog_digest.encode()
         ).hexdigest()
         result_path = output_dir / "rejudgments" / f"{packet_path.stem}.json"
         if result_path.is_file():
@@ -373,6 +438,7 @@ def rejudge_packets(
                 repo_root,
                 judge_config,
                 codex_executable=codex_executable,
+                skill_paths=skill_paths,
             ),
             lambda result: _judge_retryable(result)
             or not judge_covers_rubric(result.output, rubric),
@@ -388,7 +454,9 @@ def rejudge_packets(
                 },
                 "judge": {
                     "returncode": judgment.returncode,
+                    "events": list(judgment.events),
                     "output": judgment.output,
+                    "usage": judgment.usage,
                     "stderr": judgment.stderr,
                     "elapsed_seconds": judgment.elapsed_seconds,
                     "retries": retries,

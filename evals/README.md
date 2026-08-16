@@ -31,9 +31,17 @@ model/reasoning arguments. Review tasks are read-only. Edit tasks are graded
 against a path allowlist. Workspaces and conversations are never reused across
 conditions.
 
+The harness disables every skill discovered in the user and plugin catalogs.
+For forced and automatic arms it copies only the enabled repository skills into
+the fresh workspace's project-local `.agents/skills` directory before committing
+the fixture baseline. The subject output schema is staged beside the fixture so
+the baseline command does not disclose the source checkout or target skill
+names. These evaluator-owned files are excluded from the blinded judge packet.
+
 Codex 0.147 does not emit an independent skill-activation event. Routing
 precision and recall therefore use the subject's schema-constrained
-`skills_used` declaration and are labeled **reported routing**. They are not
+`skills_used` declaration and are labeled **reported routing**. Plugin-qualified
+and local skill identifiers are canonicalized to the same repository skill. They are not
 proof that the runtime loaded a particular `SKILL.md`; outcome differences and
 the human audit provide the behavioral evidence.
 
@@ -111,6 +119,8 @@ Use `--skill`, repeated `--case` or `--arm` filters, and `--output-dir` to bound
 a run. Raw results are atomic and fingerprinted by the case, arm, skill commit,
 Codex version, and both model settings. Reusing the same output directory resumes
 matching results and rejects stale fingerprints.
+The fingerprint also covers the discovered external skill catalog and the exact
+repository skill contents staged into subject workspaces.
 
 Rebuild reports from completed raw records without model calls:
 
@@ -146,10 +156,10 @@ applies these gates over the three repetitions:
 - forced and automatic no-change controls do not regress below baseline; and
 - forbidden-action failures are zero.
 
-Tokens, tool calls, elapsed time, process failures, and retries are diagnostics,
-not gates. The scorecard also reports how often the router itself was declared
-in the automatic arm. Missing arms or case categories are shown as `not met`;
-filtered smoke runs cannot pass gates they did not evaluate.
+Subject and judge tokens, tool calls, elapsed time, process failures, and retries
+are diagnostics, not gates. The scorecard also reports how often the router
+itself was declared in the automatic arm. Missing arms or case categories are
+shown as `not met`; filtered smoke runs cannot pass gates they did not evaluate.
 
 ## Human audit
 

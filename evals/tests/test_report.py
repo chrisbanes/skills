@@ -65,7 +65,18 @@ class ReportTest(unittest.TestCase):
                     "retries": 1,
                     "returncode": 0,
                 },
-                "judge": {"elapsed_seconds": 0.5, "retries": 0, "returncode": 0},
+                "judge": {
+                    "usage": {"input_tokens": 4, "output_tokens": 1},
+                    "events": [
+                        {
+                            "type": "item.completed",
+                            "item": {"type": "command_execution"},
+                        }
+                    ],
+                    "elapsed_seconds": 0.5,
+                    "retries": 0,
+                    "returncode": 0,
+                },
             })
         score = compute_scorecard(records)
 
@@ -77,8 +88,9 @@ class ReportTest(unittest.TestCase):
             self.assertIn("Advisory Compose Skill Scorecard", markdown)
             self.assertIn("not a merge or release gate", markdown)
             self.assertIn("Reported automatic routing precision", markdown)
-            self.assertIn("Input tokens: 30", markdown)
-            self.assertIn("Tool events: 3", markdown)
+            self.assertIn("Input tokens: 42", markdown)
+            self.assertIn("Output tokens: 9", markdown)
+            self.assertIn("Tool events: 6", markdown)
             self.assertIn("Retries: 3", markdown)
             self.assertEqual(markdown, render_scorecard(score, records))
 

@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +11,7 @@ from evals.harness.results import (
     write_result,
 )
 from evals.harness.experiment import next_attempt_workspace
+from evals.harness.experiment import load_raw_records
 
 
 class ResultLifecycleTest(unittest.TestCase):
@@ -43,6 +45,21 @@ class ResultLifecycleTest(unittest.TestCase):
         with self.assertRaises(FingerprintMismatch):
             load_result(path, "new")
 
+    def test_skill_catalog_changes_the_experiment_fingerprint(self):
+        common = {
+            "case_digest": "case-sha",
+            "arm": "automatic",
+            "skill_sha": "skill-sha",
+            "codex_version": "codex-cli 1",
+            "model": "gpt-5.6-sol",
+            "reasoning": "medium",
+        }
+
+        first = result_fingerprint(**common, skill_catalog_digest="catalog-one")
+        second = result_fingerprint(**common, skill_catalog_digest="catalog-two")
+
+        self.assertNotEqual(first, second)
+
     def test_retries_only_once_for_a_retryable_failure(self):
         calls = []
 
@@ -62,6 +79,30 @@ class ResultLifecycleTest(unittest.TestCase):
         (condition / "attempt-2").mkdir()
 
         self.assertEqual(condition / "attempt-3", next_attempt_workspace(condition))
+
+    def test_loading_raw_records_canonicalizes_plugin_qualified_routing(self):
+        path = self.root / "raw" / "case" / "automatic" / "1.json"
+        path.parent.mkdir(parents=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "payload": {
+                        "subject": {
+                            "final_output": {
+                                "skills_used": [
+                                    "chrisbanes-skills:compose-state-authoring"
+                                ]
+                            }
+                        }
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        record = load_raw_records(self.root)[0]
+
+        self.assertEqual(["compose-state-authoring"], record["reported_skills"])
 
 
 if __name__ == "__main__":
