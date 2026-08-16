@@ -13,6 +13,9 @@ _DESTRUCTIVE_COMMAND = re.compile(
     r"(?:^|[;&|]\s*|\s)(?:rm\s+-[^\n]*r|git\s+(?:reset\s+--hard|clean\s+-|push)|sudo\s|gh\s+(?:pr\s+merge|issue\s+close))"
 )
 _NETWORK_COMMAND = re.compile(r"(?:^|\s)(?:curl|wget|nc|ssh|scp)\s")
+_GRADLEW_INVOCATION = re.compile(
+    r"(?:^|[;&|]\s*|\s)['\"]?(?:\./|/[^\s'\";|&]+/)?gradlew\s"
+)
 
 
 @dataclass(frozen=True)
@@ -110,7 +113,7 @@ def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
                 violations.append("destructive command attempted")
             if _NETWORK_COMMAND.search(command):
                 violations.append("network command attempted")
-            if "gradlew" in command and "--offline" not in command:
+            if _GRADLEW_INVOCATION.search(command) and "--offline" not in command:
                 violations.append("Gradle command omitted --offline")
     return violations
 

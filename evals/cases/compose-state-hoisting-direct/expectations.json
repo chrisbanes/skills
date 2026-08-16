@@ -7,7 +7,5 @@
     "onQueryChange: (String) -> Unit"
   ],
   "must_contain_any": [],
-  "must_not_contain": [
-    "var query by remember"
-  ]
+  "must_not_contain": []
 }

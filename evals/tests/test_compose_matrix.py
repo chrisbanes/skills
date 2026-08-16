@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -5,6 +6,7 @@ from pathlib import Path
 from evals.harness.cases import COMPOSE_SKILLS, validate_corpus
 from evals.harness.codex import prepare_workspace
 from evals.harness.grade import grade_subject
+from evals.harness.experiment import regrade_records
 from evals.tests.test_grade import make_result
 
 
@@ -96,6 +98,106 @@ class Counter {
             )
 
             self.assertTrue(grade_subject(case, result).objective_pass)
+
+    def test_direct_validators_accept_semantic_equivalents_seen_in_live_runs(self):
+        report = validate_corpus(REPO_ROOT)
+        replacements = {
+            "compose-slot-api-pattern-direct": """package example
+import androidx.compose.runtime.Composable
+@Composable fun ActionRow(
+  leadingContent: @Composable () -> Unit,
+  titleContent: @Composable () -> Unit,
+) { leadingContent(); titleContent() }
+""",
+            "compose-stability-diagnostics-direct": """package example
+import kotlinx.collections.immutable.ImmutableList
+data class FeedState(val items: ImmutableList<String>)
+""",
+            "compose-state-hoisting-direct": """package example
+import androidx.compose.runtime.Composable
+@Composable fun SearchContent(query: String, onQueryChange: (String) -> Unit) = Unit
+@Composable private fun SearchContentPreview() {
+  var query by remember { mutableStateOf(\"\") }
+  SearchContent(query, onQueryChange = { query = it })
+}
+""",
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for case_id, source in replacements.items():
+                with self.subTest(case=case_id):
+                    case = next(case for case in report.cases if case.id == case_id)
+                    workspace = prepare_workspace(
+                        case, REPO_ROOT, Path(temp_dir) / case_id
+                    )
+                    subject = workspace / "src/main/kotlin/example/Subject.kt"
+                    subject.write_text(source, encoding="utf-8")
+                    result = make_result(workspace, paths=(str(subject.relative_to(workspace)),))
+                    self.assertTrue(grade_subject(case, result).objective_pass)
+
+    def test_regrades_persisted_subject_evidence_without_model_calls(self):
+        report = validate_corpus(REPO_ROOT)
+        case = next(
+            case for case in report.cases if case.id == "compose-slot-api-pattern-direct"
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            workspace = prepare_workspace(
+                case,
+                REPO_ROOT,
+                output_dir / "workspaces" / case.id / "none" / "1" / "attempt-1",
+            )
+            subject_path = workspace / "src/main/kotlin/example/Subject.kt"
+            subject_path.write_text(
+                """package example
+import androidx.compose.runtime.Composable
+@Composable fun ActionRow(
+  leadingContent: @Composable () -> Unit,
+  titleContent: @Composable () -> Unit,
+) { leadingContent(); titleContent() }
+""",
+                encoding="utf-8",
+            )
+            result = make_result(
+                workspace,
+                paths=(str(subject_path.relative_to(workspace)),),
+            )
+            record = {
+                "id": f"{case.id}:none:1",
+                "case_id": case.id,
+                "arm": "none",
+                "kind": case.kind,
+                "expected_skills": list(case.expected_skills),
+                "reported_skills": [],
+                "reported_router": False,
+                "objective_pass": False,
+                "judge_pass": True,
+                "outcome_pass": False,
+                "forbidden_action_failure": False,
+                "subject": {
+                    "command": ["codex", "-C", str(workspace)],
+                    "events": list(result.events),
+                    "returncode": result.returncode,
+                    "final_output": result.final_output,
+                    "usage": {},
+                    "changed_paths": list(result.changed_paths),
+                    "diff": result.diff,
+                    "elapsed_seconds": 0.1,
+                    "stderr": "",
+                    "retries": 0,
+                },
+                "judge": {"returncode": 0, "retries": 0},
+            }
+
+            paths = regrade_records(
+                REPO_ROOT, list(report.cases), output_dir, [record], audit_seed=3
+            )
+            regraded = json.loads(paths["results"].read_text(encoding="utf-8"))
+
+            self.assertTrue(regraded[0]["objective_pass"])
+            self.assertTrue(regraded[0]["outcome_pass"])
+            self.assertFalse((output_dir / "raw").exists())
 
 
 if __name__ == "__main__":

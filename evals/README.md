@@ -136,6 +136,15 @@ Rebuild reports from completed raw records without model calls:
 python3 evals/run.py report --output-dir .scratch/skill-evals/<run-id>
 ```
 
+If deterministic validators or safety matchers change after a run, reapply only
+those local checks without overwriting raw evidence or repeating model calls:
+
+```shell
+python3 evals/run.py regrade --output-dir .scratch/skill-evals/<run-id>
+```
+
+Regraded results and reports are written under `<run-id>/regraded/`.
+
 Persisted blinded packets can be rejudged without repeating subject calls. The
 command previews by default and writes separate fingerprinted rejudgments when
 `--execute` is supplied, preserving the original judgment:

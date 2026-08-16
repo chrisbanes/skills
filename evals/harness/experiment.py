@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+from copy import deepcopy
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -402,6 +403,68 @@ def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
                 payload["reported_router"] = ROUTER_SKILL in reported
             records.append(payload)
     return records
+
+
+def _subject_result_from_record(
+    record: dict[str, Any], output_dir: Path
+) -> SubjectResult:
+    subject = record.get("subject", {})
+    command = subject.get("command", [])
+    if not isinstance(command, list) or "-C" not in command:
+        raise ValueError(f"record has no subject workspace: {record.get('id')}")
+    workspace = Path(command[command.index("-C") + 1]).resolve()
+    workspaces_root = (output_dir / "workspaces").resolve()
+    if not workspace.is_relative_to(workspaces_root):
+        raise ValueError(f"subject workspace escapes run directory: {workspace}")
+    return SubjectResult(
+        case_id=str(record["case_id"]),
+        arm=str(record["arm"]),
+        command=tuple(str(value) for value in command),
+        workspace=workspace,
+        returncode=int(subject.get("returncode", 1)),
+        events=tuple(subject.get("events", ())),
+        final_output=dict(subject.get("final_output", {})),
+        usage=dict(subject.get("usage", {})),
+        changed_paths=tuple(subject.get("changed_paths", ())),
+        diff=str(subject.get("diff", "")),
+        stdout="",
+        stderr=str(subject.get("stderr", "")),
+        elapsed_seconds=float(subject.get("elapsed_seconds", 0.0)),
+    )
+
+
+def regrade_records(
+    repo_root: Path,
+    cases: list[EvalCase],
+    output_dir: Path,
+    records: list[dict[str, Any]],
+    *,
+    audit_seed: int,
+) -> dict[str, Path]:
+    by_id = {case.id: case for case in cases}
+    regraded: list[dict[str, Any]] = []
+    for original in records:
+        record = deepcopy(original)
+        case_id = str(record.get("case_id"))
+        if case_id not in by_id:
+            raise ValueError(f"unknown case in raw record: {case_id}")
+        case = by_id[case_id]
+        grade = grade_subject(case, _subject_result_from_record(record, output_dir))
+        record["objective_pass"] = grade.objective_pass
+        record["forbidden_action_failure"] = grade.forbidden_action_failure
+        record["objective_failures"] = list(grade.objective_failures)
+        record["violations"] = list(grade.violations)
+        record["validators"] = _validator_payload(grade)
+        record["outcome_pass"] = grade.objective_pass and bool(record.get("judge_pass"))
+        record["regraded_case_digest"] = _case_digest(case)
+        regraded.append(record)
+    destination = output_dir / "regraded"
+    return write_reports(
+        destination,
+        regraded,
+        compute_scorecard(regraded),
+        seed=audit_seed,
+    )
 
 
 def rejudge_packets(

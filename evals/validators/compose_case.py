@@ -35,6 +35,12 @@ def main(argv: list[str]) -> int:
     for alternatives in expectations.get("must_contain_any", []):
         if not any(alternative in subject for alternative in alternatives):
             failures.append(f"missing one of: {alternatives!r}")
+    for required, count in expectations.get("minimum_occurrences", {}).items():
+        actual = subject.count(required)
+        if actual < count:
+            failures.append(
+                f"expected at least {count} occurrences of {required!r}, found {actual}"
+            )
     for forbidden in expectations.get("must_not_contain", []):
         if forbidden in subject:
             failures.append(f"forbidden evidence remains: {forbidden!r}")
