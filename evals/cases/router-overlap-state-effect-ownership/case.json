@@ -1,0 +1,48 @@
+{
+  "id": "router-overlap-state-effect-ownership",
+  "title": "Route screen state and one-shot events",
+  "family": "router-overlap",
+  "target_skills": [
+    "compose-state-hoisting",
+    "compose-side-effects"
+  ],
+  "expected_skills": [
+    "compose-state-hoisting",
+    "compose-side-effects"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "overlap",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "router-overlap-state-effect-ownership"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Distinguishes durable query state from UI wiring"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Finds key or callback freshness risks in event collection"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

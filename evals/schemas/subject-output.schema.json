@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["summary", "skills_used", "evidence"],
+  "properties": {
+    "summary": { "type": "string" },
+    "skills_used": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "compose-state-authoring",
+          "compose-state-hoisting",
+          "compose-side-effects",
+          "compose-recomposition-performance",
+          "compose-stability-diagnostics",
+          "compose-state-deferred-reads",
+          "compose-modifier-and-layout-style",
+          "compose-slot-api-pattern",
+          "compose-animations",
+          "compose-focus-navigation",
+          "compose-ui-testing-patterns",
+          "using-chrisbanes-skills"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "evidence": { "type": "array", "items": { "type": "string" } }
+  }
+}

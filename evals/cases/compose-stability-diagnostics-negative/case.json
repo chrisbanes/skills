@@ -1,0 +1,50 @@
+{
+  "id": "compose-stability-diagnostics-negative",
+  "title": "Preserve immutable UI state",
+  "family": "performance",
+  "target_skills": [
+    "compose-stability-diagnostics"
+  ],
+  "expected_skills": [],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-stability-diagnostics-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Recognizes the immutable collection contract"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Does not add redundant annotations or wrappers"
+    },
+    {
+      "id": "criterion-3",
+      "text": "Leaves the workspace unchanged"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

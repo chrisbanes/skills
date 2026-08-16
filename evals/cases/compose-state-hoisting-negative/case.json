@@ -1,0 +1,46 @@
+{
+  "id": "compose-state-hoisting-negative",
+  "title": "Preserve a state-driven badge",
+  "family": "state-effects",
+  "target_skills": [
+    "compose-state-hoisting"
+  ],
+  "expected_skills": [],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-state-hoisting-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Recognizes the component is already state-driven"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Leaves the workspace unchanged"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

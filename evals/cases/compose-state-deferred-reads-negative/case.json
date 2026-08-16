@@ -1,0 +1,46 @@
+{
+  "id": "compose-state-deferred-reads-negative",
+  "title": "Preserve graphics-phase animation reads",
+  "family": "performance",
+  "target_skills": [
+    "compose-state-deferred-reads"
+  ],
+  "expected_skills": [],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-state-deferred-reads-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Recognizes the value is already read in the graphics phase"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Leaves the workspace unchanged"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

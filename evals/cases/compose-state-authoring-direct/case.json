@@ -1,0 +1,48 @@
+{
+  "id": "compose-state-authoring-direct",
+  "title": "Encapsulate writable counter state",
+  "family": "state-effects",
+  "target_skills": [
+    "compose-state-authoring"
+  ],
+  "expected_skills": [
+    "compose-state-authoring"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-state-authoring-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "The counter remains observable by Compose"
+    },
+    {
+      "id": "criterion-2",
+      "text": "External callers cannot assign count directly"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

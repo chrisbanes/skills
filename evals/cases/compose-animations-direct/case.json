@@ -1,0 +1,48 @@
+{
+  "id": "compose-animations-direct",
+  "title": "Preserve content identity during swaps",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-animations"
+  ],
+  "expected_skills": [
+    "compose-animations"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-animations-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Uses a content-swap animation keyed by the target value"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Removes the unsafe outer-value capture"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

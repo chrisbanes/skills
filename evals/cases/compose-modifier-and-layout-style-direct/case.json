@@ -1,0 +1,48 @@
+{
+  "id": "compose-modifier-and-layout-style-direct",
+  "title": "Apply caller placement at the root",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-modifier-and-layout-style"
+  ],
+  "expected_skills": [
+    "compose-modifier-and-layout-style"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-modifier-and-layout-style-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "The supplied modifier is applied to the root"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Internal padding remains internal to caller placement"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

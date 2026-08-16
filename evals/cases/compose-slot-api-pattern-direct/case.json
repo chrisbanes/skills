@@ -1,0 +1,48 @@
+{
+  "id": "compose-slot-api-pattern-direct",
+  "title": "Replace primitive visual regions with slots",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-slot-api-pattern"
+  ],
+  "expected_skills": [
+    "compose-slot-api-pattern"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-slot-api-pattern-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Variable visual regions are caller-provided composable slots"
+    },
+    {
+      "id": "criterion-2",
+      "text": "The row retains responsibility for layout"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

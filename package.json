@@ -7,7 +7,10 @@
   "repository": "https://github.com/chrisbanes/skills",
   "license": "Apache-2.0",
   "scripts": {
-    "lint": "remark --frail skills/"
+    "lint": "remark --frail skills/ README.md evals/README.md",
+    "test": "python3 -m unittest scripts/test_release.py skills/run-github-project/scripts/test_rank_tickets.py && python3 -m unittest discover -s evals/tests -p 'test_*.py'",
+    "evals:validate": "python3 evals/run.py validate",
+    "evals:plan": "python3 evals/run.py plan --model gpt-5.6-sol --reasoning medium --judge-model gpt-5.6-sol --judge-reasoning high"
   },
   "devDependencies": {
     "remark": "^15.0.1",

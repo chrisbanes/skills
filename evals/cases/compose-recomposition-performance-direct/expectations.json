@@ -1,0 +1,12 @@
+{
+  "files": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "must_contain": [
+    "Modifier.offset {"
+  ],
+  "must_contain_any": [],
+  "must_not_contain": [
+    "val offset = listState.firstVisibleItemScrollOffset"
+  ]
+}

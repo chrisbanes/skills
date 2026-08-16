@@ -1,0 +1,50 @@
+{
+  "id": "compose-modifier-and-layout-style-novel",
+  "title": "Review a conditional layout wrapper",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-modifier-and-layout-style"
+  ],
+  "expected_skills": [
+    "compose-modifier-and-layout-style"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-modifier-and-layout-style-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies inconsistent root modifier application between branches"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Preserves the component's conditional layout rather than forcing a wrapper"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/Jetsnack/app/src/main/java/com/example/jetsnack/ui/components/Surface.kt",
+    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced component excerpt preserving conditional root layout and modifier placement decisions."
+  }
+}

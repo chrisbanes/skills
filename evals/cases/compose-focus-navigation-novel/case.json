@@ -1,0 +1,50 @@
+{
+  "id": "compose-focus-navigation-novel",
+  "title": "Review repeated focus requests",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-focus-navigation"
+  ],
+  "expected_skills": [
+    "compose-focus-navigation"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-focus-navigation-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies focus requests performed directly during composition"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Places the request behind an appropriate event or effect boundary"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/Jetcaster/tv/src/main/java/com/example/jetcaster/tv/ui/component/Catalog.kt",
+    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced and perturbed TV catalog excerpt preserving initial focus requester ownership and timing."
+  }
+}

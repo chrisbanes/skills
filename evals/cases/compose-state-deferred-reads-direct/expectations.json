@@ -1,0 +1,13 @@
+{
+  "files": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "must_contain": [
+    "graphicsLayer {",
+    "alpha ="
+  ],
+  "must_contain_any": [],
+  "must_not_contain": [
+    "val currentAlpha = alpha.value"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "files": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "must_contain": [
+    "val items: List<String>"
+  ],
+  "must_contain_any": [],
+  "must_not_contain": [
+    "MutableList<String>"
+  ]
+}

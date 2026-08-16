@@ -1,0 +1,46 @@
+{
+  "id": "compose-ui-testing-patterns-negative",
+  "title": "Preserve a value-only unit test",
+  "family": "testing",
+  "target_skills": [
+    "compose-ui-testing-patterns"
+  ],
+  "expected_skills": [],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/test/kotlin/example/SubjectTest.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-ui-testing-patterns-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Recognizes a plain unit test is the correct seam"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Leaves the workspace unchanged"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

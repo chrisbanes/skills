@@ -1,0 +1,14 @@
+{
+  "files": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "must_contain": [
+    "title: @Composable () -> Unit",
+    "icon: @Composable () -> Unit"
+  ],
+  "must_contain_any": [],
+  "must_not_contain": [
+    "title: String",
+    "icon: ImageVector"
+  ]
+}

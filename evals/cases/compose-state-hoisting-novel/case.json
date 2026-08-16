@@ -1,0 +1,50 @@
+{
+  "id": "compose-state-hoisting-novel",
+  "title": "Review UI objects held by a screen owner",
+  "family": "state-effects",
+  "target_skills": [
+    "compose-state-hoisting"
+  ],
+  "expected_skills": [
+    "compose-state-hoisting"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-state-hoisting-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Distinguishes durable screen data from composition-owned UI objects"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Recommends a previewable state-driven content boundary"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/Conversation.kt",
+    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced excerpt preserving the conversation list, draft, and focus ownership boundaries while removing app services."
+  }
+}

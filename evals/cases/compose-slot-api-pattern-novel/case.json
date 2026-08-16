@@ -1,0 +1,50 @@
+{
+  "id": "compose-slot-api-pattern-novel",
+  "title": "Review nullable content slots",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-slot-api-pattern"
+  ],
+  "expected_skills": [
+    "compose-slot-api-pattern"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-slot-api-pattern-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Evaluates whether nullable slots express real optional regions or complicate invocation"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Keeps variable content caller-provided and layout component-owned"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/Jetchat/app/src/main/java/com/example/compose/jetchat/components/JetchatScaffold.kt",
+    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced scaffold excerpt preserving optional content regions and component-owned placement."
+  }
+}

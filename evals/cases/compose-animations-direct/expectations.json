@@ -1,0 +1,15 @@
+{
+  "files": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "must_contain": [],
+  "must_contain_any": [
+    [
+      "AnimatedContent(",
+      "Crossfade("
+    ]
+  ],
+  "must_not_contain": [
+    "current!!"
+  ]
+}

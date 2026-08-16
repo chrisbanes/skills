@@ -1,0 +1,50 @@
+{
+  "id": "compose-side-effects-novel",
+  "title": "Review event collection and navigation",
+  "family": "state-effects",
+  "target_skills": [
+    "compose-side-effects"
+  ],
+  "expected_skills": [
+    "compose-side-effects"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-side-effects-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies the stale Flow or callback risk created by a constant key"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Keeps one-shot navigation in an effect rather than composition"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/UserInput.kt",
+    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced excerpt preserving event-to-callback collection semantics while removing the message composer UI."
+  }
+}

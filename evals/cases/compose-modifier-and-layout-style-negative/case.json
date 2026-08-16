@@ -1,0 +1,46 @@
+{
+  "id": "compose-modifier-and-layout-style-negative",
+  "title": "Preserve intentional internal alignment",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-modifier-and-layout-style"
+  ],
+  "expected_skills": [],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-modifier-and-layout-style-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Recognizes caller placement and internal alignment are already separated"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Leaves the workspace unchanged"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "compose-focus-navigation-direct",
+  "title": "Remember the focus requester",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-focus-navigation"
+  ],
+  "expected_skills": [
+    "compose-focus-navigation"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-focus-navigation-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "The requester has stable remembered identity"
+    },
+    {
+      "id": "criterion-2",
+      "text": "The requester remains attached through the modifier"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

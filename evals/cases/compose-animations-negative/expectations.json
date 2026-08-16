@@ -1,0 +1,8 @@
+{
+  "files": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "must_contain": [],
+  "must_contain_any": [],
+  "must_not_contain": []
+}

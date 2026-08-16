@@ -1,0 +1,48 @@
+{
+  "id": "router-overlap-component-slots",
+  "title": "Route a reusable card API review",
+  "family": "router-overlap",
+  "target_skills": [
+    "compose-modifier-and-layout-style",
+    "compose-slot-api-pattern"
+  ],
+  "expected_skills": [
+    "compose-modifier-and-layout-style",
+    "compose-slot-api-pattern"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "overlap",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "router-overlap-component-slots"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies caller modifier ordering at the root"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Evaluates whether the variable profile region needs a caller slot"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

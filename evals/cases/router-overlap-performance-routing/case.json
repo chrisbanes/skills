@@ -1,0 +1,48 @@
+{
+  "id": "router-overlap-performance-routing",
+  "title": "Route evidence-based recomposition diagnosis",
+  "family": "router-overlap",
+  "target_skills": [
+    "compose-recomposition-performance",
+    "compose-stability-diagnostics"
+  ],
+  "expected_skills": [
+    "compose-recomposition-performance",
+    "compose-stability-diagnostics"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "overlap",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "router-overlap-performance-routing"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Routes from the broad performance symptom to stability evidence"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Identifies the mutable collection without claiming an unmeasured frame-time win"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "router-overlap-animation-focus-testing",
+  "title": "Route focus-aware animated content testing",
+  "family": "router-overlap",
+  "target_skills": [
+    "compose-animations",
+    "compose-focus-navigation",
+    "compose-ui-testing-patterns"
+  ],
+  "expected_skills": [
+    "compose-animations",
+    "compose-focus-navigation",
+    "compose-ui-testing-patterns"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "overlap",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "router-overlap-animation-focus-testing"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Finds the focus side effect inside animated content"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Preserves target-state identity"
+    },
+    {
+      "id": "criterion-3",
+      "text": "Selects a focused plain UI interaction test seam"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

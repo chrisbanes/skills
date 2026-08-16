@@ -1,0 +1,48 @@
+{
+  "id": "compose-state-deferred-reads-direct",
+  "title": "Defer animated alpha reads",
+  "family": "performance",
+  "target_skills": [
+    "compose-state-deferred-reads"
+  ],
+  "expected_skills": [
+    "compose-state-deferred-reads"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-state-deferred-reads-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "The animated value is read inside the graphics lambda"
+    },
+    {
+      "id": "criterion-2",
+      "text": "The rendered alpha still follows the animation"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

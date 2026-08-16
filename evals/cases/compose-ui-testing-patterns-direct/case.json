@@ -1,0 +1,48 @@
+{
+  "id": "compose-ui-testing-patterns-direct",
+  "title": "Move a component check to a plain UI test",
+  "family": "testing",
+  "target_skills": [
+    "compose-ui-testing-patterns"
+  ],
+  "expected_skills": [
+    "compose-ui-testing-patterns"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/test/kotlin/example/SubjectTest.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-ui-testing-patterns-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Uses a plain Compose UI-test entry point and controlled setContent"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Removes the unnecessary activity integration boundary"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

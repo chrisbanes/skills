@@ -1,0 +1,50 @@
+{
+  "id": "compose-state-deferred-reads-novel",
+  "title": "Review measured state read during composition",
+  "family": "performance",
+  "target_skills": [
+    "compose-state-deferred-reads"
+  ],
+  "expected_skills": [
+    "compose-state-deferred-reads"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-state-deferred-reads-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies both the layout back-write and composition-time frame read"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Moves calculation toward the phase that consumes size and progress"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/JetLagged/app/src/main/java/com/example/jetlagged/backgrounds/FadingCircleBackground.kt",
+    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced and perturbed drawing excerpt preserving size and animation-progress phase boundaries."
+  }
+}

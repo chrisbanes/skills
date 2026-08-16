@@ -1,0 +1,54 @@
+{
+  "id": "router-overlap-state-animation-deferred",
+  "title": "Route an animated scroll-owned header",
+  "family": "router-overlap",
+  "target_skills": [
+    "compose-state-hoisting",
+    "compose-animations",
+    "compose-state-deferred-reads"
+  ],
+  "expected_skills": [
+    "compose-state-hoisting",
+    "compose-animations",
+    "compose-state-deferred-reads"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "overlap",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "router-overlap-state-animation-deferred"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Separates composition-owned scroll state from durable screen state"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Evaluates the visibility transition appropriately"
+    },
+    {
+      "id": "criterion-3",
+      "text": "Identifies the frame-rate composition read"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "compose-recomposition-performance-direct",
+  "title": "Move scroll offset work to placement",
+  "family": "performance",
+  "target_skills": [
+    "compose-recomposition-performance"
+  ],
+  "expected_skills": [
+    "compose-recomposition-performance"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-recomposition-performance-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "The high-frequency read occurs in a deferred placement lambda"
+    },
+    {
+      "id": "criterion-2",
+      "text": "The visual behavior still follows the scroll offset"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

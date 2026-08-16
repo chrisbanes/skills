@@ -1,0 +1,50 @@
+{
+  "id": "compose-state-authoring-novel",
+  "title": "Review a read-only accessor contract",
+  "family": "state-effects",
+  "target_skills": [
+    "compose-state-authoring"
+  ],
+  "expected_skills": [
+    "compose-state-authoring"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-state-authoring-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies that the read-only contract is invalid for a mutable snapshot read"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Does not invent unrelated state architecture changes"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/JetNews/app/src/main/java/com/example/jetnews/ui/navigation/NavigationState.kt",
+    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced and renamed excerpt preserving the observable navigation-state accessor pattern while removing application dependencies."
+  }
+}

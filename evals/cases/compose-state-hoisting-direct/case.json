@@ -1,0 +1,48 @@
+{
+  "id": "compose-state-hoisting-direct",
+  "title": "Hoist reusable search input state",
+  "family": "state-effects",
+  "target_skills": [
+    "compose-state-hoisting"
+  ],
+  "expected_skills": [
+    "compose-state-hoisting"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-state-hoisting-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "The reusable content receives query and change callback parameters"
+    },
+    {
+      "id": "criterion-2",
+      "text": "The component no longer owns caller-visible search state"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

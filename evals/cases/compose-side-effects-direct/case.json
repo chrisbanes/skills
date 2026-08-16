@@ -1,0 +1,48 @@
+{
+  "id": "compose-side-effects-direct",
+  "title": "Keep a delayed callback current",
+  "family": "state-effects",
+  "target_skills": [
+    "compose-side-effects"
+  ],
+  "expected_skills": [
+    "compose-side-effects"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-side-effects-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "The effect observes the latest callback"
+    },
+    {
+      "id": "criterion-2",
+      "text": "The stable delay is not restarted for callback identity alone"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

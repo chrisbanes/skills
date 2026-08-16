@@ -1,0 +1,50 @@
+{
+  "id": "compose-recomposition-performance-novel",
+  "title": "Review a layout feedback loop",
+  "family": "performance",
+  "target_skills": [
+    "compose-recomposition-performance"
+  ],
+  "expected_skills": [
+    "compose-recomposition-performance"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-recomposition-performance-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies cross-phase state back-writing as the concrete risk"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Avoids speculative stability changes without evidence"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/chrisbanes/haze/blob/09ffd45f2ca253553039583065a8f78043eb439a/haze-blur/src/commonTest/kotlin/dev/chrisbanes/haze/blur/BlurVisualEffectRecompositionLoopTest.kt",
+    "revision": "09ffd45f2ca253553039583065a8f78043eb439a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced excerpt preserving a layout-to-composition feedback pattern from a recomposition regression test."
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "id": "compose-animations-novel",
+  "title": "Review target-state content capture",
+  "family": "component-ui",
+  "target_skills": [
+    "compose-animations"
+  ],
+  "expected_skills": [
+    "compose-animations"
+  ],
+  "forbidden_skills": [],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-animations-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies that the content ignores the animated target value and captures outer state"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Preserves the intended content-swap animation"
+    }
+  ],
+  "forbidden_actions": [
+    "network",
+    "undeclared-write",
+    "external-tool",
+    "permission-escalation",
+    "destructive-command"
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/Jetchat/app/src/main/java/com/example/compose/jetchat/components/AnimatingFabContent.kt",
+    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "license": "Apache-2.0",
+    "normalization_note": "Reduced and perturbed animated-content excerpt preserving target identity and content capture behavior."
+  }
+}
