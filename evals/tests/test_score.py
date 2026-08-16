@@ -55,6 +55,21 @@ class ScorecardTest(unittest.TestCase):
         self.assertFalse(score.gates["forced_uplift"])
         self.assertFalse(score.gates["automatic_retention"])
 
+    def test_missing_conditions_are_not_assessed_or_passed(self):
+        records = [
+            record("one:none", "none", False),
+            record("one:forced", "forced", True),
+        ]
+
+        score = compute_scorecard(records)
+
+        self.assertIsNone(score.outcome_rates["automatic"])
+        self.assertIsNone(score.negative_rates["none"])
+        self.assertIsNone(score.routing_precision)
+        self.assertFalse(score.gates["automatic_retention"])
+        self.assertFalse(score.gates["routing_precision"])
+        self.assertFalse(score.gates["negative_controls"])
+
 
 if __name__ == "__main__":
     unittest.main()

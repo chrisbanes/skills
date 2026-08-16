@@ -71,6 +71,36 @@ class EvaluationCliTest(unittest.TestCase):
         self.assertFalse(plan["execute"])
         self.assertIn("Pass --execute", plan["notice"])
 
+    def test_cost_preview_uses_explicit_per_call_assumptions(self):
+        status, output = self.invoke(
+            "plan",
+            *MODEL_ARGS,
+            "--case",
+            "compose-state-authoring-direct",
+            "--repetitions",
+            "1",
+            "--subject-cost-per-call-usd",
+            "0.10",
+            "--judge-cost-per-call-usd",
+            "0.04",
+            "--json",
+        )
+
+        plan = json.loads(output)
+        self.assertEqual(0, status)
+        self.assertAlmostEqual(0.42, plan["estimated_cost_usd"])
+
+    def test_live_run_requires_explicit_cost_assumptions(self):
+        status, _ = self.invoke(
+            "run",
+            *MODEL_ARGS,
+            "--case",
+            "compose-state-authoring-direct",
+            "--execute",
+        )
+
+        self.assertEqual(2, status)
+
     def test_model_and_reasoning_are_explicit_required_inputs(self):
         with self.assertRaises(SystemExit):
             main(["plan"])
@@ -87,6 +117,28 @@ class EvaluationCliTest(unittest.TestCase):
         self.assertIn("npm test", workflow)
         self.assertIn("npm run evals:validate", workflow)
         self.assertNotIn("--execute", workflow)
+
+    def test_judge_defaults_to_a_no_call_packet_preview(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            packets = Path(temp_dir) / "judge-packets"
+            packets.mkdir()
+            (packets / "one.json").write_text("{}\n", encoding="utf-8")
+            status, output = self.invoke(
+                "judge",
+                "--output-dir",
+                temp_dir,
+                "--judge-model",
+                "gpt-5.6-sol",
+                "--judge-reasoning",
+                "high",
+                "--json",
+            )
+
+        self.assertEqual(0, status)
+        self.assertEqual(1, json.loads(output)["judge_calls"])
+        self.assertFalse(json.loads(output)["execute"])
 
 
 if __name__ == "__main__":

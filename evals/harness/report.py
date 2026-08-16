@@ -114,6 +114,7 @@ def render_scorecard(
             f"- Automatic retention: {_percent(score.automatic_retention)}",
             f"- Reported automatic routing precision: {_percent(score.routing_precision)}",
             f"- Reported automatic routing recall: {_percent(score.routing_recall)}",
+            f"- Router reported in automatic arm: {_percent(score.router_report_rate)}",
             f"- Forbidden-action failures: {score.forbidden_action_failures}",
             "",
             "## Diagnostics (non-gating)",

@@ -147,6 +147,18 @@ class BlindedJudgeTest(unittest.TestCase):
                 rubric,
             )
         )
+        self.assertFalse(
+            judge_covers_rubric(
+                {
+                    **base,
+                    "extra": "not in schema",
+                    "criteria": [
+                        {"id": "correct", "pass": True, "evidence": "diff"}
+                    ],
+                },
+                rubric,
+            )
+        )
 
 
 if __name__ == "__main__":

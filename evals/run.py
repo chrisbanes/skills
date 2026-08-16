@@ -17,6 +17,7 @@ from evals.harness.experiment import (
     experiment_plan,
     filter_cases,
     load_raw_records,
+    rejudge_packets,
 )
 from evals.harness.judge import JudgeConfig
 from evals.harness.report import append_audit_decision, write_reports
@@ -33,6 +34,8 @@ def _add_experiment_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--arm", action="append", choices=ARMS)
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--subject-cost-per-call-usd", type=float)
+    parser.add_argument("--judge-cost-per-call-usd", type=float)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -51,6 +54,13 @@ def build_parser() -> argparse.ArgumentParser:
     report = subparsers.add_parser("report", help="rebuild reports from raw results")
     report.add_argument("--output-dir", type=Path, required=True)
     report.add_argument("--audit-seed", type=int, default=20260816)
+    judge = subparsers.add_parser("judge", help="preview or rejudge persisted packets")
+    judge.add_argument("--output-dir", type=Path, required=True)
+    judge.add_argument("--judge-model", required=True)
+    judge.add_argument("--judge-reasoning", required=True)
+    judge.add_argument("--codex-executable", default="codex")
+    judge.add_argument("--execute", action="store_true")
+    judge.add_argument("--json", action="store_true")
     audit = subparsers.add_parser("audit", help="append a human audit decision")
     audit.add_argument("--output-dir", type=Path, required=True)
     audit.add_argument("--id", required=True)
@@ -67,6 +77,10 @@ def _print_plan(plan: dict[str, object], as_json: bool) -> None:
         f"{plan['case_count']} cases × {len(plan['arms'])} arms × "
         f"{plan['repetitions']} repetitions"
     )
+    if plan["estimated_cost_usd"] is None:
+        print("estimated cost: unavailable (provide both per-call USD assumptions)")
+    else:
+        print(f"estimated cost: ${plan['estimated_cost_usd']:.2f} USD")
     print(
         f"planned calls: {plan['subject_calls']} subject + {plan['judge_calls']} judge "
         f"= {plan['total_calls']} total"
@@ -95,6 +109,19 @@ def main(argv: list[str] | None = None) -> int:
         if args.repetitions <= 0:
             print("repetitions must be positive", file=sys.stderr)
             return 2
+        costs = (args.subject_cost_per_call_usd, args.judge_cost_per_call_usd)
+        if any(cost is not None and cost < 0 for cost in costs):
+            print("per-call cost assumptions cannot be negative", file=sys.stderr)
+            return 2
+        if (costs[0] is None) != (costs[1] is None):
+            print("provide both subject and judge per-call cost assumptions", file=sys.stderr)
+            return 2
+        if args.command == "run" and args.execute and costs[0] is None:
+            print(
+                "live execution requires explicit subject and judge per-call cost assumptions",
+                file=sys.stderr,
+            )
+            return 2
         try:
             report = validate_corpus(repo_root)
             cases = filter_cases(report.cases, case_ids=args.case_ids, skills=args.skills)
@@ -112,6 +139,8 @@ def main(argv: list[str] | None = None) -> int:
             judge_model=args.judge_model,
             judge_reasoning=args.judge_reasoning,
             execute=execute,
+            subject_cost_per_call_usd=costs[0],
+            judge_cost_per_call_usd=costs[1],
         )
         _print_plan(plan, args.json)
         if not execute:
@@ -143,6 +172,22 @@ def main(argv: list[str] | None = None) -> int:
             seed=args.audit_seed,
         )
         print(paths["scorecard"])
+        return 0
+    if args.command == "judge":
+        result = rejudge_packets(
+            repo_root,
+            args.output_dir.resolve(),
+            JudgeConfig(args.judge_model, args.judge_reasoning),
+            execute=args.execute,
+            codex_executable=args.codex_executable,
+        )
+        if args.json:
+            print(json.dumps(result, indent=2, sort_keys=True))
+        else:
+            print(
+                f"{result['packet_count']} persisted packets; "
+                f"{result['judge_calls']} planned judge calls"
+            )
         return 0
     if args.command == "audit":
         path = args.output_dir.resolve() / "audit-decisions.jsonl"

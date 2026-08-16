@@ -126,6 +126,26 @@ class DeterministicGradeTest(unittest.TestCase):
         self.assertTrue(grade.validators[0].timed_out)
         self.assertIn("invalid subject output", grade.objective_failures)
 
+    def test_subject_output_rejects_extra_fields_and_non_string_evidence(self):
+        from evals.harness.experiment import _subject_output_valid
+
+        extra = make_result(
+            self.workspace,
+            output={
+                "summary": "done",
+                "skills_used": [],
+                "evidence": [],
+                "extra": True,
+            },
+        )
+        bad_evidence = make_result(
+            self.workspace,
+            output={"summary": "done", "skills_used": [], "evidence": [1]},
+        )
+
+        self.assertFalse(_subject_output_valid(extra))
+        self.assertFalse(_subject_output_valid(bad_evidence))
+
 
 if __name__ == "__main__":
     unittest.main()

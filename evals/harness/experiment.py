@@ -59,8 +59,17 @@ def experiment_plan(
     judge_model: str,
     judge_reasoning: str,
     execute: bool,
+    subject_cost_per_call_usd: float | None = None,
+    judge_cost_per_call_usd: float | None = None,
 ) -> dict[str, Any]:
     subject_calls = len(cases) * len(arms) * repetitions
+    estimated_cost = (
+        subject_calls * subject_cost_per_call_usd
+        + subject_calls * judge_cost_per_call_usd
+        if subject_cost_per_call_usd is not None
+        and judge_cost_per_call_usd is not None
+        else None
+    )
     return {
         "case_count": len(cases),
         "case_ids": [case.id for case in cases],
@@ -71,6 +80,11 @@ def experiment_plan(
         "subject_calls": subject_calls,
         "judge_calls": subject_calls,
         "total_calls": subject_calls * 2,
+        "cost_assumptions_usd_per_call": {
+            "subject": subject_cost_per_call_usd,
+            "judge": judge_cost_per_call_usd,
+        },
+        "estimated_cost_usd": estimated_cost,
         "execute": execute,
         "notice": (
             "Live model calls are enabled."
@@ -83,6 +97,13 @@ def experiment_plan(
 def default_output_dir(repo_root: Path) -> Path:
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     return repo_root / ".scratch" / "skill-evals" / stamp
+
+
+def next_attempt_workspace(condition_dir: Path) -> Path:
+    attempt = 1
+    while (condition_dir / f"attempt-{attempt}").exists():
+        attempt += 1
+    return condition_dir / f"attempt-{attempt}"
 
 
 def _case_digest(case: EvalCase) -> str:
@@ -115,13 +136,16 @@ def preflight(repo_root: Path, codex_executable: str) -> tuple[str, str]:
 def _subject_output_valid(result: SubjectResult) -> bool:
     output = result.final_output
     skills = output.get("skills_used")
+    evidence = output.get("evidence")
     return (
         result.returncode == 0
+        and set(output) == {"summary", "skills_used", "evidence"}
         and isinstance(output.get("summary"), str)
         and isinstance(skills, list)
         and len(skills) == len(set(skills))
         and all(skill in {*COMPOSE_SKILLS, ROUTER_SKILL} for skill in skills)
-        and isinstance(output.get("evidence"), list)
+        and isinstance(evidence, list)
+        and all(isinstance(item, str) for item in evidence)
     )
 
 
@@ -243,19 +267,15 @@ def execute_experiment(
                     records.append(load_result(result_path, fingerprint))
                     continue
 
-                subject_attempt = 0
-
                 def run_subject_attempt() -> SubjectResult:
-                    nonlocal subject_attempt
-                    subject_attempt += 1
-                    workspace = (
+                    condition_dir = (
                         output_dir
                         / "workspaces"
                         / case.id
                         / arm
                         / str(repetition)
-                        / f"attempt-{subject_attempt}"
                     )
+                    workspace = next_attempt_workspace(condition_dir)
                     return run_subject(
                         case,
                         arm,
@@ -320,3 +340,60 @@ def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
         if isinstance(payload, dict):
             records.append(payload)
     return records
+
+
+def rejudge_packets(
+    repo_root: Path,
+    output_dir: Path,
+    judge_config: JudgeConfig,
+    *,
+    execute: bool,
+    codex_executable: str = "codex",
+) -> dict[str, Any]:
+    packets = sorted((output_dir / "judge-packets").glob("*.json"))
+    plan = {"packet_count": len(packets), "judge_calls": len(packets), "execute": execute}
+    if not execute:
+        return plan
+    completed = 0
+    for packet_path in packets:
+        packet = json.loads(packet_path.read_text(encoding="utf-8"))
+        rubric = tuple(packet.get("rubric", ()))
+        fingerprint = hashlib.sha256(
+            packet_path.read_bytes()
+            + json.dumps(asdict(judge_config), sort_keys=True).encode()
+        ).hexdigest()
+        result_path = output_dir / "rejudgments" / f"{packet_path.stem}.json"
+        if result_path.is_file():
+            load_result(result_path, fingerprint)
+            completed += 1
+            continue
+        judgment, retries = run_with_one_retry(
+            lambda: run_judge(
+                packet_path,
+                repo_root,
+                judge_config,
+                codex_executable=codex_executable,
+            ),
+            lambda result: _judge_retryable(result)
+            or not judge_covers_rubric(result.output, rubric),
+        )
+        write_result(
+            result_path,
+            fingerprint,
+            {
+                "candidate_id": packet.get("candidate_id"),
+                "judge_model": {
+                    "model": judge_config.model,
+                    "reasoning": judge_config.reasoning,
+                },
+                "judge": {
+                    "returncode": judgment.returncode,
+                    "output": judgment.output,
+                    "stderr": judgment.stderr,
+                    "elapsed_seconds": judgment.elapsed_seconds,
+                    "retries": retries,
+                },
+            },
+        )
+        completed += 1
+    return {**plan, "completed": completed}

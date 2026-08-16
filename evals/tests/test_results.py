@@ -9,6 +9,7 @@ from evals.harness.results import (
     run_with_one_retry,
     write_result,
 )
+from evals.harness.experiment import next_attempt_workspace
 
 
 class ResultLifecycleTest(unittest.TestCase):
@@ -54,6 +55,13 @@ class ResultLifecycleTest(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertEqual(1, retries)
         self.assertEqual(2, len(calls))
+
+    def test_resume_uses_a_new_attempt_when_interrupted_workspace_exists(self):
+        condition = self.root / "condition"
+        (condition / "attempt-1").mkdir(parents=True)
+        (condition / "attempt-2").mkdir()
+
+        self.assertEqual(condition / "attempt-3", next_attempt_workspace(condition))
 
 
 if __name__ == "__main__":

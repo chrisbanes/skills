@@ -82,6 +82,17 @@ python3 evals/run.py plan \
   --repetitions 3
 ```
 
+Pass current, user-verified per-call cost assumptions to include a USD estimate;
+the harness deliberately does not bake in a price table that can go stale:
+
+```shell
+python3 evals/run.py plan \
+  --model gpt-5.6-sol --reasoning medium \
+  --judge-model gpt-5.6-sol --judge-reasoning high \
+  --subject-cost-per-call-usd <amount> \
+  --judge-cost-per-call-usd <amount>
+```
+
 `run` is also a preview unless `--execute` is present. Start with a one-case
 smoke run after authenticating Codex and warming the pinned Gradle distribution:
 
@@ -91,6 +102,8 @@ python3 evals/run.py run \
   --arm none --arm forced --arm automatic \
   --model gpt-5.6-sol --reasoning medium \
   --judge-model gpt-5.6-sol --judge-reasoning high \
+  --subject-cost-per-call-usd <amount> \
+  --judge-cost-per-call-usd <amount> \
   --repetitions 1 --execute
 ```
 
@@ -103,6 +116,16 @@ Rebuild reports from completed raw records without model calls:
 
 ```shell
 python3 evals/run.py report --output-dir .scratch/skill-evals/<run-id>
+```
+
+Persisted blinded packets can be rejudged without repeating subject calls. The
+command previews by default and writes separate fingerprinted rejudgments when
+`--execute` is supplied, preserving the original judgment:
+
+```shell
+python3 evals/run.py judge \
+  --output-dir .scratch/skill-evals/<run-id> \
+  --judge-model gpt-5.6-sol --judge-reasoning high
 ```
 
 ## Grading and gates
@@ -124,7 +147,9 @@ applies these gates over the three repetitions:
 - forbidden-action failures are zero.
 
 Tokens, tool calls, elapsed time, process failures, and retries are diagnostics,
-not gates.
+not gates. The scorecard also reports how often the router itself was declared
+in the automatic arm. Missing arms or case categories are shown as `not met`;
+filtered smoke runs cannot pass gates they did not evaluate.
 
 ## Human audit
 

@@ -164,9 +164,11 @@ def _judge_output(stdout: str) -> dict[str, Any]:
 def judge_output_valid(output: dict[str, Any]) -> bool:
     criteria = output.get("criteria")
     return (
-        isinstance(criteria, list)
+        set(output) == {"criteria", "overall_pass", "rationale"}
+        and isinstance(criteria, list)
         and all(
             isinstance(item, dict)
+            and set(item) == {"id", "pass", "evidence"}
             and isinstance(item.get("id"), str)
             and isinstance(item.get("pass"), bool)
             and isinstance(item.get("evidence"), str)
