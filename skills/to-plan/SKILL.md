@@ -35,10 +35,14 @@ conversation.
 With no issue reference, use conversation mode. An inline task starts a new
 conversation source; do not let an earlier summary or confirmation satisfy its
 prerequisite unless the user explicitly identifies that summary as describing
-the inline task. Without an inline task, use the relevant prior conversation. A
-completed `grill-me` summary may satisfy this prerequisite, but never require
-the user to invoke it. Do not reconstruct a specification from a partial or
-unconfirmed interview.
+the inline task. Without an inline task, use a prior conversation only when it
+has exactly one compact decision-complete summary followed by explicit
+confirmation. If none exists, conduct the interview. If several summaries could
+plausibly be relevant, ask the user to identify the task or summary before
+selecting a source; do not infer from recency or draft a plan. A completed
+`grill-me` summary may satisfy this prerequisite, but never require the user to
+invoke it. Do not reconstruct a specification from a partial or unconfirmed
+interview.
 
 When the selected conversation source lacks a compact decision-complete summary
 followed by the user's explicit confirmation of shared understanding:
@@ -50,9 +54,9 @@ followed by the user's explicit confirmation of shared understanding:
    decisions, trade-offs, repository target, validation, and re-plan boundaries
    are decision-complete.
 3. Present one compact self-contained summary and require explicit confirmation.
-4. After confirmation, continue this invocation at Step 1. Write no draft
-   during the interview and do not require a mode switch or another `/to-plan`
-   invocation.
+4. After confirmation, if Plan mode is active, ask the user to switch to Default
+   mode before continuing this invocation at Step 1. Write no draft during the
+   interview and do not require another `/to-plan` invocation.
 
 `--auto` is GitHub-only and requires an issue reference. GitHub normal mode
 requires explicit approval before publishing. `--auto` skips only that approval
@@ -534,7 +538,9 @@ then restore the skill and require the GREEN outcome.
     writes a marked conversation-format scratch plan, performs no GitHub
     write, and returns its path, plan ID, and deletion-aware implementation
     handoff. A completed `grill-me` summary may instead supply the confirmed
-    conversation source.
+    conversation source. If confirmation occurs in Plan mode, it asks the user
+    to switch to Default mode, then continues this invocation without another
+    `/to-plan` command.
     Novel case: an earlier confirmed summary for task A does not satisfy the
     invocation `/to-plan <task B>` unless the user explicitly identifies it as
     task B's summary; the planner interviews and confirms task B instead of
@@ -545,12 +551,13 @@ then restore the skill and require the GREEN outcome.
     path, and never overwrites the unrelated draft. A new conversation instead
     selects the next numeric suffix; a missing or mismatched marker on the
     established path blocks.
-19. Conversation mode is invoked without an inline task after relevant prior
-    discussion. It uses that context, conducts the same one-question-at-a-time
-    interview for missing decisions, and continues immediately after the user
-    confirms its compact summary. Counterexample: it does not direct the user
-    to invoke `grill-me`, require a mode switch, or require another `/to-plan`
-    invocation.
+19. Conversation mode is invoked without an inline task after one confirmed
+    task summary. It uses that summary and proceeds to repository planning. If
+    no confirmed summary exists, it conducts the same one-question-at-a-time
+    interview and proceeds after confirmation. Counterexample: when several
+    confirmed summaries could match, it asks the user to identify the task
+    instead of choosing by recency or drafting a plan. It does not direct the
+    user to invoke `grill-me` or require another `/to-plan` invocation.
 20. The current invocation supplies one issue reference after a grilling
     session. GitHub mode wins and retains every issue readiness and publication
     gate. Counterexample: an issue link mentioned only inside the confirmed
