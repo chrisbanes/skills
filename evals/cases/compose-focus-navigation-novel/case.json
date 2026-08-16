@@ -6,7 +6,8 @@
     "compose-focus-navigation"
   ],
   "expected_skills": [
-    "compose-focus-navigation"
+    "compose-focus-navigation",
+    "compose-side-effects"
   ],
   "forbidden_skills": [],
   "task_mode": "review",

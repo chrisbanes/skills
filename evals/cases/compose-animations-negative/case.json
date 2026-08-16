@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-animations"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-animations"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",

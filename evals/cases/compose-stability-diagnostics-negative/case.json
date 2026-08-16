@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-stability-diagnostics"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-stability-diagnostics"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",

@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-state-deferred-reads"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-state-deferred-reads"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",

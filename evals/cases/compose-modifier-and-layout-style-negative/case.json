@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-modifier-and-layout-style"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-modifier-and-layout-style"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",

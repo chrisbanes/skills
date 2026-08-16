@@ -24,6 +24,8 @@ class ComposeMatrixTest(unittest.TestCase):
             cases = [case for case in standalone if case.target_skills == (skill,)]
             self.assertEqual(3, len(cases), skill)
             self.assertEqual(1, sum(case.provenance["kind"] == "historical" for case in cases))
+            negative = next(case for case in cases if case.kind == "negative")
+            self.assertEqual((skill,), negative.expected_skills)
 
     def test_automatic_prompts_do_not_name_or_invoke_expected_skills(self):
         report = validate_corpus(REPO_ROOT)

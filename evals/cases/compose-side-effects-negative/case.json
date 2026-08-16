@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-side-effects"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-side-effects"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",

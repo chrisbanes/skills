@@ -61,6 +61,10 @@ arm-neutral task. `overlay/` is copied over the pinned Compose/JVM fixture.
 `expectations.json` is consumed only by the external deterministic grader and is
 not copied into the subject workspace.
 
+No-change controls still expect the relevant domain skill to be consulted. They
+measure behavioral restraint through the unchanged-workspace requirement rather
+than treating correct inspection as a routing false positive.
+
 Validate the entire contract without model calls:
 
 ```shell

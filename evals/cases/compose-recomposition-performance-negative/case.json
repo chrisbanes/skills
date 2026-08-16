@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-recomposition-performance"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-recomposition-performance"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",

@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-focus-navigation"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-focus-navigation"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",

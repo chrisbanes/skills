@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-ui-testing-patterns"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-ui-testing-patterns"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",

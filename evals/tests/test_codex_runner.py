@@ -140,8 +140,8 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertEqual("read-only", review[review.index("--sandbox") + 1])
         self.assertNotIn("--approve-for-me", review)
 
-    def test_forced_negative_control_invokes_target_without_claiming_expected_routing(self):
-        case = replace(sample_case(self.root), kind="negative", expected_skills=())
+    def test_forced_negative_control_invokes_target_while_behavior_stays_negative(self):
+        case = replace(sample_case(self.root), kind="negative")
 
         command = build_subject_command(
             case, "forced", self.root, self.root / "workspace", self.config

@@ -5,7 +5,9 @@
   "target_skills": [
     "compose-state-hoisting"
   ],
-  "expected_skills": [],
+  "expected_skills": [
+    "compose-state-hoisting"
+  ],
   "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "negative",
