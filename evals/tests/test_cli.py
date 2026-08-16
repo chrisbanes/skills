@@ -118,6 +118,14 @@ class EvaluationCliTest(unittest.TestCase):
         self.assertIn("npm run evals:validate", workflow)
         self.assertNotIn("--execute", workflow)
 
+    def test_subject_schema_uses_supported_structured_output_keywords(self):
+        root = Path(__file__).resolve().parents[2]
+        schema = json.loads(
+            (root / "evals" / "schemas" / "subject-output.schema.json").read_text()
+        )
+
+        self.assertNotIn("uniqueItems", schema["properties"]["skills_used"])
+
     def test_judge_defaults_to_a_no_call_packet_preview(self):
         import tempfile
 

@@ -91,8 +91,6 @@ def build_subject_command(
         "--sandbox",
         sandbox,
     ]
-    if case.task_mode == "edit":
-        command.append("--approve-for-me")
     command.extend(["-C", str(workspace.resolve()), _subject_prompt(case, arm)])
     return command
 

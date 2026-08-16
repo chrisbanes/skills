@@ -22,8 +22,7 @@
           "compose-ui-testing-patterns",
           "using-chrisbanes-skills"
         ]
-      },
-      "uniqueItems": true
+      }
     },
     "evidence": { "type": "array", "items": { "type": "string" } }
   }

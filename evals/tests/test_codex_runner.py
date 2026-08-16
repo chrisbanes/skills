@@ -88,7 +88,7 @@ class CodexRunnerTest(unittest.TestCase):
         )
 
         self.assertEqual("workspace-write", edit[edit.index("--sandbox") + 1])
-        self.assertIn("--approve-for-me", edit)
+        self.assertNotIn("--approve-for-me", edit)
         self.assertEqual("read-only", review[review.index("--sandbox") + 1])
         self.assertNotIn("--approve-for-me", review)
 
