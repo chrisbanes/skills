@@ -35,7 +35,7 @@ specialist only when its independent behavior changes the same work.
 | Coroutine scope ownership, `init { launch }`, non-suspending launch APIs, `runBlocking`, cancellation, `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, or one-shot events | [`kotlin-concurrency-and-flow`](../kotlin-concurrency-and-flow/SKILL.md) |
 | Kotlin branching, `when` expressions, guard conditions, sealed type exhaustiveness, smart casts, nullable branching, or complex `if`/`else` chains | [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) |
 | Kotlin function placement, member versus top-level or extension functions, factories, single-field domain types, value classes, Kotlin Multiplatform source sets, expect/actual, or platform services | [`kotlin-api-design`](../kotlin-api-design/SKILL.md) |
-| One ready GitHub issue or confirmed conversation specification needs repository-aware planning before a separate implementation session | [`to-plan`](../to-plan/SKILL.md) |
+| One ready GitHub issue or in-chat task needs repository-aware planning before a separate implementation session | [`to-plan`](../to-plan/SKILL.md) |
 | Polling or shepherding PRs/MRs, triaging review comments, fixing CI failures, or keeping reviews moving | [`shepherd`](../shepherd/SKILL.md) |
 
 ## Combining skills
