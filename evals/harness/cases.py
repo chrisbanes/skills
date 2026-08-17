@@ -43,14 +43,12 @@ class EvalCase:
     family: str
     target_skills: tuple[str, ...]
     expected_skills: tuple[str, ...]
-    forbidden_skills: tuple[str, ...]
     task_mode: str
     kind: str
     fixture: str
     allowed_write_paths: tuple[str, ...]
     validators: tuple[Validator, ...]
     rubric: tuple[dict[str, str], ...]
-    forbidden_actions: tuple[str, ...]
     provenance: dict[str, str]
     prompt: str
     directory: Path
@@ -121,20 +119,15 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
 
     target_skills = _require_string_list(data, "target_skills")
     expected_skills = _require_string_list(data, "expected_skills")
-    forbidden_skills = _require_string_list(data, "forbidden_skills")
     known_skills = set(COMPOSE_SKILLS)
     for field, values in (
         ("target_skills", target_skills),
         ("expected_skills", expected_skills),
-        ("forbidden_skills", forbidden_skills),
     ):
         unknown = set(values) - known_skills
         if unknown:
             raise CaseValidationError(f"{field} contains unknown skills: {sorted(unknown)}")
-    if set(expected_skills) & set(forbidden_skills):
-        raise CaseValidationError("expected_skills and forbidden_skills overlap")
-
-    for skill in set(target_skills) | set(expected_skills) | set(forbidden_skills):
+    for skill in set(target_skills) | set(expected_skills):
         if not (repo_root / "skills" / skill / "SKILL.md").is_file():
             raise CaseValidationError(f"missing skill path: skills/{skill}/SKILL.md")
 
@@ -210,14 +203,12 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         family=_require_string(data, "family"),
         target_skills=target_skills,
         expected_skills=expected_skills,
-        forbidden_skills=forbidden_skills,
         task_mode=task_mode,
         kind=kind,
         fixture=fixture,
         allowed_write_paths=allowed_write_paths,
         validators=tuple(validators),
         rubric=tuple(rubric),
-        forbidden_actions=_require_string_list(data, "forbidden_actions"),
         provenance=_validate_provenance(data.get("provenance")),
         prompt=prompt,
         directory=manifest_path.parent,

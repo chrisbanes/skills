@@ -6,7 +6,7 @@ import subprocess
 from dataclasses import dataclass
 
 from evals.harness.cases import EvalCase, Validator
-from evals.harness.codex import SubjectResult
+from evals.harness.codex import SubjectResult, subject_output_valid
 
 
 _DESTRUCTIVE_COMMAND = re.compile(
@@ -78,16 +78,6 @@ def _run_validator(
         )
 
 
-def _valid_subject_output(output: dict[str, object]) -> bool:
-    return (
-        isinstance(output.get("summary"), str)
-        and isinstance(output.get("skills_used"), list)
-        and all(isinstance(skill, str) for skill in output["skills_used"])
-        and isinstance(output.get("evidence"), list)
-        and all(isinstance(item, str) for item in output["evidence"])
-    )
-
-
 def _path_allowed(path: str, allowed: tuple[str, ...]) -> bool:
     return any(path == prefix or path.startswith(prefix.rstrip("/") + "/") for prefix in allowed)
 
@@ -125,7 +115,7 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
     failures: list[str] = []
     if result.returncode != 0:
         failures.append(f"subject exited {result.returncode}")
-    if not _valid_subject_output(result.final_output):
+    if not subject_output_valid(result.final_output):
         failures.append("invalid subject output")
     if case.kind == "negative" and result.changed_paths:
         failures.append("negative control changed workspace")

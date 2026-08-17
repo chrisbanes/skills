@@ -39,6 +39,35 @@ class SubjectResult:
     elapsed_seconds: float
 
 
+def canonical_skill_name(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    name = value.removeprefix("chrisbanes-skills:")
+    return name if name in {*COMPOSE_SKILLS, ROUTER_SKILL} else None
+
+
+def reported_skill_names(output: dict[str, Any]) -> list[str]:
+    values = output.get("skills_used", [])
+    if not isinstance(values, list):
+        return []
+    return [name for value in values if (name := canonical_skill_name(value))]
+
+
+def subject_output_valid(output: dict[str, Any]) -> bool:
+    skills = output.get("skills_used")
+    evidence = output.get("evidence")
+    canonical_skills = reported_skill_names(output)
+    return (
+        set(output) == {"summary", "skills_used", "evidence"}
+        and isinstance(output.get("summary"), str)
+        and isinstance(skills, list)
+        and len(canonical_skills) == len(skills)
+        and len(canonical_skills) == len(set(canonical_skills))
+        and isinstance(evidence, list)
+        and all(isinstance(item, str) for item in evidence)
+    )
+
+
 def discover_skill_paths(
     repo_root: Path, *, roots: tuple[Path, ...] | None = None
 ) -> tuple[Path, ...]:
@@ -199,7 +228,9 @@ def prepare_workspace(
     return destination
 
 
-def _parse_jsonl(stdout: str) -> tuple[tuple[dict[str, Any], ...], dict[str, Any], dict[str, int]]:
+def parse_codex_jsonl(
+    stdout: str,
+) -> tuple[tuple[dict[str, Any], ...], dict[str, Any], dict[str, int]]:
     events: list[dict[str, Any]] = []
     final_output: dict[str, Any] = {}
     usage: dict[str, int] = {}
@@ -314,7 +345,7 @@ def run_subject(
         stderr = error.stderr if isinstance(error.stderr, str) else ""
         stderr += f"\nsubject timed out after {config.timeout_seconds}s"
     elapsed = time.monotonic() - started
-    events, final_output, usage = _parse_jsonl(stdout)
+    events, final_output, usage = parse_codex_jsonl(stdout)
     diff = _workspace_diff(workspace)
     return SubjectResult(
         case_id=case.id,

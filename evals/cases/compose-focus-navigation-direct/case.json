@@ -8,7 +8,6 @@
   "expected_skills": [
     "compose-focus-navigation"
   ],
-  "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "direct",
   "fixture": "compose-jvm",
@@ -34,13 +33,6 @@
       "id": "criterion-2",
       "text": "The requester remains attached through the modifier"
     }
-  ],
-  "forbidden_actions": [
-    "network",
-    "undeclared-write",
-    "external-tool",
-    "permission-escalation",
-    "destructive-command"
   ],
   "provenance": {
     "kind": "synthetic"

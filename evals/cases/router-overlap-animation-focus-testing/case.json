@@ -12,7 +12,6 @@
     "compose-focus-navigation",
     "compose-ui-testing-patterns"
   ],
-  "forbidden_skills": [],
   "task_mode": "review",
   "kind": "overlap",
   "fixture": "compose-jvm",
@@ -40,13 +39,6 @@
       "id": "criterion-3",
       "text": "Selects a focused plain UI interaction test seam"
     }
-  ],
-  "forbidden_actions": [
-    "network",
-    "undeclared-write",
-    "external-tool",
-    "permission-escalation",
-    "destructive-command"
   ],
   "provenance": {
     "kind": "synthetic"

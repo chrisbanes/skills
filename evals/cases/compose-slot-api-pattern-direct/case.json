@@ -8,7 +8,6 @@
   "expected_skills": [
     "compose-slot-api-pattern"
   ],
-  "forbidden_skills": [],
   "task_mode": "edit",
   "kind": "direct",
   "fixture": "compose-jvm",
@@ -34,13 +33,6 @@
       "id": "criterion-2",
       "text": "The row retains responsibility for layout"
     }
-  ],
-  "forbidden_actions": [
-    "network",
-    "undeclared-write",
-    "external-tool",
-    "permission-escalation",
-    "destructive-command"
   ],
   "provenance": {
     "kind": "synthetic"

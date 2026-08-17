@@ -9,7 +9,6 @@
     "compose-focus-navigation",
     "compose-side-effects"
   ],
-  "forbidden_skills": [],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "compose-jvm",
@@ -33,13 +32,6 @@
       "id": "criterion-2",
       "text": "Places the request behind an appropriate event or effect boundary"
     }
-  ],
-  "forbidden_actions": [
-    "network",
-    "undeclared-write",
-    "external-tool",
-    "permission-escalation",
-    "destructive-command"
   ],
   "provenance": {
     "kind": "historical",

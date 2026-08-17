@@ -12,7 +12,6 @@
     "compose-animations",
     "compose-state-deferred-reads"
   ],
-  "forbidden_skills": [],
   "task_mode": "review",
   "kind": "overlap",
   "fixture": "compose-jvm",
@@ -40,13 +39,6 @@
       "id": "criterion-3",
       "text": "Identifies the frame-rate composition read"
     }
-  ],
-  "forbidden_actions": [
-    "network",
-    "undeclared-write",
-    "external-tool",
-    "permission-escalation",
-    "destructive-command"
   ],
   "provenance": {
     "kind": "synthetic"

@@ -13,7 +13,6 @@ def valid_manifest(**overrides):
         "family": "state-effects",
         "target_skills": ["compose-state-authoring"],
         "expected_skills": ["compose-state-authoring"],
-        "forbidden_skills": [],
         "task_mode": "edit",
         "kind": "direct",
         "fixture": "compose-jvm",
@@ -22,7 +21,6 @@ def valid_manifest(**overrides):
             {"argv": ["python3", "checks/check_subject.py"], "timeout_seconds": 30}
         ],
         "rubric": [{"id": "safe-state", "text": "State writes are snapshot-aware"}],
-        "forbidden_actions": ["network", "undeclared-write"],
         "provenance": {"kind": "synthetic"},
     }
     manifest.update(overrides)

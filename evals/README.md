@@ -56,8 +56,10 @@ The 38 cases comprise:
   source URL, revision, license, and normalization note in `case.json`.
 
 `case.json` defines routing expectations, task mode, allowed writes, deterministic
-validators, rubric criteria, safety rules, and provenance. `prompt.md` is the
-arm-neutral task. `overlay/` is copied over the pinned Compose/JVM fixture.
+validators, rubric criteria, and provenance. Safety checks for network and external
+tools, permission escalation, destructive commands, undeclared writes, and online
+Gradle invocations are global evaluator policy. `prompt.md` is the arm-neutral task.
+`overlay/` is copied over the pinned Compose/JVM fixture.
 `expectations.json` is consumed only by the external deterministic grader and is
 not copied into the subject workspace.
 

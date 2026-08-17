@@ -15,7 +15,9 @@ from evals.harness.codex import (
     RunConfig,
     SubjectResult,
     discover_skill_paths,
+    reported_skill_names,
     run_subject,
+    subject_output_valid,
 )
 from evals.harness.grade import ObjectiveGrade, grade_subject
 from evals.harness.judge import (
@@ -34,20 +36,6 @@ from evals.harness.results import (
     write_result,
 )
 from evals.harness.score import compute_scorecard
-
-
-def _canonical_skill_name(value: object) -> str | None:
-    if not isinstance(value, str):
-        return None
-    name = value.removeprefix("chrisbanes-skills:")
-    return name if name in {*COMPOSE_SKILLS, ROUTER_SKILL} else None
-
-
-def _reported_skill_names(output: dict[str, Any]) -> list[str]:
-    values = output.get("skills_used", [])
-    if not isinstance(values, list):
-        return []
-    return [name for value in values if (name := _canonical_skill_name(value))]
 
 
 def filter_cases(
@@ -171,22 +159,6 @@ def preflight(repo_root: Path, codex_executable: str) -> tuple[str, str]:
     return codex_version, skill_sha
 
 
-def _subject_output_valid(result: SubjectResult) -> bool:
-    output = result.final_output
-    skills = output.get("skills_used")
-    evidence = output.get("evidence")
-    return (
-        result.returncode == 0
-        and set(output) == {"summary", "skills_used", "evidence"}
-        and isinstance(output.get("summary"), str)
-        and isinstance(skills, list)
-        and len(skills) == len(set(skills))
-        and len(_reported_skill_names(output)) == len(skills)
-        and isinstance(evidence, list)
-        and all(isinstance(item, str) for item in evidence)
-    )
-
-
 def _judge_retryable(result: JudgeResult) -> bool:
     return result.returncode != 0 or not judge_output_valid(result.output)
 
@@ -215,6 +187,7 @@ def _result_payload(
     skill_sources: tuple[Path, ...],
     skill_catalog_digest: str,
 ) -> dict[str, Any]:
+    reported = reported_skill_names(subject.final_output)
     judge_pass = (
         judge.returncode == 0
         and judge_covers_rubric(judge.output, case.rubric)
@@ -244,11 +217,9 @@ def _result_payload(
         "task_mode": case.task_mode,
         "expected_skills": list(case.expected_skills),
         "reported_skills": [
-            skill
-            for skill in _reported_skill_names(subject.final_output)
-            if skill in COMPOSE_SKILLS
+            skill for skill in reported if skill in COMPOSE_SKILLS
         ],
-        "reported_router": ROUTER_SKILL in _reported_skill_names(subject.final_output),
+        "reported_router": ROUTER_SKILL in reported,
         "objective_pass": grade.objective_pass,
         "judge_pass": judge_pass,
         "outcome_pass": grade.objective_pass and judge_pass,
@@ -338,7 +309,9 @@ def execute_experiment(
                     )
 
                 subject, subject_retries = run_with_one_retry(
-                    run_subject_attempt, lambda result: not _subject_output_valid(result)
+                    run_subject_attempt,
+                    lambda result: result.returncode != 0
+                    or not subject_output_valid(result.final_output),
                 )
                 grade = grade_subject(case, subject)
                 packet = build_judge_packet(case, subject, grade)
@@ -396,7 +369,7 @@ def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
         if isinstance(payload, dict):
             subject_output = payload.get("subject", {}).get("final_output", {})
             if isinstance(subject_output, dict):
-                reported = _reported_skill_names(subject_output)
+                reported = reported_skill_names(subject_output)
                 payload["reported_skills"] = [
                     skill for skill in reported if skill in COMPOSE_SKILLS
                 ]

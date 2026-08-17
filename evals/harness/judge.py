@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from evals.harness.cases import EvalCase
-from evals.harness.codex import SubjectResult, discover_skill_paths
+from evals.harness.codex import SubjectResult, discover_skill_paths, parse_codex_jsonl
 from evals.harness.grade import ObjectiveGrade
 
 
@@ -144,44 +144,6 @@ def build_judge_command(
     ]
 
 
-def _parse_judge_jsonl(
-    stdout: str,
-) -> tuple[tuple[dict[str, Any], ...], dict[str, Any], dict[str, int]]:
-    events: list[dict[str, Any]] = []
-    output: dict[str, Any] = {}
-    usage: dict[str, int] = {}
-    for line in stdout.splitlines():
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if not isinstance(event, dict):
-            continue
-        events.append(event)
-        raw_usage = event.get("usage")
-        if isinstance(raw_usage, dict):
-            usage = {
-                str(key): int(value)
-                for key, value in raw_usage.items()
-                if isinstance(value, int) and not isinstance(value, bool)
-            }
-        if event.get("type") != "item.completed":
-            continue
-        item = event.get("item")
-        if not isinstance(item, dict) or item.get("type") != "agent_message":
-            continue
-        text = item.get("text")
-        if not isinstance(text, str):
-            continue
-        try:
-            candidate = json.loads(text)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(candidate, dict):
-            output = candidate
-    return tuple(events), output, usage
-
-
 def judge_output_valid(output: dict[str, Any]) -> bool:
     criteria = output.get("criteria")
     return (
@@ -242,7 +204,7 @@ def run_judge(
         returncode = 124
         stdout = error.stdout if isinstance(error.stdout, str) else ""
         stderr = error.stderr if isinstance(error.stderr, str) else ""
-    events, output, usage = _parse_judge_jsonl(stdout)
+    events, output, usage = parse_codex_jsonl(stdout)
     return JudgeResult(
         returncode=returncode,
         events=events,

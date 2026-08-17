@@ -8,7 +8,6 @@
   "expected_skills": [
     "compose-state-deferred-reads"
   ],
-  "forbidden_skills": [],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "compose-jvm",
@@ -32,13 +31,6 @@
       "id": "criterion-2",
       "text": "Moves calculation toward the phase that consumes size and progress"
     }
-  ],
-  "forbidden_actions": [
-    "network",
-    "undeclared-write",
-    "external-tool",
-    "permission-escalation",
-    "destructive-command"
   ],
   "provenance": {
     "kind": "historical",

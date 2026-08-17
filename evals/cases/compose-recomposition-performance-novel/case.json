@@ -8,7 +8,6 @@
   "expected_skills": [
     "compose-recomposition-performance"
   ],
-  "forbidden_skills": [],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "compose-jvm",
@@ -32,13 +31,6 @@
       "id": "criterion-2",
       "text": "Avoids speculative stability changes without evidence"
     }
-  ],
-  "forbidden_actions": [
-    "network",
-    "undeclared-write",
-    "external-tool",
-    "permission-escalation",
-    "destructive-command"
   ],
   "provenance": {
     "kind": "historical",

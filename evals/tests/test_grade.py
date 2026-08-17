@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from evals.harness.cases import EvalCase, Validator
-from evals.harness.codex import SubjectResult
+from evals.harness.codex import SubjectResult, subject_output_valid
 from evals.harness.grade import grade_subject
 
 
@@ -14,14 +14,12 @@ def make_case(root: Path, *, task_mode="edit", validators=None, allowed=None):
         family="test",
         target_skills=("compose-state-authoring",),
         expected_skills=("compose-state-authoring",),
-        forbidden_skills=(),
         task_mode=task_mode,
         kind="direct",
         fixture="compose-jvm",
         allowed_write_paths=tuple(allowed or ()),
         validators=tuple(validators or (Validator(("python3", "-c", "pass"), 5),)),
         rubric=({"id": "correct", "text": "Correct"},),
-        forbidden_actions=("network", "undeclared-write", "destructive-command"),
         provenance={"kind": "synthetic"},
         prompt="Do it\n",
         directory=root,
@@ -157,8 +155,6 @@ class DeterministicGradeTest(unittest.TestCase):
         self.assertIn("invalid subject output", grade.objective_failures)
 
     def test_subject_output_rejects_extra_fields_and_non_string_evidence(self):
-        from evals.harness.experiment import _subject_output_valid
-
         extra = make_result(
             self.workspace,
             output={
@@ -173,12 +169,11 @@ class DeterministicGradeTest(unittest.TestCase):
             output={"summary": "done", "skills_used": [], "evidence": [1]},
         )
 
-        self.assertFalse(_subject_output_valid(extra))
-        self.assertFalse(_subject_output_valid(bad_evidence))
+        for result in (extra, bad_evidence):
+            self.assertFalse(subject_output_valid(result.final_output))
+            self.assertFalse(grade_subject(make_case(self.workspace), result).objective_pass)
 
     def test_subject_output_accepts_plugin_prefixed_skill_names(self):
-        from evals.harness.experiment import _subject_output_valid
-
         result = make_result(
             self.workspace,
             output={
@@ -188,7 +183,23 @@ class DeterministicGradeTest(unittest.TestCase):
             },
         )
 
-        self.assertTrue(_subject_output_valid(result))
+        self.assertTrue(subject_output_valid(result.final_output))
+
+    def test_subject_output_rejects_duplicate_canonical_skill_names(self):
+        result = make_result(
+            self.workspace,
+            output={
+                "summary": "done",
+                "skills_used": [
+                    "compose-state-authoring",
+                    "chrisbanes-skills:compose-state-authoring",
+                ],
+                "evidence": ["read the staged skill"],
+            },
+        )
+
+        self.assertFalse(subject_output_valid(result.final_output))
+        self.assertFalse(grade_subject(make_case(self.workspace), result).objective_pass)
 
 
 if __name__ == "__main__":
