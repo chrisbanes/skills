@@ -26,6 +26,7 @@ from evals.harness.judge import (
     build_judge_packet,
     judge_covers_rubric,
     judge_output_valid,
+    judge_passes_rubric,
     run_judge,
 )
 from evals.harness.report import write_reports
@@ -124,6 +125,16 @@ def next_attempt_workspace(condition_dir: Path) -> Path:
     return condition_dir / f"attempt-{attempt}"
 
 
+def _judge_packet_path(
+    output_dir: Path, candidate_id: str, fingerprint: str, repetition: int
+) -> Path:
+    return (
+        output_dir
+        / "judge-packets"
+        / f"{candidate_id}-{fingerprint[:20]}-{repetition}.json"
+    )
+
+
 def _case_digest(case: EvalCase) -> str:
     digest = hashlib.sha256()
     for path in sorted(path for path in case.directory.rglob("*") if path.is_file()):
@@ -207,10 +218,8 @@ def _result_payload(
     skill_catalog_digest: str,
 ) -> dict[str, Any]:
     reported = reported_skill_names(subject.final_output)
-    judge_pass = (
-        judge.returncode == 0
-        and judge_covers_rubric(judge.output, case.rubric)
-        and bool(judge.output.get("overall_pass"))
+    judge_pass = judge.returncode == 0 and judge_passes_rubric(
+        judge.output, case.rubric
     )
     return {
         "id": f"{case.id}:{arm}:{repetition}",
@@ -334,10 +343,11 @@ def execute_experiment(
                 )
                 grade = grade_subject(case, subject)
                 packet = build_judge_packet(case, subject, grade)
-                packet_path = (
-                    output_dir
-                    / "judge-packets"
-                    / f"{packet['candidate_id']}-{repetition}.json"
+                packet_path = _judge_packet_path(
+                    output_dir,
+                    str(packet["candidate_id"]),
+                    fingerprint,
+                    repetition,
                 )
                 packet_path.parent.mkdir(parents=True, exist_ok=True)
                 packet_path.write_text(
@@ -498,17 +508,19 @@ def rejudge_packets(
     plan = {"packet_count": len(packets), "judge_calls": len(packets), "execute": execute}
     if not execute:
         return plan
+    codex_version = _command_output([codex_executable, "--version"], cwd=repo_root)
     skill_paths = discover_skill_paths(repo_root)
     skill_catalog_digest = _skill_catalog_digest(skill_paths)
     completed = 0
     for packet_path in packets:
         packet = json.loads(packet_path.read_text(encoding="utf-8"))
         rubric = tuple(packet.get("rubric", ()))
-        fingerprint = hashlib.sha256(
-            packet_path.read_bytes()
-            + json.dumps(asdict(judge_config), sort_keys=True).encode()
-            + skill_catalog_digest.encode()
-        ).hexdigest()
+        fingerprint = _rejudgment_fingerprint(
+            packet_path,
+            judge_config,
+            skill_catalog_digest=skill_catalog_digest,
+            codex_version=codex_version,
+        )
         result_path = output_dir / "rejudgments" / f"{packet_path.stem}.json"
         if result_path.is_file():
             load_result(result_path, fingerprint)
@@ -530,6 +542,7 @@ def rejudge_packets(
             fingerprint,
             {
                 "candidate_id": packet.get("candidate_id"),
+                "codex_version": codex_version,
                 "judge_model": {
                     "model": judge_config.model,
                     "reasoning": judge_config.reasoning,
@@ -547,3 +560,21 @@ def rejudge_packets(
         )
         completed += 1
     return {**plan, "completed": completed}
+
+
+def _rejudgment_fingerprint(
+    packet_path: Path,
+    judge_config: JudgeConfig,
+    *,
+    skill_catalog_digest: str,
+    codex_version: str,
+) -> str:
+    identity = {
+        "packet_digest": hashlib.sha256(packet_path.read_bytes()).hexdigest(),
+        "judge_config": asdict(judge_config),
+        "skill_catalog_digest": skill_catalog_digest,
+        "codex_version": codex_version,
+    }
+    return hashlib.sha256(
+        json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()

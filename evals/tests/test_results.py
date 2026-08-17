@@ -5,10 +5,13 @@ from pathlib import Path
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL
 from evals.harness.experiment import (
+    _judge_packet_path,
+    _rejudgment_fingerprint,
     _skill_source_paths,
     load_raw_records,
     next_attempt_workspace,
 )
+from evals.harness.judge import JudgeConfig
 from evals.harness.results import (
     FingerprintMismatch,
     load_result,
@@ -76,6 +79,44 @@ class ResultLifecycleTest(unittest.TestCase):
 
         first = result_fingerprint(**common, skill_catalog_digest="catalog-one")
         second = result_fingerprint(**common, skill_catalog_digest="catalog-two")
+
+        self.assertNotEqual(first, second)
+
+    def test_judge_packet_paths_are_unique_across_arms_without_disclosing_them(self):
+        common = {
+            "case_digest": "case-sha",
+            "skill_sha": "skill-sha",
+            "codex_version": "codex-cli 1",
+            "model": "gpt-5.6-terra",
+            "reasoning": "medium",
+        }
+        forced = result_fingerprint(**common, arm="forced")
+        automatic = result_fingerprint(**common, arm="automatic")
+
+        forced_path = _judge_packet_path(self.root, "candidate", forced, 1)
+        automatic_path = _judge_packet_path(self.root, "candidate", automatic, 1)
+
+        self.assertNotEqual(forced_path, automatic_path)
+        self.assertNotIn("forced", forced_path.name)
+        self.assertNotIn("automatic", automatic_path.name)
+
+    def test_rejudgment_fingerprint_includes_codex_runtime_version(self):
+        packet = self.root / "packet.json"
+        packet.write_text("{}\n", encoding="utf-8")
+        config = JudgeConfig("gpt-5.6-sol", "high")
+
+        first = _rejudgment_fingerprint(
+            packet,
+            config,
+            skill_catalog_digest="catalog-sha",
+            codex_version="codex-cli 1",
+        )
+        second = _rejudgment_fingerprint(
+            packet,
+            config,
+            skill_catalog_digest="catalog-sha",
+            codex_version="codex-cli 2",
+        )
 
         self.assertNotEqual(first, second)
 
