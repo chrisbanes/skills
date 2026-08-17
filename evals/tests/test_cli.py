@@ -1,6 +1,7 @@
 import contextlib
 import io
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -25,6 +26,13 @@ class EvaluationCliTest(unittest.TestCase):
         with contextlib.redirect_stdout(output):
             status = main(list(args))
         return status, output.getvalue()
+
+    def invoke_with_error(self, *args):
+        output = io.StringIO()
+        error = io.StringIO()
+        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(error):
+            status = main(list(args))
+        return status, output.getvalue(), error.getvalue()
 
     def test_full_plan_expands_38_cases_three_arms_and_three_repetitions(self):
         status, output = self.invoke("plan", *MODEL_ARGS, "--repetitions", "3", "--json")
@@ -105,6 +113,35 @@ class EvaluationCliTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             main(["plan"])
 
+    def test_report_and_regrade_reject_incomparable_raw_results_cleanly(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            controls = {
+                "codex_version": "codex-cli 1",
+                "skill_sha": "skill-sha",
+                "skill_catalog_digest": "catalog-sha",
+                "subject_model": {"model": "gpt-5.6-terra", "reasoning": "medium"},
+                "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
+            }
+            for case, model in (("first", "gpt-5.6-terra"), ("second", "gpt-5.6-sol")):
+                path = output_dir / "raw" / case / "automatic" / "1.json"
+                path.parent.mkdir(parents=True)
+                payload = {
+                    **controls,
+                    "id": f"{case}:automatic:1",
+                    "subject_model": {"model": model, "reasoning": "medium"},
+                }
+                path.write_text(json.dumps({"payload": payload}), encoding="utf-8")
+
+            for command in ("report", "regrade"):
+                with self.subTest(command=command):
+                    status, output, error = self.invoke_with_error(
+                        command, "--output-dir", temp_dir
+                    )
+                    self.assertEqual(1, status)
+                    self.assertEqual("", output)
+                    self.assertIn("different run controls: subject_model", error)
+
     def test_repository_commands_validate_harness_without_live_model_calls(self):
         root = Path(__file__).resolve().parents[2]
         package = json.loads((root / "package.json").read_text(encoding="utf-8"))
@@ -127,8 +164,6 @@ class EvaluationCliTest(unittest.TestCase):
         self.assertNotIn("uniqueItems", schema["properties"]["skills_used"])
 
     def test_judge_defaults_to_a_no_call_packet_preview(self):
-        import tempfile
-
         with tempfile.TemporaryDirectory() as temp_dir:
             packets = Path(temp_dir) / "judge-packets"
             packets.mkdir()

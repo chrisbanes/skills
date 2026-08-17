@@ -198,7 +198,11 @@ def prepare_workspace(
         raise FileExistsError(f"run workspace already exists: {destination}")
     destination.parent.mkdir(parents=True, exist_ok=True)
     fixture = repo_root / "evals" / "fixtures" / case.fixture
-    shutil.copytree(fixture, destination)
+    shutil.copytree(
+        fixture,
+        destination,
+        ignore=shutil.ignore_patterns(".gradle", "build"),
+    )
     overlay = case.directory / "overlay"
     if overlay.is_dir():
         shutil.copytree(overlay, destination, dirs_exist_ok=True)

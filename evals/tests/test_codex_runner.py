@@ -150,6 +150,11 @@ class CodexRunnerTest(unittest.TestCase):
 
     def test_prepares_independent_fixture_and_overlay_copies(self):
         case = sample_case(self.root)
+        fixture = self.root / "evals" / "fixtures" / case.fixture
+        (fixture / ".gradle").mkdir()
+        (fixture / ".gradle" / "cache.bin").write_text("generated\n", encoding="utf-8")
+        (fixture / "build").mkdir()
+        (fixture / "build" / "output.bin").write_text("generated\n", encoding="utf-8")
         first = prepare_workspace(case, self.root, self.root / "runs" / "first")
         second = prepare_workspace(case, self.root, self.root / "runs" / "second")
 
@@ -157,6 +162,8 @@ class CodexRunnerTest(unittest.TestCase):
         subject.write_text("changed\n", encoding="utf-8")
 
         self.assertTrue((first / ".git").is_dir())
+        self.assertFalse((first / ".gradle").exists())
+        self.assertFalse((first / "build").exists())
         self.assertEqual("package example\n", (second / subject.relative_to(first)).read_text())
 
     def test_captures_jsonl_final_output_and_workspace_diff(self):

@@ -167,25 +167,29 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "report":
         output_dir = args.output_dir.resolve()
-        records = load_raw_records(output_dir)
-        if not records:
-            print(f"no raw results under {output_dir}", file=sys.stderr)
+        try:
+            records = load_raw_records(output_dir)
+            if not records:
+                print(f"no raw results under {output_dir}", file=sys.stderr)
+                return 1
+            paths = write_reports(
+                output_dir,
+                records,
+                compute_scorecard(records),
+                seed=args.audit_seed,
+            )
+        except (OSError, ValueError) as error:
+            print(error, file=sys.stderr)
             return 1
-        paths = write_reports(
-            output_dir,
-            records,
-            compute_scorecard(records),
-            seed=args.audit_seed,
-        )
         print(paths["scorecard"])
         return 0
     if args.command == "regrade":
         output_dir = args.output_dir.resolve()
-        records = load_raw_records(output_dir)
-        if not records:
-            print(f"no raw results under {output_dir}", file=sys.stderr)
-            return 1
         try:
+            records = load_raw_records(output_dir)
+            if not records:
+                print(f"no raw results under {output_dir}", file=sys.stderr)
+                return 1
             corpus = validate_corpus(repo_root)
             paths = regrade_records(
                 repo_root,
@@ -194,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
                 records,
                 audit_seed=args.audit_seed,
             )
-        except (CaseValidationError, ValueError) as error:
+        except (CaseValidationError, OSError, ValueError) as error:
             print(error, file=sys.stderr)
             return 1
         print(paths["scorecard"])

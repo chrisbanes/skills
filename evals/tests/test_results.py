@@ -26,6 +26,21 @@ class ResultLifecycleTest(unittest.TestCase):
     def tearDown(self):
         self.temp_dir.cleanup()
 
+    def write_raw_record(self, case: str, arm: str, repetition: int, **overrides):
+        payload = {
+            "id": f"{case}:{arm}:{repetition}",
+            "codex_version": "codex-cli 1",
+            "skill_sha": "skill-sha",
+            "skill_catalog_digest": "catalog-sha",
+            "subject_model": {"model": "gpt-5.6-terra", "reasoning": "medium"},
+            "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
+            "subject": {"final_output": {"skills_used": []}},
+        }
+        payload.update(overrides)
+        path = self.root / "raw" / case / arm / f"{repetition}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"payload": payload}), encoding="utf-8")
+
     def test_round_trips_an_atomic_fingerprinted_result(self):
         fingerprint = result_fingerprint(
             case_digest="case-sha",
@@ -85,28 +100,34 @@ class ResultLifecycleTest(unittest.TestCase):
         self.assertEqual(condition / "attempt-3", next_attempt_workspace(condition))
 
     def test_loading_raw_records_canonicalizes_plugin_qualified_routing(self):
-        path = self.root / "raw" / "case" / "automatic" / "1.json"
-        path.parent.mkdir(parents=True)
-        path.write_text(
-            json.dumps(
-                {
-                    "payload": {
-                        "subject": {
-                            "final_output": {
-                                "skills_used": [
-                                    "chrisbanes-skills:compose-state-and-effects"
-                                ]
-                            }
-                        }
-                    }
+        self.write_raw_record(
+            "case",
+            "automatic",
+            1,
+            subject={
+                "final_output": {
+                    "skills_used": [
+                        "chrisbanes-skills:compose-state-and-effects"
+                    ]
                 }
-            ),
-            encoding="utf-8",
+            },
         )
 
         record = load_raw_records(self.root)[0]
 
         self.assertEqual(["compose-state-and-effects"], record["reported_skills"])
+
+    def test_loading_raw_records_rejects_incomparable_run_controls(self):
+        self.write_raw_record("first", "automatic", 1)
+        self.write_raw_record(
+            "second",
+            "automatic",
+            1,
+            subject_model={"model": "gpt-5.6-sol", "reasoning": "high"},
+        )
+
+        with self.assertRaisesRegex(ValueError, "different run controls: subject_model"):
+            load_raw_records(self.root)
 
     def test_skill_sources_include_cluster_references(self):
         for skill in (*COMPOSE_SKILLS, ROUTER_SKILL):

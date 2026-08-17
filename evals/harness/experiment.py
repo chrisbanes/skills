@@ -38,6 +38,15 @@ from evals.harness.results import (
 from evals.harness.score import compute_scorecard
 
 
+RUN_CONTROL_FIELDS = (
+    "codex_version",
+    "skill_sha",
+    "skill_catalog_digest",
+    "subject_model",
+    "judge_model",
+)
+
+
 def filter_cases(
     cases: Iterable[EvalCase], *, case_ids: list[str] | None, skills: list[str] | None
 ) -> list[EvalCase]:
@@ -373,10 +382,37 @@ def execute_experiment(
 
 def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
+    baseline_controls: dict[str, Any] | None = None
+    baseline_id: str | None = None
     for path in sorted((output_dir / "raw").glob("*/*/*.json")):
         document = json.loads(path.read_text(encoding="utf-8"))
         payload = document.get("payload")
         if isinstance(payload, dict):
+            record_id = str(payload.get("id", path))
+            missing_controls = [
+                field for field in RUN_CONTROL_FIELDS if field not in payload
+            ]
+            if missing_controls:
+                raise ValueError(
+                    f"raw record {record_id} is missing run controls: "
+                    f"{', '.join(missing_controls)}"
+                )
+            controls = {field: payload[field] for field in RUN_CONTROL_FIELDS}
+            if baseline_controls is None:
+                baseline_controls = controls
+                baseline_id = record_id
+            else:
+                differing_controls = [
+                    field
+                    for field in RUN_CONTROL_FIELDS
+                    if controls[field] != baseline_controls[field]
+                ]
+                if differing_controls:
+                    raise ValueError(
+                        f"raw record {record_id} is incomparable with {baseline_id}; "
+                        "different run controls: "
+                        f"{', '.join(differing_controls)}"
+                    )
             subject_output = payload.get("subject", {}).get("final_output", {})
             if isinstance(subject_output, dict):
                 reported = reported_skill_names(subject_output)
