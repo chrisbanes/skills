@@ -106,6 +106,8 @@ When an existing annotation is false, order the repair deliberately:
 
 Removing the annotation without fixing an accidental mutable data contract may avoid an incorrect compiler promise, but it does not make the UI state safe or observable.
 
+Finish gate for a false-promise review: do not stop after saying the annotation is unsupported. State the repair order explicitly—make the affected properties immutable or snapshot-observable first, verify the resulting contract, and only then decide whether an annotation remains truthful and necessary. If visible evidence does not determine whether the model should be immutable or observable, name both valid directions without inventing which one the product requires.
+
 ### Third-party immutable types
 
 For types you cannot annotate but can truthfully treat as immutable, use `stabilityConfigurationFiles`:
