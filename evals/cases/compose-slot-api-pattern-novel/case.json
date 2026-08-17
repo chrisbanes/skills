@@ -3,10 +3,10 @@
   "title": "Review nullable content slots",
   "family": "component-ui",
   "target_skills": [
-    "compose-slot-api-pattern"
+    "compose-component-design"
   ],
   "expected_skills": [
-    "compose-slot-api-pattern"
+    "compose-component-design"
   ],
   "task_mode": "review",
   "kind": "novel",

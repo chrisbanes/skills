@@ -1,8 +1,3 @@
----
-name: compose-stability-diagnostics
-description: Use when writing or reviewing Jetpack Compose parameter stability, compiler reports, skippability, unstable UI state classes, collection parameters, or Kotlin 2.0+ strong skipping behavior.
----
-
 # Compose stability diagnostics
 
 ## Core principle
@@ -170,8 +165,8 @@ Verify focus moves and insertions with recomposition-count assertions after hois
 
 ## When NOT to apply
 
-- The issue is back-writing across phases or cross-row measurement reads. Use [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md).
-- The issue is a fast-changing `State` read in composition, such as scroll or animation. Use [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md).
+- The issue is back-writing across phases or cross-row measurement reads. Use [Deferred reads](deferred-reads.md).
+- The issue is a fast-changing `State` read in composition, such as scroll or animation. Use [Deferred reads](deferred-reads.md).
 - The recomposition count matches real data changes.
 - The bug is wrong data or stale state, not excess work.
 - The code is test-only and readability is more important than report cleanliness.
@@ -183,5 +178,5 @@ Verify focus moves and insertions with recomposition-count assertions after hois
 
 ## Related
 
-- [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) - frame-rate state should often be read in layout/draw rather than composition.
-- [`compose-recomposition-performance`](../compose-recomposition-performance/SKILL.md) - entry point when you are not sure which recomposition axis is involved.
+- [Deferred reads](deferred-reads.md) - frame-rate state should often be read in layout/draw rather than composition.
+- [Diagnosis](diagnosis.md) - use this when the recomposition axis is not yet known.

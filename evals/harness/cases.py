@@ -8,21 +8,29 @@ from typing import Any
 
 
 COMPOSE_SKILLS = (
-    "compose-state-authoring",
-    "compose-state-hoisting",
-    "compose-side-effects",
-    "compose-recomposition-performance",
-    "compose-stability-diagnostics",
-    "compose-state-deferred-reads",
-    "compose-modifier-and-layout-style",
-    "compose-slot-api-pattern",
+    "compose-state-and-effects",
+    "compose-performance",
+    "compose-component-design",
     "compose-animations",
     "compose-focus-navigation",
     "compose-ui-testing-patterns",
 )
+EVALUATED_TOPICS = (
+    ("compose-state-authoring", "compose-state-and-effects"),
+    ("compose-state-hoisting", "compose-state-and-effects"),
+    ("compose-side-effects", "compose-state-and-effects"),
+    ("compose-recomposition-performance", "compose-performance"),
+    ("compose-stability-diagnostics", "compose-performance"),
+    ("compose-state-deferred-reads", "compose-performance"),
+    ("compose-modifier-and-layout-style", "compose-component-design"),
+    ("compose-slot-api-pattern", "compose-component-design"),
+    ("compose-animations", "compose-animations"),
+    ("compose-focus-navigation", "compose-focus-navigation"),
+    ("compose-ui-testing-patterns", "compose-ui-testing-patterns"),
+)
 ROUTER_SKILL = "using-chrisbanes-skills"
 TASK_MODES = {"review", "edit"}
-CASE_KINDS = {"direct", "novel", "negative", "overlap"}
+CASE_KINDS = {"direct", "novel", "negative", "routing"}
 _ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
@@ -137,8 +145,8 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         raise CaseValidationError(f"unknown task_mode: {task_mode}")
     if kind not in CASE_KINDS:
         raise CaseValidationError(f"unknown kind: {kind}")
-    if kind == "overlap" and len(expected_skills) < 2:
-        raise CaseValidationError("overlap cases require at least two expected skills")
+    if kind == "routing" and not expected_skills:
+        raise CaseValidationError("routing cases require at least one expected skill")
 
     fixture = _require_string(data, "fixture")
     if not _safe_relative(fixture):
@@ -217,21 +225,31 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
 
 def _coverage_gaps(cases: list[EvalCase]) -> list[str]:
     gaps: list[str] = []
-    for skill in COMPOSE_SKILLS:
-        standalone = [case for case in cases if case.kind != "overlap" and case.target_skills == (skill,)]
-        if len(standalone) != 3:
-            gaps.append(f"{skill}: expected 3 standalone cases, found {len(standalone)}")
-            continue
-        pairs = {(case.task_mode, case.kind) for case in standalone}
-        for pair in (("edit", "direct"), ("review", "novel"), ("edit", "negative")):
-            if pair not in pairs:
-                gaps.append(f"{skill}: missing {pair[0]} {pair[1]} case")
-        historical = [case for case in standalone if case.provenance["kind"] == "historical"]
+    by_id = {case.id: case for case in cases}
+    expected_conditions = (
+        ("direct", "edit"),
+        ("novel", "review"),
+        ("negative", "edit"),
+    )
+    for topic, skill in EVALUATED_TOPICS:
+        topic_cases: list[EvalCase] = []
+        for kind, task_mode in expected_conditions:
+            case_id = f"{topic}-{kind}"
+            case = by_id.get(case_id)
+            if case is None:
+                gaps.append(f"{topic}: missing {task_mode} {kind} case")
+                continue
+            topic_cases.append(case)
+            if case.kind != kind or case.task_mode != task_mode:
+                gaps.append(f"{case_id}: expected {task_mode} {kind}")
+            if case.target_skills != (skill,) or skill not in case.expected_skills:
+                gaps.append(f"{case_id}: expected primary routing to {skill}")
+        historical = [case for case in topic_cases if case.provenance["kind"] == "historical"]
         if len(historical) != 1:
-            gaps.append(f"{skill}: expected 1 historical case, found {len(historical)}")
-    overlap_count = sum(case.kind == "overlap" for case in cases)
-    if overlap_count != 5:
-        gaps.append(f"router overlap: expected 5 cases, found {overlap_count}")
+            gaps.append(f"{topic}: expected 1 historical case, found {len(historical)}")
+    routing_count = sum(case.kind == "routing" for case in cases)
+    if routing_count != 5:
+        gaps.append(f"router: expected 5 cases, found {routing_count}")
     if len(cases) != 38:
         gaps.append(f"corpus: expected 38 cases, found {len(cases)}")
     return gaps

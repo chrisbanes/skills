@@ -3,10 +3,10 @@
   "title": "Preserve intentional internal alignment",
   "family": "component-ui",
   "target_skills": [
-    "compose-modifier-and-layout-style"
+    "compose-component-design"
   ],
   "expected_skills": [
-    "compose-modifier-and-layout-style"
+    "compose-component-design"
   ],
   "task_mode": "edit",
   "kind": "negative",

@@ -1,8 +1,3 @@
----
-name: kotlin-types-value-class
-description: Use when writing or reviewing Kotlin type declarations to choose @JvmInline value class over data class where appropriate, including Compose stability implications.
----
-
 # Kotlin value class vs data class
 
 ## Core principle
@@ -115,4 +110,4 @@ val Offset.y: Float get() = unpackFloat2(packedValue)
 
 ## Related
 
-- [`compose-stability-diagnostics`](../compose-stability-diagnostics/SKILL.md) — diagnose unstable Compose parameters; value classes are one fix
+- [Compose performance](../../compose-performance/SKILL.md) — diagnose unstable Compose parameters; value classes are one fix

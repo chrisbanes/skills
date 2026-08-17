@@ -3,15 +3,13 @@
   "title": "Route screen state and one-shot events",
   "family": "router-overlap",
   "target_skills": [
-    "compose-state-hoisting",
-    "compose-side-effects"
+    "compose-state-and-effects"
   ],
   "expected_skills": [
-    "compose-state-hoisting",
-    "compose-side-effects"
+    "compose-state-and-effects"
   ],
   "task_mode": "review",
-  "kind": "overlap",
+  "kind": "routing",
   "fixture": "compose-jvm",
   "allowed_write_paths": [],
   "validators": [

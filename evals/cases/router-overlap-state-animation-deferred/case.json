@@ -3,17 +3,17 @@
   "title": "Route an animated scroll-owned header",
   "family": "router-overlap",
   "target_skills": [
-    "compose-state-hoisting",
+    "compose-state-and-effects",
     "compose-animations",
-    "compose-state-deferred-reads"
+    "compose-performance"
   ],
   "expected_skills": [
-    "compose-state-hoisting",
+    "compose-state-and-effects",
     "compose-animations",
-    "compose-state-deferred-reads"
+    "compose-performance"
   ],
   "task_mode": "review",
-  "kind": "overlap",
+  "kind": "routing",
   "fixture": "compose-jvm",
   "allowed_write_paths": [],
   "validators": [

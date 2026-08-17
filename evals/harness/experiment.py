@@ -136,9 +136,19 @@ def _skill_catalog_digest(skill_paths: tuple[Path, ...]) -> str:
 
 
 def _skill_source_paths(repo_root: Path) -> tuple[Path, ...]:
+    skill_dirs = (
+        repo_root / "skills" / skill for skill in (*COMPOSE_SKILLS, ROUTER_SKILL)
+    )
     return tuple(
-        (repo_root / "skills" / skill / "SKILL.md").resolve()
-        for skill in (*COMPOSE_SKILLS, ROUTER_SKILL)
+        sorted(
+            (
+                path.resolve()
+                for skill_dir in skill_dirs
+                for path in skill_dir.rglob("*")
+                if path.is_file()
+            ),
+            key=str,
+        )
     )
 
 

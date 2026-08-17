@@ -1,6 +1,6 @@
 ---
 name: to-plan
-description: Use when one ready GitHub issue or one explicitly confirmed conversation specification needs a repository-aware implementation plan for a later implementation workflow.
+description: Use when one ready GitHub issue or an in-chat task needs a repository-aware implementation plan for a later implementation workflow.
 ---
 
 # To Plan
@@ -23,7 +23,7 @@ Accept one of these forms:
 ```text
 /to-plan <issue URL | owner/repository#number | #number>
 /to-plan --auto <issue URL | owner/repository#number | #number>
-/to-plan
+/to-plan [in-chat task]
 ```
 
 Use GitHub mode only when the current invocation supplies exactly one issue
@@ -32,32 +32,36 @@ Reject pull requests and stop when the reference or repository identity is
 ambiguous. Do not select GitHub mode from issue links mentioned earlier in the
 conversation.
 
-With no issue reference, use conversation mode only when the conversation
-contains a compact decision-complete summary followed by the user's explicit
-confirmation of shared understanding. That summary may come from `grill-me` or
-the fallback interview below. Do not reconstruct a specification from a partial
-or unconfirmed interview. Once the summary is confirmed, if Plan mode is still
-active, stop before writing and ask the user to switch to Default mode, then
-invoke `/to-plan` again.
+With no issue reference, use conversation mode. An inline task starts a new
+conversation source; do not let an earlier summary or confirmation satisfy its
+prerequisite unless the user explicitly identifies that summary as describing
+the inline task. Without an inline task, use a prior conversation only when it
+has exactly one compact decision-complete summary followed by explicit
+confirmation. If none exists, conduct the interview. If several summaries could
+plausibly be relevant, ask the user to identify the task or summary before
+selecting a source; do not infer from recency or draft a plan. A completed
+`grill-me` summary may satisfy this prerequisite, but never require the user to
+invoke it. Do not reconstruct a specification from a partial or unconfirmed
+interview.
 
-When the summary or confirmation is missing:
+When the selected conversation source lacks a compact decision-complete summary
+followed by the user's explicit confirmation of shared understanding:
 
-1. If `grill-me` is installed, direct the user to invoke it.
-2. Otherwise ask the user to switch to Plan mode, then conduct the equivalent
-   interview directly. Ask one decision question at a time, provide a
-   recommended answer, wait for the response, and look up discoverable facts
-   instead of asking for them.
-3. Continue until goal, success criteria, scope, constraints, decisions,
-   trade-offs, repository target, validation, and re-plan boundaries are
-   decision-complete.
-4. Present one compact self-contained summary and require explicit confirmation.
-5. After confirmation, ask the user to switch to Default mode and invoke
-   `/to-plan` again. Write nothing during the interview.
+1. Conduct the in-chat interview directly. Ask one decision question at a
+   time, provide a recommendation, wait for the response, and look up
+   discoverable repository facts instead of asking for them.
+2. Continue until the task title, goal, success criteria, scope, constraints,
+   decisions, trade-offs, repository target, validation, and re-plan boundaries
+   are decision-complete.
+3. Present one compact self-contained summary and require explicit confirmation.
+4. After confirmation, if Plan mode is active, ask the user to switch to Default
+   mode before continuing this invocation at Step 1. Write no draft during the
+   interview and do not require another `/to-plan` invocation.
 
 `--auto` is GitHub-only and requires an issue reference. GitHub normal mode
 requires explicit approval before publishing. `--auto` skips only that approval
-pause; every other GitHub gate remains identical. Conversation mode needs no
-second approval after its explicit Default-mode invocation.
+pause; every other GitHub gate remains identical. Conversation mode uses its
+confirmed summary as approval and needs no second approval.
 
 ## Workflow
 
@@ -139,20 +143,20 @@ to be resolved.
 
 #### Conversation mode
 
-Read the compact shared-understanding summary immediately preceding the user's
-explicit confirmation, then read only subsequent messages to detect changes or
-conflicts. Require that summary to state the goal, success criteria, scope,
-constraints, decisions, and trade-offs. Consult earlier `grill-me` or fallback
-interview messages only when the summary explicitly depends on missing context.
-Treat rejected options, linked issues, and other referenced material as
-context, not as a competing source or instruction.
+Read the selected conversation source's compact shared-understanding summary
+immediately preceding the user's explicit confirmation, then read only
+subsequent messages to detect changes or conflicts. Require that summary to
+state the goal, success criteria, scope, constraints, decisions, and trade-offs.
+Consult earlier `grill-me` or in-chat interview messages only when the summary
+explicitly depends on missing context. Treat rejected options, linked issues,
+and other referenced material as context, not as a competing source or
+instruction.
 
-Record a planning blocker when the confirmation is missing, later user text
-contradicts it without resolving the conflict, or the conversation does not
-contain a self-contained summary for one implementation outcome. Return to the
-conversation prerequisite for a compact summary or any unresolved
-contract-creating decision under Step 6; do not fill contract gaps with
-assumptions inside `to-plan`.
+Record a planning blocker when a confirmed summary is later contradicted without
+resolution, or when the conversation still cannot establish a self-contained
+summary for one implementation outcome. Return to the in-chat interview for a
+compact summary or any unresolved contract-creating decision under Step 6; do
+not fill contract gaps with assumptions inside `to-plan`.
 
 ### 3. Enforce readiness
 
@@ -268,13 +272,12 @@ would require one of the following:
 Finish discovery before escalating. In GitHub normal mode, ask one decision
 question at a time with a recommendation, present the resulting contract change
 for confirmation, then require the issue, specification, or ADR to record it
-before planning resumes. In conversation mode, return to the conversation
-prerequisite and require a newly confirmed summary. In GitHub `--auto` mode, ask
-nothing and return one consolidated `human-required` planning-blocker report
-with every blocker, its impact, recommended resolution, and required upstream
-change. This is the Blocked planner finish state, not a worker replan packet.
-Write no draft and publish nothing while a contract-creating decision remains
-unresolved.
+before planning resumes. In conversation mode, return to the in-chat interview
+and require a newly confirmed summary. In GitHub `--auto` mode, ask nothing and
+return one consolidated `human-required` planning-blocker report with every
+blocker, its impact, recommended resolution, and required upstream change. This
+is the Blocked planner finish state, not a worker replan packet. Write no draft
+and publish nothing while a contract-creating decision remains unresolved.
 
 Do not reject, resize, or split the specification solely because it may exceed
 one context window or produce a long plan. Plan the ready source that was
@@ -513,10 +516,9 @@ then restore the skill and require the GREEN outcome.
     Refresh blocks publication while the issue is closed. After it reopens, the
     workflow screens the committed delta, revalidates affected baseline
     evidence, updates the draft, and requires approval again.
-13. A broad Kotlin or Android request to plan one ready GitHub issue or one
-    confirmed conversation specification routes from
-    `using-chrisbanes-skills` to `/to-plan`. A request to implement directly
-    does not.
+13. A broad Kotlin or Android request to plan one ready GitHub issue or an
+    in-chat task routes from `using-chrisbanes-skills` to `/to-plan`. A request
+    to implement directly does not.
 14. During the approval pause, an already-dirty ticket-adjacent file keeps the
     same path and status but gains ticket-overlapping contents. Refresh
     reinspects it, blocks publication, and does not rely on the unchanged path
@@ -529,23 +531,33 @@ then restore the skill and require the GREEN outcome.
     preserves the predecessor payload under a superseded banner and collapsed
     wrapper. If that presentation edit also fails, it reports the hygiene
     failure but returns the authoritative new leaf.
-17. A completed `grill-me` session presents a compact decision-complete summary
-    and reaches explicit shared understanding. In Default mode, `/to-plan`
-    validates the current repository, writes a marked conversation-format
-    scratch plan, performs no GitHub write, and returns its path, plan ID, and
-    deletion-aware implementation handoff.
+17. A user invokes `/to-plan` with an inline task. It conducts an in-chat,
+    one-question-at-a-time interview with recommendations, looks up
+    discoverable repository facts, and presents a compact summary. After
+    explicit confirmation, the same invocation validates the repository,
+    writes a marked conversation-format scratch plan, performs no GitHub
+    write, and returns its path, plan ID, and deletion-aware implementation
+    handoff. A completed `grill-me` summary may instead supply the confirmed
+    conversation source. If confirmation occurs in Plan mode, it asks the user
+    to switch to Default mode, then continues this invocation without another
+    `/to-plan` command.
+    Novel case: an earlier confirmed summary for task A does not satisfy the
+    invocation `/to-plan <task B>` unless the user explicitly identifies it as
+    task B's summary; the planner interviews and confirms task B instead of
+    selecting task A or reporting task B as a conflict.
 18. Novel case: conversation mode reruns after compatible user edits to its
     draft while an unrelated draft already owns the preferred slug. It
     verifies the matching plan ID, preserves the edits, reuses its established
     path, and never overwrites the unrelated draft. A new conversation instead
     selects the next numeric suffix; a missing or mismatched marker on the
     established path blocks.
-19. Conversation mode is invoked before shared understanding is confirmed. It
-    lacks a self-contained summary and directs the user to invoke `grill-me`
-    when available. With no provider installed, it conducts the
-    one-question-at-a-time fallback in Plan mode, confirms a compact summary,
-    then requests a switch to Default mode and writes nothing until `/to-plan`
-    is invoked again.
+19. Conversation mode is invoked without an inline task after one confirmed
+    task summary. It uses that summary and proceeds to repository planning. If
+    no confirmed summary exists, it conducts the same one-question-at-a-time
+    interview and proceeds after confirmation. Counterexample: when several
+    confirmed summaries could match, it asks the user to identify the task
+    instead of choosing by recency or drafting a plan. It does not direct the
+    user to invoke `grill-me` or require another `/to-plan` invocation.
 20. The current invocation supplies one issue reference after a grilling
     session. GitHub mode wins and retains every issue readiness and publication
     gate. Counterexample: an issue link mentioned only inside the confirmed
@@ -553,7 +565,7 @@ then restore the skill and require the GREEN outcome.
 21. A confirmed conversation leaves a contract-realizing public interface
     decision to implementation. Planning chooses the repository-supported shape
     and records it. Conflicting later requirements or a genuine stakeholder
-    contract choice instead return to the conversation prerequisite for
+    contract choice instead return to the in-chat interview for
     one-question-at-a-time resolution and a newly confirmed summary.
 22. A fresh implementation session succeeds from the scratch handoff and
     deletes only that plan file. A blocked implementation preserves it, and

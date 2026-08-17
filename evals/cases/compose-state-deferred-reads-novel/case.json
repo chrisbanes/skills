@@ -3,10 +3,10 @@
   "title": "Review measured state read during composition",
   "family": "performance",
   "target_skills": [
-    "compose-state-deferred-reads"
+    "compose-performance"
   ],
   "expected_skills": [
-    "compose-state-deferred-reads"
+    "compose-performance"
   ],
   "task_mode": "review",
   "kind": "novel",

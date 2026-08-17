@@ -7,7 +7,7 @@
   ],
   "expected_skills": [
     "compose-focus-navigation",
-    "compose-side-effects"
+    "compose-state-and-effects"
   ],
   "task_mode": "review",
   "kind": "novel",

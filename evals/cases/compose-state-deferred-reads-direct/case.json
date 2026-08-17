@@ -3,10 +3,10 @@
   "title": "Defer animated alpha reads",
   "family": "performance",
   "target_skills": [
-    "compose-state-deferred-reads"
+    "compose-performance"
   ],
   "expected_skills": [
-    "compose-state-deferred-reads"
+    "compose-performance"
   ],
   "task_mode": "edit",
   "kind": "direct",

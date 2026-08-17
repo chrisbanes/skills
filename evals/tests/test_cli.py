@@ -9,7 +9,7 @@ from evals.run import main
 
 MODEL_ARGS = [
     "--model",
-    "gpt-5.6-sol",
+    "gpt-5.6-terra",
     "--reasoning",
     "medium",
     "--judge-model",

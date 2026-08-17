@@ -3,10 +3,10 @@
   "title": "Preserve a state-driven badge",
   "family": "state-effects",
   "target_skills": [
-    "compose-state-hoisting"
+    "compose-state-and-effects"
   ],
   "expected_skills": [
-    "compose-state-hoisting"
+    "compose-state-and-effects"
   ],
   "task_mode": "edit",
   "kind": "negative",

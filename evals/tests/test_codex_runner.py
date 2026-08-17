@@ -24,8 +24,8 @@ def sample_case(root: Path, *, task_mode: str = "edit") -> EvalCase:
         id="sample",
         title="Sample",
         family="state-effects",
-        target_skills=("compose-state-authoring",),
-        expected_skills=("compose-state-authoring",),
+        target_skills=("compose-state-and-effects",),
+        expected_skills=("compose-state-and-effects",),
         task_mode=task_mode,
         kind="direct",
         fixture="compose-jvm",
@@ -54,7 +54,7 @@ class CodexRunnerTest(unittest.TestCase):
         schemas = self.root / "evals" / "schemas"
         schemas.mkdir(parents=True)
         (schemas / "subject-output.schema.json").write_text("{}\n", encoding="utf-8")
-        self.config = RunConfig(model="gpt-5.6-sol", reasoning="medium")
+        self.config = RunConfig(model="gpt-5.6-terra", reasoning="medium")
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -91,12 +91,12 @@ class CodexRunnerTest(unittest.TestCase):
             self.assertIn("SKILL.md", rendered)
         self.assertEqual(1, " ".join(none).count("path = "))
         self.assertEqual(2, " ".join(forced).count("path = "))
-        self.assertEqual(13, " ".join(automatic).count("path = "))
+        self.assertEqual(8, " ".join(automatic).count("path = "))
         self.assertEqual(0, " ".join(none).count("enabled = true"))
         self.assertEqual(1, " ".join(forced).count("enabled = true"))
-        self.assertEqual(12, " ".join(automatic).count("enabled = true"))
-        self.assertIn("$compose-state-authoring", forced[-1])
-        self.assertNotIn("$compose-state-authoring", automatic[-1])
+        self.assertEqual(7, " ".join(automatic).count("enabled = true"))
+        self.assertIn("$compose-state-and-effects", forced[-1])
+        self.assertNotIn("$compose-state-and-effects", automatic[-1])
         self.assertIn("If you run Gradle, use `--offline --no-scan`.", automatic[-1])
         self.assertIn("only skills whose SKILL.md instructions you actually read", automatic[-1])
         self.assertNotEqual(case.prompt, automatic[-1])
@@ -123,7 +123,7 @@ class CodexRunnerTest(unittest.TestCase):
         rendered = " ".join(command)
 
         self.assertNotIn(str(self.root / "skills"), rendered)
-        self.assertNotIn("compose-state-authoring", rendered)
+        self.assertNotIn("compose-state-and-effects", rendered)
         self.assertIn(str(workspace / ".eval/subject-output.schema.json"), rendered)
 
     def test_selects_read_only_or_workspace_write_from_the_case_contract(self):
@@ -146,7 +146,7 @@ class CodexRunnerTest(unittest.TestCase):
         )
 
         self.assertEqual(1, " ".join(command).count("enabled = true"))
-        self.assertIn("$compose-state-authoring", command[-1])
+        self.assertIn("$compose-state-and-effects", command[-1])
 
     def test_prepares_independent_fixture_and_overlay_copies(self):
         case = sample_case(self.root)
@@ -171,7 +171,7 @@ class CodexRunnerTest(unittest.TestCase):
             "  previous=$arg\n"
             "done\n"
             "printf '// changed\\n' >> \"$workspace/src/main/kotlin/example/Subject.kt\"\n"
-            "printf '%s\\n' '{\"type\":\"item.completed\",\"item\":{\"type\":\"agent_message\",\"text\":\"{\\\"summary\\\":\\\"done\\\",\\\"skills_used\\\":[\\\"compose-state-authoring\\\"],\\\"evidence\\\":[\\\"diff\\\"]}\"}}'\n"
+            "printf '%s\\n' '{\"type\":\"item.completed\",\"item\":{\"type\":\"agent_message\",\"text\":\"{\\\"summary\\\":\\\"done\\\",\\\"skills_used\\\":[\\\"compose-state-and-effects\\\"],\\\"evidence\\\":[\\\"diff\\\"]}\"}}'\n"
             "printf '%s\\n' '{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":10,\"output_tokens\":5}}'\n",
             encoding="utf-8",
         )
@@ -190,7 +190,7 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertTrue(
             (
                 result.workspace
-                / ".agents/skills/compose-state-authoring/SKILL.md"
+                / ".agents/skills/compose-state-and-effects/SKILL.md"
             ).is_file()
         )
         self.assertEqual("done", result.final_output["summary"])

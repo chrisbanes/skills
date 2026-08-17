@@ -3,10 +3,10 @@
   "title": "Preserve a correctly keyed analytics effect",
   "family": "state-effects",
   "target_skills": [
-    "compose-side-effects"
+    "compose-state-and-effects"
   ],
   "expected_skills": [
-    "compose-side-effects"
+    "compose-state-and-effects"
   ],
   "task_mode": "edit",
   "kind": "negative",

@@ -3,10 +3,10 @@
   "title": "Encapsulate writable counter state",
   "family": "state-effects",
   "target_skills": [
-    "compose-state-authoring"
+    "compose-state-and-effects"
   ],
   "expected_skills": [
-    "compose-state-authoring"
+    "compose-state-and-effects"
   ],
   "task_mode": "edit",
   "kind": "direct",

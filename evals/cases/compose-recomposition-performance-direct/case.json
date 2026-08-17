@@ -3,10 +3,10 @@
   "title": "Move scroll offset work to placement",
   "family": "performance",
   "target_skills": [
-    "compose-recomposition-performance"
+    "compose-performance"
   ],
   "expected_skills": [
-    "compose-recomposition-performance"
+    "compose-performance"
   ],
   "task_mode": "edit",
   "kind": "direct",

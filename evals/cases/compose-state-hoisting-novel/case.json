@@ -3,10 +3,10 @@
   "title": "Review UI objects held by a screen owner",
   "family": "state-effects",
   "target_skills": [
-    "compose-state-hoisting"
+    "compose-state-and-effects"
   ],
   "expected_skills": [
-    "compose-state-hoisting"
+    "compose-state-and-effects"
   ],
   "task_mode": "review",
   "kind": "novel",

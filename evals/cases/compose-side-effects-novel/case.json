@@ -3,10 +3,10 @@
   "title": "Review event collection and navigation",
   "family": "state-effects",
   "target_skills": [
-    "compose-side-effects"
+    "compose-state-and-effects"
   ],
   "expected_skills": [
-    "compose-side-effects"
+    "compose-state-and-effects"
   ],
   "task_mode": "review",
   "kind": "novel",

@@ -1,8 +1,3 @@
----
-name: kotlin-coroutines-structured-concurrency
-description: Use when writing or reviewing Kotlin code that stores CoroutineScope, launches from init/non-suspending APIs, calls runBlocking, or catches broad exceptions around suspend calls.
----
-
 # Kotlin coroutines: structured concurrency
 
 ## Core principle
@@ -437,4 +432,4 @@ These thoughts mean the anti-pattern is back:
 
 ## Related
 
-- [`kotlin-flow-state-event-modeling`](../kotlin-flow-state-event-modeling/SKILL.md) — `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, one-shot events, and related modeling.
+- [Flow state and events](flow-state-events.md) — `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, one-shot events, and related modeling.

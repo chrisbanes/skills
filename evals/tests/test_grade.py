@@ -12,8 +12,8 @@ def make_case(root: Path, *, task_mode="edit", validators=None, allowed=None):
         id="case",
         title="Case",
         family="test",
-        target_skills=("compose-state-authoring",),
-        expected_skills=("compose-state-authoring",),
+        target_skills=("compose-state-and-effects",),
+        expected_skills=("compose-state-and-effects",),
         task_mode=task_mode,
         kind="direct",
         fixture="compose-jvm",
@@ -35,7 +35,7 @@ def make_result(workspace: Path, *, paths=(), events=(), output=None, returncode
         returncode=returncode,
         events=tuple(events),
         final_output=output
-        or {"summary": "done", "skills_used": ["compose-state-authoring"], "evidence": ["diff"]},
+        or {"summary": "done", "skills_used": ["compose-state-and-effects"], "evidence": ["diff"]},
         usage={},
         changed_paths=tuple(paths),
         diff="",
@@ -178,7 +178,7 @@ class DeterministicGradeTest(unittest.TestCase):
             self.workspace,
             output={
                 "summary": "done",
-                "skills_used": ["chrisbanes-skills:compose-state-authoring"],
+                "skills_used": ["chrisbanes-skills:compose-state-and-effects"],
                 "evidence": ["read the staged skill"],
             },
         )
@@ -191,8 +191,8 @@ class DeterministicGradeTest(unittest.TestCase):
             output={
                 "summary": "done",
                 "skills_used": [
-                    "compose-state-authoring",
-                    "chrisbanes-skills:compose-state-authoring",
+                    "compose-state-and-effects",
+                    "chrisbanes-skills:compose-state-and-effects",
                 ],
                 "evidence": ["read the staged skill"],
             },

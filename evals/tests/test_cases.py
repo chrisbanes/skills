@@ -11,8 +11,8 @@ def valid_manifest(**overrides):
         "id": "compose-state-authoring-direct",
         "title": "Replace unsafe public mutable state",
         "family": "state-effects",
-        "target_skills": ["compose-state-authoring"],
-        "expected_skills": ["compose-state-authoring"],
+        "target_skills": ["compose-state-and-effects"],
+        "expected_skills": ["compose-state-and-effects"],
         "task_mode": "edit",
         "kind": "direct",
         "fixture": "compose-jvm",
@@ -31,9 +31,9 @@ class CaseContractTest(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.root = Path(self.temp_dir.name)
-        (self.root / "skills" / "compose-state-authoring").mkdir(parents=True)
-        (self.root / "skills" / "compose-state-authoring" / "SKILL.md").write_text(
-            "---\nname: compose-state-authoring\n---\n", encoding="utf-8"
+        (self.root / "skills" / "compose-state-and-effects").mkdir(parents=True)
+        (self.root / "skills" / "compose-state-and-effects" / "SKILL.md").write_text(
+            "---\nname: compose-state-and-effects\n---\n", encoding="utf-8"
         )
         (self.root / "skills" / "using-chrisbanes-skills").mkdir(parents=True)
         (self.root / "skills" / "using-chrisbanes-skills" / "SKILL.md").write_text(
@@ -57,7 +57,7 @@ class CaseContractTest(unittest.TestCase):
         case = load_case(case_dir / "case.json", self.root)
 
         self.assertEqual("compose-state-authoring-direct", case.id)
-        self.assertEqual(("compose-state-authoring",), case.expected_skills)
+        self.assertEqual(("compose-state-and-effects",), case.expected_skills)
         self.assertEqual("Fix the subject.\n", case.prompt)
 
     def test_rejects_validator_paths_that_escape_the_case_contract(self):

@@ -13,7 +13,7 @@
     "compose-ui-testing-patterns"
   ],
   "task_mode": "review",
-  "kind": "overlap",
+  "kind": "routing",
   "fixture": "compose-jvm",
   "allowed_write_paths": [],
   "validators": [

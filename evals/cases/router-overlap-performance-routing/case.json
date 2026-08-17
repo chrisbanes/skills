@@ -3,15 +3,13 @@
   "title": "Route evidence-based recomposition diagnosis",
   "family": "router-overlap",
   "target_skills": [
-    "compose-recomposition-performance",
-    "compose-stability-diagnostics"
+    "compose-performance"
   ],
   "expected_skills": [
-    "compose-recomposition-performance",
-    "compose-stability-diagnostics"
+    "compose-performance"
   ],
   "task_mode": "review",
-  "kind": "overlap",
+  "kind": "routing",
   "fixture": "compose-jvm",
   "allowed_write_paths": [],
   "validators": [

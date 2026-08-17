@@ -26,8 +26,8 @@ class ScorecardTest(unittest.TestCase):
                         f"positive-{index}:{arm}",
                         arm,
                         outcome,
-                        expected=("compose-state-authoring",),
-                        reported=("compose-state-authoring",) if arm == "automatic" else (),
+                        expected=("compose-state-and-effects",),
+                        reported=("compose-state-and-effects",) if arm == "automatic" else (),
                     )
                 )
         for arm in ("none", "forced", "automatic"):

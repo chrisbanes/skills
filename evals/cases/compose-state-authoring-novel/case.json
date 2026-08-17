@@ -3,10 +3,10 @@
   "title": "Review a read-only accessor contract",
   "family": "state-effects",
   "target_skills": [
-    "compose-state-authoring"
+    "compose-state-and-effects"
   ],
   "expected_skills": [
-    "compose-state-authoring"
+    "compose-state-and-effects"
   ],
   "task_mode": "review",
   "kind": "novel",

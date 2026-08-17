@@ -3,6 +3,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL
+from evals.harness.experiment import (
+    _skill_source_paths,
+    load_raw_records,
+    next_attempt_workspace,
+)
 from evals.harness.results import (
     FingerprintMismatch,
     load_result,
@@ -10,8 +16,6 @@ from evals.harness.results import (
     run_with_one_retry,
     write_result,
 )
-from evals.harness.experiment import next_attempt_workspace
-from evals.harness.experiment import load_raw_records
 
 
 class ResultLifecycleTest(unittest.TestCase):
@@ -90,7 +94,7 @@ class ResultLifecycleTest(unittest.TestCase):
                         "subject": {
                             "final_output": {
                                 "skills_used": [
-                                    "chrisbanes-skills:compose-state-authoring"
+                                    "chrisbanes-skills:compose-state-and-effects"
                                 ]
                             }
                         }
@@ -102,7 +106,26 @@ class ResultLifecycleTest(unittest.TestCase):
 
         record = load_raw_records(self.root)[0]
 
-        self.assertEqual(["compose-state-authoring"], record["reported_skills"])
+        self.assertEqual(["compose-state-and-effects"], record["reported_skills"])
+
+    def test_skill_sources_include_cluster_references(self):
+        for skill in (*COMPOSE_SKILLS, ROUTER_SKILL):
+            skill_file = self.root / "skills" / skill / "SKILL.md"
+            skill_file.parent.mkdir(parents=True)
+            skill_file.write_text(f"---\nname: {skill}\n---\n", encoding="utf-8")
+        reference = (
+            self.root
+            / "skills"
+            / "compose-performance"
+            / "references"
+            / "stability.md"
+        )
+        reference.parent.mkdir()
+        reference.write_text("Stability guidance\n", encoding="utf-8")
+
+        sources = _skill_source_paths(self.root)
+
+        self.assertIn(reference.resolve(), sources)
 
 
 if __name__ == "__main__":

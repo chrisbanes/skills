@@ -3,10 +3,10 @@
   "title": "Hoist reusable search input state",
   "family": "state-effects",
   "target_skills": [
-    "compose-state-hoisting"
+    "compose-state-and-effects"
   ],
   "expected_skills": [
-    "compose-state-hoisting"
+    "compose-state-and-effects"
   ],
   "task_mode": "edit",
   "kind": "direct",

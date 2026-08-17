@@ -1,8 +1,3 @@
----
-name: kotlin-flow-state-event-modeling
-description: Use when writing or reviewing Kotlin Flow state and event APIs with StateFlow, MutableStateFlow.update, SharedFlow, Channel, stateIn, SharingStarted, .value, receiveAsFlow, one-shot events, or sentinel initial values.
----
-
 # Kotlin Flow: state and event modeling
 
 ## Core principle
@@ -178,7 +173,6 @@ If you're tempted to reach for `SharedFlow`, ask: would dropping an emission be 
 
 ## Related
 
-- [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) — choosing `when`, guard conditions, exhaustiveness, smart casts, and early returns when modeling state and events.
-- [`kotlin-coroutines-structured-concurrency`](../kotlin-coroutines-structured-concurrency/SKILL.md) — scope ownership, init launches, fire-and-forget boundaries, cancellation, `runBlocking`
-- [`compose-side-effects`](../compose-side-effects/SKILL.md) — collecting event flows and wiring side effects in Compose
-- [`compose-state-hoisting`](../compose-state-hoisting/SKILL.md) — where state holders expose flows to plain state-driven UI
+- [Kotlin control flow](../../kotlin-control-flow/SKILL.md) — choosing `when`, guard conditions, exhaustiveness, smart casts, and early returns when modeling state and events.
+- [Structured concurrency](structured-concurrency.md) — scope ownership, init launches, fire-and-forget boundaries, cancellation, `runBlocking`
+- [Compose state and effects](../../compose-state-and-effects/SKILL.md) — collecting event flows and wiring state holders to plain state-driven UI

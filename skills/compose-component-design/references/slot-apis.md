@@ -1,8 +1,3 @@
----
-name: compose-slot-api-pattern
-description: Use when designing or reviewing a reusable Jetpack Compose component whose visual regions vary by caller, or when primitive content parameters and boolean shape flags are accumulating.
----
-
 # Compose: slot API pattern
 
 ## Core principle
@@ -13,11 +8,13 @@ A reusable Compose component describes layout structure. Callers provide variabl
 
 1. Confirm the component is reusable. For a true single-use composable, do not add slot ceremony.
 2. Mark which regions vary by caller: headline, supporting text, leading visual, trailing visual, actions, body.
-3. Replace caller-controlled primitive content and shape flags with slots.
+3. Replace caller-controlled, unconstrained primitive content and shape flags
+   with slots. Preserve primitive parameters when they intentionally enforce a
+   semantic, design-system, constrained-type, or measured fast-path contract.
 4. Add receiver scopes only when the slot is emitted inside a layout whose scope APIs callers should use.
 5. Make absent optional regions nullable (`null`), so the component can omit their containers and spacing.
 6. Put repeated default content or tokens in `XxxDefaults`.
-7. Pair this with the `modifier` rules in `compose-modifier-and-layout-style`.
+7. Pair this with the `modifier` rules in [Modifier and layout](modifier-layout.md).
 
 ## 1. Replace primitive content with `@Composable` slots
 
@@ -158,9 +155,10 @@ This matches Material 3's `ButtonDefaults`, `TopAppBarDefaults`, etc. — defaul
 
 | Symptom | Diagnosis | Fix |
 |---|---|---|
-| `title: String, subtitle: String?, leadingIcon: ImageVector?` on a reusable component | Primitive content params (§1) | Convert to `xxxContent: (@Composable () -> Unit)?` slots |
-| Multiple boolean flags (`showChevron`, `showSwitch`) selecting trailing shapes | Enumerating shapes (§1) | One `trailingContent: (@Composable () -> Unit)?` slot |
-| A `mode: Mode.Sealed` parameter listing variants | Same as flag soup (§1) | Slot it |
+| Caller-controlled `title: String, subtitle: String?, leadingIcon: ImageVector?` on a reusable component | Unconstrained primitive content (§1) | Convert to `xxxContent: (@Composable () -> Unit)?` slots |
+| Multiple Boolean flags selecting caller-controlled trailing shapes | Enumerating unconstrained shapes (§1) | One `trailingContent: (@Composable () -> Unit)?` slot |
+| A mode parameter enumerating caller-controlled visual variants | Same as flag soup (§1) | Replace the visual variants with a slot |
+| Primitive or mode parameter enforces semantic, design-system, constrained-type, or measured fast-path behavior | Deliberate component contract | Keep the primitive parameter and document the invariant |
 | `actions: @Composable () -> Unit = {}` inside a `Row` body | Missing scope receiver (§2) | `actions: @Composable RowScope.() -> Unit = {}` |
 | `slot: @Composable () -> Unit = {}` for an optional area | Empty-lambda default (§3) | `slot: (@Composable () -> Unit)? = null` and branch on it |
 | Component param `defaultColor: Color = MaterialTheme.colorScheme.surface` | Defaults inlined (§4) | Move to `XxxDefaults.color` and reference it |
@@ -187,4 +185,4 @@ This matches Material 3's `ButtonDefaults`, `TopAppBarDefaults`, etc. — defaul
 
 ## Related
 
-- [`compose-modifier-and-layout-style`](../compose-modifier-and-layout-style/SKILL.md) — the modifier-parameter rule (§1–§3 there) travels with slot APIs. A reusable component takes a `modifier` parameter *and* slots its content; the caller owns both placement and what to place.
+- [Modifier and layout](modifier-layout.md) — the modifier-parameter rule (§1–§3 there) travels with slot APIs. A reusable component takes a `modifier` parameter *and* slots its content; the caller owns both placement and what to place.

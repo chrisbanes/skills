@@ -3,10 +3,10 @@
   "title": "Review a layout feedback loop",
   "family": "performance",
   "target_skills": [
-    "compose-recomposition-performance"
+    "compose-performance"
   ],
   "expected_skills": [
-    "compose-recomposition-performance"
+    "compose-performance"
   ],
   "task_mode": "review",
   "kind": "novel",

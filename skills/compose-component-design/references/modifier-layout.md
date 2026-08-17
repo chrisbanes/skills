@@ -1,8 +1,3 @@
----
-name: compose-modifier-and-layout-style
-description: Use when writing or reviewing Jetpack Compose layout APIs, modifier parameters, modifier chain construction, hardcoded root layout decisions, or layout wrappers around a single conditional.
----
-
 # Compose modifier and layout style
 
 ## Core principle
@@ -281,11 +276,10 @@ The benefit isn't a performance win — the runtime handles both fine — it's t
   }
   ```
 
-## 7. Measure-phase constraint decoration
+## 7. Measure-phase constraint helper
 
-When composable A captures a size and composable B must match it, **do not read the captured size in B's composable body** (`Modifier.height(state.dp)`). That ties B to composition whenever the measurement state changes.
-
-Capture in a layout callback on A; apply on B inside `Modifier.layout` so only layout invalidates:
+When a caller must apply captured constraints during measurement, this small
+layout helper keeps the modifier API reusable:
 
 ```kotlin
 fun Modifier.decorateMeasureConstraints(
@@ -299,27 +293,9 @@ fun Modifier.decorateMeasureConstraints(
 }
 ```
 
-```kotlin
-// Hoisted at the common parent of both rows:
-//   var anchorHeightPx by remember { mutableIntStateOf(0) }
-
-// Measured row — write state only from onSizeChanged
-RowAnchor(Modifier.onSizeChanged { size -> if (size.height != anchorHeightPx) anchorHeightPx = size.height })
-
-// Sibling rows — read anchorHeightPx only inside layout
-RowSibling(
-    Modifier.decorateMeasureConstraints { incoming ->
-        if (anchorHeightPx > 0) {
-            // Clamp to incoming bounds so the constraint never exceeds the parent's max.
-            incoming.copy(minHeight = anchorHeightPx, maxHeight = anchorHeightPx)
-        } else {
-            incoming
-        }
-    },
-)
-```
-
-Use a composition-time fallback (fixed height) only while `anchorHeightPx` is `0`. See [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) for the full cross-row pattern.
+For the state ownership, phase diagnosis, fallback, and cross-row application
+recipe, use [Deferred reads](../../compose-performance/references/deferred-reads.md)
+as the canonical reference.
 
 ## Quick reference
 
@@ -343,7 +319,7 @@ Use a composition-time fallback (fixed height) only while `anchorHeightPx` is `0
 
 ## When NOT to apply
 
-- **Composables that don't emit layout.** A `@Composable fun computeColor(): Color` or a `@Composable @ReadOnlyComposable` accessor doesn't emit a layout node. No `modifier` parameter needed (and a `@ReadOnlyComposable` couldn't accept one — see `compose-state-authoring`).
+- **Composables that don't emit layout.** A `@Composable fun computeColor(): Color` or a `@Composable @ReadOnlyComposable` accessor doesn't emit a layout node. No `modifier` parameter needed (and a `@ReadOnlyComposable` couldn't accept one — see [composition contracts](../../compose-performance/references/composition-contracts.md)).
 - **`@Preview` functions.** Previews are throwaway entry points; the framework calls them with no caller. A `modifier` parameter would be unused dead weight.
 - **Test-only composables** inside `*Test` sources whose only caller is `composeTestRule.setContent { … }`. Same reasoning as previews.
 - **Internal layout primitives that take a `modifier` as their *first required* parameter** (very rare; framework-level). The rule is "first *optional* param"; some private utilities legitimately have `modifier` upfront as required.
@@ -371,5 +347,5 @@ The declaration-side rules (§1–§3) should not be skipped merely because "thi
 
 ## Related
 
-- [`compose-slot-api-pattern`](../compose-slot-api-pattern/SKILL.md) — the other half of declaring a reusable composable's public API: take `@Composable () -> Unit` slots for variable content. A reusable component takes both a `modifier` parameter *and* slots — caller owns placement *and* what to place.
-- [`compose-state-deferred-reads`](../compose-state-deferred-reads/SKILL.md) — back-writing across phases and deferred measurement reads.
+- [Slot APIs](slot-apis.md) — the other half of declaring a reusable composable's public API: take `@Composable () -> Unit` slots for variable content. A reusable component takes both a `modifier` parameter *and* slots — caller owns placement *and* what to place.
+- [Compose performance](../../compose-performance/SKILL.md) — back-writing across phases and deferred measurement reads.

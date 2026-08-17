@@ -3,10 +3,10 @@
   "title": "Preserve immutable UI state",
   "family": "performance",
   "target_skills": [
-    "compose-stability-diagnostics"
+    "compose-performance"
   ],
   "expected_skills": [
-    "compose-stability-diagnostics"
+    "compose-performance"
   ],
   "task_mode": "edit",
   "kind": "negative",

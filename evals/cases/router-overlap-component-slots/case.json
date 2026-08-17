@@ -3,15 +3,13 @@
   "title": "Route a reusable card API review",
   "family": "router-overlap",
   "target_skills": [
-    "compose-modifier-and-layout-style",
-    "compose-slot-api-pattern"
+    "compose-component-design"
   ],
   "expected_skills": [
-    "compose-modifier-and-layout-style",
-    "compose-slot-api-pattern"
+    "compose-component-design"
   ],
   "task_mode": "review",
-  "kind": "overlap",
+  "kind": "routing",
   "fixture": "compose-jvm",
   "allowed_write_paths": [],
   "validators": [

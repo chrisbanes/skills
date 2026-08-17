@@ -1,11 +1,11 @@
 # Compose skill evaluations
 
 This directory contains a reproducible, advisory evaluator for the repository's
-11 Compose skills and the `using-chrisbanes-skills` routing layer. It is designed
+six Compose skills and the `using-chrisbanes-skills` routing layer. It is designed
 to answer two separate questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
-2. Does automatic activation report the expected leaf skills?
+2. Does automatic activation report the expected public skill entrypoints?
 
 The evaluator never turns a stochastic model score into a merge or release
 gate. CI validates only the harness, corpus, and deterministic formulas.
@@ -14,11 +14,11 @@ gate. CI validates only the harness, corpus, and deterministic formulas.
 
 Every case runs in a fresh workspace and conversation under three arms:
 
-- `none` disables all 11 leaf skills and the router.
+- `none` disables all six Compose skills and the router.
 - `forced` enables and explicitly invokes only the case's target skill or
   skills. Negative controls still force the target so over-application remains
   observable.
-- `automatic` enables all leaf skills and the router without naming any skill
+- `automatic` enables all Compose skills and the router without naming any skill
   in the task prompt.
 
 Each `case × arm` condition runs three times by default. The complete corpus
@@ -50,10 +50,13 @@ the human audit provide the behavioral evidence.
 The 38 cases comprise:
 
 - one direct authorized edit, one novel read-only review, and one authorized
-  no-change control for each Compose skill;
-- five multi-label router-overlap reviews; and
-- one normalized snapshot from an immutable public revision per skill, with
-  source URL, revision, license, and normalization note in `case.json`.
+  no-change control for each of 11 focused concern slices across the six skills;
+- five router reviews spanning single-cluster and multi-skill decisions; and
+- one normalized snapshot from an immutable public revision per concern slice,
+  with source URL, revision, license, and normalization note in `case.json`.
+
+Case IDs retain their focused concern names even when several concerns route to
+the same clustered public skill.
 
 `case.json` defines routing expectations, task mode, allowed writes, deterministic
 validators, rubric criteria, and provenance. Safety checks for network and external

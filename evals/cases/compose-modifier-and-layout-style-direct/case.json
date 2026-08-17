@@ -3,10 +3,10 @@
   "title": "Apply caller placement at the root",
   "family": "component-ui",
   "target_skills": [
-    "compose-modifier-and-layout-style"
+    "compose-component-design"
   ],
   "expected_skills": [
-    "compose-modifier-and-layout-style"
+    "compose-component-design"
   ],
   "task_mode": "edit",
   "kind": "direct",

@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL
 from evals.harness.grade import ObjectiveGrade, ValidatorResult
 from evals.harness.judge import (
     JudgeConfig,
@@ -19,20 +20,7 @@ class BlindedJudgeTest(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.root = Path(self.temp_dir.name)
-        for skill in (
-            "compose-state-authoring",
-            "compose-state-hoisting",
-            "compose-side-effects",
-            "compose-recomposition-performance",
-            "compose-stability-diagnostics",
-            "compose-state-deferred-reads",
-            "compose-modifier-and-layout-style",
-            "compose-slot-api-pattern",
-            "compose-animations",
-            "compose-focus-navigation",
-            "compose-ui-testing-patterns",
-            "using-chrisbanes-skills",
-        ):
+        for skill in (*COMPOSE_SKILLS, ROUTER_SKILL):
             (self.root / "skills" / skill).mkdir(parents=True)
         (self.root / "evals" / "schemas").mkdir(parents=True)
         (self.root / "evals" / "schemas" / "judge-output.schema.json").write_text(
@@ -108,7 +96,7 @@ class BlindedJudgeTest(unittest.TestCase):
     def test_packet_omits_evaluator_owned_project_skill_snapshot(self):
         case = make_case(self.root)
         workspace = self.root / "staged-workspace"
-        skill = workspace / ".agents/skills/compose-state-authoring/SKILL.md"
+        skill = workspace / ".agents/skills/compose-state-and-effects/SKILL.md"
         skill.parent.mkdir(parents=True)
         skill.write_text("secret skill instructions\n", encoding="utf-8")
         (workspace / "Subject.kt").write_text("val initial = true\n", encoding="utf-8")
@@ -127,7 +115,7 @@ class BlindedJudgeTest(unittest.TestCase):
             case, make_result(workspace), ObjectiveGrade(True, False, (), (), ())
         )
 
-        self.assertNotIn(".agents/skills/compose-state-authoring/SKILL.md", packet["initial_state"])
+        self.assertNotIn(".agents/skills/compose-state-and-effects/SKILL.md", packet["initial_state"])
         self.assertNotIn("secret skill instructions", json.dumps(packet))
 
     def test_judge_command_disables_every_skill_and_uses_read_only_sandbox(self):
@@ -139,25 +127,12 @@ class BlindedJudgeTest(unittest.TestCase):
             JudgeConfig(model="gpt-5.6-sol", reasoning="high"),
             skill_paths=tuple(
                 (self.root / "skills" / skill / "SKILL.md").resolve()
-                for skill in (
-                    "compose-state-authoring",
-                    "compose-state-hoisting",
-                    "compose-side-effects",
-                    "compose-recomposition-performance",
-                    "compose-stability-diagnostics",
-                    "compose-state-deferred-reads",
-                    "compose-modifier-and-layout-style",
-                    "compose-slot-api-pattern",
-                    "compose-animations",
-                    "compose-focus-navigation",
-                    "compose-ui-testing-patterns",
-                    "using-chrisbanes-skills",
-                )
+                for skill in (*COMPOSE_SKILLS, ROUTER_SKILL)
             ),
         )
         rendered = " ".join(command)
 
-        self.assertEqual(12, rendered.count("path = "))
+        self.assertEqual(7, rendered.count("path = "))
         self.assertEqual(0, rendered.count("enabled = true"))
         self.assertEqual("read-only", command[command.index("--sandbox") + 1])
         self.assertNotIn("--approve-for-me", command)

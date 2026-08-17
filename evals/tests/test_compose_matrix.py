@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from evals.harness.cases import COMPOSE_SKILLS, validate_corpus
+from evals.harness.cases import EVALUATED_TOPICS, validate_corpus
 from evals.harness.codex import prepare_workspace
 from evals.harness.grade import grade_subject
 from evals.harness.experiment import regrade_records
@@ -14,17 +14,18 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class ComposeMatrixTest(unittest.TestCase):
-    def test_has_the_exact_standalone_and_router_overlap_matrix(self):
+    def test_has_the_exact_concern_slice_and_router_matrix(self):
         report = validate_corpus(REPO_ROOT)
 
         self.assertEqual(38, report.case_count)
-        standalone = [case for case in report.cases if case.kind != "overlap"]
-        overlaps = [case for case in report.cases if case.kind == "overlap"]
+        standalone = [case for case in report.cases if case.kind != "routing"]
+        routing = [case for case in report.cases if case.kind == "routing"]
         self.assertEqual(33, len(standalone))
-        self.assertEqual(5, len(overlaps))
-        for skill in COMPOSE_SKILLS:
-            cases = [case for case in standalone if case.target_skills == (skill,)]
+        self.assertEqual(5, len(routing))
+        for topic, skill in EVALUATED_TOPICS:
+            cases = [case for case in standalone if case.id.startswith(f"{topic}-")]
             self.assertEqual(3, len(cases), skill)
+            self.assertTrue(all(case.target_skills == (skill,) for case in cases))
             self.assertEqual(1, sum(case.provenance["kind"] == "historical" for case in cases))
             negative = next(case for case in cases if case.kind == "negative")
             self.assertEqual((skill,), negative.expected_skills)
