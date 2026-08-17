@@ -521,7 +521,7 @@ def rejudge_packets(
             skill_catalog_digest=skill_catalog_digest,
             codex_version=codex_version,
         )
-        result_path = output_dir / "rejudgments" / f"{packet_path.stem}.json"
+        result_path = _rejudgment_result_path(output_dir, packet_path, fingerprint)
         if result_path.is_file():
             load_result(result_path, fingerprint)
             completed += 1
@@ -578,3 +578,9 @@ def _rejudgment_fingerprint(
     return hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
+
+
+def _rejudgment_result_path(
+    output_dir: Path, packet_path: Path, fingerprint: str
+) -> Path:
+    return output_dir / "rejudgments" / packet_path.stem / f"{fingerprint}.json"

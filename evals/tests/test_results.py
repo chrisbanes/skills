@@ -2,14 +2,17 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL
 from evals.harness.experiment import (
     _judge_packet_path,
     _rejudgment_fingerprint,
+    _rejudgment_result_path,
     _skill_source_paths,
     load_raw_records,
     next_attempt_workspace,
+    rejudge_packets,
 )
 from evals.harness.judge import JudgeConfig
 from evals.harness.results import (
@@ -119,6 +122,81 @@ class ResultLifecycleTest(unittest.TestCase):
         )
 
         self.assertNotEqual(first, second)
+
+    def test_rejudging_a_new_runtime_preserves_the_previous_result(self):
+        packet = self.root / "judge-packets" / "candidate.json"
+        packet.parent.mkdir()
+        packet.write_text(
+            json.dumps(
+                {
+                    "candidate_id": "candidate",
+                    "task": "Review the subject",
+                    "task_mode": "review",
+                    "rubric": [{"id": "correct", "text": "Correct"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        calls = self.root / "judge-calls.txt"
+        fake = self.root / "fake-codex"
+        legacy_result = self.root / "rejudgments" / "candidate.json"
+        legacy_result.parent.mkdir()
+        legacy_result.write_text('{"legacy": true}\n', encoding="utf-8")
+
+        def write_fake(version: str) -> None:
+            fake.write_text(
+                "#!/bin/sh\n"
+                f"if [ \"$1\" = \"--version\" ]; then echo '{version}'; exit 0; fi\n"
+                f"echo judge >> '{calls}'\n"
+                "printf '%s\\n' '{\"type\":\"item.completed\",\"item\":{\"type\":\"agent_message\",\"text\":\"{\\\"criteria\\\":[{\\\"id\\\":\\\"correct\\\",\\\"pass\\\":true,\\\"evidence\\\":\\\"diff\\\"}],\\\"overall_pass\\\":true,\\\"rationale\\\":\\\"ok\\\"}\"}}'\n",
+                encoding="utf-8",
+            )
+            fake.chmod(0o755)
+
+        config = JudgeConfig("gpt-5.6-sol", "high")
+        with patch("evals.harness.experiment.discover_skill_paths", return_value=()):
+            write_fake("codex-cli 1")
+            rejudge_packets(
+                self.root,
+                self.root,
+                config,
+                execute=True,
+                codex_executable=str(fake),
+            )
+            write_fake("codex-cli 2")
+            rejudge_packets(
+                self.root,
+                self.root,
+                config,
+                execute=True,
+                codex_executable=str(fake),
+            )
+            rejudge_packets(
+                self.root,
+                self.root,
+                config,
+                execute=True,
+                codex_executable=str(fake),
+            )
+
+        results = sorted((self.root / "rejudgments" / "candidate").glob("*.json"))
+        self.assertEqual(2, len(results))
+        self.assertEqual(["judge", "judge"], calls.read_text().splitlines())
+        self.assertEqual('{"legacy": true}\n', legacy_result.read_text(encoding="utf-8"))
+        versions = {
+            json.loads(path.read_text(encoding="utf-8"))["payload"]["codex_version"]
+            for path in results
+        }
+        self.assertEqual({"codex-cli 1", "codex-cli 2"}, versions)
+
+    def test_rejudgment_result_path_is_keyed_by_full_fingerprint(self):
+        packet = self.root / "packet.json"
+
+        first = _rejudgment_result_path(self.root, packet, "a" * 64)
+        second = _rejudgment_result_path(self.root, packet, "b" * 64)
+
+        self.assertNotEqual(first, second)
+        self.assertEqual("a" * 64 + ".json", first.name)
 
     def test_retries_only_once_for_a_retryable_failure(self):
         calls = []

@@ -13,6 +13,7 @@ from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase
 
 
 ARMS = ("none", "forced", "automatic")
+_GRADLE_OUTPUT_DIRECTORIES = (".gradle", "build")
 
 
 @dataclass(frozen=True)
@@ -201,7 +202,7 @@ def prepare_workspace(
     shutil.copytree(
         fixture,
         destination,
-        ignore=shutil.ignore_patterns(".gradle", "build"),
+        ignore=shutil.ignore_patterns(*_GRADLE_OUTPUT_DIRECTORIES),
     )
     overlay = case.directory / "overlay"
     if overlay.is_dir():
@@ -218,6 +219,12 @@ def prepare_workspace(
             destination / ".agents" / "skills" / skill,
         )
     _run_git(destination, "init", "-q")
+    exclude = destination / ".git" / "info" / "exclude"
+    with exclude.open("a", encoding="utf-8") as output:
+        output.write("\n# Evaluator-sanctioned Gradle outputs\n")
+        output.writelines(
+            f"{directory}/\n" for directory in _GRADLE_OUTPUT_DIRECTORIES
+        )
     _run_git(destination, "add", ".")
     _run_git(
         destination,

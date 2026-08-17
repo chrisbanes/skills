@@ -1,4 +1,5 @@
 import json
+import subprocess
 import tempfile
 import unittest
 from dataclasses import replace
@@ -160,10 +161,20 @@ class CodexRunnerTest(unittest.TestCase):
 
         subject = first / "src" / "main" / "kotlin" / "example" / "Subject.kt"
         subject.write_text("changed\n", encoding="utf-8")
+        (first / ".gradle").mkdir()
+        (first / ".gradle" / "cache.bin").write_text("generated\n", encoding="utf-8")
+        (first / "build").mkdir()
+        (first / "build" / "output.bin").write_text("generated\n", encoding="utf-8")
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=first,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout
 
         self.assertTrue((first / ".git").is_dir())
-        self.assertFalse((first / ".gradle").exists())
-        self.assertFalse((first / "build").exists())
+        self.assertEqual(" M src/main/kotlin/example/Subject.kt\n", status)
         self.assertEqual("package example\n", (second / subject.relative_to(first)).read_text())
 
     def test_captures_jsonl_final_output_and_workspace_diff(self):
