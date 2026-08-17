@@ -248,6 +248,16 @@ class ResultLifecycleTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different run controls: subject_model"):
             load_raw_records(self.root)
 
+    def test_loading_raw_records_rejects_malformed_payloads(self):
+        path = self.root / "raw" / "case" / "automatic" / "1.json"
+        path.parent.mkdir(parents=True)
+
+        for document in ({}, {"payload": []}, []):
+            with self.subTest(document=document):
+                path.write_text(json.dumps(document), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "object payload"):
+                    load_raw_records(self.root)
+
     def test_skill_sources_include_cluster_references(self):
         for skill in (*COMPOSE_SKILLS, ROUTER_SKILL):
             skill_file = self.root / "skills" / skill / "SKILL.md"
