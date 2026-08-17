@@ -1,3 +1,5 @@
+![Abstract illustration of a modular Kotlin and Jetpack Compose toolkit](docs/assets/skills-header.webp)
+
 # Skills
 
 A set of skills for Kotlin, Jetpack Compose, and Android development.
