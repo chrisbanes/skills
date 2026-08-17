@@ -30,7 +30,7 @@
     },
     {
       "id": "criterion-2",
-      "text": "Recommends fixing the data contract before adding or retaining annotations"
+      "text": "Recommends first making mutable properties immutable or snapshot-observable, then deciding whether an annotation is needed"
     }
   ],
   "forbidden_actions": [

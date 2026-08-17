@@ -39,6 +39,23 @@ class ComposeMatrixTest(unittest.TestCase):
                 for skill in case.expected_skills:
                     self.assertNotIn(skill, prompt)
 
+    def test_stability_novel_requests_the_repair_recommendation_it_grades(self):
+        report = validate_corpus(REPO_ROOT)
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "compose-stability-diagnostics-novel"
+        )
+
+        self.assertIn("recommend the minimal safe repair order", case.prompt.lower())
+        repair_criterion = next(
+            criterion
+            for criterion in case.rubric
+            if criterion["id"] == "criterion-2"
+        )
+        self.assertIn("recommends first", repair_criterion["text"].lower())
+        self.assertIn("then deciding", repair_criterion["text"].lower())
+
     def test_fixture_declares_pinned_compose_jvm_dependencies_and_offline_wrapper(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "compose-jvm"
 

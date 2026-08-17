@@ -1,1 +1,1 @@
-Review the stability promise in this model using only evidence visible in the code. Do not edit or propose annotations without justification.
+Review the stability promise in this model using only evidence visible in the code. Identify any unsupported promise and recommend the minimal safe repair order. Do not edit or propose an annotation until the data contract makes it truthful.
