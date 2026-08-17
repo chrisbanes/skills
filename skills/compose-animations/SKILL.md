@@ -17,6 +17,7 @@ Pick the **smallest API that matches the problem**: built-in visibility and layo
 4. Check identity: render each `AnimatedContent` branch from its content-lambda target, then choose `contentKey` by visual shape rather than payload churn.
 5. Check performance: keep frame-rate animation values as `State` and read them in layout/draw block modifiers when possible.
 6. Escalate to `Animatable` or lower-level APIs only when target-state animation cannot express the motion.
+7. Finish when the chosen API matches the visual and lifecycle needs, any content-swap identity is preserved, no simpler API fits, and the relevant behavior has been verified.
 
 ## Pick the smallest animation API
 
