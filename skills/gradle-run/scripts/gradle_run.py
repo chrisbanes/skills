@@ -517,9 +517,7 @@ def terminate_child(
             return
         try:
             child.send_signal(signal.CTRL_BREAK_EVENT)
-            child.wait(timeout=5)
-            return
-        except (OSError, subprocess.TimeoutExpired):
+        except OSError:
             pass
         try:
             subprocess.run(

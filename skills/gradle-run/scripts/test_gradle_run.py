@@ -571,51 +571,44 @@ class GradleRunProcessTest(GradleRunTestCase):
 
     def test_signal_after_child_exit_preserves_the_completed_run(self) -> None:
         workflow = self.create_workflow()
-        pid_file = self.root.parent / "completed-child.pid"
-        child_code = (
-            "from pathlib import Path; import os; "
-            f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
-            "[print(f'warning: diagnostic {index}') for index in range(1_000_000)]"
-        )
-        wrapper = subprocess.Popen(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--root",
-                str(self.root),
-                "run",
-                "--workflow",
-                workflow,
-                "--scope",
-                "targeted",
-                "--question",
-                "Can finalization preserve a completed build?",
-                "--",
-                str(self.gradle),
-                "--",
-                sys.executable,
-                "-c",
-                child_code,
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        deadline = time.monotonic() + 15
-        while not pid_file.exists() and time.monotonic() < deadline:
-            time.sleep(0.01)
-        self.assertTrue(pid_file.exists(), "child did not start")
-        child_pid = int(pid_file.read_text())
-        while process_is_running(child_pid) and time.monotonic() < deadline:
-            time.sleep(0.001)
-        self.assertFalse(process_is_running(child_pid), "child did not finish")
-        self.assertIsNone(wrapper.poll(), "wrapper finished before finalization was exercised")
+        arguments = [
+            str(SCRIPT),
+            "--root",
+            str(self.root),
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            "targeted",
+            "--question",
+            "Can finalization preserve a completed build?",
+            "--",
+            str(self.gradle),
+            "--",
+            sys.executable,
+            "-c",
+            "print('warning: final diagnostic')",
+        ]
+        extract_diagnostics = GRADLE_RUN.extract_diagnostics
 
-        wrapper.send_signal(signal.SIGINT)
-        stdout, stderr = wrapper.communicate(timeout=15)
+        def interrupt_during_finalization(log: Path) -> GRADLE_RUN.Diagnostics:
+            signal.raise_signal(signal.SIGINT)
+            return extract_diagnostics(log)
 
-        self.assertEqual(wrapper.returncode, 0, stderr)
-        self.assertEqual(json.loads(stdout)["exit_status"], 0)
+        with (
+            mock.patch.object(sys, "argv", arguments),
+            mock.patch.object(
+                GRADLE_RUN,
+                "extract_diagnostics",
+                side_effect=interrupt_during_finalization,
+            ) as extraction,
+            mock.patch("sys.stdout", new=io.StringIO()) as stdout,
+        ):
+            exit_status = GRADLE_RUN.main()
+
+        extraction.assert_called_once()
+        self.assertEqual(exit_status, 0)
+        self.assertEqual(json.loads(stdout.getvalue())["exit_status"], 0)
         ledger = json.loads((self.root / workflow / "ledger.json").read_text())
         self.assertEqual(ledger["run_count"], 1)
         self.assertEqual(ledger["runs"][0]["exit_status"], 0)
@@ -825,7 +818,34 @@ class GradleRunWindowsProcessTest(unittest.TestCase):
             stdout=subprocess.DEVNULL,
             timeout=5,
         )
-        child.wait.assert_has_calls([mock.call(timeout=5), mock.call(timeout=5)])
+        child.wait.assert_has_calls([mock.call(timeout=5), mock.call()])
+
+    def test_windows_cleanup_kills_tree_when_launcher_exits_after_ctrl_break(self) -> None:
+        child = mock.Mock()
+        child.pid = 4242
+        child.poll.return_value = None
+        child.wait.return_value = 0
+
+        with (
+            mock.patch.object(GRADLE_RUN.os, "name", "nt"),
+            mock.patch.object(
+                GRADLE_RUN.signal,
+                "CTRL_BREAK_EVENT",
+                1,
+                create=True,
+            ),
+            mock.patch.object(GRADLE_RUN.subprocess, "run") as taskkill,
+        ):
+            GRADLE_RUN.terminate_child(child, isolated_process_group=True)
+
+        child.send_signal.assert_called_once_with(1)
+        taskkill.assert_called_once_with(
+            ["taskkill", "/PID", "4242", "/T", "/F"],
+            check=False,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            timeout=5,
+        )
 
 
 class GradleRunWorkflowTest(GradleRunTestCase):
