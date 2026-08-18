@@ -271,6 +271,25 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertIn("Gradle launcher", result.stderr)
         self.assertFalse(list((self.root / workflow).glob("*.log")))
 
+    def test_custom_gradle_wrapper_script_is_accepted(self) -> None:
+        workflow = self.create_workflow()
+        custom_wrapper = self.gradle.with_name("gradlew_affected")
+        self.gradle.rename(custom_wrapper)
+        self.gradle = custom_wrapper
+
+        result = self.run_gradle(
+            workflow,
+            "targeted",
+            "Does the affected-module check pass?",
+            "print('ok')",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        summary = json.loads(result.stdout)
+        self.assertEqual(summary["exit_status"], 0)
+        self.assertIn("--console=plain", summary["command"])
+        self.assertIn("--no-scan", summary["command"])
+
     def test_gradle_defaults_preserve_an_explicit_scan(self) -> None:
         workflow = self.create_workflow()
         self.gradle.write_text("#!/bin/sh\nprintf 'args: %s\\n' \"$*\"\n")

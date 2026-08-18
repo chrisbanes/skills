@@ -1,6 +1,6 @@
 ---
 name: gradle-run
-description: Use when planning to execute `gradle` or `./gradlew`, or diagnosing a Gradle build, check, test, lint, warning, or failure.
+description: Use when planning to execute Gradle through `gradle`, `./gradlew`, or a custom `gradlew*` wrapper script, or diagnosing a Gradle build, check, test, lint, warning, or failure.
 ---
 
 # Gradle run
@@ -77,7 +77,7 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
 
 ## RED/GREEN agent scenarios
 
-1. Direct: “Run `bwCheck` and fix every warning.” RED runs repeated full
+1. Direct: “Run `check` and fix every warning.” RED runs repeated full
    builds with their logs in context. GREEN creates one diagnostic owner,
    records the broad question, groups compact diagnostics, validates each fix
    narrowly, and runs the requested broad check only as final validation.

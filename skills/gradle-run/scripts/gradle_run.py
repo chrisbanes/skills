@@ -291,9 +291,14 @@ def display_command(command: list[str]) -> str:
     return shortened(" ".join(command), 1024)
 
 
+def is_gradle_launcher(command: str) -> bool:
+    name = Path(command).name
+    return name == "gradle" or name.startswith("gradlew")
+
+
 def effective_command(command: list[str]) -> list[str]:
     """Add safe Gradle defaults without overriding an explicit scan choice."""
-    if Path(command[0]).name not in {"gradle", "gradlew"}:
+    if not is_gradle_launcher(command[0]):
         raise ValueError("command must start with a Gradle launcher")
     effective = list(command)
     try:
