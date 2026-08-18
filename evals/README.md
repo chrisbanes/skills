@@ -10,6 +10,38 @@ to answer two separate questions:
 The evaluator never turns a stochastic model score into a merge or release
 gate. CI validates only the harness, corpus, and deterministic formulas.
 
+## Latest per-skill scores
+
+The 2026-08-18 certified scorecard produced the following descriptive scores.
+**Automatic score** is the positive-case outcome pass rate when all skills and
+the router are available without naming a skill in the prompt.
+Baseline and forced scores show the same cases with no skills or with the target
+skill explicitly invoked. Uplift is forced minus baseline. Restraint is the
+outcome pass rate on forced and automatic no-change controls.
+
+| Skill | Positive records per arm | Baseline | Forced | Automatic score | Uplift | Restraint (forced / automatic) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `compose-animations` | 12 | 75.0% | 100.0% | 100.0% | +25.0 pp | 100.0% / 100.0% |
+| `compose-component-design` | 15 | 86.7% | 100.0% | 100.0% | +13.3 pp | 100.0% / 100.0% |
+| `compose-focus-navigation` | 9 | 66.7% | 100.0% | 100.0% | +33.3 pp | 100.0% / 100.0% |
+| `compose-performance` | 24 | 91.7% | 100.0% | 100.0% | +8.3 pp | 100.0% / 100.0% |
+| `compose-state-and-effects` | 27 | 77.8% | 100.0% | 100.0% | +22.2 pp | 100.0% / 100.0% |
+| `compose-ui-testing-patterns` | 9 | 55.6% | 100.0% | 100.0% | +44.4 pp | 100.0% / 100.0% |
+
+These rows are diagnostic rather than independent pass/fail gates. Multi-skill
+routing cases contribute to every expected skill row, so the rows do not sum to
+the suite-wide rates. The aggregate certification passed with 82.7% baseline
+and 100.0% forced and automatic positive outcomes; 89.4% reported routing
+precision; 97.7% reported routing recall; and 100.0% forced and automatic
+negative-control restraint.
+
+Provenance: the scorecard retains unaffected conditions from the previous
+complete benchmark and uses the latest three-repetition result for every
+condition targeted by the finalized skill edits, plus a current safety probe.
+The raw historical scorecard retains its two earlier forbidden actions; the
+current probe recorded none. See the experiment design and safety rules below
+when interpreting the table.
+
 ## Experiment arms
 
 Every case runs in a fresh workspace and conversation under three arms:
@@ -26,10 +58,10 @@ therefore schedules 342 subject calls and 342 blinded judge calls, or 684 calls
 in total.
 
 All subject and judge processes use `--ignore-user-config`, explicit
-`skills.config` entries, network-disabled sandboxes, output schemas, and pinned
-model/reasoning arguments. Review tasks are read-only. Edit tasks are graded
-against a path allowlist. Workspaces and conversations are never reused across
-conditions.
+`skills.config` entries, network-disabled sandboxes, disabled hosted web search,
+output schemas, and pinned model/reasoning arguments. Review tasks are read-only.
+Edit tasks are graded against a path allowlist. Workspaces and conversations are
+never reused across conditions.
 
 The harness disables every skill discovered in the user and plugin catalogs.
 For forced and automatic arms it copies only the enabled repository skills into
@@ -47,7 +79,7 @@ the human audit provide the behavioral evidence.
 
 ## Corpus
 
-The 38 cases comprise:
+The scored benchmark remains 38 cases and comprises:
 
 - one direct authorized edit, one novel read-only review, and one authorized
   no-change control for each of 11 focused concern slices across the six skills;
@@ -57,6 +89,11 @@ The 38 cases comprise:
 
 Case IDs retain their focused concern names even when several concerns route to
 the same clustered public skill.
+
+Four calibration-only performance challenge cases are also validated with the
+corpus. They are excluded from default plans and published scorecards; select
+them explicitly with `--case` when deciding whether they should graduate into
+the benchmark.
 
 `case.json` defines routing expectations, task mode, allowed writes, deterministic
 validators, rubric criteria, and provenance. Safety checks for network and external
@@ -159,6 +196,19 @@ python3 evals/run.py judge \
   --output-dir .scratch/skill-evals/<run-id> \
   --judge-model gpt-5.6-sol --judge-reasoning high
 ```
+
+After all rejudgments complete, build a separate scorecard that combines those
+verdicts with the immutable subject and deterministic-grading evidence:
+
+```shell
+python3 evals/run.py rejudged-report \
+  --output-dir .scratch/skill-evals/<run-id>
+```
+
+This report fails rather than guessing if a packet is missing, has no
+rejudgment, or has multiple rejudgments for one packet. Its results, scorecard,
+and audit queue are written under `<run-id>/rejudged/`; the original run remains
+unchanged.
 
 ## Grading and gates
 

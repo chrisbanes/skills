@@ -19,6 +19,7 @@ from evals.harness.experiment import (
     load_raw_records,
     regrade_records,
     rejudge_packets,
+    write_rejudged_reports,
 )
 from evals.harness.judge import JudgeConfig
 from evals.harness.report import append_audit_decision, write_reports
@@ -60,6 +61,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     regrade.add_argument("--output-dir", type=Path, required=True)
     regrade.add_argument("--audit-seed", type=int, default=20260816)
+    rejudged_report = subparsers.add_parser(
+        "rejudged-report", help="report valid persisted rejudgments without model calls"
+    )
+    rejudged_report.add_argument("--output-dir", type=Path, required=True)
+    rejudged_report.add_argument("--audit-seed", type=int, default=20260816)
     judge = subparsers.add_parser("judge", help="preview or rejudge persisted packets")
     judge.add_argument("--output-dir", type=Path, required=True)
     judge.add_argument("--judge-model", required=True)
@@ -199,6 +205,23 @@ def main(argv: list[str] | None = None) -> int:
                 audit_seed=args.audit_seed,
             )
         except (CaseValidationError, OSError, ValueError) as error:
+            print(error, file=sys.stderr)
+            return 1
+        print(paths["scorecard"])
+        return 0
+    if args.command == "rejudged-report":
+        output_dir = args.output_dir.resolve()
+        try:
+            records = load_raw_records(output_dir)
+            if not records:
+                print(f"no raw results under {output_dir}", file=sys.stderr)
+                return 1
+            paths = write_rejudged_reports(
+                output_dir,
+                records,
+                audit_seed=args.audit_seed,
+            )
+        except (OSError, ValueError) as error:
             print(error, file=sys.stderr)
             return 1
         print(paths["scorecard"])

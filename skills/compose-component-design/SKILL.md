@@ -13,18 +13,22 @@ policy choices that vary by use.
 
 ## Procedure
 
-1. State the component's invariant visual structure and identify every varying
+1. State the requested API concern and keep the edit within it. A focused slot
+   review does not authorize unrelated modifier, naming, or cleanup changes.
+2. State the component's invariant visual structure and identify every varying
    region, placement concern, and policy choice.
-2. Accept and apply a caller modifier at the component root unless a concrete
-   API boundary makes another placement correct.
-3. Represent caller-controlled, unconstrained visual regions with slots rather
+3. When root placement is part of the requested work or a broad component API
+   design, accept and apply a caller modifier at the component root unless a
+   concrete API boundary makes another placement correct.
+4. Represent caller-controlled, unconstrained visual regions with slots rather
    than proliferating primitive content parameters or Boolean shape flags.
    Keep semantic and design-system constraints as primitive parameters.
-4. Keep simple conditional structure inline; extract only a coherent reusable
+5. Keep simple conditional structure inline; extract only a coherent reusable
    contract.
-5. Read the relevant focused reference below before editing public signatures.
-6. Finish when callers can position the component, supply variable content,
-   and understand ownership without needing hidden layout or content switches.
+6. Read the relevant focused reference below before editing public signatures.
+7. Finish with no edit when the existing API already satisfies the requested
+   concern. Otherwise finish when callers can position the component, supply
+   variable content, and understand ownership without hidden switches.
 
 ## Topic router
 
@@ -43,6 +47,10 @@ policy choices that vary by use.
    the variable regions as named slots.
 2. Novel case: a component needs both a root modifier and caller-supplied
    trailing content. GREEN applies the modifier at the root and supplies a
-   trailing slot without leaking internal layout.
+   trailing slot without leaking the component's `RowScope`; reserve a scope
+   receiver for a region whose child layout is deliberately caller-controlled.
 3. Counterexample: a private screen helper has one fixed child and no callers.
    GREEN keeps it simple instead of inventing slots for hypothetical reuse.
+4. Focused counterexample: a status label intentionally maps a semantic enum to
+   fixed copy, and the task asks only whether it needs slots. GREEN leaves the
+   workspace unchanged instead of adding an unrelated root modifier.

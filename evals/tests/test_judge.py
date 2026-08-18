@@ -136,8 +136,10 @@ class BlindedJudgeTest(unittest.TestCase):
         self.assertEqual(7, rendered.count("path = "))
         self.assertEqual(0, rendered.count("enabled = true"))
         self.assertEqual("read-only", command[command.index("--sandbox") + 1])
+        self.assertIn("--skip-git-repo-check", command)
         self.assertNotIn("--approve-for-me", command)
         self.assertIn('model_reasoning_effort="high"', rendered)
+        self.assertIn('web_search="disabled"', rendered)
 
     def test_judge_command_treats_subject_controlled_fields_as_untrusted_data(self):
         packet = self.root / "packet.json"

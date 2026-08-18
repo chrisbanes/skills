@@ -1,0 +1,41 @@
+{
+  "id": "compose-performance-composition-decision-challenge",
+  "title": "Preserve a composition decision",
+  "family": "performance",
+  "target_skills": [
+    "compose-performance"
+  ],
+  "expected_skills": [
+    "compose-performance"
+  ],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [
+    "src/main/kotlin/example/Subject.kt"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-performance-composition-decision-challenge"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Recognizes that the state decides which UI branch exists and therefore must remain a composition read"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Leaves the workspace unchanged without introducing a deferred lambda or a graphics or layout refactor"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

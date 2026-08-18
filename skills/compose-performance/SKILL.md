@@ -20,8 +20,14 @@ axis begins.
 3. Check for a false lead: a real data change, a correctness defect, or an
    unchanged lazy item that is expected to recompose.
 4. Read the corresponding focused reference before proposing a change.
-5. Change one axis at a time and re-measure the same transition.
-6. Finish when the evidence improves at the observed boundary without hiding
+5. For review work, pair every finding with the smallest evidence-supported
+   repair. For a false stability promise, explicitly say to replace mutable
+   non-snapshot properties with immutable data or snapshot-observable state,
+   verify that contract, and only then decide whether an annotation remains
+   needed. For a phase problem, name the layout or draw consumer where the
+   changing read or calculation should move. Do not stop at diagnosis.
+6. Change one axis at a time and re-measure the same transition.
+7. Finish when the evidence improves at the observed boundary without hiding
    state changes, caching stale values, or moving work to a less correct owner.
 
 ## Topic router
@@ -38,8 +44,9 @@ axis begins.
 
 1. RED blames unstable parameters for unchanged lazy rows that recompose during
    a focus transition. GREEN checks composition and layout back-writing first.
-2. Novel case: an animation value controls only drawing. GREEN reads the State
-   in a draw or layout lambda instead of propagating it through composition.
+2. Novel case: an animation value controls only drawing. RED identifies the
+   composition read but stops at diagnosis. GREEN moves the State read and its
+   geometry calculation into the draw or layout consumer.
 3. Counterexample: a screen visibly recomposes because its displayed model
    actually changed. GREEN does not add stability wrappers or caches merely to
    lower a count.

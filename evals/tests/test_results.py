@@ -13,6 +13,7 @@ from evals.harness.experiment import (
     load_raw_records,
     next_attempt_workspace,
     rejudge_packets,
+    write_rejudged_reports,
 )
 from evals.harness.judge import JudgeConfig
 from evals.harness.results import (
@@ -197,6 +198,87 @@ class ResultLifecycleTest(unittest.TestCase):
 
         self.assertNotEqual(first, second)
         self.assertEqual("a" * 64 + ".json", first.name)
+
+    def test_rejudged_report_overlays_a_valid_matching_judgment(self):
+        fingerprint = "a" * 64
+        candidate_id = "candidate"
+        packet_path = _judge_packet_path(self.root, candidate_id, fingerprint, 1)
+        packet_path.parent.mkdir(parents=True)
+        packet_path.write_text(
+            json.dumps(
+                {
+                    "candidate_id": candidate_id,
+                    "rubric": [{"id": "correct", "text": "Correct"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        rejudgment_path = self.root / "rejudgments" / packet_path.stem / "result.json"
+        write_result(
+            rejudgment_path,
+            "rejudgment-sha",
+            {
+                "candidate_id": candidate_id,
+                "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
+                "judge": {
+                    "returncode": 0,
+                    "events": [],
+                    "output": {
+                        "criteria": [
+                            {"id": "correct", "pass": True, "evidence": "diff"}
+                        ],
+                        "overall_pass": True,
+                        "rationale": "ok",
+                    },
+                    "usage": {},
+                    "stderr": "",
+                    "elapsed_seconds": 1.0,
+                    "retries": 0,
+                },
+            },
+        )
+        original = {
+            "id": "case:none:1",
+            "fingerprint": fingerprint,
+            "repetition": 1,
+            "arm": "none",
+            "kind": "direct",
+            "expected_skills": [],
+            "reported_skills": [],
+            "reported_router": False,
+            "objective_pass": True,
+            "judge_pass": False,
+            "outcome_pass": False,
+            "forbidden_action_failure": False,
+            "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
+            "judge": {"returncode": 1, "output": {}},
+        }
+
+        paths = write_rejudged_reports(self.root, [original], audit_seed=3)
+
+        rejudged = json.loads(paths["results"].read_text(encoding="utf-8"))
+        self.assertTrue(rejudged[0]["judge_pass"])
+        self.assertTrue(rejudged[0]["outcome_pass"])
+        self.assertEqual(1, rejudged[0]["original_judge"]["returncode"])
+        self.assertFalse(original["judge_pass"])
+        self.assertFalse(original["outcome_pass"])
+
+    def test_rejudged_report_refuses_missing_judgments(self):
+        fingerprint = "a" * 64
+        packet_path = _judge_packet_path(self.root, "candidate", fingerprint, 1)
+        packet_path.parent.mkdir(parents=True)
+        packet_path.write_text(
+            json.dumps({"candidate_id": "candidate", "rubric": []}),
+            encoding="utf-8",
+        )
+        original = {
+            "id": "case:none:1",
+            "fingerprint": fingerprint,
+            "repetition": 1,
+        }
+
+        with self.assertRaisesRegex(ValueError, "missing rejudgment"):
+            write_rejudged_reports(self.root, [original], audit_seed=3)
 
     def test_retries_only_once_for_a_retryable_failure(self):
         calls = []

@@ -6,15 +6,17 @@ A reusable Compose component describes layout structure. Callers provide variabl
 
 ## API review procedure
 
-1. Confirm the component is reusable. For a true single-use composable, do not add slot ceremony.
+1. Confirm the component is reusable and slot semantics are within the requested
+   scope. In a focused slot task, do not add unrelated modifier or cleanup changes.
 2. Mark which regions vary by caller: headline, supporting text, leading visual, trailing visual, actions, body.
 3. Replace caller-controlled, unconstrained primitive content and shape flags
    with slots. Preserve primitive parameters when they intentionally enforce a
    semantic, design-system, constrained-type, or measured fast-path contract.
-4. Add receiver scopes only when the slot is emitted inside a layout whose scope APIs callers should use.
+4. Add a receiver scope only when the public contract deliberately gives callers control over that region's child layout; do not infer it merely because the implementation emits the slot inside a layout.
 5. Make absent optional regions nullable (`null`), so the component can omit their containers and spacing.
 6. Put repeated default content or tokens in `XxxDefaults`.
-7. Pair this with the `modifier` rules in [Modifier and layout](modifier-layout.md).
+7. Pair this with the `modifier` rules in [Modifier and layout](modifier-layout.md)
+   only when root placement is part of the task or a broad API review.
 
 ## 1. Replace primitive content with `@Composable` slots
 
@@ -78,9 +80,9 @@ SettingsRow(
 - Use a singular noun (`title`, `icon`, `actions`) when the slot is semantically constrained and the component name disambiguates (`Scaffold(topBar = { … }, bottomBar = { … }, floatingActionButton = { … })`).
 - Don't use `content` *and* other `xxxContent` slots together — pick one convention per component.
 
-## 2. Scope receivers when the slot emits into a layout
+## 2. Scope receivers only for a public layout contract
 
-If the slot's content will sit inside a `Row`/`Column`/`Box` whose layout features (`Modifier.weight`, `BoxScope.matchParentSize`, alignment) should be available to the caller, declare the slot as a receiver lambda: `@Composable RowScope.() -> Unit`.
+Use a receiver lambda only when callers must intentionally control the layout *inside the named region*, such as an app bar's action region. A component retaining ownership of its internal `Row`, `Column`, or `Box` should keep ordinary `@Composable () -> Unit` slots, even if it happens to emit them in that layout.
 
 ```kotlin
 // ❌ BAD — actions render inside a Row, but callers can't use RowScope.weight()
@@ -100,9 +102,9 @@ fun MyTopBar(
 )
 ```
 
-This is what makes `TopAppBar(actions = { IconButton(…); IconButton(…) })` work — the caller is implicitly inside a `RowScope`.
+This is what makes `TopAppBar(actions = { IconButton(…); IconButton(…) })` work — its documented actions region deliberately gives callers a `RowScope`.
 
-Don't bolt a scope receiver onto every slot reflexively. The receiver should match the actual parent layout the slot emits into. If the slot is rendered inside a `Box`, use `BoxScope`. If it's inside a `Column`, use `ColumnScope`. If the parent is not a standard layout (or none of its scope APIs are useful in slot content), no receiver.
+Don't bolt a scope receiver onto every slot reflexively. First decide whether caller control over region layout is part of the API. Only then match the receiver to that public contract (`RowScope`, `BoxScope`, or `ColumnScope`). A trailing slot in a component-owned row is normally an ordinary slot: callers choose its content while the component owns ordering, spacing, and allocation.
 
 ## 3. Optional slots — nullable with `null` default
 
@@ -160,6 +162,7 @@ This matches Material 3's `ButtonDefaults`, `TopAppBarDefaults`, etc. — defaul
 | A mode parameter enumerating caller-controlled visual variants | Same as flag soup (§1) | Replace the visual variants with a slot |
 | Primitive or mode parameter enforces semantic, design-system, constrained-type, or measured fast-path behavior | Deliberate component contract | Keep the primitive parameter and document the invariant |
 | `actions: @Composable () -> Unit = {}` inside a `Row` body | Missing scope receiver (§2) | `actions: @Composable RowScope.() -> Unit = {}` |
+| A trailing or inline slot merely happens to be emitted in an internal `Row` | Component owns the row's allocation and ordering | Keep `@Composable () -> Unit`; do not leak `RowScope` |
 | `slot: @Composable () -> Unit = {}` for an optional area | Empty-lambda default (§3) | `slot: (@Composable () -> Unit)? = null` and branch on it |
 | Component param `defaultColor: Color = MaterialTheme.colorScheme.surface` | Defaults inlined (§4) | Move to `XxxDefaults.color` and reference it |
 | Common trailing content repeats at every call site | Missing default helper (§4) | Add `XxxDefaults.Chevron()` etc. |

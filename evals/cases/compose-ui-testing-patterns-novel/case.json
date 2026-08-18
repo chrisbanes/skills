@@ -25,11 +25,11 @@
   "rubric": [
     {
       "id": "criterion-1",
-      "text": "Identifies fixed sleep and production integration as sources of nondeterminism"
+      "text": "Identifies the fixed sleep as nondeterministic and production integration as a broader-than-needed asynchronous seam"
     },
     {
       "id": "criterion-2",
-      "text": "Recommends a controlled UI seam with semantics-based synchronization"
+      "text": "Recommends a controlled UI seam with an observable callback or semantic assertion and does not recommend a fixed delay"
     }
   ],
   "provenance": {

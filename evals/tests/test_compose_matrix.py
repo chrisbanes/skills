@@ -6,7 +6,7 @@ from pathlib import Path
 from evals.harness.cases import EVALUATED_TOPICS, validate_corpus
 from evals.harness.codex import prepare_workspace
 from evals.harness.grade import grade_subject
-from evals.harness.experiment import regrade_records
+from evals.harness.experiment import filter_cases, regrade_records
 from evals.tests.test_grade import make_result
 
 
@@ -17,9 +17,14 @@ class ComposeMatrixTest(unittest.TestCase):
     def test_has_the_exact_concern_slice_and_router_matrix(self):
         report = validate_corpus(REPO_ROOT)
 
-        self.assertEqual(38, report.case_count)
-        standalone = [case for case in report.cases if case.kind != "routing"]
-        routing = [case for case in report.cases if case.kind == "routing"]
+        self.assertEqual(42, report.case_count)
+        benchmark = [case for case in report.cases if not case.calibration]
+        calibration = [case for case in report.cases if case.calibration]
+        self.assertEqual(38, len(benchmark))
+        self.assertEqual(4, len(calibration))
+        self.assertTrue(all(case.family == "performance" for case in calibration))
+        standalone = [case for case in benchmark if case.kind != "routing"]
+        routing = [case for case in benchmark if case.kind == "routing"]
         self.assertEqual(33, len(standalone))
         self.assertEqual(5, len(routing))
         for topic, skill in EVALUATED_TOPICS:
@@ -29,6 +34,22 @@ class ComposeMatrixTest(unittest.TestCase):
             self.assertEqual(1, sum(case.provenance["kind"] == "historical" for case in cases))
             negative = next(case for case in cases if case.kind == "negative")
             self.assertEqual((skill,), negative.expected_skills)
+
+    def test_calibration_cases_require_explicit_selection(self):
+        report = validate_corpus(REPO_ROOT)
+
+        default_cases = filter_cases(report.cases, case_ids=None, skills=None)
+        self.assertEqual(38, len(default_cases))
+        self.assertFalse(any(case.calibration for case in default_cases))
+
+        challenge_id = "compose-performance-strong-skipping-churn-challenge"
+        selected = filter_cases(
+            report.cases,
+            case_ids=[challenge_id],
+            skills=None,
+        )
+        self.assertEqual([challenge_id], [case.id for case in selected])
+        self.assertTrue(selected[0].calibration)
 
     def test_automatic_prompts_do_not_name_or_invoke_expected_skills(self):
         report = validate_corpus(REPO_ROOT)
@@ -56,6 +77,23 @@ class ComposeMatrixTest(unittest.TestCase):
         )
         self.assertIn("recommends first", repair_criterion["text"].lower())
         self.assertIn("then deciding", repair_criterion["text"].lower())
+
+    def test_ui_testing_novel_does_not_require_unnecessary_synchronization(self):
+        report = validate_corpus(REPO_ROOT)
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "compose-ui-testing-patterns-novel"
+        )
+
+        seam_criterion = next(
+            criterion
+            for criterion in case.rubric
+            if criterion["id"] == "criterion-2"
+        )["text"].lower()
+        self.assertIn("callback or semantic assertion", seam_criterion)
+        self.assertIn("does not recommend a fixed delay", seam_criterion)
+        self.assertNotIn("synchronization", seam_criterion)
 
     def test_fixture_declares_pinned_compose_jvm_dependencies_and_offline_wrapper(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "compose-jvm"
@@ -119,41 +157,45 @@ class Counter {
 
     def test_direct_validators_accept_semantic_equivalents_seen_in_live_runs(self):
         report = validate_corpus(REPO_ROOT)
-        replacements = {
-            "compose-slot-api-pattern-direct": """package example
+        replacements = (
+            ("compose-slot-api-pattern-direct", """package example
 import androidx.compose.runtime.Composable
 @Composable fun ActionRow(
   leadingContent: @Composable () -> Unit,
   titleContent: @Composable () -> Unit,
 ) { leadingContent(); titleContent() }
-""",
-            "compose-stability-diagnostics-direct": """package example
+"""),
+            ("compose-stability-diagnostics-direct", """package example
 import kotlinx.collections.immutable.ImmutableList
 data class FeedState(val items: ImmutableList<String>)
-""",
-            "compose-state-hoisting-direct": """package example
+"""),
+            ("compose-stability-diagnostics-direct", """package example
+import kotlinx.collections.immutable.PersistentList
+data class FeedState(val items: PersistentList<String>)
+"""),
+            ("compose-state-hoisting-direct", """package example
 import androidx.compose.runtime.Composable
 @Composable fun SearchContent(query: String, onQueryChange: (String) -> Unit) = Unit
 @Composable private fun SearchContentPreview() {
   var query by remember { mutableStateOf(\"\") }
   SearchContent(query, onQueryChange = { query = it })
 }
-""",
-            "compose-ui-testing-patterns-direct": """package example
+"""),
+            ("compose-ui-testing-patterns-direct", """package example
 import androidx.compose.ui.test.junit4.createComposeRule
 class SubjectTest {
   val composeTestRule = createComposeRule()
   fun test() { composeTestRule.setContent {} }
 }
-""",
-        }
+"""),
+        )
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            for case_id, source in replacements.items():
+            for index, (case_id, source) in enumerate(replacements):
                 with self.subTest(case=case_id):
                     case = next(case for case in report.cases if case.id == case_id)
                     workspace = prepare_workspace(
-                        case, REPO_ROOT, Path(temp_dir) / case_id
+                        case, REPO_ROOT, Path(temp_dir) / f"{case_id}-{index}"
                     )
                     relative_path = (
                         "src/test/kotlin/example/SubjectTest.kt"

@@ -1,0 +1,39 @@
+{
+  "id": "compose-performance-deferred-provider-challenge",
+  "title": "Find an eager read behind a provider",
+  "family": "performance",
+  "target_skills": [
+    "compose-performance"
+  ],
+  "expected_skills": [
+    "compose-performance"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-performance-deferred-provider-challenge"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies that progress.value is still read in composition even though the derived radius is passed through a provider lambda"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Moves both the state read and the dependent radius calculation into the Canvas draw consumer"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

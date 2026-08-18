@@ -9,10 +9,10 @@ Hoist state only as far as the logic needs it. Keep simple UI element state loca
 1. List the state, operations, app dependencies, event streams, and imperative effects involved.
 2. Assign each item to the lowest owner that needs to read or change it using the decision guide below.
 3. Extract a plain state holder only when coordinated UI-only behavior has become a concept.
-4. When a screen mixes app wiring with layout, keep a small state-holder composable and move rendering to a plain state-driven composable.
+4. When a screen state holder owns Compose runtime objects, or a screen mixes app wiring with layout, keep durable data and intents at the screen boundary; move runtime objects into composition or a plain UI state holder; and explicitly recommend a separate, previewable content composable that takes immutable state and event callbacks. Naming immutable state and intents without this content boundary is incomplete.
 5. Pass immutable UI state and explicit event callbacks across that boundary; keep UI mechanics in composition unless business logic needs their values.
 6. Load focused effect, testing, focus, or deferred-read skills when those concerns need deeper treatment.
-7. Finish when the UI can be previewed and tested without app dependencies, business work remains in the screen state holder, and no state has been hoisted farther than its logic requires.
+7. Finish an ownership review by stating that concrete boundary when the visible code requires it. Otherwise allow a no-change conclusion. Do not stop after naming the wrong owner, invent product requirements, or hoist state farther than its logic requires.
 
 ## Decision guide
 

@@ -164,6 +164,8 @@ def build_subject_command(
         "-c",
         "sandbox_workspace_write.network_access=false",
         "-c",
+        'web_search="disabled"',
+        "-c",
         _skill_config(
             case,
             arm,

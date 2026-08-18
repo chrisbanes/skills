@@ -58,7 +58,14 @@ class CaseContractTest(unittest.TestCase):
 
         self.assertEqual("compose-state-authoring-direct", case.id)
         self.assertEqual(("compose-state-and-effects",), case.expected_skills)
+        self.assertFalse(case.calibration)
         self.assertEqual("Fix the subject.\n", case.prompt)
+
+    def test_requires_calibration_marker_to_be_boolean(self):
+        case_dir = self.write_case(valid_manifest(calibration="yes"))
+
+        with self.assertRaisesRegex(CaseValidationError, "calibration must be a boolean"):
+            load_case(case_dir / "case.json", self.root)
 
     def test_rejects_validator_paths_that_escape_the_case_contract(self):
         for argv in (["../check.py"], ["/tmp/check.py"]):

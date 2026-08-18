@@ -129,6 +129,34 @@ invocation, and automatic activation across 38 synthetic and provenance-bearing
 cases. Deterministic checks run in CI; authenticated model calls and their
 scores never gate merges or releases.
 
+### Latest evaluated scores
+
+The 2026-08-18 certified scorecard produced these per-skill positive-case
+outcome scores. **Automatic score** is the headline score: all skills and the
+router were available, but the prompt did not name a skill. Uplift compares
+explicit skill invocation with the no-skill baseline.
+
+| Skill | Baseline | Forced | Automatic score | Uplift |
+| --- | ---: | ---: | ---: | ---: |
+| [`compose-animations`](skills/compose-animations/SKILL.md) | 75.0% | 100.0% | **100.0%** | +25.0 pp |
+| [`compose-component-design`](skills/compose-component-design/SKILL.md) | 86.7% | 100.0% | **100.0%** | +13.3 pp |
+| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 66.7% | 100.0% | **100.0%** | +33.3 pp |
+| [`compose-performance`](skills/compose-performance/SKILL.md) | 91.7% | 100.0% | **100.0%** | +8.3 pp |
+| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 77.8% | 100.0% | **100.0%** | +22.2 pp |
+| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 100.0% | **100.0%** | +44.4 pp |
+
+Every skill scored 100.0% restraint on its forced and automatic no-change
+controls. These per-skill rows are diagnostic, not independent release gates,
+and multi-skill routing cases contribute to each relevant row. The suite-wide
+forced and automatic outcome scores were both 100.0%, with 89.4% reported
+routing precision and 97.7% reported routing recall.
+
+Provenance: the scorecard retains unaffected conditions from the previous
+complete benchmark and uses the latest three-repetition result for every
+condition targeted by the finalized skill edits. The
+[evaluation documentation](evals/README.md) defines the score, controls, safety
+evidence, and interpretation caveats.
+
 Validate the harness and preview the full call matrix:
 
 ```shell

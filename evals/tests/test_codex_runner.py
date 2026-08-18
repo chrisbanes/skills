@@ -87,6 +87,7 @@ class CodexRunnerTest(unittest.TestCase):
             self.assertIn("--json", command)
             self.assertIn('model_reasoning_effort="medium"', rendered)
             self.assertIn("sandbox_workspace_write.network_access=false", rendered)
+            self.assertIn('web_search="disabled"', rendered)
             self.assertIn(str(unrelated.resolve()), rendered)
             self.assertIn("enabled = false", rendered)
             self.assertIn("SKILL.md", rendered)

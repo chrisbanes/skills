@@ -137,6 +137,7 @@ def build_judge_command(
         "--ephemeral",
         "--ignore-user-config",
         "--ignore-rules",
+        "--skip-git-repo-check",
         "--strict-config",
         "--json",
         "--output-schema",
@@ -147,6 +148,8 @@ def build_judge_command(
         f'model_reasoning_effort="{config.reasoning}"',
         "-c",
         "sandbox_workspace_write.network_access=false",
+        "-c",
+        'web_search="disabled"',
         "-c",
         _disabled_skill_config(
             discover_skill_paths(repo_root) if skill_paths is None else skill_paths

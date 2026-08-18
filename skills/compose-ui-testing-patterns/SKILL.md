@@ -9,6 +9,19 @@ description: Use when writing or reviewing Jetpack Compose UI tests, screenshot 
 
 Test the smallest UI contract that proves the behavior. Prefer plain state-driven UI tests with callbacks. Add integration only when lifecycle, navigation, DI, or platform behavior is the thing under test.
 
+## Procedure
+
+1. State the behavior and test concern the task asks you to prove.
+2. Inspect the existing test against that concern and choose the smallest
+   sufficient seam from the table below.
+3. Keep focused edits within the requested test concern. Do not move test-only
+   helpers into production or broaden production APIs unless that production
+   boundary is itself under test.
+4. Drive controlled state or input, synchronize through Compose when needed,
+   and assert an observable semantic, visual, or callback result.
+5. Finish with no edit when the existing test already uses the narrowest valid
+   seam and proves the requested behavior.
+
 ## Test target choice
 
 | What you need to prove | Test shape |
@@ -74,6 +87,12 @@ assertThat(selectedId).isEqualTo("movie-1")
 ```
 
 For plain captured callback values, a direct assertion after the action is usually enough. Use `runOnIdle` when the assertion needs Compose to finish applying snapshot state, recomposition, or queued UI work before reading the result.
+
+## Keep UI tests deterministic
+
+For layout, branch, and callback behavior, render controlled state with `setContent` instead of constructing the production app graph. Production DI, repositories, lifecycle observers, and background effects add asynchronous work that is irrelevant to a plain UI contract and can make the test flaky.
+
+Do not use `Thread.sleep` to wait for Compose. Drive the UI to a known state, then use semantic assertions and Compose synchronization (`waitForIdle`, `runOnIdle`, or a bounded `waitUntil` for a real asynchronous condition). Reserve full-app integration for behavior that actually depends on navigation, lifecycle, DI, or platform wiring.
 
 ## Interaction state with MutableInteractionSource
 
@@ -163,6 +182,8 @@ When image appearance matters, provide a deterministic local painter/bitmap inst
 | Semantics test for padding/color/focus ring | Use screenshot test |
 | Test tags everywhere | Prefer text/content description/role when stable |
 | UI test depends on real image loading/network/time | Fake or freeze the source |
+| Sleeping after an action before asserting UI | Use semantics plus `waitForIdle`, `runOnIdle`, or bounded `waitUntil` |
+| Production DI or app wiring for a state/rendering assertion | Render controlled state with `setContent`; use integration only when that wiring is under test |
 | Simulating hover/press/focus with mouse or touch events | Inject `MutableInteractionSource` and emit the interaction |
 | Relying on the default `InteractionSource` in tests | Pass `MutableInteractionSource` so you can control state |
 | TV/keyboard UI tested with `performClick` only | Use key input and focus assertions; see [compose-focus-navigation](../compose-focus-navigation/SKILL.md) |
@@ -176,3 +197,13 @@ When image appearance matters, provide a deterministic local painter/bitmap inst
 - Focus behavior is visually inspected but not asserted.
 - A test uses `performMouseInput` or touch injection to trigger hover/press states instead of `MutableInteractionSource.emit`.
 - A composable accepts `interactionSource` but tests don't inject `MutableInteractionSource`.
+- A plain rendering test starts the production app or uses `Thread.sleep` before asserting.
+
+## RED/GREEN agent scenarios
+
+1. RED launches a production app, waits with `Thread.sleep`, and only asserts that a node exists. GREEN renders fixed state with `setContent`, drives the action, synchronizes through Compose, and asserts the semantic state or callback result.
+2. Novel case: a screen's repository-backed state holder starts background work, but the test only needs to prove a disabled Save button. GREEN tests the plain UI state directly; a separate integration test covers the state-holder wiring if needed.
+3. Counterexample: navigation behavior depends on a real `NavController` lifecycle. GREEN uses an integration test rather than pretending a plain rendering test proves that contract.
+4. Focused counterexample: a value-only formatter test already uses a plain unit
+   test and the task asks only whether it needs a UI harness. GREEN leaves the
+   test-local helper and workspace unchanged.

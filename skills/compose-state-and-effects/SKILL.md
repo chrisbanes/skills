@@ -13,21 +13,34 @@ state and effects make rendering change safely.
 
 ## Procedure
 
-1. Inventory mutable UI state, app state, event streams, app dependencies, and
+1. Establish the requested scope and visible behavioral requirements. Treat an
+   ownership change as a finding only when code or task evidence shows a
+   lifecycle, testability, business, or coordination need.
+2. Inventory mutable UI state, app state, event streams, app dependencies, and
    imperative work in the affected screen or component.
-2. Place each state value at its lowest necessary owner: local UI state,
+3. Place each state value at its lowest necessary owner: local UI state,
    hoisted state, a plain UI state holder, or a screen state holder.
-3. Keep app wiring and business state at the screen boundary; expose plain UI
-   state and explicit callbacks to previewable rendering.
-4. Choose an effect API whose lifecycle matches the work, and key it by the
+4. Keep app wiring and business state at the screen boundary. When a screen
+   holder owns Compose runtime objects, explicitly recommend a separate,
+   previewable content composable that takes immutable state and event
+   callbacks; keep runtime objects in composition or a plain UI state holder.
+   Merely recommending immutable state and intents does not establish that
+   rendering boundary.
+5. Choose an effect API whose lifecycle matches the work, and key it by the
    semantic input that should restart or dispose it.
-5. Load the focused reference for every material concern below. Do not use a
+6. Load the focused reference for every material concern below. Do not use a
    reference merely because its topic is adjacent.
-6. Route frame-rate reads, cross-phase back-writing, and
+7. Route frame-rate reads, cross-phase back-writing, and
    `@ReadOnlyComposable` contracts to [Compose performance](../compose-performance/SKILL.md).
-7. Finish when every state value has one owner, every effect has a justified
+8. Before responding to a screen-ownership review, verify that the answer
+   explicitly names all three required seams when the visible code needs them:
+   durable data and intents at the screen boundary, runtime UI objects in
+   composition or a plain UI state holder, and a previewable content composable
+   whose inputs are immutable state and event callbacks.
+9. Finish when every state value has one owner, every effect has a justified
    lifecycle and key, and the UI can be previewed and tested without app
-   dependencies.
+   dependencies. For review-only work, report no change when no evidence-backed
+   issue remains; do not invent product requirements.
 
 ## Topic router
 
@@ -49,3 +62,5 @@ state and effects make rendering change safely.
    the screen state holder, but keeps Compose runtime objects in plain UI state.
 3. Counterexample: a one-off expandable badge has one private Boolean. GREEN
    keeps it local and does not introduce a state holder or an effect.
+4. Counterexample: an accessor reads shared snapshot state with no requirement
+   for per-instance independence. GREEN does not invent an ownership leak.

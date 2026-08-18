@@ -60,6 +60,7 @@ class EvalCase:
     provenance: dict[str, str]
     prompt: str
     directory: Path
+    calibration: bool = False
 
 
 @dataclass(frozen=True)
@@ -205,6 +206,10 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
     if not prompt.strip():
         raise CaseValidationError("prompt.md cannot be empty")
 
+    calibration = data.get("calibration", False)
+    if not isinstance(calibration, bool):
+        raise CaseValidationError("calibration must be a boolean")
+
     return EvalCase(
         id=case_id,
         title=_require_string(data, "title"),
@@ -218,6 +223,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         validators=tuple(validators),
         rubric=tuple(rubric),
         provenance=_validate_provenance(data.get("provenance")),
+        calibration=calibration,
         prompt=prompt,
         directory=manifest_path.parent,
     )
@@ -225,7 +231,8 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
 
 def _coverage_gaps(cases: list[EvalCase]) -> list[str]:
     gaps: list[str] = []
-    by_id = {case.id: case for case in cases}
+    benchmark_cases = [case for case in cases if not case.calibration]
+    by_id = {case.id: case for case in benchmark_cases}
     expected_conditions = (
         ("direct", "edit"),
         ("novel", "review"),
@@ -247,11 +254,11 @@ def _coverage_gaps(cases: list[EvalCase]) -> list[str]:
         historical = [case for case in topic_cases if case.provenance["kind"] == "historical"]
         if len(historical) != 1:
             gaps.append(f"{topic}: expected 1 historical case, found {len(historical)}")
-    routing_count = sum(case.kind == "routing" for case in cases)
+    routing_count = sum(case.kind == "routing" for case in benchmark_cases)
     if routing_count != 5:
         gaps.append(f"router: expected 5 cases, found {routing_count}")
-    if len(cases) != 38:
-        gaps.append(f"corpus: expected 38 cases, found {len(cases)}")
+    if len(benchmark_cases) != 38:
+        gaps.append(f"corpus: expected 38 benchmark cases, found {len(benchmark_cases)}")
     return gaps
 
 

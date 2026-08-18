@@ -58,6 +58,8 @@ def filter_cases(
         missing = requested - {case.id for case in selected}
         if missing:
             raise ValueError(f"unknown cases: {sorted(missing)}")
+    else:
+        selected = [case for case in selected if not case.calibration]
     if skills:
         requested_skills = set(skills)
         selected = [case for case in selected if requested_skills & set(case.target_skills)]
@@ -495,6 +497,90 @@ def regrade_records(
         destination,
         regraded,
         compute_scorecard(regraded),
+        seed=audit_seed,
+    )
+
+
+def write_rejudged_reports(
+    output_dir: Path,
+    records: list[dict[str, Any]],
+    *,
+    audit_seed: int,
+) -> dict[str, Path]:
+    packets: dict[tuple[str, int], tuple[str, dict[str, Any]]] = {}
+    for packet_path in sorted((output_dir / "judge-packets").glob("*.json")):
+        try:
+            candidate_id, fingerprint_prefix, repetition = packet_path.stem.rsplit(
+                "-", 2
+            )
+            key = (fingerprint_prefix, int(repetition))
+        except ValueError as error:
+            raise ValueError(f"invalid judge packet filename: {packet_path}") from error
+        packet = json.loads(packet_path.read_text(encoding="utf-8"))
+        if packet.get("candidate_id") != candidate_id:
+            raise ValueError(f"judge packet candidate mismatch: {packet_path}")
+        if key in packets:
+            raise ValueError(f"duplicate judge packet for fingerprint: {packet_path}")
+        packets[key] = (packet_path.stem, packet)
+
+    judgments: dict[str, tuple[str, dict[str, Any]]] = {}
+    for result_path in sorted((output_dir / "rejudgments").glob("*/*.json")):
+        document = json.loads(result_path.read_text(encoding="utf-8"))
+        fingerprint = document.get("fingerprint")
+        payload = document.get("payload")
+        if not isinstance(fingerprint, str) or not isinstance(payload, dict):
+            raise ValueError(f"invalid rejudgment result: {result_path}")
+        candidate_id = payload.get("candidate_id")
+        if not isinstance(candidate_id, str) or not isinstance(
+            payload.get("judge"), dict
+        ):
+            raise ValueError(f"invalid rejudgment payload: {result_path}")
+        packet_name = result_path.parent.name
+        if packet_name in judgments:
+            raise ValueError(f"ambiguous rejudgments for packet: {packet_name}")
+        judgments[packet_name] = (fingerprint, payload)
+
+    rejudged: list[dict[str, Any]] = []
+    for original in records:
+        fingerprint = original.get("fingerprint")
+        repetition = original.get("repetition")
+        if not isinstance(fingerprint, str) or not isinstance(repetition, int):
+            raise ValueError(
+                f"record lacks fingerprint or repetition: {original.get('id')}"
+            )
+        packet_record = packets.get((fingerprint[:20], repetition))
+        if packet_record is None:
+            raise ValueError(f"missing judge packet for record: {original.get('id')}")
+        packet_name, packet = packet_record
+        candidate_id = packet["candidate_id"]
+        rejudgment = judgments.get(packet_name)
+        if rejudgment is None:
+            raise ValueError(f"missing rejudgment for packet: {packet_name}")
+        rejudgment_fingerprint, judgment = rejudgment
+        if judgment["candidate_id"] != candidate_id:
+            raise ValueError(f"rejudgment candidate mismatch: {packet_name}")
+        judge = judgment["judge"]
+        rubric = tuple(packet.get("rubric", ()))
+        judge_pass = int(judge.get("returncode", 1)) == 0 and judge_passes_rubric(
+            judge.get("output", {}), rubric
+        )
+        record = deepcopy(original)
+        record["original_judge"] = record["judge"]
+        record["judge"] = judge
+        record["judge_model"] = judgment.get("judge_model", record["judge_model"])
+        record["judge_pass"] = judge_pass
+        record["outcome_pass"] = bool(record.get("objective_pass")) and judge_pass
+        record["rejudgment"] = {
+            "candidate_id": candidate_id,
+            "fingerprint": rejudgment_fingerprint,
+        }
+        rejudged.append(record)
+
+    destination = output_dir / "rejudged"
+    return write_reports(
+        destination,
+        rejudged,
+        compute_scorecard(rejudged),
         seed=audit_seed,
     )
 

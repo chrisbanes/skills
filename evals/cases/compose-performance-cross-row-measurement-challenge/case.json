@@ -1,0 +1,39 @@
+{
+  "id": "compose-performance-cross-row-measurement-challenge",
+  "title": "Diagnose cross-row measurement back-writing",
+  "family": "performance",
+  "target_skills": [
+    "compose-performance"
+  ],
+  "expected_skills": [
+    "compose-performance"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-performance-cross-row-measurement-challenge"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies the onSizeChanged layout-phase write followed by the sibling height read in composition as a layout-to-composition back-write"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Recommends consuming the captured height in the sibling measure or layout phase, rather than using derivedStateOf, an equality guard, caching, or a stability annotation as the primary fix"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

@@ -1,0 +1,39 @@
+{
+  "id": "compose-performance-strong-skipping-churn-challenge",
+  "title": "Diagnose strong-skipping identity churn",
+  "family": "performance",
+  "target_skills": [
+    "compose-performance"
+  ],
+  "expected_skills": [
+    "compose-performance"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "compose-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/compose_case.py",
+        "compose-performance-strong-skipping-churn-challenge"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "criterion-1",
+      "text": "Identifies that FeedUiState remains unstable because it contains List and that recreating the state and list gives strong skipping a new identity to compare on every recomposition"
+    },
+    {
+      "id": "criterion-2",
+      "text": "Recommends a truthful immutable collection contract and/or retaining the state instance at its ownership boundary, without adding Stable or Immutable annotations unless the contract is made true"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
