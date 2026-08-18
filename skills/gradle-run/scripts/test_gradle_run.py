@@ -25,6 +25,48 @@ sys.modules[SPEC.name] = GRADLE_RUN
 SPEC.loader.exec_module(GRADLE_RUN)
 
 
+def process_is_running(pid: int) -> bool:
+    try:
+        stat = (Path("/proc") / str(pid) / "stat").read_text()
+    except OSError:
+        pass
+    else:
+        _prefix, separator, fields = stat.rpartition(") ")
+        if separator and fields.split()[:1] == ["Z"]:
+            return False
+
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    return True
+
+
+class ProcessAssertionTest(unittest.TestCase):
+    @unittest.skipUnless(
+        hasattr(os, "fork") and Path("/proc").is_dir(),
+        "requires a procfs-backed POSIX process table",
+    )
+    def test_zombie_is_not_reported_as_running(self) -> None:
+        pid = os.fork()
+        if pid == 0:
+            os._exit(0)
+
+        try:
+            status = Path("/proc") / str(pid) / "stat"
+            deadline = time.monotonic() + 2
+            while time.monotonic() < deadline:
+                if status.read_text().rpartition(") ")[2].split()[:1] == ["Z"]:
+                    break
+                time.sleep(0.01)
+            else:
+                self.fail(f"process {pid} did not become a zombie")
+
+            self.assertFalse(process_is_running(pid))
+        finally:
+            os.waitpid(pid, 0)
+
+
 class GradleRunTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary_directory = tempfile.TemporaryDirectory()
@@ -57,9 +99,7 @@ class GradleRunTestCase(unittest.TestCase):
     def assert_process_gone(self, pid: int) -> None:
         deadline = time.monotonic() + 2
         while time.monotonic() < deadline:
-            try:
-                os.kill(pid, 0)
-            except ProcessLookupError:
+            if not process_is_running(pid):
                 return
             time.sleep(0.01)
         self.fail(f"process {pid} is still running")
@@ -314,6 +354,72 @@ class GradleRunProcessTest(GradleRunTestCase):
         ledger = json.loads((self.root / workflow / "ledger.json").read_text())
         self.assertEqual(ledger["runs"][0]["interrupted_signal"], signal.SIGINT)
         self.assert_process_gone(int(pid_file.read_text()))
+
+    def test_repeated_sigint_during_cleanup_records_interrupted_run(self) -> None:
+        workflow = self.create_workflow()
+        pid_file = self.root.parent / "signal-resistant-child.pid"
+        child_code = (
+            "from pathlib import Path; import os, signal, time; "
+            "signal.signal(signal.SIGINT, signal.SIG_IGN); "
+            "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+            f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
+            "time.sleep(60)"
+        )
+        wrapper = subprocess.Popen(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--root",
+                str(self.root),
+                "run",
+                "--workflow",
+                workflow,
+                "--scope",
+                "targeted",
+                "--question",
+                "Can repeated Ctrl-C stop the build safely?",
+                "--",
+                str(self.gradle),
+                "--",
+                sys.executable,
+                "-c",
+                child_code,
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        child_pid: int | None = None
+        stdout = ""
+        stderr = ""
+        try:
+            deadline = time.monotonic() + 5
+            while not pid_file.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue(pid_file.exists(), "child did not start")
+            child_pid = int(pid_file.read_text())
+
+            wrapper.send_signal(signal.SIGINT)
+            time.sleep(0.1)
+            wrapper.send_signal(signal.SIGINT)
+            stdout, stderr = wrapper.communicate(timeout=10)
+        finally:
+            if wrapper.poll() is None:
+                wrapper.kill()
+                wrapper.communicate()
+            if child_pid is not None:
+                try:
+                    os.kill(child_pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+
+        self.assertEqual(wrapper.returncode, 128 + signal.SIGINT, stderr)
+        summary = json.loads(stdout)
+        self.assertEqual(summary["interrupted_signal"], signal.SIGINT)
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        self.assertEqual(ledger["runs"][0]["interrupted_signal"], signal.SIGINT)
+        assert child_pid is not None
+        self.assert_process_gone(child_pid)
 
     def test_blank_question_fails_without_running_the_command(self) -> None:
         workflow = self.create_workflow()

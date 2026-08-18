@@ -468,6 +468,7 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
     launch_error: OSError | None = None
     exit_status = 125
     with output:
+        cleanup_started = False
         handled_signals = (signal.SIGINT, signal.SIGTERM)
         previous_handlers = {
             handled_signal: signal.getsignal(handled_signal)
@@ -475,6 +476,8 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
         }
 
         def interrupt_child(signum: int, _frame: Any) -> None:
+            if cleanup_started:
+                return
             raise ProcessInterrupted(signum)
 
         for handled_signal in handled_signals:
@@ -492,10 +495,12 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
             else:
                 exit_status = wait_for_child(child, sequence)
         except ProcessInterrupted as error:
+            cleanup_started = True
             interruption = error
             if child is not None:
                 terminate_child(child, isolated_process_group=os.name == "posix")
         except BaseException:
+            cleanup_started = True
             if child is not None:
                 terminate_child(child, isolated_process_group=os.name == "posix")
             raise

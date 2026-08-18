@@ -101,6 +101,8 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
 6. Boundary: while a Gradle workflow runs, a user starts an unrelated review
    subagent. GREEN permits it; this skill owns Gradle output handling and
    diagnostic delegation only.
-7. Interruption: Ctrl-C arrives while Gradle has a worker process. GREEN stops
-   the isolated process group, retains the log, and records SIGINT in the
-   compact ledger before returning.
+7. Interruption: Ctrl-C arrives twice while Gradle has a signal-resistant
+   worker process. GREEN tolerates the second signal, stops the isolated process
+   group, retains the log, and records SIGINT in the compact ledger before
+   returning. RED re-enters cleanup, leaves either process running, or loses the
+   interruption record.
