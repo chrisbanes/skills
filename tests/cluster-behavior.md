@@ -34,6 +34,16 @@ Use this result shape in the implementation issue or pull request:
 | Mixed concern | "This reusable card has an animated height and hardcodes fillMaxWidth." | Selects **compose-component-design** and **compose-animations**; does not load state guidance by default. |
 | Narrow Kotlin | "Replace this nested if with guard conditions." | Selects **kotlin-control-flow** only. |
 
+## Gradle execution
+
+| Case | Prompt | Expected behavior |
+|---|---|---|
+| Direct | "Run `./gradlew bwCheck -x bwSimulatorTest --warning-mode all` and fix every warning." | Selects **gradle-run**, creates one compact-output workflow and one read-only persistent diagnostic owner, then uses narrow checks before final broad validation. |
+| Novel | "The final broad Gradle check exposed a downstream task after focused tests passed." | Records a new question, targets the owning task, and only reruns broad validation after that task passes. |
+| Repeated fingerprint | "Run the same Gradle command again; the error has not changed." | Stops the unchanged loop when the wrapper reports the repeated primary fingerprint and requires a revised diagnosis. |
+| Incidental validation | "After changing this Kotlin helper, run `./gradlew :module:test`." | Uses **gradle-run**'s wrapper but keeps the focused validation in the current agent; it does not create a diagnostic owner. |
+| Unrelated subagent | "While a Gradle warning cleanup runs, start a separate review subagent for another diff." | Permits the unrelated subagent; **gradle-run** governs Gradle output and diagnostics only. |
+
 ## Compose state and effects
 
 | Case | Prompt | Expected behavior |

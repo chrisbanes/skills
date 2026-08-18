@@ -1,0 +1,373 @@
+"""Tests for the compact-output Gradle wrapper."""
+
+from __future__ import annotations
+
+import json
+import importlib.util
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+SCRIPT = Path(__file__).with_name("gradle_run.py")
+SPEC = importlib.util.spec_from_file_location("gradle_run", SCRIPT)
+assert SPEC and SPEC.loader
+GRADLE_RUN = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(GRADLE_RUN)
+
+
+class GradleRunTestCase(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary_directory = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary_directory.name) / "managed-root"
+        self.gradle = self.root.parent / "gradlew"
+        self.gradle.write_text(
+            "#!/bin/sh\n"
+            "while [ \"$1\" != \"--\" ]; do shift; done\n"
+            "shift\n"
+            "exec \"$@\"\n"
+        )
+        self.gradle.chmod(0o700)
+
+    def tearDown(self) -> None:
+        self.temporary_directory.cleanup()
+
+    def invoke(self, *arguments: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, str(SCRIPT), "--root", str(self.root), *arguments],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+    def create_workflow(self) -> str:
+        result = self.invoke("create")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)["workflow"]
+
+    def run_gradle(
+        self, workflow: str, scope: str, question: str, command: str
+    ) -> subprocess.CompletedProcess[str]:
+        return self.invoke(
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            scope,
+            "--question",
+            question,
+            "--",
+            str(self.gradle),
+            "--",
+            sys.executable,
+            "-c",
+            command,
+        )
+
+
+class GradleRunProcessTest(GradleRunTestCase):
+    def test_large_output_is_saved_but_stdout_is_bounded(self) -> None:
+        workflow = self.create_workflow()
+        payload = "x" * 200_000
+
+        result = self.run_gradle(
+            workflow, "targeted", "Does the focused task pass?", f"print({payload!r})"
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertLessEqual(len(result.stdout.encode("utf-8")), 16_384)
+        self.assertLessEqual(len(result.stdout.splitlines()), 64)
+        summary = json.loads(result.stdout)
+        log = Path(summary["log"])
+        self.assertTrue(log.is_file())
+        self.assertGreater(log.stat().st_size, 100_000)
+        self.assertNotIn(payload, result.stdout)
+
+    def test_many_failed_tasks_do_not_exceed_the_summary_bound(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.run_gradle(
+            workflow,
+            "broad",
+            "Which aggregate tasks failed?",
+            "[print(f'> Task :task{index} FAILED') for index in range(1000)]",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        summary = json.loads(result.stdout)
+        self.assertLessEqual(len(result.stdout.encode("utf-8")), 16_384)
+        self.assertLessEqual(len(summary["failed_tasks"]), 16)
+        self.assertTrue(summary["failed_tasks_truncated"])
+
+    def test_oversized_failed_task_name_does_not_exceed_the_summary_bound(self) -> None:
+        workflow = self.create_workflow()
+        task_name = "a" * 20_000
+
+        result = self.run_gradle(
+            workflow,
+            "broad",
+            "Which oversized task failed?",
+            f"print('> Task :{task_name} FAILED')",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        summary = json.loads(result.stdout)
+        self.assertLessEqual(len(result.stdout.encode("utf-8")), 16_384)
+        self.assertTrue(summary["failed_tasks_truncated"])
+        self.assertLess(len(summary["failed_tasks"][0].encode("utf-8")), 1024)
+
+    def test_child_exit_status_and_failed_tasks_are_reported(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.run_gradle(
+            workflow,
+            "targeted",
+            "Which task failed?",
+            "print('> Task :compileKotlin FAILED'); print('FAILURE: Build failed'); raise SystemExit(7)",
+        )
+
+        self.assertEqual(result.returncode, 7)
+        summary = json.loads(result.stdout)
+        self.assertEqual(summary["exit_status"], 7)
+        self.assertEqual(summary["failed_tasks"], [":compileKotlin"])
+        self.assertTrue(summary["failure_fingerprints"])
+
+    def test_ansi_diagnostics_are_normalized_and_fingerprinted(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.run_gradle(
+            workflow,
+            "targeted",
+            "What warning must be fixed?",
+            "print('\\x1b[33mwarning: use the new API\\x1b[0m'); print('warning:   use the new API')",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        warning = json.loads(result.stdout)["warning_fingerprints"]
+        self.assertEqual(len(warning), 1)
+        self.assertEqual(warning[0]["count"], 2)
+        self.assertEqual(len(warning[0]["fingerprint"]), 64)
+
+    def test_multiline_failure_is_fingerprinted_as_one_diagnostic_block(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.run_gradle(
+            workflow,
+            "targeted",
+            "What source failure occurred?",
+            "print('FAILURE: Build failed'); print('* What went wrong:'); print('e: Unresolved reference: missing'); print('  at Source.kt:1'); print('* Try:'); raise SystemExit(1)",
+        )
+
+        self.assertEqual(result.returncode, 1)
+        failures = json.loads(result.stdout)["failure_fingerprints"]
+        self.assertEqual(len(failures), 1)
+        self.assertIn("Unresolved reference", failures[0]["excerpt"])
+
+    def test_missing_command_fails_without_fallback(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.invoke(
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            "targeted",
+            "--question",
+            "Can the unavailable command run?",
+            "--",
+            str(self.root.parent / "missing" / "gradlew"),
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("launch_error", json.loads(result.stdout))
+        self.assertFalse(list((self.root / workflow).glob("*.log")))
+
+    def test_blank_question_fails_without_running_the_command(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.run_gradle(workflow, "targeted", "", "raise SystemExit(99)")
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("non-empty", result.stderr)
+        self.assertFalse(list((self.root / workflow).glob("*.log")))
+
+    def test_non_gradle_command_fails_without_running(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.invoke(
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            "targeted",
+            "--question",
+            "Can a non-Gradle command run?",
+            "--",
+            sys.executable,
+            "-c",
+            "raise SystemExit(99)",
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Gradle launcher", result.stderr)
+        self.assertFalse(list((self.root / workflow).glob("*.log")))
+
+    def test_gradle_defaults_preserve_an_explicit_scan(self) -> None:
+        workflow = self.create_workflow()
+        self.gradle.write_text("#!/bin/sh\nprintf 'args: %s\\n' \"$*\"\n")
+
+        result = self.invoke(
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            "targeted",
+            "--question",
+            "Do default console flags preserve scans?",
+            "--",
+            str(self.gradle),
+            "check",
+            "--scan",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        summary = json.loads(result.stdout)
+        self.assertIn("--console=plain", summary["command"])
+        self.assertIn("--scan", summary["command"])
+        self.assertNotIn("--no-scan", summary["command"])
+
+    def test_gradle_defaults_stay_before_a_user_option_separator(self) -> None:
+        workflow = self.create_workflow()
+        self.gradle.write_text("#!/bin/sh\nprintf 'args: %s\\n' \"$*\"\n")
+
+        result = self.invoke(
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            "targeted",
+            "--question",
+            "Do Gradle defaults stay out of task arguments?",
+            "--",
+            str(self.gradle),
+            "check",
+            "--",
+            "task-option",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        command = json.loads(result.stdout)["command"].split()
+        separator = command.index("--")
+        self.assertLess(command.index("--console=plain"), separator)
+        self.assertLess(command.index("--no-scan"), separator)
+
+
+class GradleRunHeartbeatTest(unittest.TestCase):
+    def test_heartbeat_schedule_is_finite_and_stops_after_its_last_delay(self) -> None:
+        delays = GRADLE_RUN.HEARTBEAT_DELAYS
+        emitted: list[float] = []
+        next_index = 0
+
+        for elapsed in range(0, 601):
+            if GRADLE_RUN.heartbeat_due(float(elapsed), next_index):
+                emitted.append(float(elapsed))
+                next_index += 1
+
+        self.assertEqual(emitted, list(delays))
+        self.assertFalse(GRADLE_RUN.heartbeat_due(3_600.0, next_index))
+
+
+class GradleRunWorkflowTest(GradleRunTestCase):
+    def test_workflow_ledger_records_scope_question_and_command(self) -> None:
+        workflow = self.create_workflow()
+        result = self.run_gradle(
+            workflow, "broad", "What does the aggregate check reveal?", "print('ok')"
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        entry = ledger["runs"][0]
+        self.assertEqual(entry["scope"], "broad")
+        self.assertEqual(entry["question"], "What does the aggregate check reveal?")
+        self.assertIn(sys.executable, entry["command"])
+
+    def test_repeated_failure_fingerprint_is_flagged(self) -> None:
+        workflow = self.create_workflow()
+        command = "print('FAILURE: same diagnostic'); raise SystemExit(1)"
+        self.assertEqual(
+            self.run_gradle(workflow, "targeted", "First diagnosis?", command).returncode, 1
+        )
+
+        result = self.run_gradle(workflow, "targeted", "Did the fix change it?", command)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertTrue(json.loads(result.stdout)["repeated_primary_failure"])
+
+    def test_warning_fingerprints_are_deduplicated_across_runs(self) -> None:
+        workflow = self.create_workflow()
+        self.assertEqual(
+            self.run_gradle(
+                workflow, "targeted", "First warning?", "print('warning: same warning')"
+            ).returncode,
+            0,
+        )
+
+        result = self.run_gradle(
+            workflow, "targeted", "Did the warning remain?", "print('warning: same warning')"
+        )
+
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        fingerprints = ledger["warning_fingerprints"]
+        self.assertEqual(len(fingerprints), 1)
+        self.assertEqual(next(iter(fingerprints.values()))["occurrences"], 2)
+        self.assertEqual(len(json.loads(result.stdout)["warning_fingerprints"]), 1)
+
+    def test_finish_deletes_only_the_managed_workflow_directory(self) -> None:
+        first = self.create_workflow()
+        second = self.create_workflow()
+
+        result = self.invoke("finish", "--workflow", first)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((self.root / first).exists())
+        self.assertTrue((self.root / second).is_dir())
+
+    def test_finish_is_idempotent(self) -> None:
+        workflow = self.create_workflow()
+        self.assertEqual(self.invoke("finish", "--workflow", workflow).returncode, 0)
+
+        result = self.invoke("finish", "--workflow", workflow)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(json.loads(result.stdout)["already_finished"])
+
+    def test_invalid_workflow_identifier_fails_closed(self) -> None:
+        self.root.mkdir(parents=True)
+        sibling = self.root.parent / "sibling"
+        sibling.mkdir()
+
+        result = self.invoke("finish", "--workflow", "../sibling")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(sibling.is_dir())
+        self.assertIn("invalid workflow", result.stderr.lower())
+
+    def test_cleanup_rejects_a_workflow_symlink(self) -> None:
+        workflow = self.create_workflow()
+        directory = self.root / workflow
+        outside = self.root.parent / "outside"
+        outside.mkdir()
+        shutil.rmtree(directory)
+        directory.symlink_to(outside, target_is_directory=True)
+
+        result = self.invoke("finish", "--workflow", workflow)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(outside.is_dir())
+
+
+if __name__ == "__main__":
+    unittest.main()

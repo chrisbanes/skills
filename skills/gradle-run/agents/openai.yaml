@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gradle Run"
+  short_description: "Run Gradle with compact diagnostics"
+  default_prompt: "Use $gradle-run to run Gradle with compact diagnostics and bounded logs."
