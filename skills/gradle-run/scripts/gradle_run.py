@@ -37,6 +37,15 @@ ANSI_ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))
 FAILED_TASK = re.compile(r"^> Task (:[^\s]+) FAILED$", re.MULTILINE)
 WARNING = re.compile(r"(?:\bwarning\b|\bdeprecat(?:ed|ion)\b|^w:)", re.IGNORECASE)
 FAILURE = re.compile(r"(?:^FAILURE:|^\* What went wrong:|^e:|\berror:)", re.IGNORECASE)
+AUTHORIZATION_VALUE = re.compile(
+    r"(\bauthorization\s*:\s*)(?:bearer\s+)?[^\r\n]+", re.IGNORECASE
+)
+SECRET_ASSIGNMENT = re.compile(
+    r"(\b[\w.-]*(?:password|passwd|token|secret|credential|api[-_.]?key)"
+    r"[\w.-]*\s*[:=]\s*)([^\r\n]+)",
+    re.IGNORECASE,
+)
+URL_PASSWORD = re.compile(r"(://[^:/\s]+:)([^@\s]+)(@)")
 
 
 def default_root() -> Path:
@@ -45,6 +54,12 @@ def default_root() -> Path:
 
 def normalize(text: str) -> str:
     return " ".join(ANSI_ESCAPE.sub("", text).split())
+
+
+def redact(text: str) -> str:
+    text = AUTHORIZATION_VALUE.sub(r"\1[REDACTED]", text)
+    text = SECRET_ASSIGNMENT.sub(r"\1[REDACTED]", text)
+    return URL_PASSWORD.sub(r"\1[REDACTED]\3", text)
 
 
 def fingerprint(text: str) -> str:
@@ -81,6 +96,66 @@ def workflow_path(root: Path, workflow: str) -> Path:
 def finished_path(root: Path, workflow: str) -> Path:
     directory = workflow_path(root, workflow)
     return directory.with_name(f"{workflow}.finished")
+
+
+def lock_path(root: Path, workflow: str) -> Path:
+    directory = workflow_path(root, workflow)
+    return directory.with_name(f"{workflow}.lock")
+
+
+class WorkflowLock:
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.file: Any | None = None
+
+    def __enter__(self) -> None:
+        try:
+            self.file = self.path.open("a+b")
+            if self.file.tell() == 0:
+                self.file.write(b"\0")
+                self.file.flush()
+            self.file.seek(0)
+        except OSError as error:
+            if self.file is not None:
+                self.file.close()
+            raise ValueError("workflow lock is unavailable") from error
+
+        try:
+            if os.name == "posix":
+                import fcntl
+
+                fcntl.flock(self.file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            elif os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(self.file.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                raise ValueError("workflow locking is unsupported on this platform")
+        except ValueError:
+            self.file.close()
+            self.file = None
+            raise
+        except OSError as error:
+            self.file.close()
+            self.file = None
+            raise ValueError("workflow is busy") from error
+
+    def __exit__(self, _exc_type: object, _exc: object, _traceback: object) -> None:
+        if self.file is None:
+            return
+        try:
+            if os.name == "posix":
+                import fcntl
+
+                fcntl.flock(self.file.fileno(), fcntl.LOCK_UN)
+            elif os.name == "nt":
+                import msvcrt
+
+                self.file.seek(0)
+                msvcrt.locking(self.file.fileno(), msvcrt.LK_UNLCK, 1)
+        finally:
+            self.file.close()
+            self.file = None
 
 
 def read_finished(path: Path, workflow: str) -> bool:
@@ -206,7 +281,7 @@ def extract_diagnostics(log: Path) -> Diagnostics:
 
     with log.open(encoding="utf-8", errors="replace") as lines:
         for raw_line in lines:
-            line = normalize(raw_line)
+            line = redact(normalize(raw_line))
             if not line:
                 continue
             bounded_line = shortened(line, MAX_EXCERPT_LINE_BYTES)
@@ -315,8 +390,19 @@ def append_run(ledger: dict[str, Any], entry: dict[str, Any]) -> None:
         ledger["runs_truncated"] = ledger.get("runs_truncated", 0) + overflow
 
 
+def prune_logs(directory: Path, ledger: dict[str, Any]) -> None:
+    retained = {
+        run["log"]
+        for run in ledger["runs"]
+        if isinstance(run, dict) and isinstance(run.get("log"), str)
+    }
+    for log in directory.glob("*.log"):
+        if log.name not in retained:
+            log.unlink(missing_ok=True)
+
+
 def display_command(command: list[str]) -> str:
-    return shortened(" ".join(command), 1024)
+    return shortened(" ".join(redact(argument) for argument in command), 1024)
 
 
 def is_gradle_launcher(command: str) -> bool:
@@ -394,6 +480,14 @@ def wait_for_child(child: subprocess.Popen[bytes], sequence: int) -> int:
             timer.join()
 
 
+def process_launch_options(platform: str) -> dict[str, Any]:
+    if platform == "posix":
+        return {"start_new_session": True}
+    if platform == "nt":
+        return {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+    raise ValueError("isolated process groups are unsupported on this platform")
+
+
 def terminate_child(
     child: subprocess.Popen[bytes], *, isolated_process_group: bool = False
 ) -> None:
@@ -407,7 +501,38 @@ def terminate_child(
             child.kill()
             child.wait()
 
-    if os.name != "posix" or not isolated_process_group:
+    def terminate_windows_tree() -> None:
+        if child.poll() is not None:
+            return
+        try:
+            child.send_signal(signal.CTRL_BREAK_EVENT)
+            child.wait(timeout=5)
+            return
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+        try:
+            subprocess.run(
+                ["taskkill", "/PID", str(child.pid), "/T", "/F"],
+                check=False,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                timeout=5,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+        try:
+            child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait()
+
+    if not isolated_process_group:
+        terminate_direct_child()
+        return
+    if os.name == "nt":
+        terminate_windows_tree()
+        return
+    if os.name != "posix":
         terminate_direct_child()
         return
 
@@ -442,6 +567,11 @@ def terminate_child(
 
 
 def run_command(root: Path, arguments: argparse.Namespace) -> int:
+    with WorkflowLock(lock_path(root, arguments.workflow)):
+        return run_locked(root, arguments)
+
+
+def run_locked(root: Path, arguments: argparse.Namespace) -> int:
     directory = workflow_path(root, arguments.workflow)
     ledger = read_ledger(directory)
     command = list(arguments.command)
@@ -467,139 +597,157 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
     interruption: ProcessInterrupted | None = None
     launch_error: OSError | None = None
     exit_status = 125
-    with output:
-        cleanup_started = False
-        handled_signals = (signal.SIGINT, signal.SIGTERM)
-        previous_handlers = {
-            handled_signal: signal.getsignal(handled_signal)
-            for handled_signal in handled_signals
-        }
+    cleanup_started = False
+    pending_signal: int | None = None
+    handled_signals = (signal.SIGINT, signal.SIGTERM)
+    previous_handlers = {
+        handled_signal: signal.getsignal(handled_signal)
+        for handled_signal in handled_signals
+    }
 
-        def interrupt_child(signum: int, _frame: Any) -> None:
-            if cleanup_started:
-                return
-            raise ProcessInterrupted(signum)
+    def interrupt_child(signum: int, _frame: Any) -> None:
+        nonlocal pending_signal
+        if cleanup_started:
+            return
+        if child is None:
+            pending_signal = pending_signal or signum
+            return
+        raise ProcessInterrupted(signum)
 
-        for handled_signal in handled_signals:
-            signal.signal(handled_signal, interrupt_child)
-        try:
+    for handled_signal in handled_signals:
+        signal.signal(handled_signal, interrupt_child)
+    try:
+        with output:
             try:
-                child = subprocess.Popen(
-                    command,
-                    stdout=output,
-                    stderr=subprocess.STDOUT,
-                    start_new_session=os.name == "posix",
-                )
-            except OSError as error:
-                launch_error = error
-            else:
-                exit_status = wait_for_child(child, sequence)
-        except ProcessInterrupted as error:
-            cleanup_started = True
-            interruption = error
-            if child is not None:
-                terminate_child(child, isolated_process_group=os.name == "posix")
-        except BaseException:
-            cleanup_started = True
-            if child is not None:
-                terminate_child(child, isolated_process_group=os.name == "posix")
-            raise
-        finally:
-            for handled_signal, previous_handler in previous_handlers.items():
-                signal.signal(handled_signal, previous_handler)
+                try:
+                    child = subprocess.Popen(
+                        command,
+                        stdout=output,
+                        stderr=subprocess.STDOUT,
+                        **process_launch_options(os.name),
+                    )
+                    if pending_signal is not None:
+                        raise ProcessInterrupted(pending_signal)
+                except OSError as error:
+                    launch_error = error
+                else:
+                    exit_status = wait_for_child(child, sequence)
+                cleanup_started = True
+            except ProcessInterrupted as error:
+                cleanup_started = True
+                interruption = error
+                if child is not None:
+                    terminate_child(child, isolated_process_group=True)
+            except BaseException:
+                cleanup_started = True
+                if child is not None:
+                    terminate_child(child, isolated_process_group=True)
+                raise
 
-    if launch_error is not None:
-        log.unlink(missing_ok=True)
-        emit_summary(
-            {"launch_error": str(launch_error), "command": display_command(command)}
+        if launch_error is not None:
+            log.unlink(missing_ok=True)
+            emit_summary(
+                {"launch_error": str(launch_error), "command": display_command(command)}
+            )
+            return 125
+
+        elapsed = time.monotonic() - started
+        if interruption is not None:
+            exit_status = 128 + interruption.signum
+            append_run(
+                ledger,
+                {
+                    "sequence": sequence,
+                    "scope": arguments.scope,
+                    "question": shortened(redact(arguments.question), 1024),
+                    "command": display_command(command),
+                    "elapsed_seconds": round(elapsed, 3),
+                    "exit_status": exit_status,
+                    "interrupted_signal": interruption.signum,
+                    "log": log.name,
+                    "failure_fingerprints": [],
+                    "warning_fingerprints": [],
+                },
+            )
+            write_ledger(directory, ledger)
+            prune_logs(directory, ledger)
+            emit_summary(
+                {
+                    "command": display_command(command),
+                    "elapsed_seconds": round(elapsed, 3),
+                    "exit_status": exit_status,
+                    "interrupted_signal": interruption.signum,
+                    "log": str(log),
+                    "repeated_command": repeated_command,
+                    "scope": arguments.scope,
+                }
+            )
+            return exit_status
+
+        diagnostics = extract_diagnostics(log)
+        warning_items = diagnostics.warning_fingerprints
+        failure_items = diagnostics.failure_fingerprints
+        repeated_primary_failure = bool(
+            failure_items and next(iter(failure_items)) in prior_failures
         )
-        return 125
-
-    elapsed = time.monotonic() - started
-    if interruption is not None:
-        exit_status = 128 + interruption.signum
+        merge_fingerprints(
+            ledger,
+            "warning_fingerprints",
+            warning_items,
+            diagnostics.warning_fingerprints_truncated,
+        )
+        merge_fingerprints(
+            ledger,
+            "failure_fingerprints",
+            failure_items,
+            diagnostics.failure_fingerprints_truncated,
+        )
         append_run(
             ledger,
             {
                 "sequence": sequence,
                 "scope": arguments.scope,
-                "question": shortened(arguments.question, 1024),
+                "question": shortened(redact(arguments.question), 1024),
                 "command": display_command(command),
                 "elapsed_seconds": round(elapsed, 3),
                 "exit_status": exit_status,
-                "interrupted_signal": interruption.signum,
                 "log": log.name,
-                "failure_fingerprints": [],
-                "warning_fingerprints": [],
+                "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
+                "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
             },
         )
         write_ledger(directory, ledger)
+        prune_logs(directory, ledger)
         emit_summary(
             {
                 "command": display_command(command),
                 "elapsed_seconds": round(elapsed, 3),
                 "exit_status": exit_status,
-                "interrupted_signal": interruption.signum,
+                "excerpt": diagnostics.excerpt,
+                "failed_tasks": diagnostics.failed_tasks,
+                "failed_tasks_truncated": diagnostics.failed_tasks_truncated,
+                "failure_fingerprints": summary_fingerprints(failure_items),
                 "log": str(log),
                 "repeated_command": repeated_command,
+                "repeated_primary_failure": repeated_primary_failure,
                 "scope": arguments.scope,
+                "warning_fingerprints": summary_fingerprints(warning_items),
+                "warning_fingerprints_truncated": diagnostics.warning_fingerprints_truncated,
+                "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
             }
         )
         return exit_status
-
-    diagnostics = extract_diagnostics(log)
-    warning_items = diagnostics.warning_fingerprints
-    failure_items = diagnostics.failure_fingerprints
-    repeated_primary_failure = bool(failure_items and next(iter(failure_items)) in prior_failures)
-    merge_fingerprints(
-        ledger,
-        "warning_fingerprints",
-        warning_items,
-        diagnostics.warning_fingerprints_truncated,
-    )
-    merge_fingerprints(
-        ledger,
-        "failure_fingerprints",
-        failure_items,
-        diagnostics.failure_fingerprints_truncated,
-    )
-    append_run(
-        ledger,
-        {
-            "sequence": sequence,
-            "scope": arguments.scope,
-            "question": shortened(arguments.question, 1024),
-            "command": display_command(command),
-            "elapsed_seconds": round(elapsed, 3),
-            "exit_status": exit_status,
-            "log": log.name,
-            "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
-            "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
-        },
-    )
-    write_ledger(directory, ledger)
-    emit_summary(
-        {
-            "command": display_command(command),
-            "elapsed_seconds": round(elapsed, 3),
-            "exit_status": exit_status,
-            "excerpt": diagnostics.excerpt,
-            "failed_tasks": diagnostics.failed_tasks,
-            "failed_tasks_truncated": diagnostics.failed_tasks_truncated,
-            "failure_fingerprints": summary_fingerprints(failure_items),
-            "log": str(log),
-            "repeated_command": repeated_command,
-            "repeated_primary_failure": repeated_primary_failure,
-            "scope": arguments.scope,
-            "warning_fingerprints": summary_fingerprints(warning_items),
-            "warning_fingerprints_truncated": diagnostics.warning_fingerprints_truncated,
-            "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
-        }
-    )
-    return exit_status
+    finally:
+        for handled_signal, previous_handler in previous_handlers.items():
+            signal.signal(handled_signal, previous_handler)
 
 
 def finish_workflow(root: Path, workflow: str) -> int:
+    with WorkflowLock(lock_path(root, workflow)):
+        return finish_locked(root, workflow)
+
+
+def finish_locked(root: Path, workflow: str) -> int:
     directory = workflow_path(root, workflow)
     tombstone = finished_path(root, workflow)
     if not directory.exists():

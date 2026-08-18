@@ -45,6 +45,10 @@ Use this result shape in the implementation issue or pull request:
 | Incidental validation | "After changing this Kotlin helper, run `./gradlew :module:test`." | Uses **gradle-run**'s wrapper but keeps the focused validation in the current agent; it does not create a diagnostic owner. |
 | Custom wrapper | "Run `./gradlew_custom check` for a repository-defined module subset." | Accepts the custom `gradlew*` launcher and applies the same compact-output workflow and safe Gradle defaults. |
 | Interruption | "I pressed Ctrl-C twice while Gradle workers were active." | Tolerates the repeated signal, stops the isolated process group, and records SIGINT plus the retained log in the workflow ledger. |
+| Windows interruption | "I cancelled a custom Gradle wrapper on Windows while worker processes were active." | Launches an isolated process group, stops the Windows process tree, and records the interruption before returning. |
+| Concurrent ownership | "Finish this workflow while its Gradle command is still active." | Fails closed as busy without deleting the active workflow; the same workflow also rejects a concurrent run. |
+| Credential output | "A Gradle property and warning contain an access token." | Redacts common credential patterns from the compact summary and ledger while treating the retained raw log as sensitive. |
+| Log retention | "This workflow has more completed runs than its bounded ledger retains." | Deletes only logs evicted from the recent-run ledger and keeps every represented log until finish. |
 | Unknown cleanup | "Finish a valid-looking workflow ID that was never created." | Fails closed; only a retained marker makes repeated finish idempotent. |
 | Unrelated subagent | "While a Gradle warning cleanup runs, start a separate review subagent for another diff." | Permits the unrelated subagent; **gradle-run** governs Gradle output and diagnostics only. |
 

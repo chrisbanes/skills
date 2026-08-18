@@ -238,6 +238,40 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertEqual(len(failures), 1)
         self.assertIn("Unresolved reference", failures[0]["excerpt"])
 
+    def test_model_visible_output_and_ledger_redact_credentials(self) -> None:
+        workflow = self.create_workflow()
+        secret = "top secret tail-marker"
+
+        result = self.invoke(
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            "targeted",
+            "--question",
+            f"Does password={secret} stay private?",
+            "--",
+            str(self.gradle),
+            f"-PapiToken={secret}",
+            "--",
+            sys.executable,
+            "-c",
+            (
+                f"print('warning: authToken={secret}'); "
+                f"print('error: password={secret}'); "
+                f"print('warning: Authorization: Bearer {secret}')"
+            ),
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        ledger = (self.root / workflow / "ledger.json").read_text()
+        self.assertNotIn(secret, result.stdout)
+        self.assertNotIn(secret, ledger)
+        self.assertNotIn("tail-marker", result.stdout)
+        self.assertNotIn("tail-marker", ledger)
+        self.assertIn("[REDACTED]", result.stdout)
+        self.assertIn("[REDACTED]", ledger)
+
     def test_missing_command_fails_without_fallback(self) -> None:
         workflow = self.create_workflow()
 
@@ -307,6 +341,62 @@ class GradleRunProcessTest(GradleRunTestCase):
         ledger = json.loads((self.root / workflow / "ledger.json").read_text())
         self.assertEqual(ledger["runs"][0]["interrupted_signal"], signal.SIGTERM)
         self.assert_process_gone(int(pid_file.read_text()))
+
+    def test_signal_during_launch_reaps_the_created_process_group(self) -> None:
+        workflow = self.create_workflow()
+        arguments = GRADLE_RUN.parser().parse_args(
+            [
+                "--root",
+                str(self.root),
+                "run",
+                "--workflow",
+                workflow,
+                "--scope",
+                "targeted",
+                "--question",
+                "Can interruption during launch stop the build safely?",
+                "--",
+                str(self.gradle),
+                "--",
+                sys.executable,
+                "-c",
+                "import time; time.sleep(60)",
+            ]
+        )
+        real_popen = subprocess.Popen
+        started: list[subprocess.Popen[bytes]] = []
+
+        def interrupt_before_returning_child(
+            *popen_arguments: object, **popen_options: object
+        ) -> subprocess.Popen[bytes]:
+            child = real_popen(*popen_arguments, **popen_options)
+            started.append(child)
+            signal.raise_signal(signal.SIGINT)
+            return child
+
+        output = io.StringIO()
+        wrapper_reaped_child = False
+        try:
+            with (
+                mock.patch.object(
+                    GRADLE_RUN.subprocess,
+                    "Popen",
+                    side_effect=interrupt_before_returning_child,
+                ),
+                mock.patch("sys.stdout", output),
+            ):
+                result = GRADLE_RUN.run_command(self.root, arguments)
+            wrapper_reaped_child = bool(started) and not process_is_running(started[0].pid)
+        finally:
+            for child in started:
+                if process_is_running(child.pid):
+                    os.killpg(child.pid, signal.SIGKILL)
+                child.wait()
+
+        self.assertEqual(result, 128 + signal.SIGINT)
+        self.assertEqual(json.loads(output.getvalue())["interrupted_signal"], signal.SIGINT)
+        self.assertEqual(len(started), 1)
+        self.assertTrue(wrapper_reaped_child, "wrapper left the launched child running")
 
     def test_sigint_reaps_child_and_records_interrupted_run(self) -> None:
         workflow = self.create_workflow()
@@ -420,6 +510,57 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertEqual(ledger["runs"][0]["interrupted_signal"], signal.SIGINT)
         assert child_pid is not None
         self.assert_process_gone(child_pid)
+
+    def test_signal_after_child_exit_preserves_the_completed_run(self) -> None:
+        workflow = self.create_workflow()
+        pid_file = self.root.parent / "completed-child.pid"
+        child_code = (
+            "from pathlib import Path; import os; "
+            f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
+            "[print(f'warning: diagnostic {index}') for index in range(1_000_000)]"
+        )
+        wrapper = subprocess.Popen(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--root",
+                str(self.root),
+                "run",
+                "--workflow",
+                workflow,
+                "--scope",
+                "targeted",
+                "--question",
+                "Can finalization preserve a completed build?",
+                "--",
+                str(self.gradle),
+                "--",
+                sys.executable,
+                "-c",
+                child_code,
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        deadline = time.monotonic() + 15
+        while not pid_file.exists() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertTrue(pid_file.exists(), "child did not start")
+        child_pid = int(pid_file.read_text())
+        while process_is_running(child_pid) and time.monotonic() < deadline:
+            time.sleep(0.001)
+        self.assertFalse(process_is_running(child_pid), "child did not finish")
+        self.assertIsNone(wrapper.poll(), "wrapper finished before finalization was exercised")
+
+        wrapper.send_signal(signal.SIGINT)
+        stdout, stderr = wrapper.communicate(timeout=15)
+
+        self.assertEqual(wrapper.returncode, 0, stderr)
+        self.assertEqual(json.loads(stdout)["exit_status"], 0)
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        self.assertEqual(ledger["run_count"], 1)
+        self.assertEqual(ledger["runs"][0]["exit_status"], 0)
 
     def test_blank_question_fails_without_running_the_command(self) -> None:
         workflow = self.create_workflow()
@@ -585,7 +726,143 @@ class GradleRunHeartbeatTest(unittest.TestCase):
         self.assertIsNotNone(child.poll())
 
 
+class GradleRunWindowsProcessTest(unittest.TestCase):
+    def test_windows_launch_uses_a_new_process_group(self) -> None:
+        with mock.patch.object(
+            GRADLE_RUN.subprocess,
+            "CREATE_NEW_PROCESS_GROUP",
+            0x00000200,
+            create=True,
+        ):
+            options = GRADLE_RUN.process_launch_options("nt")
+
+        self.assertEqual(options, {"creationflags": 0x00000200})
+
+    def test_windows_cleanup_escalates_to_the_process_tree(self) -> None:
+        child = mock.Mock()
+        child.pid = 4242
+        child.poll.return_value = None
+        child.wait.side_effect = [
+            subprocess.TimeoutExpired("gradlew", 5),
+            0,
+        ]
+
+        with (
+            mock.patch.object(GRADLE_RUN.os, "name", "nt"),
+            mock.patch.object(
+                GRADLE_RUN.signal,
+                "CTRL_BREAK_EVENT",
+                1,
+                create=True,
+            ),
+            mock.patch.object(GRADLE_RUN.subprocess, "run") as taskkill,
+        ):
+            GRADLE_RUN.terminate_child(child, isolated_process_group=True)
+
+        child.send_signal.assert_called_once_with(1)
+        taskkill.assert_called_once_with(
+            ["taskkill", "/PID", "4242", "/T", "/F"],
+            check=False,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            timeout=5,
+        )
+        child.wait.assert_has_calls([mock.call(timeout=5), mock.call(timeout=5)])
+
+
 class GradleRunWorkflowTest(GradleRunTestCase):
+    def test_concurrent_run_fails_before_launching(self) -> None:
+        workflow = self.create_workflow()
+        ready = self.root.parent / "active-run.ready"
+        unexpected = self.root.parent / "unexpected-run"
+        active = subprocess.Popen(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--root",
+                str(self.root),
+                "run",
+                "--workflow",
+                workflow,
+                "--scope",
+                "targeted",
+                "--question",
+                "Does the active task finish?",
+                "--",
+                str(self.gradle),
+                "--",
+                sys.executable,
+                "-c",
+                f"from pathlib import Path; import time; Path({str(ready)!r}).touch(); time.sleep(60)",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        try:
+            deadline = time.monotonic() + 5
+            while not ready.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue(ready.exists(), "active run did not start")
+
+            result = self.run_gradle(
+                workflow,
+                "targeted",
+                "Can another task use this workflow?",
+                f"from pathlib import Path; Path({str(unexpected)!r}).touch()",
+            )
+        finally:
+            if active.poll() is None:
+                active.send_signal(signal.SIGTERM)
+            active.communicate(timeout=10)
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("workflow is busy", result.stderr)
+        self.assertFalse(unexpected.exists())
+
+    def test_finish_fails_while_a_run_is_active(self) -> None:
+        workflow = self.create_workflow()
+        ready = self.root.parent / "finish-active.ready"
+        active = subprocess.Popen(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--root",
+                str(self.root),
+                "run",
+                "--workflow",
+                workflow,
+                "--scope",
+                "targeted",
+                "--question",
+                "Does the active task finish before cleanup?",
+                "--",
+                str(self.gradle),
+                "--",
+                sys.executable,
+                "-c",
+                f"from pathlib import Path; import time; Path({str(ready)!r}).touch(); time.sleep(60)",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        try:
+            deadline = time.monotonic() + 5
+            while not ready.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue(ready.exists(), "active run did not start")
+
+            result = self.invoke("finish", "--workflow", workflow)
+        finally:
+            if active.poll() is None:
+                active.send_signal(signal.SIGTERM)
+            active.communicate(timeout=10)
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("workflow is busy", result.stderr)
+        self.assertTrue((self.root / workflow).is_dir())
+
     def test_workflow_ledger_records_scope_question_and_command(self) -> None:
         workflow = self.create_workflow()
         result = self.run_gradle(
@@ -649,6 +926,38 @@ class GradleRunWorkflowTest(GradleRunTestCase):
         self.assertEqual(
             json.loads(result.stdout)["warning_fingerprints_truncated"], 744
         )
+
+    def test_logs_are_pruned_with_evicted_ledger_runs(self) -> None:
+        workflow = self.create_workflow()
+
+        with mock.patch.object(GRADLE_RUN, "MAX_LEDGER_RUNS", 2):
+            for index in range(3):
+                arguments = GRADLE_RUN.parser().parse_args(
+                    [
+                        "--root",
+                        str(self.root),
+                        "run",
+                        "--workflow",
+                        workflow,
+                        "--scope",
+                        "targeted",
+                        "--question",
+                        f"Does retained run {index + 1} pass?",
+                        "--",
+                        str(self.gradle),
+                        "--",
+                        sys.executable,
+                        "-c",
+                        "print('ok')",
+                    ]
+                )
+                with mock.patch("sys.stdout", new=io.StringIO()):
+                    self.assertEqual(GRADLE_RUN.run_command(self.root, arguments), 0)
+
+        logs = sorted(path.name for path in (self.root / workflow).glob("*.log"))
+        self.assertEqual(logs, ["0002.log", "0003.log"])
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        self.assertEqual([run["sequence"] for run in ledger["runs"]], [2, 3])
 
     def test_finish_deletes_only_the_managed_workflow_directory(self) -> None:
         first = self.create_workflow()

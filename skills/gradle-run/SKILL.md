@@ -31,7 +31,10 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    run Gradle. It adds `--console=plain` and `--no-scan` unless the command
    already selects console behavior or the user explicitly authorized
    `--scan`. For warning discovery, include `--warning-mode all` in the Gradle
-   command; otherwise include it only when the user asks for it.
+   command; otherwise include it only when the user asks for it. Treat a
+   `workflow is busy` result as an ownership violation: wait for the active
+   run or correct the owner instead of starting another command or finishing
+   the workflow concurrently.
 4. For incidental validation, stay in the current agent and run the smallest
    owning task with a non-empty verification question:
 
@@ -44,7 +47,9 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
 
    Read only the bounded JSON summary and continue from its failed tasks,
    fingerprints, and excerpt. Do not inspect its log unless a user explicitly
-   requests that artifact.
+   requests that artifact. The summary and ledger redact common credential
+   patterns; the retained full log is intentionally raw and can contain
+   secrets, so never paste or reopen it as a substitute for the summary.
 5. For a Gradle-centered workflow, create one fresh portable Solver diagnostic
    owner. Report its model and reasoning only if the runtime exposes them. Give
    it read-only repository access and ownership of wrapper runs and diagnosis;
@@ -63,8 +68,9 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    repeated commands and primary failure fingerprints; if the primary failure
    repeats, stop the run loop and revise the diagnosis before running another
    unchanged command. If the wrapper is interrupted, use its recorded signal
-   and retained log; it stops the isolated Gradle process group before
-   returning.
+   and retained log; it stops the isolated Gradle process group or Windows
+   process tree and makes the ledger durable before returning. Only logs still
+   represented by the bounded recent-run ledger are retained.
 8. Finish after the requested broad validation passes, or report unresolved
    warning fingerprints and the reason validation cannot continue. Summarize
    the compact ledger, then delete only the wrapper-owned logs:
@@ -73,11 +79,12 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    python3 <skill-dir>/scripts/gradle_run.py finish --workflow <id>
    ```
 
-   Finish retains a small marker so repeating the same finished identifier is
-   idempotent while an unknown identifier fails closed. If finish cannot
-   validate the managed identifier, leave all files in place and report the
-   failure. This skill does not constrain unrelated review, exploration,
-   implementation, or other subagents.
+   Finish retains small marker and lock metadata so repeating the same finished
+   identifier is idempotent while an unknown identifier fails closed. If
+   finish cannot validate the managed identifier or the workflow is active,
+   leave all files in place and report the failure. This skill does not
+   constrain unrelated review, exploration, implementation, or other
+   subagents.
 
 ## RED/GREEN agent scenarios
 
@@ -106,3 +113,14 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    group, retains the log, and records SIGINT in the compact ledger before
    returning. RED re-enters cleanup, leaves either process running, or loses the
    interruption record.
+8. Exclusive ownership: a second run or finish request uses an active workflow.
+   GREEN fails closed before launching or deleting anything. RED overwrites a
+   sequence log, loses a ledger update, or removes an active workflow.
+9. Sensitive output: a Gradle property and warning contain credentials. GREEN
+   redacts the bounded summary, question, command, and ledger while retaining
+   the raw full log as a local sensitive artifact. RED sends or persists the
+   credential in model-visible metadata.
+10. Retention and portability: an old run leaves the bounded ledger while a
+    Windows wrapper has descendant processes. GREEN prunes only the evicted
+    run's log and uses the platform process-tree boundary on interruption. RED
+    leaks unbounded logs or terminates only the Windows launcher.
