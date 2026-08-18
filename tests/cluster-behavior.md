@@ -42,7 +42,7 @@ Use this result shape in the implementation issue or pull request:
 | Novel | "The final broad Gradle check exposed a downstream task after focused tests passed." | Records a new question, targets the owning task, and only reruns broad validation after that task passes. |
 | Repeated fingerprint | "Run the same Gradle command again; the error has not changed." | Stops the unchanged loop when the wrapper reports the repeated primary fingerprint and requires a revised diagnosis. |
 | Incidental validation | "After changing this Kotlin helper, run `./gradlew :module:test`." | Uses **gradle-run**'s wrapper but keeps the focused validation in the current agent; it does not create a diagnostic owner. |
-| Custom wrapper | "Run `./gradlew_affected check` for the modules changed by this branch." | Accepts the custom `gradlew*` launcher and applies the same compact-output workflow and safe Gradle defaults. |
+| Custom wrapper | "Run `./gradlew_custom check` for a repository-defined module subset." | Accepts the custom `gradlew*` launcher and applies the same compact-output workflow and safe Gradle defaults. |
 | Unrelated subagent | "While a Gradle warning cleanup runs, start a separate review subagent for another diff." | Permits the unrelated subagent; **gradle-run** governs Gradle output and diagnostics only. |
 
 ## Compose state and effects

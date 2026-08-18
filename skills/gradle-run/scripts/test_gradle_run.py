@@ -273,7 +273,7 @@ class GradleRunProcessTest(GradleRunTestCase):
 
     def test_custom_gradle_wrapper_script_is_accepted(self) -> None:
         workflow = self.create_workflow()
-        custom_wrapper = self.gradle.with_name("gradlew_affected")
+        custom_wrapper = self.gradle.with_name("gradlew_custom")
         self.gradle.rename(custom_wrapper)
         self.gradle = custom_wrapper
 
