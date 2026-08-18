@@ -4,18 +4,24 @@ from __future__ import annotations
 
 import json
 import importlib.util
+import io
+import os
 from pathlib import Path
+import signal
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
+from unittest import mock
 
 
 SCRIPT = Path(__file__).with_name("gradle_run.py")
 SPEC = importlib.util.spec_from_file_location("gradle_run", SCRIPT)
 assert SPEC and SPEC.loader
 GRADLE_RUN = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = GRADLE_RUN
 SPEC.loader.exec_module(GRADLE_RUN)
 
 
@@ -79,7 +85,7 @@ class GradleRunProcessTest(GradleRunTestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertLessEqual(len(result.stdout.encode("utf-8")), 16_384)
-        self.assertLessEqual(len(result.stdout.splitlines()), 64)
+        self.assertEqual(len(result.stdout.splitlines()), 1)
         summary = json.loads(result.stdout)
         log = Path(summary["log"])
         self.assertTrue(log.is_file())
@@ -185,6 +191,56 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertIn("launch_error", json.loads(result.stdout))
         self.assertFalse(list((self.root / workflow).glob("*.log")))
 
+    def test_sigterm_reaps_child_and_records_interrupted_run(self) -> None:
+        workflow = self.create_workflow()
+        pid_file = self.root.parent / "child.pid"
+        child_code = (
+            "from pathlib import Path; import os, time; "
+            f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
+            "time.sleep(60)"
+        )
+        wrapper = subprocess.Popen(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--root",
+                str(self.root),
+                "run",
+                "--workflow",
+                workflow,
+                "--scope",
+                "targeted",
+                "--question",
+                "Can interruption stop the build safely?",
+                "--",
+                str(self.gradle),
+                "--",
+                sys.executable,
+                "-c",
+                child_code,
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        deadline = time.monotonic() + 5
+        while not pid_file.exists() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertTrue(pid_file.exists(), "child did not start")
+
+        wrapper.send_signal(signal.SIGTERM)
+        stdout, stderr = wrapper.communicate(timeout=10)
+
+        self.assertEqual(wrapper.returncode, 128 + signal.SIGTERM, stderr)
+        summary = json.loads(stdout)
+        self.assertEqual(summary["interrupted_signal"], signal.SIGTERM)
+        self.assertNotIn("launch_error", summary)
+        self.assertTrue(Path(summary["log"]).is_file())
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        self.assertEqual(ledger["runs"][0]["interrupted_signal"], signal.SIGTERM)
+        with self.assertRaises(ProcessLookupError):
+            os.kill(int(pid_file.read_text()), 0)
+
     def test_blank_question_fails_without_running_the_command(self) -> None:
         workflow = self.create_workflow()
 
@@ -264,20 +320,70 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertLess(command.index("--console=plain"), separator)
         self.assertLess(command.index("--no-scan"), separator)
 
+    def test_task_arguments_do_not_override_gradle_defaults(self) -> None:
+        workflow = self.create_workflow()
+        self.gradle.write_text("#!/bin/sh\nprintf 'args: %s\\n' \"$*\"\n")
+
+        result = self.invoke(
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            "targeted",
+            "--question",
+            "Do task arguments leave Gradle defaults intact?",
+            "--",
+            str(self.gradle),
+            "check",
+            "--",
+            "--scan",
+            "--console=verbose",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        command = json.loads(result.stdout)["command"].split()
+        separator = command.index("--")
+        self.assertLess(command.index("--console=plain"), separator)
+        self.assertLess(command.index("--no-scan"), separator)
+
 
 class GradleRunHeartbeatTest(unittest.TestCase):
-    def test_heartbeat_schedule_is_finite_and_stops_after_its_last_delay(self) -> None:
-        delays = GRADLE_RUN.HEARTBEAT_DELAYS
-        emitted: list[float] = []
-        next_index = 0
+    def test_wait_blocks_between_a_finite_number_of_heartbeats(self) -> None:
+        child = mock.Mock()
+        child.wait.return_value = 0
+        timers = [mock.Mock() for _ in GRADLE_RUN.HEARTBEAT_DELAYS]
 
-        for elapsed in range(0, 601):
-            if GRADLE_RUN.heartbeat_due(float(elapsed), next_index):
-                emitted.append(float(elapsed))
-                next_index += 1
+        with mock.patch.object(GRADLE_RUN.threading, "Timer", side_effect=timers) as timer:
+            result = GRADLE_RUN.wait_for_child(child, sequence=1)
 
-        self.assertEqual(emitted, list(delays))
-        self.assertFalse(GRADLE_RUN.heartbeat_due(3_600.0, next_index))
+        self.assertEqual(result, 0)
+        child.wait.assert_called_once_with()
+        self.assertEqual(timer.call_count, len(GRADLE_RUN.HEARTBEAT_DELAYS))
+        for item in timers:
+            item.start.assert_called_once_with()
+            item.cancel.assert_called_once_with()
+            item.join.assert_called_once_with()
+
+    def test_heartbeat_only_prints_while_the_child_is_running(self) -> None:
+        child = mock.Mock()
+        child.poll.side_effect = [None, 0]
+
+        with mock.patch("sys.stderr", new=io.StringIO()) as stderr:
+            GRADLE_RUN.emit_heartbeat(child, sequence=1, delay=30.0)
+            GRADLE_RUN.emit_heartbeat(child, sequence=1, delay=60.0)
+
+        self.assertEqual(len(stderr.getvalue().splitlines()), 1)
+
+    def test_terminate_child_reaps_a_running_process(self) -> None:
+        child = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(60)"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        GRADLE_RUN.terminate_child(child)
+
+        self.assertIsNotNone(child.poll())
 
 
 class GradleRunWorkflowTest(GradleRunTestCase):
@@ -324,6 +430,26 @@ class GradleRunWorkflowTest(GradleRunTestCase):
         self.assertEqual(len(fingerprints), 1)
         self.assertEqual(next(iter(fingerprints.values()))["occurrences"], 2)
         self.assertEqual(len(json.loads(result.stdout)["warning_fingerprints"]), 1)
+
+    def test_many_unique_diagnostics_keep_the_ledger_bounded(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.run_gradle(
+            workflow,
+            "broad",
+            "Which warnings are unique?",
+            "[print(f'warning: unique {index}') for index in range(1000)]",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        self.assertEqual(
+            len(ledger["warning_fingerprints"]), GRADLE_RUN.MAX_STORED_FINGERPRINTS
+        )
+        self.assertEqual(ledger["warning_fingerprints_truncated_occurrences"], 744)
+        self.assertEqual(
+            json.loads(result.stdout)["warning_fingerprints_truncated"], 744
+        )
 
     def test_finish_deletes_only_the_managed_workflow_directory(self) -> None:
         first = self.create_workflow()

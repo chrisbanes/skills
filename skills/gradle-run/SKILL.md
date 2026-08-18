@@ -30,8 +30,8 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    Retain the returned opaque workflow identifier. Use only this wrapper to
    run Gradle. It adds `--console=plain` and `--no-scan` unless the command
    already selects console behavior or the user explicitly authorized
-   `--scan`; add `--warning-mode all` only for warning discovery or when the
-   user asks for it.
+   `--scan`. For warning discovery, include `--warning-mode all` in the Gradle
+   command; otherwise include it only when the user asks for it.
 4. For incidental validation, stay in the current agent and run the smallest
    owning task with a non-empty verification question:
 
