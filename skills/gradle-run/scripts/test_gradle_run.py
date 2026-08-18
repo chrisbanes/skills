@@ -83,12 +83,52 @@ class GradleRunTestCase(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary_directory.cleanup()
 
+    def wrapper_arguments(self, *arguments: str) -> list[str]:
+        return [
+            sys.executable,
+            str(SCRIPT),
+            "--root",
+            str(self.root),
+            *arguments,
+        ]
+
+    def gradle_run_arguments(
+        self, workflow: str, scope: str, question: str, command: str
+    ) -> list[str]:
+        return [
+            "run",
+            "--workflow",
+            workflow,
+            "--scope",
+            scope,
+            "--question",
+            question,
+            "--",
+            str(self.gradle),
+            "--",
+            sys.executable,
+            "-c",
+            command,
+        ]
+
     def invoke(self, *arguments: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            [sys.executable, str(SCRIPT), "--root", str(self.root), *arguments],
+            self.wrapper_arguments(*arguments),
             text=True,
             capture_output=True,
             check=False,
+        )
+
+    def start_gradle(
+        self, workflow: str, scope: str, question: str, command: str
+    ) -> subprocess.Popen[str]:
+        return subprocess.Popen(
+            self.wrapper_arguments(
+                *self.gradle_run_arguments(workflow, scope, question, command)
+            ),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
     def create_workflow(self) -> str:
@@ -104,23 +144,17 @@ class GradleRunTestCase(unittest.TestCase):
             time.sleep(0.01)
         self.fail(f"process {pid} is still running")
 
+    def wait_for_path(self, path: Path, message: str) -> None:
+        deadline = time.monotonic() + 5
+        while not path.exists() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertTrue(path.exists(), message)
+
     def run_gradle(
         self, workflow: str, scope: str, question: str, command: str
     ) -> subprocess.CompletedProcess[str]:
         return self.invoke(
-            "run",
-            "--workflow",
-            workflow,
-            "--scope",
-            scope,
-            "--question",
-            question,
-            "--",
-            str(self.gradle),
-            "--",
-            sys.executable,
-            "-c",
-            command,
+            *self.gradle_run_arguments(workflow, scope, question, command)
         )
 
 
@@ -272,6 +306,33 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertIn("[REDACTED]", result.stdout)
         self.assertIn("[REDACTED]", ledger)
 
+    def test_model_visible_output_and_ledger_redact_quoted_credentials(self) -> None:
+        workflow = self.create_workflow()
+        secret = "quoted-credential-value"
+        json_diagnostic = f'warning: {{"access_token":"{secret}"}}'
+        yaml_diagnostic = f"warning: 'api-key': '{secret}'"
+        json_authorization = f'warning: {{"Authorization":"Bearer {secret}"}}'
+        yaml_authorization = f"warning: 'authorization': 'Bearer {secret}'"
+
+        result = self.run_gradle(
+            workflow,
+            "targeted",
+            "Do quoted credentials stay private?",
+            (
+                f"print({json_diagnostic!r}); print({yaml_diagnostic!r}); "
+                f"print({json_authorization!r}); print({yaml_authorization!r})"
+            ),
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        summary = json.loads(result.stdout)
+        ledger = (self.root / workflow / "ledger.json").read_text()
+        self.assertNotIn(secret, result.stdout)
+        self.assertNotIn(secret, ledger)
+        self.assertIn("[REDACTED]", result.stdout)
+        self.assertIn("[REDACTED]", ledger)
+        self.assertIn(secret, Path(summary["log"]).read_text())
+
     def test_missing_command_fails_without_fallback(self) -> None:
         workflow = self.create_workflow()
 
@@ -301,34 +362,13 @@ class GradleRunProcessTest(GradleRunTestCase):
             f"Path({str(pid_file)!r}).write_text(str(descendant.pid)); "
             "time.sleep(60)"
         )
-        wrapper = subprocess.Popen(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--root",
-                str(self.root),
-                "run",
-                "--workflow",
-                workflow,
-                "--scope",
-                "targeted",
-                "--question",
-                "Can interruption stop the build safely?",
-                "--",
-                str(self.gradle),
-                "--",
-                sys.executable,
-                "-c",
-                child_code,
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        wrapper = self.start_gradle(
+            workflow,
+            "targeted",
+            "Can interruption stop the build safely?",
+            child_code,
         )
-        deadline = time.monotonic() + 5
-        while not pid_file.exists() and time.monotonic() < deadline:
-            time.sleep(0.01)
-        self.assertTrue(pid_file.exists(), "child did not start")
+        self.wait_for_path(pid_file, "child did not start")
 
         wrapper.send_signal(signal.SIGTERM)
         stdout, stderr = wrapper.communicate(timeout=10)
@@ -348,19 +388,12 @@ class GradleRunProcessTest(GradleRunTestCase):
             [
                 "--root",
                 str(self.root),
-                "run",
-                "--workflow",
-                workflow,
-                "--scope",
-                "targeted",
-                "--question",
-                "Can interruption during launch stop the build safely?",
-                "--",
-                str(self.gradle),
-                "--",
-                sys.executable,
-                "-c",
-                "import time; time.sleep(60)",
+                *self.gradle_run_arguments(
+                    workflow,
+                    "targeted",
+                    "Can interruption during launch stop the build safely?",
+                    "import time; time.sleep(60)",
+                ),
             ]
         )
         real_popen = subprocess.Popen
@@ -406,34 +439,13 @@ class GradleRunProcessTest(GradleRunTestCase):
             f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
             "time.sleep(60)"
         )
-        wrapper = subprocess.Popen(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--root",
-                str(self.root),
-                "run",
-                "--workflow",
-                workflow,
-                "--scope",
-                "targeted",
-                "--question",
-                "Can Ctrl-C stop the build safely?",
-                "--",
-                str(self.gradle),
-                "--",
-                sys.executable,
-                "-c",
-                child_code,
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        wrapper = self.start_gradle(
+            workflow,
+            "targeted",
+            "Can Ctrl-C stop the build safely?",
+            child_code,
         )
-        deadline = time.monotonic() + 5
-        while not pid_file.exists() and time.monotonic() < deadline:
-            time.sleep(0.01)
-        self.assertTrue(pid_file.exists(), "child did not start")
+        self.wait_for_path(pid_file, "child did not start")
 
         wrapper.send_signal(signal.SIGINT)
         stdout, stderr = wrapper.communicate(timeout=10)
@@ -455,34 +467,13 @@ class GradleRunProcessTest(GradleRunTestCase):
             f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
             "time.sleep(60)"
         )
-        wrapper = subprocess.Popen(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--root",
-                str(self.root),
-                "run",
-                "--workflow",
-                workflow,
-                "--scope",
-                "targeted",
-                "--question",
-                "What evidence was emitted before interruption?",
-                "--",
-                str(self.gradle),
-                "--",
-                sys.executable,
-                "-c",
-                child_code,
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        wrapper = self.start_gradle(
+            workflow,
+            "targeted",
+            "What evidence was emitted before interruption?",
+            child_code,
         )
-        deadline = time.monotonic() + 5
-        while not pid_file.exists() and time.monotonic() < deadline:
-            time.sleep(0.01)
-        self.assertTrue(pid_file.exists(), "child did not start")
+        self.wait_for_path(pid_file, "child did not start")
 
         wrapper.send_signal(signal.SIGINT)
         stdout, stderr = wrapper.communicate(timeout=10)
@@ -513,38 +504,17 @@ class GradleRunProcessTest(GradleRunTestCase):
             f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
             "time.sleep(60)"
         )
-        wrapper = subprocess.Popen(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--root",
-                str(self.root),
-                "run",
-                "--workflow",
-                workflow,
-                "--scope",
-                "targeted",
-                "--question",
-                "Can repeated Ctrl-C stop the build safely?",
-                "--",
-                str(self.gradle),
-                "--",
-                sys.executable,
-                "-c",
-                child_code,
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        wrapper = self.start_gradle(
+            workflow,
+            "targeted",
+            "Can repeated Ctrl-C stop the build safely?",
+            child_code,
         )
         child_pid: int | None = None
         stdout = ""
         stderr = ""
         try:
-            deadline = time.monotonic() + 5
-            while not pid_file.exists() and time.monotonic() < deadline:
-                time.sleep(0.01)
-            self.assertTrue(pid_file.exists(), "child did not start")
+            self.wait_for_path(pid_file, "child did not start")
             child_pid = int(pid_file.read_text())
 
             wrapper.send_signal(signal.SIGINT)
@@ -847,41 +817,47 @@ class GradleRunWindowsProcessTest(unittest.TestCase):
             timeout=5,
         )
 
+    def test_windows_cleanup_kills_tree_when_launcher_already_exited(self) -> None:
+        child = mock.Mock()
+        child.pid = 4242
+        child.poll.return_value = 0
+        child.wait.return_value = 0
+
+        with (
+            mock.patch.object(GRADLE_RUN.os, "name", "nt"),
+            mock.patch.object(
+                GRADLE_RUN.signal,
+                "CTRL_BREAK_EVENT",
+                1,
+                create=True,
+            ),
+            mock.patch.object(GRADLE_RUN.subprocess, "run") as taskkill,
+        ):
+            GRADLE_RUN.terminate_child(child, isolated_process_group=True)
+
+        child.send_signal.assert_not_called()
+        taskkill.assert_called_once_with(
+            ["taskkill", "/PID", "4242", "/T", "/F"],
+            check=False,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            timeout=5,
+        )
+
 
 class GradleRunWorkflowTest(GradleRunTestCase):
     def test_concurrent_run_fails_before_launching(self) -> None:
         workflow = self.create_workflow()
         ready = self.root.parent / "active-run.ready"
         unexpected = self.root.parent / "unexpected-run"
-        active = subprocess.Popen(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--root",
-                str(self.root),
-                "run",
-                "--workflow",
-                workflow,
-                "--scope",
-                "targeted",
-                "--question",
-                "Does the active task finish?",
-                "--",
-                str(self.gradle),
-                "--",
-                sys.executable,
-                "-c",
-                f"from pathlib import Path; import time; Path({str(ready)!r}).touch(); time.sleep(60)",
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        active = self.start_gradle(
+            workflow,
+            "targeted",
+            "Does the active task finish?",
+            f"from pathlib import Path; import time; Path({str(ready)!r}).touch(); time.sleep(60)",
         )
         try:
-            deadline = time.monotonic() + 5
-            while not ready.exists() and time.monotonic() < deadline:
-                time.sleep(0.01)
-            self.assertTrue(ready.exists(), "active run did not start")
+            self.wait_for_path(ready, "active run did not start")
 
             result = self.run_gradle(
                 workflow,
@@ -901,35 +877,14 @@ class GradleRunWorkflowTest(GradleRunTestCase):
     def test_finish_fails_while_a_run_is_active(self) -> None:
         workflow = self.create_workflow()
         ready = self.root.parent / "finish-active.ready"
-        active = subprocess.Popen(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--root",
-                str(self.root),
-                "run",
-                "--workflow",
-                workflow,
-                "--scope",
-                "targeted",
-                "--question",
-                "Does the active task finish before cleanup?",
-                "--",
-                str(self.gradle),
-                "--",
-                sys.executable,
-                "-c",
-                f"from pathlib import Path; import time; Path({str(ready)!r}).touch(); time.sleep(60)",
-            ],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        active = self.start_gradle(
+            workflow,
+            "targeted",
+            "Does the active task finish before cleanup?",
+            f"from pathlib import Path; import time; Path({str(ready)!r}).touch(); time.sleep(60)",
         )
         try:
-            deadline = time.monotonic() + 5
-            while not ready.exists() and time.monotonic() < deadline:
-                time.sleep(0.01)
-            self.assertTrue(ready.exists(), "active run did not start")
+            self.wait_for_path(ready, "active run did not start")
 
             result = self.invoke("finish", "--workflow", workflow)
         finally:

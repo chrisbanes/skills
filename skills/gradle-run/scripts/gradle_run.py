@@ -39,11 +39,14 @@ WARNING = re.compile(r"(?:\bwarning\b|\bdeprecat(?:ed|ion)\b|^w:)", re.IGNORECAS
 FAILURE = re.compile(r"(?:^FAILURE:|^\* What went wrong:|^e:|\berror:)", re.IGNORECASE)
 SOURCE_FAILURE = re.compile(r"(?:^e:|\berror:)", re.IGNORECASE)
 AUTHORIZATION_VALUE = re.compile(
-    r"(\bauthorization\s*:\s*)(?:bearer\s+)?[^\r\n]+", re.IGNORECASE
+    r"((?<![\w.-])[\"']?authorization[\"']?\s*:\s*)"
+    r"(?:[\"']?bearer\s+)?[^\r\n]+",
+    re.IGNORECASE,
 )
 SECRET_ASSIGNMENT = re.compile(
-    r"(\b[\w.-]*(?:password|passwd|token|secret|credential|api[-_.]?key)"
-    r"[\w.-]*\s*[:=]\s*)([^\r\n]+)",
+    r"((?<![\w.-])[\"']?[\w.-]*"
+    r"(?:password|passwd|token|secret|credential|api[-_.]?key)"
+    r"[\w.-]*[\"']?\s*[:=]\s*)([^\r\n]+)",
     re.IGNORECASE,
 )
 URL_PASSWORD = re.compile(r"(://[^:/\s]+:)([^@\s]+)(@)")
@@ -61,10 +64,6 @@ def redact(text: str) -> str:
     text = AUTHORIZATION_VALUE.sub(r"\1[REDACTED]", text)
     text = SECRET_ASSIGNMENT.sub(r"\1[REDACTED]", text)
     return URL_PASSWORD.sub(r"\1[REDACTED]\3", text)
-
-
-def fingerprint(text: str) -> str:
-    return hashlib.sha256(normalize(text).encode("utf-8")).hexdigest()
 
 
 def shortened(text: str, max_bytes: int) -> str:
@@ -243,14 +242,14 @@ class ProcessInterrupted(Exception):
         self.signum = signum
 
 
-def add_fingerprint(items: dict[str, dict[str, Any]], text: str) -> int:
-    value = fingerprint(text)
+def add_fingerprint(items: dict[str, dict[str, Any]], normalized_text: str) -> int:
+    value = hashlib.sha256(normalized_text.encode("utf-8")).hexdigest()
     if value in items:
         items[value]["count"] += 1
         return 0
     if len(items) >= MAX_STORED_FINGERPRINTS:
         return 1
-    items[value] = {"count": 1, "excerpt": shortened(normalize(text), 256)}
+    items[value] = {"count": 1, "excerpt": shortened(normalized_text, 256)}
     return 0
 
 
@@ -278,7 +277,9 @@ def extract_diagnostics(log: Path) -> Diagnostics:
             return
         if failure_block_truncated:
             failure_block.append("... diagnostic block truncated ...")
-        failure_block_overflow += add_fingerprint(failure_blocks, "\n".join(failure_block))
+        failure_block_overflow += add_fingerprint(
+            failure_blocks, normalize("\n".join(failure_block))
+        )
         failure_block = None
         failure_block_truncated = False
 
@@ -513,12 +514,11 @@ def terminate_child(
             child.wait()
 
     def terminate_windows_tree() -> None:
-        if child.poll() is not None:
-            return
-        try:
-            child.send_signal(signal.CTRL_BREAK_EVENT)
-        except OSError:
-            pass
+        if child.poll() is None:
+            try:
+                child.send_signal(signal.CTRL_BREAK_EVENT)
+            except OSError:
+                pass
         try:
             subprocess.run(
                 ["taskkill", "/PID", str(child.pid), "/T", "/F"],
@@ -679,80 +679,46 @@ def run_locked(root: Path, arguments: argparse.Namespace) -> int:
             failure_items,
             diagnostics.failure_fingerprints_truncated,
         )
-        if interruption is not None:
-            exit_status = 128 + interruption.signum
-            append_run(
-                ledger,
-                {
-                    "sequence": sequence,
-                    "scope": arguments.scope,
-                    "question": shortened(redact(arguments.question), 1024),
-                    "command": display_command(command),
-                    "elapsed_seconds": round(elapsed, 3),
-                    "exit_status": exit_status,
-                    "interrupted_signal": interruption.signum,
-                    "log": log.name,
-                    "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
-                    "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
-                },
-            )
-            write_ledger(directory, ledger)
-            prune_logs(directory, ledger)
-            emit_summary(
-                {
-                    "command": display_command(command),
-                    "elapsed_seconds": round(elapsed, 3),
-                    "exit_status": exit_status,
-                    "excerpt": diagnostics.excerpt,
-                    "failed_tasks": diagnostics.failed_tasks,
-                    "failed_tasks_truncated": diagnostics.failed_tasks_truncated,
-                    "failure_fingerprints": summary_fingerprints(failure_items),
-                    "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
-                    "interrupted_signal": interruption.signum,
-                    "log": str(log),
-                    "repeated_command": repeated_command,
-                    "repeated_primary_failure": repeated_primary_failure,
-                    "scope": arguments.scope,
-                    "warning_fingerprints": summary_fingerprints(warning_items),
-                    "warning_fingerprints_truncated": diagnostics.warning_fingerprints_truncated,
-                }
-            )
-            return exit_status
+        interrupted_signal = interruption.signum if interruption is not None else None
+        if interrupted_signal is not None:
+            exit_status = 128 + interrupted_signal
+        displayed_command = display_command(command)
+        elapsed_seconds = round(elapsed, 3)
+        run_entry = {
+            "sequence": sequence,
+            "scope": arguments.scope,
+            "question": shortened(redact(arguments.question), 1024),
+            "command": displayed_command,
+            "elapsed_seconds": elapsed_seconds,
+            "exit_status": exit_status,
+            "log": log.name,
+            "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
+            "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
+        }
+        summary = {
+            "command": displayed_command,
+            "elapsed_seconds": elapsed_seconds,
+            "exit_status": exit_status,
+            "excerpt": diagnostics.excerpt,
+            "failed_tasks": diagnostics.failed_tasks,
+            "failed_tasks_truncated": diagnostics.failed_tasks_truncated,
+            "failure_fingerprints": summary_fingerprints(failure_items),
+            "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
+            "log": str(log),
+            "repeated_command": repeated_command,
+            "repeated_primary_failure": repeated_primary_failure,
+            "scope": arguments.scope,
+            "warning_fingerprints": summary_fingerprints(warning_items),
+            "warning_fingerprints_truncated": diagnostics.warning_fingerprints_truncated,
+        }
+        if interrupted_signal is not None:
+            run_entry["interrupted_signal"] = interrupted_signal
+            summary["interrupted_signal"] = interrupted_signal
 
-        append_run(
-            ledger,
-            {
-                "sequence": sequence,
-                "scope": arguments.scope,
-                "question": shortened(redact(arguments.question), 1024),
-                "command": display_command(command),
-                "elapsed_seconds": round(elapsed, 3),
-                "exit_status": exit_status,
-                "log": log.name,
-                "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
-                "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
-            },
-        )
+        append_run(ledger, run_entry)
         write_ledger(directory, ledger)
         prune_logs(directory, ledger)
-        emit_summary(
-            {
-                "command": display_command(command),
-                "elapsed_seconds": round(elapsed, 3),
-                "exit_status": exit_status,
-                "excerpt": diagnostics.excerpt,
-                "failed_tasks": diagnostics.failed_tasks,
-                "failed_tasks_truncated": diagnostics.failed_tasks_truncated,
-                "failure_fingerprints": summary_fingerprints(failure_items),
-                "log": str(log),
-                "repeated_command": repeated_command,
-                "repeated_primary_failure": repeated_primary_failure,
-                "scope": arguments.scope,
-                "warning_fingerprints": summary_fingerprints(warning_items),
-                "warning_fingerprints_truncated": diagnostics.warning_fingerprints_truncated,
-                "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
-            }
-        )
+        emit_summary(summary)
         return exit_status
     finally:
         for handled_signal, previous_handler in previous_handlers.items():
