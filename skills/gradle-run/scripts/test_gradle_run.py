@@ -80,7 +80,7 @@ class GradleRunProcessTest(GradleRunTestCase):
         payload = "x" * 200_000
 
         result = self.run_gradle(
-            workflow, "targeted", "Does the focused task pass?", f"print({payload!r})"
+            workflow, "targeted", "Does the focused task pass?", "print('x' * 200_000)"
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
