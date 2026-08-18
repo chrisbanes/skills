@@ -54,6 +54,16 @@ class GradleRunTestCase(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)["workflow"]
 
+    def assert_process_gone(self, pid: int) -> None:
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return
+            time.sleep(0.01)
+        self.fail(f"process {pid} is still running")
+
     def run_gradle(
         self, workflow: str, scope: str, question: str, command: str
     ) -> subprocess.CompletedProcess[str]:
@@ -157,6 +167,22 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertEqual(warning[0]["count"], 2)
         self.assertEqual(len(warning[0]["fingerprint"]), 64)
 
+    def test_kotlin_and_deprecation_warning_formats_are_fingerprinted(self) -> None:
+        workflow = self.create_workflow()
+
+        result = self.run_gradle(
+            workflow,
+            "targeted",
+            "Which compiler and Gradle warnings remain?",
+            "print('w: src/Main.kt:1:1 This declaration needs opt-in'); print('This API has been deprecated and will be removed')",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        warnings = json.loads(result.stdout)["warning_fingerprints"]
+        self.assertEqual(len(warnings), 2)
+        self.assertTrue(any(item["excerpt"].startswith("w:") for item in warnings))
+        self.assertTrue(any("deprecated" in item["excerpt"] for item in warnings))
+
     def test_multiline_failure_is_fingerprinted_as_one_diagnostic_block(self) -> None:
         workflow = self.create_workflow()
 
@@ -193,10 +219,12 @@ class GradleRunProcessTest(GradleRunTestCase):
 
     def test_sigterm_reaps_child_and_records_interrupted_run(self) -> None:
         workflow = self.create_workflow()
-        pid_file = self.root.parent / "child.pid"
+        pid_file = self.root.parent / "descendant.pid"
+        descendant_code = "import time; time.sleep(60)"
         child_code = (
-            "from pathlib import Path; import os, time; "
-            f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
+            "from pathlib import Path; import subprocess, sys, time; "
+            f"descendant = subprocess.Popen([sys.executable, '-c', {descendant_code!r}]); "
+            f"Path({str(pid_file)!r}).write_text(str(descendant.pid)); "
             "time.sleep(60)"
         )
         wrapper = subprocess.Popen(
@@ -238,8 +266,54 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertTrue(Path(summary["log"]).is_file())
         ledger = json.loads((self.root / workflow / "ledger.json").read_text())
         self.assertEqual(ledger["runs"][0]["interrupted_signal"], signal.SIGTERM)
-        with self.assertRaises(ProcessLookupError):
-            os.kill(int(pid_file.read_text()), 0)
+        self.assert_process_gone(int(pid_file.read_text()))
+
+    def test_sigint_reaps_child_and_records_interrupted_run(self) -> None:
+        workflow = self.create_workflow()
+        pid_file = self.root.parent / "child.pid"
+        child_code = (
+            "from pathlib import Path; import os, time; "
+            f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
+            "time.sleep(60)"
+        )
+        wrapper = subprocess.Popen(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--root",
+                str(self.root),
+                "run",
+                "--workflow",
+                workflow,
+                "--scope",
+                "targeted",
+                "--question",
+                "Can Ctrl-C stop the build safely?",
+                "--",
+                str(self.gradle),
+                "--",
+                sys.executable,
+                "-c",
+                child_code,
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        deadline = time.monotonic() + 5
+        while not pid_file.exists() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertTrue(pid_file.exists(), "child did not start")
+
+        wrapper.send_signal(signal.SIGINT)
+        stdout, stderr = wrapper.communicate(timeout=10)
+
+        self.assertEqual(wrapper.returncode, 128 + signal.SIGINT, stderr)
+        summary = json.loads(stdout)
+        self.assertEqual(summary["interrupted_signal"], signal.SIGINT)
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        self.assertEqual(ledger["runs"][0]["interrupted_signal"], signal.SIGINT)
+        self.assert_process_gone(int(pid_file.read_text()))
 
     def test_blank_question_fails_without_running_the_command(self) -> None:
         workflow = self.create_workflow()
@@ -488,6 +562,14 @@ class GradleRunWorkflowTest(GradleRunTestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(json.loads(result.stdout)["already_finished"])
+
+    def test_finish_rejects_an_unknown_valid_workflow_identifier(self) -> None:
+        self.root.mkdir(parents=True)
+
+        result = self.invoke("finish", "--workflow", "0" * 32)
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("unknown workflow identifier", result.stderr)
 
     def test_invalid_workflow_identifier_fails_closed(self) -> None:
         self.root.mkdir(parents=True)

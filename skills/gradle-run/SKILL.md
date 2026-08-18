@@ -62,7 +62,9 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    distinct question that a narrower task cannot answer. The wrapper flags
    repeated commands and primary failure fingerprints; if the primary failure
    repeats, stop the run loop and revise the diagnosis before running another
-   unchanged command.
+   unchanged command. If the wrapper is interrupted, use its recorded signal
+   and retained log; it stops the isolated Gradle process group before
+   returning.
 8. Finish after the requested broad validation passes, or report unresolved
    warning fingerprints and the reason validation cannot continue. Summarize
    the compact ledger, then delete only the wrapper-owned logs:
@@ -71,9 +73,11 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    python3 <skill-dir>/scripts/gradle_run.py finish --workflow <id>
    ```
 
-   If finish cannot validate the managed identifier, leave all files in place
-   and report the failure. This skill does not constrain unrelated review,
-   exploration, implementation, or other subagents.
+   Finish retains a small marker so repeating the same finished identifier is
+   idempotent while an unknown identifier fails closed. If finish cannot
+   validate the managed identifier, leave all files in place and report the
+   failure. This skill does not constrain unrelated review, exploration,
+   implementation, or other subagents.
 
 ## RED/GREEN agent scenarios
 
@@ -89,10 +93,14 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    question string as permission for a blind repeat.
 4. Fail closed: the wrapper, Python runtime, or persistent diagnostic owner is
    unavailable. GREEN runs no direct Gradle fallback and reports the missing
-   prerequisite.
+   prerequisite. A valid-looking but unknown finish identifier also fails; it
+   is not treated as a previously completed workflow.
 5. Counterexample: “After changing this Kotlin helper, run
    `:module:test`.” GREEN uses the wrapper but keeps this incidental focused
    validation with the current agent.
 6. Boundary: while a Gradle workflow runs, a user starts an unrelated review
    subagent. GREEN permits it; this skill owns Gradle output handling and
    diagnostic delegation only.
+7. Interruption: Ctrl-C arrives while Gradle has a worker process. GREEN stops
+   the isolated process group, retains the log, and records SIGINT in the
+   compact ledger before returning.

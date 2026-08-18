@@ -8,6 +8,7 @@ from collections import deque
 from dataclasses import dataclass
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import secrets
@@ -34,7 +35,7 @@ HEARTBEAT_DELAYS = (30.0, 60.0, 120.0, 300.0)
 WORKFLOW_ID = re.compile(r"[a-z0-9]{32}\Z")
 ANSI_ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
 FAILED_TASK = re.compile(r"^> Task (:[^\s]+) FAILED$", re.MULTILINE)
-WARNING = re.compile(r"\bwarning\b", re.IGNORECASE)
+WARNING = re.compile(r"(?:\bwarning\b|\bdeprecat(?:ed|ion)\b|^w:)", re.IGNORECASE)
 FAILURE = re.compile(r"(?:^FAILURE:|^\* What went wrong:|^e:|\berror:)", re.IGNORECASE)
 
 
@@ -77,6 +78,31 @@ def workflow_path(root: Path, workflow: str) -> Path:
     return candidate
 
 
+def finished_path(root: Path, workflow: str) -> Path:
+    directory = workflow_path(root, workflow)
+    return directory.with_name(f"{workflow}.finished")
+
+
+def read_finished(path: Path, workflow: str) -> bool:
+    if path.is_symlink():
+        raise ValueError("managed workflow tombstone is invalid")
+    try:
+        value = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return False
+    except OSError as error:
+        raise ValueError("managed workflow tombstone is unavailable") from error
+    if value != f"{workflow}\n":
+        raise ValueError("managed workflow tombstone is invalid")
+    return True
+
+
+def write_finished(path: Path, workflow: str) -> None:
+    temporary = path.with_name(f"{path.name}.tmp")
+    temporary.write_text(f"{workflow}\n", encoding="utf-8")
+    temporary.replace(path)
+
+
 def read_ledger(directory: Path) -> dict[str, Any]:
     path = directory / "ledger.json"
     try:
@@ -100,6 +126,8 @@ def create_workflow(root: Path) -> int:
     for _ in range(10):
         workflow = secrets.token_hex(16)
         directory = root / workflow
+        if finished_path(root, workflow).exists():
+            continue
         try:
             directory.mkdir(mode=0o700)
         except FileExistsError:
@@ -366,14 +394,50 @@ def wait_for_child(child: subprocess.Popen[bytes], sequence: int) -> int:
             timer.join()
 
 
-def terminate_child(child: subprocess.Popen[bytes]) -> None:
-    if child.poll() is not None:
+def terminate_child(
+    child: subprocess.Popen[bytes], *, isolated_process_group: bool = False
+) -> None:
+    def terminate_direct_child() -> None:
+        if child.poll() is not None:
+            return
+        child.terminate()
+        try:
+            child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait()
+
+    if os.name != "posix" or not isolated_process_group:
+        terminate_direct_child()
         return
-    child.terminate()
+
+    process_group = child.pid
+
+    def group_exists() -> bool:
+        try:
+            os.killpg(process_group, 0)
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            return True
+        return True
+
     try:
-        child.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        child.kill()
+        os.killpg(process_group, signal.SIGTERM)
+    except ProcessLookupError:
+        child.wait()
+        return
+
+    deadline = time.monotonic() + 5
+    while group_exists() and time.monotonic() < deadline:
+        child.poll()
+        time.sleep(0.05)
+    if group_exists():
+        try:
+            os.killpg(process_group, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    if child.poll() is None:
         child.wait()
 
 
@@ -404,15 +468,25 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
     launch_error: OSError | None = None
     exit_status = 125
     with output:
-        previous_sigterm = signal.getsignal(signal.SIGTERM)
+        handled_signals = (signal.SIGINT, signal.SIGTERM)
+        previous_handlers = {
+            handled_signal: signal.getsignal(handled_signal)
+            for handled_signal in handled_signals
+        }
 
         def interrupt_child(signum: int, _frame: Any) -> None:
             raise ProcessInterrupted(signum)
 
-        signal.signal(signal.SIGTERM, interrupt_child)
+        for handled_signal in handled_signals:
+            signal.signal(handled_signal, interrupt_child)
         try:
             try:
-                child = subprocess.Popen(command, stdout=output, stderr=subprocess.STDOUT)
+                child = subprocess.Popen(
+                    command,
+                    stdout=output,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=os.name == "posix",
+                )
             except OSError as error:
                 launch_error = error
             else:
@@ -420,13 +494,14 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
         except ProcessInterrupted as error:
             interruption = error
             if child is not None:
-                terminate_child(child)
+                terminate_child(child, isolated_process_group=os.name == "posix")
         except BaseException:
             if child is not None:
-                terminate_child(child)
+                terminate_child(child, isolated_process_group=os.name == "posix")
             raise
         finally:
-            signal.signal(signal.SIGTERM, previous_sigterm)
+            for handled_signal, previous_handler in previous_handlers.items():
+                signal.signal(handled_signal, previous_handler)
 
     if launch_error is not None:
         log.unlink(missing_ok=True)
@@ -521,11 +596,19 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
 
 def finish_workflow(root: Path, workflow: str) -> int:
     directory = workflow_path(root, workflow)
+    tombstone = finished_path(root, workflow)
     if not directory.exists():
+        if not read_finished(tombstone, workflow):
+            raise ValueError("unknown workflow identifier")
         print(json.dumps({"already_finished": True, "finished": workflow}, sort_keys=True))
         return 0
     read_ledger(directory)
-    shutil.rmtree(directory)
+    write_finished(tombstone, workflow)
+    try:
+        shutil.rmtree(directory)
+    except BaseException:
+        tombstone.unlink(missing_ok=True)
+        raise
     print(json.dumps({"finished": workflow}, sort_keys=True))
     return 0
 
