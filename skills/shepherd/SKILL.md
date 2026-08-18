@@ -14,7 +14,7 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 ## Procedure
 
 1. Detect the platform with `git remote get-url origin`. Use `gh` for a remote containing `github.com`; use `glab` for one containing `gitlab`. If detection is ambiguous or unavailable, stop and ask.
-2. Establish the target PRs/MRs and record the last-seen comment/review IDs, CI state, and your own comments.
+2. Establish the target PRs/MRs. Start with an explicit handled-ID snapshot if one exists; otherwise use an empty snapshot. Treat every external comment, review, and thread absent from it as unprocessed, including feedback that predates this session. Record the resulting IDs, CI state, and your own comments after each poll.
 3. Before repeated polling, attempt to dispatch one lowest-cost available read-only **evidence-helper subagent**. Give it the targets and last-seen snapshot; require it to return each new feedback item's ID, body, and location, plus approval/request state, non-manual CI state, failed job names, and log references. Prohibit local or remote mutation. If no such subagent or cost control is available, poll directly. Keep triage, code changes, replies, pushes, thread resolution, retries, and merging with the authorized controller.
 4. Poll the target(s), using that helper when dispatched:
    - GitHub: `gh pr list`, `gh pr view <number> --json comments,reviews,reviewDecision,statusCheckRollup`, `gh pr checks <number>`, and `gh run view <run-id> --log-failed`. When inline review-thread IDs are needed to reply or resolve, query the PR's `reviewThreads` through `gh api graphql`.
@@ -31,6 +31,6 @@ Continue until the user stops monitoring, every target is merged or closed, or a
 
 ## Scenario checks
 
-- **Green:** The structured evidence response has a new `REQUESTED_CHANGES` review, two inline comments, and a failed lint job. The controller fixes both comments locally, runs lint, makes one push, replies and resolves only after the push succeeds, then waits for CI.
+- **Green:** With no handled snapshot, shepherd begins after a `REQUESTED_CHANGES` review, two inline comments, and a failed lint job already exist. The structured evidence response returns that feedback and failure; the controller fixes both comments locally, runs lint, makes one push, replies and resolves only after the push succeeds, then waits for CI.
 - **Red:** The evidence helper sees `APPROVED` while CI is still running. Do not merge, push, resolve unrelated threads, or post a status-only comment; keep monitoring until the merge gate is actually met.
 - **Counterexample:** A user asks for a one-off PR status or there are no open targets. Report the state; do not dispatch a helper or start the polling loop.
