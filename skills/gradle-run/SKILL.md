@@ -59,18 +59,20 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    the parent run the workflow loop.
 6. Have that owner reuse prior actionable summaries, group warnings and
    failures by fingerprint, and return exact file or line evidence plus the
-   narrowest next command. Run an initial broad command only when existing
-   targeted evidence cannot answer the recorded question. The owner stays
-   available for the whole workflow and verifies each parent change with the
-   same wrapper and the narrowest applicable task.
+   narrowest next command. Prefer source or compiler failure fingerprints over
+   a following generic Gradle failure block. Run an initial broad command only
+   when existing targeted evidence cannot answer the recorded question. The
+   owner stays available for the whole workflow and verifies each parent
+   change with the same wrapper and the narrowest applicable task.
 7. Record `broad` only for aggregate project checks. Give every broad run a
    distinct question that a narrower task cannot answer. The wrapper flags
    repeated commands and primary failure fingerprints; if the primary failure
    repeats, stop the run loop and revise the diagnosis before running another
    unchanged command. If the wrapper is interrupted, use its recorded signal
    and retained log; it stops the isolated Gradle process group or Windows
-   process tree and makes the ledger durable before returning. Only logs still
-   represented by the bounded recent-run ledger are retained.
+   process tree, extracts bounded diagnostics from the partial log, and makes
+   the ledger durable before returning. Only logs still represented by the
+   bounded recent-run ledger are retained.
 8. Finish after the requested broad validation passes, or report unresolved
    warning fingerprints and the reason validation cannot continue. Summarize
    the compact ledger, then delete only the wrapper-owned logs:
@@ -97,7 +99,8 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    broad-reruns once that task passes.
 3. Repetition: an unchanged failure fingerprint survives a claimed fix. GREEN
    stops rebuilding and asks for a revised diagnosis; it does not treat a new
-   question string as permission for a blind repeat.
+   question string as permission for a blind repeat. A changed source failure
+   remains primary even when the following generic Gradle block is unchanged.
 4. Fail closed: the wrapper, Python runtime, or persistent diagnostic owner is
    unavailable. GREEN runs no direct Gradle fallback and reports the missing
    prerequisite. A valid-looking but unknown finish identifier also fails; it
@@ -108,10 +111,11 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
 6. Boundary: while a Gradle workflow runs, a user starts an unrelated review
    subagent. GREEN permits it; this skill owns Gradle output handling and
    diagnostic delegation only.
-7. Interruption: Ctrl-C arrives twice while Gradle has a signal-resistant
-   worker process. GREEN tolerates the second signal, stops the isolated process
-   group, retains the log, and records SIGINT in the compact ledger before
-   returning. RED re-enters cleanup, leaves either process running, or loses the
+7. Interruption: Ctrl-C arrives twice after Gradle emits a diagnostic and enters
+   a signal-resistant worker process. GREEN tolerates the second signal, stops
+   the isolated process group, extracts the partial diagnostic, retains the
+   log, and records SIGINT in the compact ledger before returning. RED re-enters
+   cleanup, leaves either process running, or loses the diagnostic or
    interruption record.
 8. Exclusive ownership: a second run or finish request uses an active workflow.
    GREEN fails closed before launching or deleting anything. RED overwrites a

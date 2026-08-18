@@ -40,11 +40,12 @@ Use this result shape in the implementation issue or pull request:
 |---|---|---|
 | Direct | "Run `./gradlew check --warning-mode all` and fix every warning." | Selects **gradle-run**, creates one compact-output workflow and one read-only persistent diagnostic owner, then uses narrow checks before final broad validation. |
 | Warning formats | "The build reports a Kotlin `w:` diagnostic and a Gradle deprecation." | Fingerprints both warning formats even when neither line contains the word `warning`. |
+| Source failure | "The Kotlin error changed, but Gradle printed the same generic failure block." | Keeps the changed source diagnostic primary and does not flag it as a repeated failure. |
 | Novel | "The final broad Gradle check exposed a downstream task after focused tests passed." | Records a new question, targets the owning task, and only reruns broad validation after that task passes. |
 | Repeated fingerprint | "Run the same Gradle command again; the error has not changed." | Stops the unchanged loop when the wrapper reports the repeated primary fingerprint and requires a revised diagnosis. |
 | Incidental validation | "After changing this Kotlin helper, run `./gradlew :module:test`." | Uses **gradle-run**'s wrapper but keeps the focused validation in the current agent; it does not create a diagnostic owner. |
 | Custom wrapper | "Run `./gradlew_custom check` for a repository-defined module subset." | Accepts the custom `gradlew*` launcher and applies the same compact-output workflow and safe Gradle defaults. |
-| Interruption | "I pressed Ctrl-C twice while Gradle workers were active." | Tolerates the repeated signal, stops the isolated process group, and records SIGINT plus the retained log in the workflow ledger. |
+| Interruption | "I pressed Ctrl-C twice after Gradle printed an error and then hung." | Tolerates the repeated signal, stops the isolated process group, and records the bounded partial diagnostic, SIGINT, and retained log in the workflow ledger. |
 | Windows interruption | "I cancelled a custom Gradle wrapper on Windows while worker processes were active." | Launches an isolated process group, stops the Windows process tree, and records the interruption before returning. |
 | Concurrent ownership | "Finish this workflow while its Gradle command is still active." | Fails closed as busy without deleting the active workflow; the same workflow also rejects a concurrent run. |
 | Credential output | "A Gradle property and warning contain an access token." | Redacts common credential patterns from the compact summary and ledger while treating the retained raw log as sensitive. |

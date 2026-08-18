@@ -37,6 +37,7 @@ ANSI_ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))
 FAILED_TASK = re.compile(r"^> Task (:[^\s]+) FAILED$", re.MULTILINE)
 WARNING = re.compile(r"(?:\bwarning\b|\bdeprecat(?:ed|ion)\b|^w:)", re.IGNORECASE)
 FAILURE = re.compile(r"(?:^FAILURE:|^\* What went wrong:|^e:|\berror:)", re.IGNORECASE)
+SOURCE_FAILURE = re.compile(r"(?:^e:|\berror:)", re.IGNORECASE)
 AUTHORIZATION_VALUE = re.compile(
     r"(\bauthorization\s*:\s*)(?:bearer\s+)?[^\r\n]+", re.IGNORECASE
 )
@@ -259,6 +260,8 @@ def extract_diagnostics(log: Path) -> Diagnostics:
     failed_tasks_truncated = False
     warnings: dict[str, dict[str, Any]] = {}
     warning_overflow = 0
+    source_failures: dict[str, dict[str, Any]] = {}
+    source_failure_overflow = 0
     standalone_failures: dict[str, dict[str, Any]] = {}
     standalone_failure_overflow = 0
     failure_blocks: dict[str, dict[str, Any]] = {}
@@ -319,14 +322,22 @@ def extract_diagnostics(log: Path) -> Diagnostics:
                     else:
                         failure_block_truncated = True
                     continue
-            if FAILURE.search(line):
+            if SOURCE_FAILURE.search(line):
+                source_failure_overflow += add_fingerprint(source_failures, line)
+            elif FAILURE.search(line):
                 standalone_failure_overflow += add_fingerprint(standalone_failures, line)
 
     finish_failure_block()
-    failures = failure_blocks if saw_failure_block else standalone_failures
-    failure_overflow = (
+    secondary_failures = failure_blocks if saw_failure_block else standalone_failures
+    failure_overflow = source_failure_overflow + (
         failure_block_overflow if saw_failure_block else standalone_failure_overflow
     )
+    failures = dict(source_failures)
+    for value, item in secondary_failures.items():
+        if len(failures) < MAX_STORED_FINGERPRINTS:
+            failures[value] = item
+        else:
+            failure_overflow += item["count"]
     return Diagnostics(
         failed_tasks=failed_tasks,
         failed_tasks_truncated=failed_tasks_truncated,
@@ -652,38 +663,6 @@ def run_locked(root: Path, arguments: argparse.Namespace) -> int:
             return 125
 
         elapsed = time.monotonic() - started
-        if interruption is not None:
-            exit_status = 128 + interruption.signum
-            append_run(
-                ledger,
-                {
-                    "sequence": sequence,
-                    "scope": arguments.scope,
-                    "question": shortened(redact(arguments.question), 1024),
-                    "command": display_command(command),
-                    "elapsed_seconds": round(elapsed, 3),
-                    "exit_status": exit_status,
-                    "interrupted_signal": interruption.signum,
-                    "log": log.name,
-                    "failure_fingerprints": [],
-                    "warning_fingerprints": [],
-                },
-            )
-            write_ledger(directory, ledger)
-            prune_logs(directory, ledger)
-            emit_summary(
-                {
-                    "command": display_command(command),
-                    "elapsed_seconds": round(elapsed, 3),
-                    "exit_status": exit_status,
-                    "interrupted_signal": interruption.signum,
-                    "log": str(log),
-                    "repeated_command": repeated_command,
-                    "scope": arguments.scope,
-                }
-            )
-            return exit_status
-
         diagnostics = extract_diagnostics(log)
         warning_items = diagnostics.warning_fingerprints
         failure_items = diagnostics.failure_fingerprints
@@ -702,6 +681,46 @@ def run_locked(root: Path, arguments: argparse.Namespace) -> int:
             failure_items,
             diagnostics.failure_fingerprints_truncated,
         )
+        if interruption is not None:
+            exit_status = 128 + interruption.signum
+            append_run(
+                ledger,
+                {
+                    "sequence": sequence,
+                    "scope": arguments.scope,
+                    "question": shortened(redact(arguments.question), 1024),
+                    "command": display_command(command),
+                    "elapsed_seconds": round(elapsed, 3),
+                    "exit_status": exit_status,
+                    "interrupted_signal": interruption.signum,
+                    "log": log.name,
+                    "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
+                    "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
+                },
+            )
+            write_ledger(directory, ledger)
+            prune_logs(directory, ledger)
+            emit_summary(
+                {
+                    "command": display_command(command),
+                    "elapsed_seconds": round(elapsed, 3),
+                    "exit_status": exit_status,
+                    "excerpt": diagnostics.excerpt,
+                    "failed_tasks": diagnostics.failed_tasks,
+                    "failed_tasks_truncated": diagnostics.failed_tasks_truncated,
+                    "failure_fingerprints": summary_fingerprints(failure_items),
+                    "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
+                    "interrupted_signal": interruption.signum,
+                    "log": str(log),
+                    "repeated_command": repeated_command,
+                    "repeated_primary_failure": repeated_primary_failure,
+                    "scope": arguments.scope,
+                    "warning_fingerprints": summary_fingerprints(warning_items),
+                    "warning_fingerprints_truncated": diagnostics.warning_fingerprints_truncated,
+                }
+            )
+            return exit_status
+
         append_run(
             ledger,
             {

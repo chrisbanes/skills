@@ -445,6 +445,64 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertEqual(ledger["runs"][0]["interrupted_signal"], signal.SIGINT)
         self.assert_process_gone(int(pid_file.read_text()))
 
+    def test_interrupted_run_preserves_partial_diagnostics(self) -> None:
+        workflow = self.create_workflow()
+        pid_file = self.root.parent / "diagnostic-child.pid"
+        child_code = (
+            "from pathlib import Path; import os, time; "
+            "print('e: Unresolved reference: missingAfterInterrupt', flush=True); "
+            "print('warning: partial warning remains', flush=True); "
+            f"Path({str(pid_file)!r}).write_text(str(os.getpid())); "
+            "time.sleep(60)"
+        )
+        wrapper = subprocess.Popen(
+            [
+                sys.executable,
+                str(SCRIPT),
+                "--root",
+                str(self.root),
+                "run",
+                "--workflow",
+                workflow,
+                "--scope",
+                "targeted",
+                "--question",
+                "What evidence was emitted before interruption?",
+                "--",
+                str(self.gradle),
+                "--",
+                sys.executable,
+                "-c",
+                child_code,
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        deadline = time.monotonic() + 5
+        while not pid_file.exists() and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertTrue(pid_file.exists(), "child did not start")
+
+        wrapper.send_signal(signal.SIGINT)
+        stdout, stderr = wrapper.communicate(timeout=10)
+
+        self.assertEqual(wrapper.returncode, 128 + signal.SIGINT, stderr)
+        summary = json.loads(stdout)
+        self.assertIn(
+            "missingAfterInterrupt", summary["failure_fingerprints"][0]["excerpt"]
+        )
+        self.assertIn("partial warning", summary["warning_fingerprints"][0]["excerpt"])
+        ledger = json.loads((self.root / workflow / "ledger.json").read_text())
+        self.assertTrue(ledger["runs"][0]["failure_fingerprints"])
+        self.assertTrue(ledger["runs"][0]["warning_fingerprints"])
+        self.assertTrue(
+            any(
+                "missingAfterInterrupt" in item["excerpt"]
+                for item in ledger["failure_fingerprints"].values()
+            )
+        )
+
     def test_repeated_sigint_during_cleanup_records_interrupted_run(self) -> None:
         workflow = self.create_workflow()
         pid_file = self.root.parent / "signal-resistant-child.pid"
@@ -887,6 +945,35 @@ class GradleRunWorkflowTest(GradleRunTestCase):
 
         self.assertEqual(result.returncode, 1)
         self.assertTrue(json.loads(result.stdout)["repeated_primary_failure"])
+
+    def test_changed_source_failure_is_not_masked_by_the_gradle_block(self) -> None:
+        workflow = self.create_workflow()
+        generic_block = (
+            "print('FAILURE: Build failed'); "
+            "print('e: Unresolved reference: {source}'); "
+            "print('* What went wrong:'); "
+            "print('Execution failed for task compileKotlin'); "
+            "raise SystemExit(1)"
+        )
+        first = self.run_gradle(
+            workflow,
+            "targeted",
+            "What is the first source failure?",
+            generic_block.format(source="firstSymbol"),
+        )
+        self.assertEqual(first.returncode, 1)
+
+        second = self.run_gradle(
+            workflow,
+            "targeted",
+            "Did the source failure change?",
+            generic_block.format(source="secondSymbol"),
+        )
+
+        self.assertEqual(second.returncode, 1)
+        summary = json.loads(second.stdout)
+        self.assertFalse(summary["repeated_primary_failure"])
+        self.assertIn("secondSymbol", summary["failure_fingerprints"][0]["excerpt"])
 
     def test_warning_fingerprints_are_deduplicated_across_runs(self) -> None:
         workflow = self.create_workflow()
