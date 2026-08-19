@@ -1135,7 +1135,8 @@ def analyze_wayfinder_ticket(
     planning_status: str,
     priorities: tuple[str, ...],
     execution_approvers: tuple[str, ...],
-    wayfinder_labels: dict[str, str],
+    wayfinder_map_label: str,
+    wayfinder_child_labels: dict[str, str],
 ) -> dict[str, Any]:
     number = ticket["number"]
     common = analyze_common_ticket(
@@ -1153,13 +1154,13 @@ def analyze_wayfinder_ticket(
 
     types = [
         ticket_type
-        for ticket_type in ("research", "prototype", "grilling", "task")
-        if wayfinder_labels[ticket_type] in labels
+        for ticket_type, label in wayfinder_child_labels.items()
+        if label in labels
     ]
     if len(types) != 1:
         raise InputError("expected exactly one Wayfinder type label")
     ticket_type = types[0]
-    parse_wayfinder_parent(ticket, map_label=wayfinder_labels["map"])
+    parse_wayfinder_parent(ticket, map_label=wayfinder_map_label)
 
     if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
@@ -1253,6 +1254,15 @@ def main() -> int:
         if len(set(execution_approvers)) != len(execution_approvers):
             raise InputError("execution approvers must be unique")
         wayfinder_labels = configured_wayfinder_labels(args)
+        wayfinder_child_labels = (
+            {
+                ticket_type: label
+                for ticket_type, label in wayfinder_labels.items()
+                if ticket_type != "map"
+            }
+            if wayfinder_labels is not None
+            else {}
+        )
         statuses = (
             args.backlog_status,
             args.planning_status,
@@ -1301,13 +1311,7 @@ def main() -> int:
                     wayfinder_labels is not None
                     and isinstance(labels, list)
                     and any(
-                        label
-                        in (
-                            wayfinder_labels["research"],
-                            wayfinder_labels["prototype"],
-                            wayfinder_labels["grilling"],
-                            wayfinder_labels["task"],
-                        )
+                        label in wayfinder_child_labels.values()
                         for label in labels
                         if isinstance(label, str)
                     )
@@ -1338,7 +1342,8 @@ def main() -> int:
                             planning_status=args.planning_status,
                             priorities=priorities,
                             execution_approvers=execution_approvers,
-                            wayfinder_labels=wayfinder_labels,
+                            wayfinder_map_label=wayfinder_labels["map"],
+                            wayfinder_child_labels=wayfinder_child_labels,
                         ),
                     )
                 elif (

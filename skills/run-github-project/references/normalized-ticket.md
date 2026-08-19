@@ -79,6 +79,8 @@ shape above plus its direct parent and, for a task, its controller-derived mode:
     "labels": ["wayfinder:map"]
   },
   "labels": ["wayfinder:research"],
+  "readyTransition": null,
+  "implementationPlans": [],
   "wayfinderTaskMode": null,
   "wayfinderAfkEvidence": null
 }
@@ -88,7 +90,8 @@ The parent must be the direct map parent, not an inferred ancestor. Use exactly
 one configured type label. Research is AFK; prototype and grilling are HITL.
 For a task, use `"afk"` only with non-empty fresh evidence that every action is
 safely autonomous; use `"hitl"` or `null` for a human or ambiguous task.
-Wayfinder children do not require implementation plans or Ready transitions.
+Wayfinder children require the schema fields above, but not a Ready transition
+or any implementation-plan entries.
 
 Use the same canonical shape for Backlog triage contenders, with transition and
 replan fields set to `null` and `implementationPlans` empty when absent. Backlog

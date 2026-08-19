@@ -230,8 +230,6 @@ Leave tickets added after that query for the next invocation.
    - Backlog Status plus the exact `ready-for-agent`, configured epic,
      configured human-work, or configured `needs-triage` label for the Backlog
      frontier.
-   - When Wayfinder is enabled, retain Planning items carrying any configured
-     Wayfinder type label for its child-and-map eligibility check.
 4. Record draft, pull-request, redacted, cross-repository, closed, malformed,
    or filter-excluded items as ineligible. Never convert draft items into
    tickets or use a named Project view implicitly.
