@@ -68,6 +68,28 @@ paginated GitHub and Project reads. Use this shape for execution contenders:
 }
 ```
 
+When Wayfinder is enabled, a configured Wayfinder child uses the Planning
+shape above plus its direct parent and, for a task, its controller-derived mode:
+
+```json
+{
+  "parentIssue": {
+    "number": 7,
+    "state": "OPEN",
+    "labels": ["wayfinder:map"]
+  },
+  "labels": ["wayfinder:research"],
+  "wayfinderTaskMode": null,
+  "wayfinderAfkEvidence": null
+}
+```
+
+The parent must be the direct map parent, not an inferred ancestor. Use exactly
+one configured type label. Research is AFK; prototype and grilling are HITL.
+For a task, use `"afk"` only with non-empty fresh evidence that every action is
+safely autonomous; use `"hitl"` or `null` for a human or ambiguous task.
+Wayfinder children do not require implementation plans or Ready transitions.
+
 Use the same canonical shape for Backlog triage contenders, with transition and
 replan fields set to `null` and `implementationPlans` empty when absent. Backlog
 `openPullRequests` entries need only `number`, `url`, and `closesIssue`; omit
@@ -194,6 +216,9 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
     {"ticket": {"number": 45}, "action": "claim"},
     {"ticket": {"number": 46}, "action": "plan"}
   ],
+  "wayfinderHumanFrontier": [
+    {"ticket": {"number": 52}, "action": "resolve-wayfinder-hitl", "type": "grilling"}
+  ],
   "triageCandidates": [
     {"ticket": {"number": 47}, "action": "triage"}
   ],
@@ -230,6 +255,13 @@ verified. Triage candidates are ordered separately and run only through
 [Backlog Triage Lane](triage-lane.md). Process ready epics and human actions
 through [Epics And Human Frontier](human-frontier.md); Backlog `parkedBlocked`
 items consume neither a slot nor an agent.
+
+When enabled, the ranker emits an AFK Wayfinder candidate as `wayfind` and an
+assigned one as `resume-wayfind`; both are Planning work and consume no
+implementation slot. It returns configured prototype, grilling, HITL, and
+ambiguous task children in `wayfinderHumanFrontier`, ordered by Priority,
+position, and issue number. Route both forms through
+[Wayfinder Planning Lane](wayfinder-lane.md).
 
 Before invoking the ranker, apply the drain scheduler's
 [Terminal Required-CI Parking](drain-scheduler.md#terminal-required-ci-parking)

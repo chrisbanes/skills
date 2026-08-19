@@ -8,6 +8,7 @@ Never install a provider implicitly.
 | --- | --- | --- |
 | `tdd` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill tdd` |
 | `triage` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill triage` |
+| `wayfinder` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill wayfinder` |
 
 If `tdd` is unavailable, stop the execution lane and report its source and
 exact install command. Permit a triage-only tail run to continue.
@@ -20,6 +21,11 @@ marker-owned plans and handoffs are current.
 `needs-triage` item. If it is unavailable, block only the triage lane, continue
 authorized execution, and report its source and exact install command from the
 table.
+
+`wayfinder` is required only while resolving an eligible configured Wayfinder
+child. If it is unavailable, block only that Wayfinder Planning item and
+continue ordinary planning and execution. Never install it implicitly or copy
+its decision-map procedure into this workflow.
 
 The explicit `run-github-project` procedure may dispatch `triage` to its
 recommendation boundary. Its disabled implicit invocation and maintainer

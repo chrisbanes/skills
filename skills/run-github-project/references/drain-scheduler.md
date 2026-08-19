@@ -46,6 +46,11 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    [Epics And Human Frontier](human-frontier.md). They consume neither a slot
    nor agent capacity. Serialize epic closure in the controller lane, surface
    changed human actions immediately, and continue independent work.
+11. Keep configured Wayfinder work in the same single planning lane. Give it
+    one durable planning owner; use spare capacity only for independent
+    read-only research helpers. The controller serializes every Wayfinder
+    assignment, comment, closure, map edit, issue creation, Project addition,
+    and dependency mutation.
 
 ## Parallel Workers And Controller Lane
 
@@ -171,7 +176,8 @@ dispatching the next:
    until the in-flight or active-agent limit is reached.
 8. Start the next ranked `Planning` item with the default-owner capability only
    when the planning lane and active agent capacity are free after maximizing
-   runnable implementation.
+   runnable implementation. An AFK Wayfinder research or task item uses this
+   same step. Surface Wayfinder HITL work without dispatching it.
 9. Monitor all remote slots together only when no local or controller action
    remains.
 10. After the authoritative execution-clear predicate in
@@ -179,8 +185,9 @@ dispatching the next:
    unblocked Backlog `needs-triage` item through the triage tail lane.
 
 At startup and after every refreshed query, present the changed human frontier
-packet from [Epics And Human Frontier](human-frontier.md). Never wait for its
-actions while any step above remains runnable.
+packet from [Epics And Human Frontier](human-frontier.md), together with the
+ordered Wayfinder human frontier. Never wait for either while any step above
+remains runnable.
 
 ### Refresh Gate
 
@@ -345,9 +352,10 @@ Pass the refresh gate before evaluating the finish state. Finish successfully
 only when the authoritative execution-clear predicate in
 [Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, the complete live
 query has no non-deferred triage candidate after merge reconciliation, and no
-human action remains. Dependency-parked Backlog items do not prevent success;
+human or Wayfinder HITL action remains. Dependency-parked Backlog items do not prevent success;
 report their live blockers. If only human actions remain, return
-`waiting-for-human` through [Epics And Human Frontier](human-frontier.md). If no
+`waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and
+the Wayfinder frontier. If no
 runnable work remains but a parked implementation claim, blocked or timed-out
 slot, or incomplete eligible triage item remains, stop with a partial-drain
 report, preserve every affected worktree, branch, PR, assignment, and

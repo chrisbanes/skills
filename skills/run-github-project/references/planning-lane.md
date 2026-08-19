@@ -3,6 +3,11 @@
 Use this lifecycle for Project items in `Planning` and for the verified handoff
 into implementation.
 
+Configured Wayfinder children take the separate integration branch in
+[Wayfinder Planning Lane](wayfinder-lane.md). They share this lane's scheduling
+class and non-preemption rules, but never use the implementation-plan marker,
+Ready handoff, or implementation lifecycle below.
+
 ## Authority And Plan State
 
 Require both:
@@ -240,7 +245,7 @@ order:
 3. contract-preserving replan claims;
 4. other resumable Planning and verified handoff claims;
 5. new `Ready to implement` candidates;
-6. new `Planning` candidates.
+6. new `Planning` candidates, including configured AFK Wayfinder children.
 
 Within a class, use configured Priority, visible Project position, then issue
 number.
@@ -252,6 +257,11 @@ Do not select another issue.
 In `drain`, follow the
 [Drain Scheduler](drain-scheduler.md#scheduling) for planner dispatch,
 active-agent capacity, and non-preemption.
+
+An unclaimed Wayfinder prototype, grilling ticket, or HITL/ambiguous task is a
+human-frontier item, not an autonomous candidate. In `next`, process it only
+when selected with fresh per-ticket Wayfinder authority; in `drain`, surface it
+without pausing independent work.
 
 ## Migration Gate
 

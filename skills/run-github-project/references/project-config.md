@@ -49,6 +49,20 @@ closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 - Human-work label: `<repository label mapped to ready-for-human>`
 - Human-work label ID: `<LA_...>`
 
+## Wayfinder (optional)
+
+- Enabled: `<true or false>`
+- Map label: `<wayfinder:map>`
+- Map label ID: `<LA_...>`
+- Research label: `<wayfinder:research>`
+- Research label ID: `<LA_...>`
+- Prototype label: `<wayfinder:prototype>`
+- Prototype label ID: `<LA_...>`
+- Grilling label: `<wayfinder:grilling>`
+- Grilling label ID: `<LA_...>`
+- Task label: `<wayfinder:task>`
+- Task label ID: `<LA_...>`
+
 ## Priority
 
 - Field name: `<Priority>`
@@ -77,6 +91,13 @@ Treat the epic label as a work-shape declaration and the human-work label as a
 next-action role. Require both mappings even when the current Project has no
 matching issue. Never infer either role from issue titles or bodies. Humans
 create and rename role labels; never do so from this workflow.
+
+Omit the Wayfinder section, or set `Enabled` to `false`, to preserve the
+ordinary workflow unchanged. When enabled, require every displayed Wayfinder
+name and ID pair, validate each pair live at startup, and reject an ID that
+resolves to another label. A renamed matching ID is repairable drift. The map
+label identifies the parent map; the other four labels are mutually exclusive
+child types. Never create, rename, or infer any of them.
 
 Humans own the Project schema. Never create or rename Status options from the
 runner. Before migrating an existing queue, require zero `In progress` items
