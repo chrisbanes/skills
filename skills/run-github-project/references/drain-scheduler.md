@@ -352,8 +352,9 @@ Pass the refresh gate before evaluating the finish state. Finish successfully
 only when the authoritative execution-clear predicate in
 [Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, the complete live
 query has no non-deferred triage candidate after merge reconciliation, and no
-human or Wayfinder HITL action remains. Dependency-parked Backlog items do not prevent success;
-report their live blockers. If only human actions remain, return
+human action or Wayfinder human-frontier item remains. Dependency-parked
+Backlog items do not prevent success; report their live blockers. If only human
+actions and/or Wayfinder human-frontier items remain, return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and
 the Wayfinder frontier. If no
 runnable work remains but a parked implementation claim, blocked or timed-out

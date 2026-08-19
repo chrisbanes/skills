@@ -647,10 +647,11 @@ isolation rules from the drain scheduler.
    automatically; follow the scheduler's base-drift rules.
 
 Finish `next` after one selected execution issue reaches a confirmed terminal
-outcome and the post-merge live query succeeds, or after one tail-lane triage
+outcome and the post-merge live query succeeds; after a selected Wayfinder
+child reaches its reconciled terminal outcome; or after one tail-lane triage
 issue or ready epic reaches a reconciled outcome when no executable issue
 exists. Return `waiting-for-human` instead when no autonomous action exists and
-the live human frontier is non-empty. For `drain`, treat
+the live human or Wayfinder human frontier is non-empty. For `drain`, treat
 [Failure Isolation And Finish Gate](references/drain-scheduler.md#failure-isolation-and-finish-gate)
 as the authoritative success, partial-drain, preservation, and cleanup
 procedure. In `next`, preserve the worktree, branch, PR, assignment, and In
