@@ -1,3 +1,4 @@
+import shlex
 import tempfile
 import unittest
 from pathlib import Path
@@ -587,6 +588,11 @@ class DeterministicGradeTest(unittest.TestCase):
                 },
             ),
         )
+        backgrounded = (
+            "python3 gradle_run.py create && "
+            "python3 gradle_run.py run && "
+            "python3 gradle_run.py finish &"
+        )
 
         masked_grade = grade_subject(case, masked_failure)
         self.assertIn(
@@ -602,6 +608,49 @@ class DeterministicGradeTest(unittest.TestCase):
             masked_grade.objective_failures,
         )
         self.assertTrue(grade_subject(case, guaranteed_success).objective_pass)
+        for command in (backgrounded, f"zsh -lc {shlex.quote(backgrounded)}"):
+            with self.subTest(command=command):
+                background_grade = grade_subject(
+                    case,
+                    make_result(
+                        self.workspace,
+                        events=(
+                            {
+                                "type": "item.completed",
+                                "item": {
+                                    "type": "command_execution",
+                                    "command": command,
+                                    "exit_code": 0,
+                                },
+                            },
+                        ),
+                    ),
+                )
+                self.assertIn(
+                    f"required command evidence missing: {patterns[1]}",
+                    background_grade.objective_failures,
+                )
+
+        quoted_ampersand_case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": (r"\brun\b",),
+            }
+        )
+        quoted_ampersand = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "python3 gradle_run.py run --question '&'",
+                        "exit_code": 0,
+                    },
+                },
+            ),
+        )
+        self.assertTrue(grade_subject(quoted_ampersand_case, quoted_ampersand).objective_pass)
 
     def test_required_gradle_workflow_uses_one_ordered_identifier(self):
         case = make_case(self.workspace)

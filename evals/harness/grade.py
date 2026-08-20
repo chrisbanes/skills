@@ -240,6 +240,39 @@ def _command_substitutions(command: str) -> tuple[str, ...]:
     return tuple(substitutions)
 
 
+def _ends_with_background_operator(command: str) -> bool:
+    quote: str | None = None
+    last_token = ""
+    index = 0
+    while index < len(command):
+        character = command[index]
+        if character == "\\" and quote != "'":
+            last_token = "word"
+            index += 2
+            continue
+        if quote is not None:
+            if character == quote:
+                quote = None
+            last_token = "word"
+            index += 1
+            continue
+        if character in {"'", '"', "`"}:
+            quote = character
+            last_token = "word"
+        elif character.isspace():
+            pass
+        elif character == "&":
+            if index + 1 < len(command) and command[index + 1] == "&":
+                last_token = "word"
+                index += 1
+            else:
+                last_token = "background"
+        else:
+            last_token = "word"
+        index += 1
+    return last_token == "background"
+
+
 def _is_gradle_executable(token: str) -> bool:
     executable = PurePosixPath(token).name
     return executable == "gradle" or executable.startswith("gradlew")
@@ -259,6 +292,8 @@ def _including_nested_gradle(
 
 def _segment_invocations(
     tokens: tuple[str, ...],
+    *,
+    successful_only: bool = False,
 ) -> tuple[tuple[str, ...], ...]:
     index = 0
     while index < len(tokens):
@@ -285,12 +320,14 @@ def _segment_invocations(
                 } and index < len(tokens):
                     index += 1
                 elif option in {"-S", "--split-string"} and index < len(tokens):
-                    return _command_invocations(
-                        " ".join((tokens[index], shlex.join(tokens[index + 1 :])))
+                    return _nested_invocations(
+                        " ".join((tokens[index], shlex.join(tokens[index + 1 :]))),
+                        successful_only=successful_only,
                     )
                 elif option.startswith("--split-string="):
-                    return _command_invocations(
-                        " ".join((option.partition("=")[2], shlex.join(tokens[index:])))
+                    return _nested_invocations(
+                        " ".join((option.partition("=")[2], shlex.join(tokens[index:]))),
+                        successful_only=successful_only,
                     )
             continue
         if prefix in {"exec", "time"}:
@@ -339,7 +376,9 @@ def _segment_invocations(
             ):
                 if script_index >= len(tokens):
                     return ()
-                return _command_invocations(tokens[script_index])
+                return _nested_invocations(
+                    tokens[script_index], successful_only=successful_only
+                )
             if option in _SHELL_OPTIONS_WITH_OPERANDS and script_index < len(tokens):
                 script_index += 1
         if script_index < len(tokens) and _is_gradle_executable(tokens[script_index]):
@@ -386,9 +425,21 @@ def _command_invocations(command: str) -> tuple[tuple[str, ...], ...]:
     return tuple(dict.fromkeys(invocations))
 
 
+def _nested_invocations(
+    command: str, *, successful_only: bool
+) -> tuple[tuple[str, ...], ...]:
+    return (
+        _successful_command_invocations(command)
+        if successful_only
+        else _command_invocations(command)
+    )
+
+
 def _successful_command_invocations(
     command: str,
 ) -> tuple[tuple[str, ...], ...]:
+    if _ends_with_background_operator(command):
+        return ()
     segments, separators = _shell_parts(command)
     if not segments:
         return ()
@@ -407,7 +458,7 @@ def _successful_command_invocations(
     return tuple(
         invocation
         for segment in successful_segments
-        for invocation in _segment_invocations(segment)
+        for invocation in _segment_invocations(segment, successful_only=True)
     )
 
 

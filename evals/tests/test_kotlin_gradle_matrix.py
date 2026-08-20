@@ -95,11 +95,19 @@ class KotlinGradleMatrixTest(unittest.TestCase):
             "Channel<Navigation>(capacity = Channel.BUFFERED)",
             "Channel<Navigation>(1)",
             "Channel<Navigation>(capacity = 64)",
+            "private val queue: Channel<Navigation> = Channel(capacity = 1)",
+            "val queue: Channel<Navigation> = Channel(Channel.BUFFERED)",
         ):
             with self.subTest(declaration=declaration):
                 self.assertIsNotNone(re.search(channel_pattern, declaration))
 
         self.assertIsNone(re.search(channel_pattern, "Channel<Navigation>(Channel.UNLIMITED)"))
+        self.assertIsNone(
+            re.search(
+                channel_pattern,
+                "val queue: Channel<Navigation> = Channel(Channel.UNLIMITED)",
+            )
+        )
 
     def test_kotlin_fixture_is_pinned_and_offline_ready(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "kotlin-jvm"

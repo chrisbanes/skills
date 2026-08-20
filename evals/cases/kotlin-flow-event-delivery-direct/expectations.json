@@ -1,5 +1,5 @@
 {
   "files": ["src/main/kotlin/example/Subject.kt"],
-  "must_match": ["Channel<Navigation>\\(\\s*(?:capacity\\s*=\\s*)?(?:Channel\\.BUFFERED|[1-9][0-9]*)\\s*\\)", "receiveAsFlow\\(\\)"],
+  "must_match": ["(?:Channel<Navigation>\\s*\\(\\s*(?:capacity\\s*=\\s*)?(?:Channel\\.BUFFERED|[1-9][0-9]*)\\s*\\)|:\\s*Channel<Navigation>\\s*=\\s*Channel\\s*\\(\\s*(?:capacity\\s*=\\s*)?(?:Channel\\.BUFFERED|[1-9][0-9]*)\\s*\\))", "receiveAsFlow\\(\\)"],
   "must_not_match": ["MutableSharedFlow<Navigation>"]
 }
