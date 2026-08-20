@@ -325,6 +325,8 @@ class DeterministicGradeTest(unittest.TestCase):
             "! ./gradlew test",
             "time ./gradlew test",
             "exec ./gradlew test",
+            "nice ./gradlew test",
+            "nice -n 5 ./gradlew test",
         ):
             with self.subTest(command=command):
                 result = make_result(
@@ -460,6 +462,69 @@ class DeterministicGradeTest(unittest.TestCase):
             ),
         )
         self.assertTrue(grade_subject(case, successful).objective_pass)
+
+    def test_required_command_evidence_tracks_compound_command_success(self):
+        case = make_case(self.workspace)
+        patterns = (
+            r"gradle_run\.py create",
+            r"gradle_run\.py run",
+            r"gradle_run\.py finish",
+        )
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": patterns,
+            }
+        )
+        masked_failure = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": (
+                            "python3 gradle_run.py create; "
+                            "python3 gradle_run.py run; "
+                            "python3 gradle_run.py finish"
+                        ),
+                        "exit_code": 0,
+                    },
+                },
+            ),
+        )
+        guaranteed_success = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": (
+                            "python3 gradle_run.py create && "
+                            "python3 gradle_run.py run && "
+                            "python3 gradle_run.py finish"
+                        ),
+                        "exit_code": 0,
+                    },
+                },
+            ),
+        )
+
+        masked_grade = grade_subject(case, masked_failure)
+        self.assertIn(
+            f"required command evidence missing: {patterns[1]}",
+            masked_grade.objective_failures,
+        )
+        self.assertIn(
+            f"required command evidence missing: {patterns[0]}",
+            masked_grade.objective_failures,
+        )
+        self.assertNotIn(
+            f"required command evidence missing: {patterns[2]}",
+            masked_grade.objective_failures,
+        )
+        self.assertTrue(grade_subject(case, guaranteed_success).objective_pass)
 
     def test_command_text_search_is_not_execution_evidence(self):
         case = make_case(self.workspace)

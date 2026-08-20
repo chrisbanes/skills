@@ -133,26 +133,30 @@ def _path_allowed(path: str, allowed: tuple[str, ...]) -> bool:
     return any(path == prefix or path.startswith(prefix.rstrip("/") + "/") for prefix in allowed)
 
 
-def _shell_segments(command: str) -> tuple[tuple[str, ...], ...]:
+def _shell_parts(
+    command: str,
+) -> tuple[tuple[tuple[str, ...], ...], tuple[str, ...]]:
     lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|")
     lexer.whitespace_split = True
     lexer.commenters = ""
     try:
         tokens = list(lexer)
     except ValueError:
-        return ()
+        return (), ()
     segments: list[tuple[str, ...]] = []
+    separators: list[str] = []
     current: list[str] = []
     for token in tokens:
         if token and all(character in ";&|" for character in token):
             if current:
                 segments.append(tuple(current))
                 current = []
+                separators.append(token)
         else:
             current.append(token)
     if current:
         segments.append(tuple(current))
-    return tuple(segments)
+    return tuple(segments), tuple(separators[: max(0, len(segments) - 1)])
 
 
 def _is_gradle_executable(token: str) -> bool:
@@ -196,6 +200,14 @@ def _segment_invocations(
                 option = tokens[index]
                 index += 1
                 if prefix == "exec" and option == "-a" and index < len(tokens):
+                    index += 1
+            continue
+        if prefix == "nice":
+            index += 1
+            while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
+                index += 1
+                if option in {"-n", "--adjustment"} and index < len(tokens):
                     index += 1
             continue
         if prefix == "command":
@@ -244,9 +256,35 @@ def _segment_invocations(
 
 
 def _command_invocations(command: str) -> tuple[tuple[str, ...], ...]:
+    segments, _ = _shell_parts(command)
     return tuple(
         invocation
-        for segment in _shell_segments(command)
+        for segment in segments
+        for invocation in _segment_invocations(segment)
+    )
+
+
+def _successful_command_invocations(
+    command: str,
+) -> tuple[tuple[str, ...], ...]:
+    segments, separators = _shell_parts(command)
+    if not segments:
+        return ()
+    last_sequence = max(
+        (
+            index
+            for index, separator in enumerate(separators)
+            if separator not in {"&&", "||", "|"}
+        ),
+        default=-1,
+    )
+    successful_segments = segments[last_sequence + 1 :]
+    successful_separators = separators[last_sequence + 1 :]
+    if any(separator != "&&" for separator in successful_separators):
+        return ()
+    return tuple(
+        invocation
+        for segment in successful_segments
         for invocation in _segment_invocations(segment)
     )
 
@@ -288,14 +326,19 @@ def _event_invocations(
         item = event.get("item")
         if not isinstance(item, dict) or item.get("type") != "command_execution":
             continue
-        if successful_only and item.get("exit_code") != 0:
-            continue
         command = item.get("command")
         if isinstance(command, list):
             command = " ".join(str(part) for part in command)
         if isinstance(command, str):
+            if successful_only and item.get("exit_code") != 0:
+                continue
+            command_invocations = (
+                _successful_command_invocations(command)
+                if successful_only
+                else _command_invocations(command)
+            )
             invocations.extend(
-                shlex.join(invocation) for invocation in _command_invocations(command)
+                shlex.join(invocation) for invocation in command_invocations
             )
     return tuple(invocations)
 
