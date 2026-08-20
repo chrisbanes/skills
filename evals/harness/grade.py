@@ -54,9 +54,6 @@ _NETWORK_FAILURE = re.compile(
     r"(?:disabled|denied|blocked)|connection (?:refused|timed out))",
     re.IGNORECASE,
 )
-_GRADLE_INVOCATION = re.compile(
-    r"(?:^|\s)['\"]?(?:[^\s'\";|&]+/)?(?:gradle|gradlew[^\s/;|&]*)(?=$|[\s;&|])"
-)
 _SHELL_EXECUTABLES = {"bash", "dash", "sh", "zsh"}
 _SHELL_CONTROL_PREFIXES = {
     "!",
@@ -158,7 +155,26 @@ def _shell_segments(command: str) -> tuple[tuple[str, ...], ...]:
     return tuple(segments)
 
 
-def _segment_invocations(tokens: tuple[str, ...]) -> tuple[str, ...]:
+def _is_gradle_executable(token: str) -> bool:
+    executable = PurePosixPath(token).name
+    return executable == "gradle" or executable.startswith("gradlew")
+
+
+def _including_nested_gradle(
+    invocation: tuple[str, ...],
+) -> tuple[tuple[str, ...], ...]:
+    invocations = [invocation]
+    if PurePosixPath(invocation[0]).name == "gradle_run.py" and "--" in invocation:
+        separator = invocation.index("--")
+        nested = invocation[separator + 1 :]
+        if nested and _is_gradle_executable(nested[0]):
+            invocations.append(nested)
+    return tuple(invocations)
+
+
+def _segment_invocations(
+    tokens: tuple[str, ...],
+) -> tuple[tuple[str, ...], ...]:
     index = 0
     while index < len(tokens):
         while index < len(tokens) and _ENVIRONMENT_ASSIGNMENT.match(tokens[index]):
@@ -200,6 +216,11 @@ def _segment_invocations(tokens: tuple[str, ...]) -> tuple[str, ...]:
             option = tokens[option_index]
             if option.startswith("-") and "c" in option[1:]:
                 return _command_invocations(tokens[option_index + 1])
+        script_index = index + 1
+        while script_index < len(tokens) and tokens[script_index].startswith("-"):
+            script_index += 1
+        if script_index < len(tokens) and _is_gradle_executable(tokens[script_index]):
+            return (tokens[script_index:],)
         return ()
 
     if _PYTHON_EXECUTABLE.fullmatch(executable):
@@ -212,19 +233,17 @@ def _segment_invocations(tokens: tuple[str, ...]) -> tuple[str, ...]:
             script_index < len(tokens)
             and PurePosixPath(tokens[script_index]).name == "gradle_run.py"
         ):
-            return (" ".join(tokens[script_index:]),)
+            return _including_nested_gradle(tokens[script_index:])
         return ()
 
-    if (
-        executable == "gradle_run.py"
-        or executable == "gradle"
-        or executable.startswith("gradlew")
-    ):
-        return (" ".join(tokens[index:]),)
+    if executable == "gradle_run.py":
+        return _including_nested_gradle(tokens[index:])
+    if _is_gradle_executable(tokens[index]):
+        return (tokens[index:],)
     return ()
 
 
-def _command_invocations(command: str) -> tuple[str, ...]:
+def _command_invocations(command: str) -> tuple[tuple[str, ...], ...]:
     return tuple(
         invocation
         for segment in _shell_segments(command)
@@ -256,10 +275,7 @@ def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
             ):
                 violations.append("network command attempted")
             for invocation in _command_invocations(command):
-                if (
-                    _GRADLE_INVOCATION.search(invocation)
-                    and "--offline" not in invocation
-                ):
+                if _is_gradle_executable(invocation[0]) and "--offline" not in invocation:
                     violations.append("Gradle command omitted --offline")
     return violations
 
@@ -278,7 +294,9 @@ def _event_invocations(
         if isinstance(command, list):
             command = " ".join(str(part) for part in command)
         if isinstance(command, str):
-            invocations.extend(_command_invocations(command))
+            invocations.extend(
+                shlex.join(invocation) for invocation in _command_invocations(command)
+            )
     return tuple(invocations)
 
 

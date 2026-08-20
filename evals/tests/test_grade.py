@@ -229,6 +229,73 @@ class DeterministicGradeTest(unittest.TestCase):
                     grade_subject(case, result).violations,
                 )
 
+    def test_gradle_safety_recognizes_wrappers_passed_as_shell_scripts(self):
+        case = make_case(self.workspace)
+
+        for command in (
+            "bash ./gradlew test",
+            "sh gradlew test",
+            "zsh -x ./gradlew-real test",
+        ):
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertIn(
+                    "Gradle command omitted --offline",
+                    grade_subject(case, result).violations,
+                )
+
+    def test_gradle_safety_checks_nested_gradle_options_not_wrapper_text(self):
+        case = make_case(self.workspace)
+        unsafe = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": (
+                            "python3 gradle_run.py run "
+                            "--question 'Did --offline work?' -- ./gradlew test"
+                        ),
+                    },
+                },
+            ),
+        )
+        safe = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": (
+                            "python3 gradle_run.py run --question verified -- "
+                            "./gradlew --offline test"
+                        ),
+                    },
+                },
+            ),
+        )
+
+        self.assertIn(
+            "Gradle command omitted --offline", grade_subject(case, unsafe).violations
+        )
+        self.assertNotIn(
+            "Gradle command omitted --offline", grade_subject(case, safe).violations
+        )
+
     def test_gradle_safety_does_not_treat_command_lookup_as_execution(self):
         case = make_case(self.workspace)
         result = make_result(
