@@ -67,6 +67,7 @@ _SHELL_CONTROL_PREFIXES = {
 }
 _PYTHON_EXECUTABLE = re.compile(r"python(?:3(?:\.\d+)?)?$")
 _ENVIRONMENT_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=", re.DOTALL)
+_WORKFLOW_OUTPUT = re.compile(r'"workflow"\s*:\s*"([a-z0-9]{32})"')
 
 
 @dataclass(frozen=True)
@@ -192,7 +193,25 @@ def _segment_invocations(
         if prefix == "env":
             index += 1
             while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
                 index += 1
+                if option in {
+                    "-a",
+                    "--argv0",
+                    "-u",
+                    "--unset",
+                    "-C",
+                    "--chdir",
+                } and index < len(tokens):
+                    index += 1
+                elif option in {"-S", "--split-string"} and index < len(tokens):
+                    return _command_invocations(
+                        " ".join((tokens[index], shlex.join(tokens[index + 1 :])))
+                    )
+                elif option.startswith("--split-string="):
+                    return _command_invocations(
+                        " ".join((option.partition("=")[2], shlex.join(tokens[index:])))
+                    )
             continue
         if prefix in {"exec", "time"}:
             index += 1
@@ -343,6 +362,75 @@ def _event_invocations(
     return tuple(invocations)
 
 
+def _gradle_run_operation(invocation: tuple[str, ...]) -> str | None:
+    if PurePosixPath(invocation[0]).name != "gradle_run.py":
+        return None
+    return next(
+        (token for token in invocation[1:] if token in {"create", "run", "finish"}),
+        None,
+    )
+
+
+def _workflow_option(invocation: tuple[str, ...]) -> str | None:
+    for index, token in enumerate(invocation):
+        if token == "--workflow" and index + 1 < len(invocation):
+            return invocation[index + 1]
+        if token.startswith("--workflow="):
+            return token.partition("=")[2]
+    return None
+
+
+def _requires_gradle_workflow(patterns: tuple[str, ...]) -> bool:
+    return all(
+        any(f"gradle_run\\.py {operation}" in pattern for pattern in patterns)
+        for operation in ("create", "run", "finish")
+    )
+
+
+def _completed_gradle_workflow(events: tuple[dict[str, object], ...]) -> bool:
+    lifecycle: list[tuple[str, str | None]] = []
+    for event in events:
+        item = event.get("item")
+        if (
+            not isinstance(item, dict)
+            or item.get("type") != "command_execution"
+            or item.get("exit_code") != 0
+        ):
+            continue
+        command = item.get("command")
+        if isinstance(command, list):
+            command = " ".join(str(part) for part in command)
+        if not isinstance(command, str):
+            continue
+        invocations = _successful_command_invocations(command)
+        create_count = sum(
+            _gradle_run_operation(invocation) == "create"
+            for invocation in invocations
+        )
+        output = item.get("aggregated_output", "")
+        output_workflows = (
+            _WORKFLOW_OUTPUT.findall(output) if isinstance(output, str) else []
+        )
+        if create_count and (create_count != 1 or len(output_workflows) != 1):
+            return False
+        for invocation in invocations:
+            operation = _gradle_run_operation(invocation)
+            if operation == "create":
+                lifecycle.append((operation, output_workflows[0]))
+            elif operation in {"run", "finish"}:
+                lifecycle.append((operation, _workflow_option(invocation)))
+
+    if len(lifecycle) < 3:
+        return False
+    workflow = lifecycle[0][1]
+    return (
+        lifecycle[0][0] == "create"
+        and workflow is not None
+        and lifecycle[-1] == ("finish", workflow)
+        and all(item == ("run", workflow) for item in lifecycle[1:-1])
+    )
+
+
 def _command_matches(pattern: str, command: str) -> bool:
     if re.search(pattern, command, re.DOTALL):
         return True
@@ -372,6 +460,10 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
             _command_matches(pattern, command) for command in successful_commands
         ):
             failures.append(f"required command evidence missing: {pattern}")
+    if _requires_gradle_workflow(case.required_command_patterns) and not (
+        _completed_gradle_workflow(result.events)
+    ):
+        failures.append("required Gradle workflow lifecycle missing")
     for pattern in case.forbidden_command_patterns:
         if any(_command_matches(pattern, command) for command in attempted_commands):
             failures.append(f"forbidden command evidence found: {pattern}")

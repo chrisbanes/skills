@@ -327,6 +327,9 @@ class DeterministicGradeTest(unittest.TestCase):
             "exec ./gradlew test",
             "nice ./gradlew test",
             "nice -n 5 ./gradlew test",
+            "env -u JAVA_HOME ./gradlew test",
+            "env --chdir /tmp ./gradlew test",
+            "env -S './gradlew test'",
         ):
             with self.subTest(command=command):
                 result = make_result(
@@ -466,9 +469,9 @@ class DeterministicGradeTest(unittest.TestCase):
     def test_required_command_evidence_tracks_compound_command_success(self):
         case = make_case(self.workspace)
         patterns = (
-            r"gradle_run\.py create",
-            r"gradle_run\.py run",
-            r"gradle_run\.py finish",
+            r"\bcreate\b",
+            r"\brun\b",
+            r"\bfinish\b",
         )
         case = EvalCase(
             **{
@@ -525,6 +528,66 @@ class DeterministicGradeTest(unittest.TestCase):
             masked_grade.objective_failures,
         )
         self.assertTrue(grade_subject(case, guaranteed_success).objective_pass)
+
+    def test_required_gradle_workflow_uses_one_ordered_identifier(self):
+        case = make_case(self.workspace)
+        patterns = (
+            r"gradle_run\.py create",
+            r"gradle_run\.py run",
+            r"gradle_run\.py finish",
+        )
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": patterns,
+            }
+        )
+        workflow_a = "a" * 32
+        workflow_b = "b" * 32
+
+        def event(command, output=""):
+            return {
+                "type": "item.completed",
+                "item": {
+                    "type": "command_execution",
+                    "command": command,
+                    "aggregated_output": output,
+                    "exit_code": 0,
+                },
+            }
+
+        mismatched = make_result(
+            self.workspace,
+            events=(
+                event(
+                    "python3 gradle_run.py create",
+                    f'{{"workflow": "{workflow_a}"}}',
+                ),
+                event(
+                    "python3 gradle_run.py create",
+                    f'{{"workflow": "{workflow_b}"}}',
+                ),
+                event(f"python3 gradle_run.py run --workflow {workflow_a}"),
+                event(f"python3 gradle_run.py finish --workflow {workflow_b}"),
+            ),
+        )
+        completed = make_result(
+            self.workspace,
+            events=(
+                event(
+                    "python3 gradle_run.py create",
+                    f'{{"workflow": "{workflow_a}"}}',
+                ),
+                event(f"python3 gradle_run.py run --workflow {workflow_a}"),
+                event(f"python3 gradle_run.py finish --workflow {workflow_a}"),
+            ),
+        )
+
+        self.assertIn(
+            "required Gradle workflow lifecycle missing",
+            grade_subject(case, mismatched).objective_failures,
+        )
+        self.assertTrue(grade_subject(case, completed).objective_pass)
 
     def test_command_text_search_is_not_execution_evidence(self):
         case = make_case(self.workspace)
