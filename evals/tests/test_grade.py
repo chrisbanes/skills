@@ -750,6 +750,88 @@ class DeterministicGradeTest(unittest.TestCase):
         )
         self.assertTrue(grade_subject(case, completed).objective_pass)
 
+    def test_required_gradle_workflow_accepts_optional_separator_and_redirection(self):
+        case = make_case(self.workspace)
+        patterns = (
+            r"gradle_run\.py create",
+            (
+                r"gradle_run\.py run(?=.*--scope targeted)(?=.*--question)"
+                r"(?=.*--\s+(?:[^\s]+/)?(?:gradle|gradlew[^\s/]*)"
+                r"(?:\s+[^\s]+)*\s+test(?:\s|$))"
+            ),
+            r"gradle_run\.py finish",
+        )
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": patterns,
+            }
+        )
+        workflow = "a" * 32
+
+        def event(command, output=""):
+            return {
+                "type": "item.completed",
+                "item": {
+                    "type": "command_execution",
+                    "command": command,
+                    "aggregated_output": output,
+                    "exit_code": 0,
+                },
+            }
+
+        result = make_result(
+            self.workspace,
+            events=(
+                event(
+                    "python3 gradle_run.py create 2>&1",
+                    f'{{"workflow": "{workflow}"}}',
+                ),
+                event(
+                    "python3 gradle_run.py run "
+                    f"--workflow {workflow} --scope targeted --question verified "
+                    "./gradlew --offline --no-scan test 2>&1"
+                ),
+                event(
+                    f"python3 gradle_run.py finish --workflow {workflow} 2>&1"
+                ),
+            ),
+        )
+
+        self.assertTrue(grade_subject(case, result).objective_pass)
+
+        invalid_child = make_result(
+            self.workspace,
+            events=(
+                event(
+                    "python3 gradle_run.py create",
+                    f'{{"workflow": "{workflow}"}}',
+                ),
+                event(
+                    "python3 gradle_run.py run "
+                    f"--workflow {workflow} --scope targeted "
+                    "--question './gradlew test' /bin/true"
+                ),
+                event(f"python3 gradle_run.py finish --workflow {workflow}"),
+            ),
+        )
+        self.assertIn(
+            f"required command evidence missing: {patterns[1]}",
+            grade_subject(case, invalid_child).objective_failures,
+        )
+
+        create_only = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": (patterns[0],),
+            }
+        )
+        redirected = make_result(
+            self.workspace,
+            events=(event("python3 gradle_run.py create >out 2>&1"),),
+        )
+        self.assertTrue(grade_subject(create_only, redirected).objective_pass)
+
     def test_command_text_search_is_not_execution_evidence(self):
         case = make_case(self.workspace)
         case = EvalCase(

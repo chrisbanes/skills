@@ -55,7 +55,7 @@ _NETWORK_FAILURE = re.compile(
     re.IGNORECASE,
 )
 _SHELL_EXECUTABLES = {"bash", "dash", "sh", "zsh"}
-_SHELL_PUNCTUATION = ";&|(){}"
+_SHELL_PUNCTUATION = ";&|(){}<>"
 _SHELL_OPTIONS_WITH_OPERANDS = {
     "+O",
     "-O",
@@ -158,6 +158,9 @@ def _shell_parts(
     current: list[str] = []
     for token in tokens:
         if token and all(character in _SHELL_PUNCTUATION for character in token):
+            if "<" in token or ">" in token:
+                current.append(token)
+                continue
             if current:
                 segments.append(tuple(current))
                 current = []
@@ -284,12 +287,35 @@ def _including_nested_gradle(
     successful_only: bool,
 ) -> tuple[tuple[str, ...], ...]:
     invocations = [invocation]
-    if PurePosixPath(invocation[0]).name == "gradle_run.py" and "--" in invocation:
-        separator = invocation.index("--")
-        nested = invocation[separator + 1 :]
-        invocations.extend(
-            _segment_invocations(nested, successful_only=successful_only)
-        )
+    if PurePosixPath(invocation[0]).name != "gradle_run.py":
+        return tuple(invocations)
+    try:
+        run_index = invocation.index("run")
+    except ValueError:
+        return tuple(invocations)
+    command_index = run_index + 1
+    while command_index < len(invocation):
+        option = invocation[command_index]
+        if option == "--":
+            command_index += 1
+            break
+        if option in {"--workflow", "--scope", "--question"}:
+            command_index += 2
+            continue
+        if option.startswith(("--workflow=", "--scope=", "--question=")):
+            command_index += 1
+            continue
+        break
+    if command_index >= len(invocation):
+        return tuple(invocations)
+    nested = _segment_invocations(
+        invocation[command_index:], successful_only=successful_only
+    )
+    if not nested:
+        return tuple(invocations)
+    if invocation[command_index - 1] != "--":
+        invocations[0] = invocation[:command_index] + ("--",) + invocation[command_index:]
+    invocations.extend(nested)
     return tuple(invocations)
 
 
