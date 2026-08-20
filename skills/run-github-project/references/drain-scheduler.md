@@ -177,7 +177,8 @@ dispatching the next:
 8. Start the next ranked `Planning` item with the default-owner capability only
    when the planning lane and active agent capacity are free after maximizing
    runnable implementation. An AFK Wayfinder research or task item uses this
-   same step. Surface Wayfinder HITL work without dispatching it.
+   same step. Resume a marked Wayfinder reconciliation before new Planning
+   work. Surface Wayfinder HITL work without dispatching it.
 9. Monitor all remote slots together only when no local or controller action
    remains.
 10. After the authoritative execution-clear predicate in
@@ -351,8 +352,9 @@ eligible labeled item belongs only to the triage tail lane.
 Pass the refresh gate before evaluating the finish state. Finish successfully
 only when the authoritative execution-clear predicate in
 [Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, the complete live
-query has no non-deferred triage candidate after merge reconciliation, and no
-human action or Wayfinder human-frontier item remains. Dependency-parked
+query has no non-deferred triage candidate after merge reconciliation, no
+marked Wayfinder reconciliation claim remains, and no human action or
+Wayfinder human-frontier item remains. Dependency-parked
 Backlog items do not prevent success; report their live blockers. If only human
 actions and/or Wayfinder human-frontier items remain, return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and

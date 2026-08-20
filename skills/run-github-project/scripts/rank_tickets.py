@@ -18,6 +18,7 @@ class InputError(ValueError):
 IMPLEMENTATION_ACTIONS = {"resume-pr", "resume-implementation"}
 AGENT_WORK_LABEL = "ready-for-agent"
 CLAIM_ACTION_RANK = {
+    "resume-wayfinder-reconciliation": 0,
     "resume-backlog-cleanup": 0,
     "resume-pr": 1,
     "resume-implementation": 1,
@@ -34,6 +35,12 @@ CANDIDATE_OUTPUT_ACTIONS = {"resume-implementation": "claim"}
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Validate claims and rank eligible GitHub Project tickets.",
+    )
+    parser.add_argument(
+        "--mode",
+        required=True,
+        choices=("next", "drain"),
+        help="Invocation mode; next may select HITL Wayfinder work, drain may not.",
     )
     parser.add_argument(
         "--current-user",
@@ -1106,7 +1113,8 @@ def parse_wayfinder_parent(
     ticket: dict[str, Any],
     *,
     map_label: str,
-) -> None:
+    allow_closed: bool = False,
+) -> int:
     number = ticket["number"]
     parent = ticket.get("parentIssue")
     if not isinstance(parent, dict):
@@ -1124,8 +1132,75 @@ def parse_wayfinder_parent(
         "parentIssue.labels",
         number,
     )
-    if str(parent_state).upper() != "OPEN" or map_label not in parent_labels:
+    accepted_states = {"OPEN", "CLOSED"} if allow_closed else {"OPEN"}
+    if (
+        str(parent_state).upper() not in accepted_states
+        or map_label not in parent_labels
+    ):
         raise InputError("parent is not an open Wayfinder map")
+    return parent_number
+
+
+def parse_wayfinder_reconciliation(
+    value: Any,
+    *,
+    number: int,
+    current_user: str,
+    project_item_id: str,
+) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise InputError(
+            f"ticket {number}: wayfinderReconciliation must be an object or null",
+        )
+    marker_version = value.get("markerVersion")
+    if marker_version != 1 or isinstance(marker_version, bool):
+        raise InputError(
+            f"ticket {number}: wayfinderReconciliation.markerVersion must be 1",
+        )
+    result = {
+        field: nonempty_string(
+            value.get(field),
+            f"wayfinderReconciliation.{field}",
+            number,
+        )
+        for field in (
+            "commentId",
+            "permalink",
+            "author",
+            "projectItemId",
+            "resolutionPermalink",
+            "configurationDigest",
+            "planDigest",
+        )
+    }
+    result["markerVersion"] = marker_version
+    result["createdAt"] = timestamp(
+        value.get("createdAt"),
+        "wayfinderReconciliation.createdAt",
+        number,
+    )
+    map_number = value.get("mapNumber")
+    if (
+        not isinstance(map_number, int)
+        or isinstance(map_number, bool)
+        or map_number <= 0
+    ):
+        raise InputError(
+            f"ticket {number}: wayfinderReconciliation.mapNumber "
+            "must be a positive integer",
+        )
+    result["mapNumber"] = map_number
+    if result["author"] != current_user:
+        raise InputError(
+            f"ticket {number}: Wayfinder reconciliation marker is not runner-authored",
+        )
+    if result["projectItemId"] != project_item_id:
+        raise InputError(
+            f"ticket {number}: Wayfinder reconciliation Project item changed",
+        )
+    return result
 
 
 def analyze_wayfinder_ticket(
@@ -1152,6 +1227,13 @@ def analyze_wayfinder_ticket(
     errors = common["errors"]
     exclusions = common["exclusions"]
 
+    reconciliation = parse_wayfinder_reconciliation(
+        ticket.get("wayfinderReconciliation"),
+        number=number,
+        current_user=current_user,
+        project_item_id=ticket["projectItemId"],
+    )
+
     types = [
         ticket_type
         for ticket_type, label in wayfinder_child_labels.items()
@@ -1160,7 +1242,40 @@ def analyze_wayfinder_ticket(
     if len(types) != 1:
         raise InputError("expected exactly one Wayfinder type label")
     ticket_type = types[0]
-    parse_wayfinder_parent(ticket, map_label=wayfinder_map_label)
+    parent_number = parse_wayfinder_parent(
+        ticket,
+        map_label=wayfinder_map_label,
+        allow_closed=reconciliation is not None,
+    )
+
+    assigned_to_current_user = current_user in assignees
+    if reconciliation is not None:
+        if reconciliation["mapNumber"] != parent_number:
+            raise InputError(
+                f"ticket {number}: Wayfinder reconciliation map does not match parent",
+            )
+        if not assigned_to_current_user or len(assignees) != 1:
+            exclusions.append(
+                "Wayfinder reconciliation is not assigned only to current user",
+            )
+        if str(ticket["state"]).upper() not in ("OPEN", "CLOSED"):
+            exclusions.append("Wayfinder reconciliation issue state is unknown")
+        if pull_requests:
+            exclusions.append(
+                "has open implementation PRs "
+                f"{[pull_request['url'] for pull_request in pull_requests]}",
+            )
+        return {
+            "ticket": ticket,
+            "priorityRank": common["priorityRank"],
+            "projectPosition": common["projectPosition"],
+            "assignedToCurrentUser": assigned_to_current_user,
+            "resumeAction": "resume-wayfinder-reconciliation",
+            "wayfinderType": ticket_type,
+            "resolutionMode": "afk",
+            "errors": errors,
+            "exclusions": exclusions,
+        }
 
     if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
@@ -1218,7 +1333,6 @@ def analyze_wayfinder_ticket(
             f"ticket {number}: wayfinderTaskMode applies only to Wayfinder tasks",
         )
 
-    assigned_to_current_user = current_user in assignees
     return {
         "ticket": ticket,
         "priorityRank": common["priorityRank"],
@@ -1395,8 +1509,20 @@ def main() -> int:
                     and isinstance(raw_ticket.get("labels"), list)
                     and args.human_work_label in raw_ticket["labels"]
                 )
+                is_wayfinder_claim = (
+                    isinstance(raw_ticket, dict)
+                    and isinstance(raw_ticket.get("labels"), list)
+                    and any(
+                        label in wayfinder_child_labels.values()
+                        for label in raw_ticket["labels"]
+                        if isinstance(label, str)
+                    )
+                    and has_current_user_assignment(raw_ticket, args.current_user)
+                )
                 if is_human_frontier_item:
                     invalid_unclaimed.append(invalid)
+                elif is_wayfinder_claim:
+                    invalid_planning_claimed.append(invalid)
                 elif has_current_user_assignment(raw_ticket, args.current_user):
                     if (
                         isinstance(raw_ticket, dict)
@@ -1474,7 +1600,10 @@ def main() -> int:
             for item in [*eligible, *eligible_wayfinder]
             if (
                 item["assignedToCurrentUser"]
-                and item.get("resolutionMode", "afk") == "afk"
+                and (
+                    args.mode == "next"
+                    or item.get("resolutionMode", "afk") == "afk"
+                )
             )
         ]
         claimed.sort(
@@ -1516,7 +1645,10 @@ def main() -> int:
                 item
                 for item in [*eligible, *eligible_wayfinder]
                 if not item["assignedToCurrentUser"]
-                and item.get("resolutionMode", "afk") == "afk"
+                and (
+                    args.mode == "next"
+                    or item.get("resolutionMode", "afk") == "afk"
+                )
             ),
             key=lambda item: (
                 CANDIDATE_ACTION_RANK[item["resumeAction"]],
@@ -1587,7 +1719,7 @@ def main() -> int:
             (
                 item
                 for item in eligible_wayfinder
-                if item["resolutionMode"] == "hitl"
+                if args.mode == "drain" and item["resolutionMode"] == "hitl"
             ),
             key=ticket_rank,
         )

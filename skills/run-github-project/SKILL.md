@@ -221,6 +221,11 @@ Leave tickets added after that query for the next invocation.
    also read the latest runner-authored parking and resume marker identities,
    PR head, and required-check state needed by
    [Terminal Required-CI Parking](references/drain-scheduler.md#terminal-required-ci-parking).
+   When Wayfinder is enabled, also query current-user-assigned issues carrying
+   a configured Wayfinder child label and the durable reconciliation marker.
+   Include those recovery claims regardless of open/closed issue state,
+   Project Status, or archive state, and refetch their exact Project items by
+   recorded node ID. This recovery query is not a source of new work.
 3. Apply the optional trusted Project filter, then always intersect it with:
    - membership in the configured repository;
    - an open, non-draft GitHub issue;
@@ -231,7 +236,8 @@ Leave tickets added after that query for the next invocation.
      configured human-work, or configured `needs-triage` label for the Backlog
      frontier.
 4. Record draft, pull-request, redacted, cross-repository, closed, malformed,
-   or filter-excluded items as ineligible. Never convert draft items into
+   or filter-excluded items as ineligible, except for a verified Wayfinder
+   reconciliation recovery claim from step 2. Never convert draft items into
    tickets or use a named Project view implicitly.
 5. Build execution contender classes in the exact order defined by
    [Planning Lane](references/planning-lane.md#scheduling). Build the separate
@@ -255,8 +261,10 @@ Leave tickets added after that query for the next invocation.
      ref, SHA, and base target.
    - for configured Wayfinder contenders, their direct parent map's open state
      and exact labels, exact Wayfinder type labels, and task AFK evidence or
-     HITL classification. Do not deep-hydrate implementation-plan markers for
-     them.
+     HITL classification. For a reconciliation recovery claim, instead hydrate
+     its runner-authored marker, exact recorded Project item, resolution
+     permalink, and direct parent even when the child or parent is closed. Do
+     not deep-hydrate implementation-plan markers for either form.
    - for a parked claim being reconstructed or whose lightweight fingerprint
      changed, its marker payloads and bounded required-check history.
    Preserve an invalid claimed contender as a blocked slot. Report and advance
@@ -283,6 +291,7 @@ contender batch as a JSON array and run:
 
 ```text
 python3 <skill-dir>/scripts/rank_tickets.py \
+  --mode <next-or-drain> \
   --current-user <github-login> \
   --repository <owner/repository> \
   --base-branch <base-branch> \
@@ -345,7 +354,9 @@ Process returned `readyEpics` and `humanActions` through
 execution-clear predicate in
 [Backlog Triage Lane](references/triage-lane.md#dispatch) is satisfied. Then
 follow that lane one issue at a time.
-Route `wayfinderHumanFrontier` through
+In `next`, HITL Wayfinder tickets participate in the normal Planning claim and
+candidate ordering; selecting one still requires fresh per-ticket authority.
+In `drain`, route `wayfinderHumanFrontier` through
 [Wayfinder Planning Lane](references/wayfinder-lane.md); do not make it an
 implementation candidate or pause independent work in `drain`.
 
@@ -369,10 +380,12 @@ For `plan`, `resume-planning`, or `resume-planning-handoff`, follow
 that same selected issue through implementation and terminal reconciliation;
 never return to selection after planning it.
 
-For `wayfind` or `resume-wayfind`, follow
+For `wayfind`, `resume-wayfind`, or `resume-wayfinder-reconciliation`, follow
 [references/wayfinder-lane.md](references/wayfinder-lane.md). Require its
-distinct authority before assignment. Never transition the child to `Ready to
-implement` or start an implementation worktree or PR.
+distinct authority before a new assignment. A verified reconciliation marker
+retains the original lease and must be completed before new Wayfinder work.
+Never transition the child to `Ready to implement` or start an implementation
+worktree or PR.
 
 For Ready-to-implement work:
 
@@ -940,3 +953,15 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     capacity and reports ordered prototype, grilling, HITL, and ambiguous-task
     work as a non-blocking Wayfinder human frontier. Counterexample: `next`
     resolves only its selected, freshly approved HITL child and then finishes.
+42. RED leaves HITL tickets frontier-only in every mode; GREEN passes the mode
+    to the ranker so `next` selects an authorized HITL ticket by normal Planning
+    rank while `drain` keeps the same ticket in the human frontier. Novel case:
+    `next` resumes an exclusively assigned HITL claim. Counterexample: `drain`
+    never autonomously claims that assignment.
+43. RED closes a resolved child before map work and loses it after a crash;
+    GREEN publishes a runner-authored reconciliation marker first, recovers it
+    across closed issues and archived Project items, replays its exact plan
+    idempotently, reconciles the child to configured Done/archive, and unassigns
+    last. Novel case: both child and map are already closed when recovery
+    begins. Counterexample: a marker for another Project item or runner is a
+    blocked claim, never recovery authority.

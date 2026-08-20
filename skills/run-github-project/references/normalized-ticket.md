@@ -93,6 +93,34 @@ safely autonomous; use `"hitl"` or `null` for a human or ambiguous task.
 Wayfinder children require the schema fields above, but not a Ready transition
 or any implementation-plan entries.
 
+For an interrupted terminal reconciliation, add the normalized authoritative
+marker below. Recovery inventory may supply a closed child, a closed parent,
+and a Project item in Done or archived; it must still use fresh values and the
+exact recorded Project item node ID.
+
+```json
+{
+  "wayfinderReconciliation": {
+    "commentId": "IC_reconciliation",
+    "permalink": "https://github.com/owner/repository/issues/52#issuecomment-2",
+    "author": "octocat",
+    "createdAt": "2026-07-28T09:00:00Z",
+    "markerVersion": 1,
+    "mapNumber": 7,
+    "projectItemId": "PVTI_example",
+    "resolutionPermalink": "https://github.com/owner/repository/issues/52#issuecomment-1",
+    "configurationDigest": "sha256:configuration",
+    "planDigest": "sha256:semantic-reconciliation-plan"
+  }
+}
+```
+
+The comment body retains the full planned-mutation list; the normalized form
+contains the identifiers and digests the ranker validates. The marker must be
+runner-authored, match the child Project item and direct map parent, and remain
+assigned only to that runner. Such a claim returns
+`resume-wayfinder-reconciliation` before new Wayfinder work.
+
 Use the same canonical shape for Backlog triage contenders, with transition and
 replan fields set to `null` and `implementationPlans` empty when absent. Backlog
 `openPullRequests` entries need only `number`, `url`, and `closesIssue`; omit
@@ -259,11 +287,13 @@ verified. Triage candidates are ordered separately and run only through
 through [Epics And Human Frontier](human-frontier.md); Backlog `parkedBlocked`
 items consume neither a slot nor an agent.
 
-When enabled, the ranker emits an AFK Wayfinder candidate as `wayfind` and an
-assigned one as `resume-wayfind`; both are Planning work and consume no
-implementation slot. It returns configured prototype, grilling, HITL, and
-ambiguous task children in `wayfinderHumanFrontier`, ordered by Priority,
-position, and issue number. Route both forms through
+When enabled in `next`, the ranker emits any eligible Wayfinder candidate as
+`wayfind` and an assigned one as `resume-wayfind`. In `drain`, it emits only AFK
+work in those collections and returns configured prototype, grilling, HITL,
+and ambiguous task children in `wayfinderHumanFrontier`, ordered by Priority,
+position, and issue number. A terminal recovery is always an assigned
+`resume-wayfinder-reconciliation` claim. All are Planning work and consume no
+implementation slot. Route every form through
 [Wayfinder Planning Lane](wayfinder-lane.md).
 
 Before invoking the ranker, apply the drain scheduler's

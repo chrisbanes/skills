@@ -259,9 +259,10 @@ In `drain`, follow the
 active-agent capacity, and non-preemption.
 
 An unclaimed Wayfinder prototype, grilling ticket, or HITL/ambiguous task is a
-human-frontier item, not an autonomous candidate. In `next`, process it only
-when selected with fresh per-ticket Wayfinder authority; in `drain`, surface it
-without pausing independent work.
+normal Planning candidate in `next`, but process it only with fresh per-ticket
+Wayfinder authority. In `drain`, it is a human-frontier item; surface it without
+pausing independent work. Resume a durable Wayfinder reconciliation claim
+before either new class.
 
 ## Migration Gate
 
