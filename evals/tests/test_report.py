@@ -144,6 +144,26 @@ class ReportTest(unittest.TestCase):
             markdown,
         )
 
+    def test_per_skill_count_uses_the_arms_present_in_a_partial_run(self):
+        records = [
+            record(
+                "one:forced",
+                "forced",
+                True,
+                expected=("compose-state-and-effects",),
+            )
+        ]
+        records[0].update(
+            {
+                "suite": "compose",
+                "target_skills": ["compose-state-and-effects"],
+            }
+        )
+
+        markdown = render_scorecard(compute_scorecard(records), records)
+
+        self.assertIn("| `compose-state-and-effects` | 1 |", markdown)
+
     def test_audit_decisions_append_without_overwriting_raw_judgments(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "audit-decisions.jsonl"

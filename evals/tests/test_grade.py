@@ -201,6 +201,53 @@ class DeterministicGradeTest(unittest.TestCase):
                     grade_subject(case, result).violations,
                 )
 
+    def test_gradle_safety_recognizes_gradle_and_custom_wrappers(self):
+        case = make_case(self.workspace)
+
+        for command in (
+            "gradle test",
+            "./gradlew-real test",
+            "./gradlew-custom test",
+            "command ./gradlew test",
+        ):
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertIn(
+                    "Gradle command omitted --offline",
+                    grade_subject(case, result).violations,
+                )
+
+    def test_gradle_safety_does_not_treat_command_lookup_as_execution(self):
+        case = make_case(self.workspace)
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "command -v gradlew",
+                    },
+                },
+            ),
+        )
+
+        self.assertNotIn(
+            "Gradle command omitted --offline", grade_subject(case, result).violations
+        )
+
     def test_required_command_evidence_accepts_quoted_executable_path(self):
         case = make_case(self.workspace)
         case = EvalCase(
@@ -301,7 +348,7 @@ class DeterministicGradeTest(unittest.TestCase):
 
     def test_forbidden_wrapper_evidence_covers_direct_path_spellings(self):
         case = make_case(self.workspace)
-        pattern = r"(?:^|\s)(?:[^\s]+/)?gradlew(?=$|\s)"
+        pattern = r"(?:^|\s)(?:[^\s]+/)?(?:gradle|gradlew[^\s/]*)(?=$|\s)"
         case = EvalCase(
             **{
                 **case.__dict__,
@@ -313,6 +360,9 @@ class DeterministicGradeTest(unittest.TestCase):
             "gradlew test --offline",
             "/absolute/path/gradlew test --offline",
             "$PWD/gradlew test --offline",
+            "./gradlew-real test --offline",
+            "gradle test --offline",
+            "command ./gradlew test --offline",
         ):
             with self.subTest(command=command):
                 result = make_result(

@@ -54,8 +54,8 @@ _NETWORK_FAILURE = re.compile(
     r"(?:disabled|denied|blocked)|connection (?:refused|timed out))",
     re.IGNORECASE,
 )
-_GRADLEW_INVOCATION = re.compile(
-    r"(?:^|\s)['\"]?(?:[^\s'\";|&]+/)?gradlew(?=$|[\s;&|])"
+_GRADLE_INVOCATION = re.compile(
+    r"(?:^|\s)['\"]?(?:[^\s'\";|&]+/)?(?:gradle|gradlew[^\s/;|&]*)(?=$|[\s;&|])"
 )
 _SHELL_EXECUTABLES = {"bash", "dash", "sh", "zsh"}
 _PYTHON_EXECUTABLE = re.compile(r"python(?:3(?:\.\d+)?)?$")
@@ -162,6 +162,17 @@ def _segment_invocations(tokens: tuple[str, ...]) -> tuple[str, ...]:
     if index >= len(tokens):
         return ()
 
+    if PurePosixPath(tokens[index]).name == "command":
+        index += 1
+        while index < len(tokens) and tokens[index].startswith("-"):
+            if "v" in tokens[index][1:] or "V" in tokens[index][1:]:
+                return ()
+            index += 1
+        while index < len(tokens) and _ENVIRONMENT_ASSIGNMENT.match(tokens[index]):
+            index += 1
+        if index >= len(tokens):
+            return ()
+
     executable = PurePosixPath(tokens[index]).name
     if executable in _SHELL_EXECUTABLES:
         for option_index in range(index + 1, len(tokens) - 1):
@@ -183,7 +194,11 @@ def _segment_invocations(tokens: tuple[str, ...]) -> tuple[str, ...]:
             return (" ".join(tokens[script_index:]),)
         return ()
 
-    if executable in {"gradle_run.py", "gradlew"}:
+    if (
+        executable == "gradle_run.py"
+        or executable == "gradle"
+        or executable.startswith("gradlew")
+    ):
         return (" ".join(tokens[index:]),)
     return ()
 
@@ -221,7 +236,7 @@ def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
                 violations.append("network command attempted")
             for invocation in _command_invocations(command):
                 if (
-                    _GRADLEW_INVOCATION.search(invocation)
+                    _GRADLE_INVOCATION.search(invocation)
                     and "--offline" not in invocation
                 ):
                     violations.append("Gradle command omitted --offline")

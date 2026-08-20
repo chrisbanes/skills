@@ -69,6 +69,19 @@ def _target_skills(record: dict[str, Any]) -> list[str]:
     return [str(skill) for skill in skills]
 
 
+def _per_arm_record_count(records: list[dict[str, Any]]) -> str:
+    counts = {
+        arm: sum(record.get("arm") == arm for record in records)
+        for arm in ("none", "forced", "automatic")
+        if any(record.get("arm") == arm for record in records)
+    }
+    if not counts:
+        return "0"
+    if len(set(counts.values())) == 1:
+        return str(next(iter(counts.values())))
+    return ", ".join(f"{arm}={count}" for arm, count in counts.items())
+
+
 def _tool_event_count(records: Iterable[dict[str, Any]]) -> int:
     count = 0
     for record in records:
@@ -172,7 +185,7 @@ def render_scorecard(
                 if forced is not None and baseline is not None
                 else None
             )
-            per_arm_count = sum(record.get("arm") == "none" for record in positive)
+            per_arm_count = _per_arm_record_count(positive)
             lines.append(
                 f"| `{skill}` | {per_arm_count} | {_percent(baseline)} | "
                 f"{_percent(forced)} | {_percent(automatic)} | {_percent(uplift)} | "
