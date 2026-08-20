@@ -58,6 +58,16 @@ _GRADLE_INVOCATION = re.compile(
     r"(?:^|\s)['\"]?(?:[^\s'\";|&]+/)?(?:gradle|gradlew[^\s/;|&]*)(?=$|[\s;&|])"
 )
 _SHELL_EXECUTABLES = {"bash", "dash", "sh", "zsh"}
+_SHELL_CONTROL_PREFIXES = {
+    "!",
+    "do",
+    "elif",
+    "else",
+    "if",
+    "then",
+    "until",
+    "while",
+}
 _PYTHON_EXECUTABLE = re.compile(r"python(?:3(?:\.\d+)?)?$")
 _ENVIRONMENT_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=", re.DOTALL)
 
@@ -150,28 +160,39 @@ def _shell_segments(command: str) -> tuple[tuple[str, ...], ...]:
 
 def _segment_invocations(tokens: tuple[str, ...]) -> tuple[str, ...]:
     index = 0
-    if tokens and PurePosixPath(tokens[0]).name == "env":
-        index += 1
-        while index < len(tokens) and (
-            tokens[index].startswith("-")
-            or _ENVIRONMENT_ASSIGNMENT.match(tokens[index])
-        ):
-            index += 1
-    while index < len(tokens) and _ENVIRONMENT_ASSIGNMENT.match(tokens[index]):
-        index += 1
-    if index >= len(tokens):
-        return ()
-
-    if PurePosixPath(tokens[index]).name == "command":
-        index += 1
-        while index < len(tokens) and tokens[index].startswith("-"):
-            if "v" in tokens[index][1:] or "V" in tokens[index][1:]:
-                return ()
-            index += 1
+    while index < len(tokens):
         while index < len(tokens) and _ENVIRONMENT_ASSIGNMENT.match(tokens[index]):
             index += 1
         if index >= len(tokens):
             return ()
+        prefix = PurePosixPath(tokens[index]).name
+        if prefix in _SHELL_CONTROL_PREFIXES:
+            index += 1
+            continue
+        if prefix == "env":
+            index += 1
+            while index < len(tokens) and tokens[index].startswith("-"):
+                index += 1
+            continue
+        if prefix in {"exec", "time"}:
+            index += 1
+            while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
+                index += 1
+                if prefix == "exec" and option == "-a" and index < len(tokens):
+                    index += 1
+            continue
+        if prefix == "command":
+            index += 1
+            while index < len(tokens) and tokens[index].startswith("-"):
+                if "v" in tokens[index][1:] or "V" in tokens[index][1:]:
+                    return ()
+                index += 1
+            continue
+        break
+
+    if index >= len(tokens):
+        return ()
 
     executable = PurePosixPath(tokens[index]).name
     if executable in _SHELL_EXECUTABLES:
@@ -243,11 +264,15 @@ def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
     return violations
 
 
-def _event_invocations(events: tuple[dict[str, object], ...]) -> tuple[str, ...]:
+def _event_invocations(
+    events: tuple[dict[str, object], ...], *, successful_only: bool = False
+) -> tuple[str, ...]:
     invocations: list[str] = []
     for event in events:
         item = event.get("item")
         if not isinstance(item, dict) or item.get("type") != "command_execution":
+            continue
+        if successful_only and item.get("exit_code") != 0:
             continue
         command = item.get("command")
         if isinstance(command, list):
@@ -279,12 +304,15 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
         if validator.returncode != 0:
             suffix = " (timed out)" if validator.timed_out else ""
             failures.append(f"validator failed: {' '.join(validator.argv)}{suffix}")
-    commands = _event_invocations(result.events)
+    successful_commands = _event_invocations(result.events, successful_only=True)
+    attempted_commands = _event_invocations(result.events)
     for pattern in case.required_command_patterns:
-        if not any(_command_matches(pattern, command) for command in commands):
+        if not any(
+            _command_matches(pattern, command) for command in successful_commands
+        ):
             failures.append(f"required command evidence missing: {pattern}")
     for pattern in case.forbidden_command_patterns:
-        if any(_command_matches(pattern, command) for command in commands):
+        if any(_command_matches(pattern, command) for command in attempted_commands):
             failures.append(f"forbidden command evidence found: {pattern}")
 
     violations: list[str] = []

@@ -248,6 +248,55 @@ class DeterministicGradeTest(unittest.TestCase):
             "Gradle command omitted --offline", grade_subject(case, result).violations
         )
 
+    def test_gradle_safety_recognizes_shell_control_and_execution_prefixes(self):
+        case = make_case(self.workspace)
+
+        for command in (
+            "if test -x ./gradlew; then ./gradlew test; fi",
+            "if true; then command env FLAG=1 ./gradlew test; fi",
+            "while true; do ./gradlew test; done",
+            "! ./gradlew test",
+            "time ./gradlew test",
+            "exec ./gradlew test",
+        ):
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertIn(
+                    "Gradle command omitted --offline",
+                    grade_subject(case, result).violations,
+                )
+
+    def test_gradle_safety_ignores_conditional_file_probe_without_execution(self):
+        case = make_case(self.workspace)
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "if test -x ./gradlew; then echo ready; fi",
+                    },
+                },
+            ),
+        )
+
+        self.assertNotIn(
+            "Gradle command omitted --offline", grade_subject(case, result).violations
+        )
+
     def test_required_command_evidence_accepts_quoted_executable_path(self):
         case = make_case(self.workspace)
         case = EvalCase(
@@ -264,6 +313,7 @@ class DeterministicGradeTest(unittest.TestCase):
                     "item": {
                         "type": "command_execution",
                         "command": 'python3 "$skill_dir/scripts/gradle_run.py" create',
+                        "exit_code": 0,
                     },
                 },
             ),
@@ -293,12 +343,56 @@ class DeterministicGradeTest(unittest.TestCase):
                             "  --question 'Does it pass?'\n"
                             "  --scope targeted"
                         ),
+                        "exit_code": 0,
                     },
                 },
             ),
         )
 
         self.assertTrue(grade_subject(case, result).objective_pass)
+
+    def test_required_command_evidence_requires_successful_exit(self):
+        case = make_case(self.workspace)
+        pattern = r"gradle_run\.py create"
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": (pattern,),
+            }
+        )
+
+        for exit_code in (None, 1):
+            with self.subTest(exit_code=exit_code):
+                item = {
+                    "type": "command_execution",
+                    "command": "python3 gradle_run.py create",
+                }
+                if exit_code is not None:
+                    item["exit_code"] = exit_code
+                result = make_result(
+                    self.workspace,
+                    events=({"type": "item.completed", "item": item},),
+                )
+
+                self.assertIn(
+                    f"required command evidence missing: {pattern}",
+                    grade_subject(case, result).objective_failures,
+                )
+
+        successful = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "python3 gradle_run.py create",
+                        "exit_code": 0,
+                    },
+                },
+            ),
+        )
+        self.assertTrue(grade_subject(case, successful).objective_pass)
 
     def test_command_text_search_is_not_execution_evidence(self):
         case = make_case(self.workspace)
