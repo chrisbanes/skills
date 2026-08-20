@@ -280,13 +280,16 @@ def _is_gradle_executable(token: str) -> bool:
 
 def _including_nested_gradle(
     invocation: tuple[str, ...],
+    *,
+    successful_only: bool,
 ) -> tuple[tuple[str, ...], ...]:
     invocations = [invocation]
     if PurePosixPath(invocation[0]).name == "gradle_run.py" and "--" in invocation:
         separator = invocation.index("--")
         nested = invocation[separator + 1 :]
-        if nested and _is_gradle_executable(nested[0]):
-            invocations.append(nested)
+        invocations.extend(
+            _segment_invocations(nested, successful_only=successful_only)
+        )
     return tuple(invocations)
 
 
@@ -346,6 +349,23 @@ def _segment_invocations(
                 if option in {"-n", "--adjustment"} and index < len(tokens):
                     index += 1
             continue
+        if prefix in {"timeout", "gtimeout"}:
+            index += 1
+            while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
+                index += 1
+                if option == "--":
+                    break
+                if option in {"--help", "--version"}:
+                    return ()
+                if option in {"-k", "--kill-after", "-s", "--signal"}:
+                    if index >= len(tokens):
+                        return ()
+                    index += 1
+            if index >= len(tokens):
+                return ()
+            index += 1
+            continue
         if prefix == "command":
             index += 1
             while index < len(tokens) and tokens[index].startswith("-"):
@@ -353,6 +373,15 @@ def _segment_invocations(
                     return ()
                 index += 1
             continue
+        if prefix == "eval":
+            index += 1
+            if index < len(tokens) and tokens[index] == "--":
+                index += 1
+            if index >= len(tokens):
+                return ()
+            return _nested_invocations(
+                " ".join(tokens[index:]), successful_only=successful_only
+            )
         break
 
     if index >= len(tokens):
@@ -403,11 +432,15 @@ def _segment_invocations(
             script_index < len(tokens)
             and PurePosixPath(tokens[script_index]).name == "gradle_run.py"
         ):
-            return _including_nested_gradle(tokens[script_index:])
+            return _including_nested_gradle(
+                tokens[script_index:], successful_only=successful_only
+            )
         return ()
 
     if executable == "gradle_run.py":
-        return _including_nested_gradle(tokens[index:])
+        return _including_nested_gradle(
+            tokens[index:], successful_only=successful_only
+        )
     if _is_gradle_executable(tokens[index]):
         return (tokens[index:],)
     return ()

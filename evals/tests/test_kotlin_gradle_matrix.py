@@ -109,6 +109,35 @@ class KotlinGradleMatrixTest(unittest.TestCase):
             )
         )
 
+    def test_incidental_validation_requires_the_test_task(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "gradle-incidental-validation-direct"
+        )
+        run_pattern = case.required_command_patterns[1]
+
+        for command in (
+            "python3 gradle_run.py run --scope targeted --question verified "
+            "-- ./gradlew --offline --no-scan test",
+            "python3 gradle_run.py run --question verified --scope targeted "
+            "-- ./gradlew test --offline --no-scan",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(re.search(run_pattern, command, re.DOTALL))
+
+        for command in (
+            "python3 gradle_run.py run --scope targeted --question verified "
+            "-- ./gradlew --offline --no-scan help",
+            "python3 gradle_run.py run --scope targeted --question test "
+            "-- ./gradlew --offline --no-scan help",
+            "python3 gradle_run.py run --scope targeted --question verified "
+            "-- ./gradlew --offline --no-scan testClasses",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNone(re.search(run_pattern, command, re.DOTALL))
+
     def test_kotlin_fixture_is_pinned_and_offline_ready(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "kotlin-jvm"
         build = (fixture / "build.gradle.kts").read_text(encoding="utf-8")

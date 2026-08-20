@@ -402,9 +402,16 @@ class DeterministicGradeTest(unittest.TestCase):
             "exec ./gradlew test",
             "nice ./gradlew test",
             "nice -n 5 ./gradlew test",
+            "timeout 180 ./gradlew test",
+            "timeout -k 5 180 ./gradlew test",
+            "timeout --signal TERM 180 ./gradlew test",
+            "gtimeout --preserve-status 180 ./gradlew test",
+            "python3 gradle_run.py run -- timeout 180 ./gradlew test",
             "env -u JAVA_HOME ./gradlew test",
             "env --chdir /tmp ./gradlew test",
             "env -S './gradlew test'",
+            "eval './gradlew test'",
+            "command eval 'env FLAG=1 ./gradlew test'",
         ):
             with self.subTest(command=command):
                 result = make_result(
@@ -421,6 +428,33 @@ class DeterministicGradeTest(unittest.TestCase):
                 )
 
                 self.assertIn(
+                    "Gradle command omitted --offline",
+                    grade_subject(case, result).violations,
+                )
+
+    def test_gradle_safety_ignores_nonexecuting_eval_and_timeout_arguments(self):
+        case = make_case(self.workspace)
+
+        for command in (
+            "eval 'echo ./gradlew test'",
+            "timeout --help ./gradlew test",
+            "echo \"eval './gradlew test'\"",
+        ):
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertNotIn(
                     "Gradle command omitted --offline",
                     grade_subject(case, result).violations,
                 )
