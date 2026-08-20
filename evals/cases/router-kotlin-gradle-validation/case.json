@@ -10,7 +10,7 @@
   "allowed_write_paths": ["src/main/kotlin/example/Subject.kt"],
   "required_command_patterns": [
     "gradle_run\\.py create",
-    "gradle_run\\.py run(?=.*--scope targeted)(?=.*--question)",
+    "gradle_run\\.py run(?=.*--scope targeted)(?=.*--question)(?=.*--\\s+(?:[^\\s]+/)?(?:gradle|gradlew[^\\s/]*)(?:\\s+[^\\s]+)*\\s+test(?:\\s|$))",
     "gradle_run\\.py finish"
   ],
   "validators": [

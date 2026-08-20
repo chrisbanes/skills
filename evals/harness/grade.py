@@ -366,6 +366,16 @@ def _segment_invocations(
                 return ()
             index += 1
             continue
+        if prefix == "nohup":
+            index += 1
+            while index < len(tokens) and tokens[index].startswith("-"):
+                option = tokens[index]
+                index += 1
+                if option == "--":
+                    break
+                if option in {"--help", "--version"}:
+                    return ()
+            continue
         if prefix == "command":
             index += 1
             while index < len(tokens) and tokens[index].startswith("-"):

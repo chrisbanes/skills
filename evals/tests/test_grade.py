@@ -407,6 +407,9 @@ class DeterministicGradeTest(unittest.TestCase):
             "timeout --signal TERM 180 ./gradlew test",
             "gtimeout --preserve-status 180 ./gradlew test",
             "python3 gradle_run.py run -- timeout 180 ./gradlew test",
+            "nohup ./gradlew test",
+            "nohup -- ./gradlew test",
+            "python3 gradle_run.py run -- nohup ./gradlew test",
             "env -u JAVA_HOME ./gradlew test",
             "env --chdir /tmp ./gradlew test",
             "env -S './gradlew test'",
@@ -438,6 +441,7 @@ class DeterministicGradeTest(unittest.TestCase):
         for command in (
             "eval 'echo ./gradlew test'",
             "timeout --help ./gradlew test",
+            "nohup --help ./gradlew test",
             "echo \"eval './gradlew test'\"",
         ):
             with self.subTest(command=command):
