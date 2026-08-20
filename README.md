@@ -122,17 +122,18 @@ For a taxonomy change, also run the durable
 required references, safeguards, exceptions, and finish gates at the public
 agent-facing seam.
 
-## Evaluating Compose skills
+## Evaluating skills
 
-The repository contains a Codex-first advisory evaluator for the six Compose
-skills and their router. It compares a no-plugin baseline, explicit skill
-invocation, and automatic activation across 38 synthetic and provenance-bearing
-cases. Deterministic checks run in CI; authenticated model calls and their
-scores never gate merges or releases.
+The repository contains a Codex-first advisory evaluator with a shared core and
+suite-specific policies. It compares a no-plugin baseline, explicit skill
+invocation, and full-public-catalog automatic activation. The Compose suite has
+38 scored cases; the Kotlin/Gradle suite has 19 risk-weighted cases covering
+`gradle-run` and the three Kotlin skills. Deterministic checks run in CI;
+authenticated model calls and their scores never gate merges or releases.
 
 ### Latest evaluated scores
 
-The 2026-08-18 certified scorecard produced these per-skill positive-case
+The 2026-08-18 certified Compose scorecard produced these per-skill positive-case
 outcome scores. **Automatic score** is the headline score: all skills and the
 router were available, but the prompt did not name a skill. Uplift compares
 explicit skill invocation with the no-skill baseline.
@@ -158,11 +159,36 @@ condition targeted by the finalized skill edits. The
 [evaluation documentation](evals/README.md) defines the score, controls, safety
 evidence, and interpretation caveats.
 
+The published Compose scorecard predates the full-public-catalog automatic-arm
+policy. New suite results remain separate and fingerprinted; the repository
+overview is descriptive rather than a combined gate.
+
+The separate 2026-08-19 Kotlin/Gradle cohort used the full 15-skill automatic
+catalog and produced these advisory diagnostics:
+
+| Skill | Baseline | Forced | Automatic score | Uplift | Restraint (forced / automatic) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| [`gradle-run`](skills/gradle-run/SKILL.md) | 33.3% | 100.0% | **75.0%** | +66.7 pp | 100.0% / 100.0% |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | **91.7%** | +33.3 pp | 100.0% / 100.0% |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | **100.0%** | +66.7 pp | 66.7% / 66.7% |
+| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 83.3% | **77.8%** | +55.6 pp | 100.0% / 100.0% |
+
+The cohort passed forced uplift, automatic retention, and both routing gates,
+but did not pass the negative-control or zero-forbidden-action gates. Its one
+genuine forbidden action was an undeclared fixture edit. Human audit also found
+the sealed-exhaustiveness review rubric over-constrained for its
+behavior-preserving prompt. A separately fingerprinted 2026-08-20 follow-up
+evaluated the corrected rubric at 100.0% in all three arms (3/3 each), with no
+forbidden action, process failure, or retry. The discoverable disabled-skill
+catalog changed between runs, so the evaluator correctly refused to merge that
+follow-up into the frozen aggregate above.
+
 Validate the harness and preview the full call matrix:
 
 ```shell
 npm run evals:validate
 python3 evals/run.py plan \
+  --suite kotlin-gradle \
   --model gpt-5.6-terra --reasoning medium \
   --judge-model gpt-5.6-sol --judge-reasoning high
 ```

@@ -13,6 +13,7 @@ from evals.harness.codex import (
     prepare_workspace,
     run_subject,
 )
+from evals.harness.suites import PUBLIC_SKILLS
 
 
 def sample_case(root: Path, *, task_mode: str = "edit") -> EvalCase:
@@ -48,7 +49,13 @@ class CodexRunnerTest(unittest.TestCase):
         (fixture / "src" / "main" / "kotlin" / "example" / "Base.kt").write_text(
             "package example\n", encoding="utf-8"
         )
-        for skill in (*COMPOSE_SKILLS, ROUTER_SKILL):
+        (fixture / "gradlew").write_text("#!/bin/sh\necho real\n", encoding="utf-8")
+        (fixture / "gradlew").chmod(0o755)
+        (fixture / "subject-gradlew").write_text(
+            "#!/bin/sh\necho simulated\n", encoding="utf-8"
+        )
+        (fixture / "subject-gradlew").chmod(0o755)
+        for skill in PUBLIC_SKILLS:
             skill_dir = self.root / "skills" / skill
             skill_dir.mkdir(parents=True)
             (skill_dir / "SKILL.md").write_text(f"---\nname: {skill}\n---\n", encoding="utf-8")
@@ -93,10 +100,10 @@ class CodexRunnerTest(unittest.TestCase):
             self.assertIn("SKILL.md", rendered)
         self.assertEqual(1, " ".join(none).count("path = "))
         self.assertEqual(2, " ".join(forced).count("path = "))
-        self.assertEqual(8, " ".join(automatic).count("path = "))
+        self.assertEqual(16, " ".join(automatic).count("path = "))
         self.assertEqual(0, " ".join(none).count("enabled = true"))
         self.assertEqual(1, " ".join(forced).count("enabled = true"))
-        self.assertEqual(7, " ".join(automatic).count("enabled = true"))
+        self.assertEqual(15, " ".join(automatic).count("enabled = true"))
         self.assertIn("$compose-state-and-effects", forced[-1])
         self.assertNotIn("$compose-state-and-effects", automatic[-1])
         self.assertIn("If you run Gradle, use `--offline --no-scan`.", automatic[-1])
@@ -175,6 +182,9 @@ class CodexRunnerTest(unittest.TestCase):
         ).stdout
 
         self.assertTrue((first / ".git").is_dir())
+        self.assertEqual("#!/bin/sh\necho simulated\n", (first / "gradlew").read_text())
+        self.assertEqual("#!/bin/sh\necho real\n", (first / "gradlew-real").read_text())
+        self.assertFalse((first / "subject-gradlew").exists())
         self.assertEqual(" M src/main/kotlin/example/Subject.kt\n", status)
         self.assertEqual("package example\n", (second / subject.relative_to(first)).read_text())
 

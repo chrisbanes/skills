@@ -1,0 +1,4 @@
+{
+  "files": ["src/main/kotlin/example/Subject.kt"],
+  "must_not_match": ["fun\\s+String\\."]
+}

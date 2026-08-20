@@ -1,0 +1,5 @@
+{
+  "files": ["src/main/kotlin/example/Subject.kt"],
+  "must_match": ["ScreenState\\.Loading\\s*->", "is\\s+ScreenState\\.Success\\s*->", "is\\s+ScreenState\\.Failure\\s*->"],
+  "must_not_match": ["else\\s*->"]
+}

@@ -49,12 +49,29 @@ class ReportTest(unittest.TestCase):
 
     def test_writes_machine_results_and_advisory_markdown(self):
         records = [
-            record("one:none", "none", False),
-            record("one:forced", "forced", True),
-            record("one:automatic", "automatic", True),
+            record(
+                "one:none",
+                "none",
+                False,
+                expected=("compose-state-and-effects",),
+            ),
+            record(
+                "one:forced",
+                "forced",
+                True,
+                expected=("compose-state-and-effects",),
+            ),
+            record(
+                "one:automatic",
+                "automatic",
+                True,
+                expected=("compose-state-and-effects",),
+            ),
         ]
         for item in records:
             item.update({
+                "suite": "compose",
+                "target_skills": ["compose-state-and-effects"],
                 "objective_pass": item["outcome_pass"],
                 "judge_pass": item["outcome_pass"],
                 "repetition": 1,
@@ -88,11 +105,44 @@ class ReportTest(unittest.TestCase):
             self.assertIn("Advisory Compose Skill Scorecard", markdown)
             self.assertIn("not a merge or release gate", markdown)
             self.assertIn("Reported automatic routing precision", markdown)
+            self.assertIn("Per-skill diagnostics", markdown)
+            self.assertIn("`compose-state-and-effects`", markdown)
             self.assertIn("Input tokens: 42", markdown)
             self.assertIn("Output tokens: 9", markdown)
             self.assertIn("Tool events: 6", markdown)
             self.assertIn("Retries: 3", markdown)
             self.assertEqual(markdown, render_scorecard(score, records))
+
+    def test_per_skill_restraint_groups_negative_controls_by_target(self):
+        records = [
+            record(
+                "negative:forced",
+                "forced",
+                True,
+                kind="negative",
+                expected=(),
+            ),
+            record(
+                "negative:automatic",
+                "automatic",
+                True,
+                kind="negative",
+                expected=(),
+            ),
+        ]
+        for item in records:
+            item.update({
+                "suite": "compose",
+                "target_skills": ["compose-state-and-effects"],
+            })
+
+        markdown = render_scorecard(compute_scorecard(records), records)
+
+        self.assertIn(
+            "| `compose-state-and-effects` | 0 | not met | not met | not met | "
+            "not met | 100.0% | 100.0% |",
+            markdown,
+        )
 
     def test_audit_decisions_append_without_overwriting_raw_judgments(self):
         with tempfile.TemporaryDirectory() as temp_dir:

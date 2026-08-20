@@ -1,0 +1,20 @@
+{
+  "id": "kotlin-control-guards-direct",
+  "title": "Flatten a branch-local message predicate",
+  "family": "kotlin-control",
+  "target_skills": ["kotlin-control-flow"],
+  "expected_skills": ["kotlin-control-flow", "gradle-run"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": ["src/main/kotlin/example/Subject.kt"],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-control-guards-direct"], "timeout_seconds": 30},
+    {"argv": ["./gradlew-real", "--offline", "--no-scan", "test"], "timeout_seconds": 180}
+  ],
+  "rubric": [
+    {"id": "guard-shape", "text": "The unread predicate becomes a guard on the Message branch followed by an unguarded Message fallback"},
+    {"id": "smart-cast", "text": "The rewrite preserves exhaustiveness and Message smart casts without !!, as, or duplicate casts"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

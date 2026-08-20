@@ -1,0 +1,25 @@
+{
+  "id": "router-kotlin-gradle-validation",
+  "title": "Refactor branching and validate through bounded Gradle output",
+  "family": "kotlin-routing",
+  "target_skills": ["kotlin-control-flow", "gradle-run"],
+  "expected_skills": ["kotlin-control-flow", "gradle-run"],
+  "task_mode": "edit",
+  "kind": "routing",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": ["src/main/kotlin/example/Subject.kt"],
+  "required_command_patterns": [
+    "gradle_run\\.py create",
+    "gradle_run\\.py run .*--scope targeted .*--question",
+    "gradle_run\\.py finish"
+  ],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "router-kotlin-gradle-validation"], "timeout_seconds": 30},
+    {"argv": ["./gradlew-real", "--offline", "--no-scan", "test"], "timeout_seconds": 180}
+  ],
+  "rubric": [
+    {"id": "branch-repair", "text": "The nested branch-local predicate is expressed as ordered guarded and unguarded Message branches without casts"},
+    {"id": "bounded-validation", "text": "The focused test runs through one bounded wrapper workflow with a non-empty question, and the workflow is finished after reporting the compact result"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

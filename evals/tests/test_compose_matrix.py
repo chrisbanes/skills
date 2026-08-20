@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 class ComposeMatrixTest(unittest.TestCase):
     def test_has_the_exact_concern_slice_and_router_matrix(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
 
         self.assertEqual(42, report.case_count)
         benchmark = [case for case in report.cases if not case.calibration]
@@ -36,7 +36,7 @@ class ComposeMatrixTest(unittest.TestCase):
             self.assertEqual((skill,), negative.expected_skills)
 
     def test_calibration_cases_require_explicit_selection(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
 
         default_cases = filter_cases(report.cases, case_ids=None, skills=None)
         self.assertEqual(38, len(default_cases))
@@ -52,7 +52,7 @@ class ComposeMatrixTest(unittest.TestCase):
         self.assertTrue(selected[0].calibration)
 
     def test_automatic_prompts_do_not_name_or_invoke_expected_skills(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
 
         for case in report.cases:
             with self.subTest(case=case.id):
@@ -62,7 +62,7 @@ class ComposeMatrixTest(unittest.TestCase):
                     self.assertNotIn(skill, prompt)
 
     def test_stability_novel_requests_the_repair_recommendation_it_grades(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(
             case
             for case in report.cases
@@ -79,7 +79,7 @@ class ComposeMatrixTest(unittest.TestCase):
         self.assertIn("then deciding", repair_criterion["text"].lower())
 
     def test_ui_testing_novel_does_not_require_unnecessary_synchronization(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(
             case
             for case in report.cases
@@ -110,7 +110,7 @@ class ComposeMatrixTest(unittest.TestCase):
         self.assertGreater((fixture / "gradle" / "wrapper" / "gradle-wrapper.jar").stat().st_size, 10_000)
 
     def test_direct_cases_start_red_while_reviews_and_negatives_start_green(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             run_root = Path(temp_dir)
@@ -125,7 +125,7 @@ class ComposeMatrixTest(unittest.TestCase):
                         self.assertTrue(grade.objective_pass)
 
     def test_state_authoring_accepts_private_backing_state_with_public_read(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(
             case for case in report.cases if case.id == "compose-state-authoring-direct"
         )
@@ -156,7 +156,7 @@ class Counter {
             self.assertTrue(grade_subject(case, result).objective_pass)
 
     def test_direct_validators_accept_semantic_equivalents_seen_in_live_runs(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
         replacements = (
             ("compose-slot-api-pattern-direct", """package example
 import androidx.compose.runtime.Composable
@@ -208,7 +208,7 @@ class SubjectTest {
                     self.assertTrue(grade_subject(case, result).objective_pass)
 
     def test_regrades_persisted_subject_evidence_without_model_calls(self):
-        report = validate_corpus(REPO_ROOT)
+        report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(
             case for case in report.cases if case.id == "compose-slot-api-pattern-direct"
         )

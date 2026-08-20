@@ -1,0 +1,25 @@
+{
+  "id": "kotlin-control-exhaustiveness-novel",
+  "title": "Review sealed-result exhaustiveness",
+  "family": "kotlin-control",
+  "target_skills": ["kotlin-control-flow"],
+  "expected_skills": ["kotlin-control-flow"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-control-exhaustiveness-novel"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "closed-domain", "text": "The review identifies ApiStatus as a closed domain and recommends explicit branches instead of an else fallback"},
+    {"id": "branch-data", "text": "The recommendation preserves every current rendered string and keeps smart-cast access for branch data that remains in use without casts or forced unwraps; it does not invent use of ValidationError.reason"}
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/Kotlin/KEEP/blob/a1bda4c7642191d58fdc72c83f5400c4780342db/proposals/KEEP-0441-rich-errors-motivation.md",
+    "revision": "a1bda4c7642191d58fdc72c83f5400c4780342db",
+    "license": "Apache-2.0",
+    "normalization_note": "Normalized the proposal's sealed ApiStatus example into a reviewable Kotlin function with an overly broad fallback."
+  }
+}

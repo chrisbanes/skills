@@ -1,7 +1,10 @@
-# Compose skill evaluations
+# Repository skill evaluations
 
-This directory contains a reproducible, advisory evaluator for the repository's
-six Compose skills and the `using-chrisbanes-skills` routing layer. It is designed
+This directory contains a reproducible, advisory evaluator with a shared core
+and suite-specific catalogs, fixtures, coverage rules, and safety policies. The
+committed suites cover the six Compose skills and the first expansion cohort:
+`gradle-run`, `kotlin-api-design`, `kotlin-concurrency-and-flow`, and
+`kotlin-control-flow`. It is designed
 to answer two separate questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
@@ -10,7 +13,7 @@ to answer two separate questions:
 The evaluator never turns a stochastic model score into a merge or release
 gate. CI validates only the harness, corpus, and deterministic formulas.
 
-## Latest per-skill scores
+## Latest Compose per-skill scores
 
 The 2026-08-18 certified scorecard produced the following descriptive scores.
 **Automatic score** is the positive-case outcome pass rate when all skills and
@@ -42,20 +45,60 @@ The raw historical scorecard retains its two earlier forbidden actions; the
 current probe recorded none. See the experiment design and safety rules below
 when interpreting the table.
 
+This historical Compose scorecard used the then-current Compose-only automatic
+catalog. New runs use the full public repository catalog as described below, so
+do not combine old and new fingerprints or present their routing rates as one
+condition.
+
+## Latest Kotlin/Gradle per-skill scores
+
+The separate 2026-08-19 run evaluated all 19 Kotlin/Gradle cases with the full
+15-skill automatic catalog, three repetitions, Terra medium subjects, and Sol
+high blinded judges.
+
+| Skill | Positive records per arm | Baseline | Forced | Automatic score | Uplift | Restraint (forced / automatic) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `gradle-run` | 12 | 33.3% | 100.0% | 75.0% | +66.7 pp | 100.0% / 100.0% |
+| `kotlin-api-design` | 12 | 66.7% | 100.0% | 91.7% | +33.3 pp | 100.0% / 100.0% |
+| `kotlin-concurrency-and-flow` | 12 | 33.3% | 100.0% | 100.0% | +66.7 pp | 66.7% / 66.7% |
+| `kotlin-control-flow` | 18 | 27.8% | 83.3% | 77.8% | +55.6 pp | 100.0% / 100.0% |
+
+Aggregate positive outcomes were 44.4% baseline, 93.3% forced, and 84.4%
+automatic. Automatic retention was 81.8%; reported automatic routing precision
+and recall were 96.3% and 94.0%. Forced and automatic negative-control restraint
+were both 91.7%, and one genuine forbidden action remained: an automatic
+value-class response edited undeclared `Fixture.kt`.
+
+The run passed forced-uplift, automatic-retention, routing-precision, and
+routing-recall gates. It did not pass the negative-control or
+zero-forbidden-action gates. Human audit found that
+`kotlin-control-exhaustiveness-novel` requires access to an otherwise-unused
+error payload while also asking for a behavior-preserving rewrite.
+
+A separately fingerprinted 2026-08-20 follow-up corrected that rubric and
+scored 100.0% for none, forced, and automatic arms (3/3 each), with 100.0%
+routing precision/recall and no forbidden action, process failure, or retry.
+The disabled discoverable-skill catalog changed from 142 to 160 entries between
+runs because installed plugin versions changed. The evaluator therefore failed
+closed instead of merging the new case records into the frozen 2026-08-19
+aggregate. Treat the follow-up as evidence that the earlier case result was a
+rubric artifact, not as a recalculated cohort score.
+
 ## Experiment arms
 
 Every case runs in a fresh workspace and conversation under three arms:
 
-- `none` disables all six Compose skills and the router.
+- `none` disables every discoverable skill.
 - `forced` enables and explicitly invokes only the case's target skill or
   skills. Negative controls still force the target so over-application remains
   observable.
-- `automatic` enables all Compose skills and the router without naming any skill
-  in the task prompt.
+- `automatic` enables all 15 public repository skills without naming any skill
+  in the task prompt. This measures cross-domain routing interference as well as
+  target-skill activation.
 
-Each `case × arm` condition runs three times by default. The complete corpus
-therefore schedules 342 subject calls and 342 blinded judge calls, or 684 calls
-in total.
+Each `case × arm` condition runs three times by default. The 38-case Compose
+suite schedules 342 subject calls and 342 blinded judge calls. The 19-case
+Kotlin/Gradle suite schedules 171 subject calls and 171 blinded judge calls.
 
 All subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,
@@ -79,7 +122,7 @@ the human audit provide the behavioral evidence.
 
 ## Corpus
 
-The scored benchmark remains 38 cases and comprises:
+The Compose benchmark remains 38 scored cases and comprises:
 
 - one direct authorized edit, one novel read-only review, and one authorized
   no-change control for each of 11 focused concern slices across the six skills;
@@ -95,11 +138,28 @@ corpus. They are excluded from default plans and published scorecards; select
 them explicitly with `--case` when deciding whether they should graduate into
 the benchmark.
 
+The Kotlin/Gradle benchmark contains 19 scored cases:
+
+- a direct task, novel review, and no-change restraint control for each of its
+  four skills;
+- one additional high-risk branch per skill;
+- three multi-skill routing cases; and
+- three immutable public-source snapshots across API, Flow, and control-flow
+  concerns.
+
+Use `--suite compose` or `--suite kotlin-gradle` to select one advisory
+scorecard. The default remains `compose` for command compatibility. Never mix
+suites into one pass/fail result; repository-wide summaries are descriptive.
+
 `case.json` defines routing expectations, task mode, allowed writes, deterministic
 validators, rubric criteria, and provenance. Safety checks for network and external
 tools, permission escalation, destructive commands, undeclared writes, and online
 Gradle invocations are global evaluator policy. `prompt.md` is the arm-neutral task.
-`overlay/` is copied over the pinned Compose/JVM fixture.
+`overlay/` is copied over the fixture selected by the case's suite. The
+Kotlin/Gradle fixture presents subjects with a deterministic networkless
+`gradlew` simulation while external validators use `gradlew-real` to compile
+and test edits with the pinned distribution. Both case and fixture contents are
+included in result fingerprints.
 `expectations.json` is consumed only by the external deterministic grader and is
 not copied into the subject workspace.
 
@@ -135,6 +195,7 @@ Preview the complete matrix and call count:
 
 ```shell
 python3 evals/run.py plan \
+  --suite kotlin-gradle \
   --model gpt-5.6-terra --reasoning medium \
   --judge-model gpt-5.6-sol --judge-reasoning high \
   --repetitions 3
@@ -156,7 +217,8 @@ smoke run after authenticating Codex and warming the pinned Gradle distribution:
 
 ```shell
 python3 evals/run.py run \
-  --case compose-state-authoring-direct \
+  --suite kotlin-gradle \
+  --case kotlin-api-ownership-direct \
   --arm none --arm forced --arm automatic \
   --model gpt-5.6-terra --reasoning medium \
   --judge-model gpt-5.6-sol --judge-reasoning high \
@@ -217,8 +279,8 @@ final diff, response, and validator evidence. It never receives the arm, skill s
 routing expectation, raw Codex configuration, or deterministic verdict.
 
 A task outcome passes only when all deterministic validators and required judge
-criteria pass. Safety remains an independent result. The advisory scorecard
-applies these gates over the three repetitions:
+criteria pass. Safety remains an independent result. Each suite's advisory
+scorecard applies these gates over the three repetitions:
 
 - forced positive-case pass rate improves on baseline by at least 10 percentage
   points;

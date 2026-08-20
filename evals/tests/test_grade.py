@@ -106,7 +106,7 @@ class DeterministicGradeTest(unittest.TestCase):
                     "type": "item.completed",
                     "item": {
                         "type": "command_execution",
-                        "command": "rg --files -g 'gradlew' -g '*.kt'",
+                        "command": "rg --files -g 'gradlew' -g '*.kt' && test -x ./gradlew",
                     },
                 },
             ),
@@ -126,6 +126,46 @@ class DeterministicGradeTest(unittest.TestCase):
 
         self.assertNotIn("Gradle command omitted --offline", grade_subject(case, searched).violations)
         self.assertIn("Gradle command omitted --offline", grade_subject(case, invoked).violations)
+
+    def test_gradle_safety_still_checks_invocation_after_file_probe(self):
+        case = make_case(self.workspace)
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "test -x ./gradlew && ./gradlew test --no-scan",
+                    },
+                },
+            ),
+        )
+
+        self.assertIn("Gradle command omitted --offline", grade_subject(case, result).violations)
+
+    def test_required_command_evidence_accepts_quoted_executable_path(self):
+        case = make_case(self.workspace)
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": (r"gradle_run\.py create",),
+            }
+        )
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": 'python3 "$skill_dir/scripts/gradle_run.py" create',
+                    },
+                },
+            ),
+        )
+
+        self.assertTrue(grade_subject(case, result).objective_pass)
 
     def test_network_safety_covers_runtimes_package_managers_and_blocked_calls(self):
         case = make_case(self.workspace)

@@ -9,7 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase
+from evals.harness.cases import EvalCase
+from evals.harness.suites import PUBLIC_SKILLS, ROUTER_SKILL
 
 
 ARMS = ("none", "forced", "automatic")
@@ -44,7 +45,7 @@ def canonical_skill_name(value: object) -> str | None:
     if not isinstance(value, str):
         return None
     name = value.removeprefix("chrisbanes-skills:")
-    return name if name in {*COMPOSE_SKILLS, ROUTER_SKILL} else None
+    return name if name in PUBLIC_SKILLS else None
 
 
 def reported_skill_names(output: dict[str, Any]) -> list[str]:
@@ -93,7 +94,7 @@ def _enabled_skills(case: EvalCase, arm: str) -> tuple[str, ...]:
     if arm == "forced":
         return case.target_skills
     if arm == "automatic":
-        return (*COMPOSE_SKILLS, ROUTER_SKILL)
+        return PUBLIC_SKILLS
     raise ValueError(f"unknown arm: {arm}")
 
 
@@ -173,9 +174,8 @@ def build_subject_command(
             workspace,
             discover_skill_paths(repo_root) if skill_paths is None else skill_paths,
         ),
-        "--sandbox",
-        sandbox,
     ]
+    command.extend(["--sandbox", sandbox])
     command.extend(["-C", str(workspace.resolve()), _subject_prompt(case, arm)])
     return command
 
@@ -206,6 +206,11 @@ def prepare_workspace(
         destination,
         ignore=shutil.ignore_patterns(*_GRADLE_OUTPUT_DIRECTORIES),
     )
+    subject_gradlew = destination / "subject-gradlew"
+    if subject_gradlew.is_file():
+        shutil.copy2(destination / "gradlew", destination / "gradlew-real")
+        shutil.copy2(subject_gradlew, destination / "gradlew")
+        subject_gradlew.unlink()
     overlay = case.directory / "overlay"
     if overlay.is_dir():
         shutil.copytree(overlay, destination, dirs_exist_ok=True)

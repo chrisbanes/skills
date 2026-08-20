@@ -4,5 +4,5 @@ node_modules/
 __pycache__/
 *.py[cod]
 .scratch/skill-evals/
-evals/fixtures/compose-jvm/.gradle/
-evals/fixtures/compose-jvm/build/
+evals/fixtures/*/.gradle/
+evals/fixtures/*/build/

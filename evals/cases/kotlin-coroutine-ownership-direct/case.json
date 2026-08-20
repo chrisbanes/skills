@@ -1,0 +1,20 @@
+{
+  "id": "kotlin-coroutine-ownership-direct",
+  "title": "Return coroutine ownership to the caller",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow", "gradle-run"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": ["src/main/kotlin/example/Subject.kt"],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-coroutine-ownership-direct"], "timeout_seconds": 30},
+    {"argv": ["./gradlew-real", "--offline", "--no-scan", "test"], "timeout_seconds": 180}
+  ],
+  "rubric": [
+    {"id": "caller-lifetime", "text": "The repository exposes suspending work so the caller owns cancellation, completion, and error handling"},
+    {"id": "no-hidden-launch", "text": "The repository no longer stores an arbitrary CoroutineScope or hides refresh in fire-and-forget launch"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

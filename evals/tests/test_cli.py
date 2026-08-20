@@ -44,6 +44,24 @@ class EvaluationCliTest(unittest.TestCase):
         self.assertEqual(342, plan["judge_calls"])
         self.assertEqual(684, plan["total_calls"])
 
+    def test_kotlin_gradle_plan_uses_its_own_19_case_suite(self):
+        status, output = self.invoke(
+            "plan",
+            *MODEL_ARGS,
+            "--suite",
+            "kotlin-gradle",
+            "--repetitions",
+            "3",
+            "--json",
+        )
+
+        plan = json.loads(output)
+        self.assertEqual(0, status)
+        self.assertEqual(19, plan["case_count"])
+        self.assertEqual(171, plan["subject_calls"])
+        self.assertEqual(171, plan["judge_calls"])
+        self.assertEqual(342, plan["total_calls"])
+
     def test_filters_case_skill_and_arm_before_counting_calls(self):
         status, output = self.invoke(
             "plan",

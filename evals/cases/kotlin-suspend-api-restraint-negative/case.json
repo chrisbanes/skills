@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-suspend-api-restraint-negative",
+  "title": "Keep caller-owned suspension",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-suspend-api-restraint-negative"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "restraint", "text": "The response keeps the already-suspending repository API and does not add an internal scope, launch, callback, or deferred wrapper"},
+    {"id": "ownership", "text": "The response recognizes that the caller already owns lifetime, cancellation, result, and failure"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

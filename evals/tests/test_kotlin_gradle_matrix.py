@@ -1,0 +1,109 @@
+import tempfile
+import unittest
+from pathlib import Path
+
+from evals.harness.cases import validate_corpus
+from evals.harness.codex import prepare_workspace
+from evals.harness.experiment import filter_cases
+from evals.harness.grade import grade_subject
+from evals.harness.suites import KOTLIN_GRADLE_SKILLS
+from evals.tests.test_grade import make_result
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+class KotlinGradleMatrixTest(unittest.TestCase):
+    def test_has_risk_weighted_skill_triads_and_routing_cases(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+
+        self.assertEqual(19, report.case_count)
+        self.assertFalse(any(case.calibration for case in report.cases))
+        self.assertEqual(3, sum(case.kind == "routing" for case in report.cases))
+        self.assertGreaterEqual(
+            sum(case.provenance["kind"] == "historical" for case in report.cases),
+            3,
+        )
+        for skill in KOTLIN_GRADLE_SKILLS:
+            skill_cases = [case for case in report.cases if skill in case.target_skills]
+            with self.subTest(skill=skill):
+                self.assertTrue(any(case.kind == "direct" for case in skill_cases))
+                self.assertTrue(any(case.kind == "novel" for case in skill_cases))
+                self.assertTrue(any(case.kind == "negative" for case in skill_cases))
+
+    def test_default_filter_selects_all_19_scored_cases(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+
+        selected = filter_cases(report.cases, case_ids=None, skills=None)
+
+        self.assertEqual(19, len(selected))
+
+    def test_positive_edits_and_required_command_cases_start_red(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            run_root = Path(temp_dir)
+            for case in report.cases:
+                with self.subTest(case=case.id):
+                    workspace = prepare_workspace(case, REPO_ROOT, run_root / case.id)
+                    grade = grade_subject(case, make_result(workspace))
+                    starts_red = (
+                        case.kind != "negative"
+                        and (bool(case.allowed_write_paths) or bool(case.required_command_patterns))
+                    )
+                    self.assertEqual(not starts_red, grade.objective_pass)
+
+    def test_automatic_prompts_do_not_disclose_routing_expectations(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+
+        for case in report.cases:
+            with self.subTest(case=case.id):
+                prompt = case.prompt.lower()
+                self.assertNotIn("$", prompt)
+                for skill in case.expected_skills:
+                    self.assertNotIn(skill, prompt)
+
+    def test_exhaustiveness_review_does_not_require_using_an_unused_payload(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "kotlin-control-exhaustiveness-novel"
+        )
+        criterion = next(item for item in case.rubric if item["id"] == "branch-data")
+        text = criterion["text"].lower()
+
+        self.assertIn("preserves every current rendered string", text)
+        self.assertIn("branch data that remains in use", text)
+        self.assertIn("does not invent use of validationerror.reason", text)
+
+    def test_kotlin_fixture_is_pinned_and_offline_ready(self):
+        fixture = REPO_ROOT / "evals" / "fixtures" / "kotlin-jvm"
+        build = (fixture / "build.gradle.kts").read_text(encoding="utf-8")
+        wrapper = (fixture / "gradle" / "wrapper" / "gradle-wrapper.properties").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('org.jetbrains.kotlin.jvm") version "2.4.10"', build)
+        self.assertIn("kotlinx-coroutines-core:1.10.2", build)
+        self.assertIn("gradle-9.7.0-bin.zip", wrapper)
+        self.assertTrue((fixture / "gradlew").stat().st_mode & 0o111)
+        subject_wrapper = fixture / "subject-gradlew"
+        self.assertTrue(subject_wrapper.stat().st_mode & 0o111)
+        self.assertIn("BUILD SUCCESSFUL", subject_wrapper.read_text(encoding="utf-8"))
+
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        real_gradle_validators = [
+            validator
+            for case in report.cases
+            for validator in case.validators
+            if validator.argv[0].startswith("./gradlew")
+        ]
+        self.assertTrue(real_gradle_validators)
+        self.assertTrue(
+            all(validator.argv[0] == "./gradlew-real" for validator in real_gradle_validators)
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

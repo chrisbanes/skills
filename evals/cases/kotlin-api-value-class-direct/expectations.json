@@ -1,0 +1,5 @@
+{
+  "files": ["src/main/kotlin/example/Subject.kt"],
+  "must_match": ["@JvmInline\\s+value\\s+class\\s+UserId\\s*\\(val\\s+value:\\s*String\\)"],
+  "must_not_match": ["data\\s+class\\s+UserId"]
+}

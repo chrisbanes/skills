@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-control-open-fallback-negative",
+  "title": "Keep an open-world status fallback",
+  "family": "kotlin-control",
+  "target_skills": ["kotlin-control-flow"],
+  "expected_skills": ["kotlin-control-flow"],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-control-open-fallback-negative"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "open-domain", "text": "The response keeps the else branch because server String values form an open domain"},
+    {"id": "restraint", "text": "The response does not invent an enum, sealed wrapper, or exhaustive list without a closed upstream contract"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

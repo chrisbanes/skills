@@ -6,29 +6,18 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from evals.harness.suites import (
+    COMPOSE_SKILLS,
+    COMPOSE_TOPICS,
+    PUBLIC_SKILLS,
+    ROUTER_SKILL,
+    SUITES,
+    SuitePolicy,
+    suite_for_skills,
+)
 
-COMPOSE_SKILLS = (
-    "compose-state-and-effects",
-    "compose-performance",
-    "compose-component-design",
-    "compose-animations",
-    "compose-focus-navigation",
-    "compose-ui-testing-patterns",
-)
-EVALUATED_TOPICS = (
-    ("compose-state-authoring", "compose-state-and-effects"),
-    ("compose-state-hoisting", "compose-state-and-effects"),
-    ("compose-side-effects", "compose-state-and-effects"),
-    ("compose-recomposition-performance", "compose-performance"),
-    ("compose-stability-diagnostics", "compose-performance"),
-    ("compose-state-deferred-reads", "compose-performance"),
-    ("compose-modifier-and-layout-style", "compose-component-design"),
-    ("compose-slot-api-pattern", "compose-component-design"),
-    ("compose-animations", "compose-animations"),
-    ("compose-focus-navigation", "compose-focus-navigation"),
-    ("compose-ui-testing-patterns", "compose-ui-testing-patterns"),
-)
-ROUTER_SKILL = "using-chrisbanes-skills"
+
+EVALUATED_TOPICS = COMPOSE_TOPICS
 TASK_MODES = {"review", "edit"}
 CASE_KINDS = {"direct", "novel", "negative", "routing"}
 _ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -60,6 +49,8 @@ class EvalCase:
     provenance: dict[str, str]
     prompt: str
     directory: Path
+    required_command_patterns: tuple[str, ...] = ()
+    forbidden_command_patterns: tuple[str, ...] = ()
     calibration: bool = False
 
 
@@ -128,7 +119,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
 
     target_skills = _require_string_list(data, "target_skills")
     expected_skills = _require_string_list(data, "expected_skills")
-    known_skills = set(COMPOSE_SKILLS)
+    known_skills = set(PUBLIC_SKILLS) - {ROUTER_SKILL}
     for field, values in (
         ("target_skills", target_skills),
         ("expected_skills", expected_skills),
@@ -210,6 +201,16 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
     if not isinstance(calibration, bool):
         raise CaseValidationError("calibration must be a boolean")
 
+    command_patterns: dict[str, tuple[str, ...]] = {}
+    for field in ("required_command_patterns", "forbidden_command_patterns"):
+        patterns = _require_string_list(data, field) if field in data else ()
+        for pattern in patterns:
+            try:
+                re.compile(pattern)
+            except re.error as error:
+                raise CaseValidationError(f"invalid {field} regex: {pattern}") from error
+        command_patterns[field] = patterns
+
     return EvalCase(
         id=case_id,
         title=_require_string(data, "title"),
@@ -226,10 +227,12 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         calibration=calibration,
         prompt=prompt,
         directory=manifest_path.parent,
+        required_command_patterns=command_patterns["required_command_patterns"],
+        forbidden_command_patterns=command_patterns["forbidden_command_patterns"],
     )
 
 
-def _coverage_gaps(cases: list[EvalCase]) -> list[str]:
+def _coverage_gaps(policy: SuitePolicy, cases: list[EvalCase]) -> list[str]:
     gaps: list[str] = []
     benchmark_cases = [case for case in cases if not case.calibration]
     by_id = {case.id: case for case in benchmark_cases}
@@ -238,7 +241,7 @@ def _coverage_gaps(cases: list[EvalCase]) -> list[str]:
         ("novel", "review"),
         ("negative", "edit"),
     )
-    for topic, skill in EVALUATED_TOPICS:
+    for topic, skill in policy.topic_triads:
         topic_cases: list[EvalCase] = []
         for kind, task_mode in expected_conditions:
             case_id = f"{topic}-{kind}"
@@ -254,16 +257,45 @@ def _coverage_gaps(cases: list[EvalCase]) -> list[str]:
         historical = [case for case in topic_cases if case.provenance["kind"] == "historical"]
         if len(historical) != 1:
             gaps.append(f"{topic}: expected 1 historical case, found {len(historical)}")
+    if policy.require_skill_triads:
+        for skill in policy.skills:
+            skill_cases = [case for case in benchmark_cases if skill in case.target_skills]
+            for kind in ("direct", "novel", "negative"):
+                if not any(case.kind == kind for case in skill_cases):
+                    gaps.append(f"{skill}: missing {kind} case")
+    historical_count = sum(
+        case.provenance["kind"] == "historical" for case in benchmark_cases
+    )
+    if historical_count < policy.historical_minimum:
+        gaps.append(
+            f"provenance: expected at least {policy.historical_minimum} historical cases, "
+            f"found {historical_count}"
+        )
     routing_count = sum(case.kind == "routing" for case in benchmark_cases)
-    if routing_count != 5:
-        gaps.append(f"router: expected 5 cases, found {routing_count}")
-    if len(benchmark_cases) != 38:
-        gaps.append(f"corpus: expected 38 benchmark cases, found {len(benchmark_cases)}")
+    if routing_count != policy.routing_cases:
+        gaps.append(
+            f"{policy.id} router: expected {policy.routing_cases} cases, found {routing_count}"
+        )
+    if len(benchmark_cases) != policy.benchmark_cases:
+        gaps.append(
+            f"{policy.id} corpus: expected {policy.benchmark_cases} benchmark cases, "
+            f"found {len(benchmark_cases)}"
+        )
+    calibration_count = sum(case.calibration for case in cases)
+    if calibration_count != policy.calibration_cases:
+        gaps.append(
+            f"{policy.id} calibration: expected {policy.calibration_cases} cases, "
+            f"found {calibration_count}"
+        )
     return gaps
 
 
 def validate_corpus(
-    repo_root: Path, *, allow_incomplete: bool = False, family: str | None = None
+    repo_root: Path,
+    *,
+    allow_incomplete: bool = False,
+    family: str | None = None,
+    suite: str | None = None,
 ) -> CorpusReport:
     repo_root = repo_root.resolve()
     if not (repo_root / "skills" / ROUTER_SKILL / "SKILL.md").is_file():
@@ -273,8 +305,23 @@ def validate_corpus(
     ids = [case.id for case in cases]
     if len(ids) != len(set(ids)):
         raise CaseValidationError("case ids must be unique")
-    gaps = _coverage_gaps(cases)
-    selected = cases if family is None else [case for case in cases if case.family == family]
+    by_suite: dict[str, list[EvalCase]] = {suite_id: [] for suite_id in SUITES}
+    for case in cases:
+        try:
+            policy = suite_for_skills(case.target_skills)
+        except ValueError as error:
+            raise CaseValidationError(str(error)) from error
+        by_suite[policy.id].append(case)
+    gaps = [
+        gap
+        for suite_id, policy in SUITES.items()
+        for gap in _coverage_gaps(policy, by_suite[suite_id])
+    ]
+    if suite is not None and suite not in SUITES:
+        raise CaseValidationError(f"unknown evaluation suite: {suite}")
+    selected = cases if suite is None else by_suite[suite]
+    if family is not None:
+        selected = [case for case in selected if case.family == family]
     if family is not None and not selected:
         raise CaseValidationError(f"unknown or empty skill family: {family}")
     if gaps and not allow_incomplete:

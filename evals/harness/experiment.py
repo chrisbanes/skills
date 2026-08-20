@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterable
 
-from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase
+from evals.harness.cases import EvalCase
 from evals.harness.codex import (
     ARMS,
     RunConfig,
@@ -37,6 +37,7 @@ from evals.harness.results import (
     write_result,
 )
 from evals.harness.score import compute_scorecard
+from evals.harness.suites import PUBLIC_SKILLS, ROUTER_SKILL, suite_for_skills
 
 
 RUN_CONTROL_FIELDS = (
@@ -139,11 +140,22 @@ def _judge_packet_path(
 
 def _case_digest(case: EvalCase) -> str:
     digest = hashlib.sha256()
-    for path in sorted(path for path in case.directory.rglob("*") if path.is_file()):
-        digest.update(path.relative_to(case.directory).as_posix().encode())
-        digest.update(b"\0")
-        digest.update(path.read_bytes())
-        digest.update(b"\0")
+    repo_root = case.directory.parents[2]
+    roots = (
+        ("case", case.directory),
+        ("fixture", repo_root / "evals" / "fixtures" / case.fixture),
+    )
+    for label, root in roots:
+        for path in sorted(path for path in root.rglob("*") if path.is_file()):
+            relative = path.relative_to(root)
+            if label == "fixture" and {".gradle", "build"} & set(relative.parts):
+                continue
+            digest.update(label.encode())
+            digest.update(b"\0")
+            digest.update(relative.as_posix().encode())
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+            digest.update(b"\0")
     return digest.hexdigest()
 
 
@@ -158,9 +170,7 @@ def _skill_catalog_digest(skill_paths: tuple[Path, ...]) -> str:
 
 
 def _skill_source_paths(repo_root: Path) -> tuple[Path, ...]:
-    skill_dirs = (
-        repo_root / "skills" / skill for skill in (*COMPOSE_SKILLS, ROUTER_SKILL)
-    )
+    skill_dirs = (repo_root / "skills" / skill for skill in PUBLIC_SKILLS)
     return tuple(
         sorted(
             (
@@ -181,13 +191,18 @@ def _command_output(command: list[str], *, cwd: Path) -> str:
     return completed.stdout.strip()
 
 
-def preflight(repo_root: Path, codex_executable: str) -> tuple[str, str]:
+def preflight(
+    repo_root: Path, codex_executable: str, cases: Iterable[EvalCase]
+) -> tuple[str, str]:
     codex_version = _command_output([codex_executable, "--version"], cwd=repo_root)
     skill_sha = _command_output(["git", "rev-parse", "HEAD"], cwd=repo_root)
-    fixture = repo_root / "evals" / "fixtures" / "compose-jvm"
-    _command_output(
-        [str(fixture / "gradlew"), "--offline", "--no-scan", "test"], cwd=fixture
-    )
+    for fixture_name in sorted({case.fixture for case in cases}):
+        fixture = repo_root / "evals" / "fixtures" / fixture_name
+        wrapper = fixture / "gradlew"
+        if wrapper.is_file():
+            _command_output(
+                [str(wrapper), "--offline", "--no-scan", "test"], cwd=fixture
+            )
     return codex_version, skill_sha
 
 
@@ -245,10 +260,10 @@ def _result_payload(
         },
         "kind": case.kind,
         "task_mode": case.task_mode,
+        "suite": suite_for_skills(case.target_skills).id,
+        "target_skills": list(case.target_skills),
         "expected_skills": list(case.expected_skills),
-        "reported_skills": [
-            skill for skill in reported if skill in COMPOSE_SKILLS
-        ],
+        "reported_skills": [skill for skill in reported if skill != ROUTER_SKILL],
         "reported_router": ROUTER_SKILL in reported,
         "objective_pass": grade.objective_pass,
         "judge_pass": judge_pass,
@@ -293,7 +308,7 @@ def execute_experiment(
     codex_executable: str = "codex",
     audit_seed: int = 20260816,
 ) -> dict[str, Path]:
-    codex_version, skill_sha = preflight(repo_root, codex_executable)
+    codex_version, skill_sha = preflight(repo_root, codex_executable, cases)
     skill_paths = discover_skill_paths(repo_root)
     skill_sources = _skill_source_paths(repo_root)
     skill_catalog_digest = _skill_catalog_digest(
@@ -432,7 +447,7 @@ def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
         if isinstance(subject_output, dict):
             reported = reported_skill_names(subject_output)
             payload["reported_skills"] = [
-                skill for skill in reported if skill in COMPOSE_SKILLS
+                skill for skill in reported if skill != ROUTER_SKILL
             ]
             payload["reported_router"] = ROUTER_SKILL in reported
         records.append(payload)

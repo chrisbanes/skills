@@ -1,0 +1,24 @@
+{
+  "id": "gradle-incidental-validation-direct",
+  "title": "Run focused validation through bounded output",
+  "family": "gradle",
+  "target_skills": ["gradle-run"],
+  "expected_skills": ["gradle-run"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "required_command_patterns": [
+    "gradle_run\\.py create",
+    "gradle_run\\.py run .*--scope targeted .*--question",
+    "gradle_run\\.py finish"
+  ],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "gradle-incidental-validation-direct"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "bounded-wrapper", "text": "The Gradle test runs through one compact-output wrapper workflow rather than streaming or reopening full logs"},
+    {"id": "focused-validation", "text": "The current agent keeps this incidental validation focused, records a non-empty verification question, reports the bounded result, and finishes the workflow"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

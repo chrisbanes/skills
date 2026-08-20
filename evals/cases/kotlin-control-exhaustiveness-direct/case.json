@@ -1,0 +1,20 @@
+{
+  "id": "kotlin-control-exhaustiveness-direct",
+  "title": "Remove a sealed-state catch-all",
+  "family": "kotlin-control",
+  "target_skills": ["kotlin-control-flow"],
+  "expected_skills": ["kotlin-control-flow", "gradle-run"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": ["src/main/kotlin/example/Subject.kt"],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-control-exhaustiveness-direct"], "timeout_seconds": 30},
+    {"argv": ["./gradlew-real", "--offline", "--no-scan", "test"], "timeout_seconds": 180}
+  ],
+  "rubric": [
+    {"id": "explicit-cases", "text": "Every sealed ScreenState subtype has an explicit branch and the catch-all else is removed"},
+    {"id": "compiler-proof", "text": "The when remains an exhaustive expression so a future subtype becomes a compile-time decision"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

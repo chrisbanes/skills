@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from evals.harness.score import Scorecard
+from evals.harness.suites import SUITES
 
 
 def build_audit_queue(
@@ -52,6 +53,20 @@ def build_audit_queue(
 
 def _percent(value: float | None) -> str:
     return "not met" if value is None else f"{value * 100:.1f}%"
+
+
+def _outcome_rate(records: list[dict[str, Any]], arm: str) -> float | None:
+    selected = [record for record in records if record.get("arm") == arm]
+    if not selected:
+        return None
+    return sum(bool(record.get("outcome_pass")) for record in selected) / len(selected)
+
+
+def _target_skills(record: dict[str, Any]) -> list[str]:
+    skills = record.get("target_skills")
+    if not isinstance(skills, list):
+        skills = record.get("expected_skills", [])
+    return [str(skill) for skill in skills]
 
 
 def _tool_event_count(records: Iterable[dict[str, Any]]) -> int:
@@ -100,8 +115,14 @@ def render_scorecard(
         for record in records
         for role in ("subject", "judge")
     )
+    suites = {str(record.get("suite")) for record in records if record.get("suite")}
+    suite_name = (
+        SUITES[next(iter(suites))].title
+        if len(suites) == 1 and next(iter(suites)) in SUITES
+        else "Repository"
+    )
     lines = [
-        "# Advisory Compose Skill Scorecard",
+        f"# Advisory {suite_name} Skill Scorecard",
         "",
         "> This experiment is not a merge or release gate.",
         "",
@@ -114,6 +135,50 @@ def render_scorecard(
         lines.append(
             f"| {arm} | {_percent(score.outcome_rates[arm])} | {_percent(score.negative_rates[arm])} |"
         )
+    skills = sorted(
+        {
+            str(skill)
+            for record in records
+            for skill in _target_skills(record)
+        }
+    )
+    if skills:
+        lines.extend(
+            [
+                "",
+                "## Per-skill diagnostics",
+                "",
+                "| Skill | Positive records per arm | Baseline | Forced | Automatic | Uplift | Forced restraint | Automatic restraint |",
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for skill in skills:
+            skill_records = [
+                record
+                for record in records
+                if skill in _target_skills(record)
+            ]
+            positive = [
+                record for record in skill_records if record.get("kind") != "negative"
+            ]
+            negative = [
+                record for record in skill_records if record.get("kind") == "negative"
+            ]
+            baseline = _outcome_rate(positive, "none")
+            forced = _outcome_rate(positive, "forced")
+            automatic = _outcome_rate(positive, "automatic")
+            uplift = (
+                forced - baseline
+                if forced is not None and baseline is not None
+                else None
+            )
+            per_arm_count = sum(record.get("arm") == "none" for record in positive)
+            lines.append(
+                f"| `{skill}` | {per_arm_count} | {_percent(baseline)} | "
+                f"{_percent(forced)} | {_percent(automatic)} | {_percent(uplift)} | "
+                f"{_percent(_outcome_rate(negative, 'forced'))} | "
+                f"{_percent(_outcome_rate(negative, 'automatic'))} |"
+            )
     lines.extend(
         [
             "",

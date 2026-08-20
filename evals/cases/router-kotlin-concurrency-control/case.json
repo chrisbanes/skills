@@ -1,0 +1,19 @@
+{
+  "id": "router-kotlin-concurrency-control",
+  "title": "Route event semantics and exhaustive handling",
+  "family": "kotlin-routing",
+  "target_skills": ["kotlin-concurrency-and-flow", "kotlin-control-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow", "kotlin-control-flow"],
+  "task_mode": "review",
+  "kind": "routing",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "router-kotlin-concurrency-control"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "flow-finding", "text": "The review identifies that default SharedFlow can lose one-consumer navigation emitted without a collector and selects delivery semantics deliberately"},
+    {"id": "branch-finding", "text": "The review also removes the sealed Navigation catch-all conceptually and keeps subtype data smart-cast in explicit branches"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

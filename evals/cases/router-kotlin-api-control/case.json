@@ -1,0 +1,19 @@
+{
+  "id": "router-kotlin-api-control",
+  "title": "Route domain ownership and sealed branching",
+  "family": "kotlin-routing",
+  "target_skills": ["kotlin-api-design", "kotlin-control-flow"],
+  "expected_skills": ["kotlin-api-design", "kotlin-control-flow"],
+  "task_mode": "review",
+  "kind": "routing",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "router-kotlin-api-control"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "api-finding", "text": "The review identifies the misleading String extension and recommends an accurate domain owner"},
+    {"id": "control-finding", "text": "The review independently identifies the catch-all over a sealed result and recommends explicit exhaustive branches with smart casts"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

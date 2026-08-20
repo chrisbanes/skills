@@ -53,7 +53,10 @@ _NETWORK_FAILURE = re.compile(
     re.IGNORECASE,
 )
 _GRADLEW_INVOCATION = re.compile(
-    r"(?:^|[;&|]\s*|\s)['\"]?(?:\./|/[^\s'\";|&]+/)?gradlew\s"
+    r"(?:^|[;&|]\s*|\s)['\"]?(?:\./|/[^\s'\";|&]+/)gradlew(?=\s)"
+)
+_GRADLEW_FILE_TEST = re.compile(
+    r"(?:\btest|\[)\s+-x\s+['\"]?(?:\./|/[^\s'\";|&]+/)gradlew['\"]?(?=\s|\])"
 )
 
 
@@ -144,9 +147,34 @@ def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
                 json.dumps(item, sort_keys=True)
             ):
                 violations.append("network command attempted")
-            if _GRADLEW_INVOCATION.search(command) and "--offline" not in command:
+            executable_commands = _GRADLEW_FILE_TEST.sub("", command)
+            if (
+                _GRADLEW_INVOCATION.search(executable_commands)
+                and "--offline" not in command
+            ):
                 violations.append("Gradle command omitted --offline")
     return violations
+
+
+def _event_commands(events: tuple[dict[str, object], ...]) -> tuple[str, ...]:
+    commands: list[str] = []
+    for event in events:
+        item = event.get("item")
+        if not isinstance(item, dict) or item.get("type") != "command_execution":
+            continue
+        command = item.get("command")
+        if isinstance(command, list):
+            command = " ".join(str(part) for part in command)
+        if isinstance(command, str):
+            commands.append(command)
+    return tuple(commands)
+
+
+def _command_matches(pattern: str, command: str) -> bool:
+    if re.search(pattern, command):
+        return True
+    unquoted = command.replace("'", "").replace('"', "")
+    return re.search(pattern, unquoted) is not None
 
 
 def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
@@ -164,6 +192,13 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
         if validator.returncode != 0:
             suffix = " (timed out)" if validator.timed_out else ""
             failures.append(f"validator failed: {' '.join(validator.argv)}{suffix}")
+    commands = _event_commands(result.events)
+    for pattern in case.required_command_patterns:
+        if not any(_command_matches(pattern, command) for command in commands):
+            failures.append(f"required command evidence missing: {pattern}")
+    for pattern in case.forbidden_command_patterns:
+        if any(_command_matches(pattern, command) for command in commands):
+            failures.append(f"forbidden command evidence found: {pattern}")
 
     violations: list[str] = []
     if case.task_mode == "review" and result.changed_paths:

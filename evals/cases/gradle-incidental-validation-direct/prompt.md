@@ -1,0 +1,1 @@
+Run the smallest Gradle task that proves the existing Kotlin fixture tests pass. This is incidental validation for an already-finished change; report the bounded result and clean up only evaluation-owned logs.

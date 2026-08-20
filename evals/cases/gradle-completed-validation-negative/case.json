@@ -1,0 +1,20 @@
+{
+  "id": "gradle-completed-validation-negative",
+  "title": "Reuse a current successful validation",
+  "family": "gradle",
+  "target_skills": ["gradle-run"],
+  "expected_skills": ["gradle-run"],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["gradle_run\\.py (?:create|run)", "(?:^|\\s)\\./gradlew\\s"],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "gradle-completed-validation-negative"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "reuse-evidence", "text": "The response accepts the current successful targeted result for the unchanged source instead of rerunning Gradle"},
+    {"id": "restraint", "text": "The response makes no source, build, generated, or log changes and does not create a redundant wrapper workflow"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

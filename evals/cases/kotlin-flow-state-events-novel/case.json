@@ -1,0 +1,25 @@
+{
+  "id": "kotlin-flow-state-events-novel",
+  "title": "Review durable state and navigation delivery",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-flow-state-events-novel"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "state-event-split", "text": "The review keeps replayable screen state distinct from non-replayable navigation work"},
+    {"id": "delivery-semantics", "text": "The recommendation explicitly reasons about absent collectors and one-consumer versus broadcast delivery before choosing Channel, SharedFlow, or durable state"}
+  ],
+  "provenance": {
+    "kind": "historical",
+    "source_url": "https://github.com/Kotlin/kotlinx.coroutines/blob/3eadf938b1506351bffd7c015445d08faf1c4315/kotlinx-coroutines-core/common/src/flow/StateFlow.kt",
+    "revision": "3eadf938b1506351bffd7c015445d08faf1c4315",
+    "license": "Apache-2.0",
+    "normalization_note": "Combined the documented StateFlow state contract with a synthetic single-consumer navigation seam."
+  }
+}

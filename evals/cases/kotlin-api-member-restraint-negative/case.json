@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-api-member-restraint-negative",
+  "title": "Keep an obvious internal member",
+  "family": "kotlin-api",
+  "target_skills": ["kotlin-api-design"],
+  "expected_skills": ["kotlin-api-design"],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-api-member-restraint-negative"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "restraint", "text": "The response keeps the private formatter as a member because the owning class is obvious and no reusable abstraction is needed"},
+    {"id": "no-ceremony", "text": "The response does not propose a factory, service, extension, or value type solely for symmetry"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

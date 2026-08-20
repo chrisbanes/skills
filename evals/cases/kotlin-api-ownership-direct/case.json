@@ -1,0 +1,20 @@
+{
+  "id": "kotlin-api-ownership-direct",
+  "title": "Move repository behavior off String",
+  "family": "kotlin-api",
+  "target_skills": ["kotlin-api-design"],
+  "expected_skills": ["kotlin-api-design", "gradle-run"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": ["src/main/kotlin/example/Subject.kt"],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-api-ownership-direct"], "timeout_seconds": 30},
+    {"argv": ["./gradlew-real", "--offline", "--no-scan", "test"], "timeout_seconds": 180}
+  ],
+  "rubric": [
+    {"id": "semantic-owner", "text": "Repository-backed profile loading is owned by a project domain type or collaborator, not String"},
+    {"id": "explicit-dependency", "text": "The resulting call shape keeps the store dependency and user identifier semantics explicit"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

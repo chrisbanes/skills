@@ -24,6 +24,7 @@ from evals.harness.experiment import (
 from evals.harness.judge import JudgeConfig
 from evals.harness.report import append_audit_decision, write_reports
 from evals.harness.score import compute_scorecard
+from evals.harness.suites import SUITES
 
 
 def _add_experiment_arguments(parser: argparse.ArgumentParser) -> None:
@@ -33,6 +34,7 @@ def _add_experiment_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--judge-reasoning", required=True)
     parser.add_argument("--case", action="append", dest="case_ids")
     parser.add_argument("--skill", action="append", dest="skills")
+    parser.add_argument("--suite", choices=sorted(SUITES), default="compose")
     parser.add_argument("--arm", action="append", choices=ARMS)
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--json", action="store_true")
@@ -41,11 +43,12 @@ def _add_experiment_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Evaluate the Compose skill family")
+    parser = argparse.ArgumentParser(description="Evaluate repository skill suites")
     subparsers = parser.add_subparsers(dest="command", required=True)
     validate = subparsers.add_parser("validate", help="validate the committed case corpus")
     validate.add_argument("--allow-incomplete-corpus", action="store_true")
     validate.add_argument("--skill-family")
+    validate.add_argument("--suite", choices=sorted(SUITES))
     plan = subparsers.add_parser("plan", help="preview calls without executing models")
     _add_experiment_arguments(plan)
     run = subparsers.add_parser("run", help="preview or execute the full experiment")
@@ -109,6 +112,7 @@ def main(argv: list[str] | None = None) -> int:
                 repo_root,
                 allow_incomplete=args.allow_incomplete_corpus,
                 family=args.skill_family,
+                suite=args.suite,
             )
         except CaseValidationError as error:
             print(error, file=sys.stderr)
@@ -135,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 2
         try:
-            report = validate_corpus(repo_root)
+            report = validate_corpus(repo_root, suite=args.suite)
             cases = filter_cases(report.cases, case_ids=args.case_ids, skills=args.skills)
         except (CaseValidationError, ValueError) as error:
             print(error, file=sys.stderr)

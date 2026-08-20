@@ -1,0 +1,20 @@
+{
+  "id": "gradle-fingerprint-diagnosis-novel",
+  "title": "Stop on an unchanged failure fingerprint",
+  "family": "gradle",
+  "target_skills": ["gradle-run"],
+  "expected_skills": ["gradle-run"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["gradle_run\\.py run", "(?:^|\\s)\\./gradlew\\s"],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "gradle-fingerprint-diagnosis-novel"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "stop-repeat", "text": "The response stops the unchanged rebuild loop and does not disguise it with a new question or broader command"},
+    {"id": "next-evidence", "text": "The response revises the diagnosis from the primary source failure and identifies a narrower evidence-gathering step before another run"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

@@ -1,0 +1,5 @@
+{
+  "files": ["src/main/kotlin/example/Subject.kt"],
+  "must_match": ["is\\s+Event\\.Message\\s+if\\s+event\\.isUnread", "is\\s+Event\\.Message\\s*->"],
+  "must_not_match": ["is\\s+Event\\.Message\\s*->\\s*\\{?\\s*if"]
+}

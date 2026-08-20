@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+case " $* " in
+  *" test "*)
+    printf '%s\n' \
+      '> Task :compileKotlin UP-TO-DATE' \
+      '> Task :test' \
+      '' \
+      'BUILD SUCCESSFUL in 1s' \
+      '2 actionable tasks: 1 executed, 1 up-to-date'
+    ;;
+  *)
+    printf '%s\n' \
+      'FAILURE: Build failed with an exception.' \
+      '' \
+      '* What went wrong:' \
+      'The evaluation fixture supports only the test task.' >&2
+    exit 1
+    ;;
+esac
