@@ -43,6 +43,11 @@ def parse_args() -> argparse.Namespace:
         help="Invocation mode; next may select HITL Wayfinder work, drain may not.",
     )
     parser.add_argument(
+        "--wayfinder-ticket",
+        type=int,
+        help="Explicit Wayfinder child number selected by the user in next mode.",
+    )
+    parser.add_argument(
         "--current-user",
         required=True,
         help="Authenticated GitHub login used to detect resumable claims.",
@@ -51,6 +56,11 @@ def parse_args() -> argparse.Namespace:
         "--repository",
         required=True,
         help="Configured owner/repository targeted by resumable pull requests.",
+    )
+    parser.add_argument(
+        "--configuration-digest",
+        required=True,
+        help="Digest of the committed Project configuration for recovery leases.",
     )
     parser.add_argument(
         "--base-branch",
@@ -1147,6 +1157,7 @@ def parse_wayfinder_reconciliation(
     number: int,
     current_user: str,
     project_item_id: str,
+    configuration_digest: str,
 ) -> dict[str, Any] | None:
     if value is None:
         return None
@@ -1169,8 +1180,9 @@ def parse_wayfinder_reconciliation(
             "commentId",
             "permalink",
             "author",
+            "disposition",
             "projectItemId",
-            "resolutionPermalink",
+            "outcomePermalink",
             "configurationDigest",
             "planDigest",
         )
@@ -1192,6 +1204,11 @@ def parse_wayfinder_reconciliation(
             "must be a positive integer",
         )
     result["mapNumber"] = map_number
+    if result["disposition"] not in ("resolved", "out-of-scope"):
+        raise InputError(
+            f"ticket {number}: wayfinderReconciliation.disposition must be "
+            "'resolved' or 'out-of-scope'",
+        )
     if result["author"] != current_user:
         raise InputError(
             f"ticket {number}: Wayfinder reconciliation marker is not runner-authored",
@@ -1199,6 +1216,10 @@ def parse_wayfinder_reconciliation(
     if result["projectItemId"] != project_item_id:
         raise InputError(
             f"ticket {number}: Wayfinder reconciliation Project item changed",
+        )
+    if result["configurationDigest"] != configuration_digest:
+        raise InputError(
+            f"ticket {number}: Wayfinder reconciliation configuration changed",
         )
     return result
 
@@ -1210,6 +1231,7 @@ def analyze_wayfinder_ticket(
     planning_status: str,
     priorities: tuple[str, ...],
     execution_approvers: tuple[str, ...],
+    configuration_digest: str,
     wayfinder_map_label: str,
     wayfinder_child_labels: dict[str, str],
 ) -> dict[str, Any]:
@@ -1232,6 +1254,7 @@ def analyze_wayfinder_ticket(
         number=number,
         current_user=current_user,
         project_item_id=ticket["projectItemId"],
+        configuration_digest=configuration_digest,
     )
 
     types = [
@@ -1399,6 +1422,17 @@ def main() -> int:
             set(role_labels) & set(wayfinder_labels.values())
         ):
             raise InputError("Wayfinder labels cannot overlap existing role labels")
+        if not args.configuration_digest:
+            raise InputError("configuration digest must be a non-empty string")
+        if args.wayfinder_ticket is not None:
+            if args.wayfinder_ticket <= 0:
+                raise InputError("Wayfinder ticket must be a positive integer")
+            if args.mode != "next":
+                raise InputError("an explicit Wayfinder ticket requires next mode")
+            if wayfinder_labels is None:
+                raise InputError(
+                    "an explicit Wayfinder ticket requires Wayfinder configuration",
+                )
         if not 1 <= args.max_claims <= 3:
             raise InputError("max claims must be between 1 and 3")
 
@@ -1456,6 +1490,7 @@ def main() -> int:
                             planning_status=args.planning_status,
                             priorities=priorities,
                             execution_approvers=execution_approvers,
+                            configuration_digest=args.configuration_digest,
                             wayfinder_map_label=wayfinder_labels["map"],
                             wayfinder_child_labels=wayfinder_child_labels,
                         ),
@@ -1595,9 +1630,58 @@ def main() -> int:
             for item in wayfinder_analyses
             if not item["errors"] and not item["exclusions"]
         ]
+
+        selection_pool = [*eligible, *eligible_wayfinder]
+        if args.wayfinder_ticket is not None:
+            selected = [
+                item
+                for item in wayfinder_analyses
+                if item["ticket"]["number"] == args.wayfinder_ticket
+            ]
+            if not selected:
+                raise InputError(
+                    f"selected Wayfinder ticket {args.wayfinder_ticket} "
+                    "is not a configured child contender",
+                )
+            selected_item = selected[0]
+            selected_reasons = selected_item["errors"] + selected_item["exclusions"]
+            if selected_reasons:
+                raise InputError(
+                    f"selected Wayfinder ticket {args.wayfinder_ticket} is ineligible: "
+                    + "; ".join(selected_reasons),
+                )
+            other_claims = list(
+                dict.fromkeys(
+                    [
+                        item["ticket"]["number"]
+                        for item in selection_pool
+                        if item["assignedToCurrentUser"]
+                        and item["ticket"]["number"] != args.wayfinder_ticket
+                    ]
+                    + [
+                        item["number"]
+                        for item in [*blocked_claims, *blocked_planning_claims]
+                        if item["number"] != args.wayfinder_ticket
+                    ],
+                ),
+            )
+            other_claims.sort(
+                key=lambda number: (
+                    (0, number)
+                    if isinstance(number, int) and not isinstance(number, bool)
+                    else (1, str(number))
+                ),
+            )
+            if other_claims:
+                raise InputError(
+                    f"selected Wayfinder ticket {args.wayfinder_ticket} cannot bypass "
+                    f"existing claims {other_claims}",
+                )
+            selection_pool = [selected_item]
+
         claimed = [
             item
-            for item in [*eligible, *eligible_wayfinder]
+            for item in selection_pool
             if (
                 item["assignedToCurrentUser"]
                 and (
@@ -1643,7 +1727,7 @@ def main() -> int:
         candidates = sorted(
             (
                 item
-                for item in [*eligible, *eligible_wayfinder]
+                for item in selection_pool
                 if not item["assignedToCurrentUser"]
                 and (
                     args.mode == "next"
@@ -1719,7 +1803,19 @@ def main() -> int:
             (
                 item
                 for item in eligible_wayfinder
-                if args.mode == "drain" and item["resolutionMode"] == "hitl"
+                if args.mode == "drain"
+                and item["resolutionMode"] == "hitl"
+                and not item["assignedToCurrentUser"]
+            ),
+            key=ticket_rank,
+        )
+        wayfinder_claimed_hitl = sorted(
+            (
+                item
+                for item in eligible_wayfinder
+                if args.mode == "drain"
+                and item["resolutionMode"] == "hitl"
+                and item["assignedToCurrentUser"]
             ),
             key=ticket_rank,
         )
@@ -1784,6 +1880,16 @@ def main() -> int:
                 }
                 for item in wayfinder_human_frontier
             ]
+            output["wayfinderClaimedHitl"] = [
+                {
+                    "ticket": item["ticket"],
+                    "action": "resume-wayfinder-hitl",
+                    "type": item["wayfinderType"],
+                }
+                for item in wayfinder_claimed_hitl
+            ]
+        if args.wayfinder_ticket is not None:
+            output["selectedWayfinderTicket"] = args.wayfinder_ticket
         print(json.dumps(output, indent=2, sort_keys=True))
         return 0
     except (InputError, json.JSONDecodeError) as error:

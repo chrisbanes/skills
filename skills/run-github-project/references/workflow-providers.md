@@ -9,6 +9,7 @@ Never install a provider implicitly.
 | `tdd` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill tdd` |
 | `triage` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill triage` |
 | `wayfinder` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill wayfinder` |
+| `research` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill research` |
 
 If `tdd` is unavailable, stop the execution lane and report its source and
 exact install command. Permit a triage-only tail run to continue.
@@ -26,6 +27,11 @@ table.
 child. If it is unavailable, block only that Wayfinder Planning item and
 continue ordinary planning and execution. Never install it implicitly or copy
 its decision-map procedure into this workflow.
+
+`research` is required only for a Wayfinder research child. The Wayfinder owner
+must invoke it in a background subagent; a generic helper is not an equivalent
+provider. If it is unavailable, block only research children and continue
+other authorized lanes. Never install it implicitly.
 
 The explicit `run-github-project` procedure may dispatch `triage` to its
 recommendation boundary. Its disabled implicit invocation and maintainer

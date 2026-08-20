@@ -260,9 +260,15 @@ active-agent capacity, and non-preemption.
 
 An unclaimed Wayfinder prototype, grilling ticket, or HITL/ambiguous task is a
 normal Planning candidate in `next`, but process it only with fresh per-ticket
-Wayfinder authority. In `drain`, it is a human-frontier item; surface it without
-pausing independent work. Resume a durable Wayfinder reconciliation claim
-before either new class.
+Wayfinder authority. When the user explicitly names the child, it replaces
+Project ordering for new work but never bypasses another durable claim. In
+`drain`, an unclaimed HITL child is a human-frontier item while an assigned one
+is separate HITL attention; surface both without pausing independent work.
+Resume a durable Wayfinder reconciliation claim before either new class. Use a
+fresh Wayfinder provider context for each non-research AFK child in `drain`;
+`next` keeps its one selected HITL child in the current interactive session, and
+only research may fan out multiple ticket resolutions through its required
+subagents.
 
 ## Migration Gate
 

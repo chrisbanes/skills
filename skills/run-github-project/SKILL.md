@@ -37,6 +37,8 @@ Select and record the mode before checking execution preconditions:
 - Use `setup` only when the user explicitly asks to set up, configure, validate,
   or repair the repository binding without running Project work.
 - Use `next` by default for execution and process at most one selected issue.
+- When the user explicitly names a Wayfinder child, keep `next` and record that
+  selection; never reinterpret it as permission to drain or bypass a claim.
 - Use `drain` only when the user explicitly asks to drain, run all, repeat, or
   continue until empty.
 
@@ -129,7 +131,8 @@ work if any changes or becomes unknown.
    `to-plan` before ordinary planning work; if missing, block only that planning
    branch. When Wayfinder is enabled, also read
    [references/wayfinder-lane.md](references/wayfinder-lane.md) and verify its
-   provider before resolution; if missing, block only Wayfinder items.
+   provider before resolution. Verify `research` before a research child; if
+   either provider is missing, block only the affected Wayfinder items.
 6. Read [references/triage-lane.md](references/triage-lane.md). Verify
    `triage` before Backlog work; if missing, block only the triage lane.
 7. Read [references/review-contracts.md](references/review-contracts.md).
@@ -292,8 +295,10 @@ contender batch as a JSON array and run:
 ```text
 python3 <skill-dir>/scripts/rank_tickets.py \
   --mode <next-or-drain> \
+  [--wayfinder-ticket <explicit-user-selected-child-number>] \
   --current-user <github-login> \
   --repository <owner/repository> \
+  --configuration-digest <committed-configuration-digest> \
   --base-branch <base-branch> \
   --execution-approver <login> [--execution-approver <login> ...] \
   --backlog-status <backlog-name> \
@@ -356,9 +361,13 @@ execution-clear predicate in
 follow that lane one issue at a time.
 In `next`, HITL Wayfinder tickets participate in the normal Planning claim and
 candidate ordering; selecting one still requires fresh per-ticket authority.
+An explicitly user-named child replaces Project ordering for new work but
+cannot bypass another current-user claim.
 In `drain`, route `wayfinderHumanFrontier` through
 [Wayfinder Planning Lane](references/wayfinder-lane.md); do not make it an
 implementation candidate or pause independent work in `drain`.
+Route `wayfinderClaimedHitl` through the same lane as assigned attention, never
+as canonical frontier work or autonomous work.
 
 Resume a linked PR only when exactly one open PR clearly closes the issue, its
 author is the authenticated user, it targets the configured repository and
@@ -662,7 +671,8 @@ outcome and the post-merge live query succeeds; after a selected Wayfinder
 child reaches its reconciled terminal outcome; or after one tail-lane triage
 issue or ready epic reaches a reconciled outcome when no executable issue
 exists. Return `waiting-for-human` instead when no autonomous action exists and
-the live human or Wayfinder human frontier is non-empty. For `drain`, treat
+the live human frontier, unassigned Wayfinder human frontier, or assigned
+Wayfinder HITL attention is non-empty. For `drain`, treat
 [Failure Isolation And Finish Gate](references/drain-scheduler.md#failure-isolation-and-finish-gate)
 as the authoritative success, partial-drain, preservation, and cleanup
 procedure. In `next`, preserve the worktree, branch, PR, assignment, and In
@@ -683,7 +693,8 @@ Report the run mode, slot limit, Project configuration digest, live queries,
 merge-authority outcome, scheduler result, peak ticket-agent concurrency,
 named resource-lock grants, waits, recoveries, triage provider result,
 ready-epic reconciliations, the current human and Wayfinder frontier packets,
-Wayfinder authority/provider result and map reconciliation,
+assigned Wayfinder HITL attention, Wayfinder authority/provider result and map
+reconciliation,
 `parkedBlocked` and parked implementation-claim inventories, triage
 recommendations and reconciled outcomes, and the routing ledger with task,
 portable role, actual runtime selection, and concrete exceptional justification
@@ -950,18 +961,31 @@ For each changed rule, establish RED by reverting it, then require GREEN. Add a 
     awaits a new human Planning transition.
 41. RED lets `drain` pause for every Wayfinder ticket or lets an ambiguous task
     run AFK; GREEN runs only proved AFK research/tasks in spare Planning
-    capacity and reports ordered prototype, grilling, HITL, and ambiguous-task
-    work as a non-blocking Wayfinder human frontier. Counterexample: `next`
-    resolves only its selected, freshly approved HITL child and then finishes.
+    capacity, uses a fresh Wayfinder provider context for each non-research AFK
+    child in `drain`, preserves `next` HITL as the current live exchange, and
+    requires `research` subagents for research tickets. It reports
+    unassigned prototype, grilling, HITL, and ambiguous-task work as a
+    non-blocking Wayfinder human frontier. Counterexample: a generic read-only
+    helper never substitutes for `research`, and `next` resolves only its
+    selected, freshly approved HITL child before finishing.
 42. RED leaves HITL tickets frontier-only in every mode; GREEN passes the mode
     to the ranker so `next` selects an authorized HITL ticket by normal Planning
-    rank while `drain` keeps the same ticket in the human frontier. Novel case:
-    `next` resumes an exclusively assigned HITL claim. Counterexample: `drain`
-    never autonomously claims that assignment.
+    rank while `drain` keeps an unassigned ticket in the human frontier and an
+    assigned ticket in separate HITL attention. Novel case: an explicitly named
+    eligible child outranks Project order in `next`. Counterexamples: explicit
+    selection never works in `drain`, bypasses another durable claim, or calls
+    an assigned ticket frontier work.
 43. RED closes a resolved child before map work and loses it after a crash;
     GREEN publishes a runner-authored reconciliation marker first, recovers it
-    across closed issues and archived Project items, replays its exact plan
-    idempotently, reconciles the child to configured Done/archive, and unassigns
-    last. Novel case: both child and map are already closed when recovery
-    begins. Counterexample: a marker for another Project item or runner is a
-    blocked claim, never recovery authority.
+    across closed issues and archived Project items, then preserves Wayfinder's
+    child-close-before-map order while replaying its exact plan idempotently,
+    reconciling configured Done/archive, and unassigning last. Novel case: an
+    out-of-scope disposition writes its linked gist and reason only under `Out
+    of scope`; map completion requires no open child, empty fog, and current
+    decision/scope indexes. Counterexample: a marker for another Project item or
+    runner is a blocked claim, never recovery authority.
+44. RED reports Wayfinder tickets as bare numbers; GREEN renders every
+    human-facing map and ticket reference as `[title](URL)` while retaining
+    numbers and node IDs in machine payloads. Novel case: both the assigned HITL
+    attention packet and final report use linked names. Counterexample: ranker
+    diagnostics may still use issue numbers.
