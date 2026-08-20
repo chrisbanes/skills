@@ -18,10 +18,10 @@ class InputError(ValueError):
 IMPLEMENTATION_ACTIONS = {"resume-pr", "resume-implementation"}
 AGENT_WORK_LABEL = "ready-for-agent"
 CLAIM_ACTION_RANK = {
-    "resume-wayfinder-reconciliation": 0,
     "resume-backlog-cleanup": 0,
     "resume-pr": 1,
     "resume-implementation": 1,
+    "resume-wayfinder-reconciliation": 2,
 }
 CANDIDATE_ACTION_RANK = {
     "resume-pr": 0,

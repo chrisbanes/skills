@@ -2172,6 +2172,51 @@ class RankTicketsTest(unittest.TestCase):
             output["claims"][0]["action"],
         )
 
+    def test_wayfinder_reconciliation_stays_behind_earlier_claim_classes(self) -> None:
+        cleanup = ticket(
+            335,
+            projectStatus="Backlog",
+            projectPriority="Low",
+            assignees=["chris"],
+            replanRequest=replan_request(335, disposition="human-required"),
+            backlogTransition={
+                "id": "PVTE_335_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+        implementation = ticket(
+            336,
+            projectStatus="In progress",
+            projectPriority="Low",
+            assignees=["chris"],
+        )
+        reconciliation = wayfinder_ticket(
+            337,
+            assignees=["chris"],
+            state="CLOSED",
+            projectStatus="Done",
+            projectPriority="Critical",
+            wayfinderReconciliation=wayfinder_reconciliation(337),
+        )
+
+        returncode, output = run_ranker(
+            [reconciliation, implementation, cleanup],
+            *DEFAULT_WAYFINDER_ARGUMENTS,
+        )
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(
+            [
+                "resume-backlog-cleanup",
+                "resume-implementation",
+                "resume-wayfinder-reconciliation",
+            ],
+            [entry["action"] for entry in output["claims"]],
+        )
+
     def test_rejects_a_wayfinder_reconciliation_for_another_project_item(self) -> None:
         interrupted = wayfinder_ticket(
             323,
