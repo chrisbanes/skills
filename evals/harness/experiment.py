@@ -420,6 +420,7 @@ def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
             raise ValueError(f"raw result must contain an object payload: {path}")
         payload = document["payload"]
         record_id = str(payload.get("id", path))
+        payload.setdefault("suite", "compose")
         missing_controls = [
             field for field in RUN_CONTROL_FIELDS if field not in payload
         ]

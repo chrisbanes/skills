@@ -55,6 +55,15 @@ _NETWORK_FAILURE = re.compile(
     re.IGNORECASE,
 )
 _SHELL_EXECUTABLES = {"bash", "dash", "sh", "zsh"}
+_SHELL_PUNCTUATION = ";&|(){}"
+_SHELL_OPTIONS_WITH_OPERANDS = {
+    "+O",
+    "-O",
+    "-o",
+    "--init-file",
+    "--rcfile",
+}
+_PYTHON_OPTIONS_WITH_OPERANDS = {"-W", "-X", "--check-hash-based-pycs"}
 _SHELL_CONTROL_PREFIXES = {
     "!",
     "do",
@@ -137,7 +146,7 @@ def _path_allowed(path: str, allowed: tuple[str, ...]) -> bool:
 def _shell_parts(
     command: str,
 ) -> tuple[tuple[tuple[str, ...], ...], tuple[str, ...]]:
-    lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|")
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=_SHELL_PUNCTUATION)
     lexer.whitespace_split = True
     lexer.commenters = ""
     try:
@@ -148,7 +157,7 @@ def _shell_parts(
     separators: list[str] = []
     current: list[str] = []
     for token in tokens:
-        if token and all(character in ";&|" for character in token):
+        if token and all(character in _SHELL_PUNCTUATION for character in token):
             if current:
                 segments.append(tuple(current))
                 current = []
@@ -158,6 +167,77 @@ def _shell_parts(
     if current:
         segments.append(tuple(current))
     return tuple(segments), tuple(separators[: max(0, len(segments) - 1)])
+
+
+def _command_substitutions(command: str) -> tuple[str, ...]:
+    substitutions: list[str] = []
+    quote: str | None = None
+    index = 0
+    while index < len(command):
+        character = command[index]
+        if character == "\\" and quote != "'":
+            index += 2
+            continue
+        if quote == "'":
+            if character == "'":
+                quote = None
+            index += 1
+            continue
+        if character == "'":
+            quote = "'"
+            index += 1
+            continue
+        if character == '"':
+            quote = None if quote == '"' else '"'
+            index += 1
+            continue
+        if character == "`":
+            end = index + 1
+            while end < len(command):
+                if command[end] == "\\":
+                    end += 2
+                    continue
+                if command[end] == "`":
+                    substitutions.append(command[index + 1 : end])
+                    index = end + 1
+                    break
+                end += 1
+            else:
+                return tuple(substitutions)
+            continue
+        if character == "$" and index + 1 < len(command) and command[index + 1] == "(":
+            start = index + 2
+            end = start
+            depth = 1
+            nested_quote: str | None = None
+            while end < len(command):
+                nested = command[end]
+                if nested == "\\" and nested_quote != "'":
+                    end += 2
+                    continue
+                if nested_quote == "'":
+                    if nested == "'":
+                        nested_quote = None
+                    end += 1
+                    continue
+                if nested == "'":
+                    nested_quote = "'"
+                elif nested == '"':
+                    nested_quote = None if nested_quote == '"' else '"'
+                elif nested == "(" and nested_quote is None:
+                    depth += 1
+                elif nested == ")" and nested_quote is None:
+                    depth -= 1
+                    if depth == 0:
+                        substitutions.append(command[start:end])
+                        index = end + 1
+                        break
+                end += 1
+            else:
+                return tuple(substitutions)
+            continue
+        index += 1
+    return tuple(substitutions)
 
 
 def _is_gradle_executable(token: str) -> bool:
@@ -243,23 +323,43 @@ def _segment_invocations(
 
     executable = PurePosixPath(tokens[index]).name
     if executable in _SHELL_EXECUTABLES:
-        for option_index in range(index + 1, len(tokens) - 1):
-            option = tokens[option_index]
-            if option.startswith("-") and "c" in option[1:]:
-                return _command_invocations(tokens[option_index + 1])
         script_index = index + 1
-        while script_index < len(tokens) and tokens[script_index].startswith("-"):
+        while script_index < len(tokens):
+            option = tokens[script_index]
+            if option == "--":
+                script_index += 1
+                break
+            if not option.startswith(("-", "+")):
+                break
             script_index += 1
+            if (
+                option.startswith("-")
+                and not option.startswith("--")
+                and "c" in option[1:]
+            ):
+                if script_index >= len(tokens):
+                    return ()
+                return _command_invocations(tokens[script_index])
+            if option in _SHELL_OPTIONS_WITH_OPERANDS and script_index < len(tokens):
+                script_index += 1
         if script_index < len(tokens) and _is_gradle_executable(tokens[script_index]):
             return (tokens[script_index:],)
         return ()
 
     if _PYTHON_EXECUTABLE.fullmatch(executable):
         script_index = index + 1
-        while script_index < len(tokens) and tokens[script_index].startswith("-"):
-            if tokens[script_index] in {"-c", "-m"}:
+        while script_index < len(tokens):
+            option = tokens[script_index]
+            if option == "--":
+                script_index += 1
+                break
+            if not option.startswith("-"):
+                break
+            if option in {"-c", "-m"}:
                 return ()
             script_index += 1
+            if option in _PYTHON_OPTIONS_WITH_OPERANDS and script_index < len(tokens):
+                script_index += 1
         if (
             script_index < len(tokens)
             and PurePosixPath(tokens[script_index]).name == "gradle_run.py"
@@ -276,11 +376,14 @@ def _segment_invocations(
 
 def _command_invocations(command: str) -> tuple[tuple[str, ...], ...]:
     segments, _ = _shell_parts(command)
-    return tuple(
+    invocations = [
         invocation
         for segment in segments
         for invocation in _segment_invocations(segment)
-    )
+    ]
+    for substitution in _command_substitutions(command):
+        invocations.extend(_command_invocations(substitution))
+    return tuple(dict.fromkeys(invocations))
 
 
 def _successful_command_invocations(

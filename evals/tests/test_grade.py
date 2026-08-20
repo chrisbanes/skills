@@ -256,6 +256,80 @@ class DeterministicGradeTest(unittest.TestCase):
                     grade_subject(case, result).violations,
                 )
 
+    def test_gradle_safety_recognizes_nested_shell_executions(self):
+        case = make_case(self.workspace)
+
+        for command in (
+            "( ./gradlew test )",
+            "f() { ./gradlew test; }; f",
+            'echo "$(./gradlew test)"',
+            "echo `./gradlew test`",
+        ):
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertIn(
+                    "Gradle command omitted --offline",
+                    grade_subject(case, result).violations,
+                )
+
+        quoted = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "echo '$(./gradlew test)'",
+                    },
+                },
+            ),
+        )
+        self.assertNotIn(
+            "Gradle command omitted --offline", grade_subject(case, quoted).violations
+        )
+
+    def test_gradle_safety_parses_shell_and_python_option_operands(self):
+        case = make_case(self.workspace)
+
+        for command in (
+            "bash -O extglob ./gradlew test",
+            "bash --norc --noprofile ./gradlew test",
+            "bash --rcfile /dev/null ./gradlew test",
+            "sh -o noglob ./gradlew test",
+            "python3 -W ignore gradle_run.py run -- ./gradlew test",
+            "python3 -X dev gradle_run.py run -- ./gradlew test",
+        ):
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertIn(
+                    "Gradle command omitted --offline",
+                    grade_subject(case, result).violations,
+                )
+
     def test_gradle_safety_checks_nested_gradle_options_not_wrapper_text(self):
         case = make_case(self.workspace)
         unsafe = make_result(

@@ -352,6 +352,17 @@ class ResultLifecycleTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different run controls: subject_model"):
             load_raw_records(self.root)
 
+    def test_loading_raw_records_defaults_legacy_results_to_compose(self):
+        self.write_raw_record("legacy", "automatic", 1)
+        path = self.root / "raw" / "legacy" / "automatic" / "1.json"
+        document = json.loads(path.read_text(encoding="utf-8"))
+        del document["payload"]["suite"]
+        path.write_text(json.dumps(document), encoding="utf-8")
+
+        record = load_raw_records(self.root)[0]
+
+        self.assertEqual("compose", record["suite"])
+
     def test_loading_raw_records_rejects_mixed_suites(self):
         self.write_raw_record("first", "automatic", 1)
         self.write_raw_record(
