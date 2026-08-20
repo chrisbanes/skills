@@ -84,6 +84,14 @@ closed instead of merging the new case records into the frozen 2026-08-19
 aggregate. Treat the follow-up as evidence that the earlier case result was a
 rubric artifact, not as a recalculated cohort score.
 
+A later 2026-08-20 two-case repair recheck added the value-class task's visible
+`Subject.kt` write boundary and reran it with the sealed-exhaustiveness review
+across all three arms and three repetitions. All 18 records passed with no
+forbidden action, process failure, or retry; both audit-queued review records
+were accepted. This is repair evidence only: it contains no negative controls
+and its baseline was already 100.0%, so it neither measures uplift nor replaces
+the complete Kotlin/Gradle scorecard.
+
 ## Experiment arms
 
 Every case runs in a fresh workspace and conversation under three arms:

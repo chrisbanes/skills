@@ -3,10 +3,11 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from evals.harness.cases import validate_corpus
 from evals.harness.codex import prepare_workspace
-from evals.harness.experiment import filter_cases
+from evals.harness.experiment import filter_cases, preflight
 from evals.harness.grade import grade_subject
 from evals.harness.suites import KOTLIN_GRADLE_SKILLS
 from evals.tests.test_grade import make_result
@@ -78,6 +79,18 @@ class KotlinGradleMatrixTest(unittest.TestCase):
         self.assertIn("preserves every current rendered string", text)
         self.assertIn("branch data that remains in use", text)
         self.assertIn("does not invent use of validationerror.reason", text)
+
+    def test_value_class_task_exposes_its_write_boundary(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "kotlin-api-value-class-direct"
+        )
+
+        self.assertIn(
+            "Edit only `src/main/kotlin/example/Subject.kt`", case.prompt
+        )
 
     def test_event_channel_expectation_accepts_equivalent_bounded_capacities(self):
         expectation_path = (
@@ -163,6 +176,25 @@ class KotlinGradleMatrixTest(unittest.TestCase):
         self.assertTrue(real_gradle_validators)
         self.assertTrue(
             all(validator.argv[0] == "./gradlew-real" for validator in real_gradle_validators)
+        )
+
+    def test_preflight_uses_the_real_validator_gradle_wrapper(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        fixture = REPO_ROOT / "evals" / "fixtures" / "kotlin-jvm"
+
+        with patch(
+            "evals.harness.experiment._command_output", return_value="ok"
+        ) as command_output:
+            preflight(REPO_ROOT, "codex", report.cases)
+
+        commands = [call.args[0] for call in command_output.call_args_list]
+        self.assertIn(
+            [str(fixture / "gradlew"), "--offline", "--no-scan", "test"],
+            commands,
+        )
+        self.assertNotIn(
+            [str(fixture / "subject-gradlew"), "--offline", "--no-scan", "test"],
+            commands,
         )
 
 

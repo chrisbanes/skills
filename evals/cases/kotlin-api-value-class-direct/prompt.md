@@ -1,1 +1,1 @@
-Strengthen the user identifier so callers cannot interchange it with arbitrary strings. Preserve its single String wire value and avoid changing unrelated code.
+Strengthen the user identifier so callers cannot interchange it with arbitrary strings. Preserve its single String wire value and avoid changing unrelated code. Edit only `src/main/kotlin/example/Subject.kt`; do not update `Fixture.kt` or any consumers.

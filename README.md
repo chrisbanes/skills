@@ -183,6 +183,14 @@ forbidden action, process failure, or retry. The discoverable disabled-skill
 catalog changed between runs, so the evaluator correctly refused to merge that
 follow-up into the frozen aggregate above.
 
+A later 2026-08-20 two-case repair recheck added the value-class task's visible
+`Subject.kt` write boundary and reran it with the sealed-exhaustiveness review
+across all three arms and three repetitions. All 18 records passed with no
+forbidden action, process failure, or retry; both audit-queued review records
+were accepted. This is repair evidence only: it contains no negative controls
+and its baseline was already 100.0%, so it neither measures uplift nor replaces
+the complete Kotlin/Gradle scorecard.
+
 Validate the harness and preview the full call matrix:
 
 ```shell
