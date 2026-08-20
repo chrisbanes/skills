@@ -8,7 +8,7 @@
   "kind": "novel",
   "fixture": "kotlin-jvm",
   "allowed_write_paths": [],
-  "forbidden_command_patterns": ["gradle_run\\.py run", "(?:^|\\s)\\./gradlew\\s"],
+  "forbidden_command_patterns": ["gradle_run\\.py run", "(?:^|\\s)(?:[^\\s]+/)?gradlew(?=$|\\s)"],
   "validators": [
     {"argv": ["python3", "@validators/text_case.py", "gradle-fingerprint-diagnosis-novel"], "timeout_seconds": 30}
   ],

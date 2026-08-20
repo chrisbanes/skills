@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 import re
+import shlex
 import subprocess
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 
 from evals.harness.cases import EvalCase, Validator
 from evals.harness.codex import SubjectResult, subject_output_valid
@@ -53,11 +55,11 @@ _NETWORK_FAILURE = re.compile(
     re.IGNORECASE,
 )
 _GRADLEW_INVOCATION = re.compile(
-    r"(?:^|[;&|]\s*|\s)['\"]?(?:\./|/[^\s'\";|&]+/)?gradlew(?=\s)"
+    r"(?:^|\s)['\"]?(?:[^\s'\";|&]+/)?gradlew(?=$|[\s;&|])"
 )
-_GRADLEW_FILE_TEST = re.compile(
-    r"(?:\btest|\[)\s+-x\s+['\"]?(?:\./|/[^\s'\";|&]+/)?gradlew['\"]?(?=\s|\])"
-)
+_SHELL_EXECUTABLES = {"bash", "dash", "sh", "zsh"}
+_PYTHON_EXECUTABLE = re.compile(r"python(?:3(?:\.\d+)?)?$")
+_ENVIRONMENT_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=", re.DOTALL)
 
 
 @dataclass(frozen=True)
@@ -124,6 +126,76 @@ def _path_allowed(path: str, allowed: tuple[str, ...]) -> bool:
     return any(path == prefix or path.startswith(prefix.rstrip("/") + "/") for prefix in allowed)
 
 
+def _shell_segments(command: str) -> tuple[tuple[str, ...], ...]:
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|")
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    try:
+        tokens = list(lexer)
+    except ValueError:
+        return ()
+    segments: list[tuple[str, ...]] = []
+    current: list[str] = []
+    for token in tokens:
+        if token and all(character in ";&|" for character in token):
+            if current:
+                segments.append(tuple(current))
+                current = []
+        else:
+            current.append(token)
+    if current:
+        segments.append(tuple(current))
+    return tuple(segments)
+
+
+def _segment_invocations(tokens: tuple[str, ...]) -> tuple[str, ...]:
+    index = 0
+    if tokens and PurePosixPath(tokens[0]).name == "env":
+        index += 1
+        while index < len(tokens) and (
+            tokens[index].startswith("-")
+            or _ENVIRONMENT_ASSIGNMENT.match(tokens[index])
+        ):
+            index += 1
+    while index < len(tokens) and _ENVIRONMENT_ASSIGNMENT.match(tokens[index]):
+        index += 1
+    if index >= len(tokens):
+        return ()
+
+    executable = PurePosixPath(tokens[index]).name
+    if executable in _SHELL_EXECUTABLES:
+        for option_index in range(index + 1, len(tokens) - 1):
+            option = tokens[option_index]
+            if option.startswith("-") and "c" in option[1:]:
+                return _command_invocations(tokens[option_index + 1])
+        return ()
+
+    if _PYTHON_EXECUTABLE.fullmatch(executable):
+        script_index = index + 1
+        while script_index < len(tokens) and tokens[script_index].startswith("-"):
+            if tokens[script_index] in {"-c", "-m"}:
+                return ()
+            script_index += 1
+        if (
+            script_index < len(tokens)
+            and PurePosixPath(tokens[script_index]).name == "gradle_run.py"
+        ):
+            return (" ".join(tokens[script_index:]),)
+        return ()
+
+    if executable in {"gradle_run.py", "gradlew"}:
+        return (" ".join(tokens[index:]),)
+    return ()
+
+
+def _command_invocations(command: str) -> tuple[str, ...]:
+    return tuple(
+        invocation
+        for segment in _shell_segments(command)
+        for invocation in _segment_invocations(segment)
+    )
+
+
 def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
     violations: list[str] = []
     for event in events:
@@ -147,17 +219,17 @@ def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
                 json.dumps(item, sort_keys=True)
             ):
                 violations.append("network command attempted")
-            executable_commands = _GRADLEW_FILE_TEST.sub("", command)
-            if (
-                _GRADLEW_INVOCATION.search(executable_commands)
-                and "--offline" not in command
-            ):
-                violations.append("Gradle command omitted --offline")
+            for invocation in _command_invocations(command):
+                if (
+                    _GRADLEW_INVOCATION.search(invocation)
+                    and "--offline" not in invocation
+                ):
+                    violations.append("Gradle command omitted --offline")
     return violations
 
 
-def _event_commands(events: tuple[dict[str, object], ...]) -> tuple[str, ...]:
-    commands: list[str] = []
+def _event_invocations(events: tuple[dict[str, object], ...]) -> tuple[str, ...]:
+    invocations: list[str] = []
     for event in events:
         item = event.get("item")
         if not isinstance(item, dict) or item.get("type") != "command_execution":
@@ -166,8 +238,8 @@ def _event_commands(events: tuple[dict[str, object], ...]) -> tuple[str, ...]:
         if isinstance(command, list):
             command = " ".join(str(part) for part in command)
         if isinstance(command, str):
-            commands.append(command)
-    return tuple(commands)
+            invocations.extend(_command_invocations(command))
+    return tuple(invocations)
 
 
 def _command_matches(pattern: str, command: str) -> bool:
@@ -192,7 +264,7 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
         if validator.returncode != 0:
             suffix = " (timed out)" if validator.timed_out else ""
             failures.append(f"validator failed: {' '.join(validator.argv)}{suffix}")
-    commands = _event_commands(result.events)
+    commands = _event_invocations(result.events)
     for pattern in case.required_command_patterns:
         if not any(_command_matches(pattern, command) for command in commands):
             failures.append(f"required command evidence missing: {pattern}")

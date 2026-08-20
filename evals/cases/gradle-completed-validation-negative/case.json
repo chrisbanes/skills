@@ -8,7 +8,7 @@
   "kind": "negative",
   "fixture": "kotlin-jvm",
   "allowed_write_paths": [],
-  "forbidden_command_patterns": ["gradle_run\\.py (?:create|run)", "(?:^|\\s)\\./gradlew\\s"],
+  "forbidden_command_patterns": ["gradle_run\\.py (?:create|run)", "(?:^|\\s)(?:[^\\s]+/)?gradlew(?=$|\\s)"],
   "validators": [
     {"argv": ["python3", "@validators/text_case.py", "gradle-completed-validation-negative"], "timeout_seconds": 30}
   ],

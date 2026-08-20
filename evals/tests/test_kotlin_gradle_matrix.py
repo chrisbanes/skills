@@ -1,3 +1,5 @@
+import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -76,6 +78,28 @@ class KotlinGradleMatrixTest(unittest.TestCase):
         self.assertIn("preserves every current rendered string", text)
         self.assertIn("branch data that remains in use", text)
         self.assertIn("does not invent use of validationerror.reason", text)
+
+    def test_event_channel_expectation_accepts_equivalent_bounded_capacities(self):
+        expectation_path = (
+            REPO_ROOT
+            / "evals"
+            / "cases"
+            / "kotlin-flow-event-delivery-direct"
+            / "expectations.json"
+        )
+        expectation = json.loads(expectation_path.read_text(encoding="utf-8"))
+        channel_pattern = expectation["must_match"][0]
+
+        for declaration in (
+            "Channel<Navigation>(Channel.BUFFERED)",
+            "Channel<Navigation>(capacity = Channel.BUFFERED)",
+            "Channel<Navigation>(1)",
+            "Channel<Navigation>(capacity = 64)",
+        ):
+            with self.subTest(declaration=declaration):
+                self.assertIsNotNone(re.search(channel_pattern, declaration))
+
+        self.assertIsNone(re.search(channel_pattern, "Channel<Navigation>(Channel.UNLIMITED)"))
 
     def test_kotlin_fixture_is_pinned_and_offline_ready(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "kotlin-jvm"

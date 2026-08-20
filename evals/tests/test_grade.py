@@ -178,6 +178,29 @@ class DeterministicGradeTest(unittest.TestCase):
             "Gradle command omitted --offline", grade_subject(case, invoked).violations
         )
 
+    def test_gradle_safety_recognizes_shell_terminated_wrappers(self):
+        case = make_case(self.workspace)
+
+        for command in ("gradlew;", "gradlew&& next-command"):
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertIn(
+                    "Gradle command omitted --offline",
+                    grade_subject(case, result).violations,
+                )
+
     def test_required_command_evidence_accepts_quoted_executable_path(self):
         case = make_case(self.workspace)
         case = EvalCase(
@@ -229,6 +252,86 @@ class DeterministicGradeTest(unittest.TestCase):
         )
 
         self.assertTrue(grade_subject(case, result).objective_pass)
+
+    def test_command_text_search_is_not_execution_evidence(self):
+        case = make_case(self.workspace)
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": (
+                    r"gradle_run\.py create",
+                    r"gradle_run\.py run(?=.*--scope targeted)(?=.*--question)",
+                    r"gradle_run\.py finish",
+                ),
+                "forbidden_command_patterns": (r"gradle_run\.py run",),
+            }
+        )
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": (
+                            "rg 'gradle_run.py create|gradle_run.py run "
+                            ".*--scope targeted .*--question|gradle_run.py finish' skills"
+                        ),
+                    },
+                },
+            ),
+        )
+
+        grade = grade_subject(case, result)
+
+        self.assertFalse(grade.objective_pass)
+        self.assertEqual(
+            3,
+            sum(
+                failure.startswith("required command evidence missing:")
+                for failure in grade.objective_failures
+            ),
+        )
+        self.assertFalse(
+            any(
+                failure.startswith("forbidden command evidence found:")
+                for failure in grade.objective_failures
+            )
+        )
+
+    def test_forbidden_wrapper_evidence_covers_direct_path_spellings(self):
+        case = make_case(self.workspace)
+        pattern = r"(?:^|\s)(?:[^\s]+/)?gradlew(?=$|\s)"
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "forbidden_command_patterns": (pattern,),
+            }
+        )
+
+        for command in (
+            "gradlew test --offline",
+            "/absolute/path/gradlew test --offline",
+            "$PWD/gradlew test --offline",
+        ):
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertIn(
+                    f"forbidden command evidence found: {pattern}",
+                    grade_subject(case, result).objective_failures,
+                )
 
     def test_network_safety_covers_runtimes_package_managers_and_blocked_calls(self):
         case = make_case(self.workspace)
