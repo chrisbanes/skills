@@ -144,6 +144,40 @@ class DeterministicGradeTest(unittest.TestCase):
 
         self.assertIn("Gradle command omitted --offline", grade_subject(case, result).violations)
 
+    def test_gradle_safety_recognizes_bare_wrapper_invocation(self):
+        case = make_case(self.workspace)
+        searched = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "test -x gradlew",
+                    },
+                },
+            ),
+        )
+        invoked = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "PATH=.:$PATH gradlew test --no-scan",
+                    },
+                },
+            ),
+        )
+
+        self.assertNotIn(
+            "Gradle command omitted --offline", grade_subject(case, searched).violations
+        )
+        self.assertIn(
+            "Gradle command omitted --offline", grade_subject(case, invoked).violations
+        )
+
     def test_required_command_evidence_accepts_quoted_executable_path(self):
         case = make_case(self.workspace)
         case = EvalCase(
@@ -160,6 +194,35 @@ class DeterministicGradeTest(unittest.TestCase):
                     "item": {
                         "type": "command_execution",
                         "command": 'python3 "$skill_dir/scripts/gradle_run.py" create',
+                    },
+                },
+            ),
+        )
+
+        self.assertTrue(grade_subject(case, result).objective_pass)
+
+    def test_required_command_evidence_spans_lines_and_ignores_option_order(self):
+        case = make_case(self.workspace)
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": (
+                    r"gradle_run\.py run(?=.*--scope targeted)(?=.*--question)",
+                ),
+            }
+        )
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": (
+                            "python3 gradle_run.py run\n"
+                            "  --question 'Does it pass?'\n"
+                            "  --scope targeted"
+                        ),
                     },
                 },
             ),

@@ -41,6 +41,7 @@ from evals.harness.suites import PUBLIC_SKILLS, ROUTER_SKILL, suite_for_skills
 
 
 RUN_CONTROL_FIELDS = (
+    "suite",
     "codex_version",
     "skill_sha",
     "skill_catalog_digest",

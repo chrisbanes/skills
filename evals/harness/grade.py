@@ -53,10 +53,10 @@ _NETWORK_FAILURE = re.compile(
     re.IGNORECASE,
 )
 _GRADLEW_INVOCATION = re.compile(
-    r"(?:^|[;&|]\s*|\s)['\"]?(?:\./|/[^\s'\";|&]+/)gradlew(?=\s)"
+    r"(?:^|[;&|]\s*|\s)['\"]?(?:\./|/[^\s'\";|&]+/)?gradlew(?=\s)"
 )
 _GRADLEW_FILE_TEST = re.compile(
-    r"(?:\btest|\[)\s+-x\s+['\"]?(?:\./|/[^\s'\";|&]+/)gradlew['\"]?(?=\s|\])"
+    r"(?:\btest|\[)\s+-x\s+['\"]?(?:\./|/[^\s'\";|&]+/)?gradlew['\"]?(?=\s|\])"
 )
 
 
@@ -171,10 +171,10 @@ def _event_commands(events: tuple[dict[str, object], ...]) -> tuple[str, ...]:
 
 
 def _command_matches(pattern: str, command: str) -> bool:
-    if re.search(pattern, command):
+    if re.search(pattern, command, re.DOTALL):
         return True
     unquoted = command.replace("'", "").replace('"', "")
-    return re.search(pattern, unquoted) is not None
+    return re.search(pattern, unquoted, re.DOTALL) is not None
 
 
 def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:

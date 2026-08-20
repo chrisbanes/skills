@@ -135,6 +135,7 @@ class EvaluationCliTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
             controls = {
+                "suite": "compose",
                 "codex_version": "codex-cli 1",
                 "skill_sha": "skill-sha",
                 "skill_catalog_digest": "catalog-sha",

@@ -38,6 +38,7 @@ class ResultLifecycleTest(unittest.TestCase):
     def write_raw_record(self, case: str, arm: str, repetition: int, **overrides):
         payload = {
             "id": f"{case}:{arm}:{repetition}",
+            "suite": "compose",
             "codex_version": "codex-cli 1",
             "skill_sha": "skill-sha",
             "skill_catalog_digest": "catalog-sha",
@@ -349,6 +350,18 @@ class ResultLifecycleTest(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(ValueError, "different run controls: subject_model"):
+            load_raw_records(self.root)
+
+    def test_loading_raw_records_rejects_mixed_suites(self):
+        self.write_raw_record("first", "automatic", 1)
+        self.write_raw_record(
+            "second",
+            "automatic",
+            1,
+            suite="kotlin-gradle",
+        )
+
+        with self.assertRaisesRegex(ValueError, "different run controls: suite"):
             load_raw_records(self.root)
 
     def test_loading_raw_records_rejects_malformed_payloads(self):
