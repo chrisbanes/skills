@@ -74,6 +74,10 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 - [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) — write and review Kotlin branching with subject `when`, guard conditions, sealed exhaustiveness, smart casts, nullable branching, and early returns.
 - [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) — choose function owners, semantic domain types, and Kotlin Multiplatform platform boundaries.
 
+### Writing
+
+- [`grounded-writing`](skills/grounded-writing/SKILL.md) — draft or revise substantial prose in Chris Banes's evidence-led, conversational voice without inventing personal claims.
+
 ### Workflows
 
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
