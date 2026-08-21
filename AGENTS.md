@@ -5,7 +5,8 @@ Instructions for AI agents (Claude Code, etc.) working in this repo.
 ## When adding, renaming, or removing a skill
 
 1. **Update `README.md`** — keep the "Skills" list in sync. Each entry links to the skill's `SKILL.md` and summarises what it covers. If you add a skill and don't update the README, the change is incomplete.
-2. **Do not update plugin or skill versions unless explicitly asked.** If the user asks for a release/version bump, use the release system below.
+2. **Add evaluation coverage** — add the new skill to the relevant evaluation suite, with direct, novel, and no-change scenarios that exercise its expected behavior and restraint. Include deterministic validation where applicable. A new skill is incomplete without evaluation coverage.
+3. **Do not update plugin or skill versions unless explicitly asked.** If the user asks for a release/version bump, use the release system below.
 
 ## Skill authoring checklist
 

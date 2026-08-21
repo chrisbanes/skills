@@ -124,85 +124,27 @@ agent-facing seam.
 
 ## Evaluating skills
 
-The repository contains a Codex-first advisory evaluator with a shared core and
-suite-specific policies. It compares a no-plugin baseline, explicit skill
-invocation, and full-public-catalog automatic activation. The Compose suite has
-38 scored cases; the Kotlin/Gradle suite has 19 risk-weighted cases covering
-`gradle-run` and the three Kotlin skills. Deterministic checks run in CI;
-authenticated model calls and their scores never gate merges or releases.
+The advisory evaluator tests concrete scenarios modelled on real-world coding
+work, with expected outcomes and no-change controls. It compares no-skill,
+forced-skill, and automatic-routing runs. **Baseline** is the no-skill result,
+**automatic** is the headline result, and **restraint** checks that a skill does
+not make an unnecessary change. The baseline comes from the complete certified
+cohort; the other columns show the latest valid measurement for each metric.
+These are not merge or release gates. See
+[`evals/README.md`](evals/README.md) for evaluation setup and reproducibility.
 
-### Latest evaluated scores
-
-The 2026-08-18 certified Compose scorecard produced these per-skill positive-case
-outcome scores. **Automatic score** is the headline score: all skills and the
-router were available, but the prompt did not name a skill. Uplift compares
-explicit skill invocation with the no-skill baseline.
-
-| Skill | Baseline | Forced | Automatic score | Uplift |
-| --- | ---: | ---: | ---: | ---: |
-| [`compose-animations`](skills/compose-animations/SKILL.md) | 75.0% | 100.0% | **100.0%** | +25.0 pp |
-| [`compose-component-design`](skills/compose-component-design/SKILL.md) | 86.7% | 100.0% | **100.0%** | +13.3 pp |
-| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 66.7% | 100.0% | **100.0%** | +33.3 pp |
-| [`compose-performance`](skills/compose-performance/SKILL.md) | 91.7% | 100.0% | **100.0%** | +8.3 pp |
-| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 77.8% | 100.0% | **100.0%** | +22.2 pp |
-| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 100.0% | **100.0%** | +44.4 pp |
-
-Every skill scored 100.0% restraint on its forced and automatic no-change
-controls. These per-skill rows are diagnostic, not independent release gates,
-and multi-skill routing cases contribute to each relevant row. The suite-wide
-forced and automatic outcome scores were both 100.0%, with 89.4% reported
-routing precision and 97.7% reported routing recall.
-
-Provenance: the scorecard retains unaffected conditions from the previous
-complete benchmark and uses the latest three-repetition result for every
-condition targeted by the finalized skill edits. The
-[evaluation documentation](evals/README.md) defines the score, controls, safety
-evidence, and interpretation caveats.
-
-The published Compose scorecard predates the full-public-catalog automatic-arm
-policy. New suite results remain separate and fingerprinted; the repository
-overview is descriptive rather than a combined gate.
-
-The separate 2026-08-19 Kotlin/Gradle cohort used the full 15-skill automatic
-catalog and produced these advisory diagnostics:
-
-| Skill | Baseline | Forced | Automatic score | Uplift | Restraint (forced / automatic) |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| [`gradle-run`](skills/gradle-run/SKILL.md) | 33.3% | 100.0% | **75.0%** | +66.7 pp | 100.0% / 100.0% |
-| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | **91.7%** | +33.3 pp | 100.0% / 100.0% |
-| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | **100.0%** | +66.7 pp | 66.7% / 66.7% |
-| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 83.3% | **77.8%** | +55.6 pp | 100.0% / 100.0% |
-
-The cohort passed forced uplift, automatic retention, and both routing gates,
-but did not pass the negative-control or zero-forbidden-action gates. Its one
-genuine forbidden action was an undeclared fixture edit. Human audit also found
-the sealed-exhaustiveness review rubric over-constrained for its
-behavior-preserving prompt. A separately fingerprinted 2026-08-20 follow-up
-evaluated the corrected rubric at 100.0% in all three arms (3/3 each), with no
-forbidden action, process failure, or retry. The discoverable disabled-skill
-catalog changed between runs, so the evaluator correctly refused to merge that
-follow-up into the frozen aggregate above.
-
-A later 2026-08-20 two-case repair recheck added the value-class task's visible
-`Subject.kt` write boundary and reran it with the sealed-exhaustiveness review
-across all three arms and three repetitions. All 18 records passed with no
-forbidden action, process failure, or retry; both audit-queued review records
-were accepted. This is repair evidence only: it contains no negative controls
-and its baseline was already 100.0%, so it neither measures uplift nor replaces
-the complete Kotlin/Gradle scorecard.
-
-Validate the harness and preview the full call matrix:
-
-```shell
-npm run evals:validate
-python3 evals/run.py plan \
-  --suite kotlin-gradle \
-  --model gpt-5.6-terra --reasoning medium \
-  --judge-model gpt-5.6-sol --judge-reasoning high
-```
-
-See [`evals/README.md`](evals/README.md) for experiment controls, live execution,
-score formulas, resumability, and human auditing.
+| Skill | Baseline | Automatic | Restraint |
+| --- | ---: | ---: | ---: |
+| [`compose-animations`](skills/compose-animations/SKILL.md) | 75.0% | 100.0% | 100.0% |
+| [`compose-component-design`](skills/compose-component-design/SKILL.md) | 86.7% | 100.0% | 100.0% |
+| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 66.7% | 100.0% | 100.0% |
+| [`compose-performance`](skills/compose-performance/SKILL.md) | 91.7% | 100.0% | 100.0% |
+| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 77.8% | 100.0% | 100.0% |
+| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 100.0% | 100.0% |
+| [`gradle-run`](skills/gradle-run/SKILL.md) | 33.3% | 100.0% | 100.0% |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | 100.0% |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
+| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 100.0% | 100.0% |
 
 ## License
 

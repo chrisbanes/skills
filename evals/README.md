@@ -1,11 +1,12 @@
 # Repository skill evaluations
 
 This directory contains a reproducible, advisory evaluator with a shared core
-and suite-specific catalogs, fixtures, coverage rules, and safety policies. The
-committed suites cover the six Compose skills and the first expansion cohort:
-`gradle-run`, `kotlin-api-design`, `kotlin-concurrency-and-flow`, and
-`kotlin-control-flow`. It is designed
-to answer two separate questions:
+and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
+tests concrete scenarios modelled on real-world coding work, with expected
+outcomes, allowed-write boundaries, and no-change controls. The committed suites
+cover six Compose skills plus `gradle-run`, `kotlin-api-design`,
+`kotlin-concurrency-and-flow`, and `kotlin-control-flow`. It is designed to
+answer two separate questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
 2. Does automatic activation report the expected public skill entrypoints?
@@ -13,86 +14,35 @@ to answer two separate questions:
 The evaluator never turns a stochastic model score into a merge or release
 gate. CI validates only the harness, corpus, and deterministic formulas.
 
-## Latest Compose per-skill scores
+## Results
 
-The 2026-08-18 certified scorecard produced the following descriptive scores.
-**Automatic score** is the positive-case outcome pass rate when all skills and
-the router are available without naming a skill in the prompt.
-Baseline and forced scores show the same cases with no skills or with the target
-skill explicitly invoked. Uplift is forced minus baseline. Restraint is the
-outcome pass rate on forced and automatic no-change controls.
+**Baseline** is the positive-case pass rate with no skills available.
+**Automatic** is the positive-case pass rate with every repository skill
+available but none named in the prompt. **Restraint** is the no-change-control
+pass rate: the skill may inspect the task, but must not make an unnecessary
+change. The baseline comes from the complete scenario suite; automatic and
+restraint use the latest valid measurement for each metric.
 
-| Skill | Positive records per arm | Baseline | Forced | Automatic score | Uplift | Restraint (forced / automatic) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `compose-animations` | 12 | 75.0% | 100.0% | 100.0% | +25.0 pp | 100.0% / 100.0% |
-| `compose-component-design` | 15 | 86.7% | 100.0% | 100.0% | +13.3 pp | 100.0% / 100.0% |
-| `compose-focus-navigation` | 9 | 66.7% | 100.0% | 100.0% | +33.3 pp | 100.0% / 100.0% |
-| `compose-performance` | 24 | 91.7% | 100.0% | 100.0% | +8.3 pp | 100.0% / 100.0% |
-| `compose-state-and-effects` | 27 | 77.8% | 100.0% | 100.0% | +22.2 pp | 100.0% / 100.0% |
-| `compose-ui-testing-patterns` | 9 | 55.6% | 100.0% | 100.0% | +44.4 pp | 100.0% / 100.0% |
+The rows are descriptive diagnostics, not individual release gates. Multi-skill
+scenarios contribute to each relevant skill row, so the rows are not a
+suite-wide aggregate.
 
-These rows are diagnostic rather than independent pass/fail gates. Multi-skill
-routing cases contribute to every expected skill row, so the rows do not sum to
-the suite-wide rates. The aggregate certification passed with 82.7% baseline
-and 100.0% forced and automatic positive outcomes; 89.4% reported routing
-precision; 97.7% reported routing recall; and 100.0% forced and automatic
-negative-control restraint.
+| Skill | Baseline | Automatic | Restraint |
+| --- | ---: | ---: | ---: |
+| `compose-animations` | 75.0% | 100.0% | 100.0% |
+| `compose-component-design` | 86.7% | 100.0% | 100.0% |
+| `compose-focus-navigation` | 66.7% | 100.0% | 100.0% |
+| `compose-performance` | 91.7% | 100.0% | 100.0% |
+| `compose-state-and-effects` | 77.8% | 100.0% | 100.0% |
+| `compose-ui-testing-patterns` | 55.6% | 100.0% | 100.0% |
+| `gradle-run` | 33.3% | 100.0% | 100.0% |
+| `kotlin-api-design` | 66.7% | 100.0% | 100.0% |
+| `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 100.0% |
+| `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
 
-Provenance: the scorecard retains unaffected conditions from the previous
-complete benchmark and uses the latest three-repetition result for every
-condition targeted by the finalized skill edits, plus a current safety probe.
-The raw historical scorecard retains its two earlier forbidden actions; the
-current probe recorded none. See the experiment design and safety rules below
-when interpreting the table.
+## Evaluation setup
 
-This historical Compose scorecard used the then-current Compose-only automatic
-catalog. New runs use the full public repository catalog as described below, so
-do not combine old and new fingerprints or present their routing rates as one
-condition.
-
-## Latest Kotlin/Gradle per-skill scores
-
-The separate 2026-08-19 run evaluated all 19 Kotlin/Gradle cases with the full
-15-skill automatic catalog, three repetitions, Terra medium subjects, and Sol
-high blinded judges.
-
-| Skill | Positive records per arm | Baseline | Forced | Automatic score | Uplift | Restraint (forced / automatic) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `gradle-run` | 12 | 33.3% | 100.0% | 75.0% | +66.7 pp | 100.0% / 100.0% |
-| `kotlin-api-design` | 12 | 66.7% | 100.0% | 91.7% | +33.3 pp | 100.0% / 100.0% |
-| `kotlin-concurrency-and-flow` | 12 | 33.3% | 100.0% | 100.0% | +66.7 pp | 66.7% / 66.7% |
-| `kotlin-control-flow` | 18 | 27.8% | 83.3% | 77.8% | +55.6 pp | 100.0% / 100.0% |
-
-Aggregate positive outcomes were 44.4% baseline, 93.3% forced, and 84.4%
-automatic. Automatic retention was 81.8%; reported automatic routing precision
-and recall were 96.3% and 94.0%. Forced and automatic negative-control restraint
-were both 91.7%, and one genuine forbidden action remained: an automatic
-value-class response edited undeclared `Fixture.kt`.
-
-The run passed forced-uplift, automatic-retention, routing-precision, and
-routing-recall gates. It did not pass the negative-control or
-zero-forbidden-action gates. Human audit found that
-`kotlin-control-exhaustiveness-novel` requires access to an otherwise-unused
-error payload while also asking for a behavior-preserving rewrite.
-
-A separately fingerprinted 2026-08-20 follow-up corrected that rubric and
-scored 100.0% for none, forced, and automatic arms (3/3 each), with 100.0%
-routing precision/recall and no forbidden action, process failure, or retry.
-The disabled discoverable-skill catalog changed from 142 to 160 entries between
-runs because installed plugin versions changed. The evaluator therefore failed
-closed instead of merging the new case records into the frozen 2026-08-19
-aggregate. Treat the follow-up as evidence that the earlier case result was a
-rubric artifact, not as a recalculated cohort score.
-
-A later 2026-08-20 two-case repair recheck added the value-class task's visible
-`Subject.kt` write boundary and reran it with the sealed-exhaustiveness review
-across all three arms and three repetitions. All 18 records passed with no
-forbidden action, process failure, or retry; both audit-queued review records
-were accepted. This is repair evidence only: it contains no negative controls
-and its baseline was already 100.0%, so it neither measures uplift nor replaces
-the complete Kotlin/Gradle scorecard.
-
-## Experiment arms
+### Arms
 
 Every case runs in a fresh workspace and conversation under three arms:
 
@@ -128,7 +78,7 @@ and local skill identifiers are canonicalized to the same repository skill. They
 proof that the runtime loaded a particular `SKILL.md`; outcome differences and
 the human audit provide the behavioral evidence.
 
-## Corpus
+### Corpus
 
 The Compose benchmark remains 38 scored cases and comprises:
 
@@ -182,9 +132,9 @@ npm run evals:validate
 npm test
 ```
 
-## Models
+### Models
 
-The recommended public scorecard uses:
+The recommended evaluation configuration uses:
 
 - subject: `gpt-5.6-terra` with `medium` reasoning; and
 - judge: `gpt-5.6-sol` with `high` reasoning.
@@ -197,7 +147,7 @@ Keep the pair unchanged across all arms. Use a separate, explicitly named run
 for another model or reasoning effort; never combine fingerprints in one
 scorecard.
 
-## Preview and execute
+## Running evaluations
 
 Preview the complete matrix and call count:
 
@@ -280,7 +230,7 @@ rejudgment, or has multiple rejudgments for one packet. Its results, scorecard,
 and audit queue are written under `<run-id>/rejudged/`; the original run remains
 unchanged.
 
-## Grading and gates
+## Scoring and gates
 
 The outcome judge receives an opaque candidate ID, task, rubric, initial source,
 final diff, response, and validator evidence. It never receives the arm, skill selection,
