@@ -20,8 +20,7 @@ gate. CI validates only the harness, corpus, and deterministic formulas.
 **Automatic** is the positive-case pass rate with every repository skill
 available but none named in the prompt. **Restraint** is the no-change-control
 pass rate: the skill may inspect the task, but must not make an unnecessary
-change. The baseline comes from the complete scenario suite; automatic and
-restraint use the latest valid measurement for each metric.
+change. The table reports complete-scenario-suite measurements.
 
 The rows are descriptive diagnostics, not individual release gates. Multi-skill
 scenarios contribute to each relevant skill row, so the rows are not a
@@ -35,10 +34,22 @@ suite-wide aggregate.
 | `compose-performance` | 91.7% | 100.0% | 100.0% |
 | `compose-state-and-effects` | 77.8% | 100.0% | 100.0% |
 | `compose-ui-testing-patterns` | 55.6% | 100.0% | 100.0% |
-| `gradle-run` | 33.3% | 100.0% | 100.0% |
-| `kotlin-api-design` | 66.7% | 100.0% | 100.0% |
-| `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 100.0% |
-| `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
+| `gradle-run` | 33.3% | 75.0% | 100.0% |
+| `kotlin-api-design` | 66.7% | 91.7% | 100.0% |
+| `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 66.7% |
+| `kotlin-control-flow` | 27.8% | 77.8% | 100.0% |
+
+### Targeted repair rechecks
+
+Focused rechecks validate repaired scenarios only. They do not replace or
+recalculate a full-suite result.
+
+| Skill | Positive records | Automatic | Restraint |
+| --- | ---: | ---: | ---: |
+| `gradle-run` | 12 | 100.0% | 100.0% |
+| `kotlin-api-design` | 12 | 100.0% | 100.0% |
+| `kotlin-concurrency-and-flow` | 6 | 100.0% | 100.0% |
+| `kotlin-control-flow` | 3 | 100.0% | Not measured |
 
 ## Evaluation setup
 

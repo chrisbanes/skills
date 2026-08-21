@@ -128,12 +128,12 @@ The advisory evaluator tests concrete scenarios modelled on real-world coding
 work, with expected outcomes and no-change controls. It compares no-skill,
 forced-skill, and automatic-routing runs. **Baseline** is the no-skill result,
 **automatic** is the headline result, and **restraint** checks that a skill does
-not make an unnecessary change. The baseline comes from the complete certified
-cohort; the other columns show the latest valid measurement for each metric.
-These are not merge or release gates. See
+not make an unnecessary change. The table reports complete-scenario-suite
+results. Focused repair rechecks remain separate so they do not replace a
+full-suite measurement. These are not merge or release gates. See
 [`evals/README.md`](evals/README.md) for evaluation setup and reproducibility.
 
-| Skill | Baseline | Automatic | Restraint |
+| Skill | Baseline | Automatic (full suite) | Restraint (full suite) |
 | --- | ---: | ---: | ---: |
 | [`compose-animations`](skills/compose-animations/SKILL.md) | 75.0% | 100.0% | 100.0% |
 | [`compose-component-design`](skills/compose-component-design/SKILL.md) | 86.7% | 100.0% | 100.0% |
@@ -141,10 +141,10 @@ These are not merge or release gates. See
 | [`compose-performance`](skills/compose-performance/SKILL.md) | 91.7% | 100.0% | 100.0% |
 | [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 77.8% | 100.0% | 100.0% |
 | [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 100.0% | 100.0% |
-| [`gradle-run`](skills/gradle-run/SKILL.md) | 33.3% | 100.0% | 100.0% |
-| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | 100.0% |
-| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
-| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 100.0% | 100.0% |
+| [`gradle-run`](skills/gradle-run/SKILL.md) | 33.3% | 75.0% | 100.0% |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 91.7% | 100.0% |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 66.7% |
+| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 77.8% | 100.0% |
 
 ## License
 

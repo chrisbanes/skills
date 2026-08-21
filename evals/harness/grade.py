@@ -81,6 +81,17 @@ _RECOVERABLE_LOGGED_GRADLE_RUN = re.compile(
     r"(?:^|[;\n])\s*python(?:3(?:\.\d+)?)?\s+\S*gradle_run\.py"
     r"(?:\\?['\"])*\s+(?P<arguments>(?:create|run|finish)\b[^\n]*)"
 )
+_UNSAFE_RECOVERED_GRADLE_RUN = re.compile(
+    r"&&|\|\||(?<!\|)\|(?!\|)|;|(?<![0-9])&(?![&0-9])|<<"
+)
+_SHELL_CONTROL_FLOW = re.compile(
+    r"(?:^|[;\n])\s*"
+    r"(?:case|do|done|elif|else|esac|fi|for|if|then|until|while)\b"
+)
+_UNSAFE_RECOVERED_GRADLE_RUN_PREFIX = re.compile(
+    r"&&|\|\||<<|(?:^|[;\n])\s*"
+    r"(?:case|do|done|elif|else|esac|fi|for|if|then|until|while)\b"
+)
 
 
 @dataclass(frozen=True)
@@ -513,6 +524,8 @@ def _successful_command_invocations(
 ) -> tuple[tuple[str, ...], ...]:
     if _ends_with_background_operator(command):
         return ()
+    if _SHELL_CONTROL_FLOW.search(command):
+        return ()
     segments, separators = _shell_parts(command)
     if not segments:
         return _recoverable_logged_gradle_run_invocation(command)
@@ -549,6 +562,12 @@ def _recoverable_logged_gradle_run_invocation(
 ) -> tuple[tuple[str, ...], ...]:
     logged_gradle_run = _RECOVERABLE_LOGGED_GRADLE_RUN.search(command)
     if logged_gradle_run is None:
+        return ()
+    if _UNSAFE_RECOVERED_GRADLE_RUN_PREFIX.search(command[: logged_gradle_run.start()]):
+        return ()
+    if _UNSAFE_RECOVERED_GRADLE_RUN.search(logged_gradle_run.group(0)):
+        return ()
+    if command[logged_gradle_run.end() :].strip(" \t\r\n'\"\\"):
         return ()
     try:
         arguments = tuple(shlex.split(logged_gradle_run.group("arguments")))

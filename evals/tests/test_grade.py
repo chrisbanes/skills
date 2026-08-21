@@ -621,6 +621,74 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
 
         self.assertTrue(grade_subject(case, result).objective_pass)
 
+    def test_gradle_workflow_does_not_recover_masked_logged_create_commands(self):
+        case = EvalCase(
+            **{
+                **make_case(self.workspace).__dict__,
+                "required_command_patterns": (
+                    r"gradle_run\.py create",
+                    r"gradle_run\.py run",
+                    r"gradle_run\.py finish",
+                ),
+            }
+        )
+        workflow = "a" * 32
+        masked_creates = (
+            "python3 gradle_run.py create || true",
+            "python3 gradle_run.py create | tee create.log",
+            "if false; then\npython3 gradle_run.py create\nfi",
+            "cat <<'EOF'\npython3 gradle_run.py create\nEOF",
+        )
+
+        for create in masked_creates:
+            with self.subTest(command=create):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": create,
+                                "exit_code": 0,
+                            },
+                        },
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": (
+                                    "python3 gradle_run.py run "
+                                    f"--workflow {workflow}"
+                                ),
+                                "exit_code": 0,
+                            },
+                        },
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": (
+                                    "python3 gradle_run.py finish "
+                                    f"--workflow {workflow}"
+                                ),
+                                "exit_code": 0,
+                            },
+                        },
+                    ),
+                )
+
+                grade = grade_subject(case, result)
+
+                self.assertIn(
+                    "required command evidence missing: gradle_run\\.py create",
+                    grade.objective_failures,
+                )
+                self.assertIn(
+                    "required Gradle workflow lifecycle missing",
+                    grade.objective_failures,
+                )
+
     def test_required_command_evidence_spans_lines_and_ignores_option_order(self):
         case = make_case(self.workspace)
         case = EvalCase(
