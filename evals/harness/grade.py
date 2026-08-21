@@ -74,6 +74,13 @@ _SHELL_CONTROL_PREFIXES = {
     "until",
     "while",
 }
+_SHELL_CONTROL_WORDS = _SHELL_CONTROL_PREFIXES | {
+    "case",
+    "done",
+    "esac",
+    "fi",
+    "for",
+}
 _PYTHON_EXECUTABLE = re.compile(r"python(?:3(?:\.\d+)?)?$")
 _ENVIRONMENT_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=", re.DOTALL)
 _WORKFLOW_OUTPUT = re.compile(r'"workflow"\s*:\s*"([a-z0-9]{32})"')
@@ -83,10 +90,6 @@ _RECOVERABLE_LOGGED_GRADLE_RUN = re.compile(
 )
 _UNSAFE_RECOVERED_GRADLE_RUN = re.compile(
     r"&&|\|\||(?<!\|)\|(?!\|)|;|(?<![0-9])&(?![&0-9])|<<"
-)
-_SHELL_CONTROL_FLOW = re.compile(
-    r"(?:^|[;\n])\s*"
-    r"(?:case|do|done|elif|else|esac|fi|for|if|then|until|while)\b"
 )
 _UNSAFE_RECOVERED_GRADLE_RUN_PREFIX = re.compile(
     r"&&|\|\||<<|(?:^|[;\n])\s*"
@@ -509,6 +512,10 @@ def _command_invocations(command: str) -> tuple[tuple[str, ...], ...]:
     return tuple(dict.fromkeys(invocations))
 
 
+def _has_shell_control_flow(segments: tuple[tuple[str, ...], ...]) -> bool:
+    return any(segment and segment[0] in _SHELL_CONTROL_WORDS for segment in segments)
+
+
 def _nested_invocations(
     command: str, *, successful_only: bool
 ) -> tuple[tuple[str, ...], ...]:
@@ -524,11 +531,11 @@ def _successful_command_invocations(
 ) -> tuple[tuple[str, ...], ...]:
     if _ends_with_background_operator(command):
         return ()
-    if _SHELL_CONTROL_FLOW.search(command):
-        return ()
     segments, separators = _shell_parts(command)
     if not segments:
         return _recoverable_logged_gradle_run_invocation(command)
+    if _has_shell_control_flow(segments):
+        return ()
     last_sequence = max(
         (
             index

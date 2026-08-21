@@ -689,6 +689,59 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
                     grade.objective_failures,
                 )
 
+    def test_gradle_workflow_accepts_quoted_control_word_in_question(self):
+        case = EvalCase(
+            **{
+                **make_case(self.workspace).__dict__,
+                "required_command_patterns": (
+                    r"gradle_run\.py create",
+                    r"gradle_run\.py run",
+                    r"gradle_run\.py finish",
+                ),
+            }
+        )
+        workflow = "a" * 32
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "python3 gradle_run.py create",
+                        "aggregated_output": f'{{"workflow": "{workflow}"}}',
+                        "exit_code": 0,
+                    },
+                },
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": (
+                            "python3 gradle_run.py run "
+                            f"--workflow {workflow} --scope targeted "
+                            "--question 'Check this:\\nif tests pass' "
+                            "-- ./gradlew --offline --no-scan test"
+                        ),
+                        "exit_code": 0,
+                    },
+                },
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": (
+                            "python3 gradle_run.py finish "
+                            f"--workflow {workflow}"
+                        ),
+                        "exit_code": 0,
+                    },
+                },
+            ),
+        )
+
+        self.assertTrue(grade_subject(case, result).objective_pass)
+
     def test_required_command_evidence_spans_lines_and_ignores_option_order(self):
         case = make_case(self.workspace)
         case = EvalCase(
