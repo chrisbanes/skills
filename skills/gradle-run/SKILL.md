@@ -45,11 +45,18 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
      ./gradlew :module:test
    ```
 
+   Choose the task from the verification question's acceptance claim. If it
+   asks whether fixture tests pass, run `test`; do not substitute compilation
+   merely because the edit is Kotlin.
+
    Read only the bounded JSON summary and continue from its failed tasks,
    fingerprints, and excerpt. Do not inspect its log unless a user explicitly
-   requests that artifact. The summary and ledger redact common credential
-   patterns; the retained full log is intentionally raw and can contain
-   secrets, so never paste or reopen it as a substitute for the summary.
+   requests that artifact. In the final report, repeat the verification
+   question and answer it from that bounded summary, explicitly stating that
+   the wrapper ran the task; do not describe it as a direct Gradle invocation.
+   The summary and ledger redact common credential patterns; the retained full
+   log is intentionally raw and can contain secrets, so never paste or reopen
+   it as a substitute for the summary.
 5. For a Gradle-centered workflow, create one fresh portable Solver diagnostic
    owner. Report its model and reasoning only if the runtime exposes them. Give
    it read-only repository access and ownership of wrapper runs and diagnosis;
@@ -66,20 +73,28 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    change with the same wrapper and the narrowest applicable task.
 7. Record `broad` only for aggregate project checks. Give every broad run a
    distinct question that a narrower task cannot answer. The wrapper flags
-   repeated commands and primary failure fingerprints; if the primary failure
-   repeats, stop the run loop and revise the diagnosis before running another
-   unchanged command. If the wrapper is interrupted, use its recorded signal
+   repeated commands and primary failure fingerprints; if the primary source
+   or compiler failure repeats, stop the run loop. Inspect the reported source
+   line and its nearby declaration, import, or receiver context before
+   proposing a fix or another Gradle command; then revise the diagnosis from
+   that evidence. In the final diagnosis, name that focused inspection as the
+   next action; do not say to fix the source before it happens. If the wrapper
+   is interrupted, use its recorded signal
    and retained log; it stops the isolated Gradle process group or Windows
    process tree, extracts bounded diagnostics from the partial log, and makes
    the ledger durable before returning. Only logs still represented by the
    bounded recent-run ledger are retained.
 8. Finish after the requested broad validation passes, or report unresolved
    warning fingerprints and the reason validation cannot continue. Summarize
-   the compact ledger, then delete only the wrapper-owned logs:
+   the compact ledger, including each verification question and its bounded
+   answer, then finish it:
 
    ```sh
    python3 <skill-dir>/scripts/gradle_run.py finish --workflow <id>
    ```
+
+   In the final report, state that the workflow finished after that summary and
+   that cleanup removed only its wrapper-owned logs.
 
    Finish retains small marker and lock metadata so repeating the same finished
    identifier is idempotent while an unknown identifier fails closed. If
@@ -97,17 +112,20 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
 2. Novel: a final broad check finds a downstream failure after targeted tasks
    pass. GREEN records the new question, targets the owning task, and only
    broad-reruns once that task passes.
-3. Repetition: an unchanged failure fingerprint survives a claimed fix. GREEN
-   stops rebuilding and asks for a revised diagnosis; it does not treat a new
-   question string as permission for a blind repeat. A changed source failure
-   remains primary even when the following generic Gradle block is unchanged.
+3. Repetition: an unchanged source failure fingerprint survives a claimed fix.
+   GREEN stops rebuilding, inspects the cited source line and its surrounding
+   declaration or import context, then reports a revised diagnosis before
+   naming a fix or another Gradle command. It does not treat a new question
+   string as permission for a blind repeat.
 4. Fail closed: the wrapper, Python runtime, or persistent diagnostic owner is
    unavailable. GREEN runs no direct Gradle fallback and reports the missing
    prerequisite. A valid-looking but unknown finish identifier also fails; it
    is not treated as a previously completed workflow.
 5. Counterexample: “After changing this Kotlin helper, run
    `:module:test`.” GREEN uses the wrapper but keeps this incidental focused
-   validation with the current agent.
+   validation with the current agent, and reports the verification question
+   with its bounded answer; it does not substitute compilation for the stated
+   test task.
 6. Boundary: while a Gradle workflow runs, a user starts an unrelated review
    subagent. GREEN permits it; this skill owns Gradle output handling and
    diagnostic delegation only.

@@ -506,6 +506,121 @@ class DeterministicGradeTest(unittest.TestCase):
 
         self.assertTrue(grade_subject(case, result).objective_pass)
 
+    def test_gradle_workflow_recovers_logged_create_command_after_shell_pipeline(self):
+        case = make_case(self.workspace)
+        patterns = (
+            r"gradle_run\.py create",
+            r"gradle_run\.py run(?=.*--scope targeted)(?=.*--question)",
+            r"gradle_run\.py finish",
+        )
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": patterns,
+            }
+        )
+        workflow = "a" * 32
+        logged_creates = (
+            r'''/bin/zsh -lc 'SKILL_DIR=.agents/skills/gradle-run
+python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
+            '/bin/zsh -lc "rg --files -uu | sed -n \'1,260p\' && '
+            'python3 .agents/skills/gradle-run/scripts/gradle_run.py create"',
+        )
+        for logged_create in logged_creates:
+            with self.subTest(command=logged_create):
+                result = make_result(
+                    self.workspace,
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": logged_create,
+                                "aggregated_output": f'{{"workflow": "{workflow}"}}',
+                                "exit_code": 0,
+                            },
+                        },
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": (
+                                    "python3 .agents/skills/gradle-run/scripts/gradle_run.py run "
+                                    f"--workflow {workflow} --scope targeted --question verified "
+                                    "-- ./gradlew --offline --no-scan test"
+                                ),
+                                "exit_code": 0,
+                            },
+                        },
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": (
+                                    "python3 .agents/skills/gradle-run/scripts/gradle_run.py finish "
+                                    f"--workflow {workflow}"
+                                ),
+                                "exit_code": 0,
+                            },
+                        },
+                    ),
+                )
+
+                self.assertTrue(grade_subject(case, result).objective_pass)
+
+    def test_gradle_workflow_recovers_logged_run_arguments_after_pipeline(self):
+        case = make_case(self.workspace)
+        patterns = (
+            r"gradle_run\.py create",
+            r"gradle_run\.py run(?=.*--scope targeted)(?=.*--question)(?=.*test)",
+            r"gradle_run\.py finish",
+        )
+        case = EvalCase(
+            **{
+                **case.__dict__,
+                "required_command_patterns": patterns,
+            }
+        )
+        workflow = "a" * 32
+        logged_run = (
+            "rg --files | sed -n '1,240p'\n"
+            "python3 .agents/skills/gradle-run/scripts/gradle_run.py run "
+            f"--workflow {workflow} --scope targeted --question 'Does it pass?' "
+            "-- ./gradlew test --offline --no-scan"
+        )
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "python3 gradle_run.py create",
+                        "aggregated_output": f'{{"workflow": "{workflow}"}}',
+                        "exit_code": 0,
+                    },
+                },
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": logged_run,
+                        "exit_code": 0,
+                    },
+                },
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": f"python3 gradle_run.py finish --workflow {workflow}",
+                        "exit_code": 0,
+                    },
+                },
+            ),
+        )
+
+        self.assertTrue(grade_subject(case, result).objective_pass)
+
     def test_required_command_evidence_spans_lines_and_ignores_option_order(self):
         case = make_case(self.workspace)
         case = EvalCase(
@@ -743,12 +858,21 @@ class DeterministicGradeTest(unittest.TestCase):
                 event(f"python3 gradle_run.py finish --workflow {workflow_a}"),
             ),
         )
+        completed_without_create_output = make_result(
+            self.workspace,
+            events=(
+                event("python3 gradle_run.py create"),
+                event(f"python3 gradle_run.py run --workflow {workflow_a}"),
+                event(f"python3 gradle_run.py finish --workflow {workflow_a}"),
+            ),
+        )
 
         self.assertIn(
             "required Gradle workflow lifecycle missing",
             grade_subject(case, mismatched).objective_failures,
         )
         self.assertTrue(grade_subject(case, completed).objective_pass)
+        self.assertTrue(grade_subject(case, completed_without_create_output).objective_pass)
 
     def test_required_gradle_workflow_accepts_optional_separator_and_redirection(self):
         case = make_case(self.workspace)

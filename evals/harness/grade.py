@@ -77,6 +77,10 @@ _SHELL_CONTROL_PREFIXES = {
 _PYTHON_EXECUTABLE = re.compile(r"python(?:3(?:\.\d+)?)?$")
 _ENVIRONMENT_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=", re.DOTALL)
 _WORKFLOW_OUTPUT = re.compile(r'"workflow"\s*:\s*"([a-z0-9]{32})"')
+_RECOVERABLE_LOGGED_GRADLE_RUN = re.compile(
+    r"(?:^|[;\n])\s*python(?:3(?:\.\d+)?)?\s+\S*gradle_run\.py"
+    r"(?:\\?['\"])*\s+(?P<arguments>(?:create|run|finish)\b[^\n]*)"
+)
 
 
 @dataclass(frozen=True)
@@ -511,7 +515,7 @@ def _successful_command_invocations(
         return ()
     segments, separators = _shell_parts(command)
     if not segments:
-        return ()
+        return _recoverable_logged_gradle_run_invocation(command)
     last_sequence = max(
         (
             index
@@ -523,12 +527,34 @@ def _successful_command_invocations(
     successful_segments = segments[last_sequence + 1 :]
     successful_separators = separators[last_sequence + 1 :]
     if any(separator != "&&" for separator in successful_separators):
-        return ()
-    return tuple(
+        if successful_separators and successful_separators[-1] == "&&":
+            final_invocations = tuple(
+                _segment_invocations(segments[-1], successful_only=True)
+            )
+            if final_invocations:
+                return final_invocations
+        return _recoverable_logged_gradle_run_invocation(command)
+    invocations = tuple(
         invocation
         for segment in successful_segments
         for invocation in _segment_invocations(segment, successful_only=True)
     )
+    if any(PurePosixPath(invocation[0]).name == "gradle_run.py" for invocation in invocations):
+        return invocations
+    return invocations + _recoverable_logged_gradle_run_invocation(command)
+
+
+def _recoverable_logged_gradle_run_invocation(
+    command: str,
+) -> tuple[tuple[str, ...], ...]:
+    logged_gradle_run = _RECOVERABLE_LOGGED_GRADLE_RUN.search(command)
+    if logged_gradle_run is None:
+        return ()
+    try:
+        arguments = tuple(shlex.split(logged_gradle_run.group("arguments")))
+    except ValueError:
+        arguments = (logged_gradle_run.group("arguments").split(maxsplit=1)[0],)
+    return (("gradle_run.py", arguments[0].strip("'\""), *arguments[1:]),)
 
 
 def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
@@ -634,18 +660,29 @@ def _completed_gradle_workflow(events: tuple[dict[str, object], ...]) -> bool:
         output_workflows = (
             _WORKFLOW_OUTPUT.findall(output) if isinstance(output, str) else []
         )
-        if create_count and (create_count != 1 or len(output_workflows) != 1):
+        if create_count and (create_count != 1 or len(output_workflows) > 1):
             return False
         for invocation in invocations:
             operation = _gradle_run_operation(invocation)
             if operation == "create":
-                lifecycle.append((operation, output_workflows[0]))
+                lifecycle.append(
+                    (operation, output_workflows[0] if output_workflows else None)
+                )
             elif operation in {"run", "finish"}:
                 lifecycle.append((operation, _workflow_option(invocation)))
 
     if len(lifecycle) < 3:
         return False
     workflow = lifecycle[0][1]
+    if workflow is None:
+        workflow = next(
+            (
+                workflow_id
+                for operation, workflow_id in lifecycle[1:]
+                if operation == "run" and workflow_id is not None
+            ),
+            None,
+        )
     return (
         lifecycle[0][0] == "create"
         and workflow is not None
