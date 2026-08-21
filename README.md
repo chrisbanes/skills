@@ -2,7 +2,8 @@
 
 # Skills
 
-A set of skills for Kotlin, Jetpack Compose, and Android development.
+A set of skills for Kotlin, Jetpack Compose, Android development, and grounded
+writing.
 
 ## Install
 
