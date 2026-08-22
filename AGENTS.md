@@ -19,6 +19,17 @@ Before considering any skill addition or edit complete, verify:
 5. RED/GREEN agent scenarios test the change, including a novel case and a counterexample against over-application.
 6. README and router integration are updated where applicable, `npm run lint` passes, and versions remain unchanged unless requested.
 
+## Evaluation result documentation
+
+- Keep the result tables in `README.md` and `evals/README.md` synchronized. Each
+  cell shows the latest available result for that skill and metric.
+- Replace superseded values in place. Do not turn either README into a journal
+  of dated runs, targeted rechecks, repair history, or per-run commentary.
+- Keep detailed scorecards, audit decisions, run provenance, and historical
+  evidence in evaluation artifacts and the change record, not in the READMEs.
+- Update only metrics supported by the latest evidence; leave unrelated skill
+  results unchanged.
+
 ## Release/version system
 
 - Use SemVer-compatible CalVer: `YYYY.M.D`.

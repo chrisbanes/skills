@@ -1,6 +1,6 @@
 ---
 name: gradle-run
-description: Use when planning to execute Gradle through `gradle`, `./gradlew`, or a custom `gradlew*` wrapper script, or diagnosing a Gradle build, check, test, lint, warning, or failure.
+description: Use when planning to execute Gradle through `gradle`, `./gradlew`, or a custom `gradlew*` wrapper script, or diagnosing a Gradle build, compact workflow ledger, repeated failure fingerprint, check, test, lint, warning, or failure even when no new Gradle run is appropriate.
 ---
 
 # Gradle run
@@ -27,6 +27,8 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    python3 <skill-dir>/scripts/gradle_run.py create
    ```
 
+   Run `create`, every `run`, and `finish` as standalone shell commands; do
+   not chain a lifecycle operation with discovery, status, or cleanup commands.
    Retain the returned opaque workflow identifier. Use only this wrapper to
    run Gradle. It adds `--console=plain` and `--no-scan` unless the command
    already selects console behavior or the user explicitly authorized
@@ -52,8 +54,10 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    Read only the bounded JSON summary and continue from its failed tasks,
    fingerprints, and excerpt. Do not inspect its log unless a user explicitly
    requests that artifact. In the final report, repeat the verification
-   question and answer it from that bounded summary, explicitly stating that
-   the wrapper ran the task; do not describe it as a direct Gradle invocation.
+   question and answer it from that bounded summary. Name the managed
+   `gradle_run.py run` wrapper as the executor and the nested Gradle task
+   separately; do not present only the nested Gradle command or describe it as
+   a direct Gradle invocation.
    The summary and ledger redact common credential patterns; the retained full
    log is intentionally raw and can contain secrets, so never paste or reopen
    it as a substitute for the summary.
@@ -123,9 +127,10 @@ wrapper; never stream, `tee`, paste, or reopen a complete build log.
    is not treated as a previously completed workflow.
 5. Counterexample: “After changing this Kotlin helper, run
    `:module:test`.” GREEN uses the wrapper but keeps this incidental focused
-   validation with the current agent, and reports the verification question
-   with its bounded answer; it does not substitute compilation for the stated
-   test task.
+   validation with the current agent, runs each lifecycle operation as a
+   standalone command, and reports the managed wrapper plus the verification
+   question and bounded answer; it does not substitute compilation for the
+   stated test task.
 6. Boundary: while a Gradle workflow runs, a user starts an unrelated review
    subagent. GREEN permits it; this skill owns Gradle output handling and
    diagnostic delegation only.

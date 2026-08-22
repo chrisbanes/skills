@@ -179,6 +179,8 @@ def _skill_source_paths(repo_root: Path) -> tuple[Path, ...]:
                 for skill_dir in skill_dirs
                 for path in skill_dir.rglob("*")
                 if path.is_file()
+                and "__pycache__" not in path.relative_to(skill_dir).parts
+                and path.suffix not in {".pyc", ".pyo"}
             ),
             key=str,
         )

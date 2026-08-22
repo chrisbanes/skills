@@ -67,6 +67,11 @@ Put guarded branches before their unguarded fallback for the same primary condit
 
 For a `when` expression over a closed domain, handle every case explicitly. Do not add `else` only to quiet the compiler.
 
+Match singleton objects by value, but match class and data-class subtypes with
+`is`. In a subtype branch, use any caller-visible payload that the mapping
+already needs so the smart cast remains explicit; do not replace `else` with an
+invalid bare class name or discard subtype data merely to claim exhaustiveness.
+
 ```kotlin
 val action = when (state) {
     SessionState.SignedOut -> Action.ShowSignIn
@@ -180,6 +185,21 @@ Before finishing a control-flow change, verify:
 - Open-domain fallbacks are still explicit.
 - Smart casts still work without `as`, `!!`, or duplicated casts.
 - The new shape is easier to scan than the old shape.
+
+## RED/GREEN agent scenarios
+
+1. Direct: a sealed result maps one data-class subtype and two singleton
+   outcomes through `else`. RED recommends class names as value branches or
+   drops the data payload. GREEN uses `is` for class subtypes, value matches for
+   objects, and keeps the payload smart-cast where the mapping needs it.
+2. Novel: plain Kotlin navigation uses a one-shot Flow plus a sealed route
+   renderer. GREEN combines concurrency guidance with this skill and makes data
+   routes explicit; it does not infer a Compose state concern without Compose
+   APIs or ownership evidence.
+3. Counterexample: an external integer status code has a deliberate unknown
+   fallback. GREEN keeps `else` because the domain is open.
+4. No-change: an exhaustive `when` already uses each subtype payload without
+   casts. GREEN reports no control-flow change.
 
 ## When NOT to apply
 

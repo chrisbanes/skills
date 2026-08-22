@@ -385,7 +385,7 @@ class ResultLifecycleTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "object payload"):
                     load_raw_records(self.root)
 
-    def test_skill_sources_include_cluster_references(self):
+    def test_skill_sources_include_references_but_ignore_generated_bytecode(self):
         for skill in (*COMPOSE_SKILLS, ROUTER_SKILL):
             skill_file = self.root / "skills" / skill / "SKILL.md"
             skill_file.parent.mkdir(parents=True)
@@ -399,10 +399,24 @@ class ResultLifecycleTest(unittest.TestCase):
         )
         reference.parent.mkdir()
         reference.write_text("Stability guidance\n", encoding="utf-8")
+        bytecode = (
+            self.root
+            / "skills"
+            / "compose-performance"
+            / "scripts"
+            / "__pycache__"
+            / "helper.cpython-314.pyc"
+        )
+        bytecode.parent.mkdir(parents=True)
+        bytecode.write_bytes(b"generated")
+        adjacent_bytecode = bytecode.parent.parent / "helper.pyc"
+        adjacent_bytecode.write_bytes(b"generated")
 
         sources = _skill_source_paths(self.root)
 
         self.assertIn(reference.resolve(), sources)
+        self.assertNotIn(bytecode.resolve(), sources)
+        self.assertNotIn(adjacent_bytecode.resolve(), sources)
 
 
 if __name__ == "__main__":
