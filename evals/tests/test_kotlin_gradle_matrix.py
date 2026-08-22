@@ -2,6 +2,7 @@ import json
 import re
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -150,6 +151,60 @@ class KotlinGradleMatrixTest(unittest.TestCase):
             ):
                 with self.subTest(case=case_id, command=command):
                     self.assertIsNone(re.search(run_pattern, command, re.DOTALL))
+
+    def test_exhaustiveness_direct_requires_test_command_evidence(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "kotlin-control-exhaustiveness-direct"
+        )
+        self.assertEqual(1, len(case.required_command_patterns))
+        test_pattern = case.required_command_patterns[0]
+
+        for command in (
+            "./gradlew --offline --no-scan test",
+            "python3 gradle_run.py run --scope targeted --question verified "
+            "-- ./gradlew --offline --no-scan test",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(re.search(test_pattern, command, re.DOTALL))
+
+        for command in (
+            "./gradlew --offline --no-scan help",
+            "./gradlew --offline --no-scan testClasses",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNone(re.search(test_pattern, command, re.DOTALL))
+
+        objective_case = replace(case, validators=())
+        missing = grade_subject(
+            objective_case,
+            make_result(
+                REPO_ROOT,
+                paths=("src/main/kotlin/example/Subject.kt",),
+            ),
+        )
+        recorded = grade_subject(
+            objective_case,
+            make_result(
+                REPO_ROOT,
+                paths=("src/main/kotlin/example/Subject.kt",),
+                events=(
+                    {
+                        "type": "item.completed",
+                        "item": {
+                            "type": "command_execution",
+                            "command": "./gradlew --offline --no-scan test",
+                            "exit_code": 0,
+                        },
+                    },
+                ),
+            ),
+        )
+
+        self.assertFalse(missing.objective_pass)
+        self.assertTrue(recorded.objective_pass)
 
     def test_kotlin_fixture_is_pinned_and_offline_ready(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "kotlin-jvm"
