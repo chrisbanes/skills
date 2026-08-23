@@ -188,6 +188,31 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertEqual(" M src/main/kotlin/example/Subject.kt\n", status)
         self.assertEqual("package example\n", (second / subject.relative_to(first)).read_text())
 
+    def test_staged_skills_ignore_generated_bytecode(self):
+        case = sample_case(self.root)
+        skill = self.root / "skills" / "compose-state-and-effects"
+        script = skill / "scripts" / "helper.py"
+        script.parent.mkdir()
+        script.write_text("print('source')\n", encoding="utf-8")
+        cache = script.parent / "__pycache__" / "helper.cpython-314.pyc"
+        cache.parent.mkdir()
+        cache.write_bytes(b"generated")
+        adjacent_bytecode = script.with_suffix(".pyc")
+        adjacent_bytecode.write_bytes(b"generated")
+
+        workspace = prepare_workspace(
+            case,
+            self.root,
+            self.root / "runs" / "bytecode",
+            enabled_skills=("compose-state-and-effects",),
+        )
+        staged = workspace / ".agents" / "skills" / "compose-state-and-effects"
+
+        self.assertTrue((staged / "SKILL.md").is_file())
+        self.assertTrue((staged / "scripts" / "helper.py").is_file())
+        self.assertFalse((staged / "scripts" / "__pycache__").exists())
+        self.assertFalse((staged / "scripts" / "helper.pyc").exists())
+
     def test_captures_jsonl_final_output_and_workspace_diff(self):
         case = sample_case(self.root)
         fake = self.root / "fake-codex"

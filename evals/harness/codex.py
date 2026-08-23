@@ -15,6 +15,7 @@ from evals.harness.suites import PUBLIC_SKILLS, ROUTER_SKILL
 
 ARMS = ("none", "forced", "automatic")
 _GRADLE_OUTPUT_DIRECTORIES = (".gradle", "build")
+_GENERATED_SKILL_SUFFIXES = {".pyc", ".pyo"}
 
 
 @dataclass(frozen=True)
@@ -86,6 +87,22 @@ def discover_skill_paths(
         if root.is_dir():
             candidates.update(path.resolve() for path in root.rglob("SKILL.md"))
     return tuple(sorted(candidates, key=str))
+
+
+def is_generated_skill_path(path: Path, skill_root: Path) -> bool:
+    relative = path.relative_to(skill_root)
+    return "__pycache__" in relative.parts or (
+        path.is_file() and path.suffix in _GENERATED_SKILL_SUFFIXES
+    )
+
+
+def _ignore_generated_skill_paths(directory: str, names: list[str]) -> list[str]:
+    root = Path(directory)
+    return [
+        name
+        for name in names
+        if is_generated_skill_path(root / name, root)
+    ]
 
 
 def _enabled_skills(case: EvalCase, arm: str) -> tuple[str, ...]:
@@ -224,6 +241,7 @@ def prepare_workspace(
         shutil.copytree(
             repo_root / "skills" / skill,
             destination / ".agents" / "skills" / skill,
+            ignore=_ignore_generated_skill_paths,
         )
     _run_git(destination, "init", "-q")
     exclude = destination / ".git" / "info" / "exclude"
