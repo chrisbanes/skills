@@ -19,8 +19,10 @@ specialist only when its independent behavior changes the same work.
 1. Read the task and the Kotlin source that makes the code-design concern concrete.
 2. If one focused skill clearly matches, load it directly and stop routing.
 3. Before loading a Compose skill, point to a concrete Compose API or composable
-   in the inspected source. If none exists, stay in the Kotlin cluster even
-   when the task mentions UI, routes, navigation, or a hypothetical consumer.
+   in the inspected source, or to an explicit request to create or design
+   Compose code. A hypothetical UI consumer is not evidence. If neither form
+   of evidence exists, stay in the Kotlin cluster even when the task mentions
+   UI, routes, or navigation.
 4. Otherwise, match each observed code signal to the table below and load the smallest skill set that covers the work.
 5. Combine skills only when separate concerns affect the same change; do not load adjacent skills speculatively.
 6. Finish routing when every material concern has one focused owner and those skills are loaded before advice or edits.
@@ -29,7 +31,7 @@ specialist only when its independent behavior changes the same work.
 
 | Task signal | Start with |
 |---|---|
-| Broad Compose screen review, local or hoisted UI state, screen state holders, effect APIs, navigation effects, snackbar, analytics, focus requests, or event Flow collection where Compose APIs or a composable screen are evidenced | [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md) |
+| Broad Compose screen review, local or hoisted UI state, screen state holders, effect APIs, navigation effects, snackbar, analytics, focus requests, or event Flow collection where Compose APIs, a composable screen, or an explicit greenfield Compose request is evidenced | [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md) |
 | Recomposition, jank, compiler reports, skippability, unstable parameters, frame-rate State reads, back-writing, or `@ReadOnlyComposable` | [`compose-performance`](../compose-performance/SKILL.md) |
 | Modifier parameters, root layout placement, variable visual content, primitive content parameters, optional content, or Boolean shape flags | [`compose-component-design`](../compose-component-design/SKILL.md) |
 | Compose visibility, value, color, size, transition, content swap, or choosing an animation API | [`compose-animations`](../compose-animations/SKILL.md) |
@@ -50,7 +52,7 @@ specialist only when its independent behavior changes the same work.
 - For reusable UI components, use [`compose-component-design`](../compose-component-design/SKILL.md).
 - For tests around focus behavior, use [`compose-focus-navigation`](../compose-focus-navigation/SKILL.md) first, then [`compose-ui-testing-patterns`](../compose-ui-testing-patterns/SKILL.md) for test shape.
 - For Kotlin state, concurrency, or platform-boundary work that also changes branching shape, combine the cluster with [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md).
-- For plain Kotlin navigation transport plus a sealed route mapping, combine [`kotlin-concurrency-and-flow`](../kotlin-concurrency-and-flow/SKILL.md) with [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md). Do not add [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md) unless Compose APIs or state/effect ownership are actually present.
+- For plain Kotlin navigation transport plus a sealed route mapping, combine [`kotlin-concurrency-and-flow`](../kotlin-concurrency-and-flow/SKILL.md) with [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md). Do not add [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md) unless Compose APIs or state/effect ownership are present or explicitly requested as new code.
 - Do not infer a Compose concern from a possible UI consumer. Route from the
   inspected source, not from a consumer the task does not provide.
 - Kotlin or Compose advice with no planned Gradle execution and no existing
@@ -70,6 +72,11 @@ specialist only when its independent behavior changes the same work.
    [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md), not the Compose
    state cluster; mentioning a hypothetical UI collector is not Compose
    evidence.
-5. Stop case: a compact Gradle ledger repeats the same primary source failure.
+5. Greenfield case: a task explicitly asks to design a new composable that
+   collects a one-shot Flow. GREEN loads
+   [`compose-state-and-effects`](../compose-state-and-effects/SKILL.md) and
+   [`kotlin-concurrency-and-flow`](../kotlin-concurrency-and-flow/SKILL.md) even
+   though the composable does not exist yet.
+6. Stop case: a compact Gradle ledger repeats the same primary source failure.
    GREEN loads [`gradle-run`](../gradle-run/SKILL.md), stops the rerun loop, and
    names focused source inspection before any fix or command.

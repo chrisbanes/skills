@@ -506,7 +506,7 @@ class DeterministicGradeTest(unittest.TestCase):
 
         self.assertTrue(grade_subject(case, result).objective_pass)
 
-    def test_gradle_workflow_recovers_logged_create_command_after_shell_pipeline(self):
+    def test_gradle_workflow_rejects_logged_create_after_shell_preamble(self):
         case = make_case(self.workspace)
         patterns = (
             r"gradle_run\.py create",
@@ -566,9 +566,12 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
                     ),
                 )
 
-                self.assertTrue(grade_subject(case, result).objective_pass)
+                self.assertIn(
+                    "required Gradle workflow lifecycle missing",
+                    grade_subject(case, result).objective_failures,
+                )
 
-    def test_gradle_workflow_recovers_logged_run_arguments_after_pipeline(self):
+    def test_gradle_workflow_rejects_logged_run_after_shell_pipeline(self):
         case = make_case(self.workspace)
         patterns = (
             r"gradle_run\.py create",
@@ -619,7 +622,10 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
             ),
         )
 
-        self.assertTrue(grade_subject(case, result).objective_pass)
+        self.assertIn(
+            "required Gradle workflow lifecycle missing",
+            grade_subject(case, result).objective_failures,
+        )
 
     def test_gradle_workflow_does_not_recover_masked_logged_create_commands(self):
         case = EvalCase(
@@ -994,6 +1000,50 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
         )
         self.assertTrue(grade_subject(case, completed).objective_pass)
         self.assertTrue(grade_subject(case, completed_without_create_output).objective_pass)
+
+        chained_commands = (
+            (
+                event(
+                    "python3 gradle_run.py create && git status",
+                    f'{{"workflow": "{workflow_a}"}}',
+                ),
+                event(f"python3 gradle_run.py run --workflow {workflow_a}"),
+                event(f"python3 gradle_run.py finish --workflow {workflow_a}"),
+            ),
+            (
+                event(
+                    "python3 gradle_run.py create",
+                    f'{{"workflow": "{workflow_a}"}}',
+                ),
+                event(f"python3 gradle_run.py run --workflow {workflow_a} && pwd"),
+                event(f"python3 gradle_run.py finish --workflow {workflow_a}"),
+            ),
+            (
+                event(
+                    "python3 gradle_run.py create",
+                    f'{{"workflow": "{workflow_a}"}}',
+                ),
+                event(f"python3 gradle_run.py run --workflow {workflow_a}"),
+                event(
+                    f"python3 gradle_run.py finish --workflow {workflow_a} "
+                    "&& true"
+                ),
+            ),
+        )
+        for events in chained_commands:
+            chained = next(
+                event["item"]["command"]
+                for event in events
+                if "&&" in event["item"]["command"]
+            )
+            with self.subTest(command=chained):
+                self.assertIn(
+                    "required Gradle workflow lifecycle missing",
+                    grade_subject(
+                        case,
+                        make_result(self.workspace, events=events),
+                    ).objective_failures,
+                )
 
     def test_required_gradle_workflow_accepts_optional_separator_and_redirection(self):
         case = make_case(self.workspace)

@@ -662,6 +662,51 @@ def _requires_gradle_workflow(patterns: tuple[str, ...]) -> bool:
     )
 
 
+def _standalone_gradle_run_invocation(command: str) -> tuple[str, ...] | None:
+    if (
+        _command_substitutions(command)
+        or _ends_with_background_operator(command)
+    ):
+        return None
+    segments, separators = _shell_parts(command)
+    if len(segments) != 1 or separators or _has_shell_control_flow(segments):
+        return None
+    segment = segments[0]
+    executable = PurePosixPath(segment[0]).name
+    if executable in _SHELL_EXECUTABLES:
+        index = 1
+        while index < len(segment):
+            option = segment[index]
+            if option == "--" or not option.startswith(("-", "+")):
+                break
+            index += 1
+            if (
+                option.startswith("-")
+                and not option.startswith("--")
+                and "c" in option[1:]
+            ):
+                if index >= len(segment):
+                    return None
+                return _standalone_gradle_run_invocation(segment[index])
+            if option in _SHELL_OPTIONS_WITH_OPERANDS and index < len(segment):
+                index += 1
+        return None
+    if executable == "eval":
+        index = 2 if len(segment) > 1 and segment[1] == "--" else 1
+        if index >= len(segment):
+            return None
+        return _standalone_gradle_run_invocation(" ".join(segment[index:]))
+    invocations = _successful_command_invocations(command)
+    lifecycle = [
+        invocation
+        for invocation in invocations
+        if _gradle_run_operation(invocation) is not None
+    ]
+    if len(lifecycle) != 1:
+        return None
+    return lifecycle[0]
+
+
 def _completed_gradle_workflow(events: tuple[dict[str, object], ...]) -> bool:
     lifecycle: list[tuple[str, str | None]] = []
     for event in events:
@@ -677,25 +722,27 @@ def _completed_gradle_workflow(events: tuple[dict[str, object], ...]) -> bool:
             command = " ".join(str(part) for part in command)
         if not isinstance(command, str):
             continue
-        invocations = _successful_command_invocations(command)
-        create_count = sum(
-            _gradle_run_operation(invocation) == "create"
-            for invocation in invocations
-        )
+        invocation = _standalone_gradle_run_invocation(command)
+        if invocation is None:
+            if any(
+                _gradle_run_operation(item) is not None
+                for item in _successful_command_invocations(command)
+            ):
+                return False
+            continue
+        operation = _gradle_run_operation(invocation)
         output = item.get("aggregated_output", "")
         output_workflows = (
             _WORKFLOW_OUTPUT.findall(output) if isinstance(output, str) else []
         )
-        if create_count and (create_count != 1 or len(output_workflows) > 1):
+        if operation == "create" and len(output_workflows) > 1:
             return False
-        for invocation in invocations:
-            operation = _gradle_run_operation(invocation)
-            if operation == "create":
-                lifecycle.append(
-                    (operation, output_workflows[0] if output_workflows else None)
-                )
-            elif operation in {"run", "finish"}:
-                lifecycle.append((operation, _workflow_option(invocation)))
+        if operation == "create":
+            lifecycle.append(
+                (operation, output_workflows[0] if output_workflows else None)
+            )
+        elif operation in {"run", "finish"}:
+            lifecycle.append((operation, _workflow_option(invocation)))
 
     if len(lifecycle) < 3:
         return False
