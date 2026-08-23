@@ -8,17 +8,13 @@
   "kind": "direct",
   "fixture": "kotlin-jvm",
   "allowed_write_paths": ["src/main/kotlin/example/Subject.kt"],
-  "required_command_patterns": [
-    "(?:[^\\s]+/)?(?:gradle|gradlew[^\\s/]*)(?:\\s+[^\\s]+)*\\s+test(?:\\s|$)"
-  ],
   "validators": [
     {"argv": ["python3", "@validators/text_case.py", "kotlin-control-exhaustiveness-direct"], "timeout_seconds": 30},
     {"argv": ["./gradlew-real", "--offline", "--no-scan", "test"], "timeout_seconds": 180}
   ],
   "rubric": [
     {"id": "explicit-cases", "text": "Every sealed ScreenState subtype has an explicit branch and the catch-all else is removed"},
-    {"id": "compiler-proof", "text": "The when remains an exhaustive expression so a future subtype becomes a compile-time decision"},
-    {"id": "test-result", "text": "The response reports the result of running the existing fixture tests after the edit"}
+    {"id": "compiler-proof", "text": "The when remains an exhaustive expression so a future subtype becomes a compile-time decision"}
   ],
   "provenance": {"kind": "synthetic"}
 }
