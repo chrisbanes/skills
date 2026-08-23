@@ -226,7 +226,11 @@ def _command_substitutions(command: str) -> tuple[str, ...]:
             else:
                 return tuple(substitutions)
             continue
-        if character == "$" and index + 1 < len(command) and command[index + 1] == "(":
+        if (
+            index + 1 < len(command)
+            and command[index + 1] == "("
+            and (character == "$" or (character in {"<", ">"} and quote is None))
+        ):
             start = index + 2
             end = start
             depth = 1

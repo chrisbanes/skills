@@ -726,7 +726,7 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
                         "command": (
                             "python3 gradle_run.py run "
                             f"--workflow {workflow} --scope targeted "
-                            "--question 'Check this:\\nif tests pass' "
+                            "--question 'Check this:\\nif tests pass and mention >(literal)' "
                             "-- ./gradlew --offline --no-scan test"
                         ),
                         "exit_code": 0,
@@ -1029,12 +1029,34 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
                     "&& true"
                 ),
             ),
+            (
+                event(
+                    "python3 gradle_run.py create > >(tee workflow.json)",
+                    f'{{"workflow": "{workflow_a}"}}',
+                ),
+                event(f"python3 gradle_run.py run --workflow {workflow_a}"),
+                event(f"python3 gradle_run.py finish --workflow {workflow_a}"),
+            ),
+            (
+                event(
+                    "python3 gradle_run.py create",
+                    f'{{"workflow": "{workflow_a}"}}',
+                ),
+                event(
+                    f"python3 gradle_run.py run --workflow {workflow_a} "
+                    "< <(git status)"
+                ),
+                event(f"python3 gradle_run.py finish --workflow {workflow_a}"),
+            ),
         )
         for events in chained_commands:
             chained = next(
                 event["item"]["command"]
                 for event in events
-                if "&&" in event["item"]["command"]
+                if any(
+                    operator in event["item"]["command"]
+                    for operator in ("&&", ">(", "<(")
+                )
             )
             with self.subTest(command=chained):
                 self.assertIn(
