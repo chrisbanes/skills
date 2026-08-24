@@ -36,8 +36,8 @@ suite-wide aggregate.
 | `compose-state-and-effects` | 77.8% | 100.0% | 100.0% |
 | `compose-ui-testing-patterns` | 55.6% | 100.0% | 100.0% |
 | `gradle-run` | 33.3% | 100.0% | 100.0% |
-| `kotlin-api-design` | 66.7% | 91.7% | 100.0% |
-| `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 66.7% |
+| `kotlin-api-design` | 66.7% | 100.0% | 100.0% |
+| `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 100.0% |
 | `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
 
 ## Evaluation setup

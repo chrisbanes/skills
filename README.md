@@ -146,8 +146,8 @@ for each skill and metric. These are not merge or release gates. See
 | [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 77.8% | 100.0% | 100.0% |
 | [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 100.0% | 100.0% |
 | [`gradle-run`](skills/gradle-run/SKILL.md) | 33.3% | 100.0% | 100.0% |
-| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 91.7% | 100.0% |
-| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 66.7% |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | 100.0% |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 100.0% | 100.0% |
 
 ## License
