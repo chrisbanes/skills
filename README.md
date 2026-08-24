@@ -134,7 +134,12 @@ work, with expected outcomes and no-change controls. It compares no-skill,
 forced-skill, and automatic-routing runs. **Baseline** is the no-skill result,
 **automatic** is the headline result, and **restraint** checks that a skill does
 not make an unnecessary change. The table reports the latest available result
-for each skill and metric. These are not merge or release gates. See
+for each skill and metric. These scores were produced using
+[`gpt-5.6-terra`](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
+with medium reasoning, judged by
+[`gpt-5.6-sol`](https://developers.openai.com/api/docs/models/gpt-5.6-sol) with
+high reasoning. Results are model- and reasoning-specific; other configurations
+may perform differently. These are not merge or release gates. See
 [`evals/README.md`](evals/README.md) for evaluation setup and reproducibility.
 
 | Skill | Baseline | Automatic | Restraint |

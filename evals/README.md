@@ -21,7 +21,12 @@ gate. CI validates only the harness, corpus, and deterministic formulas.
 available but none named in the prompt. **Restraint** is the no-change-control
 pass rate: the skill may inspect the task, but must not make an unnecessary
 change. The table reports the latest available result for each skill and
-metric.
+metric. These scores were produced using
+[`gpt-5.6-terra`](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
+with medium reasoning, judged by
+[`gpt-5.6-sol`](https://developers.openai.com/api/docs/models/gpt-5.6-sol) with
+high reasoning. Results are model- and reasoning-specific; other configurations
+may perform differently.
 
 The rows are descriptive diagnostics, not individual release gates. Multi-skill
 scenarios contribute to each relevant skill row, so the rows are not a
@@ -134,10 +139,14 @@ npm test
 
 ### Models
 
-The recommended evaluation configuration uses:
+The published results use:
 
-- subject: `gpt-5.6-terra` with `medium` reasoning; and
-- judge: `gpt-5.6-sol` with `high` reasoning.
+- subject:
+  [`gpt-5.6-terra`](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
+  with `medium` reasoning; and
+- judge:
+  [`gpt-5.6-sol`](https://developers.openai.com/api/docs/models/gpt-5.6-sol)
+  with `high` reasoning.
 
 The Terra subject avoids the ceiling observed when Sol-medium solved every
 calibration case without skills, while the stronger Sol judge keeps outcome
