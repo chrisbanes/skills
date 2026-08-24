@@ -1,10 +1,11 @@
-# Grounded writing voice profile
+# Grounded writing style profile
 
-This profile distils durable patterns from Chris's published writing. It is a
-decision guide, not a phrase bank. Do not copy sentences from the source posts or
-force every trait into one draft.
+This profile distils durable patterns from the published writing sampled below.
+It is a decision guide, not a phrase bank. Treat each source as evidence for a
+structural technique, not as a personality to imitate or average with the other
+authors. Do not copy sentences or force every trait into one draft.
 
-## Voice fingerprint
+## Style characteristics
 
 ### Start from something concrete
 
@@ -20,16 +21,17 @@ consequence. Introduce technical terms close to where they become useful. Place
 code, measurements, tables, or small examples immediately after the claim they
 support.
 
-Chris often reasons in contrasts: what the data appears to say versus what it
-can actually tell us; the old architecture versus the new seam; the expected
+Contrasts often sharpen the reasoning: what the data appears to say versus what
+it can actually tell us; the old architecture versus the new seam; the expected
 benchmark result versus the measured one. Use a contrast only when it sharpens
 the explanation.
 
 ### Let evidence change the claim
 
 State the relevant setup for measurements and research. Qualify narrow evidence,
-separate fact from inference, and say when the result surprised Chris. A candid
-correction is more authentic than defending an earlier assumption.
+separate fact from inference, and include surprise only when the source material
+supports it. A candid correction is stronger than defending an earlier
+assumption.
 
 Treat limitations as part of the argument. Name the boundary, explain its impact,
 and continue with the narrower claim that still holds.
@@ -54,8 +56,9 @@ section. Do not append a generic call to action unless the artifact needs one.
 
 | Register | Use when | Adjustment |
 |---|---|---|
-| Restrained recent voice | Essays, product or architecture announcements, design documents, substantial emails, issue narratives, and release notes | Lead directly, keep humour light, use fewer rhetorical questions, and let one final sentence carry the ending. |
-| Playful explanatory voice | Tutorials and deep technical walkthroughs | Allow occasional reader questions, candid asides, or a well-placed emoji, while keeping evidence and code central. |
+| Concise working note | GitHub comments, review replies, issue updates, and short messages | Lead with the actionable point, include only the context or evidence needed to support it, and stop. Do not manufacture an introduction or conclusion. |
+| Restrained long form | Essays, product or architecture announcements, design documents, substantial emails, issue narratives, and release notes | Lead directly, keep humour light, use fewer rhetorical questions, and let one final sentence carry the ending. |
+| Playful explanation | Tutorials and deep technical walkthroughs | Allow occasional reader questions, candid asides, or a well-placed emoji, while keeping evidence and code central. |
 
 The requested format wins. An email should remain an email; release notes should
 remain scannable; a design document should retain its decision and evidence
@@ -64,7 +67,7 @@ sections.
 ## Language and presentation
 
 - Use the user's default language and regional conventions unless the request
-  specifies otherwise. Do not treat Chris's English-language source posts as a
+  specifies otherwise. Do not treat the English-language source posts as a
   reason to override the language of the current conversation.
 - Prefer concrete nouns and ordinary verbs to promotional adjectives.
 - Use technical vocabulary precisely, with inline code for identifiers.
@@ -83,15 +86,15 @@ sections.
   the evidence does not require them.
 - Unsupported superlatives and certainty.
 - A fake personal anecdote, opinion, emotion, benchmark, or lesson.
-- Repetition of a distinctive construction merely to signal the voice.
+- Repetition of a distinctive construction merely to make the style recognizable.
 - A conclusion that restates the introduction section by section.
 - Excessive rhetorical questions, sentence fragments, parenthetical asides, or
   emoji.
 
 ## Source observations
 
-The recent voice is weighted most heavily, while older technical posts inform
-the contextual tutorial register:
+Choose observations by the job the artifact needs to do. Do not privilege a
+source because it is newer, more popular, or more distinctive.
 
 - [Shopping Is Not a Category](https://chrisbanes.me/posts/shopping-is-not-a-category/)
   starts from a mundane data problem, explains the cross-system mechanism and
@@ -108,3 +111,23 @@ the contextual tutorial register:
 - [Retaining beyond ViewModels](https://chrisbanes.me/posts/retaining-beyond-viewmodels/)
   represents the more playful tutorial register: reader questions, concrete
   lifecycle examples, code, and occasional asides.
+- [Why you should understand (a little) about TCP](https://jvns.ca/blog/2015/11/21/why-you-should-understand-a-little-about-tcp/)
+  starts with a real performance problem, introduces only the networking detail
+  needed to explain it, shows the fix, and returns to the narrow lesson.
+- [Things we learned about LLMs in 2024](https://simonwillison.net/2024/Dec/31/llms-in-2024/)
+  shows how to synthesize a fast-moving subject: divide it into testable claims,
+  link evidence close to each claim, quantify changes, and distinguish
+  observation from judgment.
+- [Normalization of deviance](https://danluu.com/wat/) accumulates concrete cases
+  before naming the general mechanism. Use that pattern only when several cases
+  materially strengthen the argument; do not inherit the post's length or
+  sardonic register by default.
+
+## Editorial reference
+
+For technical explanations, use
+[Patterns in confusing explanations](https://jvns.ca/blog/confusing-explanations/)
+as a final review lens. Check that the draft has a specific audience, starts
+concretely, uses realistic examples, introduces jargon only when it carries
+meaning, supports substantive claims, and explains why the subject matters.
+Apply the checks that fit the artifact; do not turn them into mandatory sections.

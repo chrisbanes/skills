@@ -1,6 +1,6 @@
 interface:
   display_name: "Grounded Writing"
-  short_description: "Draft substantial prose in Chris Banes's voice"
-  default_prompt: "Use $grounded-writing to draft this substantial piece in my voice without inventing personal claims."
+  short_description: "Draft clear, evidence-led writing in my style"
+  default_prompt: "Use $grounded-writing to draft this in my style without inventing personal claims or unnecessary detail."
 policy:
   allow_implicit_invocation: true

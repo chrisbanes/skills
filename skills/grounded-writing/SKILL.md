@@ -1,43 +1,45 @@
 ---
 name: grounded-writing
-description: Use when drafting or revising prose longer than one paragraph that will be published or sent under Chris Banes's name.
+description: Use when drafting or revising text for the user to publish or send, including short GitHub comments and evidence-led technical prose.
 ---
 
 # Grounded Writing
 
 ## Core principle
 
-Reproduce Chris's way of reasoning on the page, not a collection of verbal
-tics. Build clear, evidence-led prose in a conversational voice, then remove
-anything that sounds invented, generic, or performatively "Chris-like".
+Make the reasoning visible at the scale the artifact supports. Build clear,
+evidence-led writing in a conversational tone, then remove anything invented,
+generic, or included only to imitate a personality.
 
 ## Procedure
 
-1. Confirm that the text is authored as Chris and is longer than one paragraph.
-   Do not apply this voice to short replies, quoted source text, or prose written
-   for someone else.
-2. Read [the voice profile](references/voice-profile.md) before drafting or
+1. Confirm that the text is for the user to publish or send. Apply this style at
+   any length, including one-sentence GitHub comments. Do not apply it to an
+   ordinary assistant reply, quoted source text, or prose attributed to someone
+   else.
+2. Read [the style profile](references/style-profile.md) before drafting or
    revising.
 3. Establish the audience, purpose, requested format, supplied facts, and
-   Chris's actual position. Preserve the requested artifact shape rather than
+   the user's actual position. Preserve the requested artifact shape rather than
    turning every deliverable into a blog post.
 4. Resolve missing material before writing:
    - Look up discoverable public facts when the task calls for research.
    - If a missing personal opinion or experience would materially change the
-     piece, ask Chris and stop drafting that part.
+     text, ask the user and stop drafting that part.
    - If the gap is minor, use a conspicuous placeholder or state the uncertainty
      honestly. Never invent a first-person claim, result, preference, or memory.
-5. Choose the register from the voice profile. Use the restrained recent voice
-   by default; use the more playful explanatory register only when a tutorial or
-   deep technical walkthrough benefits from it.
+5. Choose the register from the style profile. Match the length and formality to
+   the destination; short working comments should remain short.
 6. Shape the reasoning before polishing sentences. Prefer a concrete problem or
    observation, explain the mechanism, support it with evidence or an example,
    acknowledge the important limit, state the practical consequence, and end on
-   the clearest remaining point. Omit any stage the artifact does not need.
+   the clearest remaining point. Omit any stage the artifact does not need. For
+   a short comment, this may be only the actionable point and one supporting
+   fact.
 7. Use the user's default language and regional conventions unless the request
    specifies otherwise. Keep paragraphs focused, mix sentence lengths, use first
    person only when grounded, and make headings earn their place.
-8. Edit once for voice and once for truth. Remove generic scene-setting,
+8. Edit once for style and once for truth. Remove generic scene-setting,
    marketing language, repeated conclusions, decorative catchphrases, and
    unsupported certainty.
 
@@ -49,7 +51,8 @@ Finish only when all of these are true:
 - Every personal claim and substantive fact is supplied, verified, qualified,
   or clearly marked as missing.
 - The argument is concrete enough to follow without promotional filler.
-- Caveats change the reader's understanding rather than acting as disclaimers.
+- Any caveat included changes the reader's understanding rather than acting as
+  a disclaimer.
 - Spelling and grammar follow the user's default language and regional
   conventions.
 - The ending lands once and does not recap the whole piece.
@@ -57,15 +60,21 @@ Finish only when all of these are true:
   phrases, rhetorical questions, asides, or emoji.
 
 If a check fails, revise the draft. If the failure depends on an unknown personal
-position, ask Chris rather than smoothing over the gap.
+position, ask the user rather than smoothing over the gap.
 
 ## RED/GREEN agent scenarios
 
-1. RED turns supplied launch notes into polished marketing copy. GREEN opens on
-   the concrete reason the work exists, explains what changed, gives the measured
-   result with its limits, and closes on the practical value.
+1. Direct case: a two-sentence pull request reply needs to report a fix and its
+   validation. RED expands it into an essay or adds enthusiasm. GREEN leads with
+   the outcome, names the relevant check, and stays within two sentences.
 2. Novel case: a technical tutorial needs a warmer register. GREEN uses occasional
    questions or asides to guide the reader while keeping the explanation and code
    in control.
-3. Counterexample: a one-sentence issue reply is already direct and clear. GREEN
-   does not invoke this skill or expand the reply.
+3. Novel case: a technical briefing benefits from two source observations. RED
+   blends recognizable mannerisms from both authors. GREEN selects only the
+   relevant structural techniques and keeps the user's natural tone.
+4. No-change case: a one-sentence issue comment is already direct, grounded, and
+   appropriate for its audience. GREEN preserves it instead of expanding it.
+5. Counterexample: the user asks the assistant to explain a technical concept for
+   their own understanding, not to draft text for publication. GREEN answers
+   normally and does not introduce first-person claims on the user's behalf.
