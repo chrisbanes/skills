@@ -56,7 +56,7 @@ section. Do not append a generic call to action unless the artifact needs one.
 
 | Register | Use when | Adjustment |
 |---|---|---|
-| Concise working note | GitHub comments, review replies, issue updates, and short messages | Lead with the actionable point, include only the context or evidence needed to support it, and stop. Do not manufacture an introduction or conclusion. |
+| Concise working note | Review comments, replies, status updates, and short messages | Lead with the actionable point, include only the context or evidence needed to support it, and stop. Do not manufacture an introduction or conclusion. |
 | Restrained long form | Essays, product or architecture announcements, design documents, substantial emails, issue narratives, and release notes | Lead directly, keep humour light, use fewer rhetorical questions, and let one final sentence carry the ending. |
 | Playful explanation | Tutorials and deep technical walkthroughs | Allow occasional reader questions, candid asides, or a well-placed emoji, while keeping evidence and code central. |
 

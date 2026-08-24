@@ -77,7 +77,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### Writing
 
-- [`grounded-writing`](skills/grounded-writing/SKILL.md) — draft or revise clear, evidence-led writing of any length, including GitHub comments, without inventing personal claims.
+- [`grounded-writing`](skills/grounded-writing/SKILL.md) — draft or revise clear, evidence-led writing of any length, including review comments and replies, without inventing personal claims.
 
 ### Workflows
 

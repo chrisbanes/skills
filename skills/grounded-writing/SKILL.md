@@ -1,6 +1,6 @@
 ---
 name: grounded-writing
-description: Use when drafting or revising text for the user to publish or send, including short GitHub comments and evidence-led technical prose.
+description: Use when drafting or revising text for the user to publish or send, including short review comments, replies, and evidence-led technical prose.
 ---
 
 # Grounded Writing
@@ -14,9 +14,9 @@ generic, or included only to imitate a personality.
 ## Procedure
 
 1. Confirm that the text is for the user to publish or send. Apply this style at
-   any length, including one-sentence GitHub comments. Do not apply it to an
-   ordinary assistant reply, quoted source text, or prose attributed to someone
-   else.
+   any length, including one-sentence review comments and replies. Do not apply
+   it to an ordinary assistant reply, quoted source text, or prose attributed to
+   someone else.
 2. Read [the style profile](references/style-profile.md) before drafting or
    revising.
 3. Establish the audience, purpose, requested format, supplied facts, and
@@ -64,7 +64,7 @@ position, ask the user rather than smoothing over the gap.
 
 ## RED/GREEN agent scenarios
 
-1. Direct case: a two-sentence pull request reply needs to report a fix and its
+1. Direct case: a two-sentence review reply needs to report a fix and its
    validation. RED expands it into an essay or adds enthusiasm. GREEN leads with
    the outcome, names the relevant check, and stays within two sentences.
 2. Novel case: a technical tutorial needs a warmer register. GREEN uses occasional
@@ -73,7 +73,7 @@ position, ask the user rather than smoothing over the gap.
 3. Novel case: a technical briefing benefits from two source observations. RED
    blends recognizable mannerisms from both authors. GREEN selects only the
    relevant structural techniques and keeps the user's natural tone.
-4. No-change case: a one-sentence issue comment is already direct, grounded, and
+4. No-change case: a one-sentence review comment is already direct, grounded, and
    appropriate for its audience. GREEN preserves it instead of expanding it.
 5. Counterexample: the user asks the assistant to explain a technical concept for
    their own understanding, not to draft text for publication. GREEN answers
