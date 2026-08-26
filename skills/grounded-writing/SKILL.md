@@ -61,20 +61,3 @@ Finish only when all of these are true:
 
 If a check fails, revise the draft. If the failure depends on an unknown personal
 position, ask the user rather than smoothing over the gap.
-
-## RED/GREEN agent scenarios
-
-1. Direct case: a two-sentence review reply needs to report a fix and its
-   validation. RED expands it into an essay or adds enthusiasm. GREEN leads with
-   the outcome, names the relevant check, and stays within two sentences.
-2. Novel case: a technical tutorial needs a warmer register. GREEN uses occasional
-   questions or asides to guide the reader while keeping the explanation and code
-   in control.
-3. Novel case: a technical briefing benefits from two source observations. RED
-   blends recognizable mannerisms from both authors. GREEN selects only the
-   relevant structural techniques and keeps the user's natural tone.
-4. No-change case: a one-sentence review comment is already direct, grounded, and
-   appropriate for its audience. GREEN preserves it instead of expanding it.
-5. Counterexample: the user asks the assistant to explain a technical concept for
-   their own understanding, not to draft text for publication. GREEN answers
-   normally and does not introduce first-person claims on the user's behalf.

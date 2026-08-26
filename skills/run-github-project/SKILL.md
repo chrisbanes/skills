@@ -7,28 +7,25 @@ description: Use when asked to set up or repair a repository's GitHub Project co
 
 ## Core Principle
 
-Treat the Project as the live control plane. Require the readiness label and a
-human-authorized Planning transition, preserve that authority through
-contract-preserving re-plans, and return true human work to Backlog.
+The Project is the live control plane. Apply these invariants throughout:
 
-Park dependency-blocked Backlog items. After authorized execution is empty,
-route unblocked `needs-triage` items through the unchanged `triage` approval
-gate without manufacturing Planning authority.
+1. **Live authority:** use complete, fresh GitHub and Project state for every
+   claim, selection, and finish decision; a local cache or partial read is only
+   a hint.
+2. **Controller ownership:** the controller alone claims, assigns, mutates shared
+   Project state, merges, closes issues, and reconciles. A ticket agent owns only
+   its worktree, branch, and non-merge PR mutations.
+3. **Unknown outcomes:** treat a failed or timed-out remote mutation as unknown;
+   authoritatively reconcile it before retrying or reporting success.
+4. **Preservation:** retain blocked, dependency-gated, and human-owned work. Put
+   it in its authoritative frontier or partial-drain report rather than changing
+   its state to make the queue appear empty.
 
-Treat configured epics and human work as a separate live frontier. Reconcile a
-bare epic only after its native dependencies close and issue-close authority is
-present. Surface every currently actionable human step without assigning it or
-pausing independent work. Return `waiting-for-human` when that frontier is the
-only work left.
-
-Pair each occupied slot with one warm worktree and one persistent ticket agent.
-Run independent slot agents concurrently in `drain`. Keep claims, shared
-Project state, merges, and reconciliation in one controller lane while each
-ticket agent owns its worktree, branch, and non-merge PR mutations. Preserve
-context across one ticket's passes; never reuse it for another. After bounded
-ticket-local required-CI repair fails, park the preserved claim outside
-implementation capacity, refresh the live control plane, and continue
-unrelated work.
+Require the readiness label and a human-authorized Planning transition; preserve
+that authority through contract-preserving replans and return true human work to
+Backlog. In `drain`, pair each occupied slot with one warm worktree and persistent
+ticket agent, run independent slots concurrently, and park only qualifying
+terminal required-CI claims outside capacity before refreshing the control plane.
 
 ## Select The Mode
 
@@ -166,40 +163,11 @@ authority expires on any stop, timeout, crash, or interruption.
 
 ## Handle GitHub Access Failures
 
-Prefer the GitHub connector for issues, PRs, reviews, comments, threads, and CI.
-Use `gh project` and ProjectV2 GraphQL for Project reads and writes when the
-connector does not expose the required operations. Treat a missing or failed
-response as unknown state, never as evidence that a Project item, blocker,
-review, check, comment, PR, or merge is absent.
-
-1. Classify timeouts, connection resets, rate limits, temporary-unavailable
-   responses, and server errors as transient. Retry reads up to three times
-   with short exponential backoff, honor `Retry-After`, and use the
-   environment's wait mechanism between attempts.
-2. Treat authentication, authorization, validation, and unsupported-operation
-   errors as terminal. Apply the scheduler's failure-isolation rules and report
-   them without consuming the transient retry budget.
-3. Discard partial paginated or multi-call results after any transient failure.
-   Retry the complete logical read.
-4. After a transient failure from a mutating request, assume its outcome is
-   unknown. Refetch the authoritative resource before retrying:
-   - continue without repeating the mutation when the intended state is
-     already present;
-   - retry the same mutation once when the intended state is confirmed absent,
-     then refetch;
-   - stop and preserve resumable state when the outcome cannot be distinguished
-     safely.
-5. Reconcile assignments, labels, issue closure, Status changes, PR creation,
-   comments, replies, thread resolution, and merges against their resulting
-   state. Never emit a duplicate comment, repeat a close, or perform a second
-   merge because the original response was lost.
-6. After an ambiguous merge response, do not advance or clean up that slot
-   until the PR's merged state, closed ticket, and refreshed base tip are
-   verified.
-7. If bounded access retries are exhausted, block the affected slot unless the
-   failed operation is global. Preserve its claim and worktree, and report the
-   last confirmed GitHub and Project state. Access, configuration, and
-   ambiguous-mutation failures are never parking signals.
+Prefer the GitHub connector for issues, PRs, reviews, comments, threads, and CI;
+use `gh project` or ProjectV2 GraphQL only for unavailable Project operations.
+Read and apply [remote reconciliation](references/remote-reconciliation.md)
+before a retry, mutation, or success claim. It defines retry classes, complete
+logical reads, idempotent mutation recovery, and failure isolation.
 
 ## Discover And Rank The Queue
 
@@ -289,46 +257,11 @@ it from phase-two deep hydration, the ranker input, and `max-claims`. Deeply
 hydrate a parked claim only to reconstruct it, verify a changed fingerprint,
 or perform an explicitly authorized focused investigation. When the scheduler
 verifies and records a resumption signal, return it to the active claim set
-before ranking. Normalize all other hydrated existing claims plus the current
-contender batch as a JSON array and run:
-
-```text
-python3 <skill-dir>/scripts/rank_tickets.py \
-  --mode <next-or-drain> \
-  [--wayfinder-ticket <explicit-user-selected-child-number>] \
-  --current-user <github-login> \
-  --repository <owner/repository> \
-  --configuration-digest <committed-configuration-digest> \
-  --base-branch <base-branch> \
-  --execution-approver <login> [--execution-approver <login> ...] \
-  --backlog-status <backlog-name> \
-  --planning-status <planning-name> \
-  --ready-status <ready-to-implement-name> \
-  --in-progress-status <in-progress-name> \
-  --needs-triage-label <needs-triage-label> \
-  --epic-label <epic-label> \
-  --human-work-label <human-work-label> \
-  --wayfinder-map-label <wayfinder:map-label> \
-  --wayfinder-research-label <wayfinder:research-label> \
-  --wayfinder-prototype-label <wayfinder:prototype-label> \
-  --wayfinder-grilling-label <wayfinder:grilling-label> \
-  --wayfinder-task-label <wayfinder:task-label> \
-  --priority <highest-name> [--priority <next-name> ...] \
-  --max-claims <mode-slot-limit> \
-  < normalized-tickets.json
-```
-
-Produce the exact schema in
-[references/normalized-ticket.md](references/normalized-ticket.md). Preserve
-GitHub logins as logins; never substitute display names. Reject non-finite
-Project positions.
-
-Pass configured Status and Priority display names, never option IDs; use IDs
-only for Project mutations. Pass Priority names in descending order, rank unset
-Priority last, and require the exact configured `needs-triage` label for the
-triage inventory plus the exact `ready-for-agent` label for execution.
-Pass all five Wayfinder label arguments only for a complete enabled Wayfinder
-configuration; omit all five when it is disabled.
+before ranking. Normalize every other hydrated claim and contender, then invoke
+the ranker using the exact [normalized-ticket schema and CLI contract](references/normalized-ticket.md#ranker-invocation).
+Pass Status and Priority display names (IDs are only for mutations), descending
+priority names, exact role labels, and all five Wayfinder labels only when its
+configuration is complete. Preserve GitHub logins and reject non-finite positions.
 
 Hydrate every current-user claim before unclaimed contenders. Preserve
 unchanged parked implementation claims outside the ranker and implementation
@@ -710,282 +643,3 @@ implementation ticket containing:
 - merge commit, final issue state, Project Status, and archive state, when
   merged;
 - final snapped base tip and verified cleanup, or preserved state and blocker.
-
-## RED/GREEN Agent Scenarios
-
-For each changed rule, establish RED by reverting it, then require GREEN. Add a novel case and over-application counterexample for every behavioral change.
-
-1. RED ranks by labels or issue order; GREEN ranks Ready items by configured
-   Priority, visible position, then issue number. Counterexample: the label
-   gates eligibility but never supplies rank.
-2. RED plans from Status alone; GREEN requires `ready-for-agent` plus the latest
-   human Planning transition by an execution approver. Novel case: a later
-   human Planning transition makes the existing plan stale.
-3. RED accepts an Agent Brief, unmarked plan, newest timestamp, or another
-   author's marker; GREEN recognizes the unique leaf of a runner-authored v1/v2
-   revision chain. Counterexample: a presentation-only wrapper edit does not
-   change the semantic payload digest.
-4. RED pauses for plan approval; GREEN invokes `to-plan --auto`, refetches the
-   marker, then performs the runner-authored Ready handoff. Missing `to-plan`
-   blocks Planning only.
-5. RED selects another issue after planning in `next`; GREEN carries the same
-   issue through Ready, In progress, merge, and reconciliation. Counterexample:
-   `drain` keeps discovering work until its empty-query finish gate.
-6. RED lets planning consume an implementation slot or preempts it for review
-   feedback; GREEN uses spare capacity, one detached warm planning worktree,
-   one bounded recoverable planner, and no preemption.
-7. RED resumes any assigned Ready item; GREEN requires a current plan plus the
-   runner's later non-automated Ready event. A broken handoff preserves
-   assignment without an implementation slot.
-8. RED implements after overlapping base drift or a contract-preserving plan
-   inconsistency; GREEN publishes a verified replan report and automatically
-   requeues the item to Planning while retaining authority. Counterexample:
-   non-overlapping screened drift remains implementable.
-9. RED starts new work before claims; GREEN orders existing implementation
-   claims, priority replan claims, other resumable planning/handoffs, new Ready
-   work, then new Planning work. Within each class it uses Priority, position,
-   then issue number.
-10. RED skips a claimed item after assignment, plan, or eligibility changes;
-    GREEN preserves and blocks only its lane or slot. A global configuration
-    change still stops every lane.
-11. RED repeats a timed-out mutation or strands a failed planner; GREEN
-    refetches, reconciles, and applies the bounded retry contract.
-12. RED discards ticket context between implementation and feedback; GREEN
-    resumes one agent and warm worktree until that slot frees. Descendants stay
-    spare-capacity, read-only, immutable-SHA helpers and never own tickets.
-    Novel case: the ticket agent delegates independent codebase discovery and
-    CI-log analysis to separate bounded helpers, then reconciles both results.
-    Counterexample: it performs a one-file lookup inline and never delegates a
-    mutating implementation slice.
-13. RED stops because a preferred review skill is absent; GREEN executes the
-    same bundled contract. Counterexample: missing `tdd` still blocks behavior
-    changes, and tests alone never satisfy review.
-14. RED serially hydrates the Project; GREEN batches lightweight ranking data
-    and deeply hydrates only contenders. One bounded complete hydration batch is
-    allowed when cheaper and within GitHub limits.
-15. RED adopts a PR by URL or author alone; GREEN verifies closure, repository,
-    base, head ref/SHA, draft state, and lack of competition.
-16. RED creates Project options or migrates active work; GREEN requires a
-    human-managed Backlog, Planning and Ready schema, zero In progress items,
-    and reauthorizes every legacy Ready item through Planning. Preserve a valid
-    trusted config reference.
-17. RED relies on a closing keyword after a non-default merge; GREEN uses
-    configured `close-after-merge` authority and verifies closure. Do not repeat
-    a confirmed close; keep default-base closing keywords.
-18. Over-application counterexample: an ordinary single-issue implementation or
-    PR-monitoring request stays with its repository workflow or `shepherd`.
-19. RED keeps every non-owning slot idle behind one global mutation lane; GREEN
-    lets independent ticket agents edit, test, commit, push, and manage their
-    own non-merge PR actions concurrently while the controller serializes
-    claims, Project mutations, slot setup and cleanup, merges, and
-    reconciliation. Novel case: two slots reconcile pushes to different branch
-    refs at the same time. Counterexample: `next` remains single-ticket.
-20. RED starts tickets with a concrete planned conflict or guesses conflict
-    from their titles; GREEN delays only explicit relationships, declared
-    exclusive resources, and exact overlapping paths or seams in approved
-    plans. Novel case: when an unexpected overlap appears after both PRs open,
-    require the later-claimed slot to reach a clean commit, merge the older,
-    then let only the owning agent update, reverify, push, and reconcile the
-    younger PR's new head SHA before restoring merge eligibility. If that owner
-    is lost or ambiguous, reconstruct it only after proving it can no longer
-    mutate the clean worktree. Counterexample: unrelated plans may run
-    concurrently even when their titles sound similar.
-21. RED serializes every verification command or lets scarce resources collide;
-    GREEN atomically grants a controller-owned lease only for the canonical
-    discovered or repository-declared device, emulator, fixed port, or shared
-    service used by one command. Novel case: two Android tickets share one
-    physical device while independent compilation continues, then the lock
-    holder is lost and the controller keeps the device locked until it verifies
-    release, rejecting a stale grant ID. Counterexamples: `next` remains
-    single-ticket with no resource lock, and independent builds in isolated
-    worktrees need no shared-resource lock.
-22. RED makes each worker yield at every local gate, occupy active capacity
-    during remote waits, or applies drain scheduling to `next`; GREEN runs a
-    `drain` ticket pass through a reconciled push, then idles its persistent
-    context while the occupied slot awaits remote events. Novel case: with the
-    default two-slot limit, one remote-wait slot stays claimed while the other
-    ticket agent remains active and spare active-agent capacity is used for a
-    bounded helper. Counterexamples: that waiting slot still prevents claiming
-    a third ticket by default, an explicit higher limit permits additional
-    tickets up to that user-selected limit, and `next` shepherds its single PR
-    directly without creating a drain slot or dispatching another ticket.
-23. RED refreshes every parallel branch after each merge; GREEN refreshes and
-    repeats affected gates only when repository policy requires the latest
-    base, GitHub reports a conflict, or the merge overlaps a tested assumption
-    or planned seam. Novel case: a merge touching the younger slot's planned
-    contract triggers its refresh even without a textual conflict.
-    Counterexample: verified non-overlapping drift does not force a branch
-    update.
-24. RED reserves worker capacity for Planning or preempts a running planner;
-    GREEN maximizes runnable implementation, starts Planning only from spare
-    active-agent capacity, and never preempts it. Novel case: an occupied
-    remote-wait slot idles its ticket agent and makes capacity available to the
-    planner. Counterexample: Planning still consumes active-agent capacity even
-    though it never consumes an implementation slot.
-25. RED treats a failed public-interface, schema, persistence, seam, or testing
-    assumption as automatically human-required or returns an incomplete report;
-    GREEN returns the canonical disposition-aware evidence packet and uses an
-    autonomous replan when repository evidence supports a contract-realizing
-    replacement, releases the slot, preserves retained work, and resumes the
-    same ticket context after a new plan revision. Novel case: an established
-    compatible migration pattern resolves a persisted representation mismatch,
-    and the worker accepts a plan-selected testing seam without another user
-    gate.
-    Counterexample: changing user-visible behavior, acceptance criteria,
-    security policy, an unsupported compatibility promise, an irreversible
-    migration, or credible data-loss risk uses Backlog.
-26. RED unassigns a human-required ticket before cleanup or preserves partial
-    code; GREEN verifies the report and Backlog transition, closes the PR,
-    deletes exact skill-owned dirty work, worktree and branches, verifies the
-    cleanup finish state, then unassigns last. Novel case: a crash after the
-    Backlog transition returns `resume-backlog-cleanup` because assignment is
-    the durable cleanup lease. Counterexample: ambiguous ownership preserves
-    the artifact and assignment for later reconciliation but consumes no
-    implementation slot.
-27. RED edits the active plan in place or creates an unlinked duplicate; GREEN
-    publishes a contiguous v2 child, verifies the unique leaf, then minimizes
-    its predecessor or applies the collapsed fallback. Novel case: an ambiguous
-    create is reconciled by revision and payload digest. Counterexample:
-    failure of both presentation mechanisms is reported but does not invalidate
-    the new plan.
-28. RED hides Backlog `needs-triage` items or repeatedly triages them while
-    blocked; GREEN ranks unblocked items separately and returns blockers or
-    open descendants as `parkedBlocked`. Novel case: the final blocker closes
-    after a merge and the dependant enters `triageCandidates` on refresh.
-    Counterexample: a body-only `Blocked by` claim without configured fallback
-    evidence never supplies the live gate.
-29. RED treats automatic triage dispatch as permission to change labels,
-    comment, or close; GREEN invokes the exact `triage` provider through its
-    recommendation boundary and waits for the maintainer's decision. Novel
-    case: an approved `ready-for-agent` outcome leaves the item in Backlog
-    awaiting a human Planning transition. Counterexample: standing merge or
-    issue-close authority never approves triage mutations.
-30. RED pauses occupied execution or assigned Backlog cleanup for triage, lets
-    a blocked Planning claim slip past the tail gate, or lets parked work
-    prevent a successful drain; GREEN starts the one-item triage tail lane only
-    after all valid and blocked execution and Planning claims, assigned Backlog
-    cleanup, Planning work, and slots are clear, and records a deferred
-    recommendation once without looping. Novel case: `blockedPlanningClaims`
-    prevents triage even though it consumes no implementation slot.
-    Counterexample: an unassigned Backlog item without `needs-triage` never
-    enters the triage lane.
-31. RED routes planners or ticket owners from machine-local profile names,
-    topic nouns, risk labels, or plan size; GREEN selects a portable role,
-    records its actual runtime mapping, defaults every planner and normal ticket
-    owner to the default-owner capability, and requires concrete repository
-    evidence of one unresolved architecture, security, rendering, performance,
-    or data-integrity problem plus why the default owner is insufficient before
-    selecting an exceptional investigator. Novel cases: conflicting
-    persisted-format contracts with no migration precedence and demonstrated
-    data-loss exposure justify a bounded exceptional investigation; competing
-    renderer coordinate models supported by different tests and no chosen
-    invariant justify it only after default-owner discovery records that
-    ambiguity. If either requires a new public or product decision, planning
-    stops at the durable decision boundary instead of upgrading the planner.
-    Counterexamples that remain with the default owner: a bounded public-API
-    change with specified compatibility seams; rendering work with an explicit
-    algorithm, acceptance criteria, and visual validation; graphics tests or
-    documentation with no production diff; and a decision-complete
-    cross-language migration with explicit ownership, ordering, rollback, and
-    validation. Discovery and evidence roles remain bounded read-only helpers.
-    A runtime with only generic agents expresses every role in prompts and
-    records that runtime mapping without stopping.
-32. RED sends every Backlog parent through triage or implementation; GREEN
-    returns a bare configured epic as `readyEpics` only after its native open
-    blockers and descendants clear, then closes it in the controller lane with
-    explicit authority and reconciles Done. Novel case: its closure exposes a
-    downstream Planning-authorization action on the refreshed graph.
-    Counterexample: an epic with configured human work is never auto-closed.
-33. RED hides `ready-for-agent` Backlog work or treats conversation approval as
-    Planning authority; GREEN returns `move-to-planning` in `humanActions` and
-    waits for the approver's live Project transition. Novel case: several
-    independent human actions appear in one ordered frontier packet while an
-    unrelated implementation slot continues. Counterexample: an unchanged
-    frontier packet is not repeated.
-34. RED treats a human frontier as a failed partial drain or a successful empty
-    drain; GREEN returns `waiting-for-human` only after controller, planning,
-    implementation, monitoring, and triage work clear. Novel case: resumption
-    reconstructs the graph after a long pause and obtains fresh merge and epic-
-    close authority. Counterexample: a blocked claimed slot remains a partial
-    drain.
-35. RED parses issue prose as a dependency or permits conflicting role labels;
-    GREEN schedules only from native relationships, reports prose drift, and
-    rejects epic-plus-agent or multiple next-action roles. Novel case: an
-    assigned human gate remains a human action rather than interrupted runner
-    cleanup. Counterexample: an unassigned bare epic needs no next-action role
-    label.
-36. RED lets `setup` fall through execution preconditions, trust a partial live
-    read, or skip bounded retries; GREEN applies read-only failure handling,
-    discovers, writes, and live-validates only the complete configuration pair,
-    then returns its configuration result without claims or remote mutations.
-    Novel case: a partial paginated field read is discarded and the complete
-    logical read is retried. Counterexamples: mutation reconciliation never
-    applies in `setup`, and missing `tdd` or merge authority does not block a
-    complete `configuration-ready-to-commit` result.
-37. RED leaves a terminal ticket-local required-CI blocker occupying its slot,
-    trusts local parking state after restart, selects from a stale queue, or
-    finishes before a fresh query; GREEN verifies a durable parking record after
-    three non-converging repair rounds, releases the slot and agent, refreshes
-    the complete Project graph and verified base, then reranks before claiming
-    or finishing. Novel case: after restart, an unchanged record stays parked;
-    a changed PR head or required-check fingerprint produces a verified resume
-    record, and an existing Ready item takes the released slot before a newly
-    discovered Planning item uses spare agent capacity. Counterexamples: a
-    transient remote wait still occupies its slot; access, review, base-repair,
-    configuration, and ambiguous-mutation failures are not parkable; and the
-    same failure in two slots or on the verified base is global. Configuration
-    or merge-policy drift stops the drain and never resumes a parked claim.
-38. RED leaves an authorized configuration commit without a terminal result
-    when it is not on the verified base; GREEN returns `configuration-valid`
-    only when the base contains both files and otherwise returns
-    `configuration-ready-to-commit` with the exact commit and missing-base
-    evidence. Novel case: a valid configuration commit on a feature branch
-    remains ready to land while `next` and `drain` stay paused. Counterexample:
-    a base that already contains the live-validated pair is valid, not ready to
-    commit. Discovering missing configuration during `next` never silently
-    switches modes or begins execution from uncommitted configuration.
-39. RED accepts a labelled child, map membership, or an old Planning event;
-    GREEN requires an open configured-Project child in Planning, exactly one
-    configured type label, an open configured-map parent, native unblocked
-    graph, and the latest non-automated approver-authored Planning transition.
-    Novel case: a malformed unclaimed child is reported while ordinary planning
-    proceeds; an assigned invalid child remains a blocked Planning claim.
-    Counterexample: an enabled map label never turns an ordinary ticket into a
-    Wayfinder child without all child eligibility evidence.
-40. RED sends Wayfinder work through `to-plan`, Ready, or implementation;
-    GREEN invokes the installed `wayfinder` provider in the single Planning
-    lane, requires distinct Wayfinder mutation authority before a claim, and
-    closes a successful child after resolution while reconciling the map.
-    Novel case: completion closes a decision-ready map only after every child
-    closes and fog clears. Counterexample: a created child enters Backlog and
-    awaits a new human Planning transition.
-41. RED lets `drain` pause for every Wayfinder ticket or lets an ambiguous task
-    run AFK; GREEN runs only proved AFK research/tasks in spare Planning
-    capacity, uses a fresh Wayfinder provider context for each non-research AFK
-    child in `drain`, preserves `next` HITL as the current live exchange, and
-    requires `research` subagents for research tickets. It reports
-    unassigned prototype, grilling, HITL, and ambiguous-task work as a
-    non-blocking Wayfinder human frontier. Counterexample: a generic read-only
-    helper never substitutes for `research`, and `next` resolves only its
-    selected, freshly approved HITL child before finishing.
-42. RED leaves HITL tickets frontier-only in every mode; GREEN passes the mode
-    to the ranker so `next` selects an authorized HITL ticket by normal Planning
-    rank while `drain` keeps an unassigned ticket in the human frontier and an
-    assigned ticket in separate HITL attention. Novel case: an explicitly named
-    eligible child outranks Project order in `next`. Counterexamples: explicit
-    selection never works in `drain`, bypasses another durable claim, or calls
-    an assigned ticket frontier work.
-43. RED closes a resolved child before map work and loses it after a crash;
-    GREEN publishes a runner-authored reconciliation marker first, recovers it
-    across closed issues and archived Project items, then preserves Wayfinder's
-    child-close-before-map order while replaying its exact plan idempotently,
-    reconciling configured Done/archive, and unassigning last. Novel case: an
-    out-of-scope disposition writes its linked gist and reason only under `Out
-    of scope`; map completion requires no open child, empty fog, and current
-    decision/scope indexes. Counterexample: a marker for another Project item or
-    runner is a blocked claim, never recovery authority.
-44. RED reports Wayfinder tickets as bare numbers; GREEN renders every
-    human-facing map and ticket reference as `[title](URL)` while retaining
-    numbers and node IDs in machine payloads. Novel case: both the assigned HITL
-    attention packet and final report use linked names. Counterexample: ranker
-    diagnostics may still use issue numbers.
