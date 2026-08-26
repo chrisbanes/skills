@@ -171,39 +171,3 @@ setContentWithFakeImageLoader { request ->
 ```
 
 When image appearance matters, provide a deterministic local painter/bitmap instead of network data.
-
-## Common mistakes
-
-| Mistake | Fix |
-|---|---|
-| Constructing full app graph to test an error row | Test plain UI with `state = Error` |
-| Testing click behavior through a ViewModel mock | Pass a callback and assert it was invoked |
-| Screenshot test for simple text presence | Use semantics assertion |
-| Semantics test for padding/color/focus ring | Use screenshot test |
-| Test tags everywhere | Prefer text/content description/role when stable |
-| UI test depends on real image loading/network/time | Fake or freeze the source |
-| Sleeping after an action before asserting UI | Use semantics plus `waitForIdle`, `runOnIdle`, or bounded `waitUntil` |
-| Production DI or app wiring for a state/rendering assertion | Render controlled state with `setContent`; use integration only when that wiring is under test |
-| Simulating hover/press/focus with mouse or touch events | Inject `MutableInteractionSource` and emit the interaction |
-| Relying on the default `InteractionSource` in tests | Pass `MutableInteractionSource` so you can control state |
-| TV/keyboard UI tested with `performClick` only | Use key input and focus assertions; see [compose-focus-navigation](../compose-focus-navigation/SKILL.md) |
-
-## Red flags during review
-
-- "This UI test is flaky because images load slowly."
-- A test uses production DI for simple rendering.
-- A screenshot has random dates, clocks, remote images, or live data.
-- Assertions only check that a node exists after performing an action, not that the callback/state change happened.
-- Focus behavior is visually inspected but not asserted.
-- A test uses `performMouseInput` or touch injection to trigger hover/press states instead of `MutableInteractionSource.emit`.
-- A composable accepts `interactionSource` but tests don't inject `MutableInteractionSource`.
-- A plain rendering test starts the production app or uses `Thread.sleep` before asserting.
-
-## RED/GREEN agent scenarios
-
-1. RED launches a production app, waits with `Thread.sleep`, and only asserts that a node exists. GREEN renders fixed state with `setContent`, drives the action, synchronizes through Compose, and asserts the semantic state or callback result.
-2. Novel case: a screen's repository-backed state holder starts background work, but the test only needs to prove a disabled Save button. GREEN tests the plain UI state directly; a separate integration test covers the state-holder wiring if needed.
-3. Counterexample: navigation behavior depends on a real `NavController` lifecycle. GREEN uses an integration test rather than pretending a plain rendering test proves that contract.
-4. Focused counterexample: a value-only formatter test already uses a plain unit
-   test and the task asks only whether it needs a UI harness. GREEN leaves the
-   test-local helper and workspace unchanged.

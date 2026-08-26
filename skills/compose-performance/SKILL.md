@@ -39,14 +39,3 @@ axis begins.
 | Scroll, animation, gesture, layout, or draw State read at frame rate; measured state fed back into composition | [Deferred reads](references/deferred-reads.md) |
 | A composable only reads composition locals or accessor-style values | [Composition contracts](references/composition-contracts.md) |
 | State ownership or effect lifecycle is the root cause | [Compose state and effects](../compose-state-and-effects/SKILL.md) |
-
-## RED/GREEN agent scenarios
-
-1. RED blames unstable parameters for unchanged lazy rows that recompose during
-   a focus transition. GREEN checks composition and layout back-writing first.
-2. Novel case: an animation value controls only drawing. RED identifies the
-   composition read but stops at diagnosis. GREEN moves the State read and its
-   geometry calculation into the draw or layout consumer.
-3. Counterexample: a screen visibly recomposes because its displayed model
-   actually changed. GREEN does not add stability wrappers or caches merely to
-   lower a count.
