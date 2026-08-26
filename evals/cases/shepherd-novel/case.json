@@ -1,0 +1,18 @@
+{
+  "id": "shepherd-novel",
+  "title": "Wait after unchanged monitoring state",
+  "family": "workflow",
+  "target_skills": ["shepherd"],
+  "expected_skills": ["shepherd"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "shepherd-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "monitoring", "text": "The response treats unchanged monitoring state as expected and identifies the next bounded poll rather than declaring success"},
+    {"id": "no-mutation", "text": "The response does not manufacture a review, retry, merge, or branch change from stale state"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

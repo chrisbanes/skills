@@ -1,0 +1,19 @@
+{
+  "id": "implement-with-subagents-direct",
+  "title": "Assign one sequential implementation owner",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-subagents",
+  "constant_skills": ["implement"],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "one-owner", "text": "The response assigns the supplied atomic item to one implementation owner and preserves sequential ownership"},
+    {"id": "acceptance", "text": "The response requires a task-scoped commit, independent diff inspection, and requested validation before advancing"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

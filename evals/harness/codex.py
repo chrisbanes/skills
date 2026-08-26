@@ -132,6 +132,9 @@ def _skill_config(
         _workspace_skill_path(workspace, skill)
         for skill in _enabled_skills(case, arm)
     }
+    enabled.update(
+        _workspace_skill_path(workspace, skill) for skill in case.constant_skills
+    )
     entries = []
     configured_paths = set(skill_paths) | enabled
     for skill_path in sorted(configured_paths, key=str):
@@ -145,8 +148,9 @@ def _subject_prompt(case: EvalCase, arm: str) -> str:
     prompt = case.prompt.rstrip()
     prompt += (
         "\n\nIf you run Gradle, use `--offline --no-scan`. In `skills_used`, report "
-        "only skills whose SKILL.md instructions you actually read and followed during "
-        "this run; otherwise return an empty list."
+        "only public repository skill entrypoints whose SKILL.md instructions you "
+        "actually read and followed during this run; otherwise return an empty list. "
+        "Do not report evaluator-owned fixture dependencies."
     )
     if arm == "forced":
         invocations = ", ".join(f"${skill}" for skill in case.target_skills)

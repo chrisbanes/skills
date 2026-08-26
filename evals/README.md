@@ -4,9 +4,10 @@ This directory contains a reproducible, advisory evaluator with a shared core
 and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
 tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
-cover six Compose skills plus `gradle-run`, `kotlin-api-design`,
-`kotlin-concurrency-and-flow`, and `kotlin-control-flow`. It is designed to
-answer two separate questions:
+cover six Compose skills, four Kotlin/Gradle skills, and four workflow/writing
+skills: `grounded-writing`, `implement-with-subagents`,
+`run-github-project`, and `shepherd`. It is designed to answer two separate
+questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
 2. Does automatic activation report the expected public skill entrypoints?
@@ -44,6 +45,10 @@ suite-wide aggregate.
 | `kotlin-api-design` | 66.7% | 100.0% | 100.0% |
 | `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 100.0% |
 | `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
+| `grounded-writing` | — | — | — |
+| `implement-with-subagents` | — | — | — |
+| `run-github-project` | — | — | — |
+| `shepherd` | — | — | — |
 
 ## Evaluation setup
 
@@ -51,17 +56,22 @@ suite-wide aggregate.
 
 Every case runs in a fresh workspace and conversation under three arms:
 
-- `none` disables every discoverable skill.
+- `none` disables every discoverable public skill. A case may declare an
+  evaluator-owned fixture dependency when that dependency is a precondition of
+  the behavior under test; it is supplied identically to every arm and excluded
+  from public-skill routing and metrics.
 - `forced` enables and explicitly invokes only the case's target skill or
   skills. Negative controls still force the target so over-application remains
   observable.
-- `automatic` enables all 15 public repository skills without naming any skill
+- `automatic` enables all 16 public repository skills without naming any skill
   in the task prompt. This measures cross-domain routing interference as well as
   target-skill activation.
 
 Each `case × arm` condition runs three times by default. The 38-case Compose
 suite schedules 342 subject calls and 342 blinded judge calls. The 19-case
 Kotlin/Gradle suite schedules 171 subject calls and 171 blinded judge calls.
+The 12-case workflows/writing suite schedules 108 subject calls and 108 blinded
+judge calls.
 
 All subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,
@@ -110,9 +120,17 @@ The Kotlin/Gradle benchmark contains 19 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-Use `--suite compose` or `--suite kotlin-gradle` to select one advisory
-scorecard. The default remains `compose` for command compatibility. Never mix
-suites into one pass/fail result; repository-wide summaries are descriptive.
+The workflows/writing benchmark contains 12 scored cases: direct, novel, and
+no-change coverage for each of its four skills. Its GitHub-style cases use
+supplied immutable state and rubric plus forbidden-action grading; they do not
+contact a provider. Only `implement-with-subagents` declares the evaluator-owned
+`implement` fixture dependency, because that prerequisite is constant across its
+three arms and is not a public skill or a routing target.
+
+Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
+to select one advisory scorecard. The default remains `compose` for command
+compatibility. Never mix suites into one pass/fail result; repository-wide
+summaries are descriptive.
 
 `case.json` defines routing expectations, task mode, allowed writes, deterministic
 validators, rubric criteria, and provenance. Safety checks for network and external

@@ -1,0 +1,17 @@
+{
+  "id": "grounded-writing-novel",
+  "title": "Review an evidence-led release note",
+  "family": "writing",
+  "target_skills": ["grounded-writing"],
+  "expected_skills": ["grounded-writing"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "grounded-writing-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "voice", "text": "The review recommends concise evidence-led prose rather than marketing language"},
+    {"id": "truth", "text": "The review preserves the stated production-data qualification and does not invent support for a stronger claim"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

@@ -1,0 +1,17 @@
+{
+  "id": "grounded-writing-direct",
+  "title": "Turn a raw release note into grounded prose",
+  "family": "writing",
+  "target_skills": ["grounded-writing"],
+  "expected_skills": ["grounded-writing"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "text",
+  "allowed_write_paths": ["draft.md"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "grounded-writing-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "evidence", "text": "The note retains the measured p95 change and its duplicate-parse mechanism"},
+    {"id": "qualification", "text": "The note does not claim universal production improvement before the stated production evidence exists"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

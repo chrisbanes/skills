@@ -1,0 +1,18 @@
+{
+  "id": "run-github-project-negative",
+  "title": "Leave human-owned planning work untouched",
+  "family": "workflow",
+  "target_skills": ["run-github-project"],
+  "expected_skills": ["run-github-project"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "human-boundary", "text": "The response leaves a human-owned planning claim untouched and reports it as a frontier or partial-drain condition"},
+    {"id": "preservation", "text": "The response does not claim, triage, close, or otherwise mutate blocked work"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

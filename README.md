@@ -154,6 +154,10 @@ may perform differently. These are not merge or release gates. See
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | 100.0% |
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 100.0% | 100.0% |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | — | — |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | — |
+| [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | — |
+| [`shepherd`](skills/shepherd/SKILL.md) | — | — | — |
 
 ## License
 

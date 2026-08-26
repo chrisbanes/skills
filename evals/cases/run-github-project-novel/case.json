@@ -1,0 +1,18 @@
+{
+  "id": "run-github-project-novel",
+  "title": "Reconcile an unknown remote mutation outcome",
+  "family": "workflow",
+  "target_skills": ["run-github-project"],
+  "expected_skills": ["run-github-project"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "unknown-state", "text": "The response treats a timed-out remote mutation as unknown and requires authoritative reconciliation before retrying or reporting success"},
+    {"id": "no-guess", "text": "The response does not infer that a claim, comment, merge, or project transition succeeded"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

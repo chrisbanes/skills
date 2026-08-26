@@ -1,0 +1,18 @@
+{
+  "id": "run-github-project-direct",
+  "title": "Preserve controller ownership of a ready claim",
+  "family": "workflow",
+  "target_skills": ["run-github-project"],
+  "expected_skills": ["run-github-project"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "control-plane", "text": "The response identifies live project state as the authority before a claim or mutation"},
+    {"id": "controller", "text": "The response keeps claims and shared project mutation with the controller rather than an implementation worker"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

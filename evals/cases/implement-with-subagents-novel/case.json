@@ -1,0 +1,19 @@
+{
+  "id": "implement-with-subagents-novel",
+  "title": "Keep coupled implementation work atomic",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "constant_skills": ["implement"],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "atomicity", "text": "The response keeps schema and migration changes that cannot validate independently in one work item"},
+    {"id": "repair-owner", "text": "The response returns failed acceptance evidence to the same owner instead of replacing it or implementing in the controller"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

@@ -1,0 +1,17 @@
+{
+  "id": "grounded-writing-negative",
+  "title": "Leave an already-grounded note intact",
+  "family": "writing",
+  "target_skills": ["grounded-writing"],
+  "expected_skills": ["grounded-writing"],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "grounded-writing-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "restraint", "text": "The response recognizes that the note already gives evidence, mechanism, and an honest qualification"},
+    {"id": "no-invention", "text": "The response does not add a fabricated user outcome, adoption result, or stronger performance claim"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

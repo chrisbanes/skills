@@ -49,6 +49,7 @@ class EvalCase:
     provenance: dict[str, str]
     prompt: str
     directory: Path
+    constant_skills: tuple[str, ...] = ()
     required_command_patterns: tuple[str, ...] = ()
     forbidden_command_patterns: tuple[str, ...] = ()
     calibration: bool = False
@@ -143,8 +144,33 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
     fixture = _require_string(data, "fixture")
     if not _safe_relative(fixture):
         raise CaseValidationError("fixture must be a safe relative path")
-    if not (repo_root / "evals" / "fixtures" / fixture).is_dir():
+    fixture_root = repo_root / "evals" / "fixtures" / fixture
+    if not fixture_root.is_dir():
         raise CaseValidationError(f"missing fixture: evals/fixtures/{fixture}")
+
+    constant_skills = (
+        _require_string_list(data, "constant_skills")
+        if "constant_skills" in data
+        else ()
+    )
+    if any(not _ID_PATTERN.fullmatch(skill) for skill in constant_skills):
+        raise CaseValidationError("constant_skills must use lowercase kebab-case")
+    public_constants = set(constant_skills) & set(PUBLIC_SKILLS)
+    if public_constants:
+        raise CaseValidationError(
+            "constant_skills cannot be measured public skills: "
+            f"{sorted(public_constants)}"
+        )
+    fixture_constants = tuple(
+        sorted(
+            path.parent.name
+            for path in (fixture_root / ".agents" / "skills").glob("*/SKILL.md")
+        )
+    )
+    if fixture_constants != tuple(sorted(constant_skills)):
+        raise CaseValidationError(
+            "constant_skills must exactly declare fixture .agents/skills dependencies"
+        )
 
     allowed_write_paths = _require_string_list(data, "allowed_write_paths")
     if task_mode == "review" and allowed_write_paths:
@@ -227,6 +253,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         calibration=calibration,
         prompt=prompt,
         directory=manifest_path.parent,
+        constant_skills=constant_skills,
         required_command_patterns=command_patterns["required_command_patterns"],
         forbidden_command_patterns=command_patterns["forbidden_command_patterns"],
     )

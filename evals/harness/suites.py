@@ -12,6 +12,7 @@ PUBLIC_SKILLS = (
     "compose-state-and-effects",
     "compose-ui-testing-patterns",
     "gradle-run",
+    "grounded-writing",
     "implement-with-subagents",
     "kotlin-api-design",
     "kotlin-concurrency-and-flow",
@@ -63,6 +64,12 @@ KOTLIN_GRADLE_SKILLS = (
     "kotlin-concurrency-and-flow",
     "kotlin-control-flow",
 )
+WORKFLOWS_WRITING_SKILLS = (
+    "grounded-writing",
+    "implement-with-subagents",
+    "run-github-project",
+    "shepherd",
+)
 
 
 SUITES = {
@@ -83,6 +90,14 @@ SUITES = {
         routing_cases=3,
         require_skill_triads=True,
         historical_minimum=3,
+    ),
+    "workflows-writing": SuitePolicy(
+        id="workflows-writing",
+        title="Workflows and writing",
+        skills=WORKFLOWS_WRITING_SKILLS,
+        benchmark_cases=12,
+        routing_cases=0,
+        require_skill_triads=True,
     ),
 }
 

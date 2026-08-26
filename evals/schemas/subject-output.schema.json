@@ -7,7 +7,7 @@
     "summary": { "type": "string" },
     "skills_used": {
       "type": "array",
-      "description": "Only skills whose SKILL.md instructions were actually read and followed during this run.",
+      "description": "Only public repository skills whose SKILL.md instructions were actually read and followed during this run; omit evaluator-owned fixture dependencies.",
       "items": {
         "type": "string"
       }

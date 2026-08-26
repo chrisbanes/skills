@@ -5,7 +5,7 @@ Instructions for AI agents (Claude Code, etc.) working in this repo.
 ## When adding, renaming, or removing a skill
 
 1. **Update `README.md`** — keep the "Skills" list in sync. Each entry links to the skill's `SKILL.md` and summarises what it covers. If you add a skill and don't update the README, the change is incomplete.
-2. **Add evaluation coverage** — add the new skill to the relevant evaluation suite, with direct, novel, and no-change scenarios that exercise its expected behavior and restraint. Include deterministic validation where applicable. A new skill is incomplete without evaluation coverage.
+2. **Add evaluation coverage** — add the new skill to the relevant evaluation suite, with direct, novel, and no-change cases that exercise its expected behavior and restraint. Keep those cases in `evals/`, with deterministic validation where applicable; runtime `SKILL.md` files do not carry RED/GREEN scenario sections. A new skill is incomplete without evaluation coverage.
 3. **Do not update plugin or skill versions unless explicitly asked.** If the user asks for a release/version bump, use the release system below.
 
 ## Skill authoring checklist
@@ -16,7 +16,7 @@ Before considering any skill addition or edit complete, verify:
 2. The body states one core principle and gives ordered, imperative steps.
 3. Tables support rather than replace the procedure; failed checks specify the next action, and the procedure has an explicit finish gate.
 4. Examples are minimal and behavior-preserving; exceptions and non-applicable cases are explicit.
-5. RED/GREEN agent scenarios test the change, including a novel case and a counterexample against over-application.
+5. The evaluation corpus includes direct, novel, and no-change coverage, including a counterexample against over-application.
 6. README and router integration are updated where applicable, `npm run lint` passes, and versions remain unchanged unless requested.
 
 ## Evaluation result documentation
