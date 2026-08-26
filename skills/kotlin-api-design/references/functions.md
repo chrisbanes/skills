@@ -2,21 +2,17 @@
 
 ## Core principle
 
-Put a function on the smallest accurate semantic owner. Extension syntax changes call shape, not ownership.
-
-Reject primitive, common, and library-owned extensions by default: they create false ownership, domain pollution, noisy completion/imports, and collisions.
+Put a function on the smallest accurate semantic owner. Extension syntax changes
+call shape, not ownership.
 
 ## Procedure
 
 Apply in order.
 
-### 1. Name the semantic owner
+1. Name the operation and its semantic owner. If ownership is unclear, stop.
 
-Name the operation and the concept that owns it. If ownership is unclear, stop before selecting syntax.
-
-### 2. Reject a misleading receiver early
-
-For `String`, primitives, collections, `Flow`, framework, or third-party receivers, require **all**:
+2. For `String`, primitives, collections, `Flow`, framework, or third-party
+   receivers, require all of these before using an extension:
 
 - Narrow `private`/`internal` cohesive scope.
 - Valid for every receiver value.
@@ -24,9 +20,8 @@ For `String`, primitives, collections, `Flow`, framework, or third-party receive
 - Materially clearer receiver syntax.
 - No better project-owned owner.
 
-Any failure forbids an extension on that receiver; choose a non-extension form in step 3. `private fun <T> MutableList<T>.swap(...)` can pass: it is list-native, policy-free, and algorithm-local.
-
-### 3. Choose the function form
+   Any failure forbids the extension; choose another form. A private,
+   algorithm-local `MutableList.swap` can pass these gates.
 
 | Meaning | Prefer |
 |---|---|
@@ -36,11 +31,11 @@ Any failure forbids an extension on that receiver; choose a non-extension form i
 | Retained policy, state, I/O, clock, locale, or dependencies | Injected service/collaborator |
 | Type-native operation with a clearer receiver and every step-2 gate passed | Extension |
 
-Use a service/collaborator only when behavior retains policy, state, I/O, clock/locale, or dependencies; otherwise use explicit parameters on a stateless function.
+3. Use the table. A collaborator owns retained policy, state, I/O, clock/locale,
+   or dependencies; otherwise use a stateless function with explicit parameters.
 
-### 4. Move behavior and callers
-
-Move the implementation, then update calls, imports, and function references. Preserve or deprecate public entry points unless this is an explicit breaking release; add non-public migration support only for concrete consumers.
+4. Move the implementation, then update calls, imports, and references. Preserve
+   or deprecate public entry points unless this is an explicit breaking release.
 
 ```kotlin
 // Before: String falsely owns UserId construction.
@@ -57,33 +52,12 @@ value class UserId private constructor(val value: String) {
 val id = UserId.parse(raw)
 ```
 
-### 5. Verify and finish
+5. Check visibility, imports, collisions, and compatibility. For extensions,
+   also check nullable receivers, generics, and future-member precedence.
+   Compile and test; on failure, narrow the API or return to step 1.
 
-For every form, check visibility, imports, collisions, and compatibility. For extensions, also check nullable receivers, generics, and future-member precedence. Compile and test; on failure, narrow the API or return to step 1.
-
-## Rationalizations
-
-| “But…” | Counter |
-|---|---|
-| Fluent syntax | Readability does not create ownership. |
-| Kotlin uses extensions | Idiom still requires accurate semantics. |
-| It is private/internal | Scope helps only when every gate passes. |
-| Utility objects are worse | Use a top-level function or target factory. |
-| Default policy is obvious | Time zone/locale defaults are policy; keep them explicit. |
-| Already in the PR | Existing code does not prove ownership. |
-
-## Red flags
-
-- Domain meaning on `String`, numbers, collections, `Flow`, or vendor types.
-- Clock, locale, I/O, policy, or dependencies hidden in an extension.
-
-## Common mistakes
-
-| Mistake | Fix |
-|---|---|
-| `Long.toDisplayDate()` | A formatter owns time-zone/locale policy. |
-| Extension hides parsing | Use `Type.parse(raw)` or a named parser. |
-| Public library-type extension | Reclassify it using steps 1-3. |
+Do not use an extension to hide parsing, repository access, or clock/locale
+policy. Fluent syntax, Kotlin idiom, and existing code do not create ownership.
 
 ## Related
 

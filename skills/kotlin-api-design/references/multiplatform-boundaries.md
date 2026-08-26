@@ -2,16 +2,20 @@
 
 ## Core principle
 
-Keep common APIs semantic and stable. Put platform mechanics behind small `expect`/`actual` declarations or interfaces, and keep Android/iOS/Desktop details out of `commonMain`.
+Keep common APIs semantic and stable. Put platform mechanics behind small
+`expect`/`actual` declarations or interfaces.
 
 ## Boundary procedure
 
-1. Name the product capability in common terms: share text, read clipboard, request haptic feedback, resolve current region.
-2. Check whether common callers need fakes, injected dependencies, lifecycle ownership, or runtime implementation choice.
-3. Pick the smallest boundary from the table below.
-4. Keep the common signature free of platform types and platform vocabulary.
-5. Put business branching in common code; keep actuals/platform bindings as translation layers.
-6. Validate by compiling every affected source set and testing common code with a fake where possible.
+1. Name the capability in common terms.
+2. Decide whether callers need fakes, injected dependencies, lifecycle ownership,
+   or runtime implementation choice.
+3. Pick the smallest boundary below and keep the common signature free of
+   platform types and vocabulary.
+4. Keep business branching in common code; keep actuals and bindings as
+   translation layers.
+5. Compile every affected source set and test common code with a fake where
+   possible. On a platform leak, return to step 1 and rename the capability.
 
 ## Choose the boundary
 
@@ -23,9 +27,7 @@ Keep common APIs semantic and stable. Put platform mechanics behind small `expec
 | Entire screen differs by platform | Separate platform screens behind a common navigation contract |
 | Only constants/resources differ | Common API exposing semantic values, actual values per platform |
 
-## Keep common APIs semantic
-
-Write common APIs so callers describe intent, not platform mechanics:
+## Semantic common APIs
 
 ```kotlin
 // GOOD: common API is semantic
@@ -37,11 +39,9 @@ expect fun currentRegion(): Region
 expect fun currentRegionFromAndroidLocale(context: Context): Region
 ```
 
-The Android actual can use `Locale` APIs. The iOS actual can use Foundation APIs. Common callers should not know.
-
-## Keep actuals thin
-
-Actual implementations should translate the semantic API into platform calls. If the operation needs an Activity, view controller, lifecycle owner, DI, or fakes, stop and use an interface supplied by platform code instead of an `expect class`:
+Actuals may use platform APIs; common callers should not know. If an operation
+needs an Activity, view controller, lifecycle owner, DI, or fakes, use a common
+interface supplied by platform code instead of an `expect class`:
 
 ```kotlin
 // commonMain
@@ -64,13 +64,13 @@ class AndroidShareSheet(
 }
 ```
 
-The Android implementation is explicitly Activity-owned. A generic `Context` often hides the UI lifecycle requirement. Define what `suspend` means: for many platform UI actions it means "the sheet was launched", not "the user completed sharing."
+The Android implementation is Activity-owned; a generic `Context` often hides
+that lifecycle. Define `suspend` precisely (for example, sheet launched versus
+sharing completed). Move business rules out of an actual.
 
-If the actual starts accumulating business rules, move those rules back to common code and leave only platform translation in the actual.
-
-## Prefer interfaces when tests or DI matter
-
-Use `expect/actual` for simple compile-time platform APIs. Use interfaces when common code needs fakes, multiple implementations, runtime selection, or lifecycle ownership:
+Use `expect`/`actual` for simple compile-time specialization. Use an interface
+when common code needs fakes, multiple implementations, runtime selection, or
+lifecycle ownership:
 
 ```kotlin
 interface Clipboard {
@@ -80,7 +80,7 @@ interface Clipboard {
 
 Platform modules bind `Clipboard` to Android/iOS implementations. Common tests use a fake.
 
-## Compose-specific guidance
+## Shared Compose UI
 
 When shared UI reaches a platform leaf:
 
@@ -88,28 +88,13 @@ When shared UI reaches a platform leaf:
 2. Pass `Modifier` through every expected composable that emits UI.
 3. Reject platform types in `commonMain` signatures (`Context`, `Activity`, Android resource IDs, `Uri`, `Bundle`, `UIViewController`, `NSBundle`, platform permission enums, etc.).
 4. Hide native view lifecycle inside the platform actual and use the right interop container (`AndroidView`, `UIKitView`, etc.).
-5. Do not launch platform work directly from a composable body. Use `remember`, `LaunchedEffect`, `DisposableEffect`, and stable keys inside actual composables just as you would in common Compose code.
+5. Do not launch platform work from a composable body; use remembered,
+   lifecycle-aware effects with stable keys inside actual composables.
 6. Preview/test the common plain UI composable with fake platform services where possible.
 
-## Common mistakes
-
-| Mistake | Fix |
-|---|---|
-| `commonMain` API exposes Android/iOS types | Replace with semantic common types |
-| `expect` function has parameters for one platform only | Move those details into the actual |
-| Business branching duplicated in each actual | Move business rules to common code |
-| One huge `Platform` expect object | Split by capability: `Clipboard`, `ShareSheet`, `Haptics` |
-| Platform UI leaks high in the tree | Push platform-specific Composable to a leaf |
-| No fakeable boundary for common tests | Use an interface instead of direct `expect` call |
-| Only one target compiles after the change | Compile all affected source sets before finishing |
-
-## Red flags during review
-
-- Common code imports platform packages.
-- An actual implementation knows product state, navigation decisions, or domain rules.
-- A platform API name appears in a common function name.
-- Adding a third platform would require changing common callers.
-- Tests need Android/iOS runtime just to verify common business behavior.
+Reject a common platform type, one-platform parameter, broad `Platform` object,
+or platform UI high in the tree. If a third platform changes common callers or
+common tests require native runtime, return to the boundary choice.
 
 ## Related (Compose / shared UI)
 

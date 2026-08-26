@@ -2,15 +2,19 @@
 
 ## Core principle
 
-Prefer `@JvmInline value class` for single-field types that carry domain meaning. Data classes are for aggregating multiple fields.
+Prefer `@JvmInline value class` for a single-field domain distinction. Use a
+data class for multiple fields or different equality.
 
 ## Review procedure
 
-1. Find single-property wrappers, primitive-heavy APIs, and `@Immutable` wrappers in UI state.
-2. Decide whether the single value is a real domain distinction. If not, keep the primitive or use a typealias.
-3. Check whether replacing the type changes equality, serialization, Java interop, or hot-path boxing.
-4. Convert only when the domain meaning is clear and the contract changes are acceptable.
-5. Re-run the affected compiler/tests; for Compose performance work, re-check compiler reports or recomposition evidence.
+1. Find a single-property wrapper, primitive-heavy API, or `@Immutable` UI
+   wrapper.
+2. Keep the primitive or use a typealias unless the value is a real domain
+   distinction.
+3. Check equality, serialization, Java interop, and hot-path boxing.
+4. Choose the type below, then compile and test. For a Compose performance
+   change, re-check compiler or recomposition evidence. On contract drift, keep
+   the existing type.
 
 ## Decision flow
 
@@ -40,13 +44,9 @@ data class UserId(val value: String)
 // Use a data class if you need different equality semantics
 ```
 
-## Compose stability procedure
-
-When a Compose report points at a single-field wrapper:
-
-1. Confirm the underlying type is stable (`String`, primitives, or another stable type).
-2. Prefer a value class over `@Immutable` on a wrapper whose only job is type distinction.
-3. Do not change public serialization/API contracts just to silence a report.
+For a Compose stability report, first confirm a stable underlying type. Prefer a
+value class over an `@Immutable` wrapper used only for type distinction; never
+change public serialization or API contracts merely to silence a report.
 
 ```kotlin
 // Before: primitive value can be mixed up with other strings
@@ -57,9 +57,7 @@ data class UiState(val userId: String)
 data class UiState(val userId: UserId)
 ```
 
-## Refactor checks
-
-Before replacing an existing wrapper, check the contract that callers observe:
+## Contract checks
 
 | Check | Action |
 |---|---|
@@ -70,9 +68,11 @@ Before replacing an existing wrapper, check the contract that callers observe:
 | Nullable/generic/vararg hot path | Measure before converting; those uses box. |
 | Constructor body, `lateinit`, delegated properties, backing fields | Keep a data class or redesign; value classes only store the constructor value. |
 
-## Packing multiple values only after evidence
+## Packed values
 
-Do not replace a clear multi-field data class with bit-packing unless profiling shows allocation cost on a hot path. If needed, Compose provides `packFloats`, `packInts`, and matching `unpack*` functions in `androidx.compose.ui.util`:
+Do not replace a clear multi-field data class with bit-packing unless profiling
+shows hot-path allocation cost. If needed, Compose provides `packFloats`,
+`packInts`, and matching `unpack*` functions:
 
 ```kotlin
 @JvmInline value class Offset(val packedValue: Long)
@@ -82,31 +82,12 @@ val Offset.x: Float get() = unpackFloat1(packedValue)
 val Offset.y: Float get() = unpackFloat2(packedValue)
 ```
 
-## Common mistakes
+## Do not apply
 
-| Mistake | Fix |
-|---|---|
-| Data class wrapping a single domain field | Replace with `@JvmInline value class` |
-| Value class with no domain meaning (just a wrapper) | Use a type alias or the primitive directly |
-| Value class needing custom equality | Use a data class instead |
-| Value class as generic type argument in a hot path | Measure boxing cost; keep the primitive/data class if it matters |
-| `@Immutable` annotation on a type that could be a value class | Replace with a value class when the underlying type is stable |
-| Forgetting `@JvmInline` annotation | Always pair `value class` with `@JvmInline` for single-field classes |
-
-## Red flags during review
-
-- A data class with exactly one property
-- A `String`, `Long`, or `Int` used where different values should not be interchangeable (e.g., `fun transfer(from: String, to: String, amount: Long)`)
-- An `@Immutable` annotation on a single-field wrapper
-- A type alias used for domain distinction where value-class semantics are needed (type aliases are type-erased, no runtime protection)
-
-## When NOT to apply
-
-- The type needs multiple fields → data class
-- The type needs custom `equals`/`hashCode` → data class
-- The type is used heavily as a nullable or generic in performance-critical code → measure autoboxing cost first
-- The project does not need the type-safety distinction → a type alias or primitive is sufficient
-- The replacement would silently change JSON, Java, reflection, or framework behavior
+Use a data class for multiple fields or custom equality. Measure before changing
+a nullable, generic, or vararg hot path. Keep a primitive/typealias when no
+type distinction is needed, and do not silently change JSON, Java, reflection,
+or framework behavior.
 
 ## Related
 

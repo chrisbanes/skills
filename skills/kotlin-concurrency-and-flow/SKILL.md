@@ -36,15 +36,3 @@ the product contract.
 | Stored `CoroutineScope`, `init { launch }`, fire-and-forget API, `runBlocking`, broad catch, or cancellation boundary | [Structured concurrency](references/structured-concurrency.md) |
 | `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, `SharingStarted`, `.value`, state updates, sentinel values, or one-shot events | [Flow state and events](references/flow-state-events.md) |
 | Compose collection or UI effect handling | [Compose state and effects](../compose-state-and-effects/SKILL.md) |
-
-## RED/GREEN agent scenarios
-
-1. RED stores a long-lived `CoroutineScope` in a service and launches from
-   arbitrary callers. GREEN makes ownership and cancellation follow a defined
-   lifecycle boundary.
-2. Novel case: a screen needs replayable loading state and non-replayable
-   navigation. GREEN uses distinct state and event contracts with documented
-   delivery semantics.
-3. Counterexample: a suspend function already has a caller-owned scope. GREEN
-   reports that no code change is necessary rather than adding an internal
-   scope merely to make the API look asynchronous.
