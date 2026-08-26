@@ -15,9 +15,9 @@ Fetch live GitHub state and read:
 
 When an earlier conversation established the issue, inspect later trusted user
 messages only for a revoked or replaced target or a changed stakeholder
-contract. If a change conflicts with the live issue, specification, or ADR and
-has no authoritative recorded resolution, block pending an upstream update. Do
-not switch to conversation mode or request another compact confirmation.
+contract. Require every stakeholder-contract change to be recorded in the live
+issue, specification, or ADR; otherwise block pending an upstream update. Do not
+switch to conversation mode or request another compact confirmation.
 
 Treat acceptance criteria and recorded upstream decisions as authoritative.
 Compatible comments may clarify them. Block on unresolved conflicts between
