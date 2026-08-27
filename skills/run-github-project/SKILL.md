@@ -31,6 +31,8 @@ terminal required-CI claims outside capacity before refreshing the control plane
 
 Select and record the mode before checking execution preconditions:
 
+- Use `review` only when the user asks to inspect, assess, or explain the
+  Project workflow without operating it.
 - Use `setup` only when the user explicitly asks to set up, configure, validate,
   or repair the repository binding without running Project work.
 - Use `next` by default for execution and process at most one selected issue.
@@ -38,6 +40,17 @@ Select and record the mode before checking execution preconditions:
   selection; never reinterpret it as permission to drain or bypass a claim.
 - Use `drain` only when the user explicitly asks to drain, run all, repeat, or
   continue until empty.
+
+In `review`, inspect only the repository, supplied state, and read-only remote
+state that the user permits. Apply the live-authority, controller-ownership,
+unknown-outcome, and preservation invariants to the requested workflow seam.
+Do not configure or write the binding; rank, claim, transition, triage, plan, or
+delegate Project work; mutate an issue, PR, or Project item; push; merge; or
+close anything. Do not require execution dependencies, merge authority,
+issue-close authority, or ticket-agent capacity. Finish `review-complete` with
+the evidence, safe next action, and any uncertainty, or `review-blocked` when
+the permitted evidence cannot support the requested assessment. Never continue
+into setup or [Check Preconditions](#check-preconditions).
 
 In `setup`, follow [Configure The Project](#configure-the-project) plus the
 read-only retry, pagination, unknown-state, and bounded-failure rules in

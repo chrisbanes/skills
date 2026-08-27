@@ -11,7 +11,26 @@ through completion. Keep changes that cannot validate apart in one item, accept
 its task-scoped commit before advancing, and return failed acceptance evidence
 to that same owner rather than repairing it in the controller or reassigning it.
 
-## Procedure
+## Select the mode
+
+- Use `review` only when the user asks to assess supplied orchestration without
+  running it.
+- Use `implement` when the user asks to execute the supplied tickets or plan
+  tasks.
+
+## Review procedure
+
+1. Inspect only the repository and supplied orchestration state that the user
+   permits. Do not start a subagent, edit files, create a commit, or contact a
+   remote service.
+2. Assess queue atomicity, dependency order, implementation ownership,
+   task-scoped acceptance, repair ownership, and controller mutation boundaries.
+   Treat an already accepted item as complete rather than assigning it again.
+3. Report the next orchestration action, or that no action is needed, with the
+   evidence and any unresolved acceptance gap. Stop before the implementation
+   procedure.
+
+## Implementation procedure
 
 1. Read the repository instructions and inspect the current branch and worktree.
    Preserve unrelated changes. Stop before delegation when a task-scoped commit
@@ -70,7 +89,10 @@ to that same owner rather than repairing it in the controller or reassigning it.
 
 ## Finish gate
 
-Finish only when every queued item has a task-scoped, reviewed, verified commit,
-the final worktree matches the recorded pre-existing state, and no
-owner-reported blocker remains. Report the item-to-commit mapping and the final
-validation result. Otherwise finish blocked and name the first incomplete gate.
+In `review`, finish only after reporting the non-mutating assessment, its
+evidence, and any acceptance gap without starting implementation. In
+`implement`, finish only when every queued item has a task-scoped, reviewed,
+verified commit, the final worktree matches the recorded pre-existing state,
+and no owner-reported blocker remains. Report the item-to-commit mapping and the
+final validation result. Otherwise finish blocked and name the first incomplete
+gate.
