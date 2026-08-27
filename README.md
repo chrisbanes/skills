@@ -164,29 +164,28 @@ may perform differently. These are not merge or release gates. See
 
 ### Skill efficiency
 
-Values are baseline → automatic, followed by the automatic percentage change.
-These are subject-only totals and per-run medians from the latest available
-evidence for each arm. Totals include failed runs and negative controls.
-Multi-skill scenarios contribute to every targeted skill row, so rows are not
-additive. A turn is one completed Codex turn; time is the sum of per-record
-wall-clock durations and remains environment-sensitive.
+Values are per-run medians, baseline → automatic, followed by the automatic
+percentage change. These subject-only measurements use the latest available
+evidence for each arm and include failed runs and negative controls. Multi-skill
+scenarios contribute to every targeted skill row. A turn is one completed Codex
+turn; time remains environment-sensitive.
 
-| Skill | Total tokens | Tool calls | Turns | Time | Tokens / run | Tool calls / run | Turns / run | Time / run |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| [`compose-animations`](skills/compose-animations/SKILL.md) | 986.0k → 1419.3k (+44%) | 50 → 84 (+68%) | 15 → 15 (+0%) | 504.3s → 675.3s (+34%) | 41.7k → 81.9k (+96%) | 2 → 5 (+150%) | 1 → 1 (+0%) | 26.3s → 42.3s (+60%) |
-| [`compose-component-design`](skills/compose-component-design/SKILL.md) | 1502.8k → 1846.4k (+23%) | 81 → 90 (+11%) | 21 → 21 (+0%) | 666.4s → 698.9s (+5%) | 56.3k → 66.9k (+19%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 32.6s → 29.1s (-11%) |
-| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 882.8k → 1123.1k (+27%) | 47 → 77 (+64%) | 12 → 12 (+0%) | 410.7s → 519.8s (+27%) | 56.2k → 77.1k (+37%) | 3 → 6 (+100%) | 1 → 1 (+0%) | 32.4s → 44.1s (+36%) |
-| [`compose-performance`](skills/compose-performance/SKILL.md) | 2301.3k → 3524.2k (+53%) | 124 → 174 (+40%) | 33 → 33 (+0%) | 1096.5s → 1385.2s (+26%) | 56.2k → 83.0k (+48%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 32.5s → 40.1s (+24%) |
-| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 2234.7k → 3372.7k (+51%) | 123 → 182 (+48%) | 33 → 33 (+0%) | 1042.9s → 1399.8s (+34%) | 56.2k → 83.3k (+48%) | 3 → 5 (+67%) | 1 → 1 (+0%) | 28.5s → 41.6s (+46%) |
-| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 986.1k → 1237.9k (+26%) | 57 → 67 (+18%) | 12 → 12 (+0%) | 507.4s → 531.7s (+5%) | 56.7k → 69.0k (+22%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 32.9s → 34.1s (+4%) |
-| [`gradle-run`](skills/gradle-run/SKILL.md) | 836.4k → 1378.1k (+65%) | 43 → 66 (+53%) | 15 → 15 (+0%) | 363.2s → 491.0s (+35%) | 70.7k → 83.3k (+18%) | 4 → 3 (-25%) | 1 → 1 (+0%) | 30.2s → 32.9s (+9%) |
-| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 1001.2k → 1945.4k (+94%) | 55 → 95 (+73%) | 15 → 15 (+0%) | 477.4s → 776.6s (+63%) | 57.4k → 145.8k (+154%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 30.0s → 53.0s (+77%) |
-| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 1140.4k → 1984.8k (+74%) | 63 → 94 (+49%) | 15 → 15 (+0%) | 614.3s → 888.9s (+45%) | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
-| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 1522.3k → 2512.8k (+65%) | 84 → 127 (+51%) | 21 → 21 (+0%) | 828.3s → 1068.7s (+29%) | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
-| [`grounded-writing`](skills/grounded-writing/SKILL.md) | 411.8k → 628.0k (+53%) | 21 → 31 (+48%) | 9 → 9 (+0%) | 158.8s → 242.0s (+52%) | 41.3k → 63.5k (+54%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 27.6s (+70%) |
-| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | 398.1k → 866.9k (+118%) | 19 → 39 (+105%) | 9 → 9 (+0%) | 233.5s → 441.4s (+89%) | 40.9k → 92.8k (+127%) | 2 → 4 (+100%) | 1 → 1 (+0%) | 23.7s → 48.5s (+104%) |
-| [`run-github-project`](skills/run-github-project/SKILL.md) | 473.2k → 1007.4k (+113%) | 25 → 42 (+68%) | 9 → 9 (+0%) | 234.5s → 332.7s (+42%) | 41.6k → 93.8k (+125%) | 2 → 5 (+150%) | 1 → 1 (+0%) | 25.0s → 32.8s (+32%) |
-| [`shepherd`](skills/shepherd/SKILL.md) | 409.1k → 513.1k (+25%) | 23 → 25 (+9%) | 9 → 9 (+0%) | 241.8s → 225.8s (-7%) | 51.8k → 59.8k (+16%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 21.8s → 25.9s (+19%) |
+| Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
+| --- | ---: | ---: | ---: | ---: |
+| [`compose-animations`](skills/compose-animations/SKILL.md) | 41.7k → 81.9k (+96%) | 2 → 5 (+150%) | 1 → 1 (+0%) | 26.3s → 42.3s (+60%) |
+| [`compose-component-design`](skills/compose-component-design/SKILL.md) | 56.3k → 66.9k (+19%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 32.6s → 29.1s (-11%) |
+| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 56.2k → 77.1k (+37%) | 3 → 6 (+100%) | 1 → 1 (+0%) | 32.4s → 44.1s (+36%) |
+| [`compose-performance`](skills/compose-performance/SKILL.md) | 56.2k → 83.0k (+48%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 32.5s → 40.1s (+24%) |
+| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 56.2k → 83.3k (+48%) | 3 → 5 (+67%) | 1 → 1 (+0%) | 28.5s → 41.6s (+46%) |
+| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 56.7k → 69.0k (+22%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 32.9s → 34.1s (+4%) |
+| [`gradle-run`](skills/gradle-run/SKILL.md) | 70.7k → 83.3k (+18%) | 4 → 3 (-25%) | 1 → 1 (+0%) | 30.2s → 32.9s (+9%) |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 57.4k → 145.8k (+154%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 30.0s → 53.0s (+77%) |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
+| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | 41.3k → 63.5k (+54%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 27.6s (+70%) |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | 40.9k → 92.8k (+127%) | 2 → 4 (+100%) | 1 → 1 (+0%) | 23.7s → 48.5s (+104%) |
+| [`run-github-project`](skills/run-github-project/SKILL.md) | 41.6k → 93.8k (+125%) | 2 → 5 (+150%) | 1 → 1 (+0%) | 25.0s → 32.8s (+32%) |
+| [`shepherd`](skills/shepherd/SKILL.md) | 51.8k → 59.8k (+16%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 21.8s → 25.9s (+19%) |
 
 ## License
 

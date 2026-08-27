@@ -289,13 +289,12 @@ def render_scorecard(
                 "",
                 "## Per-skill efficiency (baseline vs automatic)",
                 "",
-                "Subject-only baseline → automatic totals and per-run medians. "
-                "Parentheses show the automatic change from baseline. "
-                "Multi-skill scenarios contribute to every targeted skill row, "
-                "so rows are not additive.",
+                "Subject-only per-run medians, baseline → automatic. Parentheses "
+                "show the automatic change from baseline. Multi-skill scenarios "
+                "contribute to every targeted skill row.",
                 "",
-                "| Skill | Total tokens | Tool calls | Turns | Time | Tokens / run | Tool calls / run | Turns / run | Time / run |",
-                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                "| Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |",
+                "| --- | ---: | ---: | ---: | ---: |",
             ]
         )
         for skill, by_arm in measured_skills:
@@ -303,10 +302,6 @@ def render_scorecard(
             automatic = by_arm["automatic"]
             lines.append(
                 f"| `{skill}` | "
-                f"{_comparison(baseline.total_tokens, automatic.total_tokens, _tokens)} | "
-                f"{_comparison(baseline.total_tool_calls, automatic.total_tool_calls, _count)} | "
-                f"{_comparison(baseline.total_turns, automatic.total_turns, _count)} | "
-                f"{_comparison(baseline.total_elapsed_seconds, automatic.total_elapsed_seconds, _seconds)} | "
                 f"{_comparison(baseline.median_tokens_per_run, automatic.median_tokens_per_run, _tokens)} | "
                 f"{_comparison(baseline.median_tool_calls_per_run, automatic.median_tool_calls_per_run, _count)} | "
                 f"{_comparison(baseline.median_turns_per_run, automatic.median_turns_per_run, _count)} | "

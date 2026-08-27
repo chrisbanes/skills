@@ -121,9 +121,10 @@ class ReportTest(unittest.TestCase):
                 "Per-skill efficiency (baseline vs automatic)", markdown
             )
             self.assertIn(
-                "| `compose-state-and-effects` | 43.2k → 61.8k (+43%) | 1 → 1 (+0%) | 1 → 1 (+0%) | 1.5s → 1.5s (+0%) | 43.2k → 61.8k (+43%) | 1 → 1 (+0%) | 1 → 1 (+0%) | 1.5s → 1.5s (+0%) |",
+                "| `compose-state-and-effects` | 43.2k → 61.8k (+43%) | 1 → 1 (+0%) | 1 → 1 (+0%) | 1.5s → 1.5s (+0%) |",
                 markdown,
             )
+            self.assertNotIn("| Skill | Total tokens", markdown)
             self.assertIn(
                 "| forced | 1 / 1 | 43.2k | 1 | 1 | 1.5s | 43.2k | 1 | 1 | 1.5s |",
                 markdown,
