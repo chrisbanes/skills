@@ -81,6 +81,10 @@ def _seconds(value: float | None) -> str:
     return _measurement(value, suffix="s")
 
 
+def _total(value: int | None) -> str:
+    return "unavailable" if value is None else str(value)
+
+
 def _comparison(
     baseline: float | None,
     automatic: float | None,
@@ -120,23 +124,33 @@ def _per_arm_record_count(records: list[dict[str, Any]]) -> str:
     return ", ".join(f"{arm}={count}" for arm, count in counts.items())
 
 
-def _role_attempts(record: dict[str, Any], role: str) -> list[dict[str, Any]]:
+def _role_attempts(
+    record: dict[str, Any], role: str
+) -> list[dict[str, Any]] | None:
     payload = record.get(role)
     if not isinstance(payload, dict):
         return []
     attempts = payload.get("attempts")
-    if isinstance(attempts, list) and attempts and all(
-        isinstance(attempt, dict) for attempt in attempts
-    ):
-        return attempts
+    if attempts is not None:
+        if isinstance(attempts, list) and attempts and all(
+            isinstance(attempt, dict) for attempt in attempts
+        ):
+            return attempts
+        return None
+    retries = payload.get("retries", 0)
+    if isinstance(retries, int) and not isinstance(retries, bool) and retries > 0:
+        return None
     return [payload]
 
 
-def _tool_event_count(records: Iterable[dict[str, Any]]) -> int:
+def _tool_event_count(records: Iterable[dict[str, Any]]) -> int | None:
     count = 0
     for record in records:
         for role in ("subject", "judge"):
-            for attempt in _role_attempts(record, role):
+            attempts = _role_attempts(record, role)
+            if attempts is None:
+                return None
+            for attempt in attempts:
                 tool_calls = attempt.get("tool_calls")
                 if isinstance(tool_calls, int) and not isinstance(tool_calls, bool):
                     count += tool_calls
@@ -151,34 +165,48 @@ def render_scorecard(
     score: Scorecard, records: Iterable[dict[str, Any]] = ()
 ) -> str:
     records = list(records)
-    input_tokens = sum(
-        int(attempt.get("usage", {}).get("input_tokens", 0))
+    attempt_groups = [
+        _role_attempts(record, role)
         for record in records
         for role in ("subject", "judge")
-        for attempt in _role_attempts(record, role)
+    ]
+    attempts_complete = all(attempts is not None for attempts in attempt_groups)
+    attempts = [
+        attempt
+        for group in attempt_groups
+        if group is not None
+        for attempt in group
+    ]
+    input_tokens = (
+        sum(
+            int(attempt.get("usage", {}).get("input_tokens", 0))
+            for attempt in attempts
+        )
+        if attempts_complete
+        else None
     )
-    output_tokens = sum(
-        int(attempt.get("usage", {}).get("output_tokens", 0))
-        for record in records
-        for role in ("subject", "judge")
-        for attempt in _role_attempts(record, role)
+    output_tokens = (
+        sum(
+            int(attempt.get("usage", {}).get("output_tokens", 0))
+            for attempt in attempts
+        )
+        if attempts_complete
+        else None
     )
-    elapsed = sum(
-        float(attempt.get("elapsed_seconds", 0.0))
-        for record in records
-        for role in ("subject", "judge")
-        for attempt in _role_attempts(record, role)
+    elapsed = (
+        sum(float(attempt.get("elapsed_seconds", 0.0)) for attempt in attempts)
+        if attempts_complete
+        else None
     )
     retries = sum(
         int(record.get(role, {}).get("retries", 0))
         for record in records
         for role in ("subject", "judge")
     )
-    process_failures = sum(
-        int(attempt.get("returncode", 0) != 0)
-        for record in records
-        for role in ("subject", "judge")
-        for attempt in _role_attempts(record, role)
+    process_failures = (
+        sum(int(attempt.get("returncode", 0) != 0) for attempt in attempts)
+        if attempts_complete
+        else None
     )
     suites = {str(record.get("suite")) for record in records if record.get("suite")}
     suite_name = (
@@ -316,11 +344,11 @@ def render_scorecard(
             "",
             "## Evaluation diagnostics (non-gating)",
             "",
-            f"- Input tokens: {input_tokens}",
-            f"- Output tokens: {output_tokens}",
-            f"- Tool events: {_tool_event_count(records)}",
-            f"- Elapsed time: {elapsed:.1f}s",
-            f"- Process failures: {process_failures}",
+            f"- Input tokens: {_total(input_tokens)}",
+            f"- Output tokens: {_total(output_tokens)}",
+            f"- Tool events: {_total(_tool_event_count(records))}",
+            f"- Elapsed time: {_seconds(elapsed)}",
+            f"- Process failures: {_total(process_failures)}",
             f"- Retries: {retries}",
             "",
             "## Gates",

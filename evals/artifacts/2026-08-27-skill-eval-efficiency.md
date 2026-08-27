@@ -65,9 +65,9 @@ scorecards in this record are the durable evidence; `.scratch` is not committed.
   cases it covers. It does not replace an incomplete suite's per-run median.
 - Compose efficiency uses the baseline and automatic arms from C0.
   Kotlin/Gradle efficiency uses those arms from K0.
-- Workflows/writing efficiency uses the W0 baseline arm and the W2 automatic
-  arm. W2 is a regrade, so its subject telemetry is unchanged from the repair
-  run. The cross-run wall-time comparison remains environment-sensitive.
+- Workflows/writing efficiency uses the baseline and automatic arms from W0.
+  W2 supports the final correctness scores but is excluded from efficiency
+  because its case digests differ from W0.
 - Targeted repair runs are excluded from efficiency medians because their case
   sets are incomplete and therefore not comparable with a complete arm.
 
@@ -124,10 +124,10 @@ thousand and counts are integers.
 | `kotlin-api-design` | 57.4k → 145.8k (+154%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 30.0s → 53.0s (+77%) | K0 |
 | `kotlin-concurrency-and-flow` | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) | K0 |
 | `kotlin-control-flow` | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) | K0 |
-| `grounded-writing` | 41.3k → 63.5k (+54%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 27.6s (+70%) | W0 → W2 |
-| `implement-with-subagents` | 40.9k → 92.8k (+127%) | 2 → 4 (+100%) | 1 → 1 (+0%) | 23.7s → 48.5s (+104%) | W0 → W2 |
-| `run-github-project` | 41.6k → 93.8k (+125%) | 2 → 5 (+150%) | 1 → 1 (+0%) | 25.0s → 32.8s (+32%) | W0 → W2 |
-| `shepherd` | 51.8k → 59.8k (+16%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 21.8s → 25.9s (+19%) | W0 → W2 |
+| `grounded-writing` | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) | W0 |
+| `implement-with-subagents` | 40.9k → 50.9k (+24%) | 2 → 2 (+0%) | 1 → 1 (+0%) | 23.7s → 25.9s (+9%) | W0 |
+| `run-github-project` | 41.6k → 59.0k (+42%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 25.0s → 24.1s (-3%) | W0 |
+| `shepherd` | 51.8k → 74.3k (+43%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 21.8s → 30.2s (+38%) | W0 |
 
 No manual audit decision is claimed by this record. Correctness values come
 from the deterministic validators and blinded judge results in the identified

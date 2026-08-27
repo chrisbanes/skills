@@ -165,11 +165,11 @@ may perform differently. These are not merge or release gates. See
 ### Skill efficiency
 
 Values are per-run medians, baseline → automatic, followed by the automatic
-percentage change. These subject-only measurements use the latest available
-evidence for each arm and include failed runs and negative controls. Multi-skill
-scenarios contribute to every targeted skill row. A turn is one completed Codex
-turn; time remains environment-sensitive. The source runs, selection rules, and
-detailed scorecards are in the
+percentage change. These subject-only measurements use the latest complete,
+same-run evidence available for each suite and include failed runs and negative
+controls. Multi-skill scenarios contribute to every targeted skill row. A turn
+is one completed Codex turn; time remains environment-sensitive. The source
+runs, selection rules, and detailed scorecards are in the
 [evaluation change record](evals/artifacts/2026-08-27-skill-eval-efficiency.md).
 
 | Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
@@ -184,10 +184,10 @@ detailed scorecards are in the
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 57.4k → 145.8k (+154%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 30.0s → 53.0s (+77%) |
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
-| [`grounded-writing`](skills/grounded-writing/SKILL.md) | 41.3k → 63.5k (+54%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 27.6s (+70%) |
-| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | 40.9k → 92.8k (+127%) | 2 → 4 (+100%) | 1 → 1 (+0%) | 23.7s → 48.5s (+104%) |
-| [`run-github-project`](skills/run-github-project/SKILL.md) | 41.6k → 93.8k (+125%) | 2 → 5 (+150%) | 1 → 1 (+0%) | 25.0s → 32.8s (+32%) |
-| [`shepherd`](skills/shepherd/SKILL.md) | 51.8k → 59.8k (+16%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 21.8s → 25.9s (+19%) |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | 40.9k → 50.9k (+24%) | 2 → 2 (+0%) | 1 → 1 (+0%) | 23.7s → 25.9s (+9%) |
+| [`run-github-project`](skills/run-github-project/SKILL.md) | 41.6k → 59.0k (+42%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 25.0s → 24.1s (-3%) |
+| [`shepherd`](skills/shepherd/SKILL.md) | 51.8k → 74.3k (+43%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 21.8s → 30.2s (+38%) |
 
 ## License
 

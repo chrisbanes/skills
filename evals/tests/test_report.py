@@ -139,6 +139,47 @@ class ReportTest(unittest.TestCase):
             self.assertIn("Retries: 0", markdown)
             self.assertEqual(markdown, render_scorecard(score, records))
 
+    def test_legacy_retry_diagnostics_are_unavailable_without_attempts(self):
+        item = record(
+            "one:automatic",
+            "automatic",
+            True,
+            expected=("compose-state-and-effects",),
+        )
+        item.update(
+            {
+                "suite": "compose",
+                "subject": {
+                    "usage": {"input_tokens": 100, "output_tokens": 10},
+                    "events": [
+                        {
+                            "type": "item.completed",
+                            "item": {"type": "command_execution"},
+                        }
+                    ],
+                    "elapsed_seconds": 1.5,
+                    "retries": 1,
+                    "returncode": 0,
+                },
+                "judge": {
+                    "usage": {"input_tokens": 20, "output_tokens": 2},
+                    "events": [],
+                    "elapsed_seconds": 0.5,
+                    "retries": 0,
+                    "returncode": 0,
+                },
+            }
+        )
+
+        markdown = render_scorecard(compute_scorecard([item]), [item])
+
+        self.assertIn("Input tokens: unavailable", markdown)
+        self.assertIn("Output tokens: unavailable", markdown)
+        self.assertIn("Tool events: unavailable", markdown)
+        self.assertIn("Elapsed time: unavailable", markdown)
+        self.assertIn("Process failures: unavailable", markdown)
+        self.assertIn("Retries: 1", markdown)
+
     def test_per_skill_restraint_groups_negative_controls_by_target(self):
         records = [
             record(
