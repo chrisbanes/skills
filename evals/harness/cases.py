@@ -52,6 +52,7 @@ class EvalCase:
     constant_skills: tuple[str, ...] = ()
     required_command_patterns: tuple[str, ...] = ()
     forbidden_command_patterns: tuple[str, ...] = ()
+    allowed_skills: tuple[str, ...] = ()
     calibration: bool = False
 
 
@@ -120,15 +121,23 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
 
     target_skills = _require_string_list(data, "target_skills")
     expected_skills = _require_string_list(data, "expected_skills")
+    allowed_skills = (
+        _require_string_list(data, "allowed_skills")
+        if "allowed_skills" in data
+        else expected_skills
+    )
+    if not set(expected_skills).issubset(allowed_skills):
+        raise CaseValidationError("allowed_skills must include expected_skills")
     known_skills = set(PUBLIC_SKILLS) - {ROUTER_SKILL}
     for field, values in (
         ("target_skills", target_skills),
         ("expected_skills", expected_skills),
+        ("allowed_skills", allowed_skills),
     ):
         unknown = set(values) - known_skills
         if unknown:
             raise CaseValidationError(f"{field} contains unknown skills: {sorted(unknown)}")
-    for skill in set(target_skills) | set(expected_skills):
+    for skill in set(target_skills) | set(expected_skills) | set(allowed_skills):
         if not (repo_root / "skills" / skill / "SKILL.md").is_file():
             raise CaseValidationError(f"missing skill path: skills/{skill}/SKILL.md")
 
@@ -256,6 +265,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         constant_skills=constant_skills,
         required_command_patterns=command_patterns["required_command_patterns"],
         forbidden_command_patterns=command_patterns["forbidden_command_patterns"],
+        allowed_skills=allowed_skills,
     )
 
 

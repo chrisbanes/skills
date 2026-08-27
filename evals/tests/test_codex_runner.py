@@ -9,6 +9,7 @@ from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase, Validato
 from evals.harness.codex import (
     RunConfig,
     build_subject_command,
+    completed_tool_call_count,
     discover_skill_paths,
     prepare_workspace,
     run_subject,
@@ -113,6 +114,18 @@ class CodexRunnerTest(unittest.TestCase):
             automatic[-1],
         )
         self.assertNotEqual(case.prompt, automatic[-1])
+
+    def test_counts_completed_subject_tool_actions(self):
+        events = [
+            {"type": "item.completed", "item": {"type": "command_execution"}},
+            {"type": "item.completed", "item": {"type": "file_change"}},
+            {"type": "item.completed", "item": {"type": "mcp_tool_call"}},
+            {"type": "item.completed", "item": {"type": "web_search"}},
+            {"type": "item.completed", "item": {"type": "agent_message"}},
+            {"type": "item.started", "item": {"type": "command_execution"}},
+        ]
+
+        self.assertEqual(4, completed_tool_call_count(events))
 
     def test_discovers_repo_and_external_skill_files_without_duplicates(self):
         external = self.root / "external" / "one" / "SKILL.md"

@@ -3,7 +3,17 @@ import unittest
 from evals.harness.score import compute_scorecard
 
 
-def record(record_id, arm, outcome, *, kind="direct", expected=(), reported=(), safety=False):
+def record(
+    record_id,
+    arm,
+    outcome,
+    *,
+    kind="direct",
+    expected=(),
+    allowed=None,
+    reported=(),
+    safety=False,
+):
     return {
         "id": record_id,
         "case_id": record_id.split(":", 1)[0],
@@ -11,12 +21,47 @@ def record(record_id, arm, outcome, *, kind="direct", expected=(), reported=(), 
         "kind": kind,
         "outcome_pass": outcome,
         "expected_skills": list(expected),
+        "allowed_skills": list(expected if allowed is None else allowed),
         "reported_skills": list(reported),
         "forbidden_action_failure": safety,
     }
 
 
 class ScorecardTest(unittest.TestCase):
+    def test_optional_allowed_routes_do_not_hurt_precision_or_recall(self):
+        records = [
+            record(
+                "one:automatic",
+                "automatic",
+                True,
+                expected=("compose-state-and-effects",),
+                allowed=(
+                    "compose-state-and-effects",
+                    "compose-focus-navigation",
+                ),
+                reported=(
+                    "compose-state-and-effects",
+                    "compose-focus-navigation",
+                ),
+            ),
+            record(
+                "two:automatic",
+                "automatic",
+                True,
+                expected=("compose-state-and-effects",),
+                allowed=(
+                    "compose-state-and-effects",
+                    "compose-focus-navigation",
+                ),
+                reported=("compose-state-and-effects",),
+            ),
+        ]
+
+        score = compute_scorecard(records)
+
+        self.assertEqual(1.0, score.routing_precision)
+        self.assertEqual(1.0, score.routing_recall)
+
     def test_applies_uplift_retention_routing_negative_and_safety_gates(self):
         records = []
         for index, outcomes in enumerate(((True, True, True), (False, True, True), (True, True, True), (False, False, False))):
@@ -69,6 +114,111 @@ class ScorecardTest(unittest.TestCase):
         self.assertFalse(score.gates["automatic_retention"])
         self.assertFalse(score.gates["routing_precision"])
         self.assertFalse(score.gates["negative_controls"])
+
+    def test_measures_subject_efficiency_and_charges_failures_to_each_pass(self):
+        def with_telemetry(item, *, tokens, tool_calls, elapsed):
+            item["subject"] = {
+                "usage": {"input_tokens": tokens - 2, "output_tokens": 2},
+                "events": [
+                    {
+                        "type": "item.completed",
+                        "item": {"type": "command_execution"},
+                    }
+                    for _ in range(tool_calls)
+                ],
+                "elapsed_seconds": elapsed,
+            }
+            return item
+
+        records = [
+            with_telemetry(
+                record("one:none", "none", True),
+                tokens=10,
+                tool_calls=1,
+                elapsed=1.0,
+            ),
+            with_telemetry(
+                record("two:none", "none", False),
+                tokens=30,
+                tool_calls=3,
+                elapsed=3.0,
+            ),
+            with_telemetry(
+                record("one:forced", "forced", True),
+                tokens=20,
+                tool_calls=2,
+                elapsed=2.0,
+            ),
+            with_telemetry(
+                record("two:forced", "forced", True),
+                tokens=20,
+                tool_calls=2,
+                elapsed=2.0,
+            ),
+        ]
+
+        score = compute_scorecard(records)
+
+        baseline = score.efficiency["none"]
+        self.assertEqual(20.0, baseline.median_tokens_per_run)
+        self.assertEqual(2.0, baseline.median_tool_calls_per_run)
+        self.assertEqual(2.0, baseline.median_elapsed_seconds_per_run)
+        self.assertEqual(40.0, baseline.tokens_per_outcome_pass)
+        self.assertEqual(4.0, baseline.tool_calls_per_outcome_pass)
+        self.assertEqual(4.0, baseline.elapsed_seconds_per_outcome_pass)
+        forced = score.efficiency["forced"]
+        self.assertEqual(20.0, forced.tokens_per_outcome_pass)
+        self.assertEqual(2, forced.outcome_passes)
+
+    def test_marks_efficiency_unavailable_without_subject_telemetry(self):
+        score = compute_scorecard([record("one:none", "none", True)])
+
+        efficiency = score.efficiency["none"]
+        self.assertIsNone(efficiency.median_tokens_per_run)
+        self.assertIsNone(efficiency.median_tool_calls_per_run)
+        self.assertIsNone(efficiency.median_elapsed_seconds_per_run)
+        self.assertIsNone(efficiency.tokens_per_outcome_pass)
+
+    def test_includes_retry_attempts_in_subject_efficiency(self):
+        item = record("one:forced", "forced", True)
+        item["subject"] = {
+            "usage": {"input_tokens": 1, "output_tokens": 1},
+            "events": [],
+            "elapsed_seconds": 1.0,
+            "attempts": [
+                {
+                    "usage": {"input_tokens": 8, "output_tokens": 2},
+                    "tool_calls": 2,
+                    "elapsed_seconds": 3.0,
+                },
+                {
+                    "usage": {"input_tokens": 18, "output_tokens": 2},
+                    "tool_calls": 1,
+                    "elapsed_seconds": 4.0,
+                },
+            ],
+        }
+
+        efficiency = compute_scorecard([item]).efficiency["forced"]
+
+        self.assertEqual(30.0, efficiency.median_tokens_per_run)
+        self.assertEqual(3.0, efficiency.median_tool_calls_per_run)
+        self.assertEqual(7.0, efficiency.median_elapsed_seconds_per_run)
+
+    def test_does_not_undercount_historical_records_missing_retry_telemetry(self):
+        item = record("one:forced", "forced", True)
+        item["subject"] = {
+            "usage": {"input_tokens": 8, "output_tokens": 2},
+            "events": [],
+            "elapsed_seconds": 1.0,
+            "retries": 1,
+        }
+
+        efficiency = compute_scorecard([item]).efficiency["forced"]
+
+        self.assertIsNone(efficiency.median_tokens_per_run)
+        self.assertIsNone(efficiency.median_tool_calls_per_run)
+        self.assertIsNone(efficiency.median_elapsed_seconds_per_run)
 
 
 if __name__ == "__main__":

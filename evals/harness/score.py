@@ -1,7 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable
+from statistics import median
+from typing import Any, Callable, Iterable
+
+from evals.harness.codex import completed_tool_call_count
+
+
+@dataclass(frozen=True)
+class EfficiencyMetrics:
+    runs: int
+    outcome_passes: int
+    median_tokens_per_run: float | None
+    median_tool_calls_per_run: float | None
+    median_elapsed_seconds_per_run: float | None
+    tokens_per_outcome_pass: float | None
+    tool_calls_per_outcome_pass: float | None
+    elapsed_seconds_per_outcome_pass: float | None
 
 
 @dataclass(frozen=True)
@@ -14,6 +29,7 @@ class Scorecard:
     routing_recall: float | None
     router_report_rate: float | None
     forbidden_action_failures: int
+    efficiency: dict[str, EfficiencyMetrics]
     gates: dict[str, bool]
 
 
@@ -26,18 +42,128 @@ def _rate(records: list[dict[str, Any]]) -> float | None:
 def _routing_metrics(records: list[dict[str, Any]]) -> tuple[float | None, float | None]:
     if not records:
         return None, None
-    true_positive = false_positive = false_negative = 0
+    precision_true_positive = false_positive = 0
+    recall_true_positive = false_negative = 0
     for record in records:
         expected = set(record.get("expected_skills", []))
+        allowed = set(record.get("allowed_skills", expected)) | expected
         reported = set(record.get("reported_skills", []))
-        true_positive += len(expected & reported)
-        false_positive += len(reported - expected)
+        precision_true_positive += len(allowed & reported)
+        false_positive += len(reported - allowed)
+        recall_true_positive += len(expected & reported)
         false_negative += len(expected - reported)
-    precision_denominator = true_positive + false_positive
-    recall_denominator = true_positive + false_negative
-    precision = true_positive / precision_denominator if precision_denominator else 1.0
-    recall = true_positive / recall_denominator if recall_denominator else 1.0
+    precision_denominator = precision_true_positive + false_positive
+    recall_denominator = recall_true_positive + false_negative
+    precision = (
+        precision_true_positive / precision_denominator
+        if precision_denominator
+        else 1.0
+    )
+    recall = recall_true_positive / recall_denominator if recall_denominator else 1.0
     return precision, recall
+
+
+def _subject_tokens(record: dict[str, Any]) -> float | None:
+    subject = record.get("subject")
+    if not isinstance(subject, dict):
+        return None
+    total = 0
+    attempts = _subject_attempts(subject)
+    if attempts is None:
+        return None
+    for attempt in attempts:
+        usage = attempt.get("usage")
+        if not isinstance(usage, dict):
+            return None
+        input_tokens = usage.get("input_tokens")
+        output_tokens = usage.get("output_tokens")
+        if (
+            not isinstance(input_tokens, int)
+            or isinstance(input_tokens, bool)
+            or not isinstance(output_tokens, int)
+            or isinstance(output_tokens, bool)
+        ):
+            return None
+        total += input_tokens + output_tokens
+    return float(total)
+
+
+def _subject_attempts(subject: dict[str, Any]) -> list[dict[str, Any]] | None:
+    attempts = subject.get("attempts")
+    if attempts is not None:
+        if isinstance(attempts, list) and attempts and all(
+            isinstance(attempt, dict) for attempt in attempts
+        ):
+            return attempts
+        return None
+    retries = subject.get("retries", 0)
+    if isinstance(retries, int) and not isinstance(retries, bool) and retries > 0:
+        return None
+    return [subject]
+
+
+def _subject_tool_calls(record: dict[str, Any]) -> float | None:
+    subject = record.get("subject")
+    if not isinstance(subject, dict):
+        return None
+    total = 0
+    attempts = _subject_attempts(subject)
+    if attempts is None:
+        return None
+    for attempt in attempts:
+        tool_calls = attempt.get("tool_calls")
+        if isinstance(tool_calls, int) and not isinstance(tool_calls, bool):
+            total += tool_calls
+            continue
+        events = attempt.get("events")
+        if not isinstance(events, list):
+            return None
+        total += completed_tool_call_count(events)
+    return float(total)
+
+
+def _subject_elapsed_seconds(record: dict[str, Any]) -> float | None:
+    subject = record.get("subject")
+    if not isinstance(subject, dict):
+        return None
+    total = 0.0
+    attempts = _subject_attempts(subject)
+    if attempts is None:
+        return None
+    for attempt in attempts:
+        elapsed = attempt.get("elapsed_seconds")
+        if not isinstance(elapsed, (int, float)) or isinstance(elapsed, bool):
+            return None
+        total += float(elapsed)
+    return total
+
+
+def _efficiency_metrics(records: list[dict[str, Any]]) -> EfficiencyMetrics:
+    outcome_passes = sum(bool(record.get("outcome_pass")) for record in records)
+
+    def summarize(
+        extractor: Callable[[dict[str, Any]], float | None],
+    ) -> tuple[float | None, float | None]:
+        values = [extractor(record) for record in records]
+        if not values or any(value is None for value in values):
+            return None, None
+        measured = [float(value) for value in values if value is not None]
+        per_pass = sum(measured) / outcome_passes if outcome_passes else None
+        return float(median(measured)), per_pass
+
+    median_tokens, tokens_per_pass = summarize(_subject_tokens)
+    median_tool_calls, tool_calls_per_pass = summarize(_subject_tool_calls)
+    median_elapsed, elapsed_per_pass = summarize(_subject_elapsed_seconds)
+    return EfficiencyMetrics(
+        runs=len(records),
+        outcome_passes=outcome_passes,
+        median_tokens_per_run=median_tokens,
+        median_tool_calls_per_run=median_tool_calls,
+        median_elapsed_seconds_per_run=median_elapsed,
+        tokens_per_outcome_pass=tokens_per_pass,
+        tool_calls_per_outcome_pass=tool_calls_per_pass,
+        elapsed_seconds_per_outcome_pass=elapsed_per_pass,
+    )
 
 
 def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
@@ -77,6 +203,12 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
     forbidden_failures = sum(
         bool(record.get("forbidden_action_failure")) for record in records
     )
+    efficiency = {
+        arm: _efficiency_metrics(
+            [record for record in records if record.get("arm") == arm]
+        )
+        for arm in arms
+    }
     gates = {
         "forced_uplift": forced_uplift is not None and forced_uplift >= 0.10,
         "automatic_retention": automatic_retention is not None and automatic_retention >= 0.80,
@@ -98,5 +230,6 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         routing_recall=routing_recall,
         router_report_rate=router_report_rate,
         forbidden_action_failures=forbidden_failures,
+        efficiency=efficiency,
         gates=gates,
     )

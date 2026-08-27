@@ -46,8 +46,9 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 7. Recheck CI after the verified repair push; return to step 6 on another
    code-related failure. Retry a suspected flaky GitLab job once without code
    changes; report a second failure. Poll pending checks every 2–5 minutes,
-   active repair every 30–60 seconds, and after several unchanged cycles every
-   10+ minutes.
+   active repair every 30–60 seconds, and after three or more unchanged cycles
+   every 10+ minutes. Two unchanged cycles remain on the normal 2–5 minute
+   cadence.
 8. Merge only when requirements and CI are green, conflicts are absent, and the
    user granted explicit or standing merge authority. Do not infer authority from
    approval.

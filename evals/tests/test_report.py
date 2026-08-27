@@ -79,7 +79,7 @@ class ReportTest(unittest.TestCase):
                     "usage": {"input_tokens": 10, "output_tokens": 2},
                     "events": [{"type": "item.completed", "item": {"type": "command_execution"}}],
                     "elapsed_seconds": 1.5,
-                    "retries": 1,
+                    "retries": 0,
                     "returncode": 0,
                 },
                 "judge": {
@@ -107,10 +107,19 @@ class ReportTest(unittest.TestCase):
             self.assertIn("Reported automatic routing precision", markdown)
             self.assertIn("Per-skill diagnostics", markdown)
             self.assertIn("`compose-state-and-effects`", markdown)
+            self.assertIn("Efficiency (non-gating)", markdown)
+            self.assertIn(
+                "| forced | 1 / 1 | 12.0 | 1.0 | 1.5s | 12.0 | 1.0 | 1.5s |",
+                markdown,
+            )
+            self.assertIn(
+                "| none | 0 / 1 | 12.0 | 1.0 | 1.5s | unavailable | unavailable | unavailable |",
+                markdown,
+            )
             self.assertIn("Input tokens: 42", markdown)
             self.assertIn("Output tokens: 9", markdown)
             self.assertIn("Tool events: 6", markdown)
-            self.assertIn("Retries: 3", markdown)
+            self.assertIn("Retries: 0", markdown)
             self.assertEqual(markdown, render_scorecard(score, records))
 
     def test_per_skill_restraint_groups_negative_controls_by_target(self):

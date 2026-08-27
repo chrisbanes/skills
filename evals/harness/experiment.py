@@ -14,6 +14,7 @@ from evals.harness.codex import (
     ARMS,
     RunConfig,
     SubjectResult,
+    completed_tool_call_count,
     discover_skill_paths,
     is_generated_skill_path,
     reported_skill_names,
@@ -217,6 +218,15 @@ def _validator_payload(grade: ObjectiveGrade) -> list[dict[str, Any]]:
     return [asdict(validator) for validator in grade.validators]
 
 
+def _attempt_payload(result: SubjectResult | JudgeResult) -> dict[str, Any]:
+    return {
+        "returncode": result.returncode,
+        "usage": result.usage,
+        "tool_calls": completed_tool_call_count(result.events),
+        "elapsed_seconds": result.elapsed_seconds,
+    }
+
+
 def _result_payload(
     case: EvalCase,
     arm: str,
@@ -225,6 +235,8 @@ def _result_payload(
     grade: ObjectiveGrade,
     judge: JudgeResult,
     *,
+    subject_attempts: list[SubjectResult],
+    judge_attempts: list[JudgeResult],
     subject_retries: int,
     judge_retries: int,
     codex_version: str,
@@ -266,6 +278,7 @@ def _result_payload(
         "suite": suite_for_skills(case.target_skills).id,
         "target_skills": list(case.target_skills),
         "expected_skills": list(case.expected_skills),
+        "allowed_skills": list(case.allowed_skills or case.expected_skills),
         "reported_skills": [skill for skill in reported if skill != ROUTER_SKILL],
         "reported_router": ROUTER_SKILL in reported,
         "objective_pass": grade.objective_pass,
@@ -286,6 +299,7 @@ def _result_payload(
             "elapsed_seconds": subject.elapsed_seconds,
             "stderr": subject.stderr,
             "retries": subject_retries,
+            "attempts": [_attempt_payload(attempt) for attempt in subject_attempts],
         },
         "judge": {
             "returncode": judge.returncode,
@@ -295,6 +309,7 @@ def _result_payload(
             "elapsed_seconds": judge.elapsed_seconds,
             "stderr": judge.stderr,
             "retries": judge_retries,
+            "attempts": [_attempt_payload(attempt) for attempt in judge_attempts],
         },
     }
 
@@ -356,8 +371,15 @@ def execute_experiment(
                         skill_paths=skill_paths,
                     )
 
+                subject_attempts: list[SubjectResult] = []
+
+                def recorded_subject_attempt() -> SubjectResult:
+                    result = run_subject_attempt()
+                    subject_attempts.append(result)
+                    return result
+
                 subject, subject_retries = run_with_one_retry(
-                    run_subject_attempt,
+                    recorded_subject_attempt,
                     lambda result: result.returncode != 0
                     or not subject_output_valid(result.final_output),
                 )
@@ -374,14 +396,21 @@ def execute_experiment(
                     json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8"
                 )
 
-                judge, judge_retries = run_with_one_retry(
-                    lambda: run_judge(
+                judge_attempts: list[JudgeResult] = []
+
+                def run_judge_attempt() -> JudgeResult:
+                    result = run_judge(
                         packet_path,
                         repo_root,
                         judge_config,
                         codex_executable=codex_executable,
                         skill_paths=skill_paths,
-                    ),
+                    )
+                    judge_attempts.append(result)
+                    return result
+
+                judge, judge_retries = run_with_one_retry(
+                    run_judge_attempt,
                     lambda result: _judge_retryable(result)
                     or not judge_covers_rubric(result.output, case.rubric),
                 )
@@ -392,6 +421,8 @@ def execute_experiment(
                     subject,
                     grade,
                     judge,
+                    subject_attempts=subject_attempts,
+                    judge_attempts=judge_attempts,
                     subject_retries=subject_retries,
                     judge_retries=judge_retries,
                     codex_version=codex_version,
@@ -503,6 +534,8 @@ def regrade_records(
             raise ValueError(f"unknown case in raw record: {case_id}")
         case = by_id[case_id]
         grade = grade_subject(case, _subject_result_from_record(record, output_dir))
+        record["expected_skills"] = list(case.expected_skills)
+        record["allowed_skills"] = list(case.allowed_skills or case.expected_skills)
         record["objective_pass"] = grade.objective_pass
         record["forbidden_action_failure"] = grade.forbidden_action_failure
         record["objective_failures"] = list(grade.objective_failures)
@@ -634,14 +667,21 @@ def rejudge_packets(
             load_result(result_path, fingerprint)
             completed += 1
             continue
-        judgment, retries = run_with_one_retry(
-            lambda: run_judge(
+        judge_attempts: list[JudgeResult] = []
+
+        def run_judge_attempt() -> JudgeResult:
+            result = run_judge(
                 packet_path,
                 repo_root,
                 judge_config,
                 codex_executable=codex_executable,
                 skill_paths=skill_paths,
-            ),
+            )
+            judge_attempts.append(result)
+            return result
+
+        judgment, retries = run_with_one_retry(
+            run_judge_attempt,
             lambda result: _judge_retryable(result)
             or not judge_covers_rubric(result.output, rubric),
         )
@@ -663,6 +703,9 @@ def rejudge_packets(
                     "stderr": judgment.stderr,
                     "elapsed_seconds": judgment.elapsed_seconds,
                     "retries": retries,
+                    "attempts": [
+                        _attempt_payload(attempt) for attempt in judge_attempts
+                    ],
                 },
             },
         )

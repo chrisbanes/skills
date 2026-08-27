@@ -61,6 +61,26 @@ class ComposeMatrixTest(unittest.TestCase):
                 for skill in case.expected_skills:
                     self.assertNotIn(skill, prompt)
 
+    def test_state_hoisting_novel_keeps_the_state_ownership_boundary(self):
+        report = validate_corpus(REPO_ROOT, suite="compose")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "compose-state-hoisting-novel"
+        )
+
+        self.assertEqual(("compose-state-and-effects",), case.expected_skills)
+        self.assertEqual(
+            (
+                "compose-state-and-effects",
+                "compose-component-design",
+                "compose-focus-navigation",
+            ),
+            case.allowed_skills,
+        )
+        self.assertNotIn("testability", case.prompt.lower())
+        self.assertIn("state-driven content", case.prompt.lower())
+
     def test_stability_novel_requests_the_repair_recommendation_it_grades(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(
@@ -241,6 +261,7 @@ import androidx.compose.runtime.Composable
                 "arm": "none",
                 "kind": case.kind,
                 "expected_skills": list(case.expected_skills),
+                "allowed_skills": [],
                 "reported_skills": [],
                 "reported_router": False,
                 "objective_pass": False,
@@ -269,6 +290,9 @@ import androidx.compose.runtime.Composable
 
             self.assertTrue(regraded[0]["objective_pass"])
             self.assertTrue(regraded[0]["outcome_pass"])
+            self.assertEqual(
+                list(case.allowed_skills), regraded[0]["allowed_skills"]
+            )
             self.assertFalse((output_dir / "raw").exists())
 
 

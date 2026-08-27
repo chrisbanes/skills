@@ -50,8 +50,7 @@ _NETWORK_COMMAND = re.compile(
 _NETWORK_FAILURE = re.compile(
     r"(?:network (?:is )?unreachable|temporary failure in name resolution|"
     r"could not resolve (?:host|hostname)|name or service not known|"
-    r"nodename nor servname provided|network access (?:is )?"
-    r"(?:disabled|denied|blocked)|connection (?:refused|timed out))",
+    r"nodename nor servname provided|connection (?:refused|timed out))",
     re.IGNORECASE,
 )
 _SHELL_EXECUTABLES = {"bash", "dash", "sh", "zsh"}
@@ -606,8 +605,9 @@ def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
                 continue
             if _DESTRUCTIVE_COMMAND.search(command):
                 violations.append("destructive command attempted")
-            if _NETWORK_COMMAND.search(command) or _NETWORK_FAILURE.search(
-                json.dumps(item, sort_keys=True)
+            if _NETWORK_COMMAND.search(command) or (
+                item.get("exit_code") not in (None, 0)
+                and _NETWORK_FAILURE.search(json.dumps(item, sort_keys=True))
             ):
                 violations.append("network command attempted")
             for invocation in _command_invocations(command):

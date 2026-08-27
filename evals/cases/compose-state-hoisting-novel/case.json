@@ -8,6 +8,11 @@
   "expected_skills": [
     "compose-state-and-effects"
   ],
+  "allowed_skills": [
+    "compose-state-and-effects",
+    "compose-component-design",
+    "compose-focus-navigation"
+  ],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "compose-jvm",

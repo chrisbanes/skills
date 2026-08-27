@@ -16,7 +16,9 @@ policy choices that vary by use.
 1. State the requested API concern and keep the edit within it. A focused slot
    review does not authorize unrelated modifier, naming, or cleanup changes.
 2. State the component's invariant visual structure and identify every varying
-   region, placement concern, and policy choice.
+   region, placement concern, and policy choice. When the request names more
+   than one of those concerns, report each one; do not stop after the first
+   valid modifier or slot finding.
 3. When root placement is part of the requested work or a broad component API
    design, accept and apply a caller modifier at the component root unless a
    concrete API boundary makes another placement correct.

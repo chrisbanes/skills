@@ -25,7 +25,9 @@ axis begins.
    non-snapshot properties with immutable data or snapshot-observable state,
    verify that contract, and only then decide whether an annotation remains
    needed. For a phase problem, name the layout or draw consumer where the
-   changing read or calculation should move. Do not stop at diagnosis.
+   changing read or calculation should move. A cross-phase write proves
+   invalidation or an extra pass; do not claim oscillation or an infinite loop
+   unless evidence shows values repeatedly changing. Do not stop at diagnosis.
 6. Change one axis at a time and re-measure the same transition.
 7. Finish when the evidence improves at the observed boundary without hiding
    state changes, caching stale values, or moving work to a less correct owner.

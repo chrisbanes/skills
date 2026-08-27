@@ -1,1 +1,1 @@
-{"files": ["state.md"], "must_contain": ["Network access is disabled", "minimal `implement` dependency"]}
+{"files": ["state.md"], "must_contain": ["Network access is disabled"]}

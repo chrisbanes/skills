@@ -20,11 +20,11 @@ Focus is stateful UI behavior: make targets and exceptional edges explicit, then
 | Visual or state reaction to focus changes | `Modifier.onFocusChanged { ... }` |
 | Custom interactive surface that is not already focusable | `Modifier.focusable()` plus role/semantics as appropriate |
 
-2. Request initial or restored focus from `LaunchedEffect`, keyed to the condition that makes the target present. For lazy content, keep requesters by stable item id and request only after the item is composed.
+2. Request initial or restored focus from `LaunchedEffect`, keyed to the condition that makes the target present. For lazy content, keep requesters by stable item id and request only after the item is composed. Inside `AnimatedContent`, use the content lambda's target consistently for rendered identity, tags, requester ownership, and the effect key; captured outer state gives outgoing and incoming content the same identity.
 3. Keep default spatial search unless a concrete edge, jump, or trap is wrong. Encode only those exceptions with `focusProperties`.
 4. Handle keys only for behavior that is not normal click or traversal. Consume exactly the handled event; throttle rapid D-pad work at its expensive owner, not across the screen.
 5. Restore by semantic identity after refresh: retain the focused id when it exists, otherwise choose a deterministic fallback.
-6. Test with key/D-pad input and focused semantics. Use screenshots only for the focus appearance.
+6. Test with one concrete key/D-pad interaction and focused semantics. When the behavior under review is user-triggered, do not substitute direct state mutation or leave the input conditional. Use screenshots only for the focus appearance.
 7. Finish when all intentional targets and exceptional edges are encoded, loading/refresh behavior has a stable focus policy, and tests use the same input model as users.
 
 For example, request and observe focus only when both behaviors are required:

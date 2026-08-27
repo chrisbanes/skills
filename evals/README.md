@@ -6,14 +6,25 @@ tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
 cover six Compose skills, four Kotlin/Gradle skills, and four workflow/writing
 skills: `grounded-writing`, `implement-with-subagents`,
-`run-github-project`, and `shepherd`. It is designed to answer two separate
+`run-github-project`, and `shepherd`. It is designed to answer three separate
 questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
 2. Does automatic activation report the expected public skill entrypoints?
+3. What subject-side token, tool-call, and wall-clock cost does each arm require?
 
 The evaluator never turns a stochastic model score into a merge or release
 gate. CI validates only the harness, corpus, and deterministic formulas.
+
+Every scorecard includes non-gating, subject-only efficiency diagnostics by
+arm. It reports median tokens, completed tool calls, and elapsed time per
+run, including any retry, plus total work across all runs per successful
+outcome. The latter charges failed runs to the successful outcomes instead of
+making a fast failure look efficient. Token counts are Codex input plus output
+tokens; judge usage is kept in separate evaluator diagnostics because it
+measures evaluation overhead, not skill efficiency. Wall-clock results are
+environment-sensitive, so compare runs only when model, reasoning, machine,
+corpus, and execution conditions are held constant.
 
 ## Results
 
@@ -22,7 +33,7 @@ gate. CI validates only the harness, corpus, and deterministic formulas.
 available but none named in the prompt. **Restraint** is the no-change-control
 pass rate: the skill may inspect the task, but must not make an unnecessary
 change. The table reports the latest available result for each skill and
-metric. These scores were produced using
+correctness metric. These scores were produced using
 [`gpt-5.6-terra`](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
 with medium reasoning, judged by
 [`gpt-5.6-sol`](https://developers.openai.com/api/docs/models/gpt-5.6-sol) with
@@ -45,10 +56,10 @@ suite-wide aggregate.
 | `kotlin-api-design` | 66.7% | 100.0% | 100.0% |
 | `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 100.0% |
 | `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
-| `grounded-writing` | — | — | — |
-| `implement-with-subagents` | — | — | — |
-| `run-github-project` | — | — | — |
-| `shepherd` | — | — | — |
+| `grounded-writing` | — | 100.0% | 100.0% |
+| `implement-with-subagents` | — | 100.0% | 100.0% |
+| `run-github-project` | — | 100.0% | 100.0% |
+| `shepherd` | — | 100.0% | 100.0% |
 
 ## Evaluation setup
 
@@ -92,6 +103,12 @@ precision and recall therefore use the subject's schema-constrained
 and local skill identifiers are canonicalized to the same repository skill. They are not
 proof that the runtime loaded a particular `SKILL.md`; outcome differences and
 the human audit provide the behavioral evidence.
+
+Cases distinguish required routes from allowed overlaps. Recall measures the
+required `expected_skills`; precision accepts any reported skill in the case's
+`allowed_skills`, which must include every expected skill. This lets a case
+permit a genuinely relevant secondary skill without requiring every successful
+subject to consult it.
 
 ### Corpus
 

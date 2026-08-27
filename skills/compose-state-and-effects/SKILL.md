@@ -11,6 +11,10 @@ Give every piece of UI state one lowest responsible owner, then run imperative
 work through the effect whose lifecycle follows that owner. Composition renders;
 state and effects make rendering change safely.
 
+A screen-ownership review is incomplete until it names the plain, previewable
+content composable that receives immutable state and event callbacks separately
+from app wiring and composition-owned runtime objects.
+
 ## Procedure
 
 1. Establish the requested scope and visible behavioral requirements. Treat an

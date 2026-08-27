@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterable
 
+from evals.harness.codex import completed_tool_call_count
 from evals.harness.score import Scorecard
 from evals.harness.suites import SUITES
 
@@ -55,6 +56,13 @@ def _percent(value: float | None) -> str:
     return "not met" if value is None else f"{value * 100:.1f}%"
 
 
+def _measurement(value: float | None, *, suffix: str = "") -> str:
+    if value is None:
+        return "unavailable"
+    rendered = f"{value:.1f}"
+    return f"{rendered}{suffix}"
+
+
 def _outcome_rate(records: list[dict[str, Any]], arm: str) -> float | None:
     selected = [record for record in records if record.get("arm") == arm]
     if not selected:
@@ -82,20 +90,30 @@ def _per_arm_record_count(records: list[dict[str, Any]]) -> str:
     return ", ".join(f"{arm}={count}" for arm, count in counts.items())
 
 
+def _role_attempts(record: dict[str, Any], role: str) -> list[dict[str, Any]]:
+    payload = record.get(role)
+    if not isinstance(payload, dict):
+        return []
+    attempts = payload.get("attempts")
+    if isinstance(attempts, list) and attempts and all(
+        isinstance(attempt, dict) for attempt in attempts
+    ):
+        return attempts
+    return [payload]
+
+
 def _tool_event_count(records: Iterable[dict[str, Any]]) -> int:
     count = 0
     for record in records:
         for role in ("subject", "judge"):
-            for event in record.get(role, {}).get("events", []):
-                if not isinstance(event, dict) or event.get("type") != "item.completed":
+            for attempt in _role_attempts(record, role):
+                tool_calls = attempt.get("tool_calls")
+                if isinstance(tool_calls, int) and not isinstance(tool_calls, bool):
+                    count += tool_calls
                     continue
-                item = event.get("item", {})
-                if item.get("type") in {
-                    "command_execution",
-                    "mcp_tool_call",
-                    "tool_call",
-                }:
-                    count += 1
+                events = attempt.get("events", [])
+                if isinstance(events, list):
+                    count += completed_tool_call_count(events)
     return count
 
 
@@ -104,19 +122,22 @@ def render_scorecard(
 ) -> str:
     records = list(records)
     input_tokens = sum(
-        int(record.get(role, {}).get("usage", {}).get("input_tokens", 0))
+        int(attempt.get("usage", {}).get("input_tokens", 0))
         for record in records
         for role in ("subject", "judge")
+        for attempt in _role_attempts(record, role)
     )
     output_tokens = sum(
-        int(record.get(role, {}).get("usage", {}).get("output_tokens", 0))
+        int(attempt.get("usage", {}).get("output_tokens", 0))
         for record in records
         for role in ("subject", "judge")
+        for attempt in _role_attempts(record, role)
     )
     elapsed = sum(
-        float(record.get(role, {}).get("elapsed_seconds", 0.0))
+        float(attempt.get("elapsed_seconds", 0.0))
         for record in records
         for role in ("subject", "judge")
+        for attempt in _role_attempts(record, role)
     )
     retries = sum(
         int(record.get(role, {}).get("retries", 0))
@@ -124,9 +145,10 @@ def render_scorecard(
         for role in ("subject", "judge")
     )
     process_failures = sum(
-        int(record.get(role, {}).get("returncode", 0) != 0)
+        int(attempt.get("returncode", 0) != 0)
         for record in records
         for role in ("subject", "judge")
+        for attempt in _role_attempts(record, role)
     )
     suites = {str(record.get("suite")) for record in records if record.get("suite")}
     suite_name = (
@@ -204,7 +226,34 @@ def render_scorecard(
             f"- Router reported in automatic arm: {_percent(score.router_report_rate)}",
             f"- Forbidden-action failures: {score.forbidden_action_failures}",
             "",
-            "## Diagnostics (non-gating)",
+            "## Efficiency (non-gating)",
+            "",
+            "Subject-only metrics. Medians describe a typical run, including any retry. "
+            "Per-pass totals include failed runs, so a quick incorrect result is not rewarded.",
+            "",
+            "| Arm | Passes / runs | Tokens / run | Tool calls / run | Time / run | Tokens / pass | Tool calls / pass | Time / pass |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+        ]
+    )
+    for arm in ("none", "forced", "automatic"):
+        efficiency = score.efficiency[arm]
+        lines.append(
+            f"| {arm} | {efficiency.outcome_passes} / {efficiency.runs} | "
+            f"{_measurement(efficiency.median_tokens_per_run)} | "
+            f"{_measurement(efficiency.median_tool_calls_per_run)} | "
+            f"{_measurement(efficiency.median_elapsed_seconds_per_run, suffix='s')} | "
+            f"{_measurement(efficiency.tokens_per_outcome_pass)} | "
+            f"{_measurement(efficiency.tool_calls_per_outcome_pass)} | "
+            f"{_measurement(efficiency.elapsed_seconds_per_outcome_pass, suffix='s')} |"
+        )
+    lines.extend(
+        [
+            "",
+            "Token counts are Codex input plus output tokens. Tool calls count completed "
+            "command, file-change, MCP, web-search, and generic tool events. Wall-clock "
+            "time is environment-sensitive.",
+            "",
+            "## Evaluation diagnostics (non-gating)",
             "",
             f"- Input tokens: {input_tokens}",
             f"- Output tokens: {output_tokens}",

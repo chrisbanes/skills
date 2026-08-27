@@ -4,4 +4,4 @@ interface:
   default_prompt: "Use $run-github-project in setup mode for configuration only, next mode to reconcile one ready epic, resolve one authorized Wayfinder decision ticket, execute one authorized issue, or surface the current human checkpoint, and explicit drain mode to continue until success, waiting-for-human, or a partial drain."
 
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

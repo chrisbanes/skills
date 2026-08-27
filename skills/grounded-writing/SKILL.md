@@ -41,7 +41,12 @@ generic, or included only to imitate a personality.
    person only when grounded, and make headings earn their place.
 8. Edit once for style and once for truth. Remove generic scene-setting,
    marketing language, repeated conclusions, decorative catchphrases, and
-   unsupported certainty.
+   unsupported certainty. Treat the headline and opening claim as substantive:
+   remove or qualify promotional framing that the supplied evidence does not
+   directly support.
+9. For a no-change review, name the material facts, mechanism, and qualification
+   that make the existing text publishable. A bare “no edit needed” does not
+   show that the truth and clarity checks were completed.
 
 ## Finish gate
 

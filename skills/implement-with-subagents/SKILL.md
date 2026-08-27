@@ -1,13 +1,15 @@
 ---
 name: implement-with-subagents
-description: Use when supplied tickets or plan tasks must be implemented sequentially by separate implementation subagents through an installed implement skill, without controller implementation fallback.
+description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including queue atomicity, task-scoped commit acceptance, and repair ownership, with an installed implement skill.
 ---
 
 # Implement with subagents
 
 Keep orchestration and implementation ownership separate: the controller
 schedules, and one implementation subagent owns each independent work item
-through completion.
+through completion. Keep changes that cannot validate apart in one item, accept
+its task-scoped commit before advancing, and return failed acceptance evidence
+to that same owner rather than repairing it in the controller or reassigning it.
 
 ## Procedure
 

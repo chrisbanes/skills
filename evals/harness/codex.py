@@ -16,6 +16,13 @@ from evals.harness.suites import PUBLIC_SKILLS, ROUTER_SKILL
 ARMS = ("none", "forced", "automatic")
 _GRADLE_OUTPUT_DIRECTORIES = (".gradle", "build")
 _GENERATED_SKILL_SUFFIXES = {".pyc", ".pyo"}
+_TOOL_EVENT_TYPES = {
+    "command_execution",
+    "file_change",
+    "mcp_tool_call",
+    "tool_call",
+    "web_search",
+}
 
 
 @dataclass(frozen=True)
@@ -40,6 +47,17 @@ class SubjectResult:
     stdout: str
     stderr: str
     elapsed_seconds: float
+
+
+def completed_tool_call_count(
+    events: list[dict[str, Any]] | tuple[dict[str, Any], ...],
+) -> int:
+    return sum(
+        event.get("type") == "item.completed"
+        and isinstance(event.get("item"), dict)
+        and event["item"].get("type") in _TOOL_EVENT_TYPES
+        for event in events
+    )
 
 
 def canonical_skill_name(value: object) -> str | None:
@@ -149,9 +167,16 @@ def _subject_prompt(case: EvalCase, arm: str) -> str:
     prompt += (
         "\n\nIf you run Gradle, use `--offline --no-scan`. In `skills_used`, report "
         "only public repository skill entrypoints whose SKILL.md instructions you "
-        "actually read and followed during this run; otherwise return an empty list. "
-        "Do not report evaluator-owned fixture dependencies."
+        "actually read and followed during this run; otherwise return an empty list."
     )
+    if case.constant_skills:
+        dependencies = ", ".join(case.constant_skills)
+        prompt += (
+            f" Evaluator-owned fixture dependencies to omit: {dependencies}. "
+            "Enabled public skills are not fixture dependencies."
+        )
+    else:
+        prompt += " This case has no evaluator-owned fixture dependencies."
     if arm == "forced":
         invocations = ", ".join(f"${skill}" for skill in case.target_skills)
         prompt += f"\n\nUse the following skill(s) explicitly: {invocations}"

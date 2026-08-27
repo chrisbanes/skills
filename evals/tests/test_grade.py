@@ -1243,6 +1243,7 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
             {
                 "type": "command_execution",
                 "command": "custom-sync",
+                "exit_code": 1,
                 "aggregated_output": "Network is unreachable",
             },
         )
@@ -1271,6 +1272,27 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
         )
         self.assertNotIn(
             "network command attempted", grade_subject(case, local_python).violations
+        )
+
+    def test_network_fixture_text_from_nonzero_local_command_is_not_an_attempt(self):
+        case = make_case(self.workspace)
+        local_read = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": "sed -n '1,80p' state.md",
+                        "exit_code": 1,
+                        "aggregated_output": "Network access is disabled.",
+                    },
+                },
+            ),
+        )
+
+        self.assertNotIn(
+            "network command attempted", grade_subject(case, local_read).violations
         )
 
     def test_negative_control_requires_no_change_even_when_editing_is_authorized(self):

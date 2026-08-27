@@ -1,6 +1,6 @@
 ---
 name: run-github-project
-description: Use when asked to set up or repair a repository's GitHub Project configuration, reconcile Project epics or human checkpoints, triage Backlog work, plan and execute the next authorized issue, or drain authorized issues through implementation, review, merge, and reconciliation.
+description: Use when asked to set up, review, or operate a repository's GitHub Project workflow, including ready claims, human-owned Planning work, unknown remote mutation outcomes, Backlog triage, epics, checkpoints, next-issue execution, or an authorized drain.
 ---
 
 # Run GitHub Project

@@ -3,4 +3,4 @@ interface:
   short_description: "Delegate tasks to implementation subagents"
   default_prompt: "Use $implement-with-subagents to implement these tickets or plan tasks through sequential implementation owners."
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

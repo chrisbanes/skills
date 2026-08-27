@@ -58,8 +58,21 @@ class CaseContractTest(unittest.TestCase):
 
         self.assertEqual("compose-state-authoring-direct", case.id)
         self.assertEqual(("compose-state-and-effects",), case.expected_skills)
+        self.assertEqual(("compose-state-and-effects",), case.allowed_skills)
         self.assertFalse(case.calibration)
         self.assertEqual("Fix the subject.\n", case.prompt)
+
+    def test_allowed_skills_must_include_every_expected_skill(self):
+        case_dir = self.write_case(
+            valid_manifest(
+                allowed_skills=[],
+            )
+        )
+
+        with self.assertRaisesRegex(
+            CaseValidationError, "allowed_skills must include expected_skills"
+        ):
+            load_case(case_dir / "case.json", self.root)
 
     def test_requires_calibration_marker_to_be_boolean(self):
         case_dir = self.write_case(valid_manifest(calibration="yes"))

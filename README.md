@@ -82,9 +82,9 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 ### Workflows
 
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
-- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement supplied tickets or plan tasks sequentially through separate implementation subagents, requiring the installed `implement` skill and prohibiting controller fallback.
+- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement or review supplied-task orchestration through separate implementation owners, preserving atomic work, task-scoped acceptance, repair ownership, and the installed `implement` dependency.
 - [`to-plan`](skills/to-plan/SKILL.md) — create a repository-aware implementation plan from one ready GitHub issue or an in-chat task, with a provider-neutral implementation handoff.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — set up or repair the repository's GitHub Project binding without running work, reconcile epics, surface resumable human checkpoints, triage unblocked Backlog work, and plan and execute authorized issues through one planning lane and a two-slot-by-default parallel pipeline. Optionally routes authorized Wayfinder decision tickets through that planning lane while preserving their map and HITL gates. Requires `tdd` for implementation and preserves human Planning and triage approval gates.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate the repository's GitHub Project workflow; preserve live authority, human Planning work, unknown outcomes, epics, checkpoints, triage, and authorized execution boundaries.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
 
 ### Migration from pre-cluster skills
@@ -133,8 +133,10 @@ The advisory evaluator tests concrete scenarios modelled on real-world coding
 work, with expected outcomes and no-change controls. It compares no-skill,
 forced-skill, and automatic-routing runs. **Baseline** is the no-skill result,
 **automatic** is the headline result, and **restraint** checks that a skill does
-not make an unnecessary change. The table reports the latest available result
-for each skill and metric. These scores were produced using
+not make an unnecessary change. Scorecards also compare subject-side tokens,
+tool calls, elapsed time, and total attempted work per successful outcome. The
+table reports the latest available result for each skill and correctness metric.
+These scores were produced using
 [`gpt-5.6-terra`](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
 with medium reasoning, judged by
 [`gpt-5.6-sol`](https://developers.openai.com/api/docs/models/gpt-5.6-sol) with
@@ -154,10 +156,10 @@ may perform differently. These are not merge or release gates. See
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | 100.0% |
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 100.0% | 100.0% |
-| [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | — | — |
-| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | — |
-| [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | — |
-| [`shepherd`](skills/shepherd/SKILL.md) | — | — | — |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | 100.0% | 100.0% |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | 100.0% | 100.0% |
+| [`run-github-project`](skills/run-github-project/SKILL.md) | — | 100.0% | 100.0% |
+| [`shepherd`](skills/shepherd/SKILL.md) | — | 100.0% | 100.0% |
 
 ## License
 

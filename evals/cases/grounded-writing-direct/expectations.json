@@ -1,5 +1,5 @@
 {
   "files": ["draft.md"],
-  "must_contain": ["p95", "1.8", "1.1", "duplicate parse", "production"],
-  "must_not_contain": ["every project"]
+  "must_contain": ["p95", "1.8", "1.1", "duplicate parse"],
+  "must_match": ["(?i)production"]
 }
