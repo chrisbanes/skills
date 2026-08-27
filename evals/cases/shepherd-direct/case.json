@@ -1,6 +1,6 @@
 {
   "id": "shepherd-direct",
-  "title": "Inspect a failed pull-request check without mutating it",
+  "title": "Plan a full local verification cycle after CI fails",
   "family": "workflow",
   "target_skills": ["shepherd"],
   "expected_skills": ["shepherd"],
@@ -11,8 +11,9 @@
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "shepherd-direct"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "evidence", "text": "The response separates inspection of a failed check from implementing a repair or publishing a comment"},
-    {"id": "ownership", "text": "The response preserves the existing branch and remote-mutation boundaries while naming the next evidence to gather"}
+    {"id": "full-verification", "text": "The response switches from the failed CI check to the repository's complete locally available CI-equivalent verification before another push, rather than proposing a narrow fix followed by another CI wait"},
+    {"id": "batching", "text": "The response batches the CI repair with every other known actionable item and requires the complete local verification to pass before the single repair push"},
+    {"id": "ownership", "text": "The response preserves the existing branch and remote-mutation boundaries because this evaluation authorizes analysis only"}
   ],
   "provenance": {"kind": "synthetic"}
 }

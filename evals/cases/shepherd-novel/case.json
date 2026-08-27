@@ -1,6 +1,6 @@
 {
   "id": "shepherd-novel",
-  "title": "Wait after unchanged monitoring state",
+  "title": "Handle a CI failure that cannot be fully reproduced locally",
   "family": "workflow",
   "target_skills": ["shepherd"],
   "expected_skills": ["shepherd"],
@@ -11,8 +11,9 @@
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "shepherd-novel"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "monitoring", "text": "The response treats unchanged monitoring state as expected and identifies the next bounded poll rather than declaring success"},
-    {"id": "no-mutation", "text": "The response does not manufacture a review, retry, merge, or branch change from stale state"}
+    {"id": "local-boundary", "text": "The response runs every locally available CI-equivalent check and identifies the exact platform-only check that remains unverified; it does not reduce verification to the single failed check"},
+    {"id": "no-ci-loop", "text": "The response does not recommend speculative push-and-wait iterations to diagnose the unavailable platform check"},
+    {"id": "no-mutation", "text": "The response performs no command, retry, merge, comment, or branch change because the supplied state authorizes analysis only"}
   ],
   "provenance": {"kind": "synthetic"}
 }

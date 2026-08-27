@@ -85,7 +85,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement supplied tickets or plan tasks sequentially through separate implementation subagents, requiring the installed `implement` skill and prohibiting controller fallback.
 - [`to-plan`](skills/to-plan/SKILL.md) — create a repository-aware implementation plan from one ready GitHub issue or an in-chat task, with a provider-neutral implementation handoff.
 - [`run-github-project`](skills/run-github-project/SKILL.md) — set up or repair the repository's GitHub Project binding without running work, reconcile epics, surface resumable human checkpoints, triage unblocked Backlog work, and plan and execute authorized issues through one planning lane and a two-slot-by-default parallel pipeline. Optionally routes authorized Wayfinder decision tickets through that planning lane while preserving their map and HITL gates. Requires `tdd` for implementation and preserves human Planning and triage approval gates.
-- [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, detect and fix CI failures, and keep PRs moving forward.
+- [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
 
 ### Migration from pre-cluster skills
 
