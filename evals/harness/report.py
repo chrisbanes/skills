@@ -5,7 +5,7 @@ import math
 import random
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 from evals.harness.codex import completed_tool_call_count
 from evals.harness.score import Scorecard
@@ -61,6 +61,36 @@ def _measurement(value: float | None, *, suffix: str = "") -> str:
         return "unavailable"
     rendered = f"{value:.1f}"
     return f"{rendered}{suffix}"
+
+
+def _count(value: float | None) -> str:
+    if value is None:
+        return "unavailable"
+    return str(int(value)) if value.is_integer() else f"{value:.1f}"
+
+
+def _tokens(value: float | None) -> str:
+    if value is None:
+        return "unavailable"
+    if abs(value) < 1000:
+        return _count(value)
+    return f"{value / 1000:.1f}k"
+
+
+def _seconds(value: float | None) -> str:
+    return _measurement(value, suffix="s")
+
+
+def _comparison(
+    baseline: float | None,
+    automatic: float | None,
+    formatter: Callable[[float | None], str],
+) -> str:
+    if baseline is None or automatic is None or baseline == 0:
+        change = "n/a"
+    else:
+        change = f"{(automatic - baseline) / baseline:+.0%}"
+    return f"{formatter(baseline)} → {formatter(automatic)} ({change})"
 
 
 def _outcome_rate(records: list[dict[str, Any]], arm: str) -> float | None:
@@ -231,21 +261,57 @@ def render_scorecard(
             "Subject-only metrics. Medians describe a typical run, including any retry. "
             "Per-pass totals include failed runs, so a quick incorrect result is not rewarded.",
             "",
-            "| Arm | Passes / runs | Tokens / run | Tool calls / run | Time / run | Tokens / pass | Tool calls / pass | Time / pass |",
-            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+            "| Arm | Passes / runs | Tokens / run | Tool calls / run | Turns / run | Time / run | Tokens / pass | Tool calls / pass | Turns / pass | Time / pass |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
         ]
     )
     for arm in ("none", "forced", "automatic"):
         efficiency = score.efficiency[arm]
         lines.append(
             f"| {arm} | {efficiency.outcome_passes} / {efficiency.runs} | "
-            f"{_measurement(efficiency.median_tokens_per_run)} | "
-            f"{_measurement(efficiency.median_tool_calls_per_run)} | "
-            f"{_measurement(efficiency.median_elapsed_seconds_per_run, suffix='s')} | "
-            f"{_measurement(efficiency.tokens_per_outcome_pass)} | "
-            f"{_measurement(efficiency.tool_calls_per_outcome_pass)} | "
-            f"{_measurement(efficiency.elapsed_seconds_per_outcome_pass, suffix='s')} |"
+            f"{_tokens(efficiency.median_tokens_per_run)} | "
+            f"{_count(efficiency.median_tool_calls_per_run)} | "
+            f"{_count(efficiency.median_turns_per_run)} | "
+            f"{_seconds(efficiency.median_elapsed_seconds_per_run)} | "
+            f"{_tokens(efficiency.tokens_per_outcome_pass)} | "
+            f"{_count(efficiency.tool_calls_per_outcome_pass)} | "
+            f"{_count(efficiency.turns_per_outcome_pass)} | "
+            f"{_seconds(efficiency.elapsed_seconds_per_outcome_pass)} |"
         )
+    measured_skills = [
+        (skill, by_arm)
+        for skill, by_arm in sorted(score.skill_efficiency.items())
+        if by_arm["none"].runs or by_arm["automatic"].runs
+    ]
+    if measured_skills:
+        lines.extend(
+            [
+                "",
+                "## Per-skill efficiency (baseline vs automatic)",
+                "",
+                "Subject-only baseline → automatic totals and per-run medians. "
+                "Parentheses show the automatic change from baseline. "
+                "Multi-skill scenarios contribute to every targeted skill row, "
+                "so rows are not additive.",
+                "",
+                "| Skill | Total tokens | Tool calls | Turns | Time | Tokens / run | Tool calls / run | Turns / run | Time / run |",
+                "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for skill, by_arm in measured_skills:
+            baseline = by_arm["none"]
+            automatic = by_arm["automatic"]
+            lines.append(
+                f"| `{skill}` | "
+                f"{_comparison(baseline.total_tokens, automatic.total_tokens, _tokens)} | "
+                f"{_comparison(baseline.total_tool_calls, automatic.total_tool_calls, _count)} | "
+                f"{_comparison(baseline.total_turns, automatic.total_turns, _count)} | "
+                f"{_comparison(baseline.total_elapsed_seconds, automatic.total_elapsed_seconds, _seconds)} | "
+                f"{_comparison(baseline.median_tokens_per_run, automatic.median_tokens_per_run, _tokens)} | "
+                f"{_comparison(baseline.median_tool_calls_per_run, automatic.median_tool_calls_per_run, _count)} | "
+                f"{_comparison(baseline.median_turns_per_run, automatic.median_turns_per_run, _count)} | "
+                f"{_comparison(baseline.median_elapsed_seconds_per_run, automatic.median_elapsed_seconds_per_run, _seconds)} |"
+            )
     lines.extend(
         [
             "",

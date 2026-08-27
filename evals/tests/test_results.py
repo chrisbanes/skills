@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL
 from evals.harness.experiment import (
+    _attempt_payload,
     _case_digest,
     _judge_packet_path,
     _rejudgment_fingerprint,
@@ -66,6 +67,22 @@ class ResultLifecycleTest(unittest.TestCase):
 
         self.assertEqual({"outcome": "pass"}, load_result(path, fingerprint))
         self.assertFalse(path.with_suffix(".json.tmp").exists())
+
+    def test_attempt_payload_counts_completed_turns(self):
+        attempt = SimpleNamespace(
+            returncode=0,
+            usage={"input_tokens": 10, "output_tokens": 2},
+            events=(
+                {"type": "turn.started"},
+                {"type": "turn.completed"},
+                {"type": "turn.completed"},
+            ),
+            elapsed_seconds=1.5,
+        )
+
+        payload = _attempt_payload(attempt)
+
+        self.assertEqual(2, payload["turns"])
 
     def test_refuses_to_resume_a_stale_fingerprint(self):
         path = self.root / "result.json"

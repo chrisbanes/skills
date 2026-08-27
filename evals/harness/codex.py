@@ -60,6 +60,12 @@ def completed_tool_call_count(
     )
 
 
+def completed_turn_count(
+    events: list[dict[str, Any]] | tuple[dict[str, Any], ...],
+) -> int:
+    return sum(event.get("type") == "turn.completed" for event in events)
+
+
 def canonical_skill_name(value: object) -> str | None:
     if not isinstance(value, str):
         return None

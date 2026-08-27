@@ -14,6 +14,7 @@ from evals.harness.codex import (
     ARMS,
     RunConfig,
     SubjectResult,
+    completed_turn_count,
     completed_tool_call_count,
     discover_skill_paths,
     is_generated_skill_path,
@@ -223,6 +224,7 @@ def _attempt_payload(result: SubjectResult | JudgeResult) -> dict[str, Any]:
         "returncode": result.returncode,
         "usage": result.usage,
         "tool_calls": completed_tool_call_count(result.events),
+        "turns": completed_turn_count(result.events),
         "elapsed_seconds": result.elapsed_seconds,
     }
 

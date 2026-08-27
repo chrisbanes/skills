@@ -69,6 +69,9 @@ class ReportTest(unittest.TestCase):
             ),
         ]
         for item in records:
+            subject_input_tokens = (
+                61774 if item["arm"] == "automatic" else 43198
+            )
             item.update({
                 "suite": "compose",
                 "target_skills": ["compose-state-and-effects"],
@@ -76,8 +79,14 @@ class ReportTest(unittest.TestCase):
                 "judge_pass": item["outcome_pass"],
                 "repetition": 1,
                 "subject": {
-                    "usage": {"input_tokens": 10, "output_tokens": 2},
-                    "events": [{"type": "item.completed", "item": {"type": "command_execution"}}],
+                    "usage": {
+                        "input_tokens": subject_input_tokens,
+                        "output_tokens": 2,
+                    },
+                    "events": [
+                        {"type": "item.completed", "item": {"type": "command_execution"}},
+                        {"type": "turn.completed"},
+                    ],
                     "elapsed_seconds": 1.5,
                     "retries": 0,
                     "returncode": 0,
@@ -109,14 +118,21 @@ class ReportTest(unittest.TestCase):
             self.assertIn("`compose-state-and-effects`", markdown)
             self.assertIn("Efficiency (non-gating)", markdown)
             self.assertIn(
-                "| forced | 1 / 1 | 12.0 | 1.0 | 1.5s | 12.0 | 1.0 | 1.5s |",
+                "Per-skill efficiency (baseline vs automatic)", markdown
+            )
+            self.assertIn(
+                "| `compose-state-and-effects` | 43.2k → 61.8k (+43%) | 1 → 1 (+0%) | 1 → 1 (+0%) | 1.5s → 1.5s (+0%) | 43.2k → 61.8k (+43%) | 1 → 1 (+0%) | 1 → 1 (+0%) | 1.5s → 1.5s (+0%) |",
                 markdown,
             )
             self.assertIn(
-                "| none | 0 / 1 | 12.0 | 1.0 | 1.5s | unavailable | unavailable | unavailable |",
+                "| forced | 1 / 1 | 43.2k | 1 | 1 | 1.5s | 43.2k | 1 | 1 | 1.5s |",
                 markdown,
             )
-            self.assertIn("Input tokens: 42", markdown)
+            self.assertIn(
+                "| none | 0 / 1 | 43.2k | 1 | 1 | 1.5s | unavailable | unavailable | unavailable | unavailable |",
+                markdown,
+            )
+            self.assertIn("Input tokens: 148182", markdown)
             self.assertIn("Output tokens: 9", markdown)
             self.assertIn("Tool events: 6", markdown)
             self.assertIn("Retries: 0", markdown)
