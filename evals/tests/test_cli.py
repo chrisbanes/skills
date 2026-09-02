@@ -44,7 +44,7 @@ class EvaluationCliTest(unittest.TestCase):
         self.assertEqual(342, plan["judge_calls"])
         self.assertEqual(684, plan["total_calls"])
 
-    def test_kotlin_gradle_plan_uses_its_own_19_case_suite(self):
+    def test_kotlin_gradle_plan_uses_its_own_22_case_suite(self):
         status, output = self.invoke(
             "plan",
             *MODEL_ARGS,
@@ -57,10 +57,10 @@ class EvaluationCliTest(unittest.TestCase):
 
         plan = json.loads(output)
         self.assertEqual(0, status)
-        self.assertEqual(19, plan["case_count"])
-        self.assertEqual(171, plan["subject_calls"])
-        self.assertEqual(171, plan["judge_calls"])
-        self.assertEqual(342, plan["total_calls"])
+        self.assertEqual(22, plan["case_count"])
+        self.assertEqual(198, plan["subject_calls"])
+        self.assertEqual(198, plan["judge_calls"])
+        self.assertEqual(396, plan["total_calls"])
 
     def test_workflows_plan_skips_explicit_only_automatic_conditions(self):
         status, output = self.invoke(

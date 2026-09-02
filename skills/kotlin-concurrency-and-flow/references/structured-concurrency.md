@@ -10,21 +10,28 @@ Most repositories, managers, use cases, and data sources should expose
 
 1. Name the caller that owns cancellation, completion, and failure. If none is
    visible, do not add or retain a launch.
-2. Replace a stored, injected, lazily created, or function-local `CoroutineScope`
+2. Treat direct `Thread.start` or `Executor.execute`/`submit` as detached work
+   when no caller can observe its completion, cancellation, and failure. Expose
+   a suspending API and let its lifecycle owner launch it; do not pass an
+   arbitrary `CoroutineScope` into a lower layer merely to replace the thread.
+   Do not flag an executor merely because it backs a `CoroutineDispatcher` or
+   required thread-affinity adapter; verify that an explicit owner closes or
+   stops it and that completion and failure remain observable.
+3. Replace a stored, injected, lazily created, or function-local `CoroutineScope`
    on a non-UI class with suspending APIs. A cancelled stored scope can make
    future launches silently do nothing.
-3. Move construction-time and initializer launches to an explicit suspending
+4. Move construction-time and initializer launches to an explicit suspending
    bootstrap or named launch site. A constructor or `Initializer.initialize()`
    may register, but must not launch.
-4. Keep a non-suspending launch only at the UI/state-holder boundary described
+5. Keep a non-suspending launch only at the UI/state-holder boundary described
    below. Otherwise make the API suspend.
-5. Re-throw `CancellationException` from any broad catch around suspension.
+6. Re-throw `CancellationException` from any broad catch around suspension.
    A narrow timeout converted close to its own `withTimeout` is the exception;
    catches of non-cancellation subtypes are also safe.
-6. Replace application `runBlocking` with suspension or a lifecycle-bound
+7. Replace application `runBlocking` with suspension or a lifecycle-bound
    boundary. Use `runTest` in tests; use `runBlocking` only at a true blocking
    edge and keep it small.
-7. Compile and test the changed call chain. Finish when a reader can locate the
+8. Compile and test the changed call chain. Finish when a reader can locate the
    owner, start point, cancellation path, and failure behavior without guessing.
 
 ## Scope and launch choices
@@ -83,6 +90,11 @@ at a non-suspending UI callback, and `runTest` for tests. Legitimate
 bridges, and migration shims. Android `ContentProvider` member methods are one
 such framework boundary; a companion/helper is not. Keep the body to the direct
 suspending call.
+
+Moving blocking work to a dispatcher changes where it runs, not whether
+cancellation stops it. Wrap a single interruptible JVM call in
+`runInterruptible(dispatcher)` so cancellation interrupts the call; otherwise
+state the blocking API's cancellation mechanism explicitly.
 
 ## Incremental refactor
 

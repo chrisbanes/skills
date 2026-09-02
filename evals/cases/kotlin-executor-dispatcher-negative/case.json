@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-executor-dispatcher-negative",
+  "title": "Keep an explicitly owned executor-backed dispatcher",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-executor-dispatcher-negative"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "restraint", "text": "The response keeps the executor-backed coroutine dispatcher because work remains in the caller's coroutine hierarchy"},
+    {"id": "explicit-lifecycle", "text": "The response recognizes that closing the dispatcher explicitly owns and shuts down the executor"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

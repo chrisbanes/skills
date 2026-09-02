@@ -20,7 +20,7 @@ class KotlinGradleMatrixTest(unittest.TestCase):
     def test_has_risk_weighted_skill_triads_and_routing_cases(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
 
-        self.assertEqual(19, report.case_count)
+        self.assertEqual(22, report.case_count)
         self.assertFalse(any(case.calibration for case in report.cases))
         self.assertEqual(3, sum(case.kind == "routing" for case in report.cases))
         self.assertGreaterEqual(
@@ -34,12 +34,12 @@ class KotlinGradleMatrixTest(unittest.TestCase):
                 self.assertTrue(any(case.kind == "novel" for case in skill_cases))
                 self.assertTrue(any(case.kind == "negative" for case in skill_cases))
 
-    def test_default_filter_selects_all_19_scored_cases(self):
+    def test_default_filter_selects_all_22_scored_cases(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
 
         selected = filter_cases(report.cases, case_ids=None, skills=None)
 
-        self.assertEqual(19, len(selected))
+        self.assertEqual(22, len(selected))
 
     def test_positive_edits_and_required_command_cases_start_red(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")

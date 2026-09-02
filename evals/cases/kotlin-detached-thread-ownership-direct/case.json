@@ -1,0 +1,20 @@
+{
+  "id": "kotlin-detached-thread-ownership-direct",
+  "title": "Return detached thread ownership to the caller",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow", "gradle-run"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": ["src/main/kotlin/example/Subject.kt"],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-detached-thread-ownership-direct"], "timeout_seconds": 30},
+    {"argv": ["./gradlew-real", "--offline", "--no-scan", "test"], "timeout_seconds": 180}
+  ],
+  "rubric": [
+    {"id": "caller-lifetime", "text": "Cache eviction is a suspending operation whose caller owns completion, cancellation, and failure"},
+    {"id": "blocking-dispatch", "text": "Blocking file deletion runs on the supplied dispatcher without a raw Thread, retained CoroutineScope, or hidden launch"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

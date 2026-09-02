@@ -1,0 +1,9 @@
+{
+  "files": ["src/main/kotlin/example/Subject.kt"],
+  "must_match": ["suspend\\s+fun\\s+evictExpired\\s*\\("],
+  "must_not_match": [
+    "Thread\\s*(?:\\(|\\{)",
+    "CoroutineScope",
+    "\\.launch\\s*\\{"
+  ]
+}

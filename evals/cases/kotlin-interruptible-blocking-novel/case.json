@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-interruptible-blocking-novel",
+  "title": "Bridge cancellation into interruptible blocking work",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-interruptible-blocking-novel"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "interruptible-boundary", "text": "The review identifies that withContext alone does not interrupt BlockingQueue.take on coroutine cancellation and recommends runInterruptible"},
+    {"id": "dispatcher-preserved", "text": "The recommendation preserves the supplied dispatcher, either on runInterruptible or an enclosing context switch"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

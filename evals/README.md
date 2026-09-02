@@ -110,8 +110,8 @@ Every case runs in a fresh workspace and conversation under three arms:
 Each eligible `case × arm` condition runs three times by default. A case that
 targets no implicitly invokable skill is excluded from the automatic arm before
 execution. The 38-case Compose suite schedules 342 subject calls and 342
-blinded judge calls. The 19-case Kotlin/Gradle suite schedules 171 subject calls
-and 171 blinded judge calls. The 15-case workflows/writing suite schedules 99
+blinded judge calls. The 22-case Kotlin/Gradle suite schedules 198 subject calls
+and 198 blinded judge calls. The 15-case workflows/writing suite schedules 99
 subject calls and 99 blinded judge calls.
 
 All subject and judge processes use `--ignore-user-config`, explicit
@@ -158,11 +158,13 @@ corpus. They are excluded from default plans and published scorecards; select
 them explicitly with `--case` when deciding whether they should graduate into
 the benchmark.
 
-The Kotlin/Gradle benchmark contains 19 scored cases:
+The Kotlin/Gradle benchmark contains 22 scored cases:
 
 - a direct task, novel review, and no-change restraint control for each of its
   four skills;
 - one additional high-risk branch per skill;
+- one additional direct, novel, and no-change triad for raw thread, blocking
+  cancellation, and executor-backed dispatcher ownership;
 - three multi-skill routing cases; and
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.

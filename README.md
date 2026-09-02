@@ -71,7 +71,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### Kotlin
 
-- [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) — review coroutine ownership, cancellation, Flow state/event modeling, sharing, replay, and one-shot delivery.
+- [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) — review coroutine, raw `Thread`, and `Executor` ownership, cancellation, Flow state/event modeling, sharing, replay, and one-shot delivery.
 - [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) — write and review Kotlin branching with subject `when`, guard conditions, sealed exhaustiveness, smart casts, nullable branching, and early returns.
 - [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) — choose function owners, semantic domain types, and Kotlin Multiplatform platform boundaries.
 

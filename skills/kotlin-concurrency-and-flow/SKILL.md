@@ -1,6 +1,6 @@
 ---
 name: kotlin-concurrency-and-flow
-description: Use when writing or reviewing Kotlin coroutine scope ownership, init launches, non-suspending launch APIs, runBlocking, cancellation, StateFlow, SharedFlow, Channel, stateIn, SharingStarted, state updates, or one-shot events.
+description: Use when writing or reviewing Kotlin coroutine scope ownership, raw Thread or Executor work, init launches, non-suspending launch APIs, runBlocking, cancellation, StateFlow, SharedFlow, Channel, stateIn, SharingStarted, state updates, or one-shot events.
 ---
 
 # Kotlin concurrency and Flow
@@ -36,6 +36,6 @@ the product contract.
 
 | Signal | Read |
 |---|---|
-| Stored `CoroutineScope`, `init { launch }`, fire-and-forget API, `runBlocking`, broad catch, or cancellation boundary | [Structured concurrency](references/structured-concurrency.md) |
+| Stored `CoroutineScope`, raw `Thread` or `Executor` work, `init { launch }`, fire-and-forget API, `runBlocking`, broad catch, or cancellation boundary | [Structured concurrency](references/structured-concurrency.md) |
 | `StateFlow`, `SharedFlow`, `Channel`, `stateIn`, `SharingStarted`, `.value`, state updates, sentinel values, or one-shot events | [Flow state and events](references/flow-state-events.md) |
 | Compose collection or UI effect handling | [Compose state and effects](../compose-state-and-effects/SKILL.md) |
