@@ -186,9 +186,6 @@ The source runs, selection rules, and detailed scorecards are in the
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
-| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | — | — |
-| [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | — | — |
-| [`shepherd`](skills/shepherd/SKILL.md) | — | — | — | — |
 
 ## License
 
