@@ -1,0 +1,18 @@
+{
+  "id": "to-plan-negative",
+  "title": "Do not turn an incidental issue link into planning work",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "restraint", "text": "The response leaves planning inactive when an issue link is incidental to a non-planning review request"},
+    {"id": "preservation", "text": "The response does not draft, publish, or mutate a plan or repository state"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

@@ -161,6 +161,7 @@ may perform differently. These are not merge or release gates. See
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
 | [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | 100.0% |
 | [`shepherd`](skills/shepherd/SKILL.md) | — | — | 100.0% |
+| [`to-plan`](skills/to-plan/SKILL.md) | — | — | — |
 
 ### Skill efficiency
 

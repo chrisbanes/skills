@@ -69,6 +69,7 @@ WORKFLOWS_WRITING_SKILLS = (
     "implement-with-subagents",
     "run-github-project",
     "shepherd",
+    "to-plan",
 )
 
 
@@ -95,7 +96,7 @@ SUITES = {
         id="workflows-writing",
         title="Workflows and writing",
         skills=WORKFLOWS_WRITING_SKILLS,
-        benchmark_cases=12,
+        benchmark_cases=15,
         routing_cases=0,
         require_skill_triads=True,
     ),

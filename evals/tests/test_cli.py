@@ -75,11 +75,11 @@ class EvaluationCliTest(unittest.TestCase):
 
         plan = json.loads(output)
         self.assertEqual(0, status)
-        self.assertEqual(12, plan["case_count"])
-        self.assertEqual(27, plan["condition_count"])
-        self.assertEqual(81, plan["subject_calls"])
-        self.assertEqual(81, plan["judge_calls"])
-        self.assertEqual(162, plan["total_calls"])
+        self.assertEqual(15, plan["case_count"])
+        self.assertEqual(33, plan["condition_count"])
+        self.assertEqual(99, plan["subject_calls"])
+        self.assertEqual(99, plan["judge_calls"])
+        self.assertEqual(198, plan["total_calls"])
 
     def test_filters_case_skill_and_arm_before_counting_calls(self):
         status, output = self.invoke(

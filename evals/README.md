@@ -4,10 +4,10 @@ This directory contains a reproducible, advisory evaluator with a shared core
 and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
 tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
-cover six Compose skills, four Kotlin/Gradle skills, and four workflow/writing
+cover six Compose skills, four Kotlin/Gradle skills, and five workflow/writing
 skills: `grounded-writing`, `implement-with-subagents`,
-`run-github-project`, and `shepherd`. It is designed to answer three separate
-questions:
+`run-github-project`, `shepherd`, and `to-plan`. It is designed to answer three
+separate questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
 2. Does automatic activation report the expected implicitly invokable public skill entrypoints?
@@ -63,6 +63,7 @@ suite-wide aggregate.
 | `implement-with-subagents` | — | — | 100.0% |
 | `run-github-project` | — | — | 100.0% |
 | `shepherd` | — | — | 100.0% |
+| `to-plan` | — | — | — |
 
 ### Skill efficiency
 
@@ -110,8 +111,8 @@ Each eligible `case × arm` condition runs three times by default. A case that
 targets no implicitly invokable skill is excluded from the automatic arm before
 execution. The 38-case Compose suite schedules 342 subject calls and 342
 blinded judge calls. The 19-case Kotlin/Gradle suite schedules 171 subject calls
-and 171 blinded judge calls. The 12-case workflows/writing suite schedules 81
-subject calls and 81 blinded judge calls.
+and 171 blinded judge calls. The 15-case workflows/writing suite schedules 99
+subject calls and 99 blinded judge calls.
 
 All subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,
@@ -166,8 +167,8 @@ The Kotlin/Gradle benchmark contains 19 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-The workflows/writing benchmark contains 12 scored cases: direct, novel, and
-no-change coverage for each of its four skills. Its GitHub-style cases use
+The workflows/writing benchmark contains 15 scored cases: direct, novel, and
+no-change coverage for each of its five skills. Its GitHub-style cases use
 supplied immutable state and rubric plus forbidden-action grading; they do not
 contact a provider. Only `implement-with-subagents` declares the evaluator-owned
 `implement` fixture dependency, because that prerequisite is constant across its

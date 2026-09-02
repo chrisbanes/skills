@@ -1,0 +1,18 @@
+{
+  "id": "to-plan-direct",
+  "title": "Confirm a complete conversation planning contract",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "confirmation", "text": "The response gathers the missing planning-contract information one decision at a time and requires a confirmed self-contained summary before drafting"},
+    {"id": "no-draft", "text": "The response does not draft or write a plan before the conversation source is confirmed"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

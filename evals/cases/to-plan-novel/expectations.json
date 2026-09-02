@@ -1,0 +1,1 @@
+{"files": ["state.md"], "must_contain": ["Immutable evaluation state", "controller owns"]}

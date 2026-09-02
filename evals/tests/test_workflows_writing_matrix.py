@@ -26,20 +26,32 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
-    def test_has_exact_skill_triads_without_routing_or_to_plan(self):
+    def test_has_exact_skill_triads_without_routing(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
 
-        self.assertEqual(12, report.case_count)
+        self.assertEqual(15, report.case_count)
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
-        self.assertEqual(12, len(filter_cases(report.cases, case_ids=None, skills=None)))
+        self.assertEqual(15, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertFalse(any(case.calibration for case in report.cases))
-        self.assertFalse(any("to-plan" in case.target_skills for case in report.cases))
         for skill in WORKFLOWS_WRITING_SKILLS:
             kinds = {case.kind for case in report.cases if skill in case.target_skills}
             with self.subTest(skill=skill):
                 self.assertEqual({"direct", "novel", "negative"}, kinds)
+
+        self.assertEqual(
+            {
+                "to-plan-direct",
+                "to-plan-novel",
+                "to-plan-negative",
+            },
+            {
+                case.id
+                for case in report.cases
+                if case.target_skills == ("to-plan",)
+            },
+        )
 
         subagent_cases = [
             case for case in report.cases if case.fixture == "workflow-subagents"
