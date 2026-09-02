@@ -190,6 +190,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         records = [
             {"case_id": "run-github-project-direct", "arm": "automatic"},
+            {"case_id": "run-github-project-direct", "arm": "forced"},
             {"case_id": "grounded-writing-direct", "arm": "automatic"},
             {"case_id": "removed-case", "arm": "automatic"},
         ]
@@ -197,9 +198,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         reconcile_automatic_eligibility(REPO_ROOT, report.cases, records)
 
         self.assertFalse(records[0]["automatic_eligible"])
-        self.assertTrue(records[1]["automatic_eligible"])
-        self.assertEqual(["grounded-writing"], records[1]["expected_skills"])
-        self.assertFalse(records[2]["automatic_eligible"])
+        self.assertFalse(records[1]["automatic_eligible"])
+        self.assertTrue(records[2]["automatic_eligible"])
+        self.assertEqual(["grounded-writing"], records[2]["expected_skills"])
+        self.assertFalse(records[3]["automatic_eligible"])
 
     def test_behavioral_expectations_do_not_assert_fixture_prose(self):
         expectations = json.loads(

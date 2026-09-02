@@ -70,6 +70,10 @@ def _routing_expectations(
     )
 
 
+def _automatic_eligible(case: EvalCase, repo_root: Path) -> bool:
+    return bool(_routing_expectations(case, "automatic", repo_root)[0])
+
+
 def evaluation_conditions(
     repo_root: Path, cases: Iterable[EvalCase], arms: Iterable[str]
 ) -> tuple[tuple[EvalCase, str], ...]:
@@ -78,7 +82,7 @@ def evaluation_conditions(
         (case, arm)
         for case in cases
         for arm in arms
-        if arm != "automatic" or bool(_routing_expectations(case, arm, repo_root)[0])
+        if arm != "automatic" or _automatic_eligible(case, repo_root)
     )
 
 
@@ -90,22 +94,18 @@ def _apply_routing_expectations(
     )
     record["expected_skills"] = list(expected_skills)
     record["allowed_skills"] = list(allowed_skills)
-    record["automatic_eligible"] = (
-        str(record.get("arm")) != "automatic" or bool(expected_skills)
-    )
+    record["automatic_eligible"] = _automatic_eligible(case, repo_root)
 
 
 def reconcile_automatic_eligibility(
     repo_root: Path, cases: Iterable[EvalCase], records: Iterable[dict[str, Any]]
 ) -> None:
-    """Recompute automatic routing for legacy records against the current corpus."""
+    """Recompute automatic eligibility for records against the current corpus."""
     by_id = {case.id: case for case in cases}
     for record in records:
-        if str(record.get("arm")) != "automatic":
-            continue
         case = by_id.get(str(record.get("case_id")))
         if case is None:
-            # A record outside the current corpus cannot establish automatic routing.
+            # A record outside the current corpus cannot establish automatic eligibility.
             record["automatic_eligible"] = False
             continue
         _apply_routing_expectations(record, case, repo_root)
@@ -315,6 +315,7 @@ def _result_payload(
 ) -> dict[str, Any]:
     reported = reported_skill_names(subject.final_output)
     expected_skills, allowed_skills = _routing_expectations(case, arm, repo_root)
+    automatic_eligible = _automatic_eligible(case, repo_root)
     judge_pass = judge.returncode == 0 and judge_passes_rubric(
         judge.output, case.rubric
     )
@@ -344,7 +345,7 @@ def _result_payload(
         "target_skills": list(case.target_skills),
         "expected_skills": list(expected_skills),
         "allowed_skills": list(allowed_skills),
-        "automatic_eligible": arm != "automatic" or bool(expected_skills),
+        "automatic_eligible": automatic_eligible,
         "reported_skills": [skill for skill in reported if skill != ROUTER_SKILL],
         "reported_router": ROUTER_SKILL in reported,
         "objective_pass": grade.objective_pass,

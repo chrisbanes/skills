@@ -29,12 +29,13 @@ corpus, and execution conditions are held constant.
 
 ## Results
 
-**Baseline** is the positive-case pass rate with no skills available.
-**Automatic** is the positive-case pass rate with every implicitly invokable
-repository skill available but none named in the prompt. Explicit-only skills
-are measured only in forced runs, including their no-change controls. **Restraint** is the no-change-control
-pass rate: the skill may inspect the task, but must not make an unnecessary
-change. The table reports the latest available result for each skill and
+**Baseline** is the positive-case pass rate with no skills available, restricted
+to cases eligible for automatic activation. **Automatic** is the matching
+positive-case pass rate with every implicitly invokable repository skill
+available but none named in the prompt. Explicit-only skills are measured only
+in forced runs, including their no-change controls. **Restraint** is the
+no-change-control pass rate: the skill may inspect the task, but must not make
+an unnecessary change. The table reports the latest available result for each skill and
 correctness metric. These scores were produced using
 [`gpt-5.6-terra`](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
 with medium reasoning, judged by

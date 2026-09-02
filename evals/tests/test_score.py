@@ -147,6 +147,84 @@ class ScorecardTest(unittest.TestCase):
         self.assertIsNone(score.outcome_rates["automatic"])
         self.assertIsNone(score.routing_precision)
 
+    def test_automatic_comparators_exclude_explicit_only_cases(self):
+        records = [
+            record(
+                "automatic-positive:none",
+                "none",
+                False,
+                automatic_eligible=True,
+            ),
+            record(
+                "automatic-positive:forced",
+                "forced",
+                True,
+                automatic_eligible=True,
+            ),
+            record(
+                "automatic-positive:automatic",
+                "automatic",
+                True,
+                automatic_eligible=True,
+            ),
+            record(
+                "explicit-positive:none",
+                "none",
+                True,
+                automatic_eligible=False,
+            ),
+            record(
+                "explicit-positive:forced",
+                "forced",
+                False,
+                automatic_eligible=False,
+            ),
+            record(
+                "automatic-negative:none",
+                "none",
+                True,
+                kind="negative",
+                automatic_eligible=True,
+            ),
+            record(
+                "automatic-negative:forced",
+                "forced",
+                True,
+                kind="negative",
+                automatic_eligible=True,
+            ),
+            record(
+                "automatic-negative:automatic",
+                "automatic",
+                True,
+                kind="negative",
+                automatic_eligible=True,
+            ),
+            record(
+                "explicit-negative:none",
+                "none",
+                True,
+                kind="negative",
+                automatic_eligible=False,
+            ),
+            record(
+                "explicit-negative:forced",
+                "forced",
+                False,
+                kind="negative",
+                automatic_eligible=False,
+            ),
+        ]
+
+        score = compute_scorecard(records)
+
+        self.assertEqual(0.0, score.outcome_rates["none"])
+        self.assertEqual(1.0, score.outcome_rates["forced"])
+        self.assertEqual(1.0, score.automatic_retention)
+        self.assertEqual(1.0, score.negative_rates["none"])
+        self.assertEqual(1.0, score.negative_rates["forced"])
+        self.assertTrue(score.gates["negative_controls"])
+
     def test_measures_subject_efficiency_and_charges_failures_to_each_pass(self):
         def with_telemetry(item, *, tokens, tool_calls, turns, elapsed):
             item["subject"] = {

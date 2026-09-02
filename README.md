@@ -131,9 +131,9 @@ agent-facing seam.
 
 The advisory evaluator tests concrete scenarios modelled on real-world coding
 work, with expected outcomes and no-change controls. It compares no-skill,
-forced-skill, and automatic-routing runs. **Baseline** is the no-skill result,
-**automatic** is the headline result, and **restraint** checks that a skill does
-not make an unnecessary change. Scorecards also compare subject-side tokens,
+forced-skill, and automatic-routing runs. **Baseline** and **automatic** use
+the cases eligible for automatic activation; **restraint** checks that a skill
+does not make an unnecessary change. Scorecards also compare subject-side tokens,
 tool calls, completed turns, elapsed time, and total attempted work per
 successful outcome. The
 table reports the latest available result for each skill and correctness metric.

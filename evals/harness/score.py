@@ -51,6 +51,11 @@ def is_measured_in_arm(record: dict[str, Any], arm: str) -> bool:
     return arm != "automatic" or record.get("automatic_eligible") is True
 
 
+def is_automatic_comparator(record: dict[str, Any]) -> bool:
+    """Require a case to have an automatic condition before cross-arm comparison."""
+    return record.get("automatic_eligible") is True
+
+
 def _routing_metrics(records: list[dict[str, Any]]) -> tuple[float | None, float | None]:
     if not records:
         return None, None
@@ -228,8 +233,16 @@ def _target_skills(record: dict[str, Any]) -> tuple[str, ...]:
 def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
     records = list(records)
     arms = ("none", "forced", "automatic")
-    positive = [record for record in records if record.get("kind") != "negative"]
-    negative = [record for record in records if record.get("kind") == "negative"]
+    positive = [
+        record
+        for record in records
+        if record.get("kind") != "negative" and is_automatic_comparator(record)
+    ]
+    negative = [
+        record
+        for record in records
+        if record.get("kind") == "negative" and is_automatic_comparator(record)
+    ]
     outcome_rates = {
         arm: _rate(
             [
