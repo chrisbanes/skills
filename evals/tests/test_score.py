@@ -225,6 +225,77 @@ class ScorecardTest(unittest.TestCase):
         self.assertEqual(1.0, score.negative_rates["forced"])
         self.assertTrue(score.gates["negative_controls"])
 
+    def test_automatic_efficiency_comparators_exclude_explicit_only_cases(self):
+        def with_telemetry(item, tokens):
+            item["subject"] = {
+                "usage": {"input_tokens": tokens - 1, "output_tokens": 1},
+                "events": [{"type": "turn.completed"}],
+                "elapsed_seconds": 1.0,
+            }
+            return item
+
+        records = [
+            with_telemetry(
+                record(
+                    "automatic:none",
+                    "none",
+                    True,
+                    automatic_eligible=True,
+                ),
+                10,
+            ),
+            with_telemetry(
+                record(
+                    "automatic:forced",
+                    "forced",
+                    True,
+                    automatic_eligible=True,
+                ),
+                20,
+            ),
+            with_telemetry(
+                record(
+                    "automatic:automatic",
+                    "automatic",
+                    True,
+                    automatic_eligible=True,
+                ),
+                30,
+            ),
+            with_telemetry(
+                record(
+                    "explicit:none",
+                    "none",
+                    True,
+                    expected=("implement-with-subagents",),
+                    automatic_eligible=False,
+                ),
+                100,
+            ),
+            with_telemetry(
+                record(
+                    "explicit:forced",
+                    "forced",
+                    True,
+                    expected=("implement-with-subagents",),
+                    automatic_eligible=False,
+                ),
+                200,
+            ),
+        ]
+
+        score = compute_scorecard(records)
+
+        self.assertEqual(1, score.efficiency["none"].runs)
+        self.assertEqual(10.0, score.efficiency["none"].total_tokens)
+        self.assertEqual(1, score.efficiency["forced"].runs)
+        self.assertEqual(20.0, score.efficiency["forced"].total_tokens)
+        self.assertEqual(1, score.efficiency["automatic"].runs)
+        self.assertEqual(30.0, score.efficiency["automatic"].total_tokens)
+        explicit = score.skill_efficiency["implement-with-subagents"]
+        self.assertEqual(0, explicit["none"].runs)
+        self.assertEqual(0, explicit["automatic"].runs)
+
     def test_measures_subject_efficiency_and_charges_failures_to_each_pass(self):
         def with_telemetry(item, *, tokens, tool_calls, turns, elapsed):
             item["subject"] = {

@@ -239,18 +239,30 @@ def main(argv: list[str] | None = None) -> int:
         print(paths["scorecard"])
         return 0
     if args.command == "judge":
-        result = rejudge_packets(
-            repo_root,
-            args.output_dir.resolve(),
-            JudgeConfig(args.judge_model, args.judge_reasoning),
-            execute=args.execute,
-            codex_executable=args.codex_executable,
-        )
+        output_dir = args.output_dir.resolve()
+        try:
+            records = load_raw_records(output_dir)
+            if not records:
+                print(f"no raw results under {output_dir}", file=sys.stderr)
+                return 1
+            corpus = validate_corpus(repo_root)
+            reconcile_automatic_eligibility(repo_root, corpus.cases, records)
+            result = rejudge_packets(
+                repo_root,
+                output_dir,
+                JudgeConfig(args.judge_model, args.judge_reasoning),
+                execute=args.execute,
+                codex_executable=args.codex_executable,
+                records=records,
+            )
+        except (CaseValidationError, OSError, ValueError) as error:
+            print(error, file=sys.stderr)
+            return 1
         if args.json:
             print(json.dumps(result, indent=2, sort_keys=True))
         else:
             print(
-                f"{result['packet_count']} persisted packets; "
+                f"{result['packet_count']} eligible persisted packets; "
                 f"{result['judge_calls']} planned judge calls"
             )
         return 0

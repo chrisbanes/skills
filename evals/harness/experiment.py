@@ -40,7 +40,7 @@ from evals.harness.results import (
     run_with_one_retry,
     write_result,
 )
-from evals.harness.score import compute_scorecard
+from evals.harness.score import compute_scorecard, is_measured_in_arm
 from evals.harness.suites import PUBLIC_SKILLS, ROUTER_SKILL, suite_for_skills
 
 
@@ -663,6 +663,8 @@ def write_rejudged_reports(
 
     rejudged: list[dict[str, Any]] = []
     for original in records:
+        if not is_measured_in_arm(original, str(original.get("arm"))):
+            continue
         fingerprint = original.get("fingerprint")
         repetition = original.get("repetition")
         if not isinstance(fingerprint, str) or not isinstance(repetition, int):
@@ -713,9 +715,37 @@ def rejudge_packets(
     *,
     execute: bool,
     codex_executable: str = "codex",
+    records: Iterable[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    packets = sorted((output_dir / "judge-packets").glob("*.json"))
-    plan = {"packet_count": len(packets), "judge_calls": len(packets), "execute": execute}
+    all_packets = sorted((output_dir / "judge-packets").glob("*.json"))
+    packets = all_packets
+    if records is not None:
+        eligible_packets: set[tuple[str, int]] = set()
+        for record in records:
+            if not is_measured_in_arm(record, str(record.get("arm"))):
+                continue
+            fingerprint = record.get("fingerprint")
+            repetition = record.get("repetition")
+            if not isinstance(fingerprint, str) or not isinstance(repetition, int):
+                raise ValueError(
+                    f"record lacks fingerprint or repetition: {record.get('id')}"
+                )
+            eligible_packets.add((fingerprint[:20], repetition))
+        packets = []
+        for packet_path in all_packets:
+            try:
+                _, fingerprint_prefix, repetition = packet_path.stem.rsplit("-", 2)
+                key = (fingerprint_prefix, int(repetition))
+            except ValueError as error:
+                raise ValueError(f"invalid judge packet filename: {packet_path}") from error
+            if key in eligible_packets:
+                packets.append(packet_path)
+    plan = {
+        "packet_count": len(packets),
+        "skipped_packet_count": len(all_packets) - len(packets),
+        "judge_calls": len(packets),
+        "execute": execute,
+    }
     if not execute:
         return plan
     codex_version = _command_output([codex_executable, "--version"], cwd=repo_root)

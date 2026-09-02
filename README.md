@@ -167,9 +167,10 @@ may perform differently. These are not merge or release gates. See
 Values are per-run medians, baseline → automatic, followed by the automatic
 percentage change. These subject-only measurements use the latest complete,
 same-run evidence available for each suite and include failed runs and negative
-controls. Multi-skill scenarios contribute to every targeted skill row. A turn
-is one completed Codex turn; time remains environment-sensitive. The source
-runs, selection rules, and detailed scorecards are in the
+controls. Baseline-to-automatic efficiency comparisons use only cases eligible
+for automatic activation. Multi-skill scenarios contribute to every targeted
+skill row. A turn is one completed Codex turn; time remains environment-sensitive.
+The source runs, selection rules, and detailed scorecards are in the
 [evaluation change record](evals/artifacts/2026-08-27-skill-eval-efficiency.md).
 
 | Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |

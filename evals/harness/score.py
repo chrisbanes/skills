@@ -295,13 +295,15 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         if is_measured_in_arm(record, str(record.get("arm")))
     )
     efficiency = {
-            arm: _efficiency_metrics(
-                [
-                    record
-                    for record in records
-                    if record.get("arm") == arm and is_measured_in_arm(record, arm)
-                ]
-            )
+        arm: _efficiency_metrics(
+            [
+                record
+                for record in records
+                if record.get("arm") == arm
+                and is_automatic_comparator(record)
+                and is_measured_in_arm(record, arm)
+            ]
+        )
         for arm in arms
     }
     target_skills = sorted(
@@ -314,6 +316,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
                     record
                     for record in records
                     if record.get("arm") == arm
+                    and is_automatic_comparator(record)
                     and is_measured_in_arm(record, arm)
                     and skill in _target_skills(record)
                 ]

@@ -69,9 +69,10 @@ suite-wide aggregate.
 Values are per-run medians, baseline → automatic, followed by the automatic
 percentage change. These subject-only measurements use the latest complete,
 same-run evidence available for each suite and include failed runs and negative
-controls. Multi-skill scenarios contribute to every targeted skill row. A turn
-is one completed Codex turn; time remains environment-sensitive. The source
-runs, selection rules, and detailed scorecards are in the
+controls. Baseline-to-automatic efficiency comparisons use only cases eligible
+for automatic activation. Multi-skill scenarios contribute to every targeted
+skill row. A turn is one completed Codex turn; time remains environment-sensitive.
+The source runs, selection rules, and detailed scorecards are in the
 [evaluation change record](artifacts/2026-08-27-skill-eval-efficiency.md).
 
 | Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
@@ -292,6 +293,10 @@ python3 evals/run.py judge \
   --output-dir .scratch/skill-evals/<run-id> \
   --judge-model gpt-5.6-sol --judge-reasoning high
 ```
+
+It reconciles raw records with the current corpus first, then plans and
+rejudges only measured packets; automatic records that are now ineligible are
+left untouched.
 
 After all rejudgments complete, build a separate scorecard that combines those
 verdicts with the immutable subject and deterministic-grading evidence:

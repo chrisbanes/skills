@@ -203,9 +203,51 @@ class EvaluationCliTest(unittest.TestCase):
 
     def test_judge_defaults_to_a_no_call_packet_preview(self):
         with tempfile.TemporaryDirectory() as temp_dir:
-            packets = Path(temp_dir) / "judge-packets"
+            output_dir = Path(temp_dir)
+            included_fingerprint = "a" * 64
+            excluded_fingerprint = "b" * 64
+            packets = output_dir / "judge-packets"
             packets.mkdir()
-            (packets / "one.json").write_text("{}\n", encoding="utf-8")
+            (packets / f"candidate-{included_fingerprint[:20]}-1.json").write_text(
+                "{}\n", encoding="utf-8"
+            )
+            (packets / f"candidate-{excluded_fingerprint[:20]}-1.json").write_text(
+                "{}\n", encoding="utf-8"
+            )
+
+            def write_raw(case_id, fingerprint):
+                raw = output_dir / "raw" / case_id / "automatic" / "1.json"
+                raw.parent.mkdir(parents=True)
+                raw.write_text(
+                    json.dumps(
+                        {
+                            "payload": {
+                                "id": f"{case_id}:automatic:1",
+                                "case_id": case_id,
+                                "arm": "automatic",
+                                "repetition": 1,
+                                "fingerprint": fingerprint,
+                                "suite": "compose",
+                                "codex_version": "codex-cli 1",
+                                "skill_sha": "skill-sha",
+                                "skill_catalog_digest": "catalog-sha",
+                                "subject_model": {
+                                    "model": "gpt-5.6-terra",
+                                    "reasoning": "medium",
+                                },
+                                "judge_model": {
+                                    "model": "gpt-5.6-sol",
+                                    "reasoning": "high",
+                                },
+                                "subject": {"final_output": {"skills_used": []}},
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+            write_raw("compose-state-authoring-direct", included_fingerprint)
+            write_raw("implement-with-subagents-direct", excluded_fingerprint)
             status, output = self.invoke(
                 "judge",
                 "--output-dir",
@@ -219,6 +261,7 @@ class EvaluationCliTest(unittest.TestCase):
 
         self.assertEqual(0, status)
         self.assertEqual(1, json.loads(output)["judge_calls"])
+        self.assertEqual(1, json.loads(output)["skipped_packet_count"])
         self.assertFalse(json.loads(output)["execute"])
 
 
