@@ -5,6 +5,10 @@
 A set of skills for Kotlin, Jetpack Compose, Android development, and grounded
 writing.
 
+The repository is also a portable [Agent Plugins](https://agent-plugins.org/)
+v1.0.0 package. Conforming clients discover the root [`plugin.json`](plugin.json)
+and the immediate skill directories under [`skills/`](skills/).
+
 ## Install
 
 With the [skills CLI](https://skills.sh):
@@ -103,13 +107,23 @@ This is a breaking taxonomy change. Replace the removed entrypoints as follows:
 
 Skills live at `skills/<skill-name>/SKILL.md`, flat (no language nesting). The `name:` in the SKILL.md frontmatter must match the directory name.
 
-Frontmatter is validated against [`skills.schema.json`](skills.schema.json) — `name` and `description` are required, `name` must be kebab-case, and `disable-model-invocation: true` makes a skill explicit-only. The router also uses Claude Code's optional `paths` extension. Clients that do not support this extension must ignore the `paths` field rather than rejecting the skill.
+Frontmatter is validated against [`skills.schema.json`](skills.schema.json), which
+tracks the core [Agent Skills specification](https://agentskills.io/specification)
+and permits `disable-model-invocation` and `paths` for Claude Code compatibility.
+`name` and `description` are required; portable optional fields are `license`,
+`compatibility`, `metadata`, and `allowed-tools`. Explicit-only workflow skills
+also mirror that policy in Codex's `agents/openai.yaml`; the router uses `paths`
+to activate for Kotlin source files in clients that support it.
 
 ### Releases
 
 Release versions use SemVer-compatible CalVer: `YYYY.M.D` without zero-padded month or day values, for example `2026.6.17`.
 
-Keep `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and new Git release tags on the same version. Existing zero-padded tags from before this policy map to the non-padded manifest version, so `2026.06.16` maps to `2026.6.16`. Only bump versions when publishing an installable release.
+Keep root `plugin.json`, `.claude-plugin/plugin.json`,
+`.codex-plugin/plugin.json`, and new Git release tags on the same version.
+Existing zero-padded tags from before this policy map to the non-padded manifest
+version, so `2026.06.16` maps to `2026.6.16`. Only bump versions when publishing
+an installable release.
 
 To publish a release, run the **Release** workflow from GitHub Actions. Leave the version input empty to use today's UTC `YYYY.M.D` version, or provide a specific non-zero-padded CalVer value. Use the dry-run option to validate without creating a commit, tag, or GitHub release.
 

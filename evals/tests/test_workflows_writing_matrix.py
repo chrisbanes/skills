@@ -158,6 +158,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "boolean",
             schema["properties"]["disable-model-invocation"]["type"],
         )
+        self.assertEqual(2, len(schema["properties"]["paths"]["oneOf"]))
 
     def test_automatic_conditions_exclude_explicit_only_workflow_skills(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

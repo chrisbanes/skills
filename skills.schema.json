@@ -6,17 +6,41 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Skill name, must match the directory name (kebab-case)",
-      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+      "description": "Skill name, must match the directory name",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
     },
     "description": {
       "type": "string",
-      "description": "When this skill should be used",
-      "minLength": 1
+      "description": "What this skill does and when it should be used",
+      "minLength": 1,
+      "maxLength": 1024
+    },
+    "license": {
+      "type": "string",
+      "description": "License name or reference to a bundled license file"
+    },
+    "compatibility": {
+      "type": "string",
+      "description": "Environment requirements",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Client-defined string metadata",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "allowed-tools": {
+      "type": "string",
+      "description": "Space-separated pre-approved tools"
     },
     "disable-model-invocation": {
       "type": "boolean",
-      "description": "Whether the skill is available only through explicit user invocation"
+      "description": "Claude Code extension that restricts a skill to explicit invocation"
     },
     "paths": {
       "description": "Claude Code path patterns that limit automatic skill activation",
