@@ -2,3 +2,5 @@ interface:
   display_name: "To Plan"
   short_description: "Create a repository-aware implementation plan"
   default_prompt: "Use $to-plan to create an implementation plan from this ready GitHub issue or in-chat task."
+policy:
+  allow_implicit_invocation: false

@@ -1,6 +1,7 @@
 ---
 name: implement-with-subagents
 description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including queue atomicity, task-scoped commit acceptance, and repair ownership, with an installed implement skill.
+disable-model-invocation: true
 ---
 
 # Implement with subagents

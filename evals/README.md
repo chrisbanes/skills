@@ -10,7 +10,7 @@ skills: `grounded-writing`, `implement-with-subagents`,
 questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
-2. Does automatic activation report the expected public skill entrypoints?
+2. Does automatic activation report the expected implicitly invokable public skill entrypoints?
 3. What subject-side token, tool-call, and wall-clock cost does each arm require?
 
 The evaluator never turns a stochastic model score into a merge or release
@@ -30,8 +30,9 @@ corpus, and execution conditions are held constant.
 ## Results
 
 **Baseline** is the positive-case pass rate with no skills available.
-**Automatic** is the positive-case pass rate with every repository skill
-available but none named in the prompt. **Restraint** is the no-change-control
+**Automatic** is the positive-case pass rate with every implicitly invokable
+repository skill available but none named in the prompt. Explicit-only skills
+are measured only in forced runs, including their no-change controls. **Restraint** is the no-change-control
 pass rate: the skill may inspect the task, but must not make an unnecessary
 change. The table reports the latest available result for each skill and
 correctness metric. These scores were produced using
@@ -58,9 +59,9 @@ suite-wide aggregate.
 | `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 100.0% |
 | `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
 | `grounded-writing` | — | 100.0% | 100.0% |
-| `implement-with-subagents` | — | 100.0% | 100.0% |
-| `run-github-project` | — | 100.0% | 100.0% |
-| `shepherd` | — | 100.0% | 100.0% |
+| `implement-with-subagents` | — | — | 100.0% |
+| `run-github-project` | — | — | 100.0% |
+| `shepherd` | — | — | 100.0% |
 
 ### Skill efficiency
 
@@ -85,9 +86,9 @@ runs, selection rules, and detailed scorecards are in the
 | `kotlin-concurrency-and-flow` | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
 | `kotlin-control-flow` | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
 | `grounded-writing` | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
-| `implement-with-subagents` | 40.9k → 50.9k (+24%) | 2 → 2 (+0%) | 1 → 1 (+0%) | 23.7s → 25.9s (+9%) |
-| `run-github-project` | 41.6k → 59.0k (+42%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 25.0s → 24.1s (-3%) |
-| `shepherd` | 51.8k → 74.3k (+43%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 21.8s → 30.2s (+38%) |
+| `implement-with-subagents` | — | — | — | — |
+| `run-github-project` | — | — | — | — |
+| `shepherd` | — | — | — | — |
 
 ## Evaluation setup
 
@@ -102,9 +103,9 @@ Every case runs in a fresh workspace and conversation under three arms:
 - `forced` enables and explicitly invokes only the case's target skill or
   skills. Negative controls still force the target so over-application remains
   observable.
-- `automatic` enables all 16 public repository skills without naming any skill
-  in the task prompt. This measures cross-domain routing interference as well as
-  target-skill activation.
+- `automatic` enables every public repository skill whose frontmatter and
+  metadata permit implicit invocation, without naming a skill in the task prompt. This measures
+  cross-domain routing interference and automatic target-skill activation.
 
 Each `case × arm` condition runs three times by default. The 38-case Compose
 suite schedules 342 subject calls and 342 blinded judge calls. The 19-case

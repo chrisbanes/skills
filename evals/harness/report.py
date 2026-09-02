@@ -98,7 +98,12 @@ def _comparison(
 
 
 def _outcome_rate(records: list[dict[str, Any]], arm: str) -> float | None:
-    selected = [record for record in records if record.get("arm") == arm]
+    selected = [
+        record
+        for record in records
+        if record.get("arm") == arm
+        and (arm != "automatic" or bool(record.get("automatic_eligible", True)))
+    ]
     if not selected:
         return None
     return sum(bool(record.get("outcome_pass")) for record in selected) / len(selected)
@@ -113,7 +118,11 @@ def _target_skills(record: dict[str, Any]) -> list[str]:
 
 def _per_arm_record_count(records: list[dict[str, Any]]) -> str:
     counts = {
-        arm: sum(record.get("arm") == arm for record in records)
+        arm: sum(
+            record.get("arm") == arm
+            and (arm != "automatic" or bool(record.get("automatic_eligible", True)))
+            for record in records
+        )
         for arm in ("none", "forced", "automatic")
         if any(record.get("arm") == arm for record in records)
     }

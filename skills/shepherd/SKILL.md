@@ -1,6 +1,7 @@
 ---
 name: shepherd
 description: "Use when asked to shepherd, babysit, monitor, or poll open pull requests or merge requests, including triaging review feedback, CI failures, and routine follow-up."
+disable-model-invocation: true
 ---
 
 # Shepherd

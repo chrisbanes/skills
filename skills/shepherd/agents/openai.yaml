@@ -1,0 +1,6 @@
+interface:
+  display_name: "Shepherd"
+  short_description: "Monitor PRs and handle authorized follow-up"
+  default_prompt: "Use $shepherd to monitor this pull request or merge request and address authorized follow-up."
+policy:
+  allow_implicit_invocation: false

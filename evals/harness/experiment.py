@@ -14,6 +14,7 @@ from evals.harness.codex import (
     ARMS,
     RunConfig,
     SubjectResult,
+    automatically_invokable_public_skills,
     completed_turn_count,
     completed_tool_call_count,
     discover_skill_paths,
@@ -51,6 +52,22 @@ RUN_CONTROL_FIELDS = (
     "subject_model",
     "judge_model",
 )
+
+
+def _routing_expectations(
+    case: EvalCase, arm: str, repo_root: Path
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    if arm != "automatic":
+        return case.expected_skills, case.allowed_skills or case.expected_skills
+    automatic_skills = set(automatically_invokable_public_skills(repo_root))
+    return (
+        tuple(skill for skill in case.expected_skills if skill in automatic_skills),
+        tuple(
+            skill
+            for skill in (case.allowed_skills or case.expected_skills)
+            if skill in automatic_skills
+        ),
+    )
 
 
 def filter_cases(
@@ -250,8 +267,10 @@ def _result_payload(
     skill_paths: tuple[Path, ...],
     skill_sources: tuple[Path, ...],
     skill_catalog_digest: str,
+    repo_root: Path,
 ) -> dict[str, Any]:
     reported = reported_skill_names(subject.final_output)
+    expected_skills, allowed_skills = _routing_expectations(case, arm, repo_root)
     judge_pass = judge.returncode == 0 and judge_passes_rubric(
         judge.output, case.rubric
     )
@@ -279,8 +298,9 @@ def _result_payload(
         "task_mode": case.task_mode,
         "suite": suite_for_skills(case.target_skills).id,
         "target_skills": list(case.target_skills),
-        "expected_skills": list(case.expected_skills),
-        "allowed_skills": list(case.allowed_skills or case.expected_skills),
+        "expected_skills": list(expected_skills),
+        "allowed_skills": list(allowed_skills),
+        "automatic_eligible": arm != "automatic" or bool(expected_skills),
         "reported_skills": [skill for skill in reported if skill != ROUTER_SKILL],
         "reported_router": ROUTER_SKILL in reported,
         "objective_pass": grade.objective_pass,
@@ -436,6 +456,7 @@ def execute_experiment(
                     skill_paths=skill_paths,
                     skill_sources=skill_sources,
                     skill_catalog_digest=skill_catalog_digest,
+                    repo_root=repo_root,
                 )
                 write_result(result_path, fingerprint, payload)
                 records.append(payload)
@@ -536,8 +557,14 @@ def regrade_records(
             raise ValueError(f"unknown case in raw record: {case_id}")
         case = by_id[case_id]
         grade = grade_subject(case, _subject_result_from_record(record, output_dir))
-        record["expected_skills"] = list(case.expected_skills)
-        record["allowed_skills"] = list(case.allowed_skills or case.expected_skills)
+        expected_skills, allowed_skills = _routing_expectations(
+            case, str(record.get("arm")), repo_root
+        )
+        record["expected_skills"] = list(expected_skills)
+        record["allowed_skills"] = list(allowed_skills)
+        record["automatic_eligible"] = (
+            str(record.get("arm")) != "automatic" or bool(expected_skills)
+        )
         record["objective_pass"] = grade.objective_pass
         record["forbidden_action_failure"] = grade.forbidden_action_failure
         record["objective_failures"] = list(grade.objective_failures)

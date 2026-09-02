@@ -14,6 +14,10 @@
       "description": "When this skill should be used",
       "minLength": 1
     },
+    "disable-model-invocation": {
+      "type": "boolean",
+      "description": "Whether the skill is available only through explicit user invocation"
+    },
     "paths": {
       "description": "Claude Code path patterns that limit automatic skill activation",
       "oneOf": [

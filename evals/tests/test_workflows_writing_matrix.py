@@ -5,7 +5,12 @@ import unittest
 from pathlib import Path
 
 from evals.harness.cases import validate_corpus
-from evals.harness.codex import RunConfig, build_subject_command, prepare_workspace
+from evals.harness.codex import (
+    RunConfig,
+    automatically_invokable_public_skills,
+    build_subject_command,
+    prepare_workspace,
+)
 from evals.harness.experiment import filter_cases
 from evals.harness.suites import PUBLIC_SKILLS, WORKFLOWS_WRITING_SKILLS
 
@@ -76,21 +81,64 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     "Enabled public skills are not fixture dependencies", rendered
                 )
 
-                prepare_workspace(case, REPO_ROOT, workspace)
+                prepare_workspace(
+                    case,
+                    REPO_ROOT,
+                    workspace,
+                    enabled_skills=automatically_invokable_public_skills(REPO_ROOT),
+                )
                 self.assertTrue(
                     (workspace / ".agents/skills/implement/SKILL.md").is_file()
                 )
+                if arm == "automatic":
+                    self.assertNotIn(
+                        str(
+                            workspace
+                            / ".agents"
+                            / "skills"
+                            / "implement-with-subagents"
+                            / "SKILL.md"
+                        ),
+                        rendered,
+                    )
+                    self.assertFalse(
+                        (
+                            workspace
+                            / ".agents"
+                            / "skills"
+                            / "implement-with-subagents"
+                        ).exists()
+                    )
 
-    def test_automatic_workflow_skills_allow_implicit_invocation(self):
-        for skill in WORKFLOWS_WRITING_SKILLS:
+    def test_advanced_workflow_skills_require_explicit_invocation(self):
+        explicit_only = (
+            "implement-with-subagents",
+            "run-github-project",
+            "shepherd",
+            "to-plan",
+        )
+        for skill in explicit_only:
             config = REPO_ROOT / "skills" / skill / "agents" / "openai.yaml"
-            if not config.is_file():
-                continue
+            entrypoint = REPO_ROOT / "skills" / skill / "SKILL.md"
             with self.subTest(skill=skill):
-                self.assertNotIn(
+                self.assertIn(
                     "allow_implicit_invocation: false",
                     config.read_text(encoding="utf-8"),
                 )
+                self.assertIn(
+                    "disable-model-invocation: true",
+                    entrypoint.read_text(encoding="utf-8"),
+                )
+
+        self.assertEqual(
+            set(PUBLIC_SKILLS) - set(explicit_only),
+            set(automatically_invokable_public_skills(REPO_ROOT)),
+        )
+        schema = json.loads((REPO_ROOT / "skills.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            "boolean",
+            schema["properties"]["disable-model-invocation"]["type"],
+        )
 
     def test_behavioral_expectations_do_not_assert_fixture_prose(self):
         expectations = json.loads(

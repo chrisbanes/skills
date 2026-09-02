@@ -113,6 +113,25 @@ def discover_skill_paths(
     return tuple(sorted(candidates, key=str))
 
 
+def automatically_invokable_public_skills(repo_root: Path) -> tuple[str, ...]:
+    """Return public skills whose frontmatter and metadata permit invocation."""
+    implicitly_invokable = []
+    for skill in PUBLIC_SKILLS:
+        skill_dir = repo_root / "skills" / skill
+        metadata = skill_dir / "agents" / "openai.yaml"
+        frontmatter = (skill_dir / "SKILL.md").read_text(encoding="utf-8").partition(
+            "\n---\n"
+        )[0]
+        is_explicit_only = "disable-model-invocation: true" in frontmatter or (
+            metadata.is_file()
+            and "allow_implicit_invocation: false"
+            in metadata.read_text(encoding="utf-8")
+        )
+        if not is_explicit_only:
+            implicitly_invokable.append(skill)
+    return tuple(implicitly_invokable)
+
+
 def is_generated_skill_path(path: Path, skill_root: Path) -> bool:
     relative = path.relative_to(skill_root)
     return "__pycache__" in relative.parts or (
@@ -129,13 +148,15 @@ def _ignore_generated_skill_paths(directory: str, names: list[str]) -> list[str]
     ]
 
 
-def _enabled_skills(case: EvalCase, arm: str) -> tuple[str, ...]:
+def _enabled_skills(
+    case: EvalCase, arm: str, repo_root: Path
+) -> tuple[str, ...]:
     if arm == "none":
         return ()
     if arm == "forced":
         return case.target_skills
     if arm == "automatic":
-        return PUBLIC_SKILLS
+        return automatically_invokable_public_skills(repo_root)
     raise ValueError(f"unknown arm: {arm}")
 
 
@@ -154,7 +175,7 @@ def _skill_config(
         raise ValueError(f"unknown arm: {arm}")
     enabled = {
         _workspace_skill_path(workspace, skill)
-        for skill in _enabled_skills(case, arm)
+        for skill in _enabled_skills(case, arm, repo_root)
     }
     enabled.update(
         _workspace_skill_path(workspace, skill) for skill in case.constant_skills
@@ -386,7 +407,7 @@ def run_subject(
         case,
         repo_root,
         workspace,
-        enabled_skills=_enabled_skills(case, arm),
+        enabled_skills=_enabled_skills(case, arm, repo_root),
     )
     command = build_subject_command(
         case,

@@ -1,6 +1,7 @@
 ---
 name: to-plan
 description: Use when one ready GitHub issue or an in-chat task needs a repository-aware implementation plan for a later implementation workflow.
+disable-model-invocation: true
 ---
 
 # To Plan

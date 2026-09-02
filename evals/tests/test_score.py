@@ -13,6 +13,7 @@ def record(
     allowed=None,
     reported=(),
     safety=False,
+    automatic_eligible=True,
 ):
     return {
         "id": record_id,
@@ -23,6 +24,7 @@ def record(
         "expected_skills": list(expected),
         "allowed_skills": list(expected if allowed is None else allowed),
         "reported_skills": list(reported),
+        "automatic_eligible": automatic_eligible,
         "forbidden_action_failure": safety,
     }
 
@@ -114,6 +116,24 @@ class ScorecardTest(unittest.TestCase):
         self.assertFalse(score.gates["automatic_retention"])
         self.assertFalse(score.gates["routing_precision"])
         self.assertFalse(score.gates["negative_controls"])
+
+    def test_explicit_only_skills_are_excluded_from_automatic_metrics(self):
+        score = compute_scorecard(
+            [
+                record("one:none", "none", False),
+                record("one:forced", "forced", True),
+                record(
+                    "one:automatic",
+                    "automatic",
+                    True,
+                    automatic_eligible=False,
+                ),
+            ]
+        )
+
+        self.assertIsNone(score.outcome_rates["automatic"])
+        self.assertIsNone(score.routing_precision)
+        self.assertIsNone(score.automatic_retention)
 
     def test_measures_subject_efficiency_and_charges_failures_to_each_pass(self):
         def with_telemetry(item, *, tokens, tool_calls, turns, elapsed):

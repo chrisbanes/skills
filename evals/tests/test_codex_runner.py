@@ -18,6 +18,14 @@ from evals.harness.codex import (
 from evals.harness.suites import PUBLIC_SKILLS
 
 
+EXPLICIT_ONLY_SKILLS = (
+    "implement-with-subagents",
+    "run-github-project",
+    "shepherd",
+    "to-plan",
+)
+
+
 def sample_case(root: Path, *, task_mode: str = "edit") -> EvalCase:
     case_dir = root / "evals" / "cases" / "sample"
     case_dir.mkdir(parents=True, exist_ok=True)
@@ -61,6 +69,19 @@ class CodexRunnerTest(unittest.TestCase):
             skill_dir = self.root / "skills" / skill
             skill_dir.mkdir(parents=True)
             (skill_dir / "SKILL.md").write_text(f"---\nname: {skill}\n---\n", encoding="utf-8")
+        for skill in EXPLICIT_ONLY_SKILLS:
+            (self.root / "skills" / skill / "SKILL.md").write_text(
+                f"---\nname: {skill}\ndisable-model-invocation: true\n---\n",
+                encoding="utf-8",
+            )
+            if skill == "to-plan":
+                continue
+            metadata = self.root / "skills" / skill / "agents"
+            metadata.mkdir()
+            (metadata / "openai.yaml").write_text(
+                "policy:\n  allow_implicit_invocation: false\n",
+                encoding="utf-8",
+            )
         schemas = self.root / "evals" / "schemas"
         schemas.mkdir(parents=True)
         (schemas / "subject-output.schema.json").write_text("{}\n", encoding="utf-8")
@@ -102,10 +123,10 @@ class CodexRunnerTest(unittest.TestCase):
             self.assertIn("SKILL.md", rendered)
         self.assertEqual(1, " ".join(none).count("path = "))
         self.assertEqual(2, " ".join(forced).count("path = "))
-        self.assertEqual(17, " ".join(automatic).count("path = "))
+        self.assertEqual(13, " ".join(automatic).count("path = "))
         self.assertEqual(0, " ".join(none).count("enabled = true"))
         self.assertEqual(1, " ".join(forced).count("enabled = true"))
-        self.assertEqual(16, " ".join(automatic).count("enabled = true"))
+        self.assertEqual(12, " ".join(automatic).count("enabled = true"))
         self.assertIn("$compose-state-and-effects", forced[-1])
         self.assertNotIn("$compose-state-and-effects", automatic[-1])
         self.assertIn("If you run Gradle, use `--offline --no-scan`.", automatic[-1])
