@@ -46,8 +46,9 @@ def _rate(records: list[dict[str, Any]]) -> float | None:
     return sum(bool(record.get("outcome_pass")) for record in records) / len(records)
 
 
-def _is_measured_in_arm(record: dict[str, Any], arm: str) -> bool:
-    return arm != "automatic" or bool(record.get("automatic_eligible", True))
+def is_measured_in_arm(record: dict[str, Any], arm: str) -> bool:
+    """Treat legacy automatic records as unmeasured until they are reconciled."""
+    return arm != "automatic" or record.get("automatic_eligible") is True
 
 
 def _routing_metrics(records: list[dict[str, Any]]) -> tuple[float | None, float | None]:
@@ -234,7 +235,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
             [
                 record
                 for record in positive
-                if record.get("arm") == arm and _is_measured_in_arm(record, arm)
+                if record.get("arm") == arm and is_measured_in_arm(record, arm)
             ]
         )
         for arm in arms
@@ -244,7 +245,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
             [
                 record
                 for record in negative
-                if record.get("arm") == arm and _is_measured_in_arm(record, arm)
+                if record.get("arm") == arm and is_measured_in_arm(record, arm)
             ]
         )
         for arm in arms
@@ -266,7 +267,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         record
         for record in records
         if record.get("arm") == "automatic"
-        and _is_measured_in_arm(record, "automatic")
+        and is_measured_in_arm(record, "automatic")
     ]
     routing_precision, routing_recall = _routing_metrics(automatic_records)
     router_report_rate = (
@@ -276,14 +277,16 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         else None
     )
     forbidden_failures = sum(
-        bool(record.get("forbidden_action_failure")) for record in records
+        bool(record.get("forbidden_action_failure"))
+        for record in records
+        if is_measured_in_arm(record, str(record.get("arm")))
     )
     efficiency = {
             arm: _efficiency_metrics(
                 [
                     record
                     for record in records
-                    if record.get("arm") == arm and _is_measured_in_arm(record, arm)
+                    if record.get("arm") == arm and is_measured_in_arm(record, arm)
                 ]
             )
         for arm in arms
@@ -298,7 +301,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
                     record
                     for record in records
                     if record.get("arm") == arm
-                    and _is_measured_in_arm(record, arm)
+                    and is_measured_in_arm(record, arm)
                     and skill in _target_skills(record)
                 ]
             )

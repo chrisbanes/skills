@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from evals.harness.cases import validate_corpus
 from evals.harness.codex import (
@@ -11,7 +12,13 @@ from evals.harness.codex import (
     build_subject_command,
     prepare_workspace,
 )
-from evals.harness.experiment import filter_cases
+from evals.harness.experiment import (
+    evaluation_conditions,
+    execute_experiment,
+    filter_cases,
+    reconcile_automatic_eligibility,
+)
+from evals.harness.judge import JudgeConfig
 from evals.harness.suites import PUBLIC_SKILLS, WORKFLOWS_WRITING_SKILLS
 
 
@@ -139,6 +146,60 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "boolean",
             schema["properties"]["disable-model-invocation"]["type"],
         )
+
+    def test_automatic_conditions_exclude_explicit_only_workflow_skills(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+
+        conditions = evaluation_conditions(REPO_ROOT, report.cases, ("automatic",))
+
+        self.assertEqual(
+            {
+                "grounded-writing-direct",
+                "grounded-writing-novel",
+                "grounded-writing-negative",
+            },
+            {case.id for case, _ in conditions},
+        )
+
+    def test_execution_skips_an_explicit_only_automatic_condition(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case for case in report.cases if case.id == "run-github-project-direct"
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "evals.harness.experiment.preflight"
+        ) as preflight:
+            paths = execute_experiment(
+                REPO_ROOT,
+                [case],
+                arms=["automatic"],
+                repetitions=1,
+                run_config=RunConfig("gpt-5.6-terra", "medium"),
+                judge_config=JudgeConfig("gpt-5.6-sol", "high"),
+                output_dir=Path(temp_dir),
+            )
+
+            self.assertEqual(
+                [], json.loads(paths["results"].read_text(encoding="utf-8"))
+            )
+
+        preflight.assert_not_called()
+
+    def test_legacy_automatic_records_are_reconciled_from_the_current_corpus(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        records = [
+            {"case_id": "run-github-project-direct", "arm": "automatic"},
+            {"case_id": "grounded-writing-direct", "arm": "automatic"},
+            {"case_id": "removed-case", "arm": "automatic"},
+        ]
+
+        reconcile_automatic_eligibility(REPO_ROOT, report.cases, records)
+
+        self.assertFalse(records[0]["automatic_eligible"])
+        self.assertTrue(records[1]["automatic_eligible"])
+        self.assertEqual(["grounded-writing"], records[1]["expected_skills"])
+        self.assertFalse(records[2]["automatic_eligible"])
 
     def test_behavioral_expectations_do_not_assert_fixture_prose(self):
         expectations = json.loads(

@@ -62,6 +62,25 @@ class EvaluationCliTest(unittest.TestCase):
         self.assertEqual(171, plan["judge_calls"])
         self.assertEqual(342, plan["total_calls"])
 
+    def test_workflows_plan_skips_explicit_only_automatic_conditions(self):
+        status, output = self.invoke(
+            "plan",
+            *MODEL_ARGS,
+            "--suite",
+            "workflows-writing",
+            "--repetitions",
+            "3",
+            "--json",
+        )
+
+        plan = json.loads(output)
+        self.assertEqual(0, status)
+        self.assertEqual(12, plan["case_count"])
+        self.assertEqual(27, plan["condition_count"])
+        self.assertEqual(81, plan["subject_calls"])
+        self.assertEqual(81, plan["judge_calls"])
+        self.assertEqual(162, plan["total_calls"])
+
     def test_filters_case_skill_and_arm_before_counting_calls(self):
         status, output = self.invoke(
             "plan",

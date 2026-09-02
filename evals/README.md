@@ -107,11 +107,12 @@ Every case runs in a fresh workspace and conversation under three arms:
   metadata permit implicit invocation, without naming a skill in the task prompt. This measures
   cross-domain routing interference and automatic target-skill activation.
 
-Each `case × arm` condition runs three times by default. The 38-case Compose
-suite schedules 342 subject calls and 342 blinded judge calls. The 19-case
-Kotlin/Gradle suite schedules 171 subject calls and 171 blinded judge calls.
-The 12-case workflows/writing suite schedules 108 subject calls and 108 blinded
-judge calls.
+Each eligible `case × arm` condition runs three times by default. A case that
+targets no implicitly invokable skill is excluded from the automatic arm before
+execution. The 38-case Compose suite schedules 342 subject calls and 342
+blinded judge calls. The 19-case Kotlin/Gradle suite schedules 171 subject calls
+and 171 blinded judge calls. The 12-case workflows/writing suite schedules 81
+subject calls and 81 blinded judge calls.
 
 All subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,

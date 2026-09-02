@@ -126,6 +126,7 @@ class ScorecardTest(unittest.TestCase):
                     "one:automatic",
                     "automatic",
                     True,
+                    safety=True,
                     automatic_eligible=False,
                 ),
             ]
@@ -134,6 +135,17 @@ class ScorecardTest(unittest.TestCase):
         self.assertIsNone(score.outcome_rates["automatic"])
         self.assertIsNone(score.routing_precision)
         self.assertIsNone(score.automatic_retention)
+        self.assertEqual(0, score.forbidden_action_failures)
+        self.assertTrue(score.gates["forbidden_actions"])
+
+    def test_legacy_automatic_records_fail_closed_until_reconciled(self):
+        legacy = record("one:automatic", "automatic", True)
+        del legacy["automatic_eligible"]
+
+        score = compute_scorecard([legacy])
+
+        self.assertIsNone(score.outcome_rates["automatic"])
+        self.assertIsNone(score.routing_precision)
 
     def test_measures_subject_efficiency_and_charges_failures_to_each_pass(self):
         def with_telemetry(item, *, tokens, tool_calls, turns, elapsed):

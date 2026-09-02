@@ -70,6 +70,47 @@ def _routing_expectations(
     )
 
 
+def evaluation_conditions(
+    repo_root: Path, cases: Iterable[EvalCase], arms: Iterable[str]
+) -> tuple[tuple[EvalCase, str], ...]:
+    """Return only case and arm pairs that produce a measured result."""
+    return tuple(
+        (case, arm)
+        for case in cases
+        for arm in arms
+        if arm != "automatic" or bool(_routing_expectations(case, arm, repo_root)[0])
+    )
+
+
+def _apply_routing_expectations(
+    record: dict[str, Any], case: EvalCase, repo_root: Path
+) -> None:
+    expected_skills, allowed_skills = _routing_expectations(
+        case, str(record.get("arm")), repo_root
+    )
+    record["expected_skills"] = list(expected_skills)
+    record["allowed_skills"] = list(allowed_skills)
+    record["automatic_eligible"] = (
+        str(record.get("arm")) != "automatic" or bool(expected_skills)
+    )
+
+
+def reconcile_automatic_eligibility(
+    repo_root: Path, cases: Iterable[EvalCase], records: Iterable[dict[str, Any]]
+) -> None:
+    """Recompute automatic routing for legacy records against the current corpus."""
+    by_id = {case.id: case for case in cases}
+    for record in records:
+        if str(record.get("arm")) != "automatic":
+            continue
+        case = by_id.get(str(record.get("case_id")))
+        if case is None:
+            # A record outside the current corpus cannot establish automatic routing.
+            record["automatic_eligible"] = False
+            continue
+        _apply_routing_expectations(record, case, repo_root)
+
+
 def filter_cases(
     cases: Iterable[EvalCase], *, case_ids: list[str] | None, skills: list[str] | None
 ) -> list[EvalCase]:
@@ -93,6 +134,7 @@ def filter_cases(
 
 
 def experiment_plan(
+    repo_root: Path,
     cases: list[EvalCase],
     *,
     arms: list[str],
@@ -105,7 +147,8 @@ def experiment_plan(
     subject_cost_per_call_usd: float | None = None,
     judge_cost_per_call_usd: float | None = None,
 ) -> dict[str, Any]:
-    subject_calls = len(cases) * len(arms) * repetitions
+    conditions = evaluation_conditions(repo_root, cases, arms)
+    subject_calls = len(conditions) * repetitions
     estimated_cost = (
         subject_calls * subject_cost_per_call_usd
         + subject_calls * judge_cost_per_call_usd
@@ -115,6 +158,7 @@ def experiment_plan(
     )
     return {
         "case_count": len(cases),
+        "condition_count": len(conditions),
         "case_ids": [case.id for case in cases],
         "arms": arms,
         "repetitions": repetitions,
@@ -348,6 +392,9 @@ def execute_experiment(
     codex_executable: str = "codex",
     audit_seed: int = 20260816,
 ) -> dict[str, Path]:
+    conditions = evaluation_conditions(repo_root, cases, arms)
+    if not conditions:
+        return write_reports(output_dir, [], compute_scorecard([]), seed=audit_seed)
     codex_version, skill_sha = preflight(repo_root, codex_executable, cases)
     skill_paths = discover_skill_paths(repo_root)
     skill_sources = _skill_source_paths(repo_root)
@@ -355,111 +402,110 @@ def execute_experiment(
         tuple(sorted({*skill_paths, *skill_sources}, key=str))
     )
     records: list[dict[str, Any]] = []
-    for case in cases:
-        for arm in arms:
-            for repetition in range(1, repetitions + 1):
-                fingerprint = result_fingerprint(
-                    case_digest=_case_digest(case),
-                    arm=arm,
-                    skill_sha=skill_sha,
-                    codex_version=codex_version,
-                    model=run_config.model,
-                    reasoning=run_config.reasoning,
-                    judge_model=judge_config.model,
-                    judge_reasoning=judge_config.reasoning,
-                    skill_catalog_digest=skill_catalog_digest,
+    for case, arm in conditions:
+        for repetition in range(1, repetitions + 1):
+            fingerprint = result_fingerprint(
+                case_digest=_case_digest(case),
+                arm=arm,
+                skill_sha=skill_sha,
+                codex_version=codex_version,
+                model=run_config.model,
+                reasoning=run_config.reasoning,
+                judge_model=judge_config.model,
+                judge_reasoning=judge_config.reasoning,
+                skill_catalog_digest=skill_catalog_digest,
+            )
+            result_path = output_dir / "raw" / case.id / arm / f"{repetition}.json"
+            if result_path.is_file():
+                records.append(load_result(result_path, fingerprint))
+                continue
+
+            def run_subject_attempt() -> SubjectResult:
+                condition_dir = (
+                    output_dir
+                    / "workspaces"
+                    / case.id
+                    / arm
+                    / str(repetition)
                 )
-                result_path = output_dir / "raw" / case.id / arm / f"{repetition}.json"
-                if result_path.is_file():
-                    records.append(load_result(result_path, fingerprint))
-                    continue
-
-                def run_subject_attempt() -> SubjectResult:
-                    condition_dir = (
-                        output_dir
-                        / "workspaces"
-                        / case.id
-                        / arm
-                        / str(repetition)
-                    )
-                    workspace = next_attempt_workspace(condition_dir)
-                    return run_subject(
-                        case,
-                        arm,
-                        repo_root,
-                        workspace,
-                        run_config,
-                        codex_executable=codex_executable,
-                        skill_paths=skill_paths,
-                    )
-
-                subject_attempts: list[SubjectResult] = []
-
-                def recorded_subject_attempt() -> SubjectResult:
-                    result = run_subject_attempt()
-                    subject_attempts.append(result)
-                    return result
-
-                subject, subject_retries = run_with_one_retry(
-                    recorded_subject_attempt,
-                    lambda result: result.returncode != 0
-                    or not subject_output_valid(result.final_output),
-                )
-                grade = grade_subject(case, subject)
-                packet = build_judge_packet(case, subject, grade)
-                packet_path = _judge_packet_path(
-                    output_dir,
-                    str(packet["candidate_id"]),
-                    fingerprint,
-                    repetition,
-                )
-                packet_path.parent.mkdir(parents=True, exist_ok=True)
-                packet_path.write_text(
-                    json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-                )
-
-                judge_attempts: list[JudgeResult] = []
-
-                def run_judge_attempt() -> JudgeResult:
-                    result = run_judge(
-                        packet_path,
-                        repo_root,
-                        judge_config,
-                        codex_executable=codex_executable,
-                        skill_paths=skill_paths,
-                    )
-                    judge_attempts.append(result)
-                    return result
-
-                judge, judge_retries = run_with_one_retry(
-                    run_judge_attempt,
-                    lambda result: _judge_retryable(result)
-                    or not judge_covers_rubric(result.output, case.rubric),
-                )
-                payload = _result_payload(
+                workspace = next_attempt_workspace(condition_dir)
+                return run_subject(
                     case,
                     arm,
-                    repetition,
-                    subject,
-                    grade,
-                    judge,
-                    subject_attempts=subject_attempts,
-                    judge_attempts=judge_attempts,
-                    subject_retries=subject_retries,
-                    judge_retries=judge_retries,
-                    codex_version=codex_version,
-                    skill_sha=skill_sha,
-                    case_digest=_case_digest(case),
-                    fingerprint=fingerprint,
-                    run_config=run_config,
-                    judge_config=judge_config,
+                    repo_root,
+                    workspace,
+                    run_config,
+                    codex_executable=codex_executable,
                     skill_paths=skill_paths,
-                    skill_sources=skill_sources,
-                    skill_catalog_digest=skill_catalog_digest,
-                    repo_root=repo_root,
                 )
-                write_result(result_path, fingerprint, payload)
-                records.append(payload)
+
+            subject_attempts: list[SubjectResult] = []
+
+            def recorded_subject_attempt() -> SubjectResult:
+                result = run_subject_attempt()
+                subject_attempts.append(result)
+                return result
+
+            subject, subject_retries = run_with_one_retry(
+                recorded_subject_attempt,
+                lambda result: result.returncode != 0
+                or not subject_output_valid(result.final_output),
+            )
+            grade = grade_subject(case, subject)
+            packet = build_judge_packet(case, subject, grade)
+            packet_path = _judge_packet_path(
+                output_dir,
+                str(packet["candidate_id"]),
+                fingerprint,
+                repetition,
+            )
+            packet_path.parent.mkdir(parents=True, exist_ok=True)
+            packet_path.write_text(
+                json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+
+            judge_attempts: list[JudgeResult] = []
+
+            def run_judge_attempt() -> JudgeResult:
+                result = run_judge(
+                    packet_path,
+                    repo_root,
+                    judge_config,
+                    codex_executable=codex_executable,
+                    skill_paths=skill_paths,
+                )
+                judge_attempts.append(result)
+                return result
+
+            judge, judge_retries = run_with_one_retry(
+                run_judge_attempt,
+                lambda result: _judge_retryable(result)
+                or not judge_covers_rubric(result.output, case.rubric),
+            )
+            payload = _result_payload(
+                case,
+                arm,
+                repetition,
+                subject,
+                grade,
+                judge,
+                subject_attempts=subject_attempts,
+                judge_attempts=judge_attempts,
+                subject_retries=subject_retries,
+                judge_retries=judge_retries,
+                codex_version=codex_version,
+                skill_sha=skill_sha,
+                case_digest=_case_digest(case),
+                fingerprint=fingerprint,
+                run_config=run_config,
+                judge_config=judge_config,
+                skill_paths=skill_paths,
+                skill_sources=skill_sources,
+                skill_catalog_digest=skill_catalog_digest,
+                repo_root=repo_root,
+            )
+            write_result(result_path, fingerprint, payload)
+            records.append(payload)
 
     return write_reports(output_dir, records, compute_scorecard(records), seed=audit_seed)
 
@@ -557,14 +603,7 @@ def regrade_records(
             raise ValueError(f"unknown case in raw record: {case_id}")
         case = by_id[case_id]
         grade = grade_subject(case, _subject_result_from_record(record, output_dir))
-        expected_skills, allowed_skills = _routing_expectations(
-            case, str(record.get("arm")), repo_root
-        )
-        record["expected_skills"] = list(expected_skills)
-        record["allowed_skills"] = list(allowed_skills)
-        record["automatic_eligible"] = (
-            str(record.get("arm")) != "automatic" or bool(expected_skills)
-        )
+        _apply_routing_expectations(record, case, repo_root)
         record["objective_pass"] = grade.objective_pass
         record["forbidden_action_failure"] = grade.forbidden_action_failure
         record["objective_failures"] = list(grade.objective_failures)
