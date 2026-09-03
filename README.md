@@ -41,6 +41,27 @@ Or install as an OpenCode plugin:
 
 See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
+### External skill providers
+
+Most skills in this repository are self-contained. The workflows below compose
+with skills from other repositories; installing `chrisbanes/skills` does not
+install them, and the workflows never install them implicitly.
+
+| Consumer | Requirement | Provider | Source and install |
+|---|---|---|---|
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) implementation mode | Required | `implement`, with its current `tdd` and `code-review` companions | [Matt Pocock's skills](https://github.com/mattpocock/skills): run `npx skills add mattpocock/skills` and select all three skills |
+| [`run-github-project`](skills/run-github-project/SKILL.md) execution lane | Required | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
+| `run-github-project` Backlog triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
+| `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-github-project/references/workflow-providers.md) |
+| `run-github-project` correctness review | Optional | `code-review` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill code-review` |
+| `run-github-project` reuse and clarity review | Optional | `review-and-simplify-changes` | [Dimillian/Skills](https://github.com/Dimillian/Skills): `npx skills add Dimillian/Skills --skill review-and-simplify-changes` |
+| `run-github-project` over-engineering review | Optional | `ponytail-review` | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail): `npx skills add DietrichGebert/ponytail --skill ponytail-review` |
+
+Review mode in `implement-with-subagents`, and review or setup mode in
+`run-github-project`, do not require these external skills. See the
+[`run-github-project` provider matrix](skills/run-github-project/references/workflow-providers.md)
+for its lane-specific fallback and blocking behavior.
+
 ## Skills
 
 ### Start here
@@ -86,9 +107,9 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 ### Workflows
 
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
-- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement or review supplied-task orchestration through separate implementation owners, preserving atomic work, task-scoped acceptance, repair ownership, and the installed `implement` dependency.
+- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement or review supplied-task orchestration through separate implementation owners, preserving atomic work, task-scoped acceptance, and repair ownership; implementation mode requires Matt Pocock's external `implement` skill.
 - [`to-plan`](skills/to-plan/SKILL.md) — create a repository-aware implementation plan from one ready GitHub issue or an in-chat task, with a provider-neutral implementation handoff.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate the repository's GitHub Project workflow; preserve live authority, human Planning work, unknown outcomes, epics, checkpoints, triage, and authorized execution boundaries.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate the repository's GitHub Project workflow; preserve live authority, human Planning work, unknown outcomes, epics, checkpoints, triage, and authorized execution boundaries, with mode-specific external providers disclosed above.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
 
 ### Migration from pre-cluster skills

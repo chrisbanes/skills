@@ -1,6 +1,7 @@
 ---
 name: run-github-project
 description: Use when asked to set up, review, or operate a repository's GitHub Project workflow, including ready claims, human-owned Planning work, unknown remote mutation outcomes, Backlog triage, epics, checkpoints, next-issue execution, or an authorized drain.
+compatibility: "External skill providers are mode-specific: review and setup require none; execution, triage, and Wayfinder lanes use the providers documented in references/workflow-providers.md."
 disable-model-invocation: true
 ---
 
@@ -27,6 +28,14 @@ that authority through contract-preserving replans and return true human work to
 Backlog. In `drain`, pair each occupied slot with one warm worktree and persistent
 ticket agent, run independent slots concurrently, and park only qualifying
 terminal required-CI claims outside capacity before refreshing the control plane.
+
+## Check External Skill Providers
+
+Review and setup modes require no external skills. Before `next` or `drain`,
+read [references/workflow-providers.md](references/workflow-providers.md). It is
+the source of truth for required, conditional, and optional providers, their
+source repositories, installation commands, and lane-specific fallback
+behavior. Never install a provider implicitly.
 
 ## Select The Mode
 

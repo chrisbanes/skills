@@ -1,0 +1,7 @@
+{
+  "files": ["state.md"],
+  "must_contain": [
+    "The repository is clean",
+    "do not contain an `implement` skill"
+  ]
+}

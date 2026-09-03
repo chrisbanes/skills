@@ -158,6 +158,10 @@ corpus. They are excluded from default plans and published scorecards; select
 them explicitly with `--case` when deciding whether they should graduate into
 the benchmark.
 
+Two calibration-only workflow challenges exercise actionable failure behavior
+when the required external `implement` or `tdd` provider is unavailable. They
+are likewise excluded from default plans and published scorecards.
+
 The Kotlin/Gradle benchmark contains 22 scored cases:
 
 - a direct task, novel review, and no-change restraint control for each of its
@@ -170,11 +174,14 @@ The Kotlin/Gradle benchmark contains 22 scored cases:
   concerns.
 
 The workflows/writing benchmark contains 15 scored cases: direct, novel, and
-no-change coverage for each of its five skills. Its GitHub-style cases use
-supplied immutable state and rubric plus forbidden-action grading; they do not
-contact a provider. Only `implement-with-subagents` declares the evaluator-owned
-`implement` fixture dependency, because that prerequisite is constant across its
-three arms and is not a public skill or a routing target.
+no-change coverage for each of its five skills. The surrounding corpus also
+contains the two calibration-only missing-provider challenges described above.
+Its GitHub-style cases use supplied immutable state and rubric plus
+forbidden-action grading; they do not contact a provider. Only
+`implement-with-subagents` declares the evaluator-owned `implement` fixture
+dependency, because that prerequisite is constant across its three scored arms
+and is not a public skill or a routing target. Its missing-provider challenge
+deliberately omits that fixture dependency.
 
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
 to select one advisory scorecard. The default remains `compose` for command

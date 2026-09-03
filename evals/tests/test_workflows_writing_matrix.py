@@ -29,12 +29,18 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_has_exact_skill_triads_without_routing(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
 
-        self.assertEqual(15, report.case_count)
+        self.assertEqual(17, report.case_count)
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(15, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
-        self.assertFalse(any(case.calibration for case in report.cases))
+        self.assertEqual(
+            {
+                "implement-with-subagents-missing-provider-challenge",
+                "run-github-project-missing-provider-challenge",
+            },
+            {case.id for case in report.cases if case.calibration},
+        )
         for skill in WORKFLOWS_WRITING_SKILLS:
             kinds = {case.kind for case in report.cases if skill in case.target_skills}
             with self.subTest(skill=skill):
@@ -128,6 +134,23 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                             / "implement-with-subagents"
                         ).exists()
                     )
+
+    def test_missing_provider_challenge_omits_the_implement_dependency(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "implement-with-subagents-missing-provider-challenge"
+        )
+
+        self.assertEqual((), case.constant_skills)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir) / "workspace"
+            prepare_workspace(case, REPO_ROOT, workspace, enabled_skills=())
+
+            self.assertFalse(
+                (workspace / ".agents/skills/implement/SKILL.md").exists()
+            )
 
     def test_advanced_workflow_skills_require_explicit_invocation(self):
         explicit_only = (
