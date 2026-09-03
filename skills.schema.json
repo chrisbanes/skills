@@ -41,24 +41,6 @@
     "disable-model-invocation": {
       "type": "boolean",
       "description": "Claude Code extension that restricts a skill to explicit invocation"
-    },
-    "paths": {
-      "description": "Claude Code path patterns that limit automatic skill activation",
-      "oneOf": [
-        {
-          "type": "string",
-          "minLength": 1
-        },
-        {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "minItems": 1,
-          "uniqueItems": true
-        }
-      ]
     }
   },
   "required": ["name", "description"],

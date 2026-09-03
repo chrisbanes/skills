@@ -51,7 +51,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### Routing
 
-- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to the focused skills; current Claude Code versions also activate it when working with `.kt` or `.kts` files.
+- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to the focused skills.
 
 ### Jetpack Compose
 
@@ -109,11 +109,10 @@ Skills live at `skills/<skill-name>/SKILL.md`, flat (no language nesting). The `
 
 Frontmatter is validated against [`skills.schema.json`](skills.schema.json), which
 tracks the core [Agent Skills specification](https://agentskills.io/specification)
-and permits `disable-model-invocation` and `paths` for Claude Code compatibility.
+and permits `disable-model-invocation` for Claude Code compatibility.
 `name` and `description` are required; portable optional fields are `license`,
 `compatibility`, `metadata`, and `allowed-tools`. Explicit-only workflow skills
-also mirror that policy in Codex's `agents/openai.yaml`; the router uses `paths`
-to activate for Kotlin source files in clients that support it.
+also mirror that policy in Codex's `agents/openai.yaml`.
 
 ### Releases
 
