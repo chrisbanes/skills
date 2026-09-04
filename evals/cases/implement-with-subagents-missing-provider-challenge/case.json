@@ -25,7 +25,7 @@
   "rubric": [
     {
       "id": "provider-guidance",
-      "text": "The response identifies mattpocock/skills as the source of the missing implement skill and provides the npx skills add mattpocock/skills installation command"
+      "text": "The response identifies mattpocock/skills as the source of the missing implement skill, provides the npx skills add mattpocock/skills installation command, and states that implement, tdd, and code-review must be selected"
     },
     {
       "id": "restraint",
