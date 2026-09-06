@@ -1,0 +1,19 @@
+{
+  "id": "to-plan-unresolved-choice-negative",
+  "title": "Pause local planning for a material unresolved outcome",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-unresolved-choice-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "focused-question", "text": "Asks one focused question because the user-visible retention or redaction outcome is unresolved"},
+    {"id": "no-draft", "text": "Does not draft or mutate a plan while that material decision remains unresolved"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

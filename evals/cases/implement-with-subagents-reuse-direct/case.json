@@ -1,0 +1,20 @@
+{
+  "id": "implement-with-subagents-reuse-direct",
+  "title": "Reuse complete current verification evidence",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-subagents",
+  "constant_skills": ["implement"],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-reuse-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "reuse", "text": "Accepts the check without rerunning it when the command, complete passing result, tested commit, and environment are known and the independently inspected documentation-only descendant leaves relevant inputs unchanged"},
+    {"id": "independent-inspection", "text": "Still requires independent task-scoped commit and diff inspection rather than trusting the owner assertion alone"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

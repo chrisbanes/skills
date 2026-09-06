@@ -1,0 +1,20 @@
+{
+  "id": "implement-with-subagents-failed-verification-negative",
+  "title": "Return failed verification to its implementation owner",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "constant_skills": ["implement"],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-failed-verification-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "failed-check", "text": "Rejects a failed check as acceptance evidence and requires repair and affected revalidation"},
+    {"id": "same-owner", "text": "Returns the failure to the original owner without controller repair or reassignment"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

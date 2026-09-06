@@ -1,0 +1,20 @@
+{
+  "id": "to-plan-prior-confirmed-novel",
+  "title": "Reuse a prior confirmed conversation contract for a local draft",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow-plan",
+  "allowed_write_paths": [".scratch/to-plan"],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-prior-confirmed-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "reuse-confirmation", "text": "Uses the supplied prior confirmed contract without asking the same confirmation again"},
+    {"id": "executable-plan", "text": "The generated plan targets validator.py and its existing test, preserves the function signature and missing file prefix, specifies a quoted path result, and gives a focused validation command and observable acceptance condition without implementing the change"},
+    {"id": "local-boundary", "text": "Creates only a marked local plan and leaves implementation and publication untouched"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

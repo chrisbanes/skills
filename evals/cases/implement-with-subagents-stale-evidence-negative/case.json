@@ -1,0 +1,20 @@
+{
+  "id": "implement-with-subagents-stale-evidence-negative",
+  "title": "Rerun verification with unexplained stale evidence",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "constant_skills": ["implement"],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-stale-evidence-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "stale-evidence", "text": "Requires the affected check because the passing evidence is tied to an unexplained older revision"},
+    {"id": "same-owner", "text": "Returns failed acceptance evidence to the same owner rather than repairing in the controller or reassigning work"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

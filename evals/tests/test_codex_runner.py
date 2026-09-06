@@ -313,6 +313,8 @@ class CodexRunnerTest(unittest.TestCase):
             "  previous=$arg\n"
             "done\n"
             "printf 'new evidence\\n' > \"$workspace/notes.txt\"\n"
+            "mkdir -p \"$workspace/.scratch/to-plan\"\n"
+            "printf '# Local plan\\n' > \"$workspace/.scratch/to-plan/task.md\"\n"
             "printf '%s\\n' '{\"type\":\"item.completed\",\"item\":{\"type\":\"agent_message\",\"text\":\"{\\\"summary\\\":\\\"done\\\",\\\"skills_used\\\":[],\\\"evidence\\\":[]}\"}}'\n",
             encoding="utf-8",
         )
@@ -327,9 +329,13 @@ class CodexRunnerTest(unittest.TestCase):
             codex_executable=str(fake),
         )
 
-        self.assertEqual(("notes.txt",), result.changed_paths)
+        self.assertEqual(
+            (".scratch/to-plan/task.md", "notes.txt"), result.changed_paths
+        )
         self.assertIn("+++ b/notes.txt", result.diff)
         self.assertIn("+new evidence", result.diff)
+        self.assertIn("+++ b/.scratch/to-plan/task.md", result.diff)
+        self.assertIn("+# Local plan", result.diff)
 
 
 if __name__ == "__main__":

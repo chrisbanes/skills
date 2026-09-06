@@ -356,7 +356,7 @@ def parse_codex_jsonl(
 
 
 def _changed_paths(workspace: Path) -> tuple[str, ...]:
-    output = _run_git(workspace, "status", "--porcelain").stdout
+    output = _run_git(workspace, "status", "--porcelain", "--untracked-files=all").stdout
     paths: set[str] = set()
     for line in output.splitlines():
         if len(line) < 4:
