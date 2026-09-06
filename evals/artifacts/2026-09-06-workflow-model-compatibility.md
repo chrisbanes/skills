@@ -28,9 +28,10 @@ revision or establish Astra compatibility.
 
 ## Cases and execution limits
 
-Nine additional calibration cases preserve the 15-case workflows/writing
+Ten additional calibration cases preserve the 15-case workflows/writing
 benchmark and its default call count. Planning covers a fully authorized local
-draft, a prior confirmed contract, and an unresolved material choice. Evidence
+draft, a prior confirmed contract, an unresolved material choice, and a
+decision-complete discussion-only request that must not write a draft. Evidence
 acceptance covers reusable, stale, missing, post-edit, failed, and explicitly
 required fresh verification. Existing direct, novel, and restraint cases remain
 available as regression controls.
@@ -62,7 +63,7 @@ availability alone is not an execution result.
 - The existing uplift gates stay advisory and unchanged. A ceiling baseline is
   not evidence that the skill is harmful or that compatibility passed.
 
-Select the nine cases explicitly; `--skill` intentionally excludes calibration
+Select the ten cases explicitly; `--skill` intentionally excludes calibration
 cases. Preview one Astra snapshot with:
 
 ```shell
@@ -70,6 +71,7 @@ python3 evals/run.py plan --suite workflows-writing \
   --case to-plan-authorized-draft-direct \
   --case to-plan-prior-confirmed-novel \
   --case to-plan-unresolved-choice-negative \
+  --case to-plan-discussion-only-negative \
   --case implement-with-subagents-reuse-direct \
   --case implement-with-subagents-stale-evidence-negative \
   --case implement-with-subagents-missing-output-negative \
@@ -84,21 +86,21 @@ python3 evals/run.py plan --suite workflows-writing \
 Repeat for Sol and Terra using their per-call assumptions below. For Luna/high,
 select only the six `implement-with-subagents` cases. Run the same matrix on
 both immutable snapshots. The CLI preview has been checked locally: the core
-models each schedule 18 subject and 18 judge calls per snapshot/repetition;
+models each schedule 20 subject and 20 judge calls per snapshot/repetition;
 Luna schedules 12 of each. No preview invokes a model.
 
 ## Call and cost preview
 
-For nine cases, two arms, two snapshots, and three core subjects, one repetition
-requires 108 subject calls plus 108 judge calls. Six Luna cases add 24 subject
-calls plus 24 judge calls: **264 top-level calls** total. Three repetitions
-require **792 top-level calls**, before retries, existing-case controls, or a
+For ten cases, two arms, two snapshots, and three core subjects, one repetition
+requires 120 subject calls plus 120 judge calls. Six Luna cases add 24 subject
+calls plus 24 judge calls: **288 top-level calls** total. Three repetitions
+require **864 top-level calls**, before retries, existing-case controls, or a
 live subagent check. The harness can retry a failed subject or judge once.
 These additional calls must be included in an execution budget.
 
 Planning assumptions use 80,000 input and 4,000 output tokens per top-level call,
 with no cache discount: Astra $1.00, Sol $0.40, Terra $0.208, Luna $0.0208; each
-Sol judge $0.40. This gives approximately **$111 for one repetition** or **$334
+Sol judge $0.40. This gives approximately **$122 for one repetition** or **$367
 for three**, excluding retries, cache writes, and extra controls. These are
 API-equivalent estimates, not a quote for Codex subscription usage or a hard
 spend cap. Actual usage must be measured from successful runs.
