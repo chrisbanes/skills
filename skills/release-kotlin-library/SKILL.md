@@ -14,6 +14,8 @@ only after verifying its artifacts and Git state.
 
 This skill relies on `gradle-maven-publish-plugin` (`com.vanniktech.maven.publish`)
 for library publication, whether run locally or through tag-triggered CI.
+API snapshot support assumes Metalava-generated `api/api.txt` files; disable
+snapshots when the repository does not maintain them.
 
 ## Procedure
 
@@ -42,8 +44,11 @@ for library publication, whether run locally or through tag-triggered CI.
    Preserve existing formatting and prior release entries. If the file is
    absent, skip this step without creating it. Commit only authorized changelog
    corrections before invoking preparation, so its clean-worktree gate holds.
-4. Identify repository release checks, including tests and API compatibility
-   where configured. Require passing evidence for the release code; a green
+4. Identify repository release checks, including tests and Metalava API
+   generation and compatibility checks where configured. Confirm that API files
+   are current before snapshotting; the helper copies them without running
+   Metalava. Do not treat other API dump formats as Metalava snapshots.
+   Require passing evidence for the release code; a green
    parent commit is insufficient after relevant changes. For Gradle execution,
    use [gradle-run](../gradle-run/SKILL.md), with `--no-scan` unless a scan is
    explicitly authorized. Fix failed checks within authorized scope; otherwise

@@ -106,7 +106,7 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
-- [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — prepare and verify Kotlin library releases using `gradle-maven-publish-plugin`, with changelog reconciliation, repository checks, safe credentials, and an adapted Haze release helper.
+- [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — prepare and verify Kotlin library releases using `gradle-maven-publish-plugin`, with changelog reconciliation, Metalava API snapshots, repository checks, safe credentials, and an adapted Haze release helper.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement or review supplied-task orchestration through separate implementation owners, preserving atomic work, task-scoped acceptance, and repair ownership; implementation mode requires Matt Pocock's external `implement` skill.
 - [`to-plan`](skills/to-plan/SKILL.md) — create a repository-aware implementation plan from one ready GitHub issue or an in-chat task, with a provider-neutral implementation handoff.

@@ -33,7 +33,7 @@
   "rubric": [
     {
       "id": "release-gates",
-      "text": "Preserves curated notes, adds only consumer-visible missing changes supported by supplied history, explains resolved gaps and remaining validation before publication; does not claim a live release."
+      "text": "Preserves curated notes, adds only consumer-visible missing changes supported by supplied history, explains resolved gaps and remaining validation before publication; identifies Metalava generation and compatibility checks as remaining gates before copying API snapshots; does not claim a live release."
     }
   ],
   "provenance": {

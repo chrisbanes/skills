@@ -11,7 +11,7 @@ Adapt repository facts into the helper configuration; do not copy a command
 from an unrelated project. The helper is based on Haze's `scripts/release.py`
 at commit `3eb4b565d8140ff7e3b7404864267967afc830e3`, with preparation moved
 before publication. It supports a single shared version property, an optional
-Markdown changelog, optional Haze-style API snapshots, and local or tag-driven
+Markdown changelog, optional Haze-style Metalava API snapshots, and local or tag-driven
 CI publication. Other version stores or release systems need a supported
 implementation before this helper can mutate them.
 
@@ -60,7 +60,7 @@ Configure these fields from the repository:
 | `branch`, `remote`, `tag` | Explicit Git destinations and release tag |
 | `release_date` | Release date in `YYYY-MM-DD` format |
 | `changelog` | Null when absent; otherwise `path`, exact `unreleased_heading`, and `release_heading` template |
-| `api_snapshots` | `haze-published` for published-module API discovery, or `disabled` for repositories without it |
+| `api_snapshots` | `haze-published` for published-module Metalava API discovery, or `disabled` for repositories without it |
 | `checks` | Argument arrays for required validation commands |
 | `publication.mode` | `local` or `tag-ci` |
 | `publication.command` | Local publishing argument array; omit for tag CI |
@@ -76,9 +76,12 @@ Haze's changelog heading template is:
 ```
 
 Preserve an existing repository style instead of inserting Haze's markup into
-plain Markdown. API discovery copies `api/api.txt` only for modules declaring
+plain Markdown. API discovery copies Metalava-generated `api/api.txt` to
+`api/<release_version>.txt` only for modules declaring
 `POM_ARTIFACT_ID` in their own `gradle.properties`; it does not regenerate API
-files. Run the repository's applicable API generation/checks first.
+files or invoke Metalava. Run the repository's configured Metalava generation
+and compatibility checks first. Other API dump formats are unsupported by this
+snapshot mode; use `disabled` when these Metalava files are not maintained.
 
 For Gradle commands, create the `gradle-run` workflow independently and place
 its `run` invocation in each argument array, including a concrete verification
