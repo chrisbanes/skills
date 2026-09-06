@@ -70,7 +70,7 @@ Use exactly one source-appropriate template.
 ```markdown
 <!-- to-plan:conversation-plan:v1 id=<lowercase UUIDv4> -->
 
-# <Confirmed task title>
+# <Established task title>
 
 **Planned against:** `<branch>` at `<full SHA>`
 **Local state:** Clean | Unrelated changes present

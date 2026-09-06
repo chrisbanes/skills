@@ -1,0 +1,20 @@
+{
+  "id": "implement-with-subagents-post-edit-negative",
+  "title": "Rerun checks affected by post-test edits",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "constant_skills": ["implement"],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-post-edit-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "affected-rerun", "text": "Requires the parser check again because parser code changed after its passing run"},
+    {"id": "narrow-repair", "text": "Does not automatically rerun unrelated checks and returns the repair to the same owner"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

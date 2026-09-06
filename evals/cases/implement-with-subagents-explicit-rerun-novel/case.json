@@ -1,0 +1,20 @@
+{
+  "id": "implement-with-subagents-explicit-rerun-novel",
+  "title": "Honor an explicit independent verification requirement",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "constant_skills": ["implement"],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-explicit-rerun-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "explicit-rerun", "text": "Runs or requires the requested independent fresh check despite otherwise current complete evidence"},
+    {"id": "acceptance-boundary", "text": "Retains independent diff inspection and does not accept solely on the owner report"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

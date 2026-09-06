@@ -187,6 +187,14 @@ dependency, because that prerequisite is constant across its three scored arms
 and is not a public skill or a routing target. Its missing-provider challenge
 deliberately omits that fixture dependency.
 
+Nine additional workflow compatibility cases are calibration-only. Select them
+explicitly with `--case`; they do not change the published benchmark or its
+default call count. They cover authorized local planning, prior confirmation,
+unresolved decisions, and verification evidence reuse versus missing, stale,
+failed, or explicitly required fresh evidence. The local-planning cases check
+the generated plan artifact; the orchestration cases assess a supplied state
+read-only and do not prove live subagent execution.
+
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
 to select one advisory scorecard. The default remains `compose` for command
 compatibility. Never mix suites into one pass/fail result; repository-wide
@@ -233,6 +241,15 @@ assessment stable.
 Keep the pair unchanged across all arms. Use a separate, explicitly named run
 for another model or reasoning effort; never combine fingerprints in one
 scorecard.
+
+For a skill revision, compare the old and revised text on each selected model
+using identical cases, reasoning, tools, and judge settings. A comparison
+between different subject models cannot isolate the effect of the skill edit.
+Explicit-only skills use `none` and `forced`, not `automatic`. Compatibility
+checks assess correctness, restraint, and unnecessary work even when a strong
+baseline leaves no room for correctness uplift; the advisory scorecard gates
+remain unchanged. See the [workflow compatibility record](artifacts/2026-09-06-workflow-model-compatibility.md)
+for the bounded matrix, evidence status, and execution limitations.
 
 ## Running evaluations
 

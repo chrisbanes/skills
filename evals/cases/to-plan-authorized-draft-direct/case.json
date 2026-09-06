@@ -1,0 +1,20 @@
+{
+  "id": "to-plan-authorized-draft-direct",
+  "title": "Draft a locally authorized complete conversation plan",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow-plan",
+  "allowed_write_paths": [".scratch/to-plan"],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-authorized-draft-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "local-draft", "text": "Creates one marked local plan from the authorized task without requesting redundant confirmation"},
+    {"id": "executable-plan", "text": "The generated plan targets validator.py and its existing test, preserves the function signature and missing file prefix, specifies a quoted path result, and gives a focused validation command and observable acceptance condition without implementing the change"},
+    {"id": "publication-boundary", "text": "Keeps the plan local and does not publish or contact a remote provider"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

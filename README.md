@@ -180,6 +180,11 @@ high reasoning. Results are model- and reasoning-specific; other configurations
 may perform differently. These are not merge or release gates. See
 [`evals/README.md`](evals/README.md) for evaluation setup and reproducibility.
 
+Skill-revision compatibility checks compare old and revised instructions within
+each model, separately from these benchmark scores. See the
+[workflow compatibility record](evals/artifacts/2026-09-06-workflow-model-compatibility.md)
+for Astra and 5.6 coverage and its current evidence limits.
+
 | Skill | Baseline | Automatic | Restraint |
 | --- | ---: | ---: | ---: |
 | [`compose-animations`](skills/compose-animations/SKILL.md) | 75.0% | 100.0% | 100.0% |

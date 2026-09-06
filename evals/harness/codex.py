@@ -356,21 +356,22 @@ def parse_codex_jsonl(
 
 
 def _changed_paths(workspace: Path) -> tuple[str, ...]:
-    output = _run_git(workspace, "status", "--porcelain").stdout
+    output = _run_git(workspace, "status", "--porcelain", "-z", "--untracked-files=all").stdout
     paths: set[str] = set()
-    for line in output.splitlines():
-        if len(line) < 4:
+    records = iter(output.split("\0"))
+    for record in records:
+        if not record:
             continue
-        path = line[3:]
-        if " -> " in path:
-            path = path.split(" -> ", 1)[1]
-        paths.add(path)
+        paths.add(record[3:])
+        # Porcelain -z puts the destination first, followed by the source.
+        if "R" in record[:2] or "C" in record[:2]:
+            next(records)
     return tuple(sorted(paths))
 
 
 def _workspace_diff(workspace: Path) -> str:
     diff = _run_git(workspace, "diff", "--no-ext-diff", "--binary", "HEAD").stdout
-    tracked = set(_run_git(workspace, "ls-files").stdout.splitlines())
+    tracked = set(_run_git(workspace, "ls-files", "-z").stdout.split("\0"))
     for path in _changed_paths(workspace):
         if path in tracked:
             continue

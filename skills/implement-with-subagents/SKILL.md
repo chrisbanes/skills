@@ -81,14 +81,28 @@ implicitly.
    - verify `HEAD` advanced by at least one task-scoped commit;
    - inspect the complete commit range and diff from the recorded `HEAD` to the
      current `HEAD` for the work item's acceptance criteria and scope;
-   - rerun the verification requested by the user and repository for this item;
+   - inspect the returned command, complete result, tested revision, and relevant
+     input and environment identity;
+   - reuse a requested check only when its complete evidence shows success,
+     the relevant environment remains unchanged, and neither the user nor
+     repository requires a fresh independent run. Also require either the tested
+     revision to equal current `HEAD`, or current `HEAD` to be a descendant of
+     the tested revision whose independently inspected diff leaves the check's
+     relevant inputs unchanged;
+   - repeat each affected check when its evidence is missing, failed, tied to an
+     unexplained older revision, affected by a changed relevant input, or subject
+     to an explicit freshness or independent-run requirement;
    - confirm the returned evidence satisfies the installed `implement` skill's
      current finish contract; and
    - verify the task-owned diff is empty relative to the recorded pre-existing
      state.
-9. Repeat step 8 after every repair. After the last accepted item, run any final
-   user- or repository-required verification. If a later action changes files,
-   return them to their owner for validation and commit.
+9. After every repair, repeat the independent commit and diff inspection, then
+   reassess the evidence under step 8. Reuse only checks whose relevant inputs
+   and environment remain unchanged across the inspected descendant diff; repeat
+   affected checks. An unexplained older revision is stale evidence.
+   After the last accepted item, run any final user- or repository-required
+   verification. If a later action changes files, return them to their owner for
+   validation and commit.
 
 ## Ownership boundaries
 

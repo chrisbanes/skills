@@ -26,10 +26,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
-    def test_has_exact_skill_triads_without_routing(self):
+    def test_has_skill_triads_and_workflow_calibration_coverage_without_routing(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
 
-        self.assertEqual(20, report.case_count)
+        benchmark = [case for case in report.cases if not case.calibration]
+        calibration = [case for case in report.cases if case.calibration]
+        self.assertEqual(18, len(benchmark))
+        self.assertEqual(12, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(18, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -38,11 +41,21 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             {
                 "implement-with-subagents-missing-provider-challenge",
                 "run-github-project-missing-provider-challenge",
+                "to-plan-authorized-draft-direct",
+                "to-plan-prior-confirmed-novel",
+                "to-plan-unresolved-choice-negative",
+                "to-plan-discussion-only-negative",
+                "implement-with-subagents-reuse-direct",
+                "implement-with-subagents-stale-evidence-negative",
+                "implement-with-subagents-missing-output-negative",
+                "implement-with-subagents-post-edit-negative",
+                "implement-with-subagents-failed-verification-negative",
+                "implement-with-subagents-explicit-rerun-novel",
             },
-            {case.id for case in report.cases if case.calibration},
+            {case.id for case in calibration},
         )
         for skill in WORKFLOWS_WRITING_SKILLS:
-            kinds = {case.kind for case in report.cases if skill in case.target_skills}
+            kinds = {case.kind for case in benchmark if skill in case.target_skills}
             with self.subTest(skill=skill):
                 self.assertEqual({"direct", "novel", "negative"}, kinds)
 
@@ -54,13 +67,13 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             },
             {
                 case.id
-                for case in report.cases
+                for case in benchmark
                 if case.target_skills == ("to-plan",)
             },
         )
 
         subagent_cases = [
-            case for case in report.cases if case.fixture == "workflow-subagents"
+            case for case in benchmark if case.fixture == "workflow-subagents"
         ]
         self.assertEqual(3, len(subagent_cases))
         self.assertTrue(
@@ -291,6 +304,55 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             )
 
         self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_plan_artifact_validator_requires_one_marked_local_draft(self):
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            draft = workspace / ".scratch/to-plan/repair-validator-output.md"
+            draft.parent.mkdir(parents=True)
+            draft.write_text(
+                "<!-- to-plan:conversation-plan:v1 id=123e4567-e89b-42d3-a456-426614174000 -->\n"
+                "# Quote missing validator files\n\n"
+                "**Planned against:** `main` at `0123456789abcdef0123456789abcdef01234567`\n\n"
+                "## Implementation slices\n\n"
+                "### 1. Quote missing validator files\n\n"
+                "**Validate:** `python3 -B -m unittest tests.test_validator`\n\n"
+                "## Final validation\n\n"
+                "- `python3 -B -m unittest tests.test_validator`\n\n"
+                "Update `validator.py` and `tests/test_validator.py`.\n",
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                ["python3", str(validator), "to-plan-authorized-draft-direct"],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_plan_artifact_validator_rejects_multiple_local_drafts(self):
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            drafts = workspace / ".scratch/to-plan"
+            drafts.mkdir(parents=True)
+            for name in ("first.md", "second.md"):
+                (drafts / name).write_text("placeholder\n", encoding="utf-8")
+
+            completed = subprocess.run(
+                ["python3", str(validator), "to-plan-authorized-draft-direct"],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("expected 1 files, found 2", completed.stderr)
 
 
 if __name__ == "__main__":

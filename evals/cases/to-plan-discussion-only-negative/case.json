@@ -1,0 +1,42 @@
+{
+  "id": "to-plan-discussion-only-negative",
+  "title": "Discuss a complete plan without inferring write permission",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-discussion-only-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "discussion-only",
+      "text": "Reviews the supplied complete plan in the response without creating or editing a local draft; completeness is not writing permission."
+    },
+    {
+      "id": "no-unnecessary-confirmation",
+      "text": "Answers the requested review directly without demanding confirmation to draft or inventing unresolved decisions."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
