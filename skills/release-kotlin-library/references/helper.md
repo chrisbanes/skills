@@ -2,6 +2,11 @@
 
 ## Supported contract
 
+Use this helper only for libraries using `gradle-maven-publish-plugin`
+(`com.vanniktech.maven.publish`). Confirm application in published modules,
+including through convention plugins, before configuring it. The helper accepts
+explicit commands; it does not detect or enforce this plugin prerequisite itself.
+
 Adapt repository facts into the helper configuration; do not copy a command
 from an unrelated project. The helper is based on Haze's `scripts/release.py`
 at commit `3eb4b565d8140ff7e3b7404864267967afc830e3`, with preparation moved

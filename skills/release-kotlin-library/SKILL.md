@@ -1,6 +1,6 @@
 ---
 name: release-kotlin-library
-description: Use when preparing, publishing, or checking readiness for a new Kotlin library version, including release changelog reconciliation, API snapshots, and publication verification.
+description: Use when preparing, publishing, or checking readiness for a new Kotlin library version in a repository using gradle-maven-publish-plugin, including release changelog reconciliation, API snapshots, and publication verification.
 ---
 
 # Release Kotlin library
@@ -10,10 +10,19 @@ description: Use when preparing, publishing, or checking readiness for a new Kot
 Publish the prepared, validated release commit and call the release complete
 only after verifying its artifacts and Git state.
 
+## Prerequisite
+
+This skill relies on `gradle-maven-publish-plugin` (`com.vanniktech.maven.publish`)
+for library publication, whether run locally or through tag-triggered CI.
+
 ## Procedure
 
 1. Establish scope and inspect repository instructions, Git state, release
    history, version properties, publishing configuration and required checks.
+   Confirm that published modules apply `com.vanniktech.maven.publish`, directly
+   or through a convention plugin. A declaration without application is not
+   sufficient. If absent or unverified, report the unmet prerequisite and stop
+   before release mutations; do not install or migrate publishing plugins.
    Distinguish a readiness review, preparation request and explicit release
    authorization. Keep review requests read-only, including credentials. Follow
    the existing local or CI publishing mechanism; do not migrate it. Read the
