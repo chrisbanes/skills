@@ -382,14 +382,12 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     if changelog_content is not None:
         originals[changelog_path] = changelog_path.read_bytes()
     originals.update({path: None for path, _ in snapshots})
-    version_file.write_bytes(version_content.encode("utf-8"))
     planned_files = {version_file: version_content}
     if changelog_content is not None:
-        changelog_path.write_bytes(changelog_content.encode("utf-8"))
         planned_files[changelog_path] = changelog_content
-    for snapshot, content in snapshots:
-        snapshot.write_bytes(content.encode("utf-8"))
-        planned_files[snapshot] = content
+    planned_files.update(snapshots)
+    for path, content in planned_files.items():
+        path.write_bytes(content.encode("utf-8"))
     # Bind validation evidence to the exact prepared release content. Checks
     # never receive release credentials.
     try:
@@ -440,7 +438,7 @@ def artifact_state(root: Path, config: Mapping[str, Any], command_runner: Comman
     return state
 
 
-def credential_environment(root: Path, config: Mapping[str, Any], process_env: Mapping[str, str]) -> tuple[dict[str, str], list[str]]:
+def credential_environment(config: Mapping[str, Any], process_env: Mapping[str, str]) -> dict[str, str]:
     publication = publication_config(config)
     configured = config.get("env_file", "~/.env")
     env_file = Path(configured).expanduser() if isinstance(configured, str) else None
@@ -452,10 +450,8 @@ def credential_environment(root: Path, config: Mapping[str, Any], process_env: M
     if missing:
         raise ValueError("required release credentials are unavailable: " + ", ".join(missing))
     child = dict(process_env)
-    for key in credentials:
-        if loaded.get(key):
-            child[key] = loaded[key]
-    return child, [child[key] for key in credentials if child.get(key)]
+    child.update({key: loaded[key] for key in credentials})
+    return child
 
 
 def verify_remote_git(root: Path, config: Mapping[str, Any]) -> None:
@@ -490,7 +486,7 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         raise RecoveryRequired(f"artifact state is {state}; inspect recovery state before retrying publication")
     require_prepared_intact(root, config, prepared_sha)
     if publication["mode"] == "local":
-        environment, _secrets = credential_environment(root, config, dict(os.environ if process_env is None else process_env))
+        environment = credential_environment(config, dict(os.environ if process_env is None else process_env))
     try:
         if publication["mode"] == "local":
             command_runner(command_argv(publication["command"], config), cwd=root, env=environment)
