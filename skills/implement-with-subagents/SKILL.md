@@ -1,6 +1,7 @@
 ---
 name: implement-with-subagents
-description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including queue atomicity, task-scoped commit acceptance, and repair ownership, with an installed implement skill.
+description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including queue atomicity, task-scoped commit acceptance, and repair ownership.
+compatibility: "Review mode has no external skill dependency. Implementation mode requires Matt Pocock's separately installed `implement` workflow; its current contract also invokes `tdd` and `code-review`."
 disable-model-invocation: true
 ---
 
@@ -11,6 +12,15 @@ schedules, and one implementation subagent owns each independent work item
 through completion. Keep changes that cannot validate apart in one item, accept
 its task-scoped commit before advancing, and return failed acceptance evidence
 to that same owner rather than repairing it in the controller or reassigning it.
+
+## Check The Prerequisite
+
+Review mode has no external skill dependency. Implementation mode requires the
+`implement` skill from [Matt Pocock's skill set](https://github.com/mattpocock/skills),
+which is not bundled with this repository. Install it with
+`npx skills add mattpocock/skills`, selecting `implement`, `tdd`, and
+`code-review` as required by the current upstream contract. Never install it
+implicitly.
 
 ## Select the mode
 
@@ -37,8 +47,11 @@ to that same owner rather than repairing it in the controller or reassigning it.
    Preserve unrelated changes. Stop before delegation when a task-scoped commit
    cannot be produced safely from the current state.
 2. Resolve and read the installed `implement` skill. Treat it as a required
-   dependency. If it is unavailable, stop before making changes and report the
-   missing dependency; never reproduce its procedure from memory.
+   dependency. If it is unavailable, stop before making changes. Report that it
+   comes from `mattpocock/skills`, provide
+   `npx skills add mattpocock/skills`, and state that the user must select
+   `implement`, `tdd`, and `code-review`. Never install them implicitly or
+   reproduce the procedure from memory.
 3. Build a dependency-ordered queue. Keep an unsplit request and its checklist
    in one work item; group supplied items only when they cannot validate in
    separate behavior-preserving commits.

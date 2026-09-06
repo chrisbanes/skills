@@ -145,3 +145,13 @@ Fresh independent Standards and Spec reviews each returned ship for the local
 implementation, with no open code findings. Reviews were behaviorally read-only
 in the shared checkout, not OS-isolated. The live compatibility requirement
 remains incomplete; the scratch implementation plan is preserved.
+
+## Main-branch reconciliation
+
+Integrated `84c2c53` before publishing the PR update. Preserved main's two
+provider calibration cases alongside the nine compatibility cases: 11 workflow
+calibration cases total, with the 15-case benchmark unchanged. After resolving
+the suite-count and matrix-test conflicts, lint passed, all 90 corpus cases
+validated, and the full local suite ran 283 tests with one platform-specific
+skip. All five plugin manifests passed JSON validation. Live model comparisons
+remain pending.

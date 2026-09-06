@@ -1,0 +1,37 @@
+{
+  "id": "implement-with-subagents-missing-provider-challenge",
+  "title": "Stop with actionable implement provider guidance",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents-missing-provider",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\bnpx\\s+skills(?:@latest)?\\s+add\\b",
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-missing-provider-challenge"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "provider-guidance",
+      "text": "The response identifies mattpocock/skills as the source of the missing implement skill, provides the npx skills add mattpocock/skills installation command, and states that implement, tdd, and code-review must be selected"
+    },
+    {
+      "id": "restraint",
+      "text": "The response stops before dependency installation, delegation, file mutation, or commit creation"
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

@@ -10,6 +10,19 @@ import sys
 VERSION_PATTERN = re.compile(r"^[0-9]{4}\.([1-9]|1[0-2])\.([1-9]|[12][0-9]|3[01])$")
 PLUGIN_NAME = "chrisbanes-skills"
 OPENCODE_MAIN = ".opencode/plugins/chrisbanes-skills.js"
+AGENT_PLUGINS_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+AGENT_PLUGINS_FIELDS = {
+    "$schema",
+    "name",
+    "version",
+    "description",
+    "author",
+    "homepage",
+    "repository",
+    "license",
+    "keywords",
+    "extensions",
+}
 
 
 def validate_version(version):
@@ -43,15 +56,33 @@ def update_manifests(root, version):
 def validate_manifests(root, version):
     validate_version(version)
 
+    portable = read_json(root / "plugin.json")
     claude = read_json(root / ".claude-plugin" / "plugin.json")
     codex = read_json(root / ".codex-plugin" / "plugin.json")
     package = read_json(root / "package.json")
     claude_marketplace = read_json(root / ".claude-plugin" / "marketplace.json")
     codex_marketplace = read_json(root / ".agents" / "plugins" / "marketplace.json")
 
+    require(
+        portable.get("$schema") == AGENT_PLUGINS_SCHEMA,
+        "Agent Plugins schema must target version 1.0.0",
+    )
+    require(
+        set(portable) <= AGENT_PLUGINS_FIELDS,
+        "Agent Plugins manifest has unknown fields: "
+        f"{sorted(set(portable) - AGENT_PLUGINS_FIELDS)}",
+    )
+    require(
+        portable.get("name") == PLUGIN_NAME,
+        "Agent Plugins name must be chrisbanes-skills",
+    )
     require(claude.get("name") == PLUGIN_NAME, "Claude plugin name must be chrisbanes-skills")
     require(codex.get("name") == PLUGIN_NAME, "Codex plugin name must be chrisbanes-skills")
     require(package.get("name") == PLUGIN_NAME, "OpenCode package name must be chrisbanes-skills")
+    require(
+        portable.get("version") == version,
+        f"Agent Plugins version mismatch: {portable.get('version')}",
+    )
     require(claude.get("version") == version, f"Claude plugin version mismatch: {claude.get('version')}")
     require(codex.get("version") == version, f"Codex plugin version mismatch: {codex.get('version')}")
     require(package.get("version") == version, f"OpenCode package version mismatch: {package.get('version')}")
@@ -69,6 +100,7 @@ def validate_manifests(root, version):
 
 def plugin_manifest_paths(root):
     return [
+        root / "plugin.json",
         root / ".claude-plugin" / "plugin.json",
         root / ".codex-plugin" / "plugin.json",
         root / "package.json",

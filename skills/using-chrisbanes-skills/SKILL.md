@@ -1,9 +1,6 @@
 ---
 name: using-chrisbanes-skills
 description: Use when debugging, benchmarking, or profiling leads into Kotlin or Jetpack Compose source before the cause is known, or when one task spans multiple Kotlin or Compose concerns, especially plain Kotlin Flow or navigation delivery plus sealed branching.
-paths:
-  - "**/*.kt"
-  - "**/*.kts"
 ---
 
 # Using chrisbanes skills

@@ -5,6 +5,10 @@
 A set of skills for Kotlin, Jetpack Compose, Android development, and grounded
 writing.
 
+The repository is also a portable [Agent Plugins](https://agent-plugins.org/)
+v1.0.0 package. Conforming clients discover the root [`plugin.json`](plugin.json)
+and the immediate skill directories under [`skills/`](skills/).
+
 ## Install
 
 With the [skills CLI](https://skills.sh):
@@ -37,6 +41,27 @@ Or install as an OpenCode plugin:
 
 See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
+### External skill providers
+
+Most skills in this repository are self-contained. The workflows below compose
+with skills from other repositories; installing `chrisbanes/skills` does not
+install them, and the workflows never install them implicitly.
+
+| Consumer | Requirement | Provider | Source and install |
+|---|---|---|---|
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) implementation mode | Required | `implement`, with its current `tdd` and `code-review` companions | [Matt Pocock's skills](https://github.com/mattpocock/skills): run `npx skills add mattpocock/skills` and select all three skills |
+| [`run-github-project`](skills/run-github-project/SKILL.md) execution lane | Required | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
+| `run-github-project` Backlog triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
+| `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-github-project/references/workflow-providers.md) |
+| `run-github-project` correctness review | Optional | `code-review` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill code-review` |
+| `run-github-project` reuse and clarity review | Optional | `review-and-simplify-changes` | [Dimillian/Skills](https://github.com/Dimillian/Skills): `npx skills add Dimillian/Skills --skill review-and-simplify-changes` |
+| `run-github-project` over-engineering review | Optional | `ponytail-review` | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail): `npx skills add DietrichGebert/ponytail --skill ponytail-review` |
+
+Review mode in `implement-with-subagents`, and review or setup mode in
+`run-github-project`, do not require these external skills. See the
+[`run-github-project` provider matrix](skills/run-github-project/references/workflow-providers.md)
+for its lane-specific fallback and blocking behavior.
+
 ## Skills
 
 ### Start here
@@ -47,7 +72,7 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### Routing
 
-- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to the focused skills; current Claude Code versions also activate it when working with `.kt` or `.kts` files.
+- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to the focused skills.
 
 ### Jetpack Compose
 
@@ -82,9 +107,9 @@ See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 ### Workflows
 
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
-- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement or review supplied-task orchestration through separate implementation owners, preserving atomic work, task-scoped acceptance, repair ownership, and the installed `implement` dependency.
+- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement or review supplied-task orchestration through separate implementation owners, preserving atomic work, task-scoped acceptance, and repair ownership; implementation mode requires Matt Pocock's external `implement` skill.
 - [`to-plan`](skills/to-plan/SKILL.md) — create a repository-aware implementation plan from one ready GitHub issue or an in-chat task, with a provider-neutral implementation handoff.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate the repository's GitHub Project workflow; preserve live authority, human Planning work, unknown outcomes, epics, checkpoints, triage, and authorized execution boundaries.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate the repository's GitHub Project workflow; preserve live authority, human Planning work, unknown outcomes, epics, checkpoints, triage, and authorized execution boundaries, with mode-specific external providers disclosed above.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
 
 ### Migration from pre-cluster skills
@@ -103,13 +128,22 @@ This is a breaking taxonomy change. Replace the removed entrypoints as follows:
 
 Skills live at `skills/<skill-name>/SKILL.md`, flat (no language nesting). The `name:` in the SKILL.md frontmatter must match the directory name.
 
-Frontmatter is validated against [`skills.schema.json`](skills.schema.json) — `name` and `description` are required, `name` must be kebab-case, and `disable-model-invocation: true` makes a skill explicit-only. The router also uses Claude Code's optional `paths` extension. Clients that do not support this extension must ignore the `paths` field rather than rejecting the skill.
+Frontmatter is validated against [`skills.schema.json`](skills.schema.json), which
+tracks the core [Agent Skills specification](https://agentskills.io/specification)
+and permits `disable-model-invocation` for Claude Code compatibility.
+`name` and `description` are required; portable optional fields are `license`,
+`compatibility`, `metadata`, and `allowed-tools`. Explicit-only workflow skills
+also mirror that policy in Codex's `agents/openai.yaml`.
 
 ### Releases
 
 Release versions use SemVer-compatible CalVer: `YYYY.M.D` without zero-padded month or day values, for example `2026.6.17`.
 
-Keep `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and new Git release tags on the same version. Existing zero-padded tags from before this policy map to the non-padded manifest version, so `2026.06.16` maps to `2026.6.16`. Only bump versions when publishing an installable release.
+Keep root `plugin.json`, `.claude-plugin/plugin.json`,
+`.codex-plugin/plugin.json`, and new Git release tags on the same version.
+Existing zero-padded tags from before this policy map to the non-padded manifest
+version, so `2026.06.16` maps to `2026.6.16`. Only bump versions when publishing
+an installable release.
 
 To publish a release, run the **Release** workflow from GitHub Actions. Leave the version input empty to use today's UTC `YYYY.M.D` version, or provide a specific non-zero-padded CalVer value. Use the dry-run option to validate without creating a commit, tag, or GitHub release.
 

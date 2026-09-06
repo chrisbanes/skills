@@ -1,0 +1,37 @@
+{
+  "id": "run-github-project-missing-provider-challenge",
+  "title": "Block only the execution lane when tdd is unavailable",
+  "family": "workflow",
+  "target_skills": ["run-github-project"],
+  "expected_skills": ["run-github-project"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\bnpx\\s+skills(?:@latest)?\\s+add\\b",
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-missing-provider-challenge"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "provider-guidance",
+      "text": "The response identifies mattpocock/skills as the source of tdd and provides the exact npx skills add mattpocock/skills --skill tdd command"
+    },
+    {
+      "id": "lane-boundary",
+      "text": "The response blocks the execution lane without installing a provider or broadening the failure to review, setup, or unrelated lanes"
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

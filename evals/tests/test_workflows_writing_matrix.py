@@ -32,13 +32,15 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(15, len(benchmark))
-        self.assertEqual(9, len(calibration))
+        self.assertEqual(11, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(15, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertEqual(
             {
+                "implement-with-subagents-missing-provider-challenge",
+                "run-github-project-missing-provider-challenge",
                 "to-plan-authorized-draft-direct",
                 "to-plan-prior-confirmed-novel",
                 "to-plan-unresolved-choice-negative",
@@ -145,6 +147,23 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                         ).exists()
                     )
 
+    def test_missing_provider_challenge_omits_the_implement_dependency(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "implement-with-subagents-missing-provider-challenge"
+        )
+
+        self.assertEqual((), case.constant_skills)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir) / "workspace"
+            prepare_workspace(case, REPO_ROOT, workspace, enabled_skills=())
+
+            self.assertFalse(
+                (workspace / ".agents/skills/implement/SKILL.md").exists()
+            )
+
     def test_advanced_workflow_skills_require_explicit_invocation(self):
         explicit_only = (
             "implement-with-subagents",
@@ -174,6 +193,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "boolean",
             schema["properties"]["disable-model-invocation"]["type"],
         )
+        self.assertNotIn("paths", schema["properties"])
 
     def test_automatic_conditions_exclude_explicit_only_workflow_skills(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

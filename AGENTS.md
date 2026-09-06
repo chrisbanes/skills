@@ -34,7 +34,7 @@ Before considering any skill addition or edit complete, verify:
 
 - Use SemVer-compatible CalVer: `YYYY.M.D`.
 - Do not zero-pad month or day values. Use `2026.6.17`, not `2026.06.17`.
-- Keep `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` on the same version.
+- Keep root `plugin.json`, `.claude-plugin/plugin.json`, and `.codex-plugin/plugin.json` on the same version.
 - New Git release tags should match the manifest version exactly.
 - Existing zero-padded tags from before this policy map to the non-padded manifest version. For example, origin tag `2026.06.16` maps to manifest version `2026.6.16`.
 - Only cut a release when publishing installable changes. Skill wording/fixes, new skills/triggers, removals, and renames all use the publication date as the version.
@@ -48,8 +48,9 @@ Before considering any skill addition or edit complete, verify:
 
 ## Manifests
 
-- `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `.agents/plugins/marketplace.json`, and `.codex-plugin/plugin.json` are all JSON (not JSONC). Validate with `jq . <file>` before committing.
-- The plugin `name` field in both manifests must stay `chrisbanes-skills`.
+- Root `plugin.json`, `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json`, `.agents/plugins/marketplace.json`, and `.codex-plugin/plugin.json` are all JSON (not JSONC). Validate with `jq . <file>` before committing.
+- Root `plugin.json` targets Agent Plugins v1.0.0 and contains only portable schema fields. Keep client-specific fields in the client manifests.
+- The plugin `name` field in all three manifests must stay `chrisbanes-skills`.
 
 ## Commits and PRs
 

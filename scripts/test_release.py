@@ -27,6 +27,10 @@ class ReleaseScriptTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.release.validate_version("2026.06.17")
 
+    def test_repository_manifests_are_valid(self):
+        version = self.read_json(ROOT / "plugin.json")["version"]
+        self.release.validate_manifests(ROOT, version)
+
     def test_update_and_validate_manifests(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = pathlib.Path(tmp)
@@ -34,6 +38,14 @@ class ReleaseScriptTest(unittest.TestCase):
             (root / ".codex-plugin").mkdir()
             (root / ".agents" / "plugins").mkdir(parents=True)
 
+            self.write_json(
+                root / "plugin.json",
+                {
+                    "$schema": self.release.AGENT_PLUGINS_SCHEMA,
+                    "name": "chrisbanes-skills",
+                    "version": "2026.6.16",
+                },
+            )
             self.write_json(
                 root / ".claude-plugin" / "plugin.json",
                 {"name": "chrisbanes-skills", "version": "2026.6.16"},
@@ -62,9 +74,11 @@ class ReleaseScriptTest(unittest.TestCase):
             self.release.update_manifests(root, "2026.6.17")
             self.release.validate_manifests(root, "2026.6.17")
 
+            portable = self.read_json(root / "plugin.json")
             claude = self.read_json(root / ".claude-plugin" / "plugin.json")
             codex = self.read_json(root / ".codex-plugin" / "plugin.json")
             package = self.read_json(root / "package.json")
+            self.assertEqual(portable["version"], "2026.6.17")
             self.assertEqual(claude["version"], "2026.6.17")
             self.assertEqual(codex["version"], "2026.6.17")
             self.assertEqual(package["version"], "2026.6.17")
@@ -79,6 +93,30 @@ class ReleaseScriptTest(unittest.TestCase):
             self.write_json(package_path, package)
 
             with self.assertRaisesRegex(ValueError, "OpenCode package name"):
+                self.release.validate_manifests(root, "2026.6.17")
+
+    def test_validate_manifests_rejects_agent_plugins_schema_mismatch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self.write_valid_manifests(root)
+            portable_path = root / "plugin.json"
+            portable = self.read_json(portable_path)
+            portable["$schema"] = "https://example.com/plugin.schema.json"
+            self.write_json(portable_path, portable)
+
+            with self.assertRaisesRegex(ValueError, "Agent Plugins schema"):
+                self.release.validate_manifests(root, "2026.6.17")
+
+    def test_validate_manifests_rejects_unknown_agent_plugins_field(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self.write_valid_manifests(root)
+            portable_path = root / "plugin.json"
+            portable = self.read_json(portable_path)
+            portable["skills"] = "./skills/"
+            self.write_json(portable_path, portable)
+
+            with self.assertRaisesRegex(ValueError, "unknown fields"):
                 self.release.validate_manifests(root, "2026.6.17")
 
     def test_validate_manifests_rejects_opencode_package_version_mismatch(self):
@@ -110,6 +148,14 @@ class ReleaseScriptTest(unittest.TestCase):
         (root / ".codex-plugin").mkdir()
         (root / ".agents" / "plugins").mkdir(parents=True)
 
+        self.write_json(
+            root / "plugin.json",
+            {
+                "$schema": self.release.AGENT_PLUGINS_SCHEMA,
+                "name": "chrisbanes-skills",
+                "version": version,
+            },
+        )
         self.write_json(
             root / ".claude-plugin" / "plugin.json",
             {"name": "chrisbanes-skills", "version": version},
