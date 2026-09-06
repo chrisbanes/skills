@@ -40,6 +40,7 @@ only when its independent behavior changes the same work.
 | Kotlin classification, `when`, guards, exhaustiveness, smart casts, or null branches | [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) |
 | Kotlin function ownership, domain types, expect/actual, or platform seams | [`kotlin-api-design`](../kotlin-api-design/SKILL.md) |
 | Planned Gradle execution or a Gradle-centered warning/failure workflow | [`gradle-run`](../gradle-run/SKILL.md) |
+| Kotlin library release preparation, publication, or readiness | [`release-kotlin-library`](../release-kotlin-library/SKILL.md) |
 | One ready GitHub issue or in-chat task needs repository-aware planning | [`to-plan`](../to-plan/SKILL.md) |
 | Polling PRs/MRs, review comments, CI failures, or routine follow-up | [`shepherd`](../shepherd/SKILL.md) |
 

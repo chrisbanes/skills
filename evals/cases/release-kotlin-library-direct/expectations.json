@@ -1,0 +1,13 @@
+{
+  "files": [
+    "CHANGELOG.md"
+  ],
+  "must_contain": [
+    "Keep this curated entry exactly.",
+    "cancellation",
+    "## 1.4.0\n\n- Initial stable API.\n"
+  ],
+  "must_not_contain": [
+    "rename internal helper"
+  ]
+}

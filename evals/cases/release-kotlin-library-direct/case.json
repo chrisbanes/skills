@@ -1,0 +1,42 @@
+{
+  "id": "release-kotlin-library-direct",
+  "title": "Reconcile release notes before publication",
+  "family": "workflow",
+  "target_skills": [
+    "release-kotlin-library"
+  ],
+  "expected_skills": [
+    "release-kotlin-library"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    "CHANGELOG.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:git)\\s+(?:push|fetch|pull|commit|tag)\\b",
+    "\\bgh\\b",
+    "(?:gradlew|release\\.py).*\\b(?:publish|release|prepare)\\b",
+    "(?:~/|/Users/[^/]+/)\\.env"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "release-kotlin-library-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "release-gates",
+      "text": "Preserves curated notes, adds only consumer-visible missing changes supported by supplied history, explains resolved gaps and remaining validation before publication; does not claim a live release."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

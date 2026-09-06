@@ -4,8 +4,8 @@ This directory contains a reproducible, advisory evaluator with a shared core
 and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
 tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
-cover six Compose skills, four Kotlin/Gradle skills, and five workflow/writing
-skills: `grounded-writing`, `implement-with-subagents`,
+cover six Compose skills, four Kotlin/Gradle skills, and six workflow/writing
+skills: `grounded-writing`, `implement-with-subagents`, `release-kotlin-library`,
 `run-github-project`, `shepherd`, and `to-plan`. It is designed to answer three
 separate questions:
 
@@ -61,6 +61,7 @@ suite-wide aggregate.
 | `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
 | `grounded-writing` | — | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
+| `release-kotlin-library` | — | — | — |
 | `run-github-project` | — | — | 100.0% |
 | `shepherd` | — | — | 100.0% |
 | `to-plan` | — | — | — |
@@ -89,6 +90,7 @@ The source runs, selection rules, and detailed scorecards are in the
 | `kotlin-concurrency-and-flow` | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
 | `kotlin-control-flow` | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
 | `grounded-writing` | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
+| `release-kotlin-library` | — | — | — | — |
 
 ## Evaluation setup
 
@@ -111,8 +113,8 @@ Each eligible `case × arm` condition runs three times by default. A case that
 targets no implicitly invokable skill is excluded from the automatic arm before
 execution. The 38-case Compose suite schedules 342 subject calls and 342
 blinded judge calls. The 22-case Kotlin/Gradle suite schedules 198 subject calls
-and 198 blinded judge calls. The 15-case workflows/writing suite schedules 99
-subject calls and 99 blinded judge calls.
+and 198 blinded judge calls. The 18-case workflows/writing suite schedules 126
+subject calls and 126 blinded judge calls.
 
 All subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,
@@ -173,9 +175,11 @@ The Kotlin/Gradle benchmark contains 22 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-The workflows/writing benchmark contains 15 scored cases: direct, novel, and
-no-change coverage for each of its five skills. The surrounding corpus also
+The workflows/writing benchmark contains 18 scored cases: direct, novel, and
+no-change coverage for each of its six skills. The surrounding corpus also
 contains the two calibration-only missing-provider challenges described above.
+The release triad checks changelog reconciliation, uncertain prerelease recovery,
+and read-only readiness restraint without live publication or credentials.
 Its GitHub-style cases use supplied immutable state and rubric plus
 forbidden-action grading; they do not contact a provider. Only
 `implement-with-subagents` declares the evaluator-owned `implement` fixture

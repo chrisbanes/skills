@@ -106,6 +106,7 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
+- [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — prepare and verify Kotlin library releases with changelog reconciliation, repository checks, safe credentials, and an adapted Haze release helper.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — implement or review supplied-task orchestration through separate implementation owners, preserving atomic work, task-scoped acceptance, and repair ownership; implementation mode requires Matt Pocock's external `implement` skill.
 - [`to-plan`](skills/to-plan/SKILL.md) — create a repository-aware implementation plan from one ready GitHub issue or an in-chat task, with a provider-neutral implementation handoff.
@@ -193,6 +194,7 @@ may perform differently. These are not merge or release gates. See
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 100.0% | 100.0% |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | 100.0% | 100.0% |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
+| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — |
 | [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | 100.0% |
 | [`shepherd`](skills/shepherd/SKILL.md) | — | — | 100.0% |
 | [`to-plan`](skills/to-plan/SKILL.md) | — | — | — |
@@ -221,6 +223,7 @@ The source runs, selection rules, and detailed scorecards are in the
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
+| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — | — |
 
 ## License
 
