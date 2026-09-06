@@ -318,9 +318,12 @@ class ReleaseHelperTest(unittest.TestCase):
         config["publication"]["required_credentials"] = ["TOKEN"]
         self.release.prepare(self.root, config)
         calls = []
+        def command(argv, *, cwd, env=None):
+            calls.append(argv)
+            return '{"state":"absent"}'
         with self.assertRaisesRegex(ValueError, "credentials"):
-            self.release.publish(self.root, config, command_runner=lambda *a, **kw: calls.append(a), process_env={})
-        self.assertEqual([], calls)
+            self.release.publish(self.root, config, command_runner=command, process_env={})
+        self.assertEqual([["artifact", "1.2.0"]], calls)
 
     def test_ci_failure_preserves_release_without_advancing_development(self):
         config = self.config(publication_mode="tag-ci")
@@ -462,6 +465,57 @@ class ReleaseHelperTest(unittest.TestCase):
         with patch.dict(os.environ, {"RELEASE_TEST_TOKEN": "synthetic-only"}):
             self.release.publish(self.root, config, command_runner=command)
         self.assertEqual([True], published)
+
+    def test_release_preserves_crlf_through_preparation_and_next_version(self):
+        originals = {}
+        for name in ["gradle.properties", "CHANGELOG.md", "library/api/api.txt"]:
+            path = self.root / name
+            originals[name] = path.read_bytes().replace(b"\n", b"\r\n")
+            path.write_bytes(originals[name])
+        self.git("add", ".")
+        self.git("commit", "-m", "CRLF release fixture")
+        config = self.config()
+        self.release.prepare(self.root, config)
+        self.assertEqual(b"VERSION_NAME=1.2.0\r\n", (self.root / "gradle.properties").read_bytes())
+        expected = originals["CHANGELOG.md"].replace(
+            b"## Unreleased", b'## Unreleased\r\n\r\n## 1.2.0 <small>2026-09-06</small> { id="1.2.0" }', 1)
+        self.assertEqual(expected, (self.root / "CHANGELOG.md").read_bytes())
+        self.assertEqual(originals["library/api/api.txt"], (self.root / "library/api/1.2.0.txt").read_bytes())
+        published = []
+        def command(argv, *, cwd, env=None):
+            if argv[0] == "publish":
+                published.append(True)
+                return ""
+            return '{"state":"published"}' if published else '{"state":"absent"}'
+        self.release.publish(self.root, config, command_runner=command, process_env={})
+        self.assertEqual(b"VERSION_NAME=1.3.0-SNAPSHOT\r\n", (self.root / "gradle.properties").read_bytes())
+        self.assertEqual(expected, (self.root / "CHANGELOG.md").read_bytes())
+
+    def test_release_date_rejects_alternative_iso_forms_before_writes(self):
+        before = self.snapshot()
+        for value in ["20260906", "2026-W36-7", "2026-02-30", "2026-9-6"]:
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, "YYYY-MM-DD"):
+                    self.release.prepare(self.root, self.config(release_date=value))
+                self.assertEqual(before, self.snapshot())
+                self.assertFalse((self.root / "library/api/1.2.0.txt").exists())
+
+    def test_tag_ci_ignores_local_dotenv_and_local_publication_credentials(self):
+        config = self.config(publication_mode="tag-ci")
+        config["publication"]["required_credentials"] = ["CI_ONLY_TOKEN"]
+        Path(config["env_file"]).write_text("not a dotenv assignment\n")
+        self.release.prepare(self.root, config)
+        calls = []
+        def command(argv, *, cwd, env=None):
+            self.assertNotIn("CI_ONLY_TOKEN", env)
+            calls.append(argv[0])
+            if argv[0] == "ci":
+                return '{"state":"passed"}'
+            return '{"state":"published"}' if calls.count("artifact") > 1 else '{"state":"absent"}'
+        result = self.release.publish(self.root, config, command_runner=command, process_env={})
+        self.assertTrue(result.completed)
+        self.assertEqual(["artifact", "ci", "artifact"], calls)
+        self.assertEqual("VERSION_NAME=1.3.0-SNAPSHOT\n", self.read("gradle.properties"))
 
     def config(self, **overrides):
         config = {

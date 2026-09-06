@@ -61,8 +61,8 @@ Configure these fields from the repository:
 | `publication.command` | Local publishing argument array; omit for tag CI |
 | `publication.artifact_check` | Read-only verifier argument array covering every expected artifact/version |
 | `publication.ci_check` | Tag-CI verifier argument array bound to the release workflow/commit |
-| `publication.required_credentials` | Required environment variable names, never values |
-| `env_file` | Defaults to `~/.env`; use synthetic files in tests |
+| `publication.required_credentials` | Names required for local publication and stripped from checks/verifiers in either mode; never values |
+| `env_file` | Defaults to `~/.env`, loaded only for local publication; use synthetic files in tests |
 
 Haze's changelog heading template is:
 
@@ -106,7 +106,9 @@ precedence. Configured checks and artifact/CI verifiers receive an explicit
 environment with the configured release credential names removed, including
 credentials already exported by the caller. The configured publishing command retains
 those release credentials. Keep credential names configured during recovery so
-its artifact verifier is also sanitized. Missing required values block publication. Child command output is
+its artifact verifier is also sanitized. Missing required values block local
+publication. Tag-triggered CI uses existing Git authentication and CI-managed
+publishing secrets; it does not load or require local dotenv values. Child command output is
 sensitive: use only the helper's bounded outcome, never expose raw logs or
 request that the user paste secrets.
 

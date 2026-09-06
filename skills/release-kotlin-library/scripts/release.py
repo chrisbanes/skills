@@ -95,9 +95,9 @@ def get_property(key: str, path: Path) -> str:
 
 def updated_property(key: str, value: str, path: Path) -> str:
     require_string(key, "version_key")
-    content = path.read_text(encoding="utf-8")
+    content = path.read_bytes().decode("utf-8")
     replacement, count = re.subn(
-        rf"^{re.escape(key)}=.*$", f"{key}={value}", content, flags=re.MULTILINE
+        rf"^{re.escape(key)}=[^\r\n]*", f"{key}={value}", content, flags=re.MULTILINE
     )
     if count != 1:
         raise ValueError(f"expected exactly one {key} property in {path}")
@@ -125,19 +125,20 @@ def updated_changelog(content: str, changelog: Mapping[str, Any], release: str, 
     heading_template = require(changelog.get("release_heading"), "changelog.release_heading is required")
     if not isinstance(unreleased, str) or not isinstance(heading_template, str):
         raise ValueError("changelog headings must be strings")
-    matches = list(re.finditer(rf"^{re.escape(unreleased)}[ \t]*$", content, re.MULTILINE))
+    matches = list(re.finditer(rf"^{re.escape(unreleased)}[ \t]*(?=\r?$)", content, re.MULTILINE))
     if len(matches) != 1:
         raise ValueError(f"changelog must contain exactly one {unreleased!r} section")
     heading = heading_template.replace("{version}", release).replace("{date}", date)
     if re.search(r"\{[A-Za-z_][A-Za-z0-9_]*\}", heading):
         raise ValueError("changelog.release_heading only supports {version} and {date}")
-    if re.search(rf"^{re.escape(heading)}[ \t]*$", content, re.MULTILINE):
+    if re.search(rf"^{re.escape(heading)}[ \t]*\r?$", content, re.MULTILINE):
         raise ValueError(f"changelog already contains release heading {release}")
     match = matches[0]
-    before, after = content[:match.start()], content[match.end():]
-    if not after.startswith("\n"):
+    after = content[match.end():]
+    newline = "\r\n" if after.startswith("\r\n") else "\n"
+    if not after.startswith(newline):
         raise ValueError("changelog Unreleased heading must occupy a complete line")
-    return before + unreleased + "\n\n" + heading + after
+    return content[:match.end()] + newline + newline + heading + after
 
 
 def parse_dotenv(text: str) -> dict[str, str]:
@@ -345,7 +346,7 @@ def expected_worktree_changes(root: Path, files: Mapping[Path, str]) -> None:
         if len(entry) < 4 or entry[3:] not in expected or entry[:2] not in {" M", "??"}:
             raise ValueError(f"release check changed or staged files outside the prepared release scope: {entry!r}")
     for path, expected_content in files.items():
-        if path.read_text(encoding="utf-8") != expected_content:
+        if path.read_bytes().decode("utf-8") != expected_content:
             raise ValueError("release check modified a prepared release file")
 
 
@@ -363,7 +364,7 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     version_key = require(config.get("version_key"), "version_key is required")
     version_content = updated_property(version_key, release, version_file)
     date = config.get("release_date", dt.date.today().isoformat())
-    if not isinstance(date, str):
+    if not isinstance(date, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", date):
         raise ValueError("release_date must use YYYY-MM-DD")
     try:
         dt.date.fromisoformat(date)
@@ -371,8 +372,8 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         raise ValueError("release_date must use YYYY-MM-DD") from error
     changelog_content = None
     if changelog_path is not None and changelog_path.exists():
-        changelog_content = updated_changelog(changelog_path.read_text(encoding="utf-8"), config["changelog"], release, date)
-    snapshots = [(api_file.parent / f"{release}.txt", api_file.read_text(encoding="utf-8")) for api_file in api_files]
+        changelog_content = updated_changelog(changelog_path.read_bytes().decode("utf-8"), config["changelog"], release, date)
+    snapshots = [(api_file.parent / f"{release}.txt", api_file.read_bytes().decode("utf-8")) for api_file in api_files]
     for snapshot, _content in snapshots:
         if snapshot.exists():
             raise ValueError(f"API snapshot already exists: {snapshot.relative_to(root)}")
@@ -381,13 +382,13 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     if changelog_content is not None:
         originals[changelog_path] = changelog_path.read_bytes()
     originals.update({path: None for path, _ in snapshots})
-    version_file.write_text(version_content, encoding="utf-8")
+    version_file.write_bytes(version_content.encode("utf-8"))
     planned_files = {version_file: version_content}
     if changelog_content is not None:
-        changelog_path.write_text(changelog_content, encoding="utf-8")
+        changelog_path.write_bytes(changelog_content.encode("utf-8"))
         planned_files[changelog_path] = changelog_content
     for snapshot, content in snapshots:
-        snapshot.write_text(content, encoding="utf-8")
+        snapshot.write_bytes(content.encode("utf-8"))
         planned_files[snapshot] = content
     # Bind validation evidence to the exact prepared release content. Checks
     # never receive release credentials.
@@ -403,7 +404,7 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         if run_git(root, ["rev-parse", "HEAD"]) == initial_sha:
             for path, content in planned_files.items():
                 if (str(path.relative_to(root)) not in staged and path.is_file()
-                        and path.read_text(encoding="utf-8") == content):
+                        and path.read_bytes().decode("utf-8") == content):
                     if originals[path] is None:
                         path.unlink()
                     else:
@@ -481,7 +482,6 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     except Exception as error:
         raise RecoveryRequired("prepared release validation failed; inspect before publishing") from error
     require_prepared_intact(root, config, prepared_sha)
-    environment, _secrets = credential_environment(root, config, dict(os.environ if process_env is None else process_env))
     try:
         state = artifact_state(root, config, command_runner, process_env)
     except Exception as error:
@@ -489,6 +489,8 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     if state != "absent":
         raise RecoveryRequired(f"artifact state is {state}; inspect recovery state before retrying publication")
     require_prepared_intact(root, config, prepared_sha)
+    if publication["mode"] == "local":
+        environment, _secrets = credential_environment(root, config, dict(os.environ if process_env is None else process_env))
     try:
         if publication["mode"] == "local":
             command_runner(command_argv(publication["command"], config), cwd=root, env=environment)
@@ -522,7 +524,7 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     verify_remote_git(root, config)
     version_file, _changelog, _api_files = release_paths(root, config)
     _release, next_version = validate_versions(config)
-    version_file.write_text(updated_property(config["version_key"], next_version, version_file), encoding="utf-8")
+    version_file.write_bytes(updated_property(config["version_key"], next_version, version_file).encode("utf-8"))
     try:
         run_git(root, ["add", "--", str(version_file.relative_to(root))])
         run_git(root, ["commit", "-m", "Prepare next development version"])

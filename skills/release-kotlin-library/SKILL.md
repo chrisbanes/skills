@@ -43,9 +43,11 @@ only after verifying its artifacts and Git state.
    style, API snapshot applicability, branch, remote, tag and command arguments.
    Keep configuration and evidence outside tracked release files. Check the
    index, snapshot collisions and local/remote destinations before writes. Load
-   `~/.env` for release execution as data, never by shell sourcing or printing it.
+   `~/.env` for local publication as data, never by shell sourcing or printing it.
    Preserve explicit process environment values. Missing required credentials
-   block publication; do not request or log their values.
+   block local publication; do not request or log their values. For tag-triggered
+   CI, use existing Git authentication and CI-managed publishing secrets without
+   loading or requiring local dotenv values.
 6. Prepare the release: update the version, finalize the changelog heading and
    applicable published-module API snapshots, run configured checks, and commit
    only release files. Inspect the resulting commit. Bind validation evidence to
