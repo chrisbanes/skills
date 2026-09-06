@@ -8,6 +8,8 @@ from pathlib import Path
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase, Validator
 from evals.harness.codex import (
     RunConfig,
+    _changed_paths,
+    _workspace_diff,
     build_subject_command,
     completed_turn_count,
     completed_tool_call_count,
@@ -300,6 +302,31 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertEqual({"input_tokens": 10, "output_tokens": 5}, result.usage)
         self.assertEqual(("src/main/kotlin/example/Subject.kt",), result.changed_paths)
         self.assertIn("// changed", result.diff)
+
+    def test_preserves_special_paths_and_rename_records(self):
+        workspace = self.root / "paths"
+        workspace.mkdir()
+        def git(*args):
+            subprocess.run(["git", "-C", str(workspace), *args], check=True,
+                           capture_output=True)
+        git("init", "-q")
+        (workspace / "old name.txt").write_text("tracked content\n")
+        git("add", ".")
+        git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+            "commit", "-qm", "baseline")
+        git("mv", "old name.txt", "new name.txt")
+        names = (".scratch/to-plan/my plan.md", 'quote".txt',
+                 "literal -> arrow.txt", "tab\tname.txt", "line\nname.txt", "café.txt")
+        for name in names:
+            path = workspace / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f"evidence {names.index(name)}\n")
+        self.assertEqual(tuple(sorted((*names, "new name.txt"))),
+                         _changed_paths(workspace))
+        diff = _workspace_diff(workspace)
+        for index in range(len(names)):
+            self.assertIn(f"+evidence {index}", diff)
+        self.assertNotIn("+tracked content", diff)
 
     def test_captures_untracked_files_in_workspace_diff(self):
         case = sample_case(self.root)

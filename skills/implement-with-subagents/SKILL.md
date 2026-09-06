@@ -83,11 +83,12 @@ implicitly.
      current `HEAD` for the work item's acceptance criteria and scope;
    - inspect the returned command, complete result, tested revision, and relevant
      input and environment identity;
-   - reuse a requested check only when that evidence shows a successful run for
-     the task-scoped revision, or when the current `HEAD` is a descendant whose
-     independently inspected diff leaves the check's relevant inputs unchanged,
+   - reuse a requested check only when its complete evidence shows success,
      the relevant environment remains unchanged, and neither the user nor
-     repository requires a fresh independent run;
+     repository requires a fresh independent run. Also require either the tested
+     revision to equal current `HEAD`, or current `HEAD` to be a descendant of
+     the tested revision whose independently inspected diff leaves the check's
+     relevant inputs unchanged;
    - repeat each affected check when its evidence is missing, failed, tied to an
      unexplained older revision, affected by a changed relevant input, or subject
      to an explicit freshness or independent-run requirement;

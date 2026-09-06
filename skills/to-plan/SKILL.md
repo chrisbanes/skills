@@ -42,8 +42,11 @@ current invocation. After selecting GitHub mode, read
 
 Otherwise use conversation mode. An inline task starts a new source unless it
 explicitly selects an established issue. A current user instruction authorizes
-a local conversation draft when it establishes the desired outcome, scope,
-acceptance boundary, and any material user-facing decision. Establish routine
+a local conversation draft when it requests creating a plan, such as “make a
+plan.” A request only to discuss or review a plan does not authorize writing,
+even when its specification is complete; answer within that requested scope.
+Separately establish the desired outcome, scope, acceptance boundary, and any
+material user-facing decision before drafting. Establish routine
 implementation details from the repository and the conversation when they do
 not require a stakeholder choice. Without an inline task, reuse a prior
 conversation only when exactly one compact, decision-complete summary is
@@ -71,8 +74,8 @@ applies to an already authorized, decision-complete source; it does not require
 the user to confirm that source again.
 
 Normal GitHub mode requires approval before publishing. `--auto` skips only
-that pause. A decision-complete current instruction or conversation
-confirmation authorizes its local draft; neither authorizes GitHub writes.
+that pause. A current request to create a plan with a decision-complete source, or explicit
+confirmation to draft that source, authorizes its local draft; neither authorizes GitHub writes.
 
 ## Workflow
 
