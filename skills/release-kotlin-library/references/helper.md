@@ -28,7 +28,12 @@ python3 <skill-dir>/scripts/release.py --root <repository> --config <config.json
 Run only the command matching the authorized phase. `prepare` creates the
 release commit and local tag but does not publish or push. `publish` verifies
 the prepared state, publishes and completes Git state. `recover` collects
-read-only provider/Git evidence; it does not retry mutations. Preparation records a configuration digest in the commit; keep the same config
+read-only provider/Git evidence; it does not retry mutations. Recovery requires
+only `release_version`, `tag` (or the release-version default), `remote`, `branch`
+and `publication.artifact_check`, plus credential names to exclude if applicable.
+It does not require `next_version`, a publication mode or a publishing command.
+An artifact command that explicitly uses `{next_version}` still requires that
+value; use a release-only verifier to inspect an interrupted release. Preparation records a configuration digest in the commit; keep the same config
 for publication. Changing it requires inspecting and re-preparing the release.
 Check the outcome before advancing. `preflight` is for execution readiness, not a substitute for
 a read-only review of supplied evidence.
@@ -97,7 +102,11 @@ that unconditionally print success.
 The environment file is parsed as literal assignments with optional `export`
 and single or double quotes. Shell substitution and unsupported syntax are
 rejected without printing the line. Explicit process environment values take
-precedence. Missing required values block publication. Child command output is
+precedence. Configured checks and artifact/CI verifiers receive an explicit
+environment with the configured release credential names removed, including
+credentials already exported by the caller. The configured publishing command retains
+those release credentials. Keep credential names configured during recovery so
+its artifact verifier is also sanitized. Missing required values block publication. Child command output is
 sensitive: use only the helper's bounded outcome, never expose raw logs or
 request that the user paste secrets.
 

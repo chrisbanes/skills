@@ -50,11 +50,22 @@ def require(value: Any, message: str) -> Any:
     return value
 
 
-def validate_versions(config: Mapping[str, Any]) -> tuple[str, str]:
+def require_string(value: Any, field: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{field} must be a non-empty string")
+    return value
+
+
+def validate_release_version(config: Mapping[str, Any]) -> str:
     release = require(config.get("release_version"), "release_version is required")
-    next_version = require(config.get("next_version"), "next_version is required")
     if not isinstance(release, str) or not VERSION.fullmatch(release) or release.endswith("-SNAPSHOT"):
         raise ValueError("release_version must be an explicit non-SNAPSHOT Maven version")
+    return release
+
+
+def validate_versions(config: Mapping[str, Any]) -> tuple[str, str]:
+    release = validate_release_version(config)
+    next_version = require(config.get("next_version"), "next_version is required")
     if not isinstance(next_version, str) or not VERSION.fullmatch(next_version) or not next_version.endswith("-SNAPSHOT"):
         raise ValueError("next_version must be an explicit Maven -SNAPSHOT version")
     return release, next_version
@@ -74,6 +85,7 @@ def root_path(root: Path, configured_path: str, *, must_exist: bool = False) -> 
 
 
 def get_property(key: str, path: Path) -> str:
+    require_string(key, "version_key")
     values = [line.split("=", 1)[1].strip() for line in path.read_text(encoding="utf-8").splitlines()
               if line.startswith(f"{key}=")]
     if len(values) != 1:
@@ -82,6 +94,7 @@ def get_property(key: str, path: Path) -> str:
 
 
 def updated_property(key: str, value: str, path: Path) -> str:
+    require_string(key, "version_key")
     content = path.read_text(encoding="utf-8")
     replacement, count = re.subn(
         rf"^{re.escape(key)}=.*$", f"{key}={value}", content, flags=re.MULTILINE
@@ -192,28 +205,39 @@ def git_status(root: Path) -> str:
 def command_argv(template: Any, config: Mapping[str, Any]) -> list[str]:
     if not isinstance(template, list) or not template or not all(isinstance(item, str) and item for item in template):
         raise ValueError("commands must be non-empty JSON arrays of strings")
-    release, next_version = validate_versions(config)
-    values = {"release_version": release, "next_version": next_version, "tag": config.get("tag", release)}
+    release = validate_release_version(config)
+    values = {"release_version": release, "tag": config.get("tag", release)}
+    if any("{next_version}" in item for item in template):
+        values["next_version"] = validate_versions(config)[1]
     try:
         return [item.format(**values) for item in template]
     except (KeyError, ValueError) as error:
         raise ValueError("command arguments only support {release_version}, {next_version}, and {tag}") from error
 
 
-def publication_config(config: Mapping[str, Any]) -> Mapping[str, Any]:
+def readback_config(config: Mapping[str, Any]) -> Mapping[str, Any]:
     publication = require(config.get("publication"), "publication configuration is required")
     if not isinstance(publication, Mapping):
         raise ValueError("publication must be an object")
-    if publication.get("mode") not in {"local", "tag-ci"}:
+    command_argv(publication.get("artifact_check"), config)
+    credentials = publication.get("required_credentials", [])
+    if not isinstance(credentials, list) or not all(
+        isinstance(key, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key)
+        for key in credentials
+    ):
+        raise ValueError("publication.required_credentials must be environment variable names")
+    return publication
+
+
+def publication_config(config: Mapping[str, Any]) -> Mapping[str, Any]:
+    validate_versions(config)
+    publication = readback_config(config)
+    if not isinstance(publication.get("mode"), str) or publication["mode"] not in {"local", "tag-ci"}:
         raise ValueError("publication.mode must be local or tag-ci")
     if publication["mode"] == "local":
         command_argv(publication.get("command"), config)
     else:
         command_argv(publication.get("ci_check"), config)
-    command_argv(publication.get("artifact_check"), config)
-    credentials = publication.get("required_credentials", [])
-    if not isinstance(credentials, list) or not all(isinstance(key, str) and ENV_KEY.fullmatch(f"{key}=") for key in credentials):
-        raise ValueError("publication.required_credentials must be environment variable names")
     return publication
 
 
@@ -232,7 +256,7 @@ def release_paths(root: Path, config: Mapping[str, Any]) -> tuple[Path, Path | N
             raise ValueError("changelog must be an object or null")
         changelog_path = root_path(root, require(changelog_config.get("path"), "changelog.path is required"))
     api_mode = config.get("api_snapshots", "haze-published")
-    if api_mode not in {"haze-published", "disabled"}:
+    if not isinstance(api_mode, str) or api_mode not in {"haze-published", "disabled"}:
         raise ValueError("api_snapshots must be haze-published or disabled")
     api_files = find_published_api_files(root) if api_mode == "haze-published" else []
     return version_file, changelog_path, api_files
@@ -243,7 +267,7 @@ def common_preflight(root: Path, config: Mapping[str, Any], *, require_prepared:
     tag = config.get("tag", release)
     if not isinstance(tag, str) or not tag:
         raise ValueError("tag must be a non-empty string")
-    branch = require(config.get("branch"), "branch is required")
+    branch = require_string(config.get("branch"), "branch")
     remote = require(config.get("remote"), "remote is required")
     if not isinstance(remote, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", remote):
         raise ValueError("remote must be a simple Git remote name")
@@ -299,12 +323,20 @@ def require_prepared_intact(root: Path, config: Mapping[str, Any], prepared_sha:
     require_config_binding(root, config)
 
 
-def run_checks(root: Path, config: Mapping[str, Any], command_runner: CommandRunner) -> None:
+def non_publication_env(config: Mapping[str, Any], process_env: Mapping[str, str] | None = None) -> dict[str, str]:
+    environment = dict(os.environ if process_env is None else process_env)
+    for key in readback_config(config).get("required_credentials", []):
+        environment.pop(key, None)
+    return environment
+
+
+def run_checks(root: Path, config: Mapping[str, Any], command_runner: CommandRunner,
+               process_env: Mapping[str, str] | None = None) -> None:
     checks = config.get("checks", [])
     if not isinstance(checks, list):
         raise ValueError("checks must be a list of command arrays")
     for check in checks:
-        command_runner(command_argv(check, config), cwd=root, env=None)
+        command_runner(command_argv(check, config), cwd=root, env=non_publication_env(config, process_env))
 
 
 def expected_worktree_changes(root: Path, files: Mapping[Path, str]) -> None:
@@ -395,8 +427,9 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     return PrepareResult(release_version=release, release_sha=run_git(root, ["rev-parse", "HEAD"]), tag=tag)
 
 
-def artifact_state(root: Path, config: Mapping[str, Any], command_runner: CommandRunner) -> str:
-    output = command_runner(command_argv(publication_config(config)["artifact_check"], config), cwd=root, env=None)
+def artifact_state(root: Path, config: Mapping[str, Any], command_runner: CommandRunner,
+                   process_env: Mapping[str, str] | None = None) -> str:
+    output = command_runner(command_argv(readback_config(config)["artifact_check"], config), cwd=root, env=non_publication_env(config, process_env))
     try:
         state = json.loads(output)["state"]
     except (json.JSONDecodeError, KeyError, TypeError) as error:
@@ -444,13 +477,13 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     require_config_binding(root, config)
     prepared_sha = run_git(root, ["rev-parse", "HEAD"])
     try:
-        run_checks(root, config, command_runner)
+        run_checks(root, config, command_runner, process_env)
     except Exception as error:
         raise RecoveryRequired("prepared release validation failed; inspect before publishing") from error
     require_prepared_intact(root, config, prepared_sha)
     environment, _secrets = credential_environment(root, config, dict(os.environ if process_env is None else process_env))
     try:
-        state = artifact_state(root, config, command_runner)
+        state = artifact_state(root, config, command_runner, process_env)
     except Exception as error:
         raise RecoveryRequired("artifact inspection failed; inspect recovery state before publishing") from error
     if state != "absent":
@@ -462,7 +495,7 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         else:
             run_git(root, ["push", config["remote"], f"HEAD:refs/heads/{config['branch']}"])
             run_git(root, ["push", config["remote"], config.get("tag", config["release_version"])])
-            ci = command_runner(command_argv(publication["ci_check"], config), cwd=root, env=None)
+            ci = command_runner(command_argv(publication["ci_check"], config), cwd=root, env=non_publication_env(config, process_env))
             try:
                 ci_state = json.loads(ci)["state"]
             except (json.JSONDecodeError, KeyError, TypeError) as error:
@@ -474,7 +507,7 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     except Exception as error:
         raise RecoveryRequired("publication command failed; inspect remote and artifact state before retrying") from error
     try:
-        final_state = artifact_state(root, config, command_runner)
+        final_state = artifact_state(root, config, command_runner, process_env)
     except Exception as error:
         raise RecoveryRequired("artifact verification failed; inspect recovery state before retrying") from error
     if final_state != "published":
@@ -506,10 +539,11 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
 def recover(root: Path, config: Mapping[str, Any], *, command_runner: CommandRunner = subprocess_command) -> dict[str, str]:
     """Read live recovery evidence without publishing, pushing, or changing files."""
     root = root.resolve()
-    publication_config(config)
-    release, _ = validate_versions(config)
-    tag = config.get("tag", release)
-    remote = config["remote"]
+    readback_config(config)
+    release = validate_release_version(config)
+    tag = require_string(config.get("tag", release), "tag")
+    remote = require_string(config.get("remote"), "remote")
+    branch = require_string(config.get("branch"), "branch")
     def remote_state(args: Sequence[str]) -> str:
         try:
             return run_git(root, args) or "absent"
@@ -524,7 +558,7 @@ def recover(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         "artifact": artifact,
         "local_tag": run_git(root, ["rev-parse", "--verify", f"refs/tags/{tag}"], allow_failure=True) or "absent",
         "remote_tag": remote_state(["ls-remote", "--tags", remote, f"refs/tags/{tag}"]),
-        "remote_branch": remote_state(["ls-remote", remote, f"refs/heads/{config['branch']}"]),
+        "remote_branch": remote_state(["ls-remote", remote, f"refs/heads/{branch}"]),
     }
 
 

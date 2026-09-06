@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+from unittest.mock import patch
 from pathlib import Path
 import subprocess
 import sys
@@ -384,6 +386,82 @@ class ReleaseHelperTest(unittest.TestCase):
         self.assertEqual("VERSION_NAME=check-owned\n", self.read("gradle.properties"))
         self.assertEqual("gradle.properties", self.git("diff", "--cached", "--name-only"))
         self.assertFalse((self.root / "library/api/1.2.0.txt").exists())
+
+    def test_exported_credentials_are_removed_from_checks_and_verifiers(self):
+        config = self.config(publication_mode="tag-ci", checks=[["check"]])
+        config["publication"]["required_credentials"] = ["RELEASE_TEST_TOKEN"]
+        seen = []
+        def command(argv, *, cwd, env=None):
+            probe = [sys.executable, "-c", "import os; print('present' if 'RELEASE_TEST_TOKEN' in os.environ else 'absent')"]
+            self.assertEqual("absent", self.release.subprocess_command(probe, cwd=cwd, env=env).strip())
+            seen.append(argv[0])
+            if argv[0] == "artifact":
+                return '{"state":"published"}' if seen.count("artifact") > 1 else '{"state":"absent"}'
+            return '{"state":"passed"}'
+        with patch.dict(os.environ, {"RELEASE_TEST_TOKEN": "synthetic-only"}):
+            self.release.prepare(self.root, config, command_runner=command)
+            self.release.publish(self.root, config, command_runner=command)
+            self.release.recover(self.root, config, command_runner=command)
+        self.assertIn("ci", seen)
+        self.assertEqual(3, seen.count("artifact"))
+
+    def test_recovery_needs_only_readback_fields_not_next_version_or_publisher(self):
+        config = self.config()
+        config.pop("next_version")
+        config["publication"].pop("mode")
+        config["publication"].pop("command")
+        before = self.snapshot()
+        calls = []
+        def command(argv, *, cwd, env=None):
+            calls.append(argv)
+            return '{"state":"published"}'
+        result = self.release.recover(self.root, config, command_runner=command)
+        self.assertEqual("published", result["artifact"])
+        self.assertEqual("absent", result["remote_tag"])
+        self.assertIn(self.git("rev-parse", "HEAD"), result["remote_branch"])
+        self.assertEqual([["artifact", "1.2.0"]], calls)
+        self.assertEqual(before, self.snapshot())
+
+    def test_cli_rejects_malformed_field_types_without_tracebacks_or_writes(self):
+        cases = [{"branch": 123}, {"version_key": 123}, {"api_snapshots": []},
+                 {"publication_mode": []}, {"branch": ["main"]}]
+        for fields in cases:
+            with self.subTest(fields=fields):
+                config = self.config()
+                if "publication_mode" in fields:
+                    config["publication"]["mode"] = fields["publication_mode"]
+                else:
+                    config.update(fields)
+                config_path = self.root.parent / "invalid.json"
+                config_path.write_text(json.dumps(config))
+                before = self.snapshot()
+                result = subprocess.run(
+                    [sys.executable, str(SCRIPT), "--root", str(self.root),
+                     "--config", str(config_path), "prepare"],
+                    capture_output=True, text=True,
+                )
+                self.assertEqual(1, result.returncode)
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertIn("must be", result.stderr)
+                self.assertEqual(before, self.snapshot())
+
+    def test_publication_keeps_exported_credentials_while_artifact_checks_do_not(self):
+        config = self.config()
+        config["publication"]["required_credentials"] = ["RELEASE_TEST_TOKEN"]
+        self.release.prepare(self.root, config)
+        published = []
+        def command(argv, *, cwd, env=None):
+            probe = [sys.executable, "-c", "import os; print('present' if 'RELEASE_TEST_TOKEN' in os.environ else 'absent')"]
+            observed = self.release.subprocess_command(probe, cwd=cwd, env=env).strip()
+            if argv[0] == "publish":
+                self.assertEqual("present", observed)
+                published.append(True)
+                return ""
+            self.assertEqual("absent", observed)
+            return '{"state":"published"}' if published else '{"state":"absent"}'
+        with patch.dict(os.environ, {"RELEASE_TEST_TOKEN": "synthetic-only"}):
+            self.release.publish(self.root, config, command_runner=command)
+        self.assertEqual([True], published)
 
     def config(self, **overrides):
         config = {
