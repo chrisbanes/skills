@@ -2,8 +2,18 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
+
+
+_KOTLIN_NON_CODE = re.compile(
+    r'""".*?"""|/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"', re.DOTALL
+)
+
+
+def _kotlin_code(source: str) -> str:
+    return _KOTLIN_NON_CODE.sub(lambda match: "\n" * match.group().count("\n"), source)
 
 
 def main(argv: list[str]) -> int:
@@ -28,6 +38,7 @@ def main(argv: list[str]) -> int:
             return 1
         contents.append(path.read_text(encoding="utf-8"))
     subject = "\n".join(contents)
+    kotlin_code = _kotlin_code(subject)
     failures: list[str] = []
     for required in expectations.get("must_contain", []):
         if required not in subject:
@@ -52,6 +63,12 @@ def main(argv: list[str]) -> int:
             failures.append(
                 f"expected at least {count} occurrences of {required!r}, found {actual}"
             )
+    for pattern in expectations.get("must_match_code", []):
+        if not re.search(pattern, kotlin_code, re.DOTALL):
+            failures.append(f"missing required code evidence: {pattern!r}")
+    for pattern in expectations.get("must_not_match_code", []):
+        if re.search(pattern, kotlin_code, re.DOTALL):
+            failures.append(f"forbidden code evidence remains: {pattern!r}")
     for forbidden in expectations.get("must_not_contain", []):
         if forbidden in subject:
             failures.append(f"forbidden evidence remains: {forbidden!r}")

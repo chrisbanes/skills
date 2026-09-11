@@ -201,11 +201,14 @@ import androidx.compose.runtime.Composable
 }
 """),
             ("compose-ui-testing-patterns-direct", """package example
+import kotlin.test.Test
 class SubjectTest {
-  fun test() = captureScreenshot(
-    options = CaptureOptions.Default,
-    tolerance = 0.02f,
-  )
+  @Test fun test() {
+    captureScreenshot(
+      options = CaptureOptions.Default,
+      tolerance = 0.02f,
+    )
+  }
 }
 private object CaptureOptions { object Default }
 private fun captureScreenshot(options: Any, tolerance: Float) = Unit
@@ -231,6 +234,27 @@ private fun captureScreenshot(options: Any, tolerance: Float) = Unit
                         baseline.write_text("configuration=default\n", encoding="utf-8")
                     result = make_result(workspace, paths=(str(subject.relative_to(workspace)),))
                     self.assertTrue(grade_subject(case, result).objective_pass)
+
+                    if case_id == "compose-ui-testing-patterns-direct":
+                        subject.write_text(
+                            """package example
+import kotlin.test.Test
+class SubjectTest {
+  @Test fun test() {
+    // captureScreenshot(options = CaptureOptions.Default, tolerance = 0.02f)
+    captureScreenshot(options = CaptureOptions.Other, tolerance = 0.02f)
+  }
+}
+private object CaptureOptions { object Default; object Other }
+private fun captureScreenshot(options: Any, tolerance: Float) = Unit
+""",
+                            encoding="utf-8",
+                        )
+                        result = make_result(
+                            workspace,
+                            paths=(str(subject.relative_to(workspace)),),
+                        )
+                        self.assertFalse(grade_subject(case, result).objective_pass)
 
     def test_regrades_persisted_subject_evidence_without_model_calls(self):
         report = validate_corpus(REPO_ROOT, suite="compose")

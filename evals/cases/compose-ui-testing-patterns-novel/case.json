@@ -34,9 +34,9 @@
   ],
   "provenance": {
     "kind": "historical",
-    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/Jetchat/app/src/androidTest/java/com/example/compose/jetchat/UserInputTest.kt",
-    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "source_url": "https://github.com/takahirom/roborazzi/blob/56f6987180b28a10c8fe79dfd524c3f0d9c633d0/README.md",
+    "revision": "56f6987180b28a10c8fe79dfd524c3f0d9c633d0",
     "license": "Apache-2.0",
-    "normalization_note": "Reduced and perturbed interaction test preserving the user-input semantics and synchronization boundary."
+    "normalization_note": "Reduced and generalized the documented record, compare, and verify workflow to test that verification does not prove a baseline was recorded."
   }
 }

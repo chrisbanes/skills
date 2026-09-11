@@ -2,17 +2,18 @@
   "files": [
     "src/test/kotlin/example/SubjectTest.kt"
   ],
-  "must_contain": [
-    "CaptureOptions.Default",
-    "tolerance = 0.02f"
-  ],
+  "must_contain": [],
   "must_contain_any": [],
   "must_contain_by_file": {
     "src/test/resources/baselines/Subject.txt": [
       "configuration=default"
     ]
   },
-  "must_not_contain": [
-    "CaptureOptions.Fixed"
+  "must_not_contain": [],
+  "must_match_code": [
+    "@Test\\s+fun\\s+\\w+\\s*\\(\\s*\\)\\s*\\{[^}]*captureScreenshot\\s*\\(\\s*options\\s*=\\s*CaptureOptions\\.Default\\s*,\\s*tolerance\\s*=\\s*0\\.02f\\s*,?\\s*\\)"
+  ],
+  "must_not_match_code": [
+    "captureScreenshot\\s*\\(\\s*options\\s*=\\s*CaptureOptions\\.Fixed"
   ]
 }
