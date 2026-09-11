@@ -284,14 +284,16 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             with self.subTest(case=case.id):
                 self.assertNotIn("do not run agents, commands", case.prompt.lower())
 
-    def test_grounded_writing_validator_accepts_qualified_every_project_language(self):
+    def test_grounded_writing_validator_accepts_public_quality_guidance(self):
         validator = REPO_ROOT / "evals/validators/text_case.py"
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace = Path(temp_dir)
             (workspace / "draft.md").write_text(
-                "Imports avoid a duplicate parse. In the release benchmark, p95 "
-                "fell from 1.8 seconds to 1.1 seconds. Production evidence is still "
-                "needed before claiming the same improvement for every project.\n",
+                "`Full` keeps the complete effect when visual fidelity matters. "
+                "Choose `Adaptive` during sustained interaction when steadier "
+                "performance matters more than the visible detail it reduces. "
+                "The settings preserve the same public API; Adaptive remains "
+                "experimental on Android backdrops.\n",
                 encoding="utf-8",
             )
 

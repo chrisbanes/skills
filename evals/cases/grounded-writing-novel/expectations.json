@@ -1,4 +1,4 @@
 {
   "files": ["draft.md"],
-  "must_contain": ["p95", "1.8 seconds", "1.1 seconds", "duplicate parse", "production data"]
+  "must_contain": ["Full", "Adaptive", "12 pixels", "CPU mask", "experimental"]
 }

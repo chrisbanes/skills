@@ -1,6 +1,6 @@
 {
   "id": "grounded-writing-novel",
-  "title": "Review an evidence-led release note",
+  "title": "Review public rendering-quality documentation",
   "family": "writing",
   "target_skills": ["grounded-writing"],
   "expected_skills": ["grounded-writing"],
@@ -10,8 +10,9 @@
   "allowed_write_paths": [],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "grounded-writing-novel"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "voice", "text": "The review recommends concise evidence-led prose rather than marketing language"},
-    {"id": "truth", "text": "The review preserves the stated production-data qualification and does not invent support for a stronger claim"}
+    {"id": "user-decision", "text": "The review asks for the visible difference, setting choice, and practical trade-off that a developer needs"},
+    {"id": "implementation-boundary", "text": "The review recommends moving interpolation and CPU-mask machinery out of public documentation while retaining relevant contracts and limitations"},
+    {"id": "truth", "text": "The review does not invent a performance result or claim that the setting is universally better"}
   ],
   "provenance": {"kind": "synthetic"}
 }

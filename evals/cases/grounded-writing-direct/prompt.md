@@ -1,3 +1,2 @@
-Rewrite `draft.md` as a short, natural release note. Keep the concrete evidence
-and qualification; do not invent results, user reactions, or personal
-experience.
+Rewrite `draft.md` as concise public developer documentation for rendering
+quality. Do not invent results or experience.
