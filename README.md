@@ -202,6 +202,7 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | 100.0% |
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 100.0% | 100.0% |
+| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | — | — | — |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | 100.0% | 100.0% |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — |
@@ -232,6 +233,7 @@ The source runs, selection rules, and detailed scorecards are in the
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 57.4k → 145.8k (+154%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 30.0s → 53.0s (+77%) |
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
+| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | — | — | — | — |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — | — |
 
