@@ -1,4 +1,4 @@
 {
   "files": ["draft.md"],
-  "must_contain": ["Full", "Adaptive", "minimum-pixel", "CPU mask", "experimental"]
+  "must_contain": ["Full", "Adaptive", "12 pixels", "CPU mask", "experimental"]
 }
