@@ -1,6 +1,6 @@
 {
   "id": "compose-ui-testing-patterns-novel",
-  "title": "Review timing-dependent interaction coverage",
+  "title": "Review screenshot baseline recording evidence",
   "family": "testing",
   "target_skills": [
     "compose-ui-testing-patterns"
@@ -25,18 +25,18 @@
   "rubric": [
     {
       "id": "criterion-1",
-      "text": "Identifies the fixed sleep as nondeterministic and production integration as a broader-than-needed asynchronous seam"
+      "text": "Distinguishes a passing verification result from evidence that recording wrote the expected artifact path"
     },
     {
       "id": "criterion-2",
-      "text": "Recommends a controlled UI seam with an observable callback or semantic assertion and does not recommend a fixed delay"
+      "text": "Recommends inspecting the expected artifact path and intentional baseline diff while preserving the tolerance"
     }
   ],
   "provenance": {
     "kind": "historical",
-    "source_url": "https://github.com/android/compose-samples/blob/018c5207fb63c4f78e5841bd8ddd4faabdf19d3a/Jetchat/app/src/androidTest/java/com/example/compose/jetchat/UserInputTest.kt",
-    "revision": "018c5207fb63c4f78e5841bd8ddd4faabdf19d3a",
+    "source_url": "https://github.com/takahirom/roborazzi/blob/56f6987180b28a10c8fe79dfd524c3f0d9c633d0/README.md",
+    "revision": "56f6987180b28a10c8fe79dfd524c3f0d9c633d0",
     "license": "Apache-2.0",
-    "normalization_note": "Reduced and perturbed interaction test preserving the user-input semantics and synchronization boundary."
+    "normalization_note": "Reduced and generalized the documented record, compare, and verify workflow to test that verification does not prove a baseline was recorded."
   }
 }

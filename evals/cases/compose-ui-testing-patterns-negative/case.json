@@ -1,6 +1,6 @@
 {
   "id": "compose-ui-testing-patterns-negative",
-  "title": "Preserve a value-only unit test",
+  "title": "Preserve an explicit screenshot configuration contract",
   "family": "testing",
   "target_skills": [
     "compose-ui-testing-patterns"
@@ -27,11 +27,11 @@
   "rubric": [
     {
       "id": "criterion-1",
-      "text": "Recognizes a plain unit test is the correct seam"
+      "text": "Recognizes that a fixed configuration is the visual contract and keeps the explicit value"
     },
     {
       "id": "criterion-2",
-      "text": "Leaves the workspace unchanged"
+      "text": "Leaves the workspace unchanged instead of substituting a named preset"
     }
   ],
   "provenance": {

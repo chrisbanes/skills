@@ -1,13 +1,15 @@
 package example
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class CountLabelTest {
+class SubjectTest {
   @Test
-  fun pluralizesCount() {
-    assertEquals("2 items", countLabel(2))
+  fun rendersWithFixedConfiguration() {
+    captureScreenshot(
+      width = 480,
+      tolerance = 0.02f,
+    )
   }
 }
 
-private fun countLabel(count: Int) = if (count == 1) "1 item" else "$count items"
+private fun captureScreenshot(width: Int, tolerance: Float) = Unit

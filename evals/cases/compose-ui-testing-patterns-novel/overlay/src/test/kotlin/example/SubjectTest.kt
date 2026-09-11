@@ -2,19 +2,16 @@ package example
 
 import kotlin.test.Test
 
-class UserInputTest {
+class SubjectTest {
   @Test
-  fun sendMessage() {
-    launchProductionApplication()
-    Thread.sleep(2_000)
-    findNode("message-input").typeText("hello")
-    findNode("send").click()
+  fun capturesSubject() {
+    captureScreenshot(
+      artifactPath = "build/recorded/subject.png",
+      tolerance = 0.02f,
+    )
   }
 }
 
-private fun launchProductionApplication() = Unit
-private fun findNode(tag: String) = FakeNode()
-private class FakeNode {
-  fun typeText(value: String) = Unit
-  fun click() = Unit
-}
+// The log says: "Verification passed".
+// No recording output or changed baseline was reported.
+private fun captureScreenshot(artifactPath: String, tolerance: Float) = Unit

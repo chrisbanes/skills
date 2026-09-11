@@ -1,11 +1,19 @@
 package example
 
-import androidx.test.core.app.ActivityScenario
 import kotlin.test.Test
 
-class SearchFieldTest {
+class SubjectTest {
   @Test
-  fun entersQuery() {
-    ActivityScenario.launch(MainActivity::class.java)
+  fun rendersWithDefaultConfiguration() {
+    captureScreenshot(
+      options = CaptureOptions.Fixed(width = 480),
+      tolerance = 0.02f,
+    )
   }
 }
+
+private object CaptureOptions {
+  object Default
+  fun Fixed(width: Int) = Unit
+}
+private fun captureScreenshot(options: Any, tolerance: Float) = Unit

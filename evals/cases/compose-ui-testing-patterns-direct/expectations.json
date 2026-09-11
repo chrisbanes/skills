@@ -2,13 +2,23 @@
   "files": [
     "src/test/kotlin/example/SubjectTest.kt"
   ],
-  "must_contain": [
-    "setContent"
-  ],
-  "must_contain_any": [
-    ["runComposeUiTest", "createComposeRule"]
-  ],
-  "must_not_contain": [
-    "ActivityScenario"
-  ]
+  "must_contain": [],
+  "must_contain_any": [],
+  "exact_content_by_file": {
+    "src/test/resources/baselines/Subject.txt": "configuration=default\n"
+  },
+  "must_not_contain": [],
+  "required_test_call": {
+    "name": "captureScreenshot",
+    "arguments": {
+      "options": "CaptureOptions.Default",
+      "tolerance": "0.02f"
+    }
+  },
+  "forbidden_test_call": {
+    "name": "captureScreenshot",
+    "arguments": {
+      "options": "CaptureOptions.Fixed"
+    }
+  }
 }
