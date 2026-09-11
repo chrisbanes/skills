@@ -68,11 +68,16 @@ for its lane-specific fallback and blocking behavior.
 
 - Working on Compose state or effects? Start with [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md).
 - Investigating recomposition, stability, or jank? Start with [`compose-performance`](skills/compose-performance/SKILL.md).
+- Comparing Android benchmark configurations or a measured Android default? Start with [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md).
 - Reviewing Flow or coroutine architecture? Start with [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md).
 
 ### Routing
 
 - [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to the focused skills.
+
+### Benchmarking
+
+- [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) — compare physical Android benchmark configurations with verified coverage, controlled conditions, trace-backed diagnosis of unstable rankings, and bounded conclusions.
 
 ### Jetpack Compose
 
@@ -197,6 +202,7 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 66.7% | 100.0% | 100.0% |
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 27.8% | 100.0% | 100.0% |
+| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | — | — | — |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | 100.0% | 100.0% |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — |
@@ -227,6 +233,7 @@ The source runs, selection rules, and detailed scorecards are in the
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 57.4k → 145.8k (+154%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 30.0s → 53.0s (+77%) |
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
+| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | — | — | — | — |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — | — |
 

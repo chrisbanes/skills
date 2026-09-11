@@ -4,10 +4,10 @@ This directory contains a reproducible, advisory evaluator with a shared core
 and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
 tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
-cover six Compose skills, four Kotlin/Gradle skills, and six workflow/writing
-skills: `grounded-writing`, `implement-with-subagents`, `release-kotlin-library`,
-`run-github-project`, `shepherd`, and `to-plan`. It is designed to answer three
-separate questions:
+cover six Compose skills, four Kotlin/Gradle skills, and seven workflow/writing
+skills: `android-benchmark-comparison`, `grounded-writing`,
+`implement-with-subagents`, `release-kotlin-library`, `run-github-project`,
+`shepherd`, and `to-plan`. It is designed to answer three separate questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
 2. Does automatic activation report the expected implicitly invokable public skill entrypoints?
@@ -59,6 +59,7 @@ suite-wide aggregate.
 | `kotlin-api-design` | 66.7% | 100.0% | 100.0% |
 | `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 100.0% |
 | `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
+| `android-benchmark-comparison` | — | — | — |
 | `grounded-writing` | — | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
 | `release-kotlin-library` | — | — | — |
@@ -89,6 +90,7 @@ The source runs, selection rules, and detailed scorecards are in the
 | `kotlin-api-design` | 57.4k → 145.8k (+154%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 30.0s → 53.0s (+77%) |
 | `kotlin-concurrency-and-flow` | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
 | `kotlin-control-flow` | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
+| `android-benchmark-comparison` | — | — | — | — |
 | `grounded-writing` | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
 | `release-kotlin-library` | — | — | — | — |
 
@@ -113,8 +115,8 @@ Each eligible `case × arm` condition runs three times by default. A case that
 targets no implicitly invokable skill is excluded from the automatic arm before
 execution. The 38-case Compose suite schedules 342 subject calls and 342
 blinded judge calls. The 22-case Kotlin/Gradle suite schedules 198 subject calls
-and 198 blinded judge calls. The 18-case workflows/writing suite schedules 126
-subject calls and 126 blinded judge calls.
+and 198 blinded judge calls. The 21-case workflows/writing suite schedules 153
+subject calls and 153 blinded judge calls.
 
 All subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,
@@ -141,6 +143,11 @@ required `expected_skills`; precision accepts any reported skill in the case's
 `allowed_skills`, which must include every expected skill. This lets a case
 permit a genuinely relevant secondary skill without requiring every successful
 subject to consult it.
+
+A no-skill automatic control sets `automatic_no_skill_control: true`. It still
+runs in the automatic arm, while requiring and permitting no public skill, so
+unnecessary activation remains visible without becoming a routing false
+negative.
 
 ### Corpus
 

@@ -11,6 +11,7 @@ PUBLIC_SKILLS = (
     "compose-performance",
     "compose-state-and-effects",
     "compose-ui-testing-patterns",
+    "android-benchmark-comparison",
     "gradle-run",
     "grounded-writing",
     "implement-with-subagents",
@@ -66,6 +67,7 @@ KOTLIN_GRADLE_SKILLS = (
     "kotlin-control-flow",
 )
 WORKFLOWS_WRITING_SKILLS = (
+    "android-benchmark-comparison",
     "grounded-writing",
     "implement-with-subagents",
     "release-kotlin-library",
@@ -98,7 +100,7 @@ SUITES = {
         id="workflows-writing",
         title="Workflows and writing",
         skills=WORKFLOWS_WRITING_SKILLS,
-        benchmark_cases=18,
+        benchmark_cases=21,
         routing_cases=0,
         calibration_cases=12,
         require_skill_triads=True,

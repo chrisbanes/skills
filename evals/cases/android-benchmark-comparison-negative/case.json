@@ -1,0 +1,18 @@
+{
+  "id": "android-benchmark-comparison-negative",
+  "title": "Do not turn a code-style request into a benchmark experiment",
+  "family": "benchmarking",
+  "target_skills": ["android-benchmark-comparison"],
+  "expected_skills": ["android-benchmark-comparison"],
+  "automatic_no_skill_control": true,
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "android-benchmark-comparison-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "restraint", "text": "The response recognizes that a formatting-only request supplies no competing configurations or benchmark decision."},
+    {"id": "no-benchmarking", "text": "The response does not run, design, or demand a performance experiment for the formatting-only request."}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

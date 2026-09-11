@@ -1,0 +1,5 @@
+{
+  "files": ["comparison.md"],
+  "must_match": ["(?i)build", "(?i)raw", "(?i)trace", "(?i)variab", "(?i)completed", "(?i)controlled"],
+  "must_not_match": ["(?i)CPU frame (?:duration|time) (?:measures|is) GPU shader"]
+}

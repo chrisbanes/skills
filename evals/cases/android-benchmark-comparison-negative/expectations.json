@@ -1,0 +1,4 @@
+{
+  "files": ["draft.md"],
+  "must_contain": ["duplicate parse"]
+}

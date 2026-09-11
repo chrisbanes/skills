@@ -1,0 +1,17 @@
+{
+  "id": "android-benchmark-comparison-direct",
+  "title": "Document a controlled quality comparison",
+  "family": "benchmarking",
+  "target_skills": ["android-benchmark-comparison"],
+  "expected_skills": ["android-benchmark-comparison"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "text",
+  "allowed_write_paths": ["comparison.md"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "android-benchmark-comparison-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "experiment-evidence", "text": "The comparison records build/configuration identity, completed case and iteration coverage, raw evidence, and conditions."},
+    {"id": "bounded-decision", "text": "The conclusion reports variability and traces, avoids claiming a CPU metric measures GPU shader time, and does not assign the combined controls' effect to affinity alone."}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

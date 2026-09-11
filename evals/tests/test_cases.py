@@ -60,7 +60,23 @@ class CaseContractTest(unittest.TestCase):
         self.assertEqual(("compose-state-and-effects",), case.expected_skills)
         self.assertEqual(("compose-state-and-effects",), case.allowed_skills)
         self.assertFalse(case.calibration)
+        self.assertFalse(case.automatic_no_skill_control)
         self.assertEqual("Fix the subject.\n", case.prompt)
+
+    def test_allows_a_no_skill_automatic_control(self):
+        case_dir = self.write_case(valid_manifest(automatic_no_skill_control=True))
+
+        case = load_case(case_dir / "case.json", self.root)
+
+        self.assertTrue(case.automatic_no_skill_control)
+
+    def test_requires_automatic_no_skill_control_to_be_boolean(self):
+        case_dir = self.write_case(valid_manifest(automatic_no_skill_control="yes"))
+
+        with self.assertRaisesRegex(
+            CaseValidationError, "automatic_no_skill_control must be a boolean"
+        ):
+            load_case(case_dir / "case.json", self.root)
 
     def test_allowed_skills_must_include_every_expected_skill(self):
         case_dir = self.write_case(

@@ -31,11 +31,11 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
-        self.assertEqual(18, len(benchmark))
+        self.assertEqual(21, len(benchmark))
         self.assertEqual(12, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
-        self.assertEqual(18, len(filter_cases(report.cases, case_ids=None, skills=None)))
+        self.assertEqual(21, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertEqual(
             {
@@ -206,6 +206,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "grounded-writing-direct",
                 "grounded-writing-novel",
                 "grounded-writing-negative",
+                "android-benchmark-comparison-direct",
+                "android-benchmark-comparison-novel",
+                "android-benchmark-comparison-negative",
                 "release-kotlin-library-direct",
                 "release-kotlin-library-novel",
                 "release-kotlin-library-negative",
@@ -254,6 +257,25 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertTrue(records[2]["automatic_eligible"])
         self.assertEqual(["grounded-writing"], records[2]["expected_skills"])
         self.assertFalse(records[3]["automatic_eligible"])
+
+    def test_no_skill_automatic_control_runs_without_routing_to_its_target(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "android-benchmark-comparison-negative"
+        )
+
+        self.assertTrue(case.automatic_no_skill_control)
+        self.assertIn(
+            (case, "automatic"), evaluation_conditions(REPO_ROOT, (case,), ("automatic",))
+        )
+        records = [{"case_id": case.id, "arm": "automatic"}]
+        reconcile_automatic_eligibility(REPO_ROOT, report.cases, records)
+
+        self.assertTrue(records[0]["automatic_eligible"])
+        self.assertEqual([], records[0]["expected_skills"])
+        self.assertEqual([], records[0]["allowed_skills"])
 
     def test_behavioral_expectations_do_not_assert_fixture_prose(self):
         expectations = json.loads(

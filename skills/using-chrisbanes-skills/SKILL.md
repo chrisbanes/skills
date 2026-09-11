@@ -1,6 +1,6 @@
 ---
 name: using-chrisbanes-skills
-description: Use when debugging, benchmarking, or profiling leads into Kotlin or Jetpack Compose source before the cause is known, or when one task spans multiple Kotlin or Compose concerns, especially plain Kotlin Flow or navigation delivery plus sealed branching.
+description: Use when routing Kotlin or Jetpack Compose work, or physical Android benchmark evidence that needs a configuration decision, especially when several Kotlin or Compose concerns overlap.
 ---
 
 # Using chrisbanes skills
@@ -13,7 +13,9 @@ only when its independent behavior changes the same work.
 
 ## Routing procedure
 
-1. Read the task and the Kotlin source that makes the concern concrete.
+1. Read the task. For Kotlin or Compose work, inspect the source that makes the
+   concern concrete. For an Android benchmark comparison, inspect the supplied
+   reports, configurations, and traces instead.
 2. If one focused skill clearly matches, load it directly and stop routing.
 3. Before loading a Compose skill, point to a concrete Compose API or composable
    in the inspected source, or to an explicit request to create or design
@@ -40,6 +42,7 @@ only when its independent behavior changes the same work.
 | Kotlin classification, `when`, guards, exhaustiveness, smart casts, or null branches | [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) |
 | Kotlin function ownership, domain types, expect/actual, or platform seams | [`kotlin-api-design`](../kotlin-api-design/SKILL.md) |
 | Planned Gradle execution or a Gradle-centered warning/failure workflow | [`gradle-run`](../gradle-run/SKILL.md) |
+| Comparing physical Android benchmark configurations, reversed rankings, or an Android default | [`android-benchmark-comparison`](../android-benchmark-comparison/SKILL.md) |
 | Kotlin library release preparation, publication, or readiness | [`release-kotlin-library`](../release-kotlin-library/SKILL.md) |
 | One ready GitHub issue or in-chat task needs repository-aware planning | [`to-plan`](../to-plan/SKILL.md) |
 | Polling PRs/MRs, review comments, CI failures, or routine follow-up | [`shepherd`](../shepherd/SKILL.md) |
