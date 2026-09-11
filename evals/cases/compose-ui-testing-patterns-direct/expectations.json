@@ -4,16 +4,21 @@
   ],
   "must_contain": [],
   "must_contain_any": [],
-  "must_contain_by_file": {
-    "src/test/resources/baselines/Subject.txt": [
-      "configuration=default"
-    ]
+  "exact_content_by_file": {
+    "src/test/resources/baselines/Subject.txt": "configuration=default\n"
   },
   "must_not_contain": [],
-  "must_match_code": [
-    "@Test\\s+fun\\s+\\w+\\s*\\(\\s*\\)\\s*\\{[^}]*captureScreenshot\\s*\\(\\s*options\\s*=\\s*CaptureOptions\\.Default\\s*,\\s*tolerance\\s*=\\s*0\\.02f\\s*,?\\s*\\)"
-  ],
-  "must_not_match_code": [
-    "captureScreenshot\\s*\\(\\s*options\\s*=\\s*CaptureOptions\\.Fixed"
-  ]
+  "required_test_call": {
+    "name": "captureScreenshot",
+    "arguments": {
+      "options": "CaptureOptions.Default",
+      "tolerance": "0.02f"
+    }
+  },
+  "forbidden_test_call": {
+    "name": "captureScreenshot",
+    "arguments": {
+      "options": "CaptureOptions.Fixed"
+    }
+  }
 }

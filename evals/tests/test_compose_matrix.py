@@ -203,11 +203,13 @@ import androidx.compose.runtime.Composable
             ("compose-ui-testing-patterns-direct", """package example
 import kotlin.test.Test
 class SubjectTest {
-  @Test fun test() {
-    captureScreenshot(
-      options = CaptureOptions.Default,
-      tolerance = 0.02f,
-    )
+  @Test fun test(): Unit {
+    run {
+      captureScreenshot(
+        tolerance = 0.02f,
+        options = CaptureOptions.Default,
+      )
+    }
   }
 }
 private object CaptureOptions { object Default }
@@ -248,6 +250,17 @@ class SubjectTest {
 private object CaptureOptions { object Default; object Other }
 private fun captureScreenshot(options: Any, tolerance: Float) = Unit
 """,
+                            encoding="utf-8",
+                        )
+                        result = make_result(
+                            workspace,
+                            paths=(str(subject.relative_to(workspace)),),
+                        )
+                        self.assertFalse(grade_subject(case, result).objective_pass)
+
+                        subject.write_text(source, encoding="utf-8")
+                        baseline.write_text(
+                            "configuration=fixed\nconfiguration=default\n",
                             encoding="utf-8",
                         )
                         result = make_result(
