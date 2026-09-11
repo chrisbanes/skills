@@ -1,0 +1,17 @@
+{
+  "id": "android-benchmark-comparison-novel",
+  "title": "Review a reversed benchmark ranking",
+  "family": "benchmarking",
+  "target_skills": ["android-benchmark-comparison"],
+  "expected_skills": ["android-benchmark-comparison"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "android-benchmark-comparison-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "reversal-investigation", "text": "The review asks to verify case/iteration coverage, balance or reverse run order, and inspect trace intervals before selecting a default."},
+    {"id": "affinity-boundary", "text": "The review distinguishes fixed performance mode from verified CPU placement and requires restoration after any affinity experiment."}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

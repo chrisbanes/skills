@@ -68,11 +68,16 @@ for its lane-specific fallback and blocking behavior.
 
 - Working on Compose state or effects? Start with [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md).
 - Investigating recomposition, stability, or jank? Start with [`compose-performance`](skills/compose-performance/SKILL.md).
+- Comparing Android benchmark configurations or a measured Android default? Start with [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md).
 - Reviewing Flow or coroutine architecture? Start with [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md).
 
 ### Routing
 
 - [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to the focused skills.
+
+### Benchmarking
+
+- [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) — compare physical Android benchmark configurations with verified coverage, controlled conditions, trace-backed diagnosis of unstable rankings, and bounded conclusions.
 
 ### Jetpack Compose
 
