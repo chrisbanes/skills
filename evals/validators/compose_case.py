@@ -12,7 +12,8 @@ _KOTLIN_NON_CODE = re.compile(
     re.DOTALL,
 )
 _TEST_FUNCTION = re.compile(
-    r"@Test\b.*?\bfun\s+\w+\s*\([^)]*\)\s*(?::\s*[^\n{=]+)?\s*\{",
+    r"@Test\b.*?\bfun\s+(?:\w+|`[^`]+`)\s*\([^)]*\)\s*"
+    r"(?::\s*[^\n{=]+)?\s*(?P<body_start>[{=])",
     re.DOTALL,
 )
 
@@ -36,10 +37,14 @@ def _matching_brace(code: str, opening_index: int) -> int | None:
 def _test_bodies(code: str) -> list[str]:
     bodies: list[str] = []
     for match in _TEST_FUNCTION.finditer(code):
-        opening_index = match.end() - 1
-        closing_index = _matching_brace(code, opening_index)
-        if closing_index is not None:
-            bodies.append(code[opening_index + 1 : closing_index])
+        body_start = match.end() - 1
+        if match.group("body_start") == "=":
+            next_test = code.find("@Test", match.end())
+            bodies.append(code[match.end() : next_test if next_test != -1 else None])
+        else:
+            closing_index = _matching_brace(code, body_start)
+            if closing_index is not None:
+                bodies.append(code[body_start + 1 : closing_index])
     return bodies
 
 
@@ -66,9 +71,32 @@ def _matching_parenthesis(code: str, opening_index: int) -> int | None:
     return None
 
 
+def _top_level_arguments(arguments: str) -> list[str]:
+    result: list[str] = []
+    start = 0
+    depth = 0
+    for index, character in enumerate(arguments):
+        if character in "([{":
+            depth += 1
+        elif character in ")]}":
+            depth -= 1
+        elif character == "," and depth == 0:
+            result.append(arguments[start:index])
+            start = index + 1
+    result.append(arguments[start:])
+    return result
+
+
 def _has_named_arguments(arguments: str, expected: dict[str, str]) -> bool:
+    top_level_arguments = _top_level_arguments(arguments)
     return all(
-        re.search(rf"\b{re.escape(name)}\s*=\s*{re.escape(value)}\b", arguments)
+        any(
+            re.match(
+                rf"\s*{re.escape(name)}\s*=\s*{re.escape(value)}(?=\s*(?:$|\())",
+                argument,
+            )
+            for argument in top_level_arguments
+        )
         for name, value in expected.items()
     )
 
