@@ -32,6 +32,17 @@ def main(argv: list[str]) -> int:
     for required in expectations.get("must_contain", []):
         if required not in subject:
             failures.append(f"missing required evidence: {required!r}")
+    for relative, required_values in expectations.get("must_contain_by_file", {}).items():
+        path = workspace / relative
+        if not path.is_file():
+            failures.append(f"missing subject file: {relative}")
+            continue
+        contents = path.read_text(encoding="utf-8")
+        for required in required_values:
+            if required not in contents:
+                failures.append(
+                    f"missing required evidence in {relative}: {required!r}"
+                )
     for alternatives in expectations.get("must_contain_any", []):
         if not any(alternative in subject for alternative in alternatives):
             failures.append(f"missing one of: {alternatives!r}")

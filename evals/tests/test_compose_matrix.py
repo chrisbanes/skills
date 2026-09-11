@@ -98,7 +98,7 @@ class ComposeMatrixTest(unittest.TestCase):
         self.assertIn("recommends first", repair_criterion["text"].lower())
         self.assertIn("then deciding", repair_criterion["text"].lower())
 
-    def test_ui_testing_novel_does_not_require_unnecessary_synchronization(self):
+    def test_ui_testing_novel_requires_recording_evidence(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(
             case
@@ -111,9 +111,8 @@ class ComposeMatrixTest(unittest.TestCase):
             for criterion in case.rubric
             if criterion["id"] == "criterion-2"
         )["text"].lower()
-        self.assertIn("callback or semantic assertion", seam_criterion)
-        self.assertIn("does not recommend a fixed delay", seam_criterion)
-        self.assertNotIn("synchronization", seam_criterion)
+        self.assertIn("expected artifact path", seam_criterion)
+        self.assertIn("preserving the tolerance", seam_criterion)
 
     def test_fixture_declares_pinned_compose_jvm_dependencies_and_offline_wrapper(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "compose-jvm"
@@ -202,11 +201,14 @@ import androidx.compose.runtime.Composable
 }
 """),
             ("compose-ui-testing-patterns-direct", """package example
-import androidx.compose.ui.test.junit4.createComposeRule
 class SubjectTest {
-  val composeTestRule = createComposeRule()
-  fun test() { composeTestRule.setContent {} }
+  fun test() = captureScreenshot(
+    options = CaptureOptions.Default,
+    tolerance = 0.02f,
+  )
 }
+private object CaptureOptions { object Default }
+private fun captureScreenshot(options: Any, tolerance: Float) = Unit
 """),
         )
 
@@ -224,6 +226,9 @@ class SubjectTest {
                     )
                     subject = workspace / relative_path
                     subject.write_text(source, encoding="utf-8")
+                    if case_id == "compose-ui-testing-patterns-direct":
+                        baseline = workspace / "src/test/resources/baselines/Subject.txt"
+                        baseline.write_text("configuration=default\n", encoding="utf-8")
                     result = make_result(workspace, paths=(str(subject.relative_to(workspace)),))
                     self.assertTrue(grade_subject(case, result).objective_pass)
 

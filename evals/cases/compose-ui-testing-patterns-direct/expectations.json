@@ -3,12 +3,16 @@
     "src/test/kotlin/example/SubjectTest.kt"
   ],
   "must_contain": [
-    "setContent"
+    "CaptureOptions.Default",
+    "tolerance = 0.02f"
   ],
-  "must_contain_any": [
-    ["runComposeUiTest", "createComposeRule"]
-  ],
+  "must_contain_any": [],
+  "must_contain_by_file": {
+    "src/test/resources/baselines/Subject.txt": [
+      "configuration=default"
+    ]
+  },
   "must_not_contain": [
-    "ActivityScenario"
+    "CaptureOptions.Fixed"
   ]
 }

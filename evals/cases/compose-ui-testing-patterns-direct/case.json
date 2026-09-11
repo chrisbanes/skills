@@ -1,6 +1,6 @@
 {
   "id": "compose-ui-testing-patterns-direct",
-  "title": "Move a component check to a plain UI test",
+  "title": "Update a baseline for an intentional screenshot configuration change",
   "family": "testing",
   "target_skills": [
     "compose-ui-testing-patterns"
@@ -12,7 +12,8 @@
   "kind": "direct",
   "fixture": "compose-jvm",
   "allowed_write_paths": [
-    "src/test/kotlin/example/SubjectTest.kt"
+    "src/test/kotlin/example/SubjectTest.kt",
+    "src/test/resources/baselines/Subject.txt"
   ],
   "validators": [
     {
@@ -27,11 +28,11 @@
   "rubric": [
     {
       "id": "criterion-1",
-      "text": "Uses a plain Compose UI-test entry point and controlled setContent"
+      "text": "Keeps the test on the named public configuration and updates the affected baseline"
     },
     {
       "id": "criterion-2",
-      "text": "Removes the unnecessary activity integration boundary"
+      "text": "Preserves the existing tolerance rather than weakening the visual assertion"
     }
   ],
   "provenance": {

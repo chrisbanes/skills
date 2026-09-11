@@ -156,6 +156,17 @@ Keep screenshot state deterministic:
 - Replace network/image loading with fake or preview handlers.
 - Avoid asserting dynamic text such as current time unless controlled.
 
+### When screenshot defaults change
+
+- Keep an intentionally changed named preset or default in the test and update
+  its baseline. Do not substitute a raw value to retain the old image; preserve
+  assertions and tolerances unless independently justified.
+- Keep an explicit fixed value when that fixed resolution or geometry is the
+  contract.
+- Verify recording separately from comparison: inspect the expected artifact
+  paths and intentional baseline diff. A passing comparison does not prove that
+  recording occurred. Keep tool-specific commands in the repository runbook.
+
 ## Fake images and platform services
 
 When image content is irrelevant, fake the loader and assert the requested model if that is the behavior. The exact hook depends on your image library; a project helper might look like this:

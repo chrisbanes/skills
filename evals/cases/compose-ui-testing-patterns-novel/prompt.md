@@ -1,1 +1,3 @@
-Review this interaction test for determinism and for the narrowest useful test seam. Report findings only.
+Review this screenshot-test run for whether the claimed baseline update is actually
+evidenced. Report findings only. Do not suggest tool-specific flags or alter the
+tolerance without an independent reason.

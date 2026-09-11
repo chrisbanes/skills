@@ -1,6 +1,6 @@
 {
   "id": "compose-ui-testing-patterns-novel",
-  "title": "Review timing-dependent interaction coverage",
+  "title": "Review screenshot baseline recording evidence",
   "family": "testing",
   "target_skills": [
     "compose-ui-testing-patterns"
@@ -25,11 +25,11 @@
   "rubric": [
     {
       "id": "criterion-1",
-      "text": "Identifies the fixed sleep as nondeterministic and production integration as a broader-than-needed asynchronous seam"
+      "text": "Distinguishes a passing verification result from evidence that recording wrote the expected artifact path"
     },
     {
       "id": "criterion-2",
-      "text": "Recommends a controlled UI seam with an observable callback or semantic assertion and does not recommend a fixed delay"
+      "text": "Recommends inspecting the expected artifact path and intentional baseline diff while preserving the tolerance"
     }
   ],
   "provenance": {
