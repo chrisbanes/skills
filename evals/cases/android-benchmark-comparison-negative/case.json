@@ -4,6 +4,7 @@
   "family": "benchmarking",
   "target_skills": ["android-benchmark-comparison"],
   "expected_skills": ["android-benchmark-comparison"],
+  "automatic_no_skill_control": true,
   "task_mode": "edit",
   "kind": "negative",
   "fixture": "text",

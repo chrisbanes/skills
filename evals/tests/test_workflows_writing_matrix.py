@@ -258,6 +258,25 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertEqual(["grounded-writing"], records[2]["expected_skills"])
         self.assertFalse(records[3]["automatic_eligible"])
 
+    def test_no_skill_automatic_control_runs_without_routing_to_its_target(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "android-benchmark-comparison-negative"
+        )
+
+        self.assertTrue(case.automatic_no_skill_control)
+        self.assertIn(
+            (case, "automatic"), evaluation_conditions(REPO_ROOT, (case,), ("automatic",))
+        )
+        records = [{"case_id": case.id, "arm": "automatic"}]
+        reconcile_automatic_eligibility(REPO_ROOT, report.cases, records)
+
+        self.assertTrue(records[0]["automatic_eligible"])
+        self.assertEqual([], records[0]["expected_skills"])
+        self.assertEqual([], records[0]["allowed_skills"])
+
     def test_behavioral_expectations_do_not_assert_fixture_prose(self):
         expectations = json.loads(
             (

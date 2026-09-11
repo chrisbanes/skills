@@ -54,6 +54,7 @@ class EvalCase:
     forbidden_command_patterns: tuple[str, ...] = ()
     allowed_skills: tuple[str, ...] = ()
     calibration: bool = False
+    automatic_no_skill_control: bool = False
 
 
 @dataclass(frozen=True)
@@ -149,6 +150,10 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         raise CaseValidationError(f"unknown kind: {kind}")
     if kind == "routing" and not expected_skills:
         raise CaseValidationError("routing cases require at least one expected skill")
+
+    automatic_no_skill_control = data.get("automatic_no_skill_control", False)
+    if not isinstance(automatic_no_skill_control, bool):
+        raise CaseValidationError("automatic_no_skill_control must be a boolean")
 
     fixture = _require_string(data, "fixture")
     if not _safe_relative(fixture):
@@ -266,6 +271,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         required_command_patterns=command_patterns["required_command_patterns"],
         forbidden_command_patterns=command_patterns["forbidden_command_patterns"],
         allowed_skills=allowed_skills,
+        automatic_no_skill_control=automatic_no_skill_control,
     )
 
 

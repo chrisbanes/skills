@@ -59,6 +59,8 @@ def _routing_expectations(
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     if arm != "automatic":
         return case.expected_skills, case.allowed_skills or case.expected_skills
+    if case.automatic_no_skill_control:
+        return (), ()
     automatic_skills = set(automatically_invokable_public_skills(repo_root))
     return (
         tuple(skill for skill in case.expected_skills if skill in automatic_skills),
@@ -71,7 +73,9 @@ def _routing_expectations(
 
 
 def _automatic_eligible(case: EvalCase, repo_root: Path) -> bool:
-    return bool(_routing_expectations(case, "automatic", repo_root)[0])
+    return case.automatic_no_skill_control or bool(
+        _routing_expectations(case, "automatic", repo_root)[0]
+    )
 
 
 def evaluation_conditions(

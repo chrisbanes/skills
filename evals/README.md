@@ -144,6 +144,11 @@ required `expected_skills`; precision accepts any reported skill in the case's
 permit a genuinely relevant secondary skill without requiring every successful
 subject to consult it.
 
+A no-skill automatic control sets `automatic_no_skill_control: true`. It still
+runs in the automatic arm, while requiring and permitting no public skill, so
+unnecessary activation remains visible without becoming a routing false
+negative.
+
 ### Corpus
 
 The Compose benchmark remains 38 scored cases and comprises:
