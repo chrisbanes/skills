@@ -1,6 +1,6 @@
 {
   "id": "grounded-writing-negative",
-  "title": "Leave an already-grounded note intact",
+  "title": "Leave an internal technical report intact",
   "family": "writing",
   "target_skills": ["grounded-writing"],
   "expected_skills": ["grounded-writing"],
@@ -10,8 +10,8 @@
   "allowed_write_paths": [],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "grounded-writing-negative"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "restraint", "text": "The response recognizes that the note already gives evidence, mechanism, and an honest qualification"},
-    {"id": "no-invention", "text": "The response does not add a fabricated user outcome, adoption result, or stronger performance claim"}
+    {"id": "restraint", "text": "The response recognizes that an internal technical report appropriately retains its implementation and diagnostic detail"},
+    {"id": "no-invention", "text": "The response does not add a fabricated user outcome, visual result, or stronger performance claim"}
   ],
   "provenance": {"kind": "synthetic"}
 }

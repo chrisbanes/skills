@@ -22,29 +22,35 @@ generic, or included only to imitate a personality.
 3. Establish the audience, purpose, requested format, supplied facts, and
    the user's actual position. Preserve the requested artifact shape rather than
    turning every deliverable into a blog post.
-4. Resolve missing material before writing:
+4. In public developer documentation, explain observable behaviour, setting
+   choices, trade-offs, and relevant limitations. Keep implementation and
+   test or diagnostic detail in internal references unless needed to use the
+   API correctly or explicitly requested. Retain public contracts and the
+   context needed to interpret claims. This does not apply to internal design
+   documents or technical reports.
+5. Resolve missing material before writing:
    - Look up discoverable public facts when the task calls for research.
    - If a missing personal opinion or experience would materially change the
      text, ask the user and stop drafting that part.
    - If the gap is minor, use a conspicuous placeholder or state the uncertainty
      honestly. Never invent a first-person claim, result, preference, or memory.
-5. Choose the register from the style profile. Match the length and formality to
+6. Choose the register from the style profile. Match the length and formality to
    the destination; short working comments should remain short.
-6. Shape the reasoning before polishing sentences. Prefer a concrete problem or
+7. Shape the reasoning before polishing sentences. Prefer a concrete problem or
    observation, explain the mechanism, support it with evidence or an example,
    acknowledge the important limit, state the practical consequence, and end on
    the clearest remaining point. Omit any stage the artifact does not need. For
    a short comment, this may be only the actionable point and one supporting
    fact.
-7. Use the user's default language and regional conventions unless the request
+8. Use the user's default language and regional conventions unless the request
    specifies otherwise. Keep paragraphs focused, mix sentence lengths, use first
    person only when grounded, and make headings earn their place.
-8. Edit once for style and once for truth. Remove generic scene-setting,
+9. Edit once for style and once for truth. Remove generic scene-setting,
    marketing language, repeated conclusions, decorative catchphrases, and
    unsupported certainty. Treat the headline and opening claim as substantive:
    remove or qualify promotional framing that the supplied evidence does not
    directly support.
-9. For a no-change review, name the material facts, mechanism, and qualification
+10. For a no-change review, name the material facts, mechanism, and qualification
    that make the existing text publishable. A bare “no edit needed” does not
    show that the truth and clarity checks were completed.
 
