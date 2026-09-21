@@ -57,13 +57,14 @@ implicitly.
    separate behavior-preserving commits.
 4. Process one item at a time. Record `HEAD` and the pre-existing worktree state
    before each item; accept the preceding item before starting the next.
-5. Select the portable **Solver** role and map it to the
-   runtime's implementation-capable subagent type. Record the portable role and
-   actual runtime selection when the environment exposes it. Spawn one owner.
-   Do not implement any part of the item in the controller. If an implementation
-   slot is temporarily unavailable, wait for capacity. If subagents cannot be
-   started, stop and report the blocker rather than falling back to controller
-   implementation.
+5. Spawn one `worker` as the implementation owner. Give it explicit ownership
+   of the work item and affected files, tell it that other agents may be editing
+   the codebase, and require it to preserve and accommodate unrelated changes.
+   Do not override the worker's model or implement any part of the item in the
+   controller. If a worker slot is temporarily unavailable, wait for capacity.
+   If the runtime does not expose the `worker` agent type, stop and report the
+   blocker rather than substituting a different role or falling back to
+   controller implementation.
 6. Give that owner a decision-complete packet containing:
    - the exact ticket or plan task and its acceptance criteria;
    - the relevant specification and repository instructions;

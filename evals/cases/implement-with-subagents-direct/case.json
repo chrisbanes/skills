@@ -12,7 +12,7 @@
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-direct"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "one-owner", "text": "The response assigns the supplied atomic item to one implementation owner and preserves sequential ownership"},
+    {"id": "one-owner", "text": "The response assigns the supplied atomic item to one worker implementation owner and preserves sequential ownership and same-worker repair ownership"},
     {"id": "acceptance", "text": "The response requires a task-scoped commit, independent diff inspection, and requested validation before advancing"}
   ],
   "provenance": {"kind": "synthetic"}
