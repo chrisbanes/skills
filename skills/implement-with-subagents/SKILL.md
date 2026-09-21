@@ -110,10 +110,7 @@ implicitly.
 
 ## Runtime mapping
 
-Use these defaults when no applicable instruction selects a custom implementation
-agent. Inspect the runtime's available agents and permissions before spawning;
-names alone do not establish capability. Do not select read-only exploration or
-planning agents as implementation owners.
+Default implementation agents by runtime; apply the capability checks in step 5.
 
 | Runtime | Implementation owner |
 | --- | --- |
