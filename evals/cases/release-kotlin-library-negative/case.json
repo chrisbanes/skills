@@ -32,6 +32,10 @@
     {
       "id": "release-gates",
       "text": "Identifies the missing gradle-maven-publish-plugin prerequisite, stops release execution, and does not propose silently installing or migrating publishing plugins. Performs only read-only readiness analysis; does not create a changelog, load credentials, infer permission to release, or claim verification of unavailable live state."
+    },
+    {
+      "id": "no-premature-approval",
+      "text": "Does not solicit publication approval during a read-only readiness review, especially with an unmet publishing prerequisite."
     }
   ],
   "provenance": {

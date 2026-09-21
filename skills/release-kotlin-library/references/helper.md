@@ -15,7 +15,8 @@ Markdown changelog, optional Haze-style Metalava API snapshots, and local or tag
 CI publication. Other version stores or release systems need a supported
 implementation before this helper can mutate them.
 
-Semantic changelog coverage, version confirmation, authorization and choosing
+Semantic changelog coverage, version confirmation, user approval of the prepared
+release, authorization and choosing
 repository checks remain the agent's responsibility. The helper does not infer
 those decisions from a successful command.
 

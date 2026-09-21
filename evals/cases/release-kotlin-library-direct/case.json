@@ -33,7 +33,11 @@
   "rubric": [
     {
       "id": "release-gates",
-      "text": "Preserves curated notes, adds only consumer-visible missing changes supported by supplied history, explains resolved gaps and remaining validation before publication; identifies Metalava generation and compatibility checks as remaining gates before copying API snapshots; does not claim a live release."
+      "text": "Preserves curated notes, adds only consumer-visible missing changes supported by supplied history, explains resolved gaps and remaining validation before publication; identifies Metalava generation and compatibility checks as remaining gates before copying API snapshots; does not claim a live release. Uses 1.4.0 as the final-release baseline, summarizes streaming with bounded buffering together with the post-RC cancellation fix in the final 2.0.0 summary, and preserves historical prerelease entries without presenting superseded unbounded buffering as final behavior. Groups the original prerelease entries in a collapsible Prerelease history block beneath the stable summary, preserving their headings and full text in the changelog rather than replacing them with circular release-page links. Leaves 1.4.0 outside the block."
+    },
+    {
+      "id": "release-approval",
+      "text": "Identifies explicit approval of the prepared release details as a remaining publication gate, covering version/tag, actual changelog, next development version, commit, artifacts/destination, publishing mechanism and validation. Respects this preparation-only request without asking to publish now; a general release request would not approve unseen details."
     }
   ],
   "provenance": {
