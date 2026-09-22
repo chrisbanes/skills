@@ -25,6 +25,36 @@ from evals.harness.suites import PUBLIC_SKILLS, WORKFLOWS_WRITING_SKILLS
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def plan_artifact(first_dependency: str = "none") -> str:
+    return (
+        "<!-- to-plan:conversation-plan:v1 id=123e4567-e89b-42d3-a456-426614174000 -->\n"
+        "# Quote missing validator files\n\n"
+        "**Planned against:** `main` at `0123456789abcdef0123456789abcdef01234567`\n\n"
+        "## Implementation context\n\n"
+        "Existing: `validator.py` defines `missing_file_error`.\n\n"
+        "## Implementation slices\n\n"
+        "**Task graph and parallelism:** this graph is acyclic; both slices touch the test file, so run serially.\n\n"
+        "### 1. Factor the existing missing-path assertion\n\n"
+        "**Task ID:** `T1`\n"
+        f"**Depends on:** `{first_dependency}`\n\n"
+        "**Files and symbols:** Edit existing `ValidatorTest.test_names_missing_file` in `tests/test_validator.py`.\n\n"
+        "**Test:** Keep the existing assertion that the diagnostic includes `settings.json`; expect it to pass before and after the refactor.\n\n"
+        "**Implementation:** Extract the existing assertion into a private test helper and call it from the current test.\n\n"
+        "**Validate:** From repository root, run `python3 -B -m unittest tests.test_validator`; expect it to pass.\n\n"
+        "**Complete when:** The behavior-preserving helper refactor is committed and the focused test passes.\n\n"
+        "### 2. Quote paths in missing-file diagnostics\n\n"
+        "**Task ID:** `T2`\n"
+        "**Depends on:** `T1`\n\n"
+        "**Files and symbols:** Edit existing `missing_file_error` in `validator.py` and its test in `tests/test_validator.py`.\n\n"
+        "**Test:** First change the assertion for `settings file.json` to expect `missing file: 'settings file.json'`; expect the focused test to fail before the implementation edit.\n\n"
+        "**Implementation:** After observing the red result, quote the supplied path in `missing_file_error` without changing its signature.\n\n"
+        "**Validate:** From repository root, run `python3 -B -m unittest tests.test_validator`; expect it to pass.\n\n"
+        "**Complete when:** The path, including spaces, is preserved inside quotes and the focused test passes.\n\n"
+        "## Final validation\n\n"
+        "- From repository root, run `python3 -B -m unittest tests.test_validator`; expect success.\n"
+    )
+
+
 class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_has_skill_triads_and_workflow_calibration_coverage_without_routing(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
@@ -335,30 +365,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             workspace = Path(temp_dir)
             draft = workspace / ".scratch/to-plan/repair-validator-output.md"
             draft.parent.mkdir(parents=True)
-            draft.write_text(
-                "<!-- to-plan:conversation-plan:v1 id=123e4567-e89b-42d3-a456-426614174000 -->\n"
-                "# Quote missing validator files\n\n"
-                "**Planned against:** `main` at `0123456789abcdef0123456789abcdef01234567`\n\n"
-                "## Implementation context\n\n"
-                "Existing: `validator.py` defines `missing_file_error`.\n\n"
-                "## Implementation slices\n\n"
-                "### 1. Quote missing validator files\n\n"
-                "**Task ID:** `T1`\n"
-                "**Depends on:** `none`\n\n"
-                "### 2. Implement quoted path behavior\n\n"
-                "**Task ID:** `T2`\n"
-                "**Depends on:** `T1`\n\n"
-                "The dependency graph is acyclic.\n\n"
-                "**Files and symbols:** Edit existing `missing_file_error` in `validator.py` "
-                "and its test in `tests/test_validator.py`.\n\n"
-                "**Test:** Pass `settings file.json` and assert the exact result "
-                "is `missing file: 'settings file.json'`.\n\n"
-                "**Validate:** `python3 -B -m unittest tests.test_validator`\n\n"
-                "## Final validation\n\n"
-                "- `python3 -B -m unittest tests.test_validator`\n\n"
-                "Update `validator.py` and `tests/test_validator.py`.\n",
-                encoding="utf-8",
-            )
+            draft.write_text(plan_artifact(), encoding="utf-8")
 
             completed = subprocess.run(
                 ["python3", str(validator), "to-plan-authorized-draft-direct"],
@@ -369,6 +376,25 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             )
 
         self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_plan_artifact_validator_rejects_cyclic_task_dependencies(self):
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            draft = workspace / ".scratch/to-plan/cyclic-plan.md"
+            draft.parent.mkdir(parents=True)
+            draft.write_text(plan_artifact(first_dependency="T2"), encoding="utf-8")
+
+            completed = subprocess.run(
+                ["python3", str(validator), "to-plan-authorized-draft-direct"],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("task dependency graph contains a cycle", completed.stderr)
 
     def test_plan_artifact_validator_rejects_multiple_local_drafts(self):
         validator = REPO_ROOT / "evals/validators/text_case.py"

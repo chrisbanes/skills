@@ -31,6 +31,97 @@ def main(argv: list[str]) -> int:
 
     failures: list[str] = []
 
+    def validate_task_graph(subject: str, rules: dict[str, object], label: str) -> None:
+        slices = re.findall(
+            r"(?ms)^#{3,4}\s+\d+\.\s+.*?\n(.*?)(?=^#{3,4}\s+\d+\.\s+|\Z)",
+            subject,
+        )
+        if not slices:
+            failures.append(f"{label}: task graph has no numbered implementation slices")
+            return
+
+        tasks: dict[str, set[str]] = {}
+        for number, body in enumerate(slices, start=1):
+            ids = re.findall(r"^\*\*Task ID:\*\*\s*`([^`]+)`\s*$", body, re.MULTILINE)
+            dependencies = re.findall(
+                r"^\*\*Depends on:\*\*\s*(.*?)\s*$", body, re.MULTILINE
+            )
+            if len(ids) != 1 or len(dependencies) != 1:
+                failures.append(
+                    f"{label}: slice {number} must declare exactly one Task ID and Depends on list"
+                )
+                continue
+
+            task_id = ids[0]
+            if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", task_id) is None:
+                failures.append(f"{label}: invalid task ID {task_id!r}")
+                continue
+            if task_id in tasks:
+                failures.append(f"{label}: duplicate task ID {task_id!r}")
+                continue
+
+            raw_dependencies = dependencies[0]
+            if raw_dependencies == "`none`":
+                dependency_ids: list[str] = []
+            else:
+                dependency_ids = re.findall(r"`([A-Za-z0-9][A-Za-z0-9._-]*)`", raw_dependencies)
+                expected_text = ", ".join(f"`{item}`" for item in dependency_ids)
+                if not dependency_ids or raw_dependencies != expected_text:
+                    failures.append(
+                        f"{label}: malformed dependency list for task {task_id!r}"
+                    )
+                    continue
+            if len(set(dependency_ids)) != len(dependency_ids):
+                failures.append(f"{label}: task {task_id!r} repeats a dependency")
+            tasks[task_id] = set(dependency_ids)
+
+        for task_id, dependencies in tasks.items():
+            for dependency in dependencies:
+                if dependency not in tasks:
+                    failures.append(
+                        f"{label}: task {task_id!r} depends on undeclared task {dependency!r}"
+                    )
+
+        required_edges = rules.get("required_edges", [])
+        if not isinstance(required_edges, list):
+            failures.append(f"{label}: task_graph.required_edges must be a list")
+            return
+        for edge in required_edges:
+            if (
+                not isinstance(edge, list)
+                or len(edge) != 2
+                or not all(isinstance(item, str) for item in edge)
+            ):
+                failures.append(
+                    f"{label}: task_graph.required_edges entries must be [task, dependency] pairs"
+                )
+                continue
+            task_id, dependency = edge
+            if dependency not in tasks.get(task_id, set()):
+                failures.append(
+                    f"{label}: missing required dependency edge {task_id!r} -> {dependency!r}"
+                )
+
+        if rules.get("require_acyclic", False):
+            visiting: set[str] = set()
+            visited: set[str] = set()
+
+            def visit(task_id: str) -> bool:
+                if task_id in visiting:
+                    return False
+                if task_id in visited:
+                    return True
+                visiting.add(task_id)
+                for dependency in tasks.get(task_id, set()):
+                    if dependency in tasks and not visit(dependency):
+                        return False
+                visiting.remove(task_id)
+                visited.add(task_id)
+                return True
+
+            if any(not visit(task_id) for task_id in tasks):
+                failures.append(f"{label}: task dependency graph contains a cycle")
+
     def validate_subject(subject: str, rules: dict[str, object], label: str) -> None:
         for pattern in rules.get("must_match", []):
             if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is None:
@@ -59,7 +150,15 @@ def main(argv: list[str]) -> int:
             )
             continue
         for path in matches:
-            validate_subject(path.read_text(encoding="utf-8"), rule, str(path.relative_to(workspace)))
+            subject = path.read_text(encoding="utf-8")
+            label = str(path.relative_to(workspace))
+            validate_subject(subject, rule, label)
+            graph_rules = expectations.get("task_graph")
+            if graph_rules is not None:
+                if not isinstance(graph_rules, dict):
+                    print("task_graph expectation must be an object", file=sys.stderr)
+                    return 2
+                validate_task_graph(subject, graph_rules, label)
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
