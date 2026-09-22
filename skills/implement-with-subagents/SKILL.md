@@ -8,10 +8,13 @@ disable-model-invocation: true
 # Implement with subagents
 
 Keep orchestration and implementation ownership separate: the controller
-schedules, and one implementation subagent owns each independent work item
-through completion. Keep changes that cannot validate apart in one item, accept
-its task-scoped commit before advancing, and return failed acceptance evidence
-to that same owner rather than repairing it in the controller or reassigning it.
+schedules, and one implementation subagent owns each work item through
+completion. Validate task IDs and dependencies before dispatch. Run only ready,
+independent tasks concurrently, each in an isolated worktree; integrate accepted
+commits in dependency order and recheck affected evidence at the integrated
+head. Preserve serial execution when safe isolation or capacity is unavailable.
+Return failed acceptance evidence to that same owner rather than repairing it
+in the controller or reassigning it.
 
 ## Check The Prerequisite
 
@@ -52,47 +55,57 @@ implicitly.
    `npx skills add mattpocock/skills`, and state that the user must select
    `implement`, `tdd`, and `code-review`. Never install them implicitly or
    reproduce the procedure from memory.
-3. Build a dependency-ordered queue. Keep an unsplit request and its checklist
-   in one work item; group supplied items only when they cannot validate in
-   separate behavior-preserving commits.
-4. Process one item at a time. Record `HEAD` and the pre-existing worktree state
-   before each item; accept the preceding item before starting the next.
-5. Select one implementation-capable subagent using the runtime mapping below.
+3. Build and validate the task graph before dispatch. Require unique stable task
+   IDs, explicit dependency lists, declared dependency targets, and an acyclic
+   graph. Treat a legacy plan without dependency metadata as a sequential chain
+   in listed order. Keep an unsplit request and its checklist in one work item;
+   group supplied items only when they cannot validate in separate
+   behavior-preserving commits. Record shared-file, interface, and integration
+   constraints; tasks with unsafe write overlap are not independent even when
+   the graph otherwise makes them ready. Stop on invalid or ambiguous graphs.
+4. Dispatch only currently ready tasks whose dependencies have been integrated
+   and accepted. Concurrent tasks must be independent, have adequate agent
+   capacity, and each receive an isolated worktree based on the same current
+   integrated head. If isolation, capacity, or safe independence is unavailable,
+   dispatch one task at a time. Dependents cannot start from a prerequisite's
+   unintegrated branch.
+5. Select an implementation-capable subagent for each dispatched task using
+   the runtime mapping below.
    Verify that it can edit, run validation, create the task-scoped commit, and
    continue the same owner session for repairs. Honour applicable user and
    repository agent selections and configured models. If the required capability
    is unavailable, stop and report the missing capability; do not install an
    extension or fall back to controller implementation. If capacity is only
-   temporarily unavailable, wait. Spawn one owner and retain its session handle.
-   Give it explicit ownership of the work item and affected files, tell it that
-   other agents may be editing the codebase, and require it to preserve and
-   accommodate unrelated changes. Do not implement any part of the item in the
-   controller.
-6. Give that owner a decision-complete packet containing:
+   temporarily unavailable, wait. Retain each owner session handle.
+   Give each owner explicit ownership of the work item, its isolated worktree, and
+   affected files, tell it that other agents may be editing the codebase, and
+   require it to preserve and accommodate unrelated changes. Do not implement
+   any part of the item in the controller.
+6. Give each owner a decision-complete packet containing:
    - the exact ticket or plan task and its acceptance criteria;
    - the relevant specification and repository instructions;
-   - exclusive ownership of that work item on the current branch;
+   - exclusive ownership of that work item in its isolated worktree;
    - the pre-existing worktree state that must be preserved;
    - an instruction to invoke the installed `implement` skill; and
    - an instruction to return the commit, the evidence required by the installed
      `implement` skill's current finish contract, and any unresolved blocker.
-7. Wait for that owner before starting another. Do not split its implementation
-   across agents. If the result is incomplete, dirty, uncommitted, or fails a
-   required check, return the evidence to the same owner. Stop on a material
-   blocker it cannot resolve within the supplied contract.
-8. Independently accept the item before advancing; an owner's report is not
-   acceptance evidence. Verify:
-   - verify `HEAD` advanced by at least one task-scoped commit;
-   - inspect the complete commit range and diff from the recorded `HEAD` to the
-     current `HEAD` for the work item's acceptance criteria and scope;
+7. Wait for dispatched owners. Do not split an item's implementation across
+   agents. If a result is incomplete, dirty, uncommitted, or fails a required
+   check, return the evidence to that same owner. Stop on a material blocker it
+   cannot resolve within the supplied contract.
+8. Independently accept each completed task; an owner's report is not acceptance
+   evidence. Verify:
+   - the owner's isolated branch advanced by at least one task-scoped commit;
+   - inspect the complete commit range and diff from its recorded base to the
+     task commit for the work item's acceptance criteria and scope;
    - inspect the returned command, complete result, tested revision, and relevant
      input and environment identity;
    - reuse a requested check only when its complete evidence shows success,
      the relevant environment remains unchanged, and neither the user nor
      repository requires a fresh independent run. Also require either the tested
-     revision to equal current `HEAD`, or current `HEAD` to be a descendant of
-     the tested revision whose independently inspected diff leaves the check's
-     relevant inputs unchanged;
+     revision to equal that owner's branch `HEAD`, or that branch `HEAD` to be a
+     descendant of the tested revision whose independently inspected diff
+     leaves the check's relevant inputs unchanged;
    - repeat each affected check when its evidence is missing, failed, tied to an
      unexplained older revision, affected by a changed relevant input, or subject
      to an explicit freshness or independent-run requirement;
@@ -100,13 +113,27 @@ implicitly.
      current finish contract; and
    - verify the task-owned diff is empty relative to the recorded pre-existing
      state.
-9. After every repair, repeat the independent commit and diff inspection, then
+9. Integrate accepted commits into the controller's integration branch in
+   dependency order. Check each integration for conflicts and inspect the
+   resulting integrated diff. Recheck every affected validation whose inputs
+   changed during integration, including tests affected by shared files, generated
+   output, shared interfaces, or merge resolution. Evidence from a task worktree
+   is stale for changed inputs at the integrated head and must be rerun there. A
+   dependent becomes ready only after its prerequisite commit is integrated, its
+   affected evidence passes at that head, and it is accepted.
+   If integration conflicts or an affected check fails, return the conflict or
+   evidence to that task's original owner. Have the owner repair in its isolated
+   worktree based on the current integrated head, produce a new task-scoped
+   commit, and repeat independent acceptance before retrying integration. The
+   controller does not resolve task-owned source conflicts or implement fixes.
+10. After every repair, repeat the independent commit and diff inspection, then
    reassess the evidence under step 8. Reuse only checks whose relevant inputs
    and environment remain unchanged across the inspected descendant diff; repeat
-   affected checks. An unexplained older revision is stale evidence.
-   After the last accepted item, run any final user- or repository-required
-   verification. If a later action changes files, return them to their owner for
-   validation and commit.
+   affected checks after integrating at the new head. An unexplained older
+   revision is stale evidence. After the last accepted item, run any final
+   user- or repository-required verification on the integrated revision. If a
+   later action changes files, return them to their owner for validation and
+   commit.
 
 ## Runtime mapping
 

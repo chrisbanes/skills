@@ -1,19 +1,48 @@
 {
   "id": "implement-with-subagents-direct",
-  "title": "Assign one sequential implementation owner",
+  "title": "Dispatch a ready fork and join after integration",
   "family": "workflow",
-  "target_skills": ["implement-with-subagents"],
-  "expected_skills": ["implement-with-subagents"],
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow-subagents",
-  "constant_skills": ["implement"],
-  "allowed_write_paths": [],
-  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
-  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-direct"], "timeout_seconds": 30}],
-  "rubric": [
-    {"id": "one-owner", "text": "The response assigns the supplied atomic item to one worker implementation owner and preserves sequential ownership and same-worker repair ownership"},
-    {"id": "acceptance", "text": "The response requires a task-scoped commit, independent diff inspection, and requested validation before advancing"}
+  "constant_skills": [
+    "implement"
   ],
-  "provenance": {"kind": "synthetic"}
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "ready-fork",
+      "text": "Dispatches API and DOC concurrently only because both are ready, independent, and have isolated worktrees"
+    },
+    {
+      "id": "join-order",
+      "text": "Waits to dispatch WIRE until both prerequisite commits are accepted and integrated"
+    },
+    {
+      "id": "integrated-evidence",
+      "text": "Checks conflicts and reruns affected validation at the integrated head before accepting and proceeding"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
 }

@@ -1,10 +1,1 @@
-Create a local implementation plan for this repository. This is explicitly
-authorized planning only; do not publish or contact a provider. The task title
-is “Quote missing validator files”. Change `missing_file_error` so its existing
-`missing file: ` prefix is followed by a quoted representation of the supplied
-path. The scope is `validator.py` and its existing unit test. Preserve the public
-function signature. Success means the diagnostic preserves the supplied path,
-including spaces, inside quotes and `python3 -B -m unittest
-tests.test_validator` passes. The fixture instructions define the repository
-root as the validation working directory and the planning boundary. Write the
-local plan now. Keep the recipe proportional to this one-function change.
+Create a local implementation plan for this repository. This is explicitly authorized planning only; do not publish or contact a provider. The task title is “Quote missing validator files”. Change `missing_file_error` so its existing `missing file: ` prefix is followed by a quoted representation of the supplied path. The scope is `validator.py` and its existing unit test. Preserve the public function signature. Success means the diagnostic preserves the supplied path, including spaces, inside quotes and `python3 -B -m unittest tests.test_validator` passes. The fixture instructions define the repository root as the validation working directory and the planning boundary. Keep the two observable slices serial: first add the failing regression test, then implement the behavior after that test is integrated. Write the local plan now. Keep the recipe proportional to this change.

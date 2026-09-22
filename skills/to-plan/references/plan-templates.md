@@ -43,8 +43,14 @@ Use exactly one source-appropriate template.
 
 ### Implementation slices
 
+**Task graph and parallelism:** <Confirm the graph is acyclic; list shared-file
+or integration constraints and identify sets of ready tasks safe to run
+concurrently.>
+
 #### 1. <Observable increment>
 
+**Task ID:** `<stable unique ID, e.g. T1>`
+**Depends on:** `none` | `<task ID>, ...`
 **Prerequisites:** <Earlier slice or none; relevant context or exemplar.>
 **Files and symbols:** <Existing files/symbols to edit and new files/symbols to
 create, labelled existing/new.>
@@ -123,8 +129,14 @@ focused command>`; expect <specific successful result>.
 
 ## Implementation slices
 
+**Task graph and parallelism:** <Confirm the graph is acyclic; list shared-file
+or integration constraints and identify sets of ready tasks safe to run
+concurrently.>
+
 ### 1. <Observable increment>
 
+**Task ID:** `<stable unique ID, e.g. T1>`
+**Depends on:** `none` | `<task ID>, ...`
 **Prerequisites:** <Earlier slice or none; relevant context or exemplar.>
 **Files and symbols:** <Existing files/symbols to edit and new files/symbols to
 create, labelled existing/new.>

@@ -1,4 +1,1 @@
-The supplied state contains one ready implementation item. The current runtime
-offers the `worker` agent type. Describe the next orchestration action and its
-acceptance boundary. Do not run agents, mutate files, or contact a remote
-service; local read-only inspection is allowed.
+The supplied plan declares three tasks: `API` updates a standalone model file, `DOC` updates its independent documentation file, and `WIRE` connects both outputs in a third file. `API` and `DOC` have no dependencies; `WIRE` depends on both. The plan says these files do not overlap and each task has its own focused validation. The current runtime offers enough `worker` capacity and isolated worktrees. Review the next orchestration actions and acceptance boundary. Do not run agents, mutate files, or contact a remote service; local read-only inspection is allowed.

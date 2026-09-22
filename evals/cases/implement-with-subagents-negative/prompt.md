@@ -1,3 +1,1 @@
-An implementation item already has a reviewed task-scoped commit and passing
-validation. Review whether any further orchestration action is needed. Do not
-change files, start an agent, or perform remote actions.
+Review this proposed implementation plan before any work starts. It declares `A` depends on `B`, `B` depends on `A`, and `C` depends on undeclared task `D`. `A` and `C` both edit `schema.sql`; the plan nevertheless says they are safe to run concurrently. A stale validation report from an earlier integration head passes, but the current integration commit changed `schema.sql`. Describe the next safe orchestration action only. Do not edit files, start agents, or contact a provider.

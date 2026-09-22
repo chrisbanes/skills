@@ -1,19 +1,52 @@
 {
   "id": "implement-with-subagents-negative",
-  "title": "Do not reassign an accepted implementation item",
+  "title": "Block dispatch for invalid dependencies and unsafe overlap",
   "family": "workflow",
-  "target_skills": ["implement-with-subagents"],
-  "expected_skills": ["implement-with-subagents"],
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow-subagents",
-  "constant_skills": ["implement"],
-  "allowed_write_paths": [],
-  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
-  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-negative"], "timeout_seconds": 30}],
-  "rubric": [
-    {"id": "restraint", "text": "The response leaves the already accepted item alone rather than spawning another owner or changing its commit"},
-    {"id": "preservation", "text": "The response preserves the controller's mutation ownership and does not absorb unrelated work"}
+  "constant_skills": [
+    "implement"
   ],
-  "provenance": {"kind": "synthetic"}
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "invalid-graph",
+      "text": "Blocks dispatch because the graph has a cycle and a dependency on undeclared task D"
+    },
+    {
+      "id": "unsafe-overlap",
+      "text": "Rejects the claimed concurrency because A and C share a mutable file"
+    },
+    {
+      "id": "stale-integration",
+      "text": "Requires affected validation at the current integrated head because schema.sql changed after the passing report"
+    },
+    {
+      "id": "restraint",
+      "text": "Does not dispatch, invent missing dependencies, or repair the plan without clarification"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
 }

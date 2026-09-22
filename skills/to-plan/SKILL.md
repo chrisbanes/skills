@@ -199,6 +199,9 @@ conversation.
 
 Each implementation slice must deliver one observable increment and name:
 
+- A stable, unique task ID (for example `T1`) and an explicit `Depends on`
+  list (`none` for a root task). Dependencies may name only declared task IDs.
+
 - Any prerequisite slice, repository exemplar, or context needed for the edit.
 - The exact existing files and symbols to change and new files or symbols to
   create, labelling which are existing and which are new.
@@ -232,6 +235,15 @@ discovery or choosing a design. The executor should still read the named files
 and confirm the baseline. Resolve a gap through repository discovery and update
 the plan. If evidence cannot resolve it, add it to the blocker set instead of
 leaving “investigate,” “decide,” or equivalent work for implementation.
+
+Validate the task graph before handoff: IDs are unique, every dependency refers
+to a declared task, and the graph is acyclic. State file or interface overlap
+that constrains parallel work. Identify which ready tasks can safely run
+together; treat tasks that share mutable files or require each other's unmerged
+changes as unsafe to overlap. An explicit `none` dependency list means the task
+has no prerequisite. When reading an older plan that lacks dependency metadata,
+preserve compatibility by treating its slices as one sequential chain in listed
+order; new plans must include IDs and dependency lists.
 
 ### 7. Manage the draft
 

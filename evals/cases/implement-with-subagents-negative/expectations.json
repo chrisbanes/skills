@@ -1,1 +1,9 @@
-{"files": ["state.md"], "must_contain": ["repository is clean", "controller owns"]}
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "repository is clean",
+    "controller owns"
+  ]
+}

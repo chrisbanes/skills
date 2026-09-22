@@ -199,8 +199,11 @@ explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
 unresolved decisions, and verification evidence reuse versus missing, stale,
 failed, or explicitly required fresh evidence. The local-planning cases check
-the generated plan artifact; the orchestration cases assess a supplied state
-read-only and do not prove live subagent execution.
+the generated plan artifact. The scored orchestration triad exercises a ready
+fork/join, a serial dependency chain, and restraint for a cyclic or incomplete
+graph, unsafe shared-file overlap, and validation invalidated at an integrated
+head. These cases assess supplied state read-only and do not prove live
+subagent execution.
 
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
 to select one advisory scorecard. The default remains `compose` for command

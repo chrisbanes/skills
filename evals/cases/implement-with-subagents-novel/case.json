@@ -1,21 +1,48 @@
 {
   "id": "implement-with-subagents-novel",
-  "title": "Keep coupled implementation work atomic",
+  "title": "Honor a serial dependency chain despite available capacity",
   "family": "workflow",
-  "target_skills": ["implement-with-subagents"],
-  "expected_skills": ["implement-with-subagents"],
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow-subagents",
-  "constant_skills": ["implement"],
-  "allowed_write_paths": [],
-  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
-  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-novel"], "timeout_seconds": 30}],
-  "rubric": [
-    {"id": "atomicity", "text": "The response keeps schema and migration changes that cannot validate independently in one work item"},
-    {"id": "repair-owner", "text": "The response returns failed acceptance evidence to the same owner instead of replacing it or implementing in the controller"},
-    {"id": "runtime-mapping", "text": "Selects general-purpose for Claude Code and the general subagent for OpenCode, without requiring a literal worker type or treating OpenCode build as a subagent"},
-    {"id": "pi-capability", "text": "Identifies missing delegation support in bare Pi and missing same-session continuation in the extension scenario; stops implementation in both rather than installing support, inventing a core worker role, replacing the repair owner, or implementing in the controller"}
+  "constant_skills": [
+    "implement"
   ],
-  "provenance": {"kind": "synthetic"}
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "serial-dependency",
+      "text": "Dispatches only SCHEMA first, then integrates and accepts before dispatching WRITER, then READER"
+    },
+    {
+      "id": "overlap",
+      "text": "Recognizes shared-file and unmerged-code overlap makes concurrent execution unsafe despite isolated worktrees"
+    },
+    {
+      "id": "repair-owner",
+      "text": "Returns failed acceptance evidence to the same task owner rather than controller repair or reassignment"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
 }
