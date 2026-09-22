@@ -146,6 +146,8 @@ also mirror that policy in Codex's `agents/openai.yaml`.
 Release versions use CalVer: `YYYY.M.D`, `YYYY.M.D.N`, or `YYYY.M.D.NN`, without
 zero-padded month or day values. For example, use `2026.6.17` for the first
 release of the day and `2026.6.17.1` or `2026.6.17.01` for another release.
+Single-digit daily release numbers are normalized to the padded form, so both
+inputs produce `2026.6.17.01`.
 
 Keep root `plugin.json`, `.claude-plugin/plugin.json`,
 `.codex-plugin/plugin.json`, and new Git release tags on the same version.

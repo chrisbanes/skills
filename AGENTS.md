@@ -34,7 +34,8 @@ Before considering any skill addition or edit complete, verify:
 
 - Use CalVer: `YYYY.M.D` for the first release of a day and `YYYY.M.D.N` or
   `YYYY.M.D.NN` for additional releases that day. Daily release numbers range
-  from `.1` to `.99`; single-digit values may be zero-padded, such as `.01`.
+  from `.1` to `.99`; single-digit values are normalized to a zero-padded form,
+  so `.1` and `.01` both resolve to `.01`.
 - Do not zero-pad month or day values. Use `2026.6.17`, not `2026.06.17`.
 - Keep root `plugin.json`, `.claude-plugin/plugin.json`, and `.codex-plugin/plugin.json` on the same version.
 - New Git release tags should match the manifest version exactly.
