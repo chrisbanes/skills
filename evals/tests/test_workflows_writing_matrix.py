@@ -394,6 +394,32 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         self.assertEqual([], failures)
 
+    def test_task_graph_validator_ignores_fenced_markdown_headings_and_fields(self):
+        subject = (
+            "```markdown\n"
+            "## Implementation slices\n"
+            "### 1. Example only\n"
+            "**Task ID:** `FAKE`\n"
+            "**Depends on:** `MISSING`\n"
+            "```\n"
+            "## Implementation slices\n\n"
+            "### 1. Actual task\n"
+            "**Task ID:** `T1`\n"
+            "**Depends on:** `none`\n\n"
+            "```md\n"
+            "### 2. Fenced example, not a slice\n"
+            "**Task ID:** `FAKE2`\n"
+            "**Depends on:** `T1`\n"
+            "```\n"
+            "## Acceptance coverage\n"
+        )
+
+        failures = validate_task_graph(
+            subject, {"required_edges": [], "require_acyclic": True}
+        )
+
+        self.assertEqual([], failures)
+
     def test_task_graph_validator_rejects_unnumbered_slice_before_valid_slice(self):
         subject = (
             "## Implementation slices\n\n"

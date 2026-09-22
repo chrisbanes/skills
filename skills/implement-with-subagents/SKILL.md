@@ -122,11 +122,18 @@ implicitly.
    is stale for changed inputs at the integrated head and must be rerun there. A
    dependent becomes ready only after its prerequisite commit is integrated, its
    affected evidence passes at that head, and it is accepted.
-   If integration conflicts or an affected check fails, return the conflict or
-   evidence to that task's original owner. Have the owner repair in its isolated
-   worktree based on the current integrated head, produce a new task-scoped
-   commit, and repeat independent acceptance before retrying integration. The
-   controller does not resolve task-owned source conflicts or implement fixes.
+   If an integration operation conflicts or an affected check fails, stop that
+   integration attempt. For a failed merge, run `git merge --abort`; for a
+   failed cherry-pick, run `git cherry-pick --abort`; use the matching abort
+   command for any other in-progress Git operation. Verify the integration
+   worktree is clean and back at its recorded pre-attempt head before returning
+   the conflict or evidence to that task's original owner. If aborting or
+   restoring that clean state fails, stop and report the integration checkout
+   as blocked; do not retry or hand repair back from a dirty integration state.
+   Have the owner repair in its isolated worktree based on the current
+   integrated head, produce a new task-scoped commit, and repeat independent
+   acceptance before retrying integration. The controller does not resolve
+   task-owned source conflicts or implement fixes.
 10. After every repair, repeat the independent commit and diff inspection, then
    reassess the evidence under step 8. Reuse only checks whose relevant inputs
    and environment remain unchanged across the inspected descendant diff; repeat

@@ -7,12 +7,48 @@ import sys
 from pathlib import Path
 
 
+def _mask_fenced_code(subject: str) -> str:
+    """Blank fenced code while preserving line breaks and source offsets."""
+    masked: list[str] = []
+    fence_char: str | None = None
+    fence_size = 0
+
+    def blank(line: str) -> str:
+        return re.sub(r"[^\r\n]", " ", line)
+
+    for line in subject.splitlines(keepends=True):
+        if fence_char is None:
+            opening = re.match(r" {0,3}(`{3,}|~{3,})", line)
+            if opening:
+                fence = opening.group(1)
+                fence_char, fence_size = fence[0], len(fence)
+                masked.append(blank(line))
+                continue
+        else:
+            closing = re.match(
+                rf" {{0,3}}{re.escape(fence_char)}{{{fence_size},}}[ \t]*(?:\r?\n)?$",
+                line,
+            )
+            masked.append(blank(line))
+            if closing:
+                fence_char = None
+                fence_size = 0
+            continue
+        masked.append(line)
+    return "".join(masked)
+
+
 def validate_task_graph(
     subject: str, rules: dict[str, object], label: str = "subject"
 ) -> list[str]:
     failures: list[str] = []
+    structural_subject = _mask_fenced_code(subject)
     headings = list(
-        re.finditer(r"^(#{1,6})[ \t]+(.+?)\s*#*\s*$", subject, re.MULTILINE)
+        re.finditer(
+            r"^(#{1,6})[ \t]+(.+?)\s*#*\s*$",
+            structural_subject,
+            re.MULTILINE,
+        )
     )
     section_headings = [
         heading
@@ -35,7 +71,9 @@ def validate_task_graph(
         ),
         None,
     )
-    section_end = section_boundary.start() if section_boundary else len(subject)
+    section_end = (
+        section_boundary.start() if section_boundary else len(structural_subject)
+    )
     if (
         section_boundary
         and section_boundary.group(2).strip().casefold() != "acceptance coverage"
@@ -83,7 +121,7 @@ def validate_task_graph(
             if heading_index + 1 < len(slice_headings)
             else section_end
         )
-        body = subject[body_start:body_end]
+        body = structural_subject[body_start:body_end]
         ids = re.findall(r"^\*\*Task ID:\*\*\s*`([^`]+)`\s*$", body, re.MULTILINE)
         dependencies = re.findall(
             r"^\*\*Depends on:\*\*\s*(.*?)\s*$", body, re.MULTILINE

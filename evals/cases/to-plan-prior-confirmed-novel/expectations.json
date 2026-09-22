@@ -5,5 +5,9 @@
     "count": 1,
     "must_match": ["<!-- to-plan:conversation-plan:v1 id=[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12} -->"],
     "must_contain": ["# Quote missing validator files", "## Implementation context", "## Implementation slices", "**Files and symbols:**", "**Test:**", "**Validate:**", "## Final validation", "validator.py", "missing_file_error", "test_names_missing_file", "tests/test_validator.py"]
-  }]
+  }],
+  "task_graph": {
+    "required_edges": [],
+    "require_acyclic": true
+  }
 }
