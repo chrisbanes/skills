@@ -8,7 +8,7 @@ import sys
 
 
 VERSION_PATTERN = re.compile(
-    r"^[0-9]{4}\.([1-9]|1[0-2])\.([1-9]|[12][0-9]|3[01])(?:\.(0[1-9]|[1-9][0-9]))?$"
+    r"^[0-9]{4}\.([1-9]|1[0-2])\.([1-9]|[12][0-9]|3[01])(?:\.(0?[1-9]|[1-9][0-9]))?$"
 )
 PLUGIN_NAME = "chrisbanes-skills"
 OPENCODE_MAIN = ".opencode/plugins/chrisbanes-skills.js"
@@ -30,7 +30,7 @@ AGENT_PLUGINS_FIELDS = {
 def validate_version(version):
     if not VERSION_PATTERN.fullmatch(version):
         raise ValueError(
-            "Version must use CalVer YYYY.M.D or YYYY.M.D.NN without "
+            "Version must use CalVer YYYY.M.D, YYYY.M.D.N, or YYYY.M.D.NN without "
             f"zero-padded month/day: {version}"
         )
     return version

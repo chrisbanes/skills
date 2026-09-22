@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version as YYYY.M.D or YYYY.M.D.NN. Leave empty to use today's UTC date."
+        description: "Release version as YYYY.M.D, YYYY.M.D.N, or YYYY.M.D.NN. Empty uses today's UTC date."
         required: false
         type: string
       dry_run:
