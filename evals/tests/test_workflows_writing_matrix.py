@@ -51,6 +51,39 @@ def plan_artifact(dependency: str = "none") -> str:
 
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
+    def test_integration_failure_guidance_restores_only_verified_controller_branch(self):
+        guidance = (REPO_ROOT / "skills/implement-with-subagents/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        integration_step = " ".join(
+            guidance.split("9. Integrate", maxsplit=1)[1]
+            .split("10. After every repair", maxsplit=1)[0]
+            .split()
+        )
+
+        conflict_path = integration_step.split(
+            "If the Git operation conflicts before", maxsplit=1
+        )[1].split("If the integration operation completes", maxsplit=1)[0]
+        completed_path = integration_step.split(
+            "If the integration operation completes", maxsplit=1
+        )[1]
+
+        self.assertIn("git merge --abort", conflict_path)
+        self.assertIn("git cherry-pick --abort", conflict_path)
+        self.assertIn("recorded pre-attempt SHA", conflict_path)
+        self.assertIn("worktree is clean", conflict_path)
+
+        self.assertIn("do not use an abort command", completed_path)
+        self.assertIn("pre-attempt state was clean", completed_path)
+        self.assertIn("current branch is still that integration branch", completed_path)
+        self.assertIn("HEAD` is still the exact SHA", completed_path)
+        self.assertIn("worktree is currently clean", completed_path)
+        self.assertIn("git reset --hard <recorded-pre-attempt-sha>", completed_path)
+        self.assertIn("do not reset task-owned branches or other refs/worktrees", completed_path)
+        self.assertIn("do not remove untracked files or unrelated changes", completed_path)
+        self.assertIn("exact recorded pre-attempt SHA and the integration worktree is", completed_path)
+        self.assertIn("stop and report the integration checkout as blocked", completed_path)
+
     def test_has_skill_triads_and_workflow_calibration_coverage_without_routing(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
 

@@ -122,18 +122,33 @@ implicitly.
    is stale for changed inputs at the integrated head and must be rerun there. A
    dependent becomes ready only after its prerequisite commit is integrated, its
    affected evidence passes at that head, and it is accepted.
-   If an integration operation conflicts or an affected check fails, stop that
-   integration attempt. For a failed merge, run `git merge --abort`; for a
-   failed cherry-pick, run `git cherry-pick --abort`; use the matching abort
-   command for any other in-progress Git operation. Verify the integration
-   worktree is clean and back at its recorded pre-attempt head before returning
-   the conflict or evidence to that task's original owner. If aborting or
-   restoring that clean state fails, stop and report the integration checkout
-   as blocked; do not retry or hand repair back from a dirty integration state.
-   Have the owner repair in its isolated worktree based on the current
-   integrated head, produce a new task-scoped commit, and repeat independent
-   acceptance before retrying integration. The controller does not resolve
-   task-owned source conflicts or implement fixes.
+   Before each integration attempt, record the controller-owned integration
+   branch name and exact `HEAD` SHA, and verify the integration worktree is
+   clean, including no untracked files. If the Git operation conflicts before
+   it completes, abort that in-progress operation (`git merge --abort` for a
+   merge, `git cherry-pick --abort` for a cherry-pick, or the matching abort
+   command for another operation). Verify the same integration branch is at
+   the recorded pre-attempt SHA and the worktree is clean before returning the
+   conflict to the original task owner. If aborting fails or those checks do
+   not pass, stop and report the integration checkout as blocked.
+
+   If the integration operation completes but an affected validation fails,
+   do not use an abort command. Restore only the controller-owned integration
+   branch to the recorded pre-attempt SHA, and only if its recorded pre-attempt
+   state was clean, the current branch is still that integration branch, and
+   its `HEAD` is still the exact SHA recorded immediately after the completed
+   integration and its worktree is currently clean. Run
+   `git reset --hard <recorded-pre-attempt-sha>` under those conditions; do not
+   reset task-owned branches or other refs/worktrees, and do not remove
+   untracked files or unrelated changes. Then verify the branch
+   is at the exact recorded pre-attempt SHA and the integration worktree is
+   clean before returning the failing check and evidence to the original task
+   owner. If any precondition, restoration, or post-reset verification fails,
+   stop and report the integration checkout as blocked. The owner repairs in
+   its isolated worktree based on the current integrated head, produces a new
+   task-scoped commit, and repeats independent acceptance before integration is
+   retried. The controller does not resolve task-owned source conflicts or
+   implement fixes.
 10. After every repair, repeat the independent commit and diff inspection, then
    reassess the evidence under step 8. Reuse only checks whose relevant inputs
    and environment remain unchanged across the inspected descendant diff; repeat
