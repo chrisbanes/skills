@@ -68,6 +68,16 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "If the integration operation completes", maxsplit=1
         )[1]
 
+        post_integration_capture = (
+            "record the integration branch and its exact `HEAD` SHA as that "
+            "attempt's post-integration SHA"
+        )
+        self.assertIn(post_integration_capture, integration_step)
+        self.assertLess(
+            integration_step.index(post_integration_capture),
+            integration_step.index("Recheck every affected validation"),
+        )
+
         self.assertIn("git merge --abort", conflict_path)
         self.assertIn("git cherry-pick --abort", conflict_path)
         self.assertIn("recorded pre-attempt SHA", conflict_path)

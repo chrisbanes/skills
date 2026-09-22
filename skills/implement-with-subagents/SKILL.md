@@ -115,13 +115,16 @@ implicitly.
    - verify the task-owned diff is empty relative to the recorded pre-existing
      state.
 9. Integrate accepted commits into the controller's integration branch in
-   dependency order. Check each integration for conflicts and inspect the
-   resulting integrated diff. Recheck every affected validation whose inputs
-   changed during integration, including tests affected by shared files, generated
-   output, shared interfaces, or merge resolution. Evidence from a task worktree
-   is stale for changed inputs at the integrated head and must be rerun there. A
-   dependent becomes ready only after its prerequisite commit is integrated, its
-   affected evidence passes at that head, and it is accepted.
+   dependency order and check each integration for conflicts. After an
+   integration operation completes, record the integration branch and its exact
+   `HEAD` SHA as that attempt's post-integration SHA before inspecting the
+   integrated diff or running affected checks. Recheck every affected
+   validation whose inputs changed during integration, including tests affected
+   by shared files, generated output, shared interfaces, or merge resolution.
+   Evidence from a task worktree is stale for changed inputs at the integrated
+   head and must be rerun there. A dependent becomes ready only after its
+   prerequisite commit is integrated, its affected evidence passes at that
+   head, and it is accepted.
    Before each integration attempt, record the controller-owned integration
    branch name and exact `HEAD` SHA, and verify the integration worktree is
    clean, including no untracked files. If the Git operation conflicts before
