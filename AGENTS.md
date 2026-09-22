@@ -32,7 +32,8 @@ Before considering any skill addition or edit complete, verify:
 
 ## Release/version system
 
-- Use SemVer-compatible CalVer: `YYYY.M.D`.
+- Use CalVer: `YYYY.M.D` for the first release of a day and `YYYY.M.D.NN` for
+  additional releases that day, starting at `.01`.
 - Do not zero-pad month or day values. Use `2026.6.17`, not `2026.06.17`.
 - Keep root `plugin.json`, `.claude-plugin/plugin.json`, and `.codex-plugin/plugin.json` on the same version.
 - New Git release tags should match the manifest version exactly.

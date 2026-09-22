@@ -143,7 +143,9 @@ also mirror that policy in Codex's `agents/openai.yaml`.
 
 ### Releases
 
-Release versions use SemVer-compatible CalVer: `YYYY.M.D` without zero-padded month or day values, for example `2026.6.17`.
+Release versions use CalVer: `YYYY.M.D` or `YYYY.M.D.NN`, without zero-padded
+month or day values. For example, use `2026.6.17` for the first release of the
+day and `2026.6.17.01` for another release that day.
 
 Keep root `plugin.json`, `.claude-plugin/plugin.json`,
 `.codex-plugin/plugin.json`, and new Git release tags on the same version.
@@ -151,7 +153,10 @@ Existing zero-padded tags from before this policy map to the non-padded manifest
 version, so `2026.06.16` maps to `2026.6.16`. Only bump versions when publishing
 an installable release.
 
-To publish a release, run the **Release** workflow from GitHub Actions. Leave the version input empty to use today's UTC `YYYY.M.D` version, or provide a specific non-zero-padded CalVer value. Use the dry-run option to validate without creating a commit, tag, or GitHub release.
+To publish a release, run the **Release** workflow from GitHub Actions. Leave the
+version input empty to use today's UTC `YYYY.M.D` version, or provide a specific
+CalVer value, optionally with a two-digit daily release number. Use the dry-run
+option to validate without creating a commit, tag, or GitHub release.
 
 Before pushing, lint skills (frontmatter schema + markdown):
 
