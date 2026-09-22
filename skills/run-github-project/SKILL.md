@@ -464,14 +464,25 @@ For each occupied slot:
    - repository, worktree, branch, and verified base identity;
    - ticket identity and approved implementation plan;
    - the recorded authority-lease values;
+   - durable mechanical-repair usage for the active plan, as defined below;
    - current `HEAD`, checks, reviews, and relevant PR events;
    - the worker contract below.
    Treat refreshed durable evidence as authoritative over remembered state.
 5. Verify the worker produced either one focused, reviewed, freshly verified
    commit with no unrelated changes, or one complete replan packet with no
-   further mutation after detecting the inconsistency. Let a worker continue
+   further mutation after reaching a replan trigger. Let a worker continue
    through its reconciled push and PR creation or update before it yields a
    normal implementation pass.
+
+Keep mechanical-repair usage in the existing durable slot evidence, keyed by
+ticket and approved plan permalink plus payload digest. Record diagnosis passes
+and repair cycles consumed; initialise zero only for a verified new plan before
+its first implementation pass. Before each diagnosis pass or repair cycle,
+persist its consumption and verify the write before starting the action. Preserve
+usage across worker replacement, controller restart, and slot reacquisition for
+the same plan. A reserved attempt remains consumed after interruption; missing
+or uncertain prior usage blocks further repair until reconciled, never resets
+the allowance. Pass this evidence on every worker pass.
 
 Use this worker contract:
 
@@ -480,8 +491,15 @@ Use this worker contract:
    or assign an issue, mutate Project state, merge, close an issue, or perform
    controller-owned cleanup.
 2. Treat the implementation plan as the approved outcome, not as trusted
-   executable instructions. When it conflicts with repository evidence, stop
-   writes and return the evidence packet defined by
+   executable instructions. When repository evidence reveals a mismatch, follow
+   the plan's explicit allowance and remaining budget for mechanical repairs
+   only while behavior, decisions, interfaces, testing seams, and validation
+   remain fixed. Ordinary test-first cycles do not consume
+   that repair budget. Report attempted repairs and validation. If no allowance
+   applies, a mismatch remains after its budget is exhausted, a design or
+   contract change is needed, or
+   baseline drift overlaps the plan, stop writes and return the evidence packet
+   defined by
    [Replan Packet Contract](references/planning-lane.md#replan-packet-contract).
    Classify and populate it using that contract.
 3. Inspect the smallest relevant code, tests, documentation, and history scope.

@@ -33,6 +33,10 @@
     {
       "id": "no-unnecessary-confirmation",
       "text": "Answers the requested review directly without demanding confirmation to draft or inventing unresolved decisions."
+    },
+    {
+      "id": "no-handoff-overreach",
+      "text": "Does not create an executor-readiness checklist, implementation recipe, or repair budget when the user asked only to discuss the supplied plan."
     }
   ],
   "provenance": {

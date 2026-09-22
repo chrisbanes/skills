@@ -156,6 +156,15 @@ configuration or recent trusted CI evidence, record what was not run, and
 assign it to implementation-time validation. Block when neither source exists.
 Run the full suite only when needed to establish the relevant baseline.
 
+Complete discovery before designing slices. Record the repository facts a fresh
+executor would otherwise have to rediscover: relevant existing files and
+symbols, their responsibilities and call sites, established exemplars, commands
+and working directories, and any files or symbols the plan will create. Trace
+the current control flow or data transformation far enough to decide ownership,
+cross-file wiring, branches, errors, and edge cases that affect the accepted
+behavior. Do not invent a path, symbol, command, or precedent when the repository
+does not support it.
+
 ### 5. Resolve planning decisions
 
 Treat an authorized Planning transition, decision-complete current instruction,
@@ -190,17 +199,39 @@ conversation.
 
 Each implementation slice must deliver one observable increment and name:
 
-- The red test, file, and expected failure when practical.
-- The production files and symbols.
-- The smallest implementation move.
-- An exact focused validation command.
+- Any prerequisite slice, repository exemplar, or context needed for the edit.
+- The exact existing files and symbols to change and new files or symbols to
+  create, labelling which are existing and which are new.
+- Ordered edits detailed enough to remove implementation design work: relevant
+  interfaces, ownership, control flow or data transformation, branches, error
+  behavior, edge cases, and cross-file wiring or call-site updates.
+- The exact test file and test seam, fixture or setup, inputs or actions,
+  assertions, and expected red failure when practical.
+- Exact focused validation commands, including the working directory and any
+  required setup, plus the expected successful result.
 - Its observable green completion condition.
 
 Use test-first slices unless an automated red test is impractical; explain the
 exception and use the strongest verification available. Allow only a small,
 independently validated prefactor that directly enables the work. Use signatures
-or pseudocode only to preserve otherwise ambiguous decisions. Omit full
-implementations, routine boilerplate, exploration logs, and progress checkboxes.
+or pseudocode where they remove executor design judgment, but give an explicit
+recipe rather than near-complete code. Omit full implementations, routine
+boilerplate, exploration logs, and progress checkboxes.
+
+Scale detail to ambiguity and risk. A local, obvious change can be one concise
+slice. Cross-module behavior, migrations, concurrency, compatibility, or subtle
+failure handling require enough detail to make the chosen design mechanical.
+Do not pad a trivial task with exhaustive branch inventories or universal
+boilerplate.
+
+Before handoff, perform an executor-readiness check from the written plan alone.
+A fresh, lower-capability executor must be able to locate every edit, distinguish
+existing from new symbols, apply the edits in order, construct meaningful tests,
+wire every consumer, and run validation without additional broad repository
+discovery or choosing a design. The executor should still read the named files
+and confirm the baseline. Resolve a gap through repository discovery and update
+the plan. If evidence cannot resolve it, add it to the blocker set instead of
+leaving “investigate,” “decide,” or equivalent work for implementation.
 
 ### 7. Manage the draft
 
@@ -236,12 +267,20 @@ Implement the approved implementation plan at <absolute scratch path>. Delete th
 ```
 
 The implementation checkout may descend from the planned SHA only when
-intervening changes do not overlap the plan. Implementers may adjust local
-names, helpers, file choices, and slice order while preserving behavior,
-decisions, seams, and validation; they must report deviations. They stop at a
-re-plan trigger rather than invoking `to-plan`. Re-plan from a clean planning
-worktree at the verified base, except that a verified runner replan may retain
-dirty implementation work in its separate worktree.
+intervening changes do not overlap the plan. Within the plan's fixed behavior,
+decisions, interfaces, seams, and validation contract, an implementer may repair
+a mechanical mismatch such as a renamed private helper, a moved equivalent file,
+or a compile or fixture error, provided the mismatch does not overlap an
+intervening baseline change. Limit this to one focused diagnosis pass and at
+most two repair edit-and-validation cycles across all unexpected mismatches;
+normal test-first implementation cycles do not count toward this budget. Stop
+at a re-plan trigger, any required design or contract change, overlapping
+baseline change, or a mismatch unresolved after the repair budget is exhausted,
+rather than adapting freely or invoking `to-plan`. Report the observed mismatch
+or failure evidence, attempted repair and validation, and remaining decision or
+upstream change. Re-plan from a clean planning worktree at the verified base,
+except that a verified runner replan may retain dirty implementation work in
+its separate worktree.
 
 ## Finish gates
 

@@ -12,7 +12,9 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-authorized-draft-direct"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "local-draft", "text": "Creates one marked local plan from the authorized task without requesting redundant confirmation"},
-    {"id": "executable-plan", "text": "The generated plan targets validator.py and its existing test, preserves the function signature and missing file prefix, specifies a quoted path result, and gives a focused validation command and observable acceptance condition without implementing the change"},
+    {"id": "executable-plan", "text": "The generated plan identifies existing files and symbols, gives an ordered edit recipe for validator.py, and specifies the existing test setup, a path-with-spaces input, exact-output assertion, expected red failure, working directory, focused command, expected green result, and observable acceptance condition without implementing the change"},
+    {"id": "proportionality", "text": "Keeps this obvious one-function change to a concise slice and uses a signature or pseudocode only if it removes real ambiguity; does not pad the plan with speculative branches, new abstractions, or near-complete code"},
+    {"id": "executor-readiness", "text": "Leaves no investigate-or-decide work for the executor and limits autonomous repair to the fixed contract and explicit diagnosis/edit-validation budget"},
     {"id": "publication-boundary", "text": "Keeps the plan local and does not publish or contact a remote provider"}
   ],
   "provenance": {"kind": "synthetic"},

@@ -140,8 +140,14 @@ current base:
 
 ### Replan Packet Contract
 
-When repository evidence invalidates the approved plan, require the owning
-ticket agent to stop writes and return one packet containing:
+A mechanical mismatch within the approved plan's explicit repair allowance and
+remaining budget does not by itself invalidate the plan. Follow the worker
+contract for those repairs; do not change behavior, design decisions, interfaces,
+testing seams, or validation, and do not bypass overlapping-baseline checks.
+
+When repository evidence invalidates the approved plan or a mismatch remains
+after the permitted repair budget is exhausted, require the owning ticket agent to stop writes and return
+one packet containing:
 
 - disposition: `autonomous-replan` or `human-required`;
 - active plan permalink and payload digest;
