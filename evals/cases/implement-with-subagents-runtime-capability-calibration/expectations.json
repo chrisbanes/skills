@@ -1,0 +1,9 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Network access is disabled",
+    "controller owns"
+  ]
+}

@@ -1,0 +1,1 @@
+An implementation item has a reviewed task-scoped commit, passing requested validation at the current integrated head, and no outstanding acceptance requirements. Review whether another orchestration action is needed. Do not change files, start agents, or perform remote actions.

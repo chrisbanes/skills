@@ -1,0 +1,49 @@
+{
+  "id": "implement-with-subagents-accepted-item-noop-calibration",
+  "title": "Leave an already accepted task complete",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "constant_skills": [
+    "implement"
+  ],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-accepted-item-noop-calibration"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "accepted-noop",
+      "text": "Treats the task-scoped reviewed commit with fresh passing validation as complete and takes no further orchestration action."
+    },
+    {
+      "id": "no-owner-reassignment",
+      "text": "Does not spawn another owner, alter the accepted commit, or rerun already current validation."
+    },
+    {
+      "id": "preserve-boundary",
+      "text": "Does not mutate files or contact a remote service."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

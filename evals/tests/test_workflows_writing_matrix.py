@@ -43,6 +43,8 @@ def plan_artifact(dependency: str = "none") -> str:
         "**Implementation:** Quote the supplied path in `missing_file_error` without changing its signature.\n\n"
         "**Validate:** From repository root, run `python3 -B -m unittest tests.test_validator`; expect it to pass.\n\n"
         "**Complete when:** The path, including spaces, is preserved inside quotes and the focused test passes.\n\n"
+        "## Acceptance coverage\n\n"
+        "| Quoted diagnostic | 1 | Focused test |\n\n"
         "## Final validation\n\n"
         "- From repository root, run `python3 -B -m unittest tests.test_validator`; expect success.\n"
     )
@@ -55,7 +57,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(21, len(benchmark))
-        self.assertEqual(12, len(calibration))
+        self.assertEqual(14, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(21, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -74,6 +76,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "implement-with-subagents-post-edit-negative",
                 "implement-with-subagents-failed-verification-negative",
                 "implement-with-subagents-explicit-rerun-novel",
+                "implement-with-subagents-runtime-capability-calibration",
+                "implement-with-subagents-accepted-item-noop-calibration",
             },
             {case.id for case in calibration},
         )
@@ -96,7 +100,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
 
         subagent_cases = [
-            case for case in benchmark if case.fixture == "workflow-subagents"
+            case
+            for case in benchmark
+            if case.fixture == "workflow-subagents" and not case.calibration
         ]
         self.assertEqual(3, len(subagent_cases))
         self.assertTrue(
@@ -387,6 +393,78 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
 
         self.assertEqual([], failures)
+
+    def test_task_graph_validator_rejects_unnumbered_slice_before_valid_slice(self):
+        subject = (
+            "## Implementation slices\n\n"
+            "### Unnumbered but declared slice\n"
+            "**Task ID:** `T0`\n"
+            "**Depends on:** `none`\n\n"
+            "### 1. Numbered slice\n"
+            "**Task ID:** `T1`\n"
+            "**Depends on:** `none`\n"
+        )
+
+        failures = validate_task_graph(
+            subject, {"required_edges": [], "require_acyclic": True}
+        )
+
+        self.assertTrue(
+            any("malformed implementation slice heading" in failure for failure in failures),
+            failures,
+        )
+
+    def test_task_graph_validator_rejects_slice_at_unexpected_heading_level(self):
+        subject = (
+            "## Implementation slices\n\n"
+            "### 1. Numbered slice\n"
+            "**Task ID:** `T1`\n"
+            "**Depends on:** `none`\n\n"
+            "#### 2. Hidden deeper slice\n"
+            "**Task ID:** `T2`\n"
+            "**Depends on:** `T1`\n"
+        )
+
+        failures = validate_task_graph(
+            subject, {"required_edges": [], "require_acyclic": True}
+        )
+
+        self.assertTrue(
+            any("unexpected heading level" in failure for failure in failures), failures
+        )
+
+    def test_task_graph_validator_rejects_slice_that_ends_its_section(self):
+        subject = (
+            "## Implementation slices\n\n"
+            "### 1. Numbered slice\n"
+            "**Task ID:** `T1`\n"
+            "**Depends on:** `none`\n\n"
+            "## Unnumbered slice\n"
+            "**Task ID:** `T2`\n"
+            "**Depends on:** `T1`\n"
+        )
+
+        failures = validate_task_graph(
+            subject, {"required_edges": [], "require_acyclic": True}
+        )
+
+        self.assertTrue(
+            any("unexpected section boundary" in failure for failure in failures), failures
+        )
+
+    def test_task_graph_validator_reserves_none_as_dependency_sentinel(self):
+        subject = (
+            "## Implementation slices\n\n"
+            "### 1. A task named none\n"
+            "**Task ID:** `NONE`\n"
+            "**Depends on:** `none`\n"
+        )
+
+        failures = validate_task_graph(
+            subject, {"required_edges": [], "require_acyclic": True}
+        )
+
+        self.assertTrue(any("task ID 'none' is reserved" in failure for failure in failures))
 
     def test_plan_artifact_validator_rejects_cyclic_task_dependencies(self):
         validator = REPO_ROOT / "evals/validators/text_case.py"

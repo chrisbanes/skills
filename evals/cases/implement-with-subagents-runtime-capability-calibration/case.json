@@ -1,0 +1,57 @@
+{
+  "id": "implement-with-subagents-runtime-capability-calibration",
+  "title": "Preserve runtime and repair-owner capability gates",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "constant_skills": [
+    "implement"
+  ],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-runtime-capability-calibration"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "claude-mapping",
+      "text": "Selects the Claude Code general-purpose implementation subagent."
+    },
+    {
+      "id": "opencode-mapping",
+      "text": "Selects the OpenCode general subagent and does not treat build as a subagent."
+    },
+    {
+      "id": "bare-pi",
+      "text": "Recognizes bare Pi has no built-in subagent role and stops when no supported delegation capability is installed."
+    },
+    {
+      "id": "pi-repair-session",
+      "text": "Rejects a Pi worker extension that starts fresh sessions without resume because it cannot preserve same-owner repair continuity."
+    },
+    {
+      "id": "no-side-effects",
+      "text": "Does not start agents, install an extension, edit files, or contact a remote service."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

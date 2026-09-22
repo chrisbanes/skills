@@ -50,7 +50,7 @@ concurrently.>
 #### 1. <Observable increment>
 
 **Task ID:** `<stable unique ID, e.g. T1>`
-**Depends on:** `none` | `<task ID>, ...`
+**Depends on:** `none` (reserved root marker; not a task ID) | `<task ID>, ...`
 **Prerequisites:** <Earlier slice or none; relevant context or exemplar.>
 **Files and symbols:** <Existing files/symbols to edit and new files/symbols to
 create, labelled existing/new.>
@@ -136,7 +136,7 @@ concurrently.>
 ### 1. <Observable increment>
 
 **Task ID:** `<stable unique ID, e.g. T1>`
-**Depends on:** `none` | `<task ID>, ...`
+**Depends on:** `none` (reserved root marker; not a task ID) | `<task ID>, ...`
 **Prerequisites:** <Earlier slice or none; relevant context or exemplar.>
 **Files and symbols:** <Existing files/symbols to edit and new files/symbols to
 create, labelled existing/new.>

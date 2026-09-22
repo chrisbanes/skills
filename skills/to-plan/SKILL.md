@@ -200,7 +200,8 @@ conversation.
 Each implementation slice must deliver one observable increment and name:
 
 - A stable, unique task ID (for example `T1`) and an explicit `Depends on`
-  list (`none` for a root task). Dependencies may name only declared task IDs.
+  list (`none` for a root task). Reserve the case-insensitive ID `none` for
+  this root marker. Dependencies may name only declared task IDs.
 
 - Any prerequisite slice, repository exemplar, or context needed for the edit.
 - The exact existing files and symbols to change and new files or symbols to

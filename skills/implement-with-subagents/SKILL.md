@@ -57,8 +57,9 @@ implicitly.
    reproduce the procedure from memory.
 3. Build and validate the task graph before dispatch. Require unique stable task
    IDs, explicit dependency lists, declared dependency targets, and an acyclic
-   graph. Treat a legacy plan without dependency metadata as a sequential chain
-   in listed order. Keep an unsplit request and its checklist in one work item;
+   graph. Reserve the case-insensitive task ID `none` for the `Depends on: none`
+   root marker. Treat a legacy plan without dependency metadata as a sequential
+   chain in listed order. Keep an unsplit request and its checklist in one work item;
    group supplied items only when they cannot validate in separate
    behavior-preserving commits. Record shared-file, interface, and integration
    constraints; tasks with unsafe write overlap are not independent even when

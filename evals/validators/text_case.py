@@ -11,28 +11,95 @@ def validate_task_graph(
     subject: str, rules: dict[str, object], label: str = "subject"
 ) -> list[str]:
     failures: list[str] = []
-    slices = re.findall(
-        r"(?ms)^#{3,4}\s+\d+\.\s+.*?\n(.*?)(?=^#{3,4}\s+\d+\.\s+|\Z)",
-        subject,
+    headings = list(
+        re.finditer(r"^(#{1,6})[ \t]+(.+?)\s*#*\s*$", subject, re.MULTILINE)
     )
-    if not slices:
-        return [f"{label}: task graph has no numbered implementation slices"]
+    section_headings = [
+        heading
+        for heading in headings
+        if heading.group(2).strip().casefold() == "implementation slices"
+    ]
+    if len(section_headings) != 1:
+        return [
+            f"{label}: expected one Implementation slices section, found {len(section_headings)}"
+        ]
+
+    section = section_headings[0]
+    section_level = len(section.group(1))
+    section_boundary = next(
+        (
+            heading
+            for heading in headings
+            if heading.start() > section.start()
+            and len(heading.group(1)) <= section_level
+        ),
+        None,
+    )
+    section_end = section_boundary.start() if section_boundary else len(subject)
+    if (
+        section_boundary
+        and section_boundary.group(2).strip().casefold() != "acceptance coverage"
+    ):
+        failures.append(
+            f"{label}: unexpected section boundary after Implementation slices: "
+            f"{section_boundary.group(2).strip()!r}"
+        )
+    slice_level = section_level + 1
+    section_headings_inside = [
+        heading
+        for heading in headings
+        if section.end() < heading.start() < section_end
+    ]
+    for heading in section_headings_inside:
+        if len(heading.group(1)) != slice_level:
+            failures.append(
+                f"{label}: unexpected heading level in Implementation slices: {heading.group(2)!r}"
+            )
+    slice_headings = [
+        heading for heading in section_headings_inside if len(heading.group(1)) == slice_level
+    ]
+    if not slice_headings:
+        return [f"{label}: task graph has no implementation slices"]
 
     tasks: dict[str, set[str]] = {}
-    for number, body in enumerate(slices, start=1):
+    expected_number = 1
+    for heading_index, heading in enumerate(slice_headings):
+        title = heading.group(2).strip()
+        match = re.fullmatch(r"(\d+)\.\s+.+", title)
+        if match is None:
+            failures.append(
+                f"{label}: malformed implementation slice heading {title!r}"
+            )
+            continue
+        if int(match.group(1)) != expected_number:
+            failures.append(
+                f"{label}: expected implementation slice {expected_number}, found {match.group(1)}"
+            )
+        expected_number = int(match.group(1)) + 1
+
+        body_start = heading.end()
+        body_end = (
+            slice_headings[heading_index + 1].start()
+            if heading_index + 1 < len(slice_headings)
+            else section_end
+        )
+        body = subject[body_start:body_end]
         ids = re.findall(r"^\*\*Task ID:\*\*\s*`([^`]+)`\s*$", body, re.MULTILINE)
         dependencies = re.findall(
             r"^\*\*Depends on:\*\*\s*(.*?)\s*$", body, re.MULTILINE
         )
         if len(ids) != 1 or len(dependencies) != 1:
             failures.append(
-                f"{label}: slice {number} must declare exactly one Task ID and Depends on list"
+                f"{label}: slice {heading_index + 1} must declare exactly one Task ID and Depends on list"
             )
             continue
 
         task_id = ids[0]
         if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", task_id) is None:
             failures.append(f"{label}: invalid task ID {task_id!r}")
+            continue
+        if task_id.casefold() == "none":
+            failures.append(f"{label}: task ID 'none' is reserved for the root dependency marker")
             continue
         if task_id in tasks:
             failures.append(f"{label}: duplicate task ID {task_id!r}")
@@ -57,7 +124,11 @@ def validate_task_graph(
 
     for task_id, dependencies in tasks.items():
         for dependency in dependencies:
-            if dependency not in tasks:
+            if dependency.casefold() == "none":
+                failures.append(
+                    f"{label}: task ID 'none' is reserved for the root dependency marker"
+                )
+            elif dependency not in tasks:
                 failures.append(
                     f"{label}: task {task_id!r} depends on undeclared task {dependency!r}"
                 )
