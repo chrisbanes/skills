@@ -35,16 +35,17 @@ It is not bundled here. Never install it implicitly; report
 2. Assess queue atomicity, dependency order, implementation ownership,
    task-scoped acceptance, repair ownership, and controller mutation boundaries.
    Acceptance requires a task-scoped commit, independent inspection of its full
-   diff, and requested task-level validation evidence before advancing. Before
-   dispatching a dependent, require each prerequisite to be integrated; inspect
-   the joined diff for conflicts and rerun affected validation at that
-   integration head. The dependent is ready only after those checks pass; an
-   isolated prerequisite commit alone is insufficient. For example, dispatch
-   independent `API` and `DOC`, integrate their accepted commits, validate the
-   joined head, and only then dispatch `WIRE`. Return failed
-   acceptance to the same owner; reuse passing checks only when their inputs and
-   environment remain unchanged. An accepted item is complete, not assignable
-   again.
+   diff, and requested task-level validation evidence before advancing. Separate
+   worktrees do not make tasks independent when they edit the same file or one
+   relies on another's unmerged code; serialize those tasks. Before dispatching
+   a dependent, integrate each accepted prerequisite, check the joined diff for
+   textual and semantic conflicts, and rerun affected validation at that exact
+   integration head. Do not proceed until those checks pass; an isolated
+   prerequisite commit alone is insufficient. For example, dispatch independent
+   `API` and `DOC`, integrate their accepted commits, validate their joined head,
+   and only then dispatch `WIRE`. Return failed acceptance to the same owner;
+   reuse passing checks only when their inputs and environment remain unchanged.
+   An accepted item is complete, not assignable again.
 3. Report the next action (or no action), evidence, and any acceptance gap. Stop
    before implementation.
 

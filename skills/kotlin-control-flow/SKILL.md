@@ -42,10 +42,11 @@ branch, and let the compiler prove closed-domain coverage.
    refactor.
 7. Compile and test. On failure, return to the smallest applicable earlier step
    or retain the prior shape. In a review, name the explicit cases and the
-   branch payload retained through smart casts when that data drives the
-   mapping; do not describe a `when` as exhaustive while omitting a relevant
-   payload. Finish when the subject, fallbacks, and branch data are obvious to
-   a reader and the resulting shape is easier to scan.
+   subtype member retained through smart casts when that data drives the
+   mapping (for example, say when a `Success` branch uses its `value` member);
+   do not stop at naming exhaustive branches when a branch's smart-cast payload
+   determines its output. Finish when the subject, fallbacks, and branch data
+   are obvious to a reader and the resulting shape is easier to scan.
 
 ## Recipes
 

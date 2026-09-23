@@ -23,11 +23,13 @@ generic, or included only to imitate a personality.
    the user's actual position. Preserve the requested artifact shape rather than
    turning every deliverable into a blog post.
 4. In public developer documentation, explain observable behaviour, setting
-   choices, trade-offs, and relevant limitations. Keep implementation and
-   test or diagnostic detail in internal references unless needed to use the
-   API correctly or explicitly requested. Retain public contracts and the
-   context needed to interpret claims. This does not apply to internal design
-   documents or technical reports.
+   choices, trade-offs, and relevant limitations. Remove implementation, test,
+   or diagnostic mechanics such as sampling thresholds, CPU masks, interpolation
+   details, and cooldown timing; retain them only when needed to use the API
+   correctly or explicitly requested. Do not ask to expand those mechanics as a
+   way to fill a public-documentation gap. Retain public contracts and the
+   context needed to interpret claims. This boundary does not apply to internal
+   design documents or technical reports.
 5. Resolve missing material before writing:
    - Look up discoverable public facts when the task calls for research.
    - If a missing personal opinion or experience would materially change the

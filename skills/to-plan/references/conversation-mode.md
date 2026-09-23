@@ -11,16 +11,18 @@ constraints, decisions, trade-offs, repository target, validation, and re-plan
 boundaries with no material unresolved choice. Without an authorized,
 decision-complete source:
 
-1. Ask one recommended decision question at a time and discover facts rather
-   than asking for them.
+1. Ask one direct, answerable question about the next material decision, with a
+   recommended option, and discover facts rather than asking the user to find
+   them. Do not just describe the missing decision.
 2. Continue until every required contract component is clear.
-3. Present one compact self-contained summary and require confirmation before
-   drafting.
+3. Present one compact, self-contained summary of the goal, success criteria,
+   scope, constraints, and decisions; explicitly ask the user to confirm it
+   before drafting.
 
-When reviewing a blocked conversation source, report the next missing decision
-and state that drafting remains blocked until the self-contained summary is
-confirmed. A decision-complete current instruction or an already confirmed
-summary needs no new confirmation.
+When reviewing a blocked conversation source, state the next missing decision
+as the direct question to ask and say drafting remains blocked. Once the source
+is complete, report the self-contained summary to confirm. A decision-complete
+current instruction or an already confirmed summary needs no new confirmation.
 
 Without an inline task, reuse prior conversation only when exactly one compact,
 decision-complete summary is followed by explicit user confirmation. If Plan

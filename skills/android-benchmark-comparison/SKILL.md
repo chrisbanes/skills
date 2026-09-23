@@ -26,14 +26,17 @@ or choosing a default.
    and whether the ordering holds; do not discard slow iterations after seeing
    the result.
 4. When rankings reverse or variability is material, defer a firm default
-   decision until the reversal is resolved. Check that raw results cover the same
-   named cases and iterations, balance or reverse run order, and inspect traces
-   spanning the measured interval for plausible causes such as placement,
-   contention, or thermal state. Fixed-performance mode does not prove CPU
-   placement. If affinity is used, discover the device topology, verify
-   placement during that interval, label the result a controlled comparison,
-   and restore the original affinity settings. If any check is unavailable,
-   label any default choice provisional and state the remaining uncertainty.
+   decision until the reversal is resolved. Confirm that raw results cover the
+   same named cases and iterations, repeat with balanced or reversed run order,
+   and inspect trace data whose timestamps overlap each measured interval for
+   placement, contention, or thermal changes. Fixed-performance mode does not
+   prove CPU placement. If an affinity experiment was attempted, discover the
+   device topology and verify placement during the measured interval. Restore
+   the recorded original affinity settings after the experiment and verify that
+   restoration before another run; do not merely note that restoration needs
+   checking. Label verified affinity runs as controlled comparisons. If the
+   original settings or any other check are unavailable, state the gap and keep
+   any default choice explicitly provisional.
 5. Calculate summaries from unrounded observations, then round only for
    presentation. Name the aggregation explicitly: the mean of per-run
    percentiles is not a percentile of pooled observations. Choose an
