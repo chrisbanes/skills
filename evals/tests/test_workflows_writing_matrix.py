@@ -174,7 +174,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(21, len(benchmark))
-        self.assertEqual(15, len(calibration))
+        self.assertEqual(16, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(21, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -185,6 +185,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-missing-provider-challenge",
                 "to-plan-authorized-draft-direct",
                 "to-plan-material-assumption-proof-calibration",
+                "to-plan-material-assumption-proof-novel",
                 "to-plan-prior-confirmed-novel",
                 "to-plan-unresolved-choice-negative",
                 "to-plan-discussion-only-negative",
@@ -539,6 +540,38 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "published_mount": "/runtime/reports/published",
             },
             config,
+        )
+        expectations = json.loads(
+            (case.directory / "expectations.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            [["T2", "T1"], ["T3", "T1"], ["T3", "T2"]],
+            expectations["task_graph"]["required_edges"],
+        )
+        self.assertTrue(expectations["task_graph"]["require_acyclic"])
+
+    def test_novel_material_assumption_proof_case_is_not_scripted(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "to-plan-material-assumption-proof-novel"
+        )
+        self.assertEqual("novel", case.kind)
+        self.assertTrue(case.calibration)
+        self.assertEqual("workflow-report-publication", case.fixture)
+        self.assertNotIn("os.replace", case.prompt)
+        self.assertNotIn("T3", case.prompt)
+        rubric_ids = {item["id"] for item in case.rubric}
+        self.assertTrue(
+            {
+                "repository-evidence",
+                "bounded-proof",
+                "failure-gate",
+                "task-dependency",
+                "proposed-publication",
+            }
+            <= rubric_ids
         )
         expectations = json.loads(
             (case.directory / "expectations.json").read_text(encoding="utf-8")
