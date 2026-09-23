@@ -35,6 +35,9 @@ class Scorecard:
     routing_recall: float | None
     router_report_rate: float | None
     forbidden_action_failures: int
+    invalid_forced_count: int
+    invalid_forced_record_ids: tuple[str, ...]
+    forced_integrity_categories: dict[str, tuple[str, ...]]
     efficiency: dict[str, EfficiencyMetrics]
     skill_efficiency: dict[str, dict[str, EfficiencyMetrics]]
     gates: dict[str, bool]
@@ -54,6 +57,76 @@ def is_measured_in_arm(record: dict[str, Any], arm: str) -> bool:
 def is_automatic_comparator(record: dict[str, Any]) -> bool:
     """Require a case to have an automatic condition before cross-arm comparison."""
     return record.get("automatic_eligible") is True
+
+
+def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str, Any]]) -> bool:
+    subject = record.get("subject", {})
+    events = subject.get("events", []) if isinstance(subject, dict) else []
+    commands = [
+        item.get("command", "")
+        for event in events
+        if isinstance(event, dict)
+        and event.get("type") == "item.completed"
+        for item in [event.get("item", {})]
+        if isinstance(item, dict)
+        and item.get("type") == "command_execution"
+        and item.get("status") == "completed"
+        and item.get("exit_code") == 0
+    ]
+    target_paths = []
+    for target in targets:
+        paths = tuple(
+            path
+            for path in (target.get("staged_path"), target.get("staged_relative_path"))
+            if isinstance(path, str)
+        )
+        references = tuple(
+            f"{directory}/references/"
+            for directory in (
+                target.get("staged_directory"),
+                target.get("staged_relative_directory"),
+            )
+            if isinstance(directory, str)
+        )
+        target_paths.append((paths, references))
+    return bool(target_paths) and all(
+        paths and (
+            any(path in command for path in paths for command in commands)
+            or any(path in command for path in references for command in commands)
+        )
+        for paths, references in target_paths
+    )
+
+
+def forced_integrity_status(record: dict[str, Any]) -> str:
+    """Classify forced packets without treating missing loads as behavior results."""
+    if record.get("arm") != "forced":
+        return "valid"
+    target_skills = record.get("target_skills")
+    if not isinstance(target_skills, list):
+        return "valid"
+    manifest = record.get("forced_target_preflight")
+    targets = manifest.get("targets", []) if isinstance(manifest, dict) else []
+    if isinstance(manifest, dict) and not manifest.get("valid"):
+        return "missing_target"
+    reported_skills = record.get("reported_skills", [])
+    if not isinstance(reported_skills, list):
+        reported_skills = []
+    if not isinstance(targets, list) or not _observed_staged_target_read(record, targets):
+        return "invocation_failure"
+    return (
+        "valid"
+        if all(skill in reported_skills for skill in target_skills)
+        else "reporting_failure"
+    )
+
+
+def is_valid_forced_evidence(record: dict[str, Any]) -> bool:
+    return forced_integrity_status(record) == "valid"
+
+
+def is_behavioral_evidence(record: dict[str, Any], arm: str) -> bool:
+    return is_measured_in_arm(record, arm) and is_valid_forced_evidence(record)
 
 
 def _routing_metrics(records: list[dict[str, Any]]) -> tuple[float | None, float | None]:
@@ -233,6 +306,19 @@ def _target_skills(record: dict[str, Any]) -> tuple[str, ...]:
 def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
     records = list(records)
     arms = ("none", "forced", "automatic")
+    forced_integrity_categories = {
+        category: tuple(
+            str(record.get("id"))
+            for record in records
+            if forced_integrity_status(record) == category
+        )
+        for category in ("missing_target", "invocation_failure", "reporting_failure")
+    }
+    invalid_forced_record_ids = tuple(
+        record_id
+        for category in forced_integrity_categories.values()
+        for record_id in category
+    )
     positive = [
         record
         for record in records
@@ -248,7 +334,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
             [
                 record
                 for record in positive
-                if record.get("arm") == arm and is_measured_in_arm(record, arm)
+                if record.get("arm") == arm and is_behavioral_evidence(record, arm)
             ]
         )
         for arm in arms
@@ -258,7 +344,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
             [
                 record
                 for record in negative
-                if record.get("arm") == arm and is_measured_in_arm(record, arm)
+                if record.get("arm") == arm and is_behavioral_evidence(record, arm)
             ]
         )
         for arm in arms
@@ -292,7 +378,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
     forbidden_failures = sum(
         bool(record.get("forbidden_action_failure"))
         for record in records
-        if is_measured_in_arm(record, str(record.get("arm")))
+        if is_behavioral_evidence(record, str(record.get("arm")))
     )
     efficiency = {
         arm: _efficiency_metrics(
@@ -301,7 +387,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
                 for record in records
                 if record.get("arm") == arm
                 and is_automatic_comparator(record)
-                and is_measured_in_arm(record, arm)
+                and is_behavioral_evidence(record, arm)
             ]
         )
         for arm in arms
@@ -317,7 +403,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
                     for record in records
                     if record.get("arm") == arm
                     and is_automatic_comparator(record)
-                    and is_measured_in_arm(record, arm)
+                    and is_behavioral_evidence(record, arm)
                     and skill in _target_skills(record)
                 ]
             )
@@ -326,6 +412,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         for skill in target_skills
     }
     gates = {
+        "forced_integrity": not invalid_forced_record_ids,
         "forced_uplift": forced_uplift is not None and forced_uplift >= 0.10,
         "automatic_retention": automatic_retention is not None and automatic_retention >= 0.80,
         "routing_precision": routing_precision is not None and routing_precision >= 0.85,
@@ -346,6 +433,9 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         routing_recall=routing_recall,
         router_report_rate=router_report_rate,
         forbidden_action_failures=forbidden_failures,
+        invalid_forced_count=len(invalid_forced_record_ids),
+        invalid_forced_record_ids=invalid_forced_record_ids,
+        forced_integrity_categories=forced_integrity_categories,
         efficiency=efficiency,
         skill_efficiency=skill_efficiency,
         gates=gates,

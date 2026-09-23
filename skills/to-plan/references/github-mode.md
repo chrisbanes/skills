@@ -1,7 +1,8 @@
 # GitHub Mode
 
-Read this reference after selecting GitHub mode. The common workflow and finish
-gates in `SKILL.md` still apply.
+Read this reference after selecting GitHub mode and the
+[shared workflow](workflow.md). That workflow owns baseline, discovery, draft,
+handoff, repair, and finish contracts.
 
 ## Build the source packet
 

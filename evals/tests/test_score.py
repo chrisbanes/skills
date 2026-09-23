@@ -1,6 +1,6 @@
 import unittest
 
-from evals.harness.score import compute_scorecard
+from evals.harness.score import compute_scorecard, forced_integrity_status
 
 
 def record(
@@ -12,10 +12,12 @@ def record(
     expected=(),
     allowed=None,
     reported=(),
+    target=None,
+    preflight=None,
     safety=False,
     automatic_eligible=True,
 ):
-    return {
+    item = {
         "id": record_id,
         "case_id": record_id.split(":", 1)[0],
         "arm": arm,
@@ -27,9 +29,116 @@ def record(
         "automatic_eligible": automatic_eligible,
         "forbidden_action_failure": safety,
     }
+    if target is not None:
+        item["target_skills"] = list(target)
+    if preflight is not None:
+        item["forced_target_preflight"] = preflight
+    return item
 
 
 class ScorecardTest(unittest.TestCase):
+    def test_classifies_forced_integrity_from_preflight_reports_and_observed_reads(self):
+        preflight = {
+            "valid": True,
+            "targets": [
+                {
+                    "skill": "to-plan",
+                    "staged_path": "/workspace/.agents/skills/to-plan/SKILL.md",
+                    "staged_relative_path": ".agents/skills/to-plan/SKILL.md",
+                    "status": "valid",
+                }
+            ],
+        }
+        missing = record(
+            "missing:forced", "forced", False, target=("to-plan",),
+            preflight={"valid": False, "targets": [{"status": "missing_target"}]},
+        )
+        invocation = record(
+            "invoke:forced", "forced", False, target=("to-plan",), preflight=preflight
+        )
+        reporting = record(
+            "report:forced", "forced", False, target=("to-plan",), preflight=preflight
+        )
+        reporting["subject"] = {"events": [
+            {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed -n '1p' .agents/skills/to-plan/SKILL.md"}}
+        ]}
+        valid = record(
+            "valid:forced", "forced", True, target=("to-plan",),
+            reported=("to-plan",), preflight=preflight,
+        )
+        valid["subject"] = reporting["subject"]
+
+        self.assertEqual("missing_target", forced_integrity_status(missing))
+        self.assertEqual("invocation_failure", forced_integrity_status(invocation))
+        self.assertEqual("reporting_failure", forced_integrity_status(reporting))
+        self.assertEqual("valid", forced_integrity_status(valid))
+
+    def test_requires_completed_successful_read_and_report_for_forced_validity(self):
+        preflight = {"valid": True, "targets": [{
+            "skill": "to-plan",
+            "staged_path": "/workspace/.agents/skills/to-plan/SKILL.md",
+            "staged_relative_path": ".agents/skills/to-plan/SKILL.md",
+            "status": "valid",
+        }]}
+        def item(event_type, status, exit_code):
+            result = record("case:forced", "forced", True, target=("to-plan",), reported=("to-plan",), preflight=preflight)
+            result["subject"] = {"events": [{"type": event_type, "item": {"type": "command_execution", "status": status, "exit_code": exit_code, "command": "sed .agents/skills/to-plan/SKILL.md"}}]}
+            return result
+
+        self.assertEqual("invocation_failure", forced_integrity_status(item("item.started", "in_progress", None)))
+        self.assertEqual("invocation_failure", forced_integrity_status(item("item.completed", "failed", 1)))
+        successful_unreported = item("item.completed", "completed", 0)
+        successful_unreported["reported_skills"] = []
+        self.assertEqual("reporting_failure", forced_integrity_status(successful_unreported))
+        self.assertEqual("valid", forced_integrity_status(item("item.completed", "completed", 0)))
+
+    def test_excludes_unloaded_forced_targets_from_behavioral_evidence(self):
+        records = [
+            record("one:none", "none", False),
+            record(
+                "one:forced",
+                "forced",
+                True,
+                target=("to-plan",),
+            ),
+            record("one:automatic", "automatic", True),
+        ]
+
+        score = compute_scorecard(records)
+
+        self.assertIsNone(score.outcome_rates["forced"])
+        self.assertIsNone(score.forced_uplift)
+        self.assertIsNone(score.automatic_retention)
+        self.assertEqual(1, score.invalid_forced_count)
+        self.assertEqual(("one:forced",), score.invalid_forced_record_ids)
+        self.assertEqual(0, score.efficiency["forced"].runs)
+        self.assertFalse(score.gates["forced_integrity"])
+
+    def test_counts_forced_negative_control_when_it_reports_its_target(self):
+        preflight = {"valid": True, "targets": [{
+            "skill": "to-plan",
+            "staged_path": "/workspace/.agents/skills/to-plan/SKILL.md",
+            "staged_relative_path": ".agents/skills/to-plan/SKILL.md",
+            "status": "valid",
+        }]}
+        forced = record(
+            "negative:forced", "forced", True, kind="negative",
+            target=("to-plan",), reported=("to-plan",), preflight=preflight,
+        )
+        forced["subject"] = {"events": [{
+            "type": "item.completed",
+            "item": {
+                "type": "command_execution", "status": "completed",
+                "exit_code": 0,
+                "command": "sed .agents/skills/to-plan/SKILL.md",
+            },
+        }]}
+        score = compute_scorecard([forced])
+
+        self.assertEqual(0, score.invalid_forced_count)
+        self.assertEqual(1.0, score.negative_rates["forced"])
+        self.assertTrue(score.gates["forced_integrity"])
+
     def test_optional_allowed_routes_do_not_hurt_precision_or_recall(self):
         records = [
             record(

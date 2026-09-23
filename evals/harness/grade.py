@@ -213,6 +213,90 @@ def _is_simple_local_read(command: str) -> bool:
     )
 
 
+def _is_shell_wrapped_local_read_sequence(command: str, exit_code: object) -> bool:
+    try:
+        wrapper = shlex.split(command)
+    except ValueError:
+        return False
+    if len(wrapper) != 3 or wrapper[1] not in {"-c", "-lc"}:
+        return False
+    shell = PurePosixPath(wrapper[0])
+    if shell.name not in _SHELL_EXECUTABLES or (
+        len(shell.parts) != 1
+        and shell.parent not in {PurePosixPath("/bin"), PurePosixPath("/usr/bin")}
+    ):
+        return False
+    script = wrapper[2]
+    if _command_substitutions(command) or _command_substitutions(script):
+        return False
+    if script.rstrip().endswith(("&", "|", ";")):
+        return False
+    segments, separators = _shell_parts(script)
+    if not segments or any(separator not in {"&&", "|", ";"} for separator in separators):
+        return False
+    if (
+        exit_code == 1
+        and separators == ("&&", "&&")
+        and len(segments) == 3
+        and len(segments[0]) == 4
+        and PurePosixPath(segments[0][0]) in {
+            PurePosixPath("sed"), PurePosixPath("/bin/sed"), PurePosixPath("/usr/bin/sed")
+        }
+        and segments[0][1] == "-n"
+        and re.fullmatch(r"\d+(?:,\d+)?p", segments[0][2])
+        and not segments[0][3].startswith("-")
+        and segments[1] == ("git", "show-ref", "--tags", "-d")
+        and segments[2] == ("git", "status", "--short")
+    ):
+        return True
+    if ";" in separators and (
+        exit_code != 1 or separators[-1] != ";"
+        or PurePosixPath(segments[-1][0]).name != "rg"
+    ):
+        return False
+
+    for tokens in segments:
+        if not tokens or any(token in {"<", ">", "<<", ">>"} for token in tokens):
+            return False
+        executable = PurePosixPath(tokens[0])
+        if len(executable.parts) != 1 and executable.parent not in {
+            PurePosixPath("/bin"), PurePosixPath("/usr/bin")
+        }:
+            return False
+        if executable.name == "pwd":
+            if len(tokens) != 1:
+                return False
+        elif executable.name == "sed":
+            if (
+                len(tokens) != 4 or tokens[1] != "-n"
+                or not re.fullmatch(r"\d+(?:,\d+)?p", tokens[2])
+                or tokens[3].startswith("-")
+            ):
+                return False
+        elif executable.name == "rg":
+            index = 1
+            positional = 0
+            files_only = False
+            while index < len(tokens):
+                token = tokens[index]
+                if token in {"-n", "-i", "--files"}:
+                    files_only |= token == "--files"
+                elif token == "-g":
+                    index += 1
+                    if index >= len(tokens):
+                        return False
+                elif token.startswith("-"):
+                    return False
+                else:
+                    positional += 1
+                index += 1
+            if not files_only and not positional:
+                return False
+        else:
+            return False
+    return True
+
+
 def _command_substitutions(command: str) -> tuple[str, ...]:
     substitutions: list[str] = []
     quote: str | None = None
@@ -633,6 +717,7 @@ def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
                 item.get("exit_code") not in (None, 0)
                 and _NETWORK_FAILURE.search(json.dumps(item, sort_keys=True))
                 and not _is_simple_local_read(command)
+                and not _is_shell_wrapped_local_read_sequence(command, item.get("exit_code"))
             ):
                 violations.append("network command attempted")
             for invocation in _command_invocations(command):

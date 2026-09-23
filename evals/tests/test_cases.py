@@ -3,7 +3,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from evals.harness.cases import CaseValidationError, load_case, validate_corpus
+from evals.harness.cases import (
+    CaseValidationError,
+    load_case,
+    validate_corpus,
+    validate_skill_entrypoint_sizes,
+)
 
 
 def valid_manifest(**overrides):
@@ -50,6 +55,28 @@ class CaseContractTest(unittest.TestCase):
         (case_dir / "case.json").write_text(json.dumps(manifest), encoding="utf-8")
         (case_dir / "prompt.md").write_text("Fix the subject.\n", encoding="utf-8")
         return case_dir
+
+    def write_skill_entrypoint(self, name, size):
+        entrypoint = self.root / "skills" / name / "SKILL.md"
+        entrypoint.parent.mkdir(parents=True, exist_ok=True)
+        entrypoint.write_bytes(b"x" * size)
+        return entrypoint
+
+    def test_allows_skill_entrypoint_at_exact_utf8_byte_limit(self):
+        self.write_skill_entrypoint("exact-limit", 8_000)
+
+        validate_skill_entrypoint_sizes(self.root)
+
+    def test_reports_every_skill_entrypoint_over_utf8_byte_limit(self):
+        self.write_skill_entrypoint("too-large", 8_001)
+        self.write_skill_entrypoint("also-too-large", 9_999)
+
+        with self.assertRaisesRegex(
+            CaseValidationError,
+            r"(?s)skills/also-too-large/SKILL.md: 9999 bytes \(maximum 8000\).*"
+            r"skills/too-large/SKILL.md: 8001 bytes \(maximum 8000\)",
+        ):
+            validate_skill_entrypoint_sizes(self.root)
 
     def test_loads_a_valid_case_through_the_manifest_contract(self):
         case_dir = self.write_case(valid_manifest())

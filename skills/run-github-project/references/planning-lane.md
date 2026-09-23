@@ -59,7 +59,7 @@ and minimized state in the authority lease.
    controller-recorded path outside the checkout, detached at the configured
    base. Refresh it only between tickets; never discard ignored build state.
 3. Start a fresh ephemeral planning agent using the default-owner capability
-   from [Route Agents By Task](../SKILL.md#route-agents-by-task) and invoke:
+   from [Route Agents By Task](ticket-lifecycle.md#route-agents-by-task) and invoke:
 
    ```text
    /to-plan --auto <canonical issue URL>

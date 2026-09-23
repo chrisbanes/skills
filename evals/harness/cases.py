@@ -20,6 +20,7 @@ from evals.harness.suites import (
 EVALUATED_TOPICS = COMPOSE_TOPICS
 TASK_MODES = {"review", "edit"}
 CASE_KINDS = {"direct", "novel", "negative", "routing"}
+MAX_SKILL_ENTRYPOINT_BYTES = 8_000
 _ID_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
@@ -65,6 +66,24 @@ class CorpusReport:
     @property
     def case_count(self) -> int:
         return len(self.cases)
+
+
+def validate_skill_entrypoint_sizes(repo_root: Path) -> None:
+    """Reject public skill prompts that Codex would truncate."""
+    repo_root = repo_root.resolve()
+    offenders = [
+        (path.relative_to(repo_root), len(path.read_bytes()))
+        for path in sorted((repo_root / "skills").glob("*/SKILL.md"))
+        if len(path.read_bytes()) > MAX_SKILL_ENTRYPOINT_BYTES
+    ]
+    if offenders:
+        details = "\n".join(
+            f"- {path}: {size} bytes (maximum {MAX_SKILL_ENTRYPOINT_BYTES})"
+            for path, size in offenders
+        )
+        raise CaseValidationError(
+            f"skill entrypoints exceed {MAX_SKILL_ENTRYPOINT_BYTES} UTF-8 bytes:\n{details}"
+        )
 
 
 def _require_string(data: dict[str, Any], field: str) -> str:
@@ -341,6 +360,7 @@ def validate_corpus(
     suite: str | None = None,
 ) -> CorpusReport:
     repo_root = repo_root.resolve()
+    validate_skill_entrypoint_sizes(repo_root)
     if not (repo_root / "skills" / ROUTER_SKILL / "SKILL.md").is_file():
         raise CaseValidationError(f"missing router path: skills/{ROUTER_SKILL}/SKILL.md")
     manifest_paths = sorted((repo_root / "evals" / "cases").glob("*/case.json"))

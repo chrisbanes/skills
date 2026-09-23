@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import difflib
+import hashlib
 import shutil
 import subprocess
 import time
@@ -47,6 +48,7 @@ class SubjectResult:
     stdout: str
     stderr: str
     elapsed_seconds: float
+    forced_target_preflight: dict[str, Any] | None = None
 
 
 def completed_tool_call_count(
@@ -64,6 +66,49 @@ def completed_turn_count(
     events: list[dict[str, Any]] | tuple[dict[str, Any], ...],
 ) -> int:
     return sum(event.get("type") == "turn.completed" for event in events)
+
+
+def captured_skill_file_evidence(
+    workspace: Path, events: tuple[dict[str, Any], ...]
+) -> list[dict[str, Any]]:
+    """Observe byte-identical staged skill text in completed command output."""
+    root = workspace / ".agents" / "skills"
+    outputs = []
+    for event in events:
+        item = event.get("item")
+        if event.get("type") != "item.completed" or not isinstance(item, dict):
+            continue
+        if item.get("type") != "command_execution":
+            continue
+        output = item.get("aggregated_output")
+        if isinstance(output, str):
+            outputs.append((item.get("id"), output.encode("utf-8")))
+
+    evidence = []
+    for path in sorted(root.rglob("*.md")) if root.is_dir() else ():
+        relative = path.relative_to(root)
+        if path.name != "SKILL.md" and "references" not in relative.parts:
+            continue
+        try:
+            staged = path.read_bytes()
+        except OSError:
+            staged = b""
+        matched = [
+            {"id": event_id, "output_sha256": hashlib.sha256(output).hexdigest()}
+            for event_id, output in outputs
+            if staged and staged in output
+        ]
+        evidence.append({
+            "path": path.relative_to(workspace).as_posix(),
+            "staged_bytes": len(staged),
+            "staged_sha256": hashlib.sha256(staged).hexdigest() if staged else None,
+            "status": (
+                "complete" if matched else
+                "incomplete_or_absent" if outputs and staged else "unavailable"
+            ),
+            "matched_events": matched,
+        })
+    return evidence
 
 
 def canonical_skill_name(value: object) -> str | None:
@@ -164,6 +209,106 @@ def _workspace_skill_path(workspace: Path, skill: str) -> Path:
     return (workspace / ".agents" / "skills" / skill / "SKILL.md").resolve()
 
 
+def _canonical_skill_name(skill_path: Path) -> str | None:
+    """Read an entrypoint's declared name without assuming its directory name."""
+    try:
+        frontmatter, marker, _ = skill_path.read_text(encoding="utf-8").partition(
+            "\n---\n"
+        )
+    except OSError:
+        return None
+    if not marker:
+        return None
+    for line in frontmatter.splitlines():
+        if line.startswith("name:"):
+            value = line.removeprefix("name:").strip().strip("'\"")
+            return value or None
+    return None
+
+
+def _configured_skill_entries(
+    case: EvalCase,
+    arm: str,
+    repo_root: Path,
+    workspace: Path,
+    skill_paths: tuple[Path, ...],
+) -> tuple[tuple[Path, bool], ...]:
+    enabled = {
+        _workspace_skill_path(workspace, skill)
+        for skill in _enabled_skills(case, arm, repo_root)
+    }
+    enabled.update(
+        _workspace_skill_path(workspace, skill) for skill in case.constant_skills
+    )
+    enabled_names = {
+        name for path in enabled if (name := _canonical_skill_name(path)) is not None
+    }
+    discovered = {
+        path.resolve()
+        for path in skill_paths
+        if _canonical_skill_name(path.resolve()) not in enabled_names
+    }
+    return tuple(
+        (path, path in enabled)
+        for path in sorted(discovered | enabled, key=str)
+    )
+
+
+def _sha256(path: Path) -> str | None:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def forced_target_preflight(
+    case: EvalCase,
+    repo_root: Path,
+    workspace: Path,
+    skill_paths: tuple[Path, ...],
+) -> dict[str, Any]:
+    """Record whether each forced target is staged, identical, and uniquely enabled."""
+    entries = _configured_skill_entries(case, "forced", repo_root, workspace, skill_paths)
+    targets = []
+    for skill in case.target_skills:
+        source = (repo_root / "skills" / skill / "SKILL.md").resolve()
+        staged = _workspace_skill_path(workspace, skill)
+        source_sha = _sha256(source)
+        staged_sha = _sha256(staged)
+        same_name_entries = [
+            {
+                "path": str(path),
+                "enabled": enabled,
+                "canonical_name": _canonical_skill_name(path),
+            }
+            for path, enabled in entries
+            if _canonical_skill_name(path) == skill
+        ]
+        enabled_count = sum(entry["enabled"] for entry in same_name_entries)
+        if source_sha is None or staged_sha is None:
+            status = "missing_target"
+        elif source_sha != staged_sha:
+            status = "byte_mismatch"
+        elif enabled_count != 1:
+            status = "not_uniquely_enabled"
+        else:
+            status = "valid"
+        targets.append(
+            {
+                "skill": skill,
+                "source_path": str(source),
+                "source_sha256": source_sha,
+                "staged_path": str(staged),
+                "staged_directory": str(staged.parent),
+                "staged_relative_path": f".agents/skills/{skill}/SKILL.md",
+                "staged_relative_directory": f".agents/skills/{skill}",
+                "staged_sha256": staged_sha,
+                "exists": staged_sha is not None,
+                "same_name_entries": same_name_entries,
+                "enabled_count": enabled_count,
+                "status": status,
+            }
+        )
+    return {"valid": all(target["status"] == "valid" for target in targets), "targets": targets}
+
+
 def _skill_config(
     case: EvalCase,
     arm: str,
@@ -173,18 +318,12 @@ def _skill_config(
 ) -> str:
     if arm not in ARMS:
         raise ValueError(f"unknown arm: {arm}")
-    enabled = {
-        _workspace_skill_path(workspace, skill)
-        for skill in _enabled_skills(case, arm, repo_root)
-    }
-    enabled.update(
-        _workspace_skill_path(workspace, skill) for skill in case.constant_skills
-    )
     entries = []
-    configured_paths = set(skill_paths) | enabled
-    for skill_path in sorted(configured_paths, key=str):
+    for skill_path, enabled in _configured_skill_entries(
+        case, arm, repo_root, workspace, skill_paths
+    ):
         path = json.dumps(str(skill_path.resolve()))
-        value = "true" if skill_path.resolve() in enabled else "false"
+        value = "true" if enabled else "false"
         entries.append(f"{{ path = {path}, enabled = {value} }}")
     return "skills.config=[" + ", ".join(entries) + "]"
 
@@ -206,7 +345,21 @@ def _subject_prompt(case: EvalCase, arm: str) -> str:
         prompt += " This case has no evaluator-owned fixture dependencies."
     if arm == "forced":
         invocations = ", ".join(f"${skill}" for skill in case.target_skills)
-        prompt += f"\n\nUse the following skill(s) explicitly: {invocations}"
+        paths = ", ".join(
+            f"`.agents/skills/{skill}/SKILL.md`" for skill in case.target_skills
+        )
+        targets = ", ".join(f"`{skill}`" for skill in case.target_skills)
+        dependencies = ", ".join(f"`{skill}`" for skill in case.constant_skills)
+        prompt += (
+            f"\n\nUse the following skill(s) explicitly: {invocations}. "
+            f"In a standalone command, print each of {paths} completely "
+            "before any repository inspection or other action. Do not combine "
+            "that read with other commands."
+            "\n\nIn the final `skills_used`, include each of these exact public "
+            f"targets whose entrypoint you read and followed: [{targets}]. "
+            "Omit only these exact evaluator-owned dependency names: "
+            f"[{dependencies}]. Exclusions are exact names, not prefixes."
+        )
     return prompt + "\n"
 
 
@@ -306,6 +459,7 @@ def prepare_workspace(
         output.writelines(
             f"{directory}/\n" for directory in _GRADLE_OUTPUT_DIRECTORIES
         )
+        output.write(".eval/forced-target-preflight.json\n")
     _run_git(destination, "add", ".")
     _run_git(
         destination,
@@ -410,6 +564,17 @@ def run_subject(
         workspace,
         enabled_skills=_enabled_skills(case, arm, repo_root),
     )
+    resolved_skill_paths = discover_skill_paths(repo_root) if skill_paths is None else skill_paths
+    forced_preflight = (
+        forced_target_preflight(case, repo_root, workspace, resolved_skill_paths)
+        if arm == "forced"
+        else None
+    )
+    if forced_preflight is not None:
+        (workspace / ".eval" / "forced-target-preflight.json").write_text(
+            json.dumps(forced_preflight, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     command = build_subject_command(
         case,
         arm,
@@ -417,8 +582,25 @@ def run_subject(
         workspace,
         config,
         codex_executable=codex_executable,
-        skill_paths=skill_paths,
+        skill_paths=resolved_skill_paths,
     )
+    if forced_preflight is not None and not forced_preflight["valid"]:
+        return SubjectResult(
+            case_id=case.id,
+            arm=arm,
+            command=tuple(command),
+            workspace=workspace,
+            returncode=0,
+            events=(),
+            final_output={},
+            usage={},
+            changed_paths=(),
+            diff="",
+            stdout="",
+            stderr="forced target preflight failed before model execution",
+            elapsed_seconds=0.0,
+            forced_target_preflight=forced_preflight,
+        )
     started = time.monotonic()
     try:
         completed = subprocess.run(
@@ -454,4 +636,5 @@ def run_subject(
         stdout=stdout,
         stderr=stderr,
         elapsed_seconds=elapsed,
+        forced_target_preflight=forced_preflight,
     )

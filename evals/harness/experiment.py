@@ -15,6 +15,7 @@ from evals.harness.codex import (
     RunConfig,
     SubjectResult,
     automatically_invokable_public_skills,
+    captured_skill_file_evidence,
     completed_turn_count,
     completed_tool_call_count,
     discover_skill_paths,
@@ -294,6 +295,28 @@ def _attempt_payload(result: SubjectResult | JudgeResult) -> dict[str, Any]:
     }
 
 
+def write_subject_stdout_artifacts(
+    output_dir: Path,
+    case_id: str,
+    arm: str,
+    repetition: int,
+    attempts: list[SubjectResult],
+) -> list[dict[str, Any]]:
+    artifacts = []
+    for number, attempt in enumerate(attempts, 1):
+        relative = Path("subject-stdout") / case_id / arm / str(repetition) / f"attempt-{number}.jsonl"
+        path = output_dir / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(attempt.stdout, encoding="utf-8")
+        encoded = attempt.stdout.encode("utf-8")
+        artifacts.append({
+            "path": relative.as_posix(),
+            "bytes": len(encoded),
+            "sha256": hashlib.sha256(encoded).hexdigest(),
+        })
+    return artifacts
+
+
 def _result_payload(
     case: EvalCase,
     arm: str,
@@ -303,6 +326,7 @@ def _result_payload(
     judge: JudgeResult,
     *,
     subject_attempts: list[SubjectResult],
+    subject_stdout_artifacts: list[dict[str, Any]],
     judge_attempts: list[JudgeResult],
     subject_retries: int,
     judge_retries: int,
@@ -347,6 +371,7 @@ def _result_payload(
         "task_mode": case.task_mode,
         "suite": suite_for_skills(case.target_skills).id,
         "target_skills": list(case.target_skills),
+        "forced_target_preflight": subject.forced_target_preflight,
         "expected_skills": list(expected_skills),
         "allowed_skills": list(allowed_skills),
         "automatic_eligible": automatic_eligible,
@@ -371,6 +396,8 @@ def _result_payload(
             "stderr": subject.stderr,
             "retries": subject_retries,
             "attempts": [_attempt_payload(attempt) for attempt in subject_attempts],
+            "stdout_artifacts": subject_stdout_artifacts,
+            "captured_skill_files": captured_skill_file_evidence(subject.workspace, subject.events),
         },
         "judge": {
             "returncode": judge.returncode,
@@ -456,6 +483,9 @@ def execute_experiment(
                 lambda result: result.returncode != 0
                 or not subject_output_valid(result.final_output),
             )
+            subject_stdout_artifacts = write_subject_stdout_artifacts(
+                output_dir, case.id, arm, repetition, subject_attempts
+            )
             grade = grade_subject(case, subject)
             packet = build_judge_packet(case, subject, grade)
             packet_path = _judge_packet_path(
@@ -495,6 +525,7 @@ def execute_experiment(
                 grade,
                 judge,
                 subject_attempts=subject_attempts,
+                subject_stdout_artifacts=subject_stdout_artifacts,
                 judge_attempts=judge_attempts,
                 subject_retries=subject_retries,
                 judge_retries=judge_retries,
@@ -564,14 +595,14 @@ def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
 
 
 def _subject_result_from_record(
-    record: dict[str, Any], output_dir: Path
+    record: dict[str, Any], workspace_root: Path
 ) -> SubjectResult:
     subject = record.get("subject", {})
     command = subject.get("command", [])
     if not isinstance(command, list) or "-C" not in command:
         raise ValueError(f"record has no subject workspace: {record.get('id')}")
     workspace = Path(command[command.index("-C") + 1]).resolve()
-    workspaces_root = (output_dir / "workspaces").resolve()
+    workspaces_root = (workspace_root / "workspaces").resolve()
     if not workspace.is_relative_to(workspaces_root):
         raise ValueError(f"subject workspace escapes run directory: {workspace}")
     return SubjectResult(
@@ -588,6 +619,7 @@ def _subject_result_from_record(
         stdout="",
         stderr=str(subject.get("stderr", "")),
         elapsed_seconds=float(subject.get("elapsed_seconds", 0.0)),
+        forced_target_preflight=subject.get("forced_target_preflight"),
     )
 
 
@@ -598,6 +630,7 @@ def regrade_records(
     records: list[dict[str, Any]],
     *,
     audit_seed: int,
+    source_output_dir: Path | None = None,
 ) -> dict[str, Path]:
     by_id = {case.id: case for case in cases}
     regraded: list[dict[str, Any]] = []
@@ -607,7 +640,10 @@ def regrade_records(
         if case_id not in by_id:
             raise ValueError(f"unknown case in raw record: {case_id}")
         case = by_id[case_id]
-        grade = grade_subject(case, _subject_result_from_record(record, output_dir))
+        grade = grade_subject(
+            case,
+            _subject_result_from_record(record, source_output_dir or output_dir),
+        )
         _apply_routing_expectations(record, case, repo_root)
         record["objective_pass"] = grade.objective_pass
         record["forbidden_action_failure"] = grade.forbidden_action_failure

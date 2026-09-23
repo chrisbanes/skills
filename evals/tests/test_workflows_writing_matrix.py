@@ -52,9 +52,13 @@ def plan_artifact(dependency: str = "none") -> str:
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_integration_failure_guidance_restores_only_verified_controller_branch(self):
-        guidance = (REPO_ROOT / "skills/implement-with-subagents/SKILL.md").read_text(
+        entrypoint = (REPO_ROOT / "skills/implement-with-subagents/SKILL.md").read_text(
             encoding="utf-8"
         )
+        self.assertIn("references/implementation-mode.md", entrypoint)
+        guidance = (
+            REPO_ROOT / "skills/implement-with-subagents/references/implementation-mode.md"
+        ).read_text(encoding="utf-8")
         integration_step = " ".join(
             guidance.split("9. Integrate", maxsplit=1)[1]
             .split("10. After every repair", maxsplit=1)[0]

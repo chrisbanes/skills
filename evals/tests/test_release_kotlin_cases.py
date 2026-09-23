@@ -35,6 +35,32 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
     def test_preserved_notes_and_evidenced_fix_pass(self):
         self.assertEqual(0, self.validate(self.completed_changelog()).returncode)
 
+    def test_cancelling_wording_in_stable_summary_passes(self):
+        updated = self.completed_changelog().replace(
+            'Fix request cancellation so underlying work stops.',
+            'Cancelling a public request now stops the underlying work.',
+        )
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_missing_cancellation_concept_in_stable_summary_fails(self):
+        updated = self.completed_changelog().replace(
+            '- Fix request cancellation so underlying work stops.\n', '',
+        )
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern', result.stderr)
+
+    def test_cancellation_only_in_prerelease_details_fails(self):
+        updated = self.completed_changelog().replace(
+            '- Fix request cancellation so underlying work stops.\n', '',
+        ).replace(
+            '## 2.0.0-alpha01\n',
+            '## 2.0.0-alpha01\n\n- Fix request cancellation so underlying work stops.\n',
+        )
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern', result.stderr)
+
     def test_rewriting_previous_release_fails(self):
         updated = '## Unreleased\n- Keep this curated entry exactly.\n- Fix cancellation.\n## 1.4.0\n- Rewritten history.\n'
         self.assertNotEqual(0, self.validate(updated).returncode)

@@ -1,6 +1,6 @@
 ---
 name: compose-ui-testing-patterns
-description: Use when writing or reviewing Jetpack Compose UI tests, screenshot tests, previews, semantics assertions, fake image loading, keyboard input, focus assertions, interaction state (hover/pressed/focused), or tests for plain state-driven UI composables.
+description: Use when writing or reviewing Jetpack Compose UI tests, screenshot tests or baseline-recording evidence, previews, semantics assertions, fake image loading, keyboard input, focus assertions, interaction state (hover/pressed/focused), or tests for plain state-driven UI composables.
 ---
 
 # Compose: UI testing patterns
@@ -96,42 +96,10 @@ Do not use `Thread.sleep` to wait for Compose. Drive the UI to a known state, th
 
 ## Interaction state with MutableInteractionSource
 
-When a composable's appearance or behavior depends on interaction state (hover, focus, press, drag), inject a `MutableInteractionSource` and emit the desired state directly. Do not try to simulate pointer/mouse events to trigger interaction states — that approach is fragile, environment-dependent, and produces flaky tests.
-
-```kotlin
-val interactionSource = MutableInteractionSource()
-
-composeTestRule.setContent {
-    OutlinedButton(
-        onClick = {},
-        interactionSource = interactionSource,
-    )
-}
-
-// Assert default (un-hovered) state
-composeTestRule.onNodeWithText("OutlinedButton").assertIsDisplayed()
-
-// Emit hover — interactionSource.emit is a suspend function,
-// so call it from a test coroutine scope.
-TestScope().launch {
-    interactionSource.emit(HoverInteraction.Enter())
-}
-
-composeTestRule.waitForIdle()
-
-// Assert the visual/semantic change that hover produces
-// (e.g., border color, elevation, or capture for screenshot test)
-composeTestRule.onNodeWithText("OutlinedButton").assertIsDisplayed()
-```
-
-The same pattern works for `PressInteraction.Press` / `Release` / `Cancel`, `FocusInteraction.Focus` / `Unfocus`, and `DragInteraction.Start` / `Stop` / `Cancel`. Emit the entry interaction, `waitForIdle`, then assert the result.
-
-Key points:
-
-- **Always inject `MutableInteractionSource`** rather than relying on the default internal source. This gives you full control over state transitions.
-- **Emit interactions from a coroutine scope** (e.g. `TestScope().launch { }`) since `emit` is a suspend function. Do not use `LaunchedEffect` — that is a production Compose effect, not a test tool.
-- **Assert the *result* of the interaction** (visual change, semantic change, enabled state), not the interaction itself. The interaction source is a test *driver*, not the assertion target.
-- **Use this for screenshot tests too** — emit the interaction state, then capture the screenshot for a deterministic hover/press/focus visual.
+When interaction state is the concern, read
+[the interaction-state procedure](references/interaction-state.md) completely
+before writing or reviewing the test. It requires direct, injected interaction
+state rather than fragile pointer simulation.
 
 ## Keyboard and focus
 

@@ -8,16 +8,21 @@ from pathlib import Path
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase, Validator
 from evals.harness.codex import (
     RunConfig,
+    SubjectResult,
     _changed_paths,
     _workspace_diff,
     build_subject_command,
     completed_turn_count,
     completed_tool_call_count,
+    captured_skill_file_evidence,
     discover_skill_paths,
+    forced_target_preflight,
+    parse_codex_jsonl,
     prepare_workspace,
     run_subject,
 )
 from evals.harness.suites import PUBLIC_SKILLS
+from evals.harness.experiment import write_subject_stdout_artifacts
 
 
 EXPLICIT_ONLY_SKILLS = (
@@ -161,6 +166,81 @@ class CodexRunnerTest(unittest.TestCase):
 
         self.assertEqual(2, completed_turn_count(events))
 
+    def test_captured_skill_file_evidence_requires_complete_completed_output(self):
+        workspace = self.root / "workspace"
+        entrypoint = workspace / ".agents/skills/example/SKILL.md"
+        reference = workspace / ".agents/skills/example/references/form.md"
+        reference.parent.mkdir(parents=True)
+        entrypoint.write_text("entrypoint full text\n", encoding="utf-8")
+        reference.write_text("reference full text\n", encoding="utf-8")
+        events = (
+            {"type": "item.started", "item": {"id": "started", "type": "command_execution", "aggregated_output": "entrypoint full text\n"}},
+            {"type": "item.completed", "item": {"id": "path-only", "type": "command_execution", "command": "cat .agents/skills/example/SKILL.md", "aggregated_output": "warnings only"}},
+            {"type": "item.completed", "item": {"id": "heading", "type": "command_execution", "aggregated_output": "# reference full text"}},
+            {"type": "item.completed", "item": {"id": "partial", "type": "command_execution", "aggregated_output": "reference full"}},
+            {"type": "item.completed", "item": {"id": "complete", "type": "command_execution", "aggregated_output": "prefix\nreference full text\nsuffix"}},
+        )
+
+        evidence = {item["path"]: item for item in captured_skill_file_evidence(workspace, events)}
+
+        self.assertEqual("incomplete_or_absent", evidence[".agents/skills/example/SKILL.md"]["status"])
+        form = evidence[".agents/skills/example/references/form.md"]
+        self.assertEqual("complete", form["status"])
+        self.assertEqual(["complete"], [item["id"] for item in form["matched_events"]])
+        self.assertEqual(64, len(form["staged_sha256"]))
+        self.assertEqual(64, len(form["matched_events"][0]["output_sha256"]))
+
+    def test_captured_skill_file_evidence_marks_missing_event_output_unavailable(self):
+        workspace = self.root / "workspace"
+        entrypoint = workspace / ".agents/skills/example/SKILL.md"
+        entrypoint.parent.mkdir(parents=True)
+        entrypoint.write_text("entrypoint full text\n", encoding="utf-8")
+
+        evidence = captured_skill_file_evidence(
+            workspace, ({"type": "item.completed", "item": {"id": "no-output", "type": "command_execution"}},)
+        )
+
+        self.assertEqual("unavailable", evidence[0]["status"])
+
+    def test_captured_skill_file_evidence_rejects_partial_read(self):
+        workspace = self.root / "workspace"
+        entrypoint = workspace / ".agents/skills/example/SKILL.md"
+        entrypoint.parent.mkdir(parents=True)
+        entrypoint.write_text("entrypoint full text\n", encoding="utf-8")
+
+        evidence = captured_skill_file_evidence(workspace, ({
+            "type": "item.completed",
+            "item": {"id": "partial", "type": "command_execution", "aggregated_output": "entrypoint full"},
+        },))
+
+        self.assertEqual("incomplete_or_absent", evidence[0]["status"])
+        self.assertEqual([], evidence[0]["matched_events"])
+
+    def test_subject_stdout_artifact_round_trips_original_jsonl(self):
+        workspace = self.root / "workspace"
+        raw_stdout = '{"type":"item.completed","item":{"aggregated_output":"text"}}\n'
+        attempt = SubjectResult(
+            case_id="sample", arm="automatic", command=("codex",),
+            workspace=workspace, returncode=0, events=(), final_output={},
+            usage={}, changed_paths=(), diff="", stdout=raw_stdout,
+            stderr="", elapsed_seconds=0.1,
+        )
+
+        artifacts = write_subject_stdout_artifacts(
+            self.root / "run", "sample", "automatic", 1, [attempt]
+        )
+
+        self.assertEqual(1, len(artifacts))
+        self.assertEqual(
+            raw_stdout,
+            (self.root / "run" / artifacts[0]["path"]).read_text(encoding="utf-8"),
+        )
+        events, _, _ = parse_codex_jsonl(
+            (self.root / "run" / artifacts[0]["path"]).read_text(encoding="utf-8")
+        )
+        self.assertEqual("text", events[0]["item"]["aggregated_output"])
+        self.assertEqual(64, len(artifacts[0]["sha256"]))
+
     def test_discovers_repo_and_external_skill_files_without_duplicates(self):
         external = self.root / "external" / "one" / "SKILL.md"
         external.parent.mkdir(parents=True)
@@ -207,6 +287,117 @@ class CodexRunnerTest(unittest.TestCase):
 
         self.assertEqual(1, " ".join(command).count("enabled = true"))
         self.assertIn("$compose-state-and-effects", command[-1])
+
+    def test_forced_prompt_uses_exact_target_and_dependency_report_sets(self):
+        case = replace(
+            sample_case(self.root),
+            target_skills=("implement-with-subagents",),
+            constant_skills=("implement",),
+        )
+        workspace = self.root / "workspace"
+        forced = build_subject_command(
+            case, "forced", self.root, workspace, self.config, skill_paths=()
+        )
+        none = build_subject_command(
+            case, "none", self.root, workspace, self.config, skill_paths=()
+        )
+        automatic = build_subject_command(
+            case, "automatic", self.root, workspace, self.config, skill_paths=()
+        )
+
+        self.assertIn("[`implement-with-subagents`]", forced[-1])
+        self.assertIn("[`implement`]", forced[-1])
+        self.assertIn("standalone command", forced[-1])
+        self.assertIn("before any repository inspection", forced[-1])
+        self.assertIn("Exclusions are exact names, not prefixes", forced[-1])
+        self.assertTrue(forced[-1].endswith("Exclusions are exact names, not prefixes.\n"))
+        self.assertNotIn("Exclusions are exact names", none[-1])
+        self.assertNotIn("Exclusions are exact names", automatic[-1])
+        self.assertNotIn("standalone command", none[-1])
+        self.assertNotIn("standalone command", automatic[-1])
+
+    def test_forced_catalog_prefers_one_enabled_staged_canonical_name(self):
+        case = sample_case(self.root)
+        workspace = prepare_workspace(
+            case,
+            self.root,
+            self.root / "runs" / "catalog",
+            enabled_skills=case.target_skills,
+        )
+        duplicate = self.root / "global-skills" / "duplicate" / "SKILL.md"
+        duplicate.parent.mkdir(parents=True)
+        duplicate.write_text(
+            "---\nname: compose-state-and-effects\n---\n", encoding="utf-8"
+        )
+
+        command = build_subject_command(
+            case,
+            "forced",
+            self.root,
+            workspace,
+            self.config,
+            skill_paths=(duplicate,),
+        )
+        rendered = " ".join(command)
+
+        self.assertNotIn(str(duplicate.resolve()), rendered)
+        self.assertEqual(1, rendered.count("path = "))
+        self.assertEqual(1, rendered.count("enabled = true"))
+        self.assertIn(
+            ".agents/skills/compose-state-and-effects/SKILL.md", command[-1]
+        )
+        self.assertIn(
+            "SKILL.md` completely before any repository inspection", command[-1]
+        )
+
+    def test_forced_preflight_rejects_missing_mismatched_and_duplicate_targets(self):
+        case = sample_case(self.root)
+        workspace = prepare_workspace(
+            case,
+            self.root,
+            self.root / "runs" / "preflight",
+            enabled_skills=case.target_skills,
+        )
+        staged = workspace / ".agents/skills/compose-state-and-effects/SKILL.md"
+
+        valid = forced_target_preflight(case, self.root, workspace, ())
+        self.assertTrue(valid["valid"])
+        self.assertEqual(1, valid["targets"][0]["enabled_count"])
+
+        staged.unlink()
+        missing = forced_target_preflight(case, self.root, workspace, ())
+        self.assertFalse(missing["valid"])
+        self.assertEqual("missing_target", missing["targets"][0]["status"])
+
+        staged.write_text("changed\n", encoding="utf-8")
+        mismatch = forced_target_preflight(case, self.root, workspace, ())
+        self.assertFalse(mismatch["valid"])
+        self.assertEqual("byte_mismatch", mismatch["targets"][0]["status"])
+
+    def test_forced_preflight_stops_before_starting_the_subject(self):
+        case = sample_case(self.root)
+        (self.root / "skills" / "compose-state-and-effects" / "SKILL.md").write_text(
+            "source changed\n", encoding="utf-8"
+        )
+        fake = self.root / "must-not-run"
+        fake.write_text("#!/bin/sh\nexit 99\n", encoding="utf-8")
+        fake.chmod(0o755)
+
+        result = run_subject(
+            case,
+            "forced",
+            self.root,
+            self.root / "runs" / "preflight-stops",
+            self.config,
+            codex_executable=str(fake),
+        )
+
+        self.assertEqual(0, result.returncode)
+        self.assertEqual((), result.events)
+        self.assertFalse(result.forced_target_preflight["valid"])
+        self.assertTrue(
+            (result.workspace / ".eval/forced-target-preflight.json").is_file()
+        )
 
     def test_prepares_independent_fixture_and_overlay_copies(self):
         case = sample_case(self.root)

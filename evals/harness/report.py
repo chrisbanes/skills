@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from evals.harness.codex import completed_tool_call_count
-from evals.harness.score import Scorecard, is_measured_in_arm
+from evals.harness.score import Scorecard, is_behavioral_evidence
 from evals.harness.suites import SUITES
 
 
@@ -102,7 +102,7 @@ def _outcome_rate(records: list[dict[str, Any]], arm: str) -> float | None:
         record
         for record in records
         if record.get("arm") == arm
-        and is_measured_in_arm(record, arm)
+        and is_behavioral_evidence(record, arm)
     ]
     if not selected:
         return None
@@ -120,7 +120,7 @@ def _per_arm_record_count(records: list[dict[str, Any]]) -> str:
     counts = {
         arm: sum(
             record.get("arm") == arm
-            and is_measured_in_arm(record, arm)
+            and is_behavioral_evidence(record, arm)
             for record in records
         )
         for arm in ("none", "forced", "automatic")
@@ -292,6 +292,25 @@ def render_scorecard(
             f"- Reported automatic routing recall: {_percent(score.routing_recall)}",
             f"- Router reported in automatic arm: {_percent(score.router_report_rate)}",
             f"- Forbidden-action failures: {score.forbidden_action_failures}",
+            "",
+            "## Evaluator integrity",
+            "",
+            "- Invalid forced evidence: "
+            f"{score.invalid_forced_count}"
+            + (
+                " (" + ", ".join(f"`{record_id}`" for record_id in score.invalid_forced_record_ids) + ")"
+                if score.invalid_forced_record_ids
+                else ""
+            ),
+            *[
+                f"- {category.replace('_', ' ')}: {len(record_ids)}"
+                + (
+                    " (" + ", ".join(f"`{record_id}`" for record_id in record_ids) + ")"
+                    if record_ids
+                    else ""
+                )
+                for category, record_ids in score.forced_integrity_categories.items()
+            ],
             "",
             "## Efficiency (non-gating)",
             "",

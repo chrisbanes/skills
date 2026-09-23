@@ -4,7 +4,6 @@
   ],
   "must_contain": [
     "Keep this curated entry exactly.",
-    "cancellation",
     "## 1.4.0\n\n- Initial stable API.\n",
     "## 2.0.0-rc00\n\n- Streaming responses now use bounded buffering.\n\n## 2.0.0-alpha01\n\n- Add streaming responses with unbounded buffering.\n\n"
   ],
@@ -13,6 +12,7 @@
   ],
   "must_match": [
     "(?i)## 2\\.0\\.0\\n(?:(?!<details>|\\n## ).)*streaming(?:(?!<details>|\\n## ).)*bounded",
+    "(?i)^## 2\\.0\\.0[ \\t]*\\n(?:(?!^##[ \\t]|<details>).)*\\b(?:cancell?ation|cancell?(?:ing|ed)|cancels?)\\b",
     "<details>\\s*<summary>Prerelease history</summary>\\s+## 2\\.0\\.0-rc00.*## 2\\.0\\.0-alpha01.*</details>\\s+## 1\\.4\\.0"
   ]
 }

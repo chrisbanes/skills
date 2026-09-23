@@ -72,7 +72,7 @@ contracts, a focused commit, and a reconciled push plus PR creation or update.
 Then yield durable evidence to the controller and idle that persistent context.
 Resume the same agent for actionable feedback or base repair.
 
-Apply [Route Agents By Task](../SKILL.md#route-agents-by-task) and append its
+Apply [Route Agents By Task](ticket-lifecycle.md#route-agents-by-task) and append its
 routing-ledger entry when selecting each persistent ticket agent and helper.
 Use the portable default-owner capability for every normal ticket owner and
 planner; never infer exceptional capability from topic, scope, plan size,

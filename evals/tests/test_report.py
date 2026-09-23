@@ -14,6 +14,26 @@ from evals.tests.test_score import record
 
 
 class ReportTest(unittest.TestCase):
+    def test_reports_invalid_forced_evidence_separately_from_process_failures(self):
+        item = record(
+            "to-plan:forced",
+            "forced",
+            True,
+            target=("to-plan",),
+        )
+        item.update(
+            {
+                "subject": {"events": [], "returncode": 0},
+                "judge": {"events": [], "returncode": 0},
+            }
+        )
+
+        markdown = render_scorecard(compute_scorecard([item]), [item])
+
+        self.assertIn("Invalid forced evidence: 1 (`to-plan:forced`)", markdown)
+        self.assertIn("Process failures: 0", markdown)
+        self.assertIn("forced_integrity: NOT MET", markdown)
+
     def test_audit_queue_includes_disagreements_inconsistency_and_seeded_sample(self):
         records = []
         for index in range(20):
@@ -104,6 +124,22 @@ class ReportTest(unittest.TestCase):
                     "returncode": 0,
                 },
             })
+            if item["arm"] == "forced":
+                item["reported_skills"] = ["compose-state-and-effects"]
+                item["forced_target_preflight"] = {
+                    "valid": True,
+                    "targets": [{
+                        "skill": "compose-state-and-effects",
+                        "staged_path": "/workspace/.agents/skills/compose-state-and-effects/SKILL.md",
+                        "staged_relative_path": ".agents/skills/compose-state-and-effects/SKILL.md",
+                        "status": "valid",
+                    }],
+                }
+                item["subject"]["events"][0]["item"].update({
+                    "status": "completed",
+                    "exit_code": 0,
+                    "command": "sed .agents/skills/compose-state-and-effects/SKILL.md",
+                })
         score = compute_scorecard(records)
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -202,6 +238,25 @@ class ReportTest(unittest.TestCase):
                 "suite": "compose",
                 "target_skills": ["compose-state-and-effects"],
             })
+            if item["arm"] == "forced":
+                item["reported_skills"] = ["compose-state-and-effects"]
+                item["forced_target_preflight"] = {
+                    "valid": True,
+                    "targets": [{
+                        "skill": "compose-state-and-effects",
+                        "staged_path": "/workspace/.agents/skills/compose-state-and-effects/SKILL.md",
+                        "staged_relative_path": ".agents/skills/compose-state-and-effects/SKILL.md",
+                        "status": "valid",
+                    }],
+                }
+                item["subject"] = {"events": [{
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution", "status": "completed",
+                        "exit_code": 0,
+                        "command": "sed .agents/skills/compose-state-and-effects/SKILL.md",
+                    },
+                }]}
 
         markdown = render_scorecard(compute_scorecard(records), records)
 
@@ -224,6 +279,24 @@ class ReportTest(unittest.TestCase):
             {
                 "suite": "compose",
                 "target_skills": ["compose-state-and-effects"],
+                "reported_skills": ["compose-state-and-effects"],
+                "forced_target_preflight": {
+                    "valid": True,
+                    "targets": [{
+                        "skill": "compose-state-and-effects",
+                        "staged_path": "/workspace/.agents/skills/compose-state-and-effects/SKILL.md",
+                        "staged_relative_path": ".agents/skills/compose-state-and-effects/SKILL.md",
+                        "status": "valid",
+                    }],
+                },
+                "subject": {"events": [{
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution", "status": "completed",
+                        "exit_code": 0,
+                        "command": "sed .agents/skills/compose-state-and-effects/SKILL.md",
+                    },
+                }]},
             }
         )
 
