@@ -167,11 +167,14 @@ implicitly.
    have the owner create a new task-owned repair branch and isolated worktree
    from that recovery ref (for example, `git worktree add -b <repair-branch>
    <repair-path> <recovery-branch>`), then make the task-scoped repair there.
-   After independent acceptance, integrate the repaired task branch in
-   dependency order and rerun affected evidence. If any precondition,
-   restoration, preservation, or verification fails, stop and report the
-   integration checkout as blocked. The controller does not resolve task-owned
-   source conflicts or implement fixes.
+   After independent acceptance, inspect the complete repaired branch range
+   from the recorded pre-attempt SHA and integrate the entire repaired task
+   branch in dependency order, including both the original task change from the
+   failed integration and its repair commits. Do not cherry-pick only the
+   repair commit. Rerun affected evidence on the reintegrated tree. If any
+   precondition, restoration, preservation, or verification fails, stop and
+   report the integration checkout as blocked. The controller does not resolve
+   task-owned source conflicts or implement fixes.
 10. After every repair, repeat the independent commit and diff inspection, then
    reassess the evidence under step 8. Reuse only checks whose relevant inputs
    and environment remain unchanged across the inspected descendant diff; repeat

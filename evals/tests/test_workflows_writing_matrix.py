@@ -118,7 +118,21 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "git worktree add -b <repair-branch> <repair-path> <recovery-branch>",
             completed_path,
         )
-        self.assertIn("integrate the repaired task branch in dependency order", completed_path)
+        self.assertIn(
+            "inspect the complete repaired branch range from the recorded pre-attempt SHA",
+            completed_path,
+        )
+        self.assertIn(
+            "integrate the entire repaired task branch in dependency order",
+            completed_path,
+        )
+        self.assertIn(
+            "including both the original task change from the failed integration "
+            "and its repair commits",
+            completed_path,
+        )
+        self.assertIn("Do not cherry-pick only the repair commit", completed_path)
+        self.assertIn("Rerun affected evidence on the reintegrated tree", completed_path)
         self.assertIn("git reset --hard <recorded-pre-attempt-sha>", completed_path)
         self.assertIn("do not reset task-owned branches or other refs/worktrees", completed_path)
         self.assertIn("do not remove untracked files or unrelated changes", completed_path)
