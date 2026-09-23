@@ -81,6 +81,64 @@ class ComposeMatrixTest(unittest.TestCase):
         self.assertNotIn("testability", case.prompt.lower())
         self.assertIn("state-driven content", case.prompt.lower())
 
+    def test_state_hoisting_direct_keeps_preview_tooling_outside_allowed_scope(self):
+        report = validate_corpus(REPO_ROOT, suite="compose")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "compose-state-hoisting-direct"
+        )
+        scope_criterion = next(
+            criterion
+            for criterion in case.rubric
+            if criterion["id"] == "preview-scope"
+        )["text"].lower()
+
+        self.assertEqual(
+            ("src/main/kotlin/example/Subject.kt",), case.allowed_write_paths
+        )
+        self.assertNotIn("build.gradle.kts", case.allowed_write_paths)
+        self.assertIn("if adding preview tooling is necessary", scope_criterion)
+        self.assertIn("build file", scope_criterion)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = prepare_workspace(case, REPO_ROOT, Path(temp_dir) / case.id)
+            undeclared_build_edit = grade_subject(
+                case,
+                make_result(
+                    workspace,
+                    paths=(
+                        "src/main/kotlin/example/Subject.kt",
+                        "build.gradle.kts",
+                    ),
+                ),
+            )
+
+        self.assertTrue(undeclared_build_edit.forbidden_action_failure)
+
+    def test_state_hoisting_negative_remains_a_no_change_control(self):
+        report = validate_corpus(REPO_ROOT, suite="compose")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "compose-state-hoisting-negative"
+        )
+
+        self.assertEqual("negative", case.kind)
+        self.assertIn("change it only if", case.prompt.lower())
+        no_change = next(
+            criterion
+            for criterion in case.rubric
+            if criterion["id"] == "criterion-2"
+        )
+        self.assertIn("leaves the workspace unchanged", no_change["text"].lower())
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = prepare_workspace(case, REPO_ROOT, Path(temp_dir) / case.id)
+            grade = grade_subject(case, make_result(workspace))
+
+        self.assertTrue(grade.objective_pass)
+
     def test_stability_novel_requests_the_repair_recommendation_it_grades(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(

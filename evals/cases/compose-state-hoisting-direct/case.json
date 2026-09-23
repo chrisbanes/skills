@@ -32,6 +32,10 @@
     {
       "id": "criterion-2",
       "text": "The component no longer owns caller-visible search state"
+    },
+    {
+      "id": "preview-scope",
+      "text": "The response stays within the allowed Kotlin source path. If adding Preview tooling is necessary but unavailable within scope, it reports the setup gap instead of editing a build file without authorization"
     }
   ],
   "provenance": {

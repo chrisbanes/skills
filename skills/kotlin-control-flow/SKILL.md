@@ -41,8 +41,11 @@ branch, and let the compiler prove closed-domain coverage.
    duplicate casts. If they do not, keep the original shape or take a smaller
    refactor.
 7. Compile and test. On failure, return to the smallest applicable earlier step
-   or retain the prior shape. Finish when the subject, fallbacks, and branch
-   data are obvious to a reader and the resulting shape is easier to scan.
+   or retain the prior shape. In a review, name the explicit cases and the
+   branch payload retained through smart casts when that data drives the
+   mapping; do not describe a `when` as exhaustive while omitting a relevant
+   payload. Finish when the subject, fallbacks, and branch data are obvious to
+   a reader and the resulting shape is easier to scan.
 
 ## Recipes
 

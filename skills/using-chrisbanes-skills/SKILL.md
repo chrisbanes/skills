@@ -24,7 +24,11 @@ only when its independent behavior changes the same work.
    UI, routes, or navigation.
 4. Match each observed code signal to the table below.
 5. Add a second skill only when it owns an independent decision in the same
-   change; do not load adjacent skills speculatively.
+   change; do not load adjacent skills speculatively. For example, a flow
+   delivery defect plus a separate catch-all over a sealed route needs both
+   `kotlin-concurrency-and-flow` and `kotlin-control-flow`. Load the latter
+   because the branch mapping needs an explicit decision, not merely because a
+   `when` appears in the file.
 6. Finish routing when every material concern has one focused owner and those
    skills are loaded before advice or edits.
 
@@ -55,8 +59,9 @@ only when its independent behavior changes the same work.
   work changes that concern too.
 - Pair focus navigation with UI testing when the task also needs a test shape.
 - Add [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) when a Kotlin
-  concern also changes branching. Plain Kotlin route delivery plus a sealed
-  mapping stays in the Kotlin cluster; do not add Compose without the evidence
-  required in step 3.
+  concern also has an independent branch decision, such as a catch-all over a
+  sealed result that hides cases or branch payload. Plain route delivery with
+  no separate branching issue does not need it. Do not add Compose without the
+  evidence required in step 3.
 - Load [`gradle-run`](../gradle-run/SKILL.md) only for planned Gradle execution
   or an existing Gradle workflow, not incidental Kotlin or Compose advice.

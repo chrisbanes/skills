@@ -73,7 +73,7 @@ for its lane-specific fallback and blocking behavior.
 
 ### Routing
 
-- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to the focused skills.
+- [`using-chrisbanes-skills`](skills/using-chrisbanes-skills/SKILL.md) — route Kotlin and Jetpack Compose work to focused skills, adding a second only for an independent decision in the same change.
 
 ### Benchmarking
 

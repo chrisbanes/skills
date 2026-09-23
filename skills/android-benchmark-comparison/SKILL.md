@@ -25,13 +25,15 @@ or choosing a default.
 3. Balance or reverse run order and repeat the comparison. Report the spread
    and whether the ordering holds; do not discard slow iterations after seeing
    the result.
-4. When rankings reverse or variability is material, investigate before making
-   the decision. Use traces to check the measured interval and plausible
-   causes such as CPU placement, contention, or thermal state. A fixed-
-   performance setting does not prove CPU placement. If affinity is used,
-   discover the device topology, verify placement during the measured trace
-   interval, label the outcome a controlled comparison, and restore device
-   settings afterwards.
+4. When rankings reverse or variability is material, defer a firm default
+   decision until the reversal is resolved. Check that raw results cover the same
+   named cases and iterations, balance or reverse run order, and inspect traces
+   spanning the measured interval for plausible causes such as placement,
+   contention, or thermal state. Fixed-performance mode does not prove CPU
+   placement. If affinity is used, discover the device topology, verify
+   placement during that interval, label the result a controlled comparison,
+   and restore the original affinity settings. If any check is unavailable,
+   label any default choice provisional and state the remaining uncertainty.
 5. Calculate summaries from unrounded observations, then round only for
    presentation. Name the aggregation explicitly: the mean of per-run
    percentiles is not a percentile of pooled observations. Choose an
@@ -44,7 +46,9 @@ or choosing a default.
    without claiming it measures GPU shader time.
 7. Finish with the raw-evidence location, completed-case counts, variability,
    trace findings, controls and restoration status, plus the bounded decision
-   or remaining uncertainty.
+   or remaining uncertainty. A reversed ranking is unresolved until its
+   coverage, run order, measured-interval trace, and any affinity restoration
+   are accounted for; label any earlier default choice provisional.
 
 ## Boundaries
 

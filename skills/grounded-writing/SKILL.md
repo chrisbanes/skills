@@ -59,6 +59,10 @@ generic, or included only to imitate a personality.
 Finish only when all of these are true:
 
 - The result still satisfies the requested format and purpose.
+- For reader-facing setting documentation, a developer can tell what changes,
+  when to choose each setting, the practical trade-off, the public contract,
+  and the meaningful limitation. Keep implementation mechanics out unless
+  they affect that choice or are required to use the API.
 - Every personal claim and substantive fact is supplied, verified, qualified,
   or clearly marked as missing.
 - The argument is concrete enough to follow without promotional filler.

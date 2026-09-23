@@ -132,8 +132,12 @@ Keep screenshot state deterministic:
 - Keep an explicit fixed value when that fixed resolution or geometry is the
   contract.
 - Verify recording separately from comparison: inspect the expected artifact
-  paths and intentional baseline diff. A passing comparison does not prove that
-  recording occurred. Keep tool-specific commands in the repository runbook.
+  paths and intentional baseline diff. Read the exact output path from the test,
+  confirm that artifact exists, and name that literal path in the verification
+  evidence. A passing comparison does not prove that recording occurred. If
+  the artifact or baseline diff is unavailable, report that gap rather than
+  claiming recording succeeded. Keep tool-specific commands in the repository
+  runbook.
 
 ## Fake images and platform services
 

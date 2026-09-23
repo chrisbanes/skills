@@ -44,6 +44,12 @@ blocks mutations and dependent work, not safe independent checks. Before
 drafting, publishing, or handoff, return every blocker with impact, recommended
 resolution, and required upstream change.
 
+For an incomplete conversation source, the pre-draft handoff is two-stage: ask
+only the next material decision and keep drafting blocked; once the contract is
+complete, present a concise self-contained summary and wait for confirmation
+before drafting. Do not treat an unresolved or partially confirmed interview as
+approval.
+
 Do not create or switch branches, or edit source and test files. Use the shared
 workflow's clean baseline and repository discovery rules. Every acceptance
 criterion needs automated or precise manual verification. Do not draft while a
