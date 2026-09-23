@@ -3,7 +3,7 @@
   "title": "Flatten a branch-local message predicate",
   "family": "kotlin-control",
   "target_skills": ["kotlin-control-flow"],
-  "expected_skills": ["kotlin-control-flow", "gradle-run"],
+  "expected_skills": ["kotlin-control-flow"],
   "task_mode": "edit",
   "kind": "direct",
   "fixture": "kotlin-jvm",
@@ -16,5 +16,6 @@
     {"id": "guard-shape", "text": "The unread predicate becomes a guard on the Message branch followed by an unguarded Message fallback"},
     {"id": "smart-cast", "text": "The rewrite preserves exhaustiveness and Message smart casts without !!, as, or duplicate casts"}
   ],
+  "allowed_skills": ["kotlin-control-flow", "gradle-run"],
   "provenance": {"kind": "synthetic"}
 }

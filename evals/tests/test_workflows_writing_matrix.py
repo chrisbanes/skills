@@ -423,6 +423,32 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertEqual([], records[0]["expected_skills"])
         self.assertEqual([], records[0]["allowed_skills"])
 
+    def test_shepherd_novel_is_an_analysis_only_case(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(case for case in report.cases if case.id == "shepherd-novel")
+
+        self.assertTrue(case.forbid_all_commands)
+        self.assertIn("unnamed macOS check", case.prompt)
+        self.assertIn("exact check name", " ".join(item["text"] for item in case.rubric))
+
+    def test_formatting_negative_supplies_the_text_and_preserves_the_noop(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "android-benchmark-comparison-negative"
+        )
+        draft = (REPO_ROOT / "evals/fixtures/text/draft.md").read_text(encoding="utf-8").rstrip()
+        expectation = json.loads(
+            (case.directory / "expectations.json").read_text(encoding="utf-8")
+        )
+
+        self.assertIn(f"```text\n{draft}\n```", case.prompt)
+        self.assertLessEqual(max(map(len, draft.splitlines())), 80)
+        self.assertTrue(case.automatic_no_skill_control)
+        self.assertTrue(case.forbid_all_commands)
+        self.assertTrue(any("81" in pattern for pattern in expectation["must_not_match"]))
+
     def test_behavioral_expectations_do_not_assert_fixture_prose(self):
         expectations = json.loads(
             (

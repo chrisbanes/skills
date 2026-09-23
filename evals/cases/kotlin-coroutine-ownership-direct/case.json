@@ -3,7 +3,7 @@
   "title": "Return coroutine ownership to the caller",
   "family": "kotlin-concurrency",
   "target_skills": ["kotlin-concurrency-and-flow"],
-  "expected_skills": ["kotlin-concurrency-and-flow", "gradle-run"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
   "task_mode": "edit",
   "kind": "direct",
   "fixture": "kotlin-jvm",
@@ -16,5 +16,6 @@
     {"id": "caller-lifetime", "text": "The repository exposes suspending work so the caller owns cancellation, completion, and error handling"},
     {"id": "no-hidden-launch", "text": "The repository no longer stores an arbitrary CoroutineScope or hides refresh in fire-and-forget launch"}
   ],
+  "allowed_skills": ["kotlin-concurrency-and-flow", "gradle-run"],
   "provenance": {"kind": "synthetic"}
 }

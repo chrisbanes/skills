@@ -56,6 +56,7 @@ class EvalCase:
     allowed_skills: tuple[str, ...] = ()
     calibration: bool = False
     automatic_no_skill_control: bool = False
+    forbid_all_commands: bool = False
 
 
 @dataclass(frozen=True)
@@ -174,6 +175,10 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
     if not isinstance(automatic_no_skill_control, bool):
         raise CaseValidationError("automatic_no_skill_control must be a boolean")
 
+    forbid_all_commands = data.get("forbid_all_commands", False)
+    if not isinstance(forbid_all_commands, bool):
+        raise CaseValidationError("forbid_all_commands must be a boolean")
+
     fixture = _require_string(data, "fixture")
     if not _safe_relative(fixture):
         raise CaseValidationError("fixture must be a safe relative path")
@@ -291,6 +296,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         forbidden_command_patterns=command_patterns["forbidden_command_patterns"],
         allowed_skills=allowed_skills,
         automatic_no_skill_control=automatic_no_skill_control,
+        forbid_all_commands=forbid_all_commands,
     )
 
 

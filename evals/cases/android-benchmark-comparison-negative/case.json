@@ -8,10 +8,11 @@
   "task_mode": "edit",
   "kind": "negative",
   "fixture": "text",
+  "forbid_all_commands": true,
   "allowed_write_paths": [],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "android-benchmark-comparison-negative"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "restraint", "text": "The response recognizes that a formatting-only request supplies no competing configurations or benchmark decision."},
+    {"id": "restraint", "text": "The response determines that the supplied draft already fits 80 columns and leaves its words and meaning unchanged."},
     {"id": "no-benchmarking", "text": "The response does not run, design, or demand a performance experiment for the formatting-only request."}
   ],
   "provenance": {"kind": "synthetic"}

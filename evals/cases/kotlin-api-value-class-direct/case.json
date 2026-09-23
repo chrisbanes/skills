@@ -3,7 +3,7 @@
   "title": "Strengthen a single-field domain identifier",
   "family": "kotlin-api",
   "target_skills": ["kotlin-api-design"],
-  "expected_skills": ["kotlin-api-design", "gradle-run"],
+  "expected_skills": ["kotlin-api-design"],
   "task_mode": "edit",
   "kind": "direct",
   "fixture": "kotlin-jvm",
@@ -16,5 +16,6 @@
     {"id": "domain-type", "text": "UserId becomes a JVM inline value class because it is a meaningful single-field domain distinction"},
     {"id": "contract", "text": "The wrapped String value and caller-visible equality semantics are preserved without unrelated API changes"}
   ],
+  "allowed_skills": ["kotlin-api-design", "gradle-run"],
   "provenance": {"kind": "synthetic"}
 }

@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from evals.harness.cases import validate_corpus
 from evals.harness.codex import prepare_workspace
-from evals.harness.experiment import filter_cases, preflight
+from evals.harness.experiment import filter_cases, preflight, reconcile_automatic_eligibility
 from evals.harness.grade import grade_subject
 from evals.harness.suites import KOTLIN_GRADLE_SKILLS
 from evals.tests.test_grade import make_result
@@ -150,6 +150,63 @@ class KotlinGradleMatrixTest(unittest.TestCase):
             ):
                 with self.subTest(case=case_id, command=command):
                     self.assertIsNone(re.search(run_pattern, command, re.DOTALL))
+
+    def test_gradle_routing_is_expected_only_after_an_invocation(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        case_ids = (
+            "kotlin-api-ownership-direct",
+            "kotlin-api-value-class-direct",
+            "kotlin-control-exhaustiveness-direct",
+            "kotlin-control-guards-direct",
+            "kotlin-coroutine-ownership-direct",
+            "kotlin-detached-thread-ownership-direct",
+            "kotlin-flow-event-delivery-direct",
+        )
+        cases = [
+            next(case for case in report.cases if case.id == case_id)
+            for case_id in case_ids
+        ]
+        records = [
+            {
+                "case_id": case.id,
+                "arm": "automatic",
+                "subject": {
+                    "events": [
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "command_execution",
+                                "command": "rg --files -g 'gradlew'",
+                            },
+                        }
+                    ]
+                },
+            }
+            for case in cases
+        ]
+
+        for case in cases:
+            self.assertEqual(case.target_skills, case.expected_skills)
+            self.assertIn("gradle-run", case.allowed_skills)
+        reconcile_automatic_eligibility(REPO_ROOT, cases, records)
+        self.assertTrue(
+            all("gradle-run" not in record["expected_skills"] for record in records)
+        )
+
+        records[0]["subject"]["events"] = [
+            {
+                "type": "item.completed",
+                "item": {
+                    "type": "command_execution",
+                    "command": (
+                        "python3 .agents/skills/gradle-run/scripts/gradle_run.py run "
+                        "--scope targeted --question test -- ./gradlew --offline test"
+                    ),
+                },
+            }
+        ]
+        reconcile_automatic_eligibility(REPO_ROOT, cases, records)
+        self.assertIn("gradle-run", records[0]["expected_skills"])
 
     def test_kotlin_fixture_is_pinned_and_offline_ready(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "kotlin-jvm"

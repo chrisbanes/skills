@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shlex
 import subprocess
 from copy import deepcopy
 from dataclasses import asdict
@@ -24,7 +25,7 @@ from evals.harness.codex import (
     run_subject,
     subject_output_valid,
 )
-from evals.harness.grade import ObjectiveGrade, grade_subject
+from evals.harness.grade import ObjectiveGrade, _event_invocations, grade_subject
 from evals.harness.judge import (
     JudgeConfig,
     JudgeResult,
@@ -94,12 +95,62 @@ def evaluation_conditions(
 def _apply_routing_expectations(
     record: dict[str, Any], case: EvalCase, repo_root: Path
 ) -> None:
-    expected_skills, allowed_skills = _routing_expectations(
-        case, str(record.get("arm")), repo_root
+    subject = record.get("subject")
+    events = subject.get("events", []) if isinstance(subject, dict) else []
+    expected_skills, allowed_skills = _result_routing_expectations(
+        case, str(record.get("arm")), repo_root, events
     )
     record["expected_skills"] = list(expected_skills)
     record["allowed_skills"] = list(allowed_skills)
     record["automatic_eligible"] = _automatic_eligible(case, repo_root)
+
+
+def _gradle_was_executed(events: object) -> bool:
+    if not isinstance(events, (list, tuple)):
+        return False
+    normalized_events = tuple(event for event in events if isinstance(event, dict))
+    for invocation in _event_invocations(normalized_events):
+        try:
+            words = shlex.split(invocation)
+        except ValueError:
+            continue
+        if not words:
+            continue
+        executable = Path(words[0]).name
+        gradle_runner_indexes = [
+            index
+            for index, word in enumerate(words)
+            if Path(word).name == "gradle_run.py"
+        ]
+        if any(
+            (
+                index == 0
+                or Path(words[0]).name in {"python", "python3", "python3.13"}
+            )
+            and "run" in words[index + 1 :]
+            for index in gradle_runner_indexes
+        ):
+            return True
+        if executable == "gradle" or executable.startswith("gradlew"):
+            return True
+    return False
+
+
+def _result_routing_expectations(
+    case: EvalCase,
+    arm: str,
+    repo_root: Path,
+    events: object,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    expected_skills, allowed_skills = _routing_expectations(case, arm, repo_root)
+    if (
+        arm == "automatic"
+        and "gradle-run" in allowed_skills
+        and "gradle-run" not in expected_skills
+        and _gradle_was_executed(events)
+    ):
+        expected_skills = (*expected_skills, "gradle-run")
+    return expected_skills, allowed_skills
 
 
 def reconcile_automatic_eligibility(
@@ -342,7 +393,9 @@ def _result_payload(
     repo_root: Path,
 ) -> dict[str, Any]:
     reported = reported_skill_names(subject.final_output)
-    expected_skills, allowed_skills = _routing_expectations(case, arm, repo_root)
+    expected_skills, allowed_skills = _result_routing_expectations(
+        case, arm, repo_root, subject.events
+    )
     automatic_eligible = _automatic_eligible(case, repo_root)
     judge_pass = judge.returncode == 0 and judge_passes_rubric(
         judge.output, case.rubric

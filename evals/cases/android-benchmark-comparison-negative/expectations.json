@@ -1,4 +1,5 @@
 {
   "files": ["draft.md"],
-  "must_contain": ["duplicate parse"]
+  "must_contain": ["duplicate parse"],
+  "must_not_match": ["(?m)^.{81,}$"]
 }

@@ -10,8 +10,8 @@
   "allowed_write_paths": ["comparison.md"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "android-benchmark-comparison-direct"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "experiment-evidence", "text": "The comparison records build/configuration identity, completed case and iteration coverage, raw evidence, and conditions."},
-    {"id": "bounded-decision", "text": "The conclusion reports variability and traces, avoids claiming a CPU metric measures GPU shader time, and does not assign the combined controls' effect to affinity alone."}
+    {"id": "experiment-evidence", "text": "The comparison records build/configuration identity, supplied qualitative results and conditions, and explicitly states that completed-case and iteration counts, raw results, and traces were not provided; it invents no coverage values."},
+    {"id": "bounded-decision", "text": "The conclusion leaves the default unresolved until the missing evidence is available, reports the stated ranking reversal and variability limits, avoids claiming a CPU metric measures GPU shader time, and does not assign the combined controls' effect to affinity alone."}
   ],
   "provenance": {"kind": "synthetic"}
 }

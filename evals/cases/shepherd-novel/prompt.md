@@ -1,4 +1,7 @@
-A pull request's macOS check failed after a minor fix. The failure may be
-code-related, but that exact check cannot run on this Linux workstation. Explain
-the verification boundary and the next repair cycle from the immutable state.
-Do not run a command or perform any local or remote mutation.
+A pull request's unnamed macOS check failed after a minor fix. The supplied
+immutable state has no check log, PR diff, source code, or exact check name. The
+host is Linux, and only analysis of the supplied state is authorized. Explain
+what cannot be verified, what evidence the controller must provide before a
+targeted repair, and how to verify that repair on macOS. Do not claim that any
+local checks ran or guess their names. Do not run a command or perform any local
+or remote mutation.

@@ -3,7 +3,7 @@
   "title": "Preserve one-consumer event delivery",
   "family": "kotlin-concurrency",
   "target_skills": ["kotlin-concurrency-and-flow"],
-  "expected_skills": ["kotlin-concurrency-and-flow", "gradle-run"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
   "task_mode": "edit",
   "kind": "direct",
   "fixture": "kotlin-jvm",
@@ -16,5 +16,6 @@
     {"id": "one-consumer", "text": "The stream models an exactly-once handoff to one UI consumer instead of lossy default SharedFlow broadcast"},
     {"id": "bounded-buffer", "text": "The repair uses an explicit bounded Channel and exposes only its receiveAsFlow view"}
   ],
+  "allowed_skills": ["kotlin-concurrency-and-flow", "gradle-run"],
   "provenance": {"kind": "synthetic"}
 }

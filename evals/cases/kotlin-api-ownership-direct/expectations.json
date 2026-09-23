@@ -1,4 +1,9 @@
 {
   "files": ["src/main/kotlin/example/Subject.kt"],
-  "must_not_match": ["fun\\s+String\\."]
+  "must_match": [
+    "fun\\s+ProfileStore\\.loadProfile\\(rawUserId: String\\): User",
+    "@Deprecated\\([^\\n]*\\)\\s*fun\\s+String\\.loadProfile\\(store: ProfileStore\\): User = store\\.loadProfile\\(this\\)",
+    "fun\\s+profileFor\\(rawUserId: String, store: ProfileStore\\): User = store\\.loadProfile\\(rawUserId\\)"
+  ],
+  "must_not_match": ["fun\\s+String\\.loadProfile\\([^)]*\\)[^\\n]*=\\s*store\\.load\\s*\\("]
 }
