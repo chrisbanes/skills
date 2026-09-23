@@ -5,7 +5,8 @@
 Read trusted repository instructions and validate the binding through the setup
 lane. Require `tdd` before implementation, `to-plan` for ordinary planning,
 `research` only for a research Wayfinder child, `triage` for Backlog work, and
-the review contracts; read [human frontier](human-frontier.md),
+the [review contracts](review-contracts.md) before ticket acceptance; read
+[human frontier](human-frontier.md),
 [planning](planning-lane.md), [triage](triage-lane.md), and, when enabled,
 [Wayfinder](wayfinder-lane.md). Follow workflow providers exactly: never install
 or approximate a missing required provider, and block only the affected lane
@@ -15,7 +16,8 @@ where the provider contract permits it. Confirm GitHub identity, read/write and
 For `next`/`drain`, require explicit merge authority for the selected issue or
 every eligible drain issue before claiming. Require issue-close authority where
 the configured policy needs it, including all eligible epics before
-reconciliation. `drain` uses the scheduler, two default in-flight slots and
+reconciliation. `drain` reads the [drain scheduler](drain-scheduler.md) before
+queue work, then uses its two default in-flight slots and
 agent concurrency (or any positive user limit), and runs occupied slots
 concurrently.
 

@@ -36,7 +36,65 @@ def record(
     return item
 
 
+def complete_read_evidence(item):
+    target = item["forced_target_preflight"]["targets"][0]
+    target["staged_sha256"] = "entrypoint-sha"
+    event = item["subject"]["events"][0]["item"]
+    event["id"] = "read"
+    item["subject"]["captured_skill_files"] = [{
+        "path": target["staged_relative_path"],
+        "staged_sha256": "entrypoint-sha",
+        "status": "complete",
+        "matched_events": [{"id": "read", "output_sha256": "output-sha"}],
+    }]
+
+
 class ScorecardTest(unittest.TestCase):
+    def test_forced_integrity_requires_complete_captured_entrypoint_for_same_read(self):
+        path = ".agents/skills/to-plan/SKILL.md"
+        preflight = {"valid": True, "targets": [{
+            "skill": "to-plan", "staged_path": f"/workspace/{path}",
+            "staged_relative_path": path, "staged_sha256": "entrypoint-sha",
+            "status": "valid",
+        }]}
+
+        def packet(command, output, status, matched_id="read"):
+            item = record(
+                "case:forced", "forced", True, target=("to-plan",),
+                reported=("to-plan",), preflight=preflight,
+            )
+            item["subject"] = {
+                "events": [{"type": "item.completed", "item": {
+                    "id": "read", "type": "command_execution", "status": "completed",
+                    "exit_code": 0, "command": command,
+                    "aggregated_output": output,
+                }}],
+                "captured_skill_files": [{
+                    "path": path, "staged_sha256": "entrypoint-sha",
+                    "status": status,
+                    "matched_events": (
+                        [{"id": matched_id, "output_sha256": "output-sha"}]
+                        if status == "complete" else []
+                    ),
+                }],
+            }
+            return item
+
+        reference_only = packet(
+            "cat .agents/skills/to-plan/references/workflow.md",
+            "full reference text", "incomplete_or_absent",
+        )
+        warnings_only = packet(f"cat {path}", "warnings only", "incomplete_or_absent")
+        path_only = packet(f"cat {path}", "warnings only", "incomplete_or_absent")
+        del path_only["subject"]["captured_skill_files"]
+        unrelated_capture = packet(f"cat {path}", "warnings only", "complete", "other")
+        full_entrypoint = packet(f"cat {path}", "full entrypoint text", "complete")
+
+        for item in (reference_only, warnings_only, path_only, unrelated_capture):
+            self.assertEqual("invocation_failure", forced_integrity_status(item))
+        self.assertEqual("valid", forced_integrity_status(full_entrypoint))
+        self.assertFalse(compute_scorecard([reference_only]).gates["forced_integrity"])
+
     def test_classifies_forced_integrity_from_preflight_reports_and_observed_reads(self):
         preflight = {
             "valid": True,
@@ -62,6 +120,7 @@ class ScorecardTest(unittest.TestCase):
         reporting["subject"] = {"events": [
             {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed -n '1p' .agents/skills/to-plan/SKILL.md"}}
         ]}
+        complete_read_evidence(reporting)
         valid = record(
             "valid:forced", "forced", True, target=("to-plan",),
             reported=("to-plan",), preflight=preflight,
@@ -83,6 +142,7 @@ class ScorecardTest(unittest.TestCase):
         def item(event_type, status, exit_code):
             result = record("case:forced", "forced", True, target=("to-plan",), reported=("to-plan",), preflight=preflight)
             result["subject"] = {"events": [{"type": event_type, "item": {"type": "command_execution", "status": status, "exit_code": exit_code, "command": "sed .agents/skills/to-plan/SKILL.md"}}]}
+            complete_read_evidence(result)
             return result
 
         self.assertEqual("invocation_failure", forced_integrity_status(item("item.started", "in_progress", None)))
@@ -133,6 +193,7 @@ class ScorecardTest(unittest.TestCase):
                 "command": "sed .agents/skills/to-plan/SKILL.md",
             },
         }]}
+        complete_read_evidence(forced)
         score = compute_scorecard([forced])
 
         self.assertEqual(0, score.invalid_forced_count)

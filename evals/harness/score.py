@@ -61,9 +61,14 @@ def is_automatic_comparator(record: dict[str, Any]) -> bool:
 
 def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str, Any]]) -> bool:
     subject = record.get("subject", {})
-    events = subject.get("events", []) if isinstance(subject, dict) else []
-    commands = [
-        item.get("command", "")
+    if not isinstance(subject, dict):
+        return False
+    events = subject.get("events", [])
+    captures = subject.get("captured_skill_files", [])
+    if not isinstance(events, list) or not isinstance(captures, list):
+        return False
+    successful_reads = [
+        (item.get("id"), item.get("command"))
         for event in events
         if isinstance(event, dict)
         and event.get("type") == "item.completed"
@@ -72,30 +77,49 @@ def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str,
         and item.get("type") == "command_execution"
         and item.get("status") == "completed"
         and item.get("exit_code") == 0
+        and isinstance(item.get("command"), str)
     ]
-    target_paths = []
+    if not targets:
+        return False
     for target in targets:
+        if not isinstance(target, dict):
+            return False
+        relative_path = target.get("staged_relative_path")
+        if not isinstance(relative_path, str) or not relative_path.endswith("/SKILL.md"):
+            return False
+        target_sha = target.get("staged_sha256")
+        if not isinstance(target_sha, str) or not target_sha:
+            return False
+        capture = next(
+            (
+                item for item in captures
+                if isinstance(item, dict) and item.get("path") == relative_path
+                and item.get("status") == "complete"
+                and item.get("staged_sha256") == target_sha
+            ),
+            None,
+        )
+        if capture is None:
+            return False
+        matched_events = capture.get("matched_events")
+        if not isinstance(matched_events, list):
+            return False
+        matched_ids = {
+            item.get("id") for item in matched_events
+            if isinstance(item, dict) and item.get("id") is not None
+        }
         paths = tuple(
-            path
-            for path in (target.get("staged_path"), target.get("staged_relative_path"))
+            path for path in (relative_path, target.get("staged_path"))
             if isinstance(path, str)
         )
-        references = tuple(
-            f"{directory}/references/"
-            for directory in (
-                target.get("staged_directory"),
-                target.get("staged_relative_directory"),
-            )
-            if isinstance(directory, str)
-        )
-        target_paths.append((paths, references))
-    return bool(target_paths) and all(
-        paths and (
-            any(path in command for path in paths for command in commands)
-            or any(path in command for path in references for command in commands)
-        )
-        for paths, references in target_paths
-    )
+        if not any(
+            event_id in matched_ids
+            and any(path in command for path in paths)
+            for event_id, command in successful_reads
+            if event_id is not None
+        ):
+            return False
+    return True
 
 
 def forced_integrity_status(record: dict[str, Any]) -> str:

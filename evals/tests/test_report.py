@@ -10,7 +10,7 @@ from evals.harness.report import (
     write_reports,
 )
 from evals.harness.score import compute_scorecard
-from evals.tests.test_score import record
+from evals.tests.test_score import complete_read_evidence, record
 
 
 class ReportTest(unittest.TestCase):
@@ -140,6 +140,7 @@ class ReportTest(unittest.TestCase):
                     "exit_code": 0,
                     "command": "sed .agents/skills/compose-state-and-effects/SKILL.md",
                 })
+                complete_read_evidence(item)
         score = compute_scorecard(records)
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -257,6 +258,7 @@ class ReportTest(unittest.TestCase):
                         "command": "sed .agents/skills/compose-state-and-effects/SKILL.md",
                     },
                 }]}
+                complete_read_evidence(item)
 
         markdown = render_scorecard(compute_scorecard(records), records)
 
@@ -299,6 +301,7 @@ class ReportTest(unittest.TestCase):
                 }]},
             }
         )
+        complete_read_evidence(records[0])
 
         markdown = render_scorecard(compute_scorecard(records), records)
 

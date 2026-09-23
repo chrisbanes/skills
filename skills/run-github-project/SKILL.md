@@ -45,6 +45,10 @@ before preconditions; it is authoritative on required, conditional, optional
 providers, sources, installation commands, and lane-specific fallback. Never
 install a provider implicitly. Read all providers and specialist contracts
 required by the execution-controller lane before their relevant action.
+For `drain`, read [drain scheduler](references/drain-scheduler.md) completely
+before drain queue work. For `next` or `drain`, read
+[review contracts](references/review-contracts.md) completely before acceptance
+work.
 
 ## Cross-mode boundaries
 

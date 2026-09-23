@@ -51,6 +51,21 @@ def plan_artifact(dependency: str = "none") -> str:
 
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
+    def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
+        entrypoint = (REPO_ROOT / "skills/run-github-project/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        controller = (
+            REPO_ROOT / "skills/run-github-project/references/execution-controller.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("references/drain-scheduler.md", entrypoint)
+        self.assertIn("references/review-contracts.md", entrypoint)
+        normalized = " ".join(entrypoint.split())
+        self.assertIn("before drain queue work", normalized)
+        self.assertIn("before acceptance work", normalized)
+        self.assertIn("drain-scheduler.md", controller)
+        self.assertIn("review-contracts.md", controller)
+
     def test_integration_failure_guidance_restores_only_verified_controller_branch(self):
         entrypoint = (REPO_ROOT / "skills/implement-with-subagents/SKILL.md").read_text(
             encoding="utf-8"
