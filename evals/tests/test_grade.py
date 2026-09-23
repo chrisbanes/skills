@@ -1359,6 +1359,20 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
         self.assertFalse(grade.forbidden_action_failure)
         self.assertNotIn("network command attempted", grade.violations)
 
+        cat_and_search = make_result(self.workspace, events=({
+            "type": "item.completed",
+            "item": {
+                "type": "command_execution",
+                "command": "/bin/zsh -lc \"cat state.md && rg --files -g 'AGENTS.md' -g 'SKILL.md'\"",
+                "status": "failed",
+                "exit_code": 1,
+                "aggregated_output": "# Immutable evaluation state\nNetwork access is disabled.\n",
+            },
+        },))
+        self.assertNotIn(
+            "network command attempted", grade_subject(case, cat_and_search).violations
+        )
+
     def test_local_sed_then_no_matching_git_tags_is_not_network(self):
         case = make_case(self.workspace, task_mode="review")
         command = (

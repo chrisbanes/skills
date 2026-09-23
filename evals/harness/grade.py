@@ -266,6 +266,9 @@ def _is_shell_wrapped_local_read_sequence(command: str, exit_code: object) -> bo
         if executable.name == "pwd":
             if len(tokens) != 1:
                 return False
+        elif executable.name == "cat":
+            if len(tokens) < 2 or any(token.startswith("-") for token in tokens[1:]):
+                return False
         elif executable.name == "sed":
             if (
                 len(tokens) != 4 or tokens[1] != "-n"

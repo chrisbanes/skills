@@ -37,11 +37,11 @@ in forced runs, including their no-change controls. **Restraint** is the
 no-change-control pass rate: the skill may inspect the task, but must not make
 an unnecessary change. The table reports the latest available result for each skill and
 correctness metric. These scores were produced using
-[`gpt-5.6-terra`](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
-with medium reasoning, judged by
-[`gpt-5.6-sol`](https://developers.openai.com/api/docs/models/gpt-5.6-sol) with
+[`gpt-6-luna`](https://developers.openai.com/api/docs/models/gpt-6-luna)
+with high reasoning, judged by
+[`gpt-6-sol`](https://developers.openai.com/api/docs/models/gpt-6-sol) with
 high reasoning. Results are model- and reasoning-specific; other configurations
-may perform differently.
+may perform differently. The human audit queue remains open.
 
 The rows are descriptive diagnostics, not individual release gates. Multi-skill
 scenarios contribute to each relevant skill row, so the rows are not a
@@ -49,23 +49,23 @@ suite-wide aggregate.
 
 | Skill | Baseline | Automatic | Restraint |
 | --- | ---: | ---: | ---: |
-| `compose-animations` | 75.0% | 100.0% | 100.0% |
-| `compose-component-design` | 86.7% | 100.0% | 100.0% |
-| `compose-focus-navigation` | 66.7% | 100.0% | 100.0% |
-| `compose-performance` | 91.7% | 100.0% | 100.0% |
-| `compose-state-and-effects` | 77.8% | 100.0% | 100.0% |
-| `compose-ui-testing-patterns` | 55.6% | 100.0% | 100.0% |
-| `gradle-run` | 33.3% | 100.0% | 100.0% |
-| `kotlin-api-design` | 66.7% | 100.0% | 100.0% |
-| `kotlin-concurrency-and-flow` | 33.3% | 100.0% | 100.0% |
-| `kotlin-control-flow` | 27.8% | 100.0% | 100.0% |
-| `android-benchmark-comparison` | — | — | — |
-| `grounded-writing` | — | 100.0% | 100.0% |
-| `implement-with-subagents` | — | — | 100.0% |
-| `release-kotlin-library` | — | — | — |
+| `compose-animations` | 75.0% | 83.3% | 100.0% |
+| `compose-component-design` | 80.0% | 86.7% | 100.0% |
+| `compose-focus-navigation` | 33.3% | 100.0% | 100.0% |
+| `compose-performance` | 87.5% | 100.0% | 100.0% |
+| `compose-state-and-effects` | 87.5% | 100.0% | 100.0% |
+| `compose-ui-testing-patterns` | 33.3% | 66.7% | 100.0% |
+| `gradle-run` | 41.7% | 83.3% | 100.0% |
+| `kotlin-api-design` | 50.0% | 50.0% | 100.0% |
+| `kotlin-concurrency-and-flow` | 61.1% | 88.9% | 100.0% |
+| `kotlin-control-flow` | 38.9% | 61.1% | 100.0% |
+| `android-benchmark-comparison` | 0.0% | 0.0% | 0.0% |
+| `grounded-writing` | 0.0% | 16.7% | 100.0% |
+| `implement-with-subagents` | — | — | 66.7% |
+| `release-kotlin-library` | 0.0% | 100.0% | 100.0% |
 | `run-github-project` | — | — | 100.0% |
 | `shepherd` | — | — | 100.0% |
-| `to-plan` | — | — | — |
+| `to-plan` | — | — | 100.0% |
 
 ### Skill efficiency
 
@@ -75,24 +75,24 @@ same-run evidence available for each suite and include failed runs and negative
 controls. Baseline-to-automatic efficiency comparisons use only cases eligible
 for automatic activation. Multi-skill scenarios contribute to every targeted
 skill row. A turn is one completed Codex turn; time remains environment-sensitive.
-The source runs, selection rules, and detailed scorecards are in the
-[evaluation change record](artifacts/2026-08-27-skill-eval-efficiency.md).
+Run provenance and local scorecard paths are in the
+[GPT-6 evaluation record](artifacts/2026-09-23-gpt6-luna-high.md).
 
 | Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
 | --- | ---: | ---: | ---: | ---: |
-| `compose-animations` | 41.7k → 81.9k (+96%) | 2 → 5 (+150%) | 1 → 1 (+0%) | 26.3s → 42.3s (+60%) |
-| `compose-component-design` | 56.3k → 66.9k (+19%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 32.6s → 29.1s (-11%) |
-| `compose-focus-navigation` | 56.2k → 77.1k (+37%) | 3 → 6 (+100%) | 1 → 1 (+0%) | 32.4s → 44.1s (+36%) |
-| `compose-performance` | 56.2k → 83.0k (+48%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 32.5s → 40.1s (+24%) |
-| `compose-state-and-effects` | 56.2k → 83.3k (+48%) | 3 → 5 (+67%) | 1 → 1 (+0%) | 28.5s → 41.6s (+46%) |
-| `compose-ui-testing-patterns` | 56.7k → 69.0k (+22%) | 3 → 4 (+33%) | 1 → 1 (+0%) | 32.9s → 34.1s (+4%) |
-| `gradle-run` | 70.7k → 83.3k (+18%) | 4 → 3 (-25%) | 1 → 1 (+0%) | 30.2s → 32.9s (+9%) |
-| `kotlin-api-design` | 57.4k → 145.8k (+154%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 30.0s → 53.0s (+77%) |
-| `kotlin-concurrency-and-flow` | 72.7k → 119.2k (+64%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 46.0s → 64.2s (+40%) |
-| `kotlin-control-flow` | 71.8k → 109.6k (+53%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 39.1s → 53.7s (+37%) |
-| `android-benchmark-comparison` | — | — | — | — |
-| `grounded-writing` | 41.3k → 65.4k (+59%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 16.2s → 26.9s (+66%) |
-| `release-kotlin-library` | — | — | — | — |
+| `compose-animations` | 47.5k → 81.4k (+72%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 31.0s → 48.4s (+56%) |
+| `compose-component-design` | 47.9k → 84.3k (+76%) | 4 → 6 (+50%) | 1 → 1 (+0%) | 22.9s → 32.1s (+40%) |
+| `compose-focus-navigation` | 47.7k → 83.1k (+74%) | 3 → 5 (+67%) | 1 → 1 (+0%) | 29.3s → 47.0s (+60%) |
+| `compose-performance` | 48.9k → 86.1k (+76%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 27.7s → 40.1s (+45%) |
+| `compose-state-and-effects` | 48.6k → 87.7k (+81%) | 4 → 6 (+50%) | 1 → 1 (+0%) | 30.1s → 42.7s (+42%) |
+| `compose-ui-testing-patterns` | 60.5k → 72.8k (+20%) | 4.5 → 6 (+33%) | 1 → 1 (+0%) | 26.5s → 34.7s (+31%) |
+| `gradle-run` | 59.2k → 115.2k (+94%) | 4 → 6 (+50%) | 1 → 1 (+0%) | 29.6s → 47.0s (+59%) |
+| `kotlin-api-design` | 48.1k → 70.6k (+47%) | 4 → 4 (+0%) | 1 → 1 (+0%) | 24.5s → 38.1s (+55%) |
+| `kotlin-concurrency-and-flow` | 60.5k → 74.9k (+24%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 29.7s → 34.5s (+16%) |
+| `kotlin-control-flow` | 61.0k → 72.7k (+19%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 35.6s → 39.7s (+12%) |
+| `android-benchmark-comparison` | 53.4k → 56.2k (+5%) | 4 → 2 (-50%) | 1 → 1 (+0%) | 28.3s → 23.2s (-18%) |
+| `grounded-writing` | 47.4k → 56.6k (+19%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 22.2s → 33.9s (+53%) |
+| `release-kotlin-library` | 65.5k → 89.5k (+37%) | 3 → 7 (+133%) | 1 → 1 (+0%) | 47.5s → 45.3s (-5%) |
 
 ## Evaluation setup
 
@@ -239,15 +239,14 @@ npm test
 The published results use:
 
 - subject:
-  [`gpt-5.6-terra`](https://developers.openai.com/api/docs/models/gpt-5.6-terra)
-  with `medium` reasoning; and
+  [`gpt-6-luna`](https://developers.openai.com/api/docs/models/gpt-6-luna)
+  with `high` reasoning; and
 - judge:
-  [`gpt-5.6-sol`](https://developers.openai.com/api/docs/models/gpt-5.6-sol)
+  [`gpt-6-sol`](https://developers.openai.com/api/docs/models/gpt-6-sol)
   with `high` reasoning.
 
-The Terra subject avoids the ceiling observed when Sol-medium solved every
-calibration case without skills, while the stronger Sol judge keeps outcome
-assessment stable.
+The Luna/high subject left measurable baseline headroom in all three suites.
+The Sol/high judge remained fixed across every arm.
 
 Keep the pair unchanged across all arms. Use a separate, explicitly named run
 for another model or reasoning effort; never combine fingerprints in one
@@ -269,8 +268,8 @@ Preview the complete matrix and call count:
 ```shell
 python3 evals/run.py plan \
   --suite kotlin-gradle \
-  --model gpt-5.6-terra --reasoning medium \
-  --judge-model gpt-5.6-sol --judge-reasoning high \
+  --model gpt-6-luna --reasoning high \
+  --judge-model gpt-6-sol --judge-reasoning high \
   --repetitions 3
 ```
 
@@ -279,8 +278,8 @@ the harness deliberately does not bake in a price table that can go stale:
 
 ```shell
 python3 evals/run.py plan \
-  --model gpt-5.6-terra --reasoning medium \
-  --judge-model gpt-5.6-sol --judge-reasoning high \
+  --model gpt-6-luna --reasoning high \
+  --judge-model gpt-6-sol --judge-reasoning high \
   --subject-cost-per-call-usd <amount> \
   --judge-cost-per-call-usd <amount>
 ```
@@ -293,8 +292,8 @@ python3 evals/run.py run \
   --suite kotlin-gradle \
   --case kotlin-api-ownership-direct \
   --arm none --arm forced --arm automatic \
-  --model gpt-5.6-terra --reasoning medium \
-  --judge-model gpt-5.6-sol --judge-reasoning high \
+  --model gpt-6-luna --reasoning high \
+  --judge-model gpt-6-sol --judge-reasoning high \
   --subject-cost-per-call-usd <amount> \
   --judge-cost-per-call-usd <amount> \
   --repetitions 1 --execute

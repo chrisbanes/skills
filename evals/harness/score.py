@@ -60,27 +60,39 @@ def is_automatic_comparator(record: dict[str, Any]) -> bool:
     return record.get("automatic_eligible") is True
 
 
-def _standalone_target_read(command: str, targets: list[dict[str, Any]]) -> bool:
-    """Accept only file-print commands whose operands are exactly the targets."""
+def _standalone_target_reads(command: str, targets: list[dict[str, Any]]) -> set[str] | None:
+    """Return the target paths printed by a standalone cat command."""
     try:
         words = shlex.split(command)
+        if (
+            len(words) == 3
+            and words[0] in ("sh", "bash", "zsh", "/bin/sh", "/bin/bash", "/bin/zsh")
+            and words[1] in ("-c", "-lc")
+        ):
+            words = shlex.split(words[2])
     except ValueError:
-        return False
+        return None
     if not words:
-        return False
+        return None
     if words[0] not in ("cat", "/bin/cat", "/usr/bin/cat"):
-        return False
+        return None
     operands = words[2:] if len(words) > 1 and words[1] == "--" else words[1:]
-    if len(operands) != len(targets):
-        return False
-    remaining = list(operands)
-    for target in targets:
-        paths = (target.get("staged_relative_path"), target.get("staged_path"))
-        match = next((path for path in remaining if path in paths), None)
-        if match is None:
-            return False
-        remaining.remove(match)
-    return not remaining
+    if not operands:
+        return None
+    matched: set[str] = set()
+    for operand in operands:
+        target = next(
+            (target for target in targets if operand in (
+                target.get("staged_relative_path"), target.get("staged_path")
+            )), None,
+        )
+        if target is None:
+            return None
+        path = target.get("staged_relative_path")
+        if not isinstance(path, str) or path in matched:
+            return None
+        matched.add(path)
+    return matched
 
 
 def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str, Any]]) -> bool:
@@ -93,62 +105,61 @@ def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str,
         return False
     if not targets or not all(isinstance(target, dict) for target in targets):
         return False
-    first_action = None
+    remaining = {target.get("staged_relative_path") for target in targets}
+    if (
+        None in remaining or len(remaining) != len(targets)
+        or any(not isinstance(path, str) or not path.endswith("/SKILL.md") for path in remaining)
+    ):
+        return False
+    active_id = None
     for event in events:
         if not isinstance(event, dict) or event.get("type") not in ("item.started", "item.completed"):
             continue
         item = event.get("item")
         if not isinstance(item, dict) or item.get("type") in ("reasoning", "agent_message"):
             continue
-        if first_action is None:
-            first_action = item
-            if item.get("type") != "command_execution" or item.get("id") is None:
-                return False
-        if item.get("id") != first_action["id"]:
+        if item.get("type") != "command_execution" or item.get("id") is None:
             return False
-        if event["type"] == "item.completed":
-            if (
-                item.get("type") != "command_execution"
-                or item.get("status") != "completed"
-                or item.get("exit_code") != 0
-                or not isinstance(item.get("command"), str)
-                or not _standalone_target_read(item["command"], targets)
+        if event["type"] == "item.started":
+            if active_id is not None:
+                return False
+            active_id = item["id"]
+            continue
+        if active_id is not None and item["id"] != active_id:
+            return False
+        active_id = None
+        if (
+            item.get("status") != "completed"
+            or item.get("exit_code") != 0
+            or not isinstance(item.get("command"), str)
+        ):
+            return False
+        reads = _standalone_target_reads(item["command"], targets)
+        if reads is None or not reads <= remaining:
+            return False
+        for path in reads:
+            target = next(target for target in targets if target["staged_relative_path"] == path)
+            target_sha = target.get("staged_sha256")
+            capture = next(
+                (
+                    captured for captured in captures
+                    if isinstance(captured, dict) and captured.get("path") == path
+                    and captured.get("status") == "complete"
+                    and captured.get("staged_sha256") == target_sha
+                ), None,
+            )
+            if not isinstance(target_sha, str) or not target_sha or capture is None:
+                return False
+            matched_events = capture.get("matched_events")
+            if not isinstance(matched_events, list) or not any(
+                isinstance(match, dict) and match.get("id") == item["id"]
+                for match in matched_events
             ):
                 return False
-            read_id = item["id"]
-            break
-    else:
-        return False
-    for target in targets:
-        if not isinstance(target, dict):
-            return False
-        relative_path = target.get("staged_relative_path")
-        if not isinstance(relative_path, str) or not relative_path.endswith("/SKILL.md"):
-            return False
-        target_sha = target.get("staged_sha256")
-        if not isinstance(target_sha, str) or not target_sha:
-            return False
-        capture = next(
-            (
-                item for item in captures
-                if isinstance(item, dict) and item.get("path") == relative_path
-                and item.get("status") == "complete"
-                and item.get("staged_sha256") == target_sha
-            ),
-            None,
-        )
-        if capture is None:
-            return False
-        matched_events = capture.get("matched_events")
-        if not isinstance(matched_events, list):
-            return False
-        matched_ids = {
-            item.get("id") for item in matched_events
-            if isinstance(item, dict) and item.get("id") is not None
-        }
-        if read_id not in matched_ids:
-            return False
-    return True
+        remaining -= reads
+        if not remaining:
+            return True
+    return False
 
 
 def forced_integrity_status(record: dict[str, Any]) -> str:

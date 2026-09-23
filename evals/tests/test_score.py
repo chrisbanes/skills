@@ -93,6 +93,12 @@ class ScorecardTest(unittest.TestCase):
         for item in (reference_only, warnings_only, path_only, unrelated_capture):
             self.assertEqual("invocation_failure", forced_integrity_status(item))
         self.assertEqual("valid", forced_integrity_status(full_entrypoint))
+        self.assertEqual("valid", forced_integrity_status(packet(
+            f"/bin/zsh -lc 'cat {path}'", "full entrypoint text", "complete"
+        )))
+        self.assertEqual("invocation_failure", forced_integrity_status(packet(
+            f"/bin/zsh -lc 'cat {path} && git status'", "full entrypoint text", "complete"
+        )))
         self.assertFalse(compute_scorecard([reference_only]).gates["forced_integrity"])
 
         late_read = packet(f"cat {path}", "full entrypoint text", "complete")
@@ -125,7 +131,7 @@ class ScorecardTest(unittest.TestCase):
             f"/bin/sed -n '1,$p' {path}", "full entrypoint text", "complete"
         )))
 
-    def test_forced_read_requires_all_targets_in_the_first_standalone_action(self):
+    def test_forced_read_requires_all_targets_before_other_actions(self):
         paths = (
             ".agents/skills/to-plan/SKILL.md",
             ".agents/skills/run-github-project/SKILL.md",
@@ -157,6 +163,25 @@ class ScorecardTest(unittest.TestCase):
             } for path in paths],
         }
         self.assertEqual("valid", forced_integrity_status(item))
+        item["subject"]["events"] = [
+            {"type": "item.completed", "item": {
+                "id": "first", "type": "command_execution", "status": "completed",
+                "exit_code": 0, "command": f"/bin/zsh -lc 'cat {paths[0]}'",
+            }},
+            {"type": "item.completed", "item": {
+                "id": "second", "type": "command_execution", "status": "completed",
+                "exit_code": 0, "command": f"/bin/zsh -lc 'cat {paths[1]}'",
+            }},
+        ]
+        for capture, read_id in zip(item["subject"]["captured_skill_files"], ("first", "second")):
+            capture["matched_events"] = [{"id": read_id}]
+        self.assertEqual("valid", forced_integrity_status(item))
+        item["subject"]["events"].insert(1, {"type": "item.completed", "item": {
+            "id": "inspection", "type": "command_execution", "status": "completed",
+            "exit_code": 0, "command": "rg --files",
+        }})
+        self.assertEqual("invocation_failure", forced_integrity_status(item))
+        item["subject"]["events"].pop(1)
         item["subject"]["events"][1]["item"]["command"] = f"cat {paths[0]}"
         self.assertEqual("invocation_failure", forced_integrity_status(item))
 
