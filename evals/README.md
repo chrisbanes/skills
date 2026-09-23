@@ -194,7 +194,7 @@ dependency, because that prerequisite is constant across its three scored arms
 and is not a public skill or a routing target. Its missing-provider challenge
 deliberately omits that fixture dependency.
 
-Twelve additional workflow compatibility cases are calibration-only. Select them
+Thirteen additional workflow compatibility cases are calibration-only. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
 unresolved decisions, and verification evidence reuse versus missing, stale,
