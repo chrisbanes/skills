@@ -82,6 +82,18 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertIn("git cherry-pick --abort", conflict_path)
         self.assertIn("recorded pre-attempt SHA", conflict_path)
         self.assertIn("worktree is clean", conflict_path)
+        self.assertIn(
+            "same owner the exact pre-attempt SHA and conflict evidence",
+            conflict_path,
+        )
+        self.assertIn(
+            "git worktree add -b <repair-branch> <repair-path> <recorded-pre-attempt-sha>",
+            conflict_path,
+        )
+        self.assertIn("replay their task-scoped commit(s) there in order", conflict_path)
+        self.assertIn("git cherry-pick <task-commit-sha>", conflict_path)
+        self.assertIn("resolves any replay conflict in that isolated worktree", conflict_path)
+        self.assertIn("Do not retry the stale task branch unchanged", conflict_path)
 
         self.assertIn("do not use an abort command", completed_path)
         self.assertIn("pre-attempt state was clean", completed_path)

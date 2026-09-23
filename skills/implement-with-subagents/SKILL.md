@@ -132,8 +132,17 @@ implicitly.
    merge, `git cherry-pick --abort` for a cherry-pick, or the matching abort
    command for another operation). Verify the same integration branch is at
    the recorded pre-attempt SHA and the worktree is clean before returning the
-   conflict to the original task owner. If aborting fails or those checks do
-   not pass, stop and report the integration checkout as blocked.
+   conflict to the original task owner. Give that same owner the exact
+   pre-attempt SHA and conflict evidence. Have them create a new task-owned
+   repair branch and isolated worktree from that integrated SHA (for example,
+   `git worktree add -b <repair-branch> <repair-path>
+   <recorded-pre-attempt-sha>`), then replay their task-scoped commit(s) there
+   in order (for example, `git cherry-pick <task-commit-sha>`). The owner
+   resolves any replay conflict in that isolated worktree, completes the
+   replay, and returns a new task-scoped commit with fresh affected evidence
+   for independent acceptance. Do not retry the stale task branch unchanged.
+   If aborting fails or the controller checks do not pass, stop and report the
+   integration checkout as blocked.
 
    If the integration operation completes but an affected validation fails,
    do not use an abort command. Preserve the failed integrated tree first: use
