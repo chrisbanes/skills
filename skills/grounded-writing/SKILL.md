@@ -25,8 +25,11 @@ generic, or included only to imitate a personality.
 4. In public developer documentation, explain observable behaviour, setting
    choices, trade-offs, and relevant limitations. Remove implementation, test,
    or diagnostic mechanics such as sampling thresholds, CPU masks, interpolation
-   details, and cooldown timing; retain them only when needed to use the API
-   correctly or explicitly requested. Do not ask to expand those mechanics as a
+   details, and cooldown timing. Include a mechanic only when it is required for
+   correct API use, the mechanism itself is necessary to distinguish a
+   reader-facing setting choice, or the user explicitly requests it. If the
+   visible outcome informs the choice but the mechanism does not, explain the
+   outcome without the mechanism. Do not ask to expand internal mechanics as a
    way to fill a public-documentation gap. Retain public contracts and the
    context needed to interpret claims. This boundary does not apply to internal
    design documents or technical reports.
@@ -63,8 +66,11 @@ Finish only when all of these are true:
 - The result still satisfies the requested format and purpose.
 - For reader-facing setting documentation, a developer can tell what changes,
   when to choose each setting, the practical trade-off, the public contract,
-  and the meaningful limitation. Keep implementation mechanics out unless
-  they affect that choice or are required to use the API.
+  and the meaningful limitation. Keep implementation mechanics out unless they
+  are required for correct API use, the mechanism itself is necessary to
+  distinguish the setting choice, or the user explicitly requests it. When an
+  observable effect informs that choice but its mechanism is unnecessary,
+  describe the effect rather than the mechanism.
 - Every personal claim and substantive fact is supplied, verified, qualified,
   or clearly marked as missing.
 - The argument is concrete enough to follow without promotional filler.
