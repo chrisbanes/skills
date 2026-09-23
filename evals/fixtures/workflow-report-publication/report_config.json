@@ -1,0 +1,4 @@
+{
+  "staging_mount": "/runtime/reports/staging",
+  "published_mount": "/runtime/reports/published"
+}

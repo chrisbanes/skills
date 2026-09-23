@@ -6,7 +6,7 @@
   "expected_skills": ["to-plan"],
   "task_mode": "edit",
   "kind": "direct",
-  "fixture": "workflow-plan",
+  "fixture": "workflow-report-publication",
   "allowed_write_paths": [".scratch/to-plan"],
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [
@@ -25,8 +25,12 @@
       "text": "Makes proof failure stop the dependent publication implementation and trigger re-planning; does not treat a failed cross-mount rename as an implementation detail to work around during the dependent slice"
     },
     {
+      "id": "repository-evidence",
+      "text": "Uses the supplied repository evidence: identifies `report_config.json` with `staging_mount` set to `/runtime/reports/staging` and `published_mount` set to `/runtime/reports/published`, and identifies `report_publisher.py:publish_report` using `os.replace` before the `mark_published` callback"
+    },
+    {
       "id": "task-dependency",
-      "text": "Declares the proof as T1 and the dependent implementation as T2, with T2 depending on T1, in an acyclic task graph"
+      "text": "Declares the proof as root task T1 and T2 as a direct dependent task. T2 may combine focused tests with implementation or establish the test contract first; if implementation is a later task, it must depend on that chain so it remains gated by T1. The task graph is acyclic"
     },
     {
       "id": "planning-boundary",

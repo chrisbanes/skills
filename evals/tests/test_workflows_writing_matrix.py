@@ -519,9 +519,22 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             for case in report.cases
             if case.id == "to-plan-material-assumption-proof-calibration"
         )
-        self.assertEqual("workflow-plan", case.fixture)
+        self.assertEqual("workflow-report-publication", case.fixture)
         self.assertTrue(case.calibration)
         self.assertIn("early-proof", case.prompt)
+        fixture = REPO_ROOT / "evals/fixtures/workflow-report-publication"
+        publisher = (fixture / "report_publisher.py").read_text(encoding="utf-8")
+        config = json.loads((fixture / "report_config.json").read_text(encoding="utf-8"))
+        self.assertIn("def publish_report", publisher)
+        self.assertIn("os.replace", publisher)
+        self.assertLess(publisher.index("os.replace"), publisher.index("mark_published("))
+        self.assertEqual(
+            {
+                "staging_mount": "/runtime/reports/staging",
+                "published_mount": "/runtime/reports/published",
+            },
+            config,
+        )
         expectations = json.loads(
             (case.directory / "expectations.json").read_text(encoding="utf-8")
         )
