@@ -1,5 +1,11 @@
 {
   "files": ["comparison.md"],
   "must_match": ["(?i)build", "(?i)raw", "(?i)trace", "(?i)variab", "(?i)completed", "(?i)controlled", "(?i)(?:not (?:provided|supplied|attached)|missing|unavailable|absent)"],
-  "must_not_match": ["(?i)CPU frame (?:duration|time) (?:measures|is) GPU shader", "(?i)\\b\\d+\\s+(?:completed\\s+)?cases?\\b", "(?i)\\b\\d+\\s+iterations?\\b"]
+  "must_not_match": [
+    "(?i)CPU frame (?:duration|time) (?:measures|is) GPU shader",
+    "(?i)\\b(?:this|the|our)\\s+(?:android\\s+)?benchmark(?:\\s+comparison)?\\s+(?:completed|ran|used|included|measured|recorded)\\s+\\d+\\s+(?:completed\\s+)?cases?\\b",
+    "(?i)\\b(?:benchmark|comparison)\\s+(?:results?\\s*[:=]\\s*)?(?:completed\\s+)?cases?\\s*(?:count)?\\s*[:=]\\s*\\d+\\b",
+    "(?i)\\b(?:this|the|our)\\s+(?:android\\s+)?benchmark(?:\\s+comparison)?\\s+(?:used|ran|included|measured|recorded)\\s+\\d+\\s+iterations?\\b",
+    "(?i)\\b(?:benchmark|comparison)\\s+(?:results?\\s*[:=]\\s*)?iterations?\\s*(?:count)?\\s*[:=]\\s*\\d+\\b"
+  ]
 }

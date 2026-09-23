@@ -92,6 +92,79 @@ class KotlinGradleMatrixTest(unittest.TestCase):
             "Edit only `src/main/kotlin/example/Subject.kt`", case.prompt
         )
 
+    def test_kotlin_api_ownership_expectations_accept_multiline_domain_owners(self):
+        expectation_path = (
+            REPO_ROOT
+            / "evals/cases/kotlin-api-ownership-direct/expectations.json"
+        )
+        expectation = json.loads(expectation_path.read_text(encoding="utf-8"))
+        patterns = expectation["must_match"]
+        sources = (
+            """interface ProfileStore {
+    fun loadProfile(rawUserId: String): User
+}
+
+@Deprecated(
+    message = "Use ProfileStore.loadProfile"
+)
+fun String.loadProfile(
+    store: ProfileStore
+): User {
+    return store.loadProfile(this)
+}
+
+fun profileFor(
+    rawUserId: String,
+    store: ProfileStore,
+): User {
+    return store.loadProfile(rawUserId)
+}
+""",
+            """package com.example
+
+interface ProfileStore {
+    fun load(rawUserId: String): User
+}
+
+data class ProfileRepository(private val store: ProfileStore) {
+    fun loadProfile(userId: String): User = store.load(userId)
+}
+
+@Deprecated("Use ProfileRepository")
+fun String.loadProfile(
+    repository: com.example.ProfileRepository,
+): User = repository.loadProfile(this)
+
+fun profileFor(userId: String, repository: com.example.ProfileRepository): User =
+    repository.loadProfile(userId)
+""",
+        )
+
+        for source in sources:
+            with self.subTest(source=source):
+                for pattern in patterns:
+                    self.assertIsNotNone(re.search(pattern, source, re.MULTILINE | re.DOTALL))
+
+        direct_repository_access = """interface ProfileStore {
+    fun loadProfile(rawUserId: String): User
+}
+
+object ProfileDatabase {
+    fun loadProfile(rawUserId: String): User = TODO()
+}
+
+@Deprecated("Use ProfileStore")
+fun String.loadProfile(store: ProfileStore): User =
+    ProfileDatabase.loadProfile(this)
+
+fun profileFor(rawUserId: String, store: ProfileStore): User =
+    store.loadProfile(rawUserId)
+"""
+        shim_delegation = patterns[1]
+        self.assertIsNone(
+            re.search(shim_delegation, direct_repository_access, re.MULTILINE | re.DOTALL)
+        )
+
     def test_event_channel_expectation_accepts_equivalent_bounded_capacities(self):
         expectation_path = (
             REPO_ROOT

@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import tempfile
 import unittest
@@ -448,6 +449,34 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertTrue(case.automatic_no_skill_control)
         self.assertTrue(case.forbid_all_commands)
         self.assertTrue(any("81" in pattern for pattern in expectation["must_not_match"]))
+
+    def test_benchmark_count_guards_ignore_citations_and_build_metadata(self):
+        expectation = json.loads(
+            (
+                REPO_ROOT
+                / "evals/cases/android-benchmark-comparison-direct/expectations.json"
+            ).read_text(encoding="utf-8")
+        )
+        patterns = expectation["must_not_match"]
+        unsupported_claims = (
+            "This benchmark comparison completed 12 cases and recorded 8 iterations.",
+            "Benchmark cases: 12; benchmark iterations: 8.",
+        )
+        harmless_context = (
+            "Build 51 on API 35; issue #42; see case 4 in Appendix 3.",
+            "Historical metadata lists 4 cases in source note [8]; schema v2.1; build 4.3.",
+            "Archived run metadata: completed cases=12; iteration count=8.",
+        )
+
+        for text in unsupported_claims:
+            with self.subTest(text=text):
+                self.assertTrue(
+                    any(re.search(pattern, text) for pattern in patterns)
+                )
+
+        for text in harmless_context:
+            with self.subTest(text=text):
+                self.assertFalse(any(re.search(pattern, text) for pattern in patterns))
 
     def test_behavioral_expectations_do_not_assert_fixture_prose(self):
         expectations = json.loads(
