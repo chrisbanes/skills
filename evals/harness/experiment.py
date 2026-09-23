@@ -15,6 +15,7 @@ from evals.harness.codex import (
     ARMS,
     RunConfig,
     SubjectResult,
+    _GRADLE_OUTPUT_DIRECTORIES,
     automatically_invokable_public_skills,
     captured_skill_file_evidence,
     completed_turn_count,
@@ -269,7 +270,9 @@ def _case_digest(case: EvalCase) -> str:
     for label, root in roots:
         for path in sorted(path for path in root.rglob("*") if path.is_file()):
             relative = path.relative_to(root)
-            if label == "fixture" and {".gradle", "build"} & set(relative.parts):
+            if label == "fixture" and set(_GRADLE_OUTPUT_DIRECTORIES) & set(
+                relative.parts
+            ):
                 continue
             digest.update(label.encode())
             digest.update(b"\0")

@@ -15,7 +15,7 @@ from evals.harness.suites import PUBLIC_SKILLS, ROUTER_SKILL
 
 
 ARMS = ("none", "forced", "automatic")
-_GRADLE_OUTPUT_DIRECTORIES = (".gradle", "build")
+_GRADLE_OUTPUT_DIRECTORIES = (".gradle", ".kotlin", "build")
 _GENERATED_SKILL_SUFFIXES = {".pyc", ".pyo"}
 _TOOL_EVENT_TYPES = {
     "command_execution",

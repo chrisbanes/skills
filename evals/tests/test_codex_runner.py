@@ -406,6 +406,8 @@ class CodexRunnerTest(unittest.TestCase):
         (fixture / ".gradle" / "cache.bin").write_text("generated\n", encoding="utf-8")
         (fixture / "build").mkdir()
         (fixture / "build" / "output.bin").write_text("generated\n", encoding="utf-8")
+        (fixture / ".kotlin").mkdir()
+        (fixture / ".kotlin" / "session.bin").write_text("generated\n", encoding="utf-8")
         first = prepare_workspace(case, self.root, self.root / "runs" / "first")
         second = prepare_workspace(case, self.root, self.root / "runs" / "second")
 
@@ -415,6 +417,8 @@ class CodexRunnerTest(unittest.TestCase):
         (first / ".gradle" / "cache.bin").write_text("generated\n", encoding="utf-8")
         (first / "build").mkdir()
         (first / "build" / "output.bin").write_text("generated\n", encoding="utf-8")
+        (first / ".kotlin").mkdir()
+        (first / ".kotlin" / "session.bin").write_text("generated\n", encoding="utf-8")
         status = subprocess.run(
             ["git", "status", "--porcelain"],
             cwd=first,
@@ -427,6 +431,7 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertEqual("#!/bin/sh\necho simulated\n", (first / "gradlew").read_text())
         self.assertEqual("#!/bin/sh\necho real\n", (first / "gradlew-real").read_text())
         self.assertFalse((first / "subject-gradlew").exists())
+        self.assertFalse((second / ".kotlin").exists())
         self.assertEqual(" M src/main/kotlin/example/Subject.kt\n", status)
         self.assertEqual("package example\n", (second / subject.relative_to(first)).read_text())
 

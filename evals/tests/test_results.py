@@ -121,6 +121,10 @@ class ResultLifecycleTest(unittest.TestCase):
         changed = _case_digest(case)
         (fixture / "build").mkdir()
         (fixture / "build" / "generated.bin").write_bytes(b"generated")
+        (fixture / ".kotlin" / "errors").mkdir(parents=True)
+        (fixture / ".kotlin" / "errors" / "compiler.log").write_text(
+            "generated diagnostic\n", encoding="utf-8"
+        )
 
         self.assertNotEqual(original, changed)
         self.assertEqual(changed, _case_digest(case))
