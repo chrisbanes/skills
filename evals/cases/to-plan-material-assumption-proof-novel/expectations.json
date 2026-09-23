@@ -21,9 +21,7 @@
         "/runtime/reports/published",
         "write_bytes",
         "os.replace",
-        "mark_published",
-        "target runtime",
-        "re-plan"
+        "mark_published"
       ]
     }
   ],
