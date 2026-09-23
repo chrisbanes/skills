@@ -69,12 +69,13 @@ def _standalone_target_read(command: str, targets: list[dict[str, Any]]) -> bool
         return False
     if not words:
         return False
-    if words[0] in ("cat", "/bin/cat"):
+    if words[0] in ("cat", "/bin/cat", "/usr/bin/cat"):
         operands = words[2:] if len(words) > 1 and words[1] == "--" else words[1:]
     elif (
         len(targets) == 1
         and len(words) == 4
-        and words[:2] == ["sed", "-n"]
+        and words[0] in ("sed", "/bin/sed", "/usr/bin/sed")
+        and words[1] == "-n"
         and re.fullmatch(r"(?:[0-9]+|\$)(?:,(?:[0-9]+|\$))?p", words[2])
     ):
         operands = words[3:]

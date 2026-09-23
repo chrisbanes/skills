@@ -352,7 +352,7 @@ def _subject_prompt(case: EvalCase, arm: str) -> str:
         dependencies = ", ".join(f"`{skill}`" for skill in case.constant_skills)
         prompt += (
             f"\n\nUse the following skill(s) explicitly: {invocations}. "
-            f"In a standalone command, print each of {paths} completely "
+            f"In a standalone command, use `cat` to print each of {paths} completely "
             "before any repository inspection or other action. Do not combine "
             "that read with other commands."
             "\n\nIn the final `skills_used`, include each of these exact public "

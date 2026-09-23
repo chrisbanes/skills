@@ -118,6 +118,12 @@ class ScorecardTest(unittest.TestCase):
         self.assertEqual("valid", forced_integrity_status(packet(
             f"sed -n '1,$p' {path}", "full entrypoint text", "complete"
         )))
+        self.assertEqual("valid", forced_integrity_status(packet(
+            f"/usr/bin/cat {path}", "full entrypoint text", "complete"
+        )))
+        self.assertEqual("valid", forced_integrity_status(packet(
+            f"/bin/sed -n '1,$p' {path}", "full entrypoint text", "complete"
+        )))
 
     def test_forced_read_requires_all_targets_in_the_first_standalone_action(self):
         paths = (
