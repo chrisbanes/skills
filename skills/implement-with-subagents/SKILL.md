@@ -136,22 +136,33 @@ implicitly.
    not pass, stop and report the integration checkout as blocked.
 
    If the integration operation completes but an affected validation fails,
-   do not use an abort command. Restore only the controller-owned integration
-   branch to the recorded pre-attempt SHA, and only if its recorded pre-attempt
-   state was clean, the current branch is still that integration branch, and
-   its `HEAD` is still the exact SHA recorded immediately after the completed
-   integration and its worktree is currently clean. Run
+   do not use an abort command. Preserve the failed integrated tree first: use
+   a fresh controller-owned recovery branch named for the task and attempt,
+   pointing to the recorded post-integration SHA. Require that this branch name
+   does not already exist; create it without force with
+   `git branch <recovery-branch> <recorded-post-integration-sha>` and verify
+   `git rev-parse <recovery-branch>` resolves to the exact post-integration
+   SHA. If the tree cannot be preserved and verified, stop and report the
+   integration checkout as blocked without resetting it.
+
+   Restore only the controller-owned integration branch to the recorded
+   pre-attempt SHA, and only if its recorded pre-attempt state was clean, the
+   current branch is still that integration branch, its `HEAD` is still the
+   exact post-integration SHA, and its worktree is currently clean. Run
    `git reset --hard <recorded-pre-attempt-sha>` under those conditions; do not
    reset task-owned branches or other refs/worktrees, and do not remove
-   untracked files or unrelated changes. Then verify the branch
-   is at the exact recorded pre-attempt SHA and the integration worktree is
-   clean before returning the failing check and evidence to the original task
-   owner. If any precondition, restoration, or post-reset verification fails,
-   stop and report the integration checkout as blocked. The owner repairs in
-   its isolated worktree based on the current integrated head, produces a new
-   task-scoped commit, and repeats independent acceptance before integration is
-   retried. The controller does not resolve task-owned source conflicts or
-   implement fixes.
+   untracked files or unrelated changes. Then verify the integration branch is
+   at the exact recorded pre-attempt SHA and clean, and the recovery branch
+   still resolves to the exact post-integration SHA, before handing off the
+   failing check. Give the original task owner that recovery branch and SHA;
+   have the owner create a new task-owned repair branch and isolated worktree
+   from that recovery ref (for example, `git worktree add -b <repair-branch>
+   <repair-path> <recovery-branch>`), then make the task-scoped repair there.
+   After independent acceptance, integrate the repaired task branch in
+   dependency order and rerun affected evidence. If any precondition,
+   restoration, preservation, or verification fails, stop and report the
+   integration checkout as blocked. The controller does not resolve task-owned
+   source conflicts or implement fixes.
 10. After every repair, repeat the independent commit and diff inspection, then
    reassess the evidence under step 8. Reuse only checks whose relevant inputs
    and environment remain unchanged across the inspected descendant diff; repeat

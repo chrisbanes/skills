@@ -86,12 +86,31 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertIn("do not use an abort command", completed_path)
         self.assertIn("pre-attempt state was clean", completed_path)
         self.assertIn("current branch is still that integration branch", completed_path)
-        self.assertIn("HEAD` is still the exact SHA", completed_path)
+        self.assertIn("HEAD` is still the exact post-integration SHA", completed_path)
         self.assertIn("worktree is currently clean", completed_path)
+        self.assertIn("Preserve the failed integrated tree first", completed_path)
+        self.assertIn("fresh controller-owned recovery branch", completed_path)
+        self.assertIn("does not already exist", completed_path)
+        self.assertIn("create it without force", completed_path)
+        self.assertIn(
+            "git branch <recovery-branch> <recorded-post-integration-sha>",
+            completed_path,
+        )
+        self.assertIn("recovery branch still resolves to the exact post-integration SHA", completed_path)
+        self.assertLess(
+            completed_path.index("`git rev-parse <recovery-branch>` resolves to the exact post-integration SHA"),
+            completed_path.index("git reset --hard <recorded-pre-attempt-sha>"),
+        )
+        self.assertIn("create a new task-owned repair branch and isolated worktree from that recovery ref", completed_path)
+        self.assertIn(
+            "git worktree add -b <repair-branch> <repair-path> <recovery-branch>",
+            completed_path,
+        )
+        self.assertIn("integrate the repaired task branch in dependency order", completed_path)
         self.assertIn("git reset --hard <recorded-pre-attempt-sha>", completed_path)
         self.assertIn("do not reset task-owned branches or other refs/worktrees", completed_path)
         self.assertIn("do not remove untracked files or unrelated changes", completed_path)
-        self.assertIn("exact recorded pre-attempt SHA and the integration worktree is", completed_path)
+        self.assertIn("exact recorded pre-attempt SHA and clean", completed_path)
         self.assertIn("stop and report the integration checkout as blocked", completed_path)
 
     def test_has_skill_triads_and_workflow_calibration_coverage_without_routing(self):
