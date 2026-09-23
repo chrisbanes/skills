@@ -522,6 +522,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertEqual("workflow-report-publication", case.fixture)
         self.assertTrue(case.calibration)
         self.assertIn("early-proof", case.prompt)
+        self.assertIn("T3 must depend directly on T1, as well as T2", case.prompt)
         fixture = REPO_ROOT / "evals/fixtures/workflow-report-publication"
         publisher = (fixture / "report_publisher.py").read_text(encoding="utf-8")
         config = json.loads((fixture / "report_config.json").read_text(encoding="utf-8"))
@@ -543,7 +544,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             (case.directory / "expectations.json").read_text(encoding="utf-8")
         )
         self.assertEqual(
-            [["T2", "T1"]], expectations["task_graph"]["required_edges"]
+            [["T2", "T1"], ["T3", "T1"], ["T3", "T2"]],
+            expectations["task_graph"]["required_edges"],
         )
         self.assertTrue(expectations["task_graph"]["require_acyclic"])
 

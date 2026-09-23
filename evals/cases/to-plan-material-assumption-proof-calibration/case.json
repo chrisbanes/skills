@@ -30,7 +30,7 @@
     },
     {
       "id": "task-dependency",
-      "text": "Declares the proof as root task T1 and T2 as a direct dependent task. T2 may combine focused tests with implementation or establish the test contract first; if implementation is a later task, it must depend on that chain so it remains gated by T1. The task graph is acyclic"
+      "text": "Declares the proof as root task T1, T2 as directly dependent on T1, and later validation task T3 as directly dependent on both T1 and T2. Every task dependent on the proof names T1 in its own dependency list; the task graph is acyclic"
     },
     {
       "id": "planning-boundary",
