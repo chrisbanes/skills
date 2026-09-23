@@ -269,8 +269,8 @@ Preview the complete matrix and call count:
 ```shell
 python3 evals/run.py plan \
   --suite kotlin-gradle \
-  --model gpt-5.6-terra --reasoning medium \
-  --judge-model gpt-5.6-sol --judge-reasoning high \
+  --model gpt-6-luna --reasoning high \
+  --judge-model gpt-6-sol --judge-reasoning high \
   --repetitions 3
 ```
 
@@ -279,8 +279,8 @@ the harness deliberately does not bake in a price table that can go stale:
 
 ```shell
 python3 evals/run.py plan \
-  --model gpt-5.6-terra --reasoning medium \
-  --judge-model gpt-5.6-sol --judge-reasoning high \
+  --model gpt-6-luna --reasoning high \
+  --judge-model gpt-6-sol --judge-reasoning high \
   --subject-cost-per-call-usd <amount> \
   --judge-cost-per-call-usd <amount>
 ```
@@ -293,17 +293,19 @@ python3 evals/run.py run \
   --suite kotlin-gradle \
   --case kotlin-api-ownership-direct \
   --arm none --arm forced --arm automatic \
-  --model gpt-5.6-terra --reasoning medium \
-  --judge-model gpt-5.6-sol --judge-reasoning high \
+  --model gpt-6-luna --reasoning high \
+  --judge-model gpt-6-sol --judge-reasoning high \
   --subject-cost-per-call-usd <amount> \
   --judge-cost-per-call-usd <amount> \
   --repetitions 1 --execute
 ```
 
 Use `--skill`, repeated `--case` or `--arm` filters, and `--output-dir` to bound
-a run. Raw results are atomic and fingerprinted by the case, arm, skill commit,
-Codex version, and both model settings. Reusing the same output directory resumes
-matching results and rejects stale fingerprints.
+a run. Use a fresh output directory for runs with these model settings because
+model settings are part of the result fingerprint. Raw results are atomic and
+fingerprinted by the case, arm, skill commit, Codex version, and both model
+settings. Reusing the same output directory resumes matching results and rejects
+stale fingerprints.
 The fingerprint also covers the discovered external skill catalog and the exact
 repository skill contents staged into subject workspaces, excluding generated
 Python bytecode caches.
@@ -330,7 +332,7 @@ command previews by default and writes separate fingerprinted rejudgments when
 ```shell
 python3 evals/run.py judge \
   --output-dir .scratch/skill-evals/<run-id> \
-  --judge-model gpt-5.6-sol --judge-reasoning high
+  --judge-model gpt-6-sol --judge-reasoning high
 ```
 
 It reconciles raw records with the current corpus first, then plans and
