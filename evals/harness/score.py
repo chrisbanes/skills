@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import shlex
 from dataclasses import dataclass
 from statistics import median
@@ -69,18 +68,9 @@ def _standalone_target_read(command: str, targets: list[dict[str, Any]]) -> bool
         return False
     if not words:
         return False
-    if words[0] in ("cat", "/bin/cat", "/usr/bin/cat"):
-        operands = words[2:] if len(words) > 1 and words[1] == "--" else words[1:]
-    elif (
-        len(targets) == 1
-        and len(words) == 4
-        and words[0] in ("sed", "/bin/sed", "/usr/bin/sed")
-        and words[1] == "-n"
-        and re.fullmatch(r"(?:[0-9]+|\$)(?:,(?:[0-9]+|\$))?p", words[2])
-    ):
-        operands = words[3:]
-    else:
+    if words[0] not in ("cat", "/bin/cat", "/usr/bin/cat"):
         return False
+    operands = words[2:] if len(words) > 1 and words[1] == "--" else words[1:]
     if len(operands) != len(targets):
         return False
     remaining = list(operands)

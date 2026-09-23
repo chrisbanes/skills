@@ -115,13 +115,13 @@ class ScorecardTest(unittest.TestCase):
         ]
         for item in (late_read, compound_read, additional_file, overlapping_action):
             self.assertEqual("invocation_failure", forced_integrity_status(item))
-        self.assertEqual("valid", forced_integrity_status(packet(
+        self.assertEqual("invocation_failure", forced_integrity_status(packet(
             f"sed -n '1,$p' {path}", "full entrypoint text", "complete"
         )))
         self.assertEqual("valid", forced_integrity_status(packet(
             f"/usr/bin/cat {path}", "full entrypoint text", "complete"
         )))
-        self.assertEqual("valid", forced_integrity_status(packet(
+        self.assertEqual("invocation_failure", forced_integrity_status(packet(
             f"/bin/sed -n '1,$p' {path}", "full entrypoint text", "complete"
         )))
 
