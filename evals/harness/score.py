@@ -66,6 +66,18 @@ def _standalone_target_read(command: str, targets: list[dict[str, Any]]) -> bool
         words = shlex.split(command)
     except ValueError:
         return False
+    # Codex reports its command tool as the shell invocation, not the inner
+    # command. Unwrap only the login-command form observed in its event stream;
+    # the inner command still has to be a standalone cat of exactly the targets.
+    if (
+        len(words) == 3
+        and words[0] == "/bin/zsh"
+        and words[1] in ("-lc", "-c")
+    ):
+        try:
+            words = shlex.split(words[2])
+        except ValueError:
+            return False
     if not words:
         return False
     if words[0] not in ("cat", "/bin/cat", "/usr/bin/cat"):

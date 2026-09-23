@@ -1,62 +1,74 @@
-# Focused `to-plan` proof case run
+# Focused `to-plan` proof and countercase results
 
-This is a single-run, non-gating evaluation record for
-`to-plan-material-assumption-proof-calibration`. It documents the focused model
-run requested during review of CB-12. It is not a suite-wide result or evidence
-that the target runtime supports cross-mount replacement.
+These are targeted, single-repetition forced-arm checks for the proof-needed
+case and its evidence-backed no-proof counterexample. Both are non-gating
+model observations, not suite-wide comparisons or proof of target-runtime mount
+behavior.
 
-## Reproduction and provenance
+## Proof-needed case
 
-- Suite: `workflows-writing`
-- Case: `to-plan-material-assumption-proof-calibration`
-- Arm / repetition: `forced` / `1`
-- Subject: `gpt-5.6-terra`, medium reasoning
-- Judge: `gpt-5.6-sol`, high reasoning
-- CLI: `codex-cli 0.155.1`
-- Explicit cost inputs: subject `$0.208` per call; judge `$0.40` per call.
-  The estimate is `$0.608` for one subject and one judge call; this is an
-  estimate from the supplied inputs, not a billed amount.
+- Run ID: `to-plan-material-assumption-proof-calibration:forced:1`
+- Run fingerprint: `94bfabef9ce6ee93571fa07bce8a9d52a1a8fd5193898b6a81589271400d97c3`
+- Case digest: `990e3028461438d4f736774f9622b5dc4f1c363162d1c3ecf348d20d4deb46b1`
+- Recorded repository HEAD: `bf473cb60d47a68b0272154c217df7e7c1869b12`
+- Captured staged `to-plan/SKILL.md` SHA-256:
+  `558a08c148ee0c02d4f63491b317c863a512ca57ea74423cf6d6f7ba7906361e`
+- Subject: `gpt-5.6-terra`, medium reasoning; judge: `gpt-5.6-sol`, high
+  reasoning; Codex CLI: `codex-cli 0.155.1`.
+- Cost inputs: subject `$0.208/call`, judge `$0.40/call`; estimate `$0.608`
+  for one subject and one judge call, not billed cost.
 - Command:
 
   ```sh
-  python3.13 evals/run.py run --suite workflows-writing --case to-plan-material-assumption-proof-calibration --arm forced --model gpt-5.6-terra --reasoning medium --judge-model gpt-5.6-sol --judge-reasoning high --subject-cost-per-call-usd 0.208 --judge-cost-per-call-usd 0.40 --repetitions 1 --execute --output-dir .scratch/skill-evals/cb12-watson-second-finding
+  python3.13 evals/run.py run --suite workflows-writing --case to-plan-material-assumption-proof-calibration --arm forced --model gpt-5.6-terra --reasoning medium --judge-model gpt-5.6-sol --judge-reasoning high --subject-cost-per-call-usd 0.208 --judge-cost-per-call-usd 0.40 --repetitions 1 --execute --output-dir ../cb12-candidate-evidence/skill-evals/cb12-fix-first-proof-accepted-final
   ```
 
-- Case digest: `4656daf84ced01cae2527c24018ec4c86f24d06b4c634f62993f4b34048084a0`
-- Run fingerprint: `8a59a45e0a73341f109c0d47cb4375f289fa64de71bbc642338d3581b6d00cc5`
-- Captured `to-plan/SKILL.md` SHA-256: `558a08c148ee0c02d4f63491b317c863a512ca57ea74423cf6d6f7ba7906361e`
-- The run recorded repository HEAD `10e1b94d91f8488fc7391180c472ad044d05f21d`;
-  the case digest matches the case and fixture in reviewed candidate
-  `17d20fc70adeba2f8ed3e9b4ddaa947652b41a25`.
-- Raw local `results.json` SHA-256:
-  `0d58daafa9efdd270bd07216cc217836275282979437e0ed8d7c6bcced884a50`.
-  The raw run directory is local scratch evidence, not part of the repository.
+- The first completed subject command was `/bin/zsh -lc 'cat
+  .agents/skills/to-plan/SKILL.md'`; it exited 0. Captured output matched the
+  staged entrypoint hash above on event `item_1`. Forced integrity is `valid`.
+- The artifact validator returned 0. Objective grading and the judge passed;
+  all five rubric criteria passed: `bounded-proof`, `failure-gate`,
+  `repository-evidence`, `task-dependency`, and `planning-boundary`. No
+  forbidden actions or violations were recorded.
+- Usage: subject 182,496 input / 9,267 output tokens; judge 38,661 input / 871
+  output tokens; no retries.
+- Human audit: **accept**. Raw `results.json` SHA-256:
+  `ddda11e3aa57aee27d6dc08773b164259a6ca806fd6cc0994e72c72bfdd6667d`.
 
-## Result and audit
+## No-proof countercase
 
-The deterministic validator returned 0 (`validated
-to-plan-material-assumption-proof-calibration`). Objective grading passed; the
-judge returned 0 and marked all five rubric criteria passing; the combined
-outcome field is true, with no forbidden-action failures or violations. The
-subject used 212,132 input and 7,538 output tokens; the judge used 38,357 input
-and 882 output tokens. Neither process retried.
+- Run ID: `to-plan-authorized-draft-direct:forced:1`
+- Run fingerprint: `77b380ab472598c32d64fd83bd0d45a6eeaa36be87ac337d2b9bc8b905d9a193`
+- Case digest: `653b65ff0aca5b3b0d82653b9ac82414d8cec435c01cac13a904acdbfef17b69`
+- Same subject, judge, reasoning, CLI version, and cost inputs as the proof
+  case. Cost estimate: `$0.608` for one subject and one judge call.
+- Command:
 
-| Criterion | Result and evidence in the plan |
-| --- | --- |
-| `bounded-proof` | T1 probes a unique sentinel from configured staging to published and requires exact destination bytes plus source absence. |
-| `failure-gate` | A T1 failure stops T2 and triggers re-planning; no copy/delete fallback is allowed. |
-| `repository-evidence` | It reports the existing direct destination write and marker ordering, both configured mount values, and labels staging plus `os.replace`/`Path.replace` before marking as proposed post-proof behavior. |
-| `task-dependency` | The acyclic plan orders T1 → T2 → T3, with T2 gated on T1. |
-| `planning-boundary` | It writes only the plan, with no source/configuration edit, runtime proof, or provider contact. |
+  ```sh
+  python3.13 evals/run.py run --suite workflows-writing --case to-plan-authorized-draft-direct --arm forced --model gpt-5.6-terra --reasoning medium --judge-model gpt-5.6-sol --judge-reasoning high --subject-cost-per-call-usd 0.208 --judge-cost-per-call-usd 0.40 --repetitions 1 --execute --output-dir ../cb12-candidate-evidence/skill-evals/cb12-fix-first-countercase
+  ```
 
-The final human audit decision is **reject as valid forced behavioral
-evidence**. Although the plan, validator, and judge checks pass, the harness
-reports `invocation_failure`: the forced-target event integrity check did not
-observe the staged `to-plan` skill being read. The audit rationale and run
-record are in the local scratch evidence. The scorecard therefore reports this
-case as invalid forced evidence, and the passing rubric must not be presented as
-a valid skill-effect measurement.
+- The first completed command read the captured staged `to-plan/SKILL.md`;
+  forced integrity is `valid`. Its artifact validator, objective grading, and
+  all five rubric criteria passed. No forbidden actions or violations were
+  recorded.
+- Usage: subject 224,184 input / 4,536 output tokens; judge 35,535 input / 1,008
+  output tokens; no retries.
+- Human audit: **accept**. Raw `results.json` SHA-256:
+  `cfc78df638fa9474a57ee55267b20867c4576a80204c30733e15275b2616276c`.
 
-This one forced repetition cannot establish repeatability, compare arms, or
-prove behavior on an actual cross-mount runtime. The fixture is synthetic; the
-required target-runtime probe remains unrun.
+## Harness diagnosis and limits
+
+Codex emits the first standalone read as a shell wrapper (`/bin/zsh -lc
+'cat …'`), while the forced-evidence checker previously accepted only bare
+`cat`. The checker now unwraps that exact shell form and still rejects
+compound commands; a regression test covers both. Earlier proof attempts had
+valid observed reads but failed case validation or rubric requirements and
+were audited as rejected. The accepted proof prompt now states the required
+`os.replace` proposal, current `published.write_bytes(contents)` behavior, and
+the template's exact T1 → T2 → T3 dependency syntax.
+
+Each accepted case has one forced repetition only. These results do not compare
+arms or establish repeatability. The fixture is synthetic and cannot establish
+that the actual target runtime permits cross-mount replacement; the bounded
+runtime proof remains unrun.
