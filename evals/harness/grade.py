@@ -213,6 +213,58 @@ def _is_simple_local_read(command: str) -> bool:
     )
 
 
+def _is_bare_or_system_executable(token: str, executable: str) -> bool:
+    return token in {
+        executable,
+        f"/bin/{executable}",
+        f"/usr/bin/{executable}",
+    }
+
+
+def _is_target_skill_entrypoint_read(case: EvalCase, command: str) -> bool:
+    """Allow only one standalone read of this case's target skill entrypoint."""
+    if _command_substitutions(command) or _ends_with_background_operator(command):
+        return False
+    segments, separators = _shell_parts(command)
+    if len(segments) != 1 or separators:
+        return False
+    invocation = segments[0]
+    if not invocation:
+        return False
+
+    executable = PurePosixPath(invocation[0])
+    if executable.name in _SHELL_EXECUTABLES:
+        if (
+            len(invocation) != 3
+            or invocation[1] not in {"-c", "-lc"}
+            or not _is_bare_or_system_executable(
+                invocation[0], executable.name
+            )
+        ):
+            return False
+        script = invocation[2]
+        if _command_substitutions(script) or _ends_with_background_operator(script):
+            return False
+        nested_segments, nested_separators = _shell_parts(script)
+        if len(nested_segments) != 1 or nested_separators:
+            return False
+        invocation = nested_segments[0]
+        if not invocation:
+            return False
+        executable = PurePosixPath(invocation[0])
+
+    if (
+        executable.name != "cat"
+        or len(invocation) != 2
+        or not _is_bare_or_system_executable(invocation[0], "cat")
+    ):
+        return False
+    return any(
+        invocation[1] == f".agents/skills/{skill}/SKILL.md"
+        for skill in case.target_skills
+    )
+
+
 def _is_shell_wrapped_local_read_sequence(command: str, exit_code: object) -> bool:
     try:
         wrapper = shlex.split(command)
@@ -905,12 +957,27 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
             failures.append(f"validator failed: {' '.join(validator.argv)}{suffix}")
     successful_commands = _event_invocations(result.events, successful_only=True)
     attempted_commands = _event_invocations(result.events)
-    command_execution_attempted = any(
-        isinstance(event.get("item"), dict)
-        and event["item"].get("type") == "command_execution"
+    command_execution_events = tuple(
+        event["item"]
         for event in result.events
+        if isinstance(event.get("item"), dict)
+        and event["item"].get("type") == "command_execution"
     )
-    if case.forbid_all_commands and command_execution_attempted:
+
+    def is_allowed_skill_read(item: dict[str, object]) -> bool:
+        if result.arm != "forced":
+            return False
+        command = item.get("command")
+        if isinstance(command, list):
+            command = shlex.join(str(part) for part in command)
+        return isinstance(command, str) and _is_target_skill_entrypoint_read(
+            case, command
+        )
+
+    disallowed_command_execution = case.forbid_all_commands and any(
+        not is_allowed_skill_read(item) for item in command_execution_events
+    )
+    if disallowed_command_execution:
         failures.append("command execution forbidden for this case")
     for pattern in case.required_command_patterns:
         if not any(
@@ -926,7 +993,7 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
             failures.append(f"forbidden command evidence found: {pattern}")
 
     violations: list[str] = []
-    if case.forbid_all_commands and command_execution_attempted:
+    if disallowed_command_execution:
         violations.append("command executed despite analysis-only boundary")
     if case.task_mode == "review" and result.changed_paths:
         violations.append("review case changed workspace")

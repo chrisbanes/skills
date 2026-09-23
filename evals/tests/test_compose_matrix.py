@@ -156,7 +156,7 @@ class ComposeMatrixTest(unittest.TestCase):
         self.assertIn("recommends first", repair_criterion["text"].lower())
         self.assertIn("then deciding", repair_criterion["text"].lower())
 
-    def test_ui_testing_novel_requires_recording_evidence(self):
+    def test_ui_testing_novel_grades_findings_without_recommending_reinspection(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(
             case
@@ -169,8 +169,14 @@ class ComposeMatrixTest(unittest.TestCase):
             for criterion in case.rubric
             if criterion["id"] == "criterion-2"
         )["text"].lower()
-        self.assertIn("expected artifact path", seam_criterion)
-        self.assertIn("preserving the tolerance", seam_criterion)
+        self.assertIn("build/recorded/subject.png", seam_criterion)
+        self.assertIn("absent", seam_criterion)
+        self.assertIn("no baseline diff was found", seam_criterion)
+        self.assertIn("not evidenced", seam_criterion)
+        self.assertIn("findings only", seam_criterion)
+        self.assertIn("preserves the existing tolerance", seam_criterion)
+        self.assertNotIn("recommend", seam_criterion)
+        self.assertIn("report findings only", case.prompt.lower())
 
     def test_fixture_declares_pinned_compose_jvm_dependencies_and_offline_wrapper(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "compose-jvm"

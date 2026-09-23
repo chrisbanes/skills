@@ -448,7 +448,37 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertLessEqual(max(map(len, draft.splitlines())), 80)
         self.assertTrue(case.automatic_no_skill_control)
         self.assertTrue(case.forbid_all_commands)
-        self.assertTrue(any("81" in pattern for pattern in expectation["must_not_match"]))
+        line_width_pattern = next(
+            pattern for pattern in expectation["must_not_match"] if "81" in pattern
+        )
+        flags = re.MULTILINE | re.DOTALL
+        self.assertGreater(len(draft), 80)
+        self.assertIsNone(re.search(line_width_pattern, draft, flags))
+        self.assertIsNone(re.search(line_width_pattern, "x" * 80, flags))
+        self.assertIsNotNone(re.search(line_width_pattern, "x" * 81, flags))
+
+    def test_benchmark_direct_accepts_spread_for_unavailable_variability(self):
+        expectation = json.loads(
+            (
+                REPO_ROOT
+                / "evals/cases/android-benchmark-comparison-direct/expectations.json"
+            ).read_text(encoding="utf-8")
+        )
+        variability_pattern = next(
+            pattern for pattern in expectation["must_match"] if "spread" in pattern
+        )
+        missing_data_pattern = next(
+            pattern
+            for pattern in expectation["must_match"]
+            if "not (?:provided|supplied|attached)" in pattern
+        )
+
+        self.assertIsNotNone(re.search(variability_pattern, "Per-run spread is unavailable."))
+        self.assertIsNotNone(re.search(variability_pattern, "Per-run variability is unavailable."))
+        self.assertIsNone(re.search(variability_pattern, "Per-run range is unavailable."))
+        self.assertIsNotNone(
+            re.search(missing_data_pattern, "The raw traces were not supplied.")
+        )
 
     def test_benchmark_count_guards_ignore_citations_and_build_metadata(self):
         expectation = json.loads(

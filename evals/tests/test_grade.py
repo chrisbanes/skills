@@ -27,10 +27,12 @@ def make_case(root: Path, *, task_mode="edit", validators=None, allowed=None):
     )
 
 
-def make_result(workspace: Path, *, paths=(), events=(), output=None, returncode=0):
+def make_result(
+    workspace: Path, *, paths=(), events=(), output=None, returncode=0, arm="automatic"
+):
     return SubjectResult(
         case_id="case",
-        arm="automatic",
+        arm=arm,
         command=("codex",),
         workspace=workspace,
         returncode=returncode,
@@ -100,6 +102,81 @@ class DeterministicGradeTest(unittest.TestCase):
         self.assertTrue(grade.forbidden_action_failure)
         self.assertIn("command execution forbidden for this case", grade.objective_failures)
         self.assertIn("command executed despite analysis-only boundary", grade.violations)
+
+    def test_analysis_only_case_allows_only_target_skill_entrypoint_read(self):
+        case = EvalCase(
+            **{**make_case(self.workspace).__dict__, "forbid_all_commands": True}
+        )
+        target_path = ".agents/skills/compose-state-and-effects/SKILL.md"
+        allowed_commands = (
+            f"cat {target_path}",
+            f"/bin/zsh -lc 'cat {target_path}'",
+        )
+        for command in allowed_commands:
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    arm="forced",
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {"type": "command_execution", "command": command},
+                        },
+                    ),
+                )
+
+                grade = grade_subject(case, result)
+
+                self.assertTrue(grade.objective_pass)
+                self.assertFalse(grade.forbidden_action_failure)
+
+        rejected_commands = (
+            "cat draft.md",
+            "/bin/zsh -lc 'cat draft.md'",
+            "cat .agents/skills/other-skill/SKILL.md",
+            f"/bin/zsh -lc 'cat {target_path} && cat draft.md'",
+            "/bin/zsh -lc 'pwd'",
+            "ls",
+        )
+        for command in rejected_commands:
+            with self.subTest(command=command):
+                result = make_result(
+                    self.workspace,
+                    arm="forced",
+                    events=(
+                        {
+                            "type": "item.completed",
+                            "item": {"type": "command_execution", "command": command},
+                        },
+                    ),
+                )
+
+                grade = grade_subject(case, result)
+
+                self.assertFalse(grade.objective_pass)
+                self.assertTrue(grade.forbidden_action_failure)
+                self.assertIn(
+                    "command execution forbidden for this case",
+                    grade.objective_failures,
+                )
+
+        result = make_result(
+            self.workspace,
+            events=(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": f"cat {target_path}",
+                    },
+                },
+            ),
+        )
+
+        grade = grade_subject(case, result)
+
+        self.assertFalse(grade.objective_pass)
+        self.assertTrue(grade.forbidden_action_failure)
 
     def test_rejects_any_review_write_and_dangerous_trace_event(self):
         case = make_case(self.workspace, task_mode="review")

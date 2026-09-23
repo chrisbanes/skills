@@ -29,7 +29,7 @@
     },
     {
       "id": "criterion-2",
-      "text": "Recommends inspecting the expected artifact path and intentional baseline diff while preserving the tolerance"
+      "text": "Notes that `build/recorded/subject.png` is absent and no baseline diff was found, so the claimed baseline update is not evidenced; gives findings only and preserves the existing tolerance"
     }
   ],
   "provenance": {
