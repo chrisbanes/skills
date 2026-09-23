@@ -526,8 +526,12 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         publisher = (fixture / "report_publisher.py").read_text(encoding="utf-8")
         config = json.loads((fixture / "report_config.json").read_text(encoding="utf-8"))
         self.assertIn("def publish_report", publisher)
-        self.assertIn("os.replace", publisher)
-        self.assertLess(publisher.index("os.replace"), publisher.index("mark_published("))
+        self.assertIn("published.write_bytes(contents)", publisher)
+        self.assertNotIn("os.replace", publisher)
+        self.assertLess(
+            publisher.index("published.write_bytes(contents)"),
+            publisher.index("mark_published("),
+        )
         self.assertEqual(
             {
                 "staging_mount": "/runtime/reports/staging",

@@ -19,6 +19,7 @@
         "/runtime/reports/published",
         "report_publisher.py",
         "publish_report",
+        "write_bytes",
         "os.replace",
         "mark_published",
         "T1",

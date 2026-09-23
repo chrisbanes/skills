@@ -26,7 +26,7 @@
     },
     {
       "id": "repository-evidence",
-      "text": "Uses the supplied repository evidence: identifies `report_config.json` with `staging_mount` set to `/runtime/reports/staging` and `published_mount` set to `/runtime/reports/published`, and identifies `report_publisher.py:publish_report` using `os.replace` before the `mark_published` callback"
+      "text": "Uses repository evidence to distinguish current and proposed behavior: the existing `report_publisher.py:publish_report` writes directly to the configured published path using `write_bytes` and then marks it published; after a passing T1, the proposed change stages under the configured staging mount, uses `os.replace` into the published mount, and only then marks it published. It identifies `report_config.json` with `staging_mount`=`/runtime/reports/staging` and `published_mount`=`/runtime/reports/published`, and does not describe the proposed rename as existing behavior or plan redundant implementation"
     },
     {
       "id": "task-dependency",

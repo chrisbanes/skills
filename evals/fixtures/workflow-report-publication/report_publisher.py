@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from collections.abc import Callable
 from pathlib import Path
 
@@ -19,10 +18,8 @@ def publish_report(
     contents: bytes,
     mark_published: Callable[[str], None],
 ) -> Path:
-    staging_mount, published_mount = configured_mounts()
-    staged = staging_mount / f"{report_id}.tmp"
+    _, published_mount = configured_mounts()
     published = published_mount / f"{report_id}.report"
-    staged.write_bytes(contents)
-    os.replace(staged, published)
+    published.write_bytes(contents)
     mark_published(report_id)
     return published
