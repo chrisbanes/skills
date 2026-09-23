@@ -43,6 +43,16 @@ edge cases; never invent repository facts.
 
 ## Resolve decisions and draft
 
+Before drafting, identify assumptions whose failure would invalidate the chosen
+approach or cause substantial rework. Resolve them with proportionate
+repository evidence or read-only checks when practical, and record the finding.
+If only new code, target hardware, or the target runtime can test an assumption,
+make a bounded proof the first prerequisite of dependent implementation. State
+the hypothesis, setup, observable pass/fail condition, and what stops or triggers
+replanning on failure; dependent slices must name the proof task ID. Do not add a
+proof when existing evidence settles the assumption, and do not leave unresolved
+design choices as open-ended implementation exploration.
+
 An authorized Planning transition, decision-complete current task, or confirmed
 conversation source authorizes the smallest coherent contract-realizing design.
 Record non-obvious choices and evidence. Escalate only conflicting authority,

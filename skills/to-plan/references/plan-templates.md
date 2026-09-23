@@ -31,6 +31,9 @@ Use exactly one source-appropriate template.
 
 - <Non-obvious contract-realizing choice, supporting repository evidence, and
   decision the implementer must preserve.>
+- <Optional: material assumption, proportionate evidence or bounded proof, and
+  the result or failure gate. Express any proof using the existing slice fields;
+  dependent slices name its task ID.>
 
 ### Implementation context
 
@@ -117,6 +120,9 @@ focused command>`; expect <specific successful result>.
 
 - <Non-obvious contract-realizing choice, supporting repository evidence, and
   decision the implementer must preserve.>
+- <Optional: material assumption, proportionate evidence or bounded proof, and
+  the result or failure gate. Express any proof using the existing slice fields;
+  dependent slices name its task ID.>
 
 ## Implementation context
 
