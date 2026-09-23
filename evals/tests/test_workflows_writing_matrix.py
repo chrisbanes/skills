@@ -560,6 +560,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertEqual("novel", case.kind)
         self.assertTrue(case.calibration)
         self.assertEqual("workflow-report-publication", case.fixture)
+        self.assertIn("configured staging mount", case.prompt)
+        self.assertIn("configured published mount", case.prompt)
+        self.assertNotIn("proof", case.prompt.lower())
         self.assertNotIn("os.replace", case.prompt)
         self.assertNotIn("T3", case.prompt)
         rubric_ids = {item["id"] for item in case.rubric}
@@ -577,7 +580,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             (case.directory / "expectations.json").read_text(encoding="utf-8")
         )
         self.assertEqual(
-            [["T2", "T1"], ["T3", "T1"], ["T3", "T2"]],
+            [["T2", "T1"]],
             expectations["task_graph"]["required_edges"],
         )
         self.assertTrue(expectations["task_graph"]["require_acyclic"])

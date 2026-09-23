@@ -1,8 +1,6 @@
-The report consumers have seen incomplete exports during busy periods. We want a
-local implementation plan for making a report appear published only once its
-contents are complete. Use the repository slice to understand how publication
-works today and where reports are configured to live. Planning only: do not
-change source or configuration, run a target runtime experiment, or contact a
-provider. Write one executable local plan. If the safe approach depends on an
-assumption the fixture cannot establish, identify a bounded way to check it
-before implementation and state what happens if the check fails.
+The report consumers have seen incomplete exports during busy periods. Plan the
+change so each completed report is staged under the configured staging mount,
+then moved to the configured published mount before it is marked published. Use
+the repository slice to understand how publication works today and where the
+mounts are configured. Planning only: do not change source or configuration, or
+contact a provider. Write one executable local plan.

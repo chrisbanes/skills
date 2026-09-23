@@ -34,7 +34,7 @@
     },
     {
       "id": "task-dependency",
-      "text": "Makes the proof a root task; every later task that depends on the proof names it directly, and the task graph is acyclic"
+      "text": "Makes the proof a root task and the implementation directly dependent on it; any additional slice that depends on the proof also names it directly, and the task graph is acyclic"
     },
     {
       "id": "planning-boundary",
