@@ -1,9 +1,12 @@
 # Focused `to-plan` proof and countercase results
 
-These are targeted, single-repetition forced-arm checks for the proof-needed
-case and its evidence-backed no-proof counterexample. Both are non-gating
-model observations, not suite-wide comparisons or proof of target-runtime mount
-behavior.
+These are historical, single-repetition forced-arm records for the proof-needed
+case and its evidence-backed no-proof counterexample. They apply only to their
+recorded case versions. The proof-case digest below does not match the case
+committed at reviewed PR head `acffa70fccbf2ba5e38cf93c53e0d3e2193b3674`
+(`44713713…`), and the dependency-aligned case changed again afterward. No
+model result is claimed for the current proof-case corpus. Neither historical
+record proves target-runtime mount behavior.
 
 ## Proof-needed case
 
@@ -32,7 +35,9 @@ behavior.
   forbidden actions or violations were recorded.
 - Usage: subject 182,496 input / 9,267 output tokens; judge 38,661 input / 871
   output tokens; no retries.
-- Human audit: **accept**. Raw `results.json` SHA-256:
+- Historical human audit for this recorded case version: **accept**. This
+  disposition does not validate the case committed at `acffa70`. Raw
+  `results.json` SHA-256:
   `ddda11e3aa57aee27d6dc08773b164259a6ca806fd6cc0994e72c72bfdd6667d`.
 
 ## No-proof countercase
@@ -54,7 +59,8 @@ behavior.
   recorded.
 - Usage: subject 224,184 input / 4,536 output tokens; judge 35,535 input / 1,008
   output tokens; no retries.
-- Human audit: **accept**. Raw `results.json` SHA-256:
+- Historical human audit for this recorded countercase version: **accept**. Raw
+  `results.json` SHA-256:
   `cfc78df638fa9474a57ee55267b20867c4576a80204c30733e15275b2616276c`.
 
 ## Harness diagnosis and limits
@@ -64,9 +70,11 @@ Codex emits the first standalone read as a shell wrapper (`/bin/zsh -lc
 `cat`. The checker now unwraps that exact shell form and still rejects
 compound commands; a regression test covers both. Earlier proof attempts had
 valid observed reads but failed case validation or rubric requirements and
-were audited as rejected. The accepted proof prompt now states the required
-`os.replace` proposal, current `published.write_bytes(contents)` behavior, and
-the template's exact T1 → T2 → T3 dependency syntax.
+were audited as rejected. The dependency-aligned calibration now requires T2 to
+depend on T1 and T3 to name both T1 (the direct proof prerequisite) and T2 (the
+implementation prerequisite), matching `skills/to-plan/references/workflow.md`.
+The committed prompt and rubric enforce that contract; model validation for
+that changed corpus is waived and is not claimed here.
 
 Each accepted case has one forced repetition only. These results do not compare
 arms or establish repeatability. The fixture is synthetic and cannot establish
