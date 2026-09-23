@@ -470,14 +470,24 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         missing_data_pattern = next(
             pattern
             for pattern in expectation["must_match"]
-            if "not (?:provided|supplied|attached)" in pattern
+            if "not (?:provided|supplied|attached|included)" in pattern
         )
 
         self.assertIsNotNone(re.search(variability_pattern, "Per-run spread is unavailable."))
         self.assertIsNotNone(re.search(variability_pattern, "Per-run variability is unavailable."))
+        self.assertIsNotNone(
+            re.search(
+                variability_pattern,
+                "The improved consistency cannot be quantified without raw results.",
+            )
+        )
+        self.assertIsNone(re.search(variability_pattern, "Results were more consistent."))
         self.assertIsNone(re.search(variability_pattern, "Per-run range is unavailable."))
         self.assertIsNotNone(
             re.search(missing_data_pattern, "The raw traces were not supplied.")
+        )
+        self.assertIsNotNone(
+            re.search(missing_data_pattern, "The raw results and traces were not included.")
         )
 
     def test_benchmark_count_guards_ignore_citations_and_build_metadata(self):
