@@ -1,5 +1,13 @@
 # Review and setup lanes
 
+For `next` or `drain`, use the Setup section below only to validate the
+existing binding as a read-only precondition. Require the trusted reference and
+configuration pair to be committed on verified base; validate all required
+fields and IDs against complete live reads, and record the committed digest,
+default branch, and live merge-policy fingerprint. If any value is missing,
+unknown, or drifted, stop and preserve work. Do not enter the setup repair flow
+during execution.
+
 ## Review
 
 Read only the repository, supplied state, and remote state the user permits.

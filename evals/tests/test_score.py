@@ -95,6 +95,65 @@ class ScorecardTest(unittest.TestCase):
         self.assertEqual("valid", forced_integrity_status(full_entrypoint))
         self.assertFalse(compute_scorecard([reference_only]).gates["forced_integrity"])
 
+        late_read = packet(f"cat {path}", "full entrypoint text", "complete")
+        late_read["subject"]["events"].insert(0, {
+            "type": "item.completed", "item": {
+                "id": "earlier", "type": "command_execution", "status": "completed",
+                "exit_code": 0, "command": "git status",
+            },
+        })
+        compound_read = packet(
+            f"git status && cat {path}", "full entrypoint text", "complete"
+        )
+        additional_file = packet(
+            f"cat {path} README.md", "full entrypoint text", "complete"
+        )
+        overlapping_action = packet(f"cat {path}", "full entrypoint text", "complete")
+        overlapping_action["subject"]["events"][:0] = [
+            {"type": "item.started", "item": {"id": "read", "type": "command_execution"}},
+            {"type": "item.started", "item": {"id": "other", "type": "web_search"}},
+        ]
+        for item in (late_read, compound_read, additional_file, overlapping_action):
+            self.assertEqual("invocation_failure", forced_integrity_status(item))
+        self.assertEqual("valid", forced_integrity_status(packet(
+            f"sed -n '1,$p' {path}", "full entrypoint text", "complete"
+        )))
+
+    def test_forced_read_requires_all_targets_in_the_first_standalone_action(self):
+        paths = (
+            ".agents/skills/to-plan/SKILL.md",
+            ".agents/skills/run-github-project/SKILL.md",
+        )
+        preflight = {"valid": True, "targets": [{
+            "skill": path.split("/")[2],
+            "staged_relative_path": path,
+            "staged_path": f"/workspace/{path}",
+            "staged_sha256": path,
+        } for path in paths]}
+        item = record(
+            "case:forced", "forced", True,
+            target=("to-plan", "run-github-project"),
+            reported=("to-plan", "run-github-project"), preflight=preflight,
+        )
+        item["subject"] = {
+            "events": [
+                {"type": "item.started", "item": {
+                    "id": "read", "type": "command_execution",
+                }},
+                {"type": "item.completed", "item": {
+                    "id": "read", "type": "command_execution", "status": "completed",
+                    "exit_code": 0, "command": f"cat {paths[0]} {paths[1]}",
+                }},
+            ],
+            "captured_skill_files": [{
+                "path": path, "status": "complete", "staged_sha256": path,
+                "matched_events": [{"id": "read"}],
+            } for path in paths],
+        }
+        self.assertEqual("valid", forced_integrity_status(item))
+        item["subject"]["events"][1]["item"]["command"] = f"cat {paths[0]}"
+        self.assertEqual("invocation_failure", forced_integrity_status(item))
+
     def test_classifies_forced_integrity_from_preflight_reports_and_observed_reads(self):
         preflight = {
             "valid": True,
@@ -118,7 +177,7 @@ class ScorecardTest(unittest.TestCase):
             "report:forced", "forced", False, target=("to-plan",), preflight=preflight
         )
         reporting["subject"] = {"events": [
-            {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "sed -n '1p' .agents/skills/to-plan/SKILL.md"}}
+            {"type": "item.completed", "item": {"type": "command_execution", "status": "completed", "exit_code": 0, "command": "cat .agents/skills/to-plan/SKILL.md"}}
         ]}
         complete_read_evidence(reporting)
         valid = record(
@@ -141,7 +200,7 @@ class ScorecardTest(unittest.TestCase):
         }]}
         def item(event_type, status, exit_code):
             result = record("case:forced", "forced", True, target=("to-plan",), reported=("to-plan",), preflight=preflight)
-            result["subject"] = {"events": [{"type": event_type, "item": {"type": "command_execution", "status": status, "exit_code": exit_code, "command": "sed .agents/skills/to-plan/SKILL.md"}}]}
+            result["subject"] = {"events": [{"type": event_type, "item": {"type": "command_execution", "status": status, "exit_code": exit_code, "command": "cat .agents/skills/to-plan/SKILL.md"}}]}
             complete_read_evidence(result)
             return result
 
@@ -190,7 +249,7 @@ class ScorecardTest(unittest.TestCase):
             "item": {
                 "type": "command_execution", "status": "completed",
                 "exit_code": 0,
-                "command": "sed .agents/skills/to-plan/SKILL.md",
+                "command": "cat .agents/skills/to-plan/SKILL.md",
             },
         }]}
         complete_read_evidence(forced)

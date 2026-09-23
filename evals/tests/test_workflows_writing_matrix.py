@@ -58,6 +58,16 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         controller = (
             REPO_ROOT / "skills/run-github-project/references/execution-controller.md"
         ).read_text(encoding="utf-8")
+        setup = (
+            REPO_ROOT / "skills/run-github-project/references/review-and-setup.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "`next` or `drain` | [Review and setup](references/review-and-setup.md) for binding validation",
+            entrypoint,
+        )
+        self.assertIn("validate the binding through the setup", controller)
+        self.assertIn("committed digest", setup)
+        self.assertIn("If any value is missing,", setup)
         self.assertIn("references/drain-scheduler.md", entrypoint)
         self.assertIn("references/review-contracts.md", entrypoint)
         normalized = " ".join(entrypoint.split())

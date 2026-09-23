@@ -42,7 +42,7 @@ snapshots when the repository does not maintain them.
 2. Before preparation, read [the changelog procedure](references/changelog.md)
    completely; resolve baseline, version and coverage ambiguity. Do not guess
    or create a changelog.
-4. Identify repository release checks, including tests and Metalava API
+3. Identify repository release checks, including tests and Metalava API
    generation and compatibility checks where configured. Confirm that API files
    are current before snapshotting; the helper copies them without running
    Metalava. Do not treat other API dump formats as Metalava snapshots.
@@ -51,7 +51,7 @@ snapshots when the repository does not maintain them.
    use [gradle-run](../gradle-run/SKILL.md), with `--no-scan` unless a scan is
    explicitly authorized. Fix failed checks within authorized scope; otherwise
    stop with the failing gate and next action.
-5. Configure and preflight the helper with explicit versions, paths, heading
+4. Configure and preflight the helper with explicit versions, paths, heading
    style, API snapshot applicability, branch, remote, tag and command arguments.
    Keep configuration and evidence outside tracked release files. Check the
    index, snapshot collisions and local/remote destinations before writes. Load
@@ -60,7 +60,7 @@ snapshots when the repository does not maintain them.
    block local publication; do not request or log their values. For tag-triggered
    CI, use existing Git authentication and CI-managed publishing secrets without
    loading or requiring local dotenv values.
-6. Prepare the release: update the version, finalize the changelog heading and
+5. Prepare the release: update the version, finalize the changelog heading and
    applicable published-module API snapshots, run configured checks, and commit
    only release files. When finalizing a stable release entry, group that cycle's
    original prerelease entries beneath its summary in a `<details>` block with
@@ -70,7 +70,7 @@ snapshots when the repository does not maintain them.
    retain expanded entries. Inspect the resulting commit. Bind validation to
    this state and invalidate it if relevant code changes. The helper must not
    publish during preparation.
-7. Present the prepared release for explicit user approval before publication:
+6. Present the prepared release for explicit user approval before publication:
    release version and tag, finalized changelog (or its absence), next development
    version, release commit, artifact coordinates and destination, publishing
    mechanism, and validation results. Provide the actual notes or a directly
@@ -81,17 +81,17 @@ snapshots when the repository does not maintain them.
    versions, notes or publishing scope change, prepare and validate the revised
    release and obtain approval again. Preparation-only and readiness requests
    stop at their requested scope without soliciting publication approval.
-8. Once the prepared release is approved and all gates pass, publish from that
+7. Once the prepared release is approved and all gates pass, publish from that
    commit via the repository's selected mechanism. Local publication and
    tag-triggered CI are alternatives; do not run both. Do not publish artifacts,
    push a release tag or trigger publishing CI before approval.
-9. Verify all expected artifact coordinates and versions at the configured
+8. Verify all expected artifact coordinates and versions at the configured
    destination, along with CI completion when applicable. Verify the remote tag
    resolves to the prepared commit. A successful command or tag alone is not
    artifact evidence. Only then advance, commit, push and verify the agreed
    next development version. Create and read back a GitHub Release only when
    repository conventions call for it, using the finalized release notes.
-10. On partial or uncertain success, stop dependent mutations and report verified,
+9. On partial or uncertain success, stop dependent mutations and report verified,
    failed and unknown stages without secrets. Inspect live artifact, workflow,
    tag and branch state before recovery; never blindly repeat publication,
    overwrite remote tags, delete published artifacts or claim rollback. Resume

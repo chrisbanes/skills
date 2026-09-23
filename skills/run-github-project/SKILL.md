@@ -38,7 +38,7 @@ claim bypass. Before any mode-specific action, read the matching mandatory lane:
 | Mode | Mandatory reference |
 | --- | --- |
 | `review` or `setup` | [Review and setup](references/review-and-setup.md) |
-| `next` or `drain` | [Execution controller](references/execution-controller.md), then [ticket lifecycle](references/ticket-lifecycle.md) |
+| `next` or `drain` | [Review and setup](references/review-and-setup.md) for binding validation, then [execution controller](references/execution-controller.md) and [ticket lifecycle](references/ticket-lifecycle.md) |
 
 For execution, read [workflow providers](references/workflow-providers.md)
 before preconditions; it is authoritative on required, conditional, optional

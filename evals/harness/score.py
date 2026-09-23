@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+import shlex
 from dataclasses import dataclass
 from statistics import median
 from typing import Any, Callable, Iterable
@@ -59,6 +61,37 @@ def is_automatic_comparator(record: dict[str, Any]) -> bool:
     return record.get("automatic_eligible") is True
 
 
+def _standalone_target_read(command: str, targets: list[dict[str, Any]]) -> bool:
+    """Accept only file-print commands whose operands are exactly the targets."""
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return False
+    if not words:
+        return False
+    if words[0] in ("cat", "/bin/cat"):
+        operands = words[2:] if len(words) > 1 and words[1] == "--" else words[1:]
+    elif (
+        len(targets) == 1
+        and len(words) == 4
+        and words[:2] == ["sed", "-n"]
+        and re.fullmatch(r"(?:[0-9]+|\$)(?:,(?:[0-9]+|\$))?p", words[2])
+    ):
+        operands = words[3:]
+    else:
+        return False
+    if len(operands) != len(targets):
+        return False
+    remaining = list(operands)
+    for target in targets:
+        paths = (target.get("staged_relative_path"), target.get("staged_path"))
+        match = next((path for path in remaining if path in paths), None)
+        if match is None:
+            return False
+        remaining.remove(match)
+    return not remaining
+
+
 def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str, Any]]) -> bool:
     subject = record.get("subject", {})
     if not isinstance(subject, dict):
@@ -67,19 +100,33 @@ def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str,
     captures = subject.get("captured_skill_files", [])
     if not isinstance(events, list) or not isinstance(captures, list):
         return False
-    successful_reads = [
-        (item.get("id"), item.get("command"))
-        for event in events
-        if isinstance(event, dict)
-        and event.get("type") == "item.completed"
-        for item in [event.get("item", {})]
-        if isinstance(item, dict)
-        and item.get("type") == "command_execution"
-        and item.get("status") == "completed"
-        and item.get("exit_code") == 0
-        and isinstance(item.get("command"), str)
-    ]
-    if not targets:
+    if not targets or not all(isinstance(target, dict) for target in targets):
+        return False
+    first_action = None
+    for event in events:
+        if not isinstance(event, dict) or event.get("type") not in ("item.started", "item.completed"):
+            continue
+        item = event.get("item")
+        if not isinstance(item, dict) or item.get("type") in ("reasoning", "agent_message"):
+            continue
+        if first_action is None:
+            first_action = item
+            if item.get("type") != "command_execution" or item.get("id") is None:
+                return False
+        if item.get("id") != first_action["id"]:
+            return False
+        if event["type"] == "item.completed":
+            if (
+                item.get("type") != "command_execution"
+                or item.get("status") != "completed"
+                or item.get("exit_code") != 0
+                or not isinstance(item.get("command"), str)
+                or not _standalone_target_read(item["command"], targets)
+            ):
+                return False
+            read_id = item["id"]
+            break
+    else:
         return False
     for target in targets:
         if not isinstance(target, dict):
@@ -108,16 +155,7 @@ def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str,
             item.get("id") for item in matched_events
             if isinstance(item, dict) and item.get("id") is not None
         }
-        paths = tuple(
-            path for path in (relative_path, target.get("staged_path"))
-            if isinstance(path, str)
-        )
-        if not any(
-            event_id in matched_ids
-            and any(path in command for path in paths)
-            for event_id, command in successful_reads
-            if event_id is not None
-        ):
+        if read_id not in matched_ids:
             return False
     return True
 

@@ -138,7 +138,7 @@ class ReportTest(unittest.TestCase):
                 item["subject"]["events"][0]["item"].update({
                     "status": "completed",
                     "exit_code": 0,
-                    "command": "sed .agents/skills/compose-state-and-effects/SKILL.md",
+                    "command": "cat .agents/skills/compose-state-and-effects/SKILL.md",
                 })
                 complete_read_evidence(item)
         score = compute_scorecard(records)
@@ -255,7 +255,7 @@ class ReportTest(unittest.TestCase):
                     "item": {
                         "type": "command_execution", "status": "completed",
                         "exit_code": 0,
-                        "command": "sed .agents/skills/compose-state-and-effects/SKILL.md",
+                        "command": "cat .agents/skills/compose-state-and-effects/SKILL.md",
                     },
                 }]}
                 complete_read_evidence(item)
@@ -296,7 +296,7 @@ class ReportTest(unittest.TestCase):
                     "item": {
                         "type": "command_execution", "status": "completed",
                         "exit_code": 0,
-                        "command": "sed .agents/skills/compose-state-and-effects/SKILL.md",
+                        "command": "cat .agents/skills/compose-state-and-effects/SKILL.md",
                     },
                 }]},
             }
