@@ -430,6 +430,59 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn('missing required pattern in a release bullet', result.stderr)
 
+    def test_pr_link_in_top_level_blockquote_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '(PR #812)\n> [#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_pr_link_in_nested_blockquote_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '\n  > [#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_pr_link_in_unrelated_link_title_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '[context](https://example.test "'
+            '[#812](https://github.com/chrisbanes/skills/pull/812)")',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_literal_less_than_before_pr_link_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            'bounded buffering ([#812](https://github.com/chrisbanes/skills/pull/812))',
+            'bounded buffering < 5 MiB '
+            '([#812](https://github.com/chrisbanes/skills/pull/812)) >',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_pr_link_only_inside_html_code_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '<code>[#812](https://github.com/chrisbanes/skills/pull/812)</code>',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
     def test_code_span_ending_in_backslash_preserves_later_link(self):
         original = self.completed_changelog()
         updated = original.replace(

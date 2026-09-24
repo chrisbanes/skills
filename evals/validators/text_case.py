@@ -49,10 +49,19 @@ def _mask_html_comments(subject: str) -> str:
 
 def _mask_inline_html_tags(subject: str) -> str:
     return re.sub(
-        r"<(?!/?details\b)[^>]*>",
+        r"<(?!/?details\b)/?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*?)?\s*/?>",
         lambda match: re.sub(r"[^\r\n]", " ", match.group()),
         subject,
         flags=re.DOTALL,
+    )
+
+
+def _mask_html_code_blocks(subject: str) -> str:
+    return re.sub(
+        r"<(code|pre)\b[^>]*>.*?</\1\s*>",
+        lambda match: re.sub(r"[^\r\n]", " ", match.group()),
+        subject,
+        flags=re.DOTALL | re.IGNORECASE,
     )
 
 
@@ -63,6 +72,19 @@ def _mask_inline_code(subject: str) -> str:
         subject,
         flags=re.DOTALL,
     )
+
+
+def _mask_markdown_link_titles(subject: str) -> str:
+    chars = list(subject)
+    for match in re.finditer(
+        r"\[[^\]\n]*\]\([^\s)\n]+[ \t]+([\"'])(.*?)\1\)",
+        subject,
+        re.DOTALL,
+    ):
+        for index in range(*match.span(2)):
+            if chars[index] not in "\r\n":
+                chars[index] = " "
+    return "".join(chars)
 
 
 def has_visible_markdown_link(subject: str, pattern: str) -> bool:
@@ -87,9 +109,12 @@ def has_visible_markdown_link(subject: str, pattern: str) -> bool:
 def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
     """Collect visible top-level bullets before the next release or details block."""
     lines = subject.splitlines()
-    visible_lines = _mask_inline_code(
-        _mask_inline_html_tags(_mask_html_comments(_mask_fenced_code(subject)))
-    ).splitlines()
+    visible = _mask_fenced_code(subject)
+    visible = _mask_html_comments(visible)
+    visible = _mask_html_code_blocks(visible)
+    visible = _mask_inline_html_tags(visible)
+    visible = _mask_inline_code(visible)
+    visible_lines = _mask_markdown_link_titles(visible).splitlines()
     bullets: list[str] = []
     current: list[str] = []
     content_indent = 0
@@ -110,6 +135,10 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
             finish()
             break
         if re.fullmatch(r"[ \t]*(?:-{3,}|_{3,}|\*{3,})[ \t]*", visible):
+            finish()
+            continue
+        block = re.match(r"( {0,3})(?:>|#{1,6}[ \t]+)", visible)
+        if block and current and len(block.group(1)) < content_indent:
             finish()
             continue
         marker = re.match(r"( {0,3})([-+*]|\d+[.)])([ \t]+)", visible)
