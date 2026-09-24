@@ -118,8 +118,10 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
     bullets: list[str] = []
     current: list[str] = []
     content_indent = 0
+    item_indents: list[tuple[int, int]] = []
     in_section = False
     after_blank = False
+    in_indented_code = False
 
     def finish() -> None:
         if current:
@@ -144,13 +146,19 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
         marker = re.match(r"( {0,3})([-+*]|\d+[.)])([ \t]+)", visible)
         if marker:
             indent = len(marker.group(1))
+            marker_content_indent = indent + len(marker.group(2)) + len(marker.group(3))
             if current and indent >= content_indent:
                 current.append(visible)
+                while len(item_indents) > 1 and indent <= item_indents[-1][0]:
+                    item_indents.pop()
+                item_indents.append((indent, marker_content_indent))
             else:
                 finish()
                 current.append(visible)
-                content_indent = indent + len(marker.group(2)) + len(marker.group(3))
+                content_indent = marker_content_indent
+                item_indents = [(indent, content_indent)]
             after_blank = False
+            in_indented_code = False
             continue
         if not current:
             continue
@@ -160,6 +168,17 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
             elif not original.strip():
                 after_blank = True
             continue
+        leading = visible[: len(visible) - len(visible.lstrip(" \t"))]
+        line_indent = len(leading.expandtabs(4))
+        while len(item_indents) > 1 and line_indent < item_indents[-1][1]:
+            item_indents.pop()
+        code_indent = item_indents[-1][1] + 4
+        if line_indent >= code_indent and (after_blank or in_indented_code):
+            current.append("")
+            in_indented_code = True
+            after_blank = False
+            continue
+        in_indented_code = False
         if after_blank and not visible.startswith(("  ", "\t")):
             finish()
             continue

@@ -313,6 +313,38 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertNotEqual(original, updated)
         self.assertEqual(0, self.validate(updated).returncode)
 
+    def test_pr_link_only_in_indented_code_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '\n\n      [#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_indented_code_followed_by_visible_pr_link_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '\n\n      example()\n'
+            '      [not a citation](https://example.test)\n\n'
+            '  [#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_nested_item_continuation_pr_link_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '\n  - Related change\n\n'
+            '      [#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
     def test_link_only_inside_fenced_example_fails(self):
         original = self.completed_changelog()
         updated = original.replace(
