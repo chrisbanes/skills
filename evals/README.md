@@ -62,14 +62,15 @@ suite-wide aggregate.
 | `android-benchmark-comparison` | 33.3% | 50.0% | 100.0% |
 | `grounded-writing` | 0.0% | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
-| `release-kotlin-library` | 0.0% | 83.3% | 100.0% |
+| `release-kotlin-library` | 0.0% | 100.0% | 100.0% |
 | `run-github-project` | — | — | 100.0% |
 | `shepherd` | — | — | 100.0% |
 | `to-plan` | — | — | 100.0% |
 
-The `compose-ui-testing-patterns` and `grounded-writing` automatic cells, and
-the `to-plan` restraint cell, use later focused evidence. Baseline and
-efficiency values use the complete suite. See
+The `compose-ui-testing-patterns`, `grounded-writing`, and
+`release-kotlin-library` automatic cells, and the `to-plan` restraint cell,
+use later focused evidence. Baseline and efficiency values use the complete
+suite. See
 the [improvement result record](artifacts/2026-09-24-gpt6-improvement-results.md)
 and [targeted probe record](artifacts/2026-09-24-gpt6-targeted-100-probes.md)
 for provenance and remaining failures.

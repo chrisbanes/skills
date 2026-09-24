@@ -213,14 +213,15 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 33.3% | 50.0% | 100.0% |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 0.0% | 100.0% | 100.0% |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
-| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 0.0% | 83.3% | 100.0% |
+| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 0.0% | 100.0% | 100.0% |
 | [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | 100.0% |
 | [`shepherd`](skills/shepherd/SKILL.md) | — | — | 100.0% |
 | [`to-plan`](skills/to-plan/SKILL.md) | — | — | 100.0% |
 
-The `compose-ui-testing-patterns` and `grounded-writing` automatic cells, and
-the `to-plan` restraint cell, use later focused evidence. Baseline and
-efficiency values use the complete suite. See
+The `compose-ui-testing-patterns`, `grounded-writing`, and
+`release-kotlin-library` automatic cells, and the `to-plan` restraint cell,
+use later focused evidence. Baseline and efficiency values use the complete
+suite. See
 the [improvement result record](evals/artifacts/2026-09-24-gpt6-improvement-results.md)
 and [targeted probe record](evals/artifacts/2026-09-24-gpt6-targeted-100-probes.md)
 for provenance and remaining failures.

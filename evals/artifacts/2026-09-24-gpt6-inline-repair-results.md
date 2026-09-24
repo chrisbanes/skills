@@ -379,3 +379,16 @@ and zero forbidden actions:
 sandboxed preflight failed before model calls; the successful focused retry is
 the evidence for the updated README automatic cell. Other suite metrics are
 unchanged.
+
+## Release Kotlin library automatic score
+
+All three `release-kotlin-library` corpus cases have later 3/3 automatic
+passes: direct in `/private/tmp/gpt6-inline-release-order-final`, and novel
+plus no-change in `/private/tmp/gpt6-inline-release-controls-final`. The case
+digests, staged release skill and reference hashes, subject and judge models,
+and Codex CLI match the current files and each other. Every run reported the
+release skill and recorded no forbidden action. The catalog digests differ
+because the direct run included three external Sites skills absent from the
+controls run; the plugin was unrelated to the release task. The README
+automatic cell combines these focused case results, not a same-catalog suite
+run. Other suite metrics remain unchanged.
