@@ -184,6 +184,21 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         )
         self.assertEqual(0, self.validate(updated).returncode)
 
+    def test_wrapped_credit_before_pr_link_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example))',
+            '\n  [Avery Example](https://github.com/avery-example); '
+            '[#845](https://github.com/chrisbanes/skills/pull/845)',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertLess(
+            updated.index('[Avery Example](https://github.com/avery-example)'),
+            updated.index('[#845](https://github.com/chrisbanes/skills/pull/845)'),
+        )
+        self.assertEqual(0, self.validate(updated).returncode)
+
     def test_release_links_cannot_replace_original_notes(self):
         updated = self.completed_changelog().replace(
             '- Add streaming responses with unbounded buffering.',
