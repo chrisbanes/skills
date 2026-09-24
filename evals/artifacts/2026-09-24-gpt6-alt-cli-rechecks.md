@@ -52,3 +52,39 @@ assumptions, a three-suite, three-repetition run requires 693 subject and 693
 judge calls and estimates $145.53; this is not a quoted price or an approved
 spend. Keep the frozen full-suite results as the latest complete-suite evidence
 until a new uniform-head run finishes and its failures are audited.
+
+## Ready repair work
+
+The two remaining skill edits are independent and may be implemented serially
+from this integrated head. Neither requires a change to the corpus or judge
+rubric to explain the recorded miss.
+
+1. **Writing review and restraint** (`Depends on: none`): inspect all six
+   novel packets, including four failures, and the no-change controls in the
+   writing triad above.
+   Forced novel repetitions 1 and 2 proposed dropping the cooldown sentence
+   without conditionally preserving the reader-visible return to `Full`;
+   automatic novel repetitions 1 and 2 also omitted either explicit setting
+   choice or the practical trade-off. Automatic no-change repetitions 1 and 3
+   edited an approved internal report for optional reproducibility or wording
+   polish. Keep a review-specific check for supported public behavior,
+   choice, trade-off, and limitation, and make the material-edit threshold
+   decisive before writing. Preserve the already passing direct-contract
+   behavior. Acceptance requires direct, novel, and no-change cases in forced
+   and automatic arms, three repetitions each, plus a review of every failure.
+2. **Release approval handoff** (`Depends on: none`): inspect automatic
+   repetition 3 in the repaired release run. The deterministic changelog check
+   passed, but the judge found the final handoff called the known
+   `com.vanniktech.maven.publish` mechanism pending and referred to notes
+   “shown below” without presenting them. Ensure a preparation-only handoff
+   names the verified publishing mechanism and shows actual notes or a directly
+   reviewable diff, while leaving unknown route, artifact destination, and
+   validation state explicitly pending. Preserve the publication-approval
+   boundary and no-change readiness behavior. Acceptance requires release
+   direct, novel, and no-change cases in each eligible arm with three
+   repetitions, and inspection of any remaining objective/judge disagreement.
+
+After both accepted repairs are integrated, freeze the skill catalog and run
+the full corpus with the selected CLI and model pair. Inspect every failure and
+forbidden action before updating the two README result tables. Report forced
+and automatic outcomes separately; do not infer 100% from targeted checks.
