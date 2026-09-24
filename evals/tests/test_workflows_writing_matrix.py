@@ -227,6 +227,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                         "manifest_reader.py",
                         "tests/test_manifest_reader.py",
                     ],
+                    "owned_symbols": ["missing_manifest_error"],
                 },
                 {
                     "id": "invalid-profile",
@@ -234,6 +235,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                         "profile_loader.py",
                         "tests/test_profile_loader.py",
                     ],
+                    "owned_symbols": ["invalid_profile_error"],
                 },
             ],
             expectations["task_graph"]["separate_slice_requirements"],
@@ -691,6 +693,17 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             hidden_failures,
         )
 
+        hidden_symbol = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path; "
+            "also update `invalid_profile_error` here.\n",
+        )
+        symbol_failures = validate_task_graph(hidden_symbol, rules["task_graph"])
+        self.assertTrue(
+            any("also implements 'invalid-profile'" in failure for failure in symbol_failures),
+            symbol_failures,
+        )
+
         verification_only = separated.replace(
             "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
             "**Implementation:** Change `manifest_reader.py` to quote the path. "
@@ -713,6 +726,19 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertEqual(
             [],
             validate_task_graph(mixed_actions, rules["task_graph"]),
+        )
+
+        dotted_paths = separated
+        for path in (
+            "manifest_reader.py",
+            "tests/test_manifest_reader.py",
+            "profile_loader.py",
+            "tests/test_profile_loader.py",
+        ):
+            dotted_paths = dotted_paths.replace(f"`{path}`", f"`./{path}`")
+        self.assertEqual(
+            [],
+            validate_task_graph(dotted_paths, rules["task_graph"]),
         )
 
         existing_inspection_only = separated.replace(

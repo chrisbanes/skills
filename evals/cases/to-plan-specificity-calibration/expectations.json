@@ -35,11 +35,13 @@
     "separate_slice_requirements": [
       {
         "id": "missing-manifest",
-        "owned_files": ["manifest_reader.py", "tests/test_manifest_reader.py"]
+        "owned_files": ["manifest_reader.py", "tests/test_manifest_reader.py"],
+        "owned_symbols": ["missing_manifest_error"]
       },
       {
         "id": "invalid-profile",
-        "owned_files": ["profile_loader.py", "tests/test_profile_loader.py"]
+        "owned_files": ["profile_loader.py", "tests/test_profile_loader.py"],
+        "owned_symbols": ["invalid_profile_error"]
       }
     ]
   }

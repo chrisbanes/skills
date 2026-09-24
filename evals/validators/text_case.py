@@ -201,7 +201,7 @@ def validate_task_graph(
 
     def lists_path(files_field: str, path: str) -> bool:
         pattern = (
-            rf"(?<![A-Za-z0-9_./-]){re.escape(path)}"
+            rf"(?<![A-Za-z0-9_./-])(?:\./)?{re.escape(path)}"
             rf"(?![A-Za-z0-9_./-])"
         )
         return re.search(pattern, files_field) is not None
@@ -233,7 +233,7 @@ def validate_task_graph(
 
     def path_action(clause: str, path: str) -> str | None:
         match = re.search(
-            rf"(?<![A-Za-z0-9_./-]){re.escape(path)}(?![A-Za-z0-9_./-])",
+            rf"(?<![A-Za-z0-9_./-])(?:\./)?{re.escape(path)}(?![A-Za-z0-9_./-])",
             clause,
         )
         if match is None:
@@ -296,15 +296,18 @@ def validate_task_graph(
             continue
         requirement_id = requirement.get("id")
         owned_files = requirement.get("owned_files")
+        owned_symbols = requirement.get("owned_symbols", [])
         if (
             not isinstance(requirement_id, str)
             or not requirement_id.strip()
             or not isinstance(owned_files, list)
             or not owned_files
             or any(not isinstance(path, str) or not path for path in owned_files)
+            or not isinstance(owned_symbols, list)
+            or any(not isinstance(symbol, str) or not symbol for symbol in owned_symbols)
         ):
             failures.append(
-                f"{label}: separate slice requirements need an id and non-empty owned_files list"
+                f"{label}: separate slice requirements need an id, non-empty owned_files, and valid owned_symbols"
             )
             continue
         matches = [
@@ -332,11 +335,19 @@ def validate_task_graph(
             if not isinstance(other, dict) or other.get("id") == requirement_id:
                 continue
             other_files = other.get("owned_files")
+            other_symbols = other.get("owned_symbols", [])
             if not isinstance(other_files, list) or any(
                 not isinstance(path, str) for path in other_files
             ):
                 continue
-            if any(edits_path(implementation, path) for path in other_files):
+            if not isinstance(other_symbols, list) or any(
+                not isinstance(symbol, str) for symbol in other_symbols
+            ):
+                continue
+            if any(
+                edits_path(implementation, target)
+                for target in [*other_files, *other_symbols]
+            ):
                 failures.append(
                     f"{label}: independent behavior {requirement_id!r} slice {task_id!r} "
                     f"also implements {other['id']!r}"
