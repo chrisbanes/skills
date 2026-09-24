@@ -90,3 +90,13 @@ check inventory and report checks run versus checks whose local equivalents
 remain unknown. It addresses two saved `shepherd-novel:forced` replies that
 omitted the latter distinction. Both revisions pass lint and corpus validation;
 the release case tests also pass. Neither revision has a new model score.
+
+Revision `9ed2009` moves the one-consumer versus broadcast decision to the
+Kotlin Flow entrypoint. A saved `kotlin-flow-state-events-novel:forced` reply
+recommended a channel under a single-consumer assumption without addressing
+whether every active consumer needs delivery. Revision `b2fddd1` adds an
+interface-implementer compatibility check to function-ownership guidance. A
+saved `kotlin-api-ownership-direct:automatic` diff retained the deprecated
+String extension but renamed an abstract `ProfileStore` member, breaking
+existing implementers. Lint, the 99-case corpus check, and the focused Kotlin
+eval tests pass. These revisions have no new model scores.
