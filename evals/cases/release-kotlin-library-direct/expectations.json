@@ -11,8 +11,8 @@
     "rename internal helper"
   ],
   "must_match": [
-    "(?im)^[-*](?=[^\\r\\n]*streaming)(?=[^\\r\\n]*bounded)(?=[^\\r\\n]*\\[#812\\]\\(https://github\\.com/chrisbanes/skills/pull/812\\))[^\\r\\n]*$",
-    "(?im)^[-*](?=[^\\r\\n]*cancel)(?=[^\\r\\n]*\\[#845\\]\\(https://github\\.com/chrisbanes/skills/pull/845\\))(?=[^\\r\\n]*\\[(?:Avery Example|avery-example)\\]\\(https://github\\.com/avery-example\\))[^\\r\\n]*$",
+    "(?ims)^## 2\\.0\\.0[ \\t]*\\r?\\n(?:(?!^##[ \\t]|<details>).)*?^[-*](?=[^\\r\\n]*streaming)(?=[^\\r\\n]*bounded)(?=[^\\r\\n]*\\[#812\\]\\(https://github\\.com/chrisbanes/skills/pull/812\\))[^\\r\\n]*$",
+    "(?ims)^## 2\\.0\\.0[ \\t]*\\r?\\n(?:(?!^##[ \\t]|<details>).)*?^[-*](?=[^\\r\\n]*cancel)(?=[^\\r\\n]*\\[#845\\]\\(https://github\\.com/chrisbanes/skills/pull/845\\))(?=[^\\r\\n]*\\[(?:Avery Example|avery-example)\\]\\(https://github\\.com/avery-example\\))[^\\r\\n]*$",
     "(?i)## 2\\.0\\.0\\n(?:(?!<details>|\\n## ).)*streaming(?:(?!<details>|\\n## ).)*bounded",
     "(?i)^## 2\\.0\\.0[ \\t]*\\n(?:(?!^##[ \\t]|<details>).)*\\b(?:cancell?ation|cancell?(?:ing|ed)|cancels?)\\b",
     "<details>\\s*<summary>Prerelease history</summary>\\s+## 2\\.0\\.0-rc00.*## 2\\.0\\.0-alpha01.*</details>\\s+## 1\\.4\\.0"
