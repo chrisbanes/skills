@@ -244,8 +244,8 @@ their behavior rubrics. The animated-header case sometimes loaded
 component skill and gave unsolicited slot/modifier advice. Another loaded it
 without any component finding. Moving a scope reminder into the router's main
 procedure still produced an extra component read on its first repetition, so
-that unproven router edit was reverted. The header routing-precision miss remains
-unresolved; the stopped packets are in
+that unproven router edit was reverted. The header routing-precision question was
+unresolved at that point; the stopped packets are in
 `/private/tmp/gpt6-targeted-router-overlap-precision-20260924`,
 `/private/tmp/gpt6-targeted-router-overlap-final-20260924`, and
 `/private/tmp/gpt6-targeted-header-scope-20260924`.
@@ -269,8 +269,9 @@ and one catalog digest:
 failed control packet remains in
 `/private/tmp/gpt6-targeted-router-overlap-boundaries-20260924`.
 
-These repairs improve the selected behavior and case contract. They do not
-resolve the remaining header over-routing or establish a full-corpus 100% score.
+These repairs improve the selected behavior and case contract. The later header
+case audit below resolves its routing allowance. They do not establish a
+full-corpus 100% score.
 
 ## Component slot novel follow-up
 
@@ -289,3 +290,22 @@ The fixed-semantic no-change control passed 3/3 automatic at the same skill
 revision, again with zero forbidden actions:
 `/private/tmp/gpt6-targeted-component-semantic-negative-20260924`. These are
 separate focused runs, not a full-corpus score.
+
+## Animated-header optional route audit
+
+The animated-header prompt calls the component reusable while asking for state
+ownership, animation, and scroll performance. Across eight saved automatic
+packets from the complete and focused runs, five loaded
+`compose-component-design`; four of those five gave a concrete caller-content
+or placement finding. One extra read gave no component finding, an efficiency
+miss retained in its original raw packet. The repeated substantive findings
+support allowing component API review as optional, while the three original
+skills remain required. The behavior rubric is unchanged.
+
+After adding that optional skill to the case contract, a fresh automatic
+three-repetition run passed 3/3, reported all three required skills and the
+optional component skill, and recorded zero forbidden actions. Its selected
+routing precision and recall are both 100%, with one catalog digest:
+`/private/tmp/gpt6-targeted-header-optional-component-20260924`. The case
+change has a new fingerprint; old packets and their original routing scores
+remain intact. This is a focused case result, not a current full-corpus score.

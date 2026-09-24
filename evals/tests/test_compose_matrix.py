@@ -95,6 +95,23 @@ class ComposeMatrixTest(unittest.TestCase):
             case.allowed_skills,
         )
 
+    def test_reusable_header_allows_component_api_review_without_requiring_it(self):
+        report = validate_corpus(REPO_ROOT, suite="compose")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "router-overlap-state-animation-deferred"
+        )
+
+        self.assertEqual(
+            ("compose-state-and-effects", "compose-animations", "compose-performance"),
+            case.expected_skills,
+        )
+        self.assertEqual(
+            (*case.expected_skills, "compose-component-design"),
+            case.allowed_skills,
+        )
+
     def test_state_hoisting_direct_keeps_preview_tooling_outside_allowed_scope(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(

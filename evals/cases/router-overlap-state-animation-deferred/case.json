@@ -12,6 +12,12 @@
     "compose-animations",
     "compose-performance"
   ],
+  "allowed_skills": [
+    "compose-state-and-effects",
+    "compose-animations",
+    "compose-performance",
+    "compose-component-design"
+  ],
   "task_mode": "review",
   "kind": "routing",
   "fixture": "compose-jvm",
