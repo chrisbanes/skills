@@ -59,7 +59,7 @@ suite-wide aggregate.
 | `kotlin-api-design` | 58.3% | 66.7% | 100.0% |
 | `kotlin-concurrency-and-flow` | 44.4% | 88.9% | 100.0% |
 | `kotlin-control-flow` | 33.3% | 72.2% | 100.0% |
-| `android-benchmark-comparison` | 33.3% | 50.0% | 100.0% |
+| `android-benchmark-comparison` | 33.3% | 100.0% | 100.0% |
 | `grounded-writing` | 0.0% | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
 | `release-kotlin-library` | 0.0% | 100.0% | 100.0% |
@@ -67,10 +67,10 @@ suite-wide aggregate.
 | `shepherd` | — | — | 100.0% |
 | `to-plan` | — | — | 100.0% |
 
-The `compose-ui-testing-patterns`, `grounded-writing`, and
-`release-kotlin-library` automatic cells, and the `to-plan` restraint cell,
-use later focused evidence. Baseline and efficiency values use the complete
-suite. See
+The `android-benchmark-comparison`, `compose-ui-testing-patterns`,
+`grounded-writing`, and `release-kotlin-library` automatic cells, and the
+`to-plan` restraint cell, use later focused evidence. Baseline and efficiency
+values use the complete suite. See
 the [improvement result record](artifacts/2026-09-24-gpt6-improvement-results.md)
 and [targeted probe record](artifacts/2026-09-24-gpt6-targeted-100-probes.md)
 for provenance and remaining failures.

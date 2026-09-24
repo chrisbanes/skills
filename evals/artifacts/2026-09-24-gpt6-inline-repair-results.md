@@ -392,3 +392,17 @@ because the direct run included three external Sites skills absent from the
 controls run; the plugin was unrelated to the release task. The README
 automatic cell combines these focused case results, not a same-catalog suite
 run. Other suite metrics remain unchanged.
+
+## Android benchmark automatic score
+
+The stopped `/private/tmp/gpt6-full-3899d1a-workflows` attempt contains a
+complete automatic result for the three `android-benchmark-comparison` cases:
+direct, novel, and no-change each passed 3/3, with one catalog digest, current
+case digests and target skill hash, and zero forbidden actions. The other
+workflow cases in that attempt did not finish, so this is a selected-skill
+result rather than a suite score. One direct reply reported the extra
+`grounded-writing` skill while passing correctness; a later direct probe in
+`/private/tmp/gpt6-inline-writing-benchmark-final2` passed 3/3 with only the
+benchmark skill reported. The README automatic correctness cell uses the
+complete nine-packet benchmark subset; routing precision is a separate
+diagnostic.
