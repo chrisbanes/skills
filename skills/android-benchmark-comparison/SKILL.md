@@ -26,10 +26,11 @@ or choosing a default.
    and whether the ordering holds; do not discard slow iterations after seeing
    the result.
 4. When rankings reverse or variability is material, defer a firm default
-   decision until the reversal is resolved. Confirm that raw results cover the
-   same named cases and iterations, repeat with balanced or reversed run order,
-   and inspect trace data whose timestamps overlap each measured interval for
-   placement, contention, or thermal changes. Fixed-performance mode does not
+   decision until the reversal is resolved. Give the complete next comparison,
+   not just its first blocker: confirm the same named cases and iterations,
+   repeat with balanced or reversed run order, and inspect trace data whose
+   timestamps overlap each measured interval for placement, contention, or
+   thermal changes. Fixed-performance mode does not
    prove CPU placement. If an affinity experiment was attempted, discover the
    device topology and verify placement during the measured interval. Restore
    the recorded original affinity settings after the experiment and verify that
@@ -49,9 +50,10 @@ or choosing a default.
    without claiming it measures GPU shader time.
 7. Finish with the raw-evidence location, completed-case counts, variability,
    trace findings, controls and restoration status, plus the bounded decision
-   or remaining uncertainty. A reversed ranking is unresolved until its
-   coverage, run order, measured-interval trace, and any affinity restoration
-   are accounted for; label any earlier default choice provisional.
+   or remaining uncertainty. When a reversal is unresolved, state the full
+   sequence still needed: matching coverage, balanced or reversed order,
+   measured-interval trace inspection, and restoration of any changed affinity
+   settings. Label any earlier default choice provisional.
 
 ## Boundaries
 

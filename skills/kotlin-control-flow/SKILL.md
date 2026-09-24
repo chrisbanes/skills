@@ -43,8 +43,10 @@ branch, and let the compiler prove closed-domain coverage.
 7. Compile and test. On failure, return to the smallest applicable earlier step
    or retain the prior shape. In a review, name the explicit cases and the
    subtype member retained through smart casts when that data drives the
-   mapping (for example, say when a `Success` branch uses its `value` member);
-   do not stop at naming exhaustive branches when a branch's smart-cast payload
+   mapping. For example, replacing a sealed result's catch-all with `Missing`
+   and `Failed` is incomplete if `Failed.reason` should determine the output:
+   say that the `is Failed` branch can use its smart-cast `reason` without a
+   cast. Do not stop at naming exhaustive branches when a branch's payload
    determines its output. Finish when the subject, fallbacks, and branch data
    are obvious to a reader and the resulting shape is easier to scan.
 

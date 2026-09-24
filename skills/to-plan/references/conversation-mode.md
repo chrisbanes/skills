@@ -20,9 +20,11 @@ decision-complete source:
    before drafting.
 
 When reviewing a blocked conversation source, state the next missing decision
-as the direct question to ask and say drafting remains blocked. Once the source
-is complete, report the self-contained summary to confirm. A decision-complete
-current instruction or an already confirmed summary needs no new confirmation.
+as one direct question to ask and say drafting remains blocked. Also make the
+later handoff explicit: after the answers complete the contract, present the
+self-contained summary and ask the user to confirm it before drafting. Do not
+bundle the next decision with later questions. A decision-complete current
+instruction or an already confirmed summary needs no new confirmation.
 
 Without an inline task, reuse prior conversation only when exactly one compact,
 decision-complete summary is followed by explicit user confirmation. If Plan

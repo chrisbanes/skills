@@ -134,10 +134,11 @@ Keep screenshot state deterministic:
 - Verify recording separately from comparison: inspect the expected artifact
   paths and intentional baseline diff. Read the exact output path from the test,
   confirm that artifact exists, and name that literal path in the verification
-  evidence. A passing comparison does not prove that recording occurred. If
-  the artifact or baseline diff is unavailable, report that gap rather than
-  claiming recording succeeded. Keep tool-specific commands in the repository
-  runbook.
+  evidence. When a verification log reports a pass, state what passed and then
+  check recording independently; a passing comparison does not prove that
+  recording wrote the artifact. If the artifact or baseline diff is
+  unavailable, report that gap rather than claiming recording succeeded. Keep
+  tool-specific commands in the repository runbook.
 
 ## Fake images and platform services
 
