@@ -27,16 +27,18 @@ generic, or included only to imitate a personality.
    gives up, and when to choose it. If the draft lacks evidence for that choice,
    name the missing information instead of inferring it. Remove implementation,
    test, or diagnostic mechanics such as sampling thresholds, CPU masks, and
-   interpolation details. Preserve stated reader-visible outcomes and
-   transitions, including timing that affects what users see or choose, but
-   describe the outcome rather than how it is implemented. For example, retain
-   that an effect returns to `Full` after a delay without describing the
-   cooldown machinery. Include a mechanic only when it is required for correct
-   API use, necessary to distinguish a reader-facing setting choice, or
-   explicitly requested. Do not ask to expand internal mechanics as a way to
-   fill a public-documentation gap. Retain public contracts and the context
-   needed to interpret claims. This boundary does not apply to internal design
-   documents or technical reports.
+   interpolation details. Retain an observable transition or associated timing
+   only when supplied or verified evidence shows it is part of the public
+   contract or materially informs how to use or choose the setting. Technical
+   specificity alone does not establish public relevance. If relevance could
+   change the recommendation but is unknown, flag it for verification rather
+   than treating it as settled behavior. Describe retained effects in outcome
+   terms and omit their implementation mechanics. Include a mechanic only when
+   it is required for correct API use, necessary to distinguish a reader-facing
+   setting choice, or explicitly requested. Do not ask to expand internal
+   mechanics as a way to fill a public-documentation gap. Retain public
+   contracts and the context needed to interpret claims. This boundary does not
+   apply to internal design documents or technical reports.
 5. Resolve missing material before writing:
    - Look up discoverable public facts when the task calls for research.
    - If a missing personal opinion or experience would materially change the
@@ -73,10 +75,11 @@ Finish only when all of these are true:
 - The result still satisfies the requested format and purpose.
 - For reader-facing setting documentation, a developer can tell what changes,
   what each setting gains and gives up, when to choose each, the public
-  contract, and the meaningful limitation. Preserve relevant reader-visible
-  transitions and timing in outcome terms. Keep implementation mechanics out
-  unless they are required for correct API use, necessary to distinguish the
-  setting choice, or explicitly requested.
+  contract, and the meaningful limitation. Include transitions or timing only
+  when evidence establishes their public or decision relevance; otherwise omit
+  them with the implementation detail or flag material uncertainty. Keep
+  implementation mechanics out unless they are required for correct API use,
+  necessary to distinguish the setting choice, or explicitly requested.
 - Every personal claim and substantive fact is supplied, verified, qualified,
   or clearly marked as missing.
 - The argument is concrete enough to follow without promotional filler.
