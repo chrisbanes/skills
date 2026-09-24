@@ -60,7 +60,7 @@ def _mask_raw_html_blocks(subject: str) -> str:
     block_start = re.compile(
         rf" {{0,3}}</?(?:{block_tags})(?=[ \t>/]|$)", re.IGNORECASE
     )
-    raw_start = re.compile(r"[ \t]*<(?:pre|script|style|textarea)(?=[ \t>]|$)", re.IGNORECASE)
+    raw_start = re.compile(r" {0,3}<(?:pre|script|style|textarea)(?=[ \t>]|$)", re.IGNORECASE)
     raw_end = re.compile(r"</(?:pre|script|style|textarea)\s*>", re.IGNORECASE)
     custom_start = re.compile(
         r" {0,3}</?[A-Za-z][A-Za-z0-9:-]*(?:[ \t]+[^<>\n]*)?[ \t]*/?>[ \t]*(?:\r?\n)?$"
@@ -105,7 +105,8 @@ def _mask_raw_html_blocks(subject: str) -> str:
 
 def _mask_inline_html_tags(subject: str) -> str:
     return re.sub(
-        r"<(?!/?details\b)/?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*?)?\s*/?>",
+        r"<(?!/?(?:details|pre|script|style|textarea)\b)"
+        r"/?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*?)?\s*/?>",
         lambda match: re.sub(r"[^\r\n]", " ", match.group()),
         subject,
         flags=re.DOTALL,
@@ -152,6 +153,7 @@ def _markdown_links(subject: str) -> list[tuple[int, int, int, int]]:
         position = offset + match.end()
         angle = position < len(subject) and subject[position] == "<"
         destination_start = position + int(angle)
+        destination_end: int | None = None
         depth = 0
         while position < len(subject):
             char = subject[position]
@@ -167,13 +169,16 @@ def _markdown_links(subject: str) -> list[tuple[int, int, int, int]]:
                     break
             elif char == "(":
                 depth += 1
+            elif char in " \t" and depth == 0 and destination_end is None:
+                destination_end = position
             elif char == ")":
                 if depth == 0:
-                    destination_end = position
+                    if destination_end is None:
+                        destination_end = position
                     break
                 depth -= 1
             position += 1
-        if position < len(subject) and subject[position] == ")":
+        if position < len(subject) and subject[position] == ")" and destination_end is not None:
             links.append((start, position + 1, destination_start, destination_end))
             offset = position + 1
         else:
@@ -210,7 +215,8 @@ def _markdown_references(subject: str) -> dict[str, str]:
     visible = _mask_raw_html_blocks(_mask_html_comments(_mask_fenced_code(subject)))
     references: dict[str, str] = {}
     for match in re.finditer(
-        r"^ {0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]+)>|([^\s]+))[ \t]*$",
+        r"^ {0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]+)>|([^\s]+))"
+        r"(?:[ \t]+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?[ \t]*$",
         visible,
         re.MULTILINE,
     ):
@@ -219,12 +225,15 @@ def _markdown_references(subject: str) -> dict[str, str]:
 
 
 def has_visible_markdown_link(subject: str, pattern: str, references: dict[str, str]) -> bool:
-    for start, end, _, _ in _markdown_links(subject):
+    for start, end, destination_start, destination_end in _markdown_links(subject):
+        label_end = subject.find("](", start, end) + 1
+        link = f"{subject[start:label_end]}({subject[destination_start:destination_end]})"
         if _visible_link_start(subject, start) and re.fullmatch(
-            pattern, subject[start:end], re.IGNORECASE
+            pattern, link, re.IGNORECASE
         ):
             return True
-    for match in re.finditer(r"\[([^\]\n]+)\]\[([^\]\n]*)\]", subject):
+    without_destinations = _mask_markdown_link_destinations(subject)
+    for match in re.finditer(r"\[([^\]\n]+)\]\[([^\]\n]*)\]", without_destinations):
         label = match.group(1)
         reference = " ".join((match.group(2) or label).split()).casefold()
         destination = references.get(reference)
@@ -255,7 +264,11 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
 
     def finish() -> None:
         if current:
-            bullets.append("\n".join(current))
+            continuations = [
+                line[content_indent:] if line.startswith(" " * content_indent) else line
+                for line in current[1:]
+            ]
+            bullets.append("\n".join([current[0], _mask_raw_html_blocks("\n".join(continuations))]))
             current.clear()
 
     for original, visible in zip(lines, visible_lines):
@@ -263,7 +276,10 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
             if re.fullmatch(rf"##[ \t]+{re.escape(heading)}[ \t]*", visible):
                 in_section = True
             continue
-        if re.match(r"##[ \t]|<details>", visible):
+        heading = re.match(r"( {0,3})##[ \t]", visible)
+        if (heading and (not current or len(heading.group(1)) < content_indent)) or re.match(
+            r"<details>", visible
+        ):
             finish()
             break
         if re.fullmatch(r"[ \t]*(?:-{3,}|_{3,}|\*{3,})[ \t]*", visible):

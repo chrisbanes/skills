@@ -107,6 +107,25 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn('missing required pattern', result.stderr)
 
+    def test_indented_older_release_heading_stops_bullet_collection(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            'PR #812',
+            1,
+        ).replace(
+            '<details>\n',
+            ' ## Older\n\n'
+            '- Add streaming responses with bounded buffering '
+            '[#812](https://github.com/chrisbanes/skills/pull/812).\n\n'
+            '<details>\n',
+            1,
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
     def test_pr_links_on_separate_summary_line_fail(self):
         updated = self.completed_changelog().replace(
             '([#845](https://github.com/chrisbanes/skills/pull/845); '
@@ -533,6 +552,35 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertNotEqual(original, updated)
         self.assertEqual(0, self.validate(updated).returncode)
 
+    def test_titled_reference_definition_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '[#812][pr-812]',
+        ) + '\n[pr-812]: https://github.com/chrisbanes/skills/pull/812 "PR #812"\n'
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_reference_citation_inside_link_destination_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '[context](<https://example.test/?x=[#812][pr-812]>)',
+        ) + '\n[pr-812]: https://github.com/chrisbanes/skills/pull/812\n'
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_titled_pr_citation_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '[#812](https://github.com/chrisbanes/skills/pull/812 "streaming")',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
     def test_pr_link_in_html_attribute_fails(self):
         original = self.completed_changelog()
         updated = original.replace(
@@ -618,6 +666,16 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
                 result = self.validate(updated)
                 self.assertEqual(1, result.returncode)
                 self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_unclosed_script_in_indented_code_preserves_later_bullets(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '## 2.0.0\n',
+            '## 2.0.0\n\n    <script>\n\n',
+            1,
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
 
     def test_pr_link_inside_inline_html_passes(self):
         original = self.completed_changelog()
