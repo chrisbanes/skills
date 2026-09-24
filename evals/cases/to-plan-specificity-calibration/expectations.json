@@ -27,6 +27,16 @@
   ],
   "task_graph": {
     "required_edges": [],
-    "require_acyclic": true
+    "require_acyclic": true,
+    "separate_slice_requirements": [
+      {
+        "id": "missing-manifest",
+        "markers": ["manifest_reader.py", "tests/test_manifest_reader.py"]
+      },
+      {
+        "id": "invalid-profile",
+        "markers": ["profile_loader.py", "tests/test_profile_loader.py"]
+      }
+    ]
   }
 }

@@ -100,6 +100,7 @@ def validate_task_graph(
         return [f"{label}: task graph has no implementation slices"]
 
     tasks: dict[str, set[str]] = {}
+    task_bodies: dict[str, str] = {}
     expected_number = 1
     for heading_index, heading in enumerate(slice_headings):
         title = heading.group(2).strip()
@@ -159,6 +160,7 @@ def validate_task_graph(
         if len(set(dependency_ids)) != len(dependency_ids):
             failures.append(f"{label}: task {task_id!r} repeats a dependency")
         tasks[task_id] = set(dependency_ids)
+        task_bodies[task_id] = body
 
     for task_id, dependencies in tasks.items():
         for dependency in dependencies:
@@ -189,6 +191,50 @@ def validate_task_graph(
             failures.append(
                 f"{label}: missing required dependency edge {task_id!r} -> {dependency!r}"
             )
+
+    separate_slice_requirements = rules.get("separate_slice_requirements", [])
+    if not isinstance(separate_slice_requirements, list):
+        return failures + [
+            f"{label}: separate_slice_requirements must be a list"
+        ]
+    matched_tasks: dict[str, str] = {}
+    for requirement in separate_slice_requirements:
+        if not isinstance(requirement, dict):
+            failures.append(
+                f"{label}: separate slice requirements must be objects"
+            )
+            continue
+        requirement_id = requirement.get("id")
+        markers = requirement.get("markers")
+        if (
+            not isinstance(requirement_id, str)
+            or not requirement_id.strip()
+            or not isinstance(markers, list)
+            or not markers
+            or any(not isinstance(marker, str) or not marker for marker in markers)
+        ):
+            failures.append(
+                f"{label}: separate slice requirements need an id and non-empty marker list"
+            )
+            continue
+        matches = [
+            task_id
+            for task_id, body in task_bodies.items()
+            if all(marker in body for marker in markers)
+        ]
+        if len(matches) != 1:
+            failures.append(
+                f"{label}: independent behavior {requirement_id!r} must be contained in exactly one slice; found {len(matches)}"
+            )
+            continue
+        task_id = matches[0]
+        previous = matched_tasks.get(task_id)
+        if previous is not None:
+            failures.append(
+                f"{label}: independent behaviors {previous!r} and {requirement_id!r} share slice {task_id!r}"
+            )
+        else:
+            matched_tasks[task_id] = requirement_id
 
     if rules.get("require_acyclic", False):
         visiting: set[str] = set()

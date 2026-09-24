@@ -218,6 +218,19 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
         self.assertEqual([], expectations["task_graph"]["required_edges"])
         self.assertTrue(expectations["task_graph"]["require_acyclic"])
+        self.assertEqual(
+            [
+                {
+                    "id": "missing-manifest",
+                    "markers": ["manifest_reader.py", "tests/test_manifest_reader.py"],
+                },
+                {
+                    "id": "invalid-profile",
+                    "markers": ["profile_loader.py", "tests/test_profile_loader.py"],
+                },
+            ],
+            expectations["task_graph"]["separate_slice_requirements"],
+        )
         required_text = expectations["file_globs"][0]["must_contain"]
         self.assertNotIn("path_diagnostics.py", required_text)
         self.assertNotIn("quote_path", required_text)
@@ -241,6 +254,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             {
                 "complete-coverage",
                 "baseline-and-red-green",
+                "independent-slice-boundaries",
                 "concrete-tests",
                 "consistent-dependencies",
                 "proportionality",
@@ -579,6 +593,49 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
 
         self.assertEqual([], failures)
+
+    def test_specificity_validator_rejects_grouped_independent_call_sites(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case for case in report.cases if case.id == "to-plan-specificity-calibration"
+        )
+        rules = json.loads(
+            (case.directory / "expectations.json").read_text(encoding="utf-8")
+        )
+        grouped = (
+            "## Implementation slices\n\n"
+            "### 1. Quote both diagnostics\n"
+            "**Task ID:** `T1`\n"
+            "**Depends on:** `none`\n"
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`tests/test_manifest_reader.py`; edit `profile_loader.py` and "
+            "`tests/test_profile_loader.py`.\n"
+            "## Acceptance coverage\n"
+        )
+        separation_failures = validate_task_graph(grouped, rules["task_graph"])
+        self.assertTrue(
+            any("share slice" in failure for failure in separation_failures),
+            separation_failures,
+        )
+
+        separated = (
+            "## Implementation slices\n\n"
+            "### 1. Quote missing-manifest paths\n"
+            "**Task ID:** `T1`\n"
+            "**Depends on:** `none`\n"
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`tests/test_manifest_reader.py`.\n\n"
+            "### 2. Quote invalid-profile paths\n"
+            "**Task ID:** `T2`\n"
+            "**Depends on:** `none`\n"
+            "**Files and symbols:** Edit `profile_loader.py` and "
+            "`tests/test_profile_loader.py`.\n"
+            "## Acceptance coverage\n"
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(separated, rules["task_graph"]),
+        )
 
     def test_material_assumption_proof_case_requires_dependent_implementation(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

@@ -25,6 +25,10 @@
       "text": "Recognizes that both existing tests assert the current unquoted output, updates the relevant assertions to the exact quoted output, and plans to observe those changed assertions fail before implementing the behavior and pass afterward"
     },
     {
+      "id": "independent-slice-boundaries",
+      "text": "Gives the missing-manifest and invalid-profile call sites separate independently deliverable implementation slices because each has its own test and neither depends on the other; the plan does not group them merely because they share the same formatting rule"
+    },
+    {
       "id": "concrete-tests",
       "text": "Names the relevant files, functions, test methods, spaced-path inputs, exact quoted outputs, focused commands, working directory, and observable passing results; any interface and symbol references agree throughout the plan"
     },

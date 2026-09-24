@@ -60,6 +60,13 @@ review and verification. Include setup, documentation, and integration edits in
 the increment whose behavior they support. Keep independent increments separate
 when each has its own useful check; keep tightly coupled edits together when
 splitting them would leave an unreviewable or untestable intermediate state.
+Set boundaries around independently changeable behaviors, not just a shared
+theme: when separate call sites have their own focused checks and no required
+cross-dependency, plan separate increments even if they use the same formatting
+rule or belong to the same feature. Combine them only when repository evidence
+shows a concrete dependency that makes an intermediate state untestable or
+unreviewable; name that dependency and the gated work explicitly. A common
+concept or nearby files alone do not establish coupling.
 
 An authorized Planning transition, decision-complete current task, or confirmed
 conversation source authorizes the smallest coherent contract-realizing design.
