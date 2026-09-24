@@ -107,6 +107,28 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn('missing required pattern', result.stderr)
 
+    def test_pr_links_on_separate_summary_line_fail(self):
+        updated = self.completed_changelog().replace(
+            '([#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example))',
+            '(PR #845)',
+        ).replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '(PR #812)',
+        ).replace(
+            '- Add streaming responses with bounded buffering (PR #812).',
+            '- Add streaming responses with bounded buffering (PR #812).\n'
+            '- Related links: [#812](https://github.com/chrisbanes/skills/pull/812), '
+            '[#845](https://github.com/chrisbanes/skills/pull/845), '
+            '[Avery Example](https://github.com/avery-example).',
+        )
+        self.assertIn('- Fix request cancellation so underlying work stops (PR #845).', updated)
+        self.assertIn('- Add streaming responses with bounded buffering (PR #812).', updated)
+        self.assertIn('- Related links: [#812]', updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern', result.stderr)
+
     def test_release_links_cannot_replace_original_notes(self):
         updated = self.completed_changelog().replace(
             '- Add streaming responses with unbounded buffering.',
