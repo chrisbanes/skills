@@ -39,9 +39,13 @@ Local validation after the final writing edits: `npm test` passed 171 tests
 with one skip and 210 eval-harness tests; `npm run lint`,
 `python3 evals/run.py validate` (99 cases), and `git diff --check` passed.
 
-The remaining score gate is one frozen, complete-corpus run at the integrated
-head, with forced and automatic outcomes reported separately and every failure
-audited. The prior planning estimate for three repetitions is 693 subject and
-693 judge calls, about $145.53 at the chosen per-call assumptions. This is an
-estimate, not a quoted price or measured charge. No aggregate 100% claim follows
-from the targeted probes.
+The remaining score gate is a frozen run across all three suites at the
+integrated head, with forced and automatic outcomes reported separately and
+every failure audited. For the two arms in the goal, three repetitions plan
+228 Compose, 132 Kotlin/Gradle, and 90 workflow/writing records: 450 subject
+and 450 judge calls, or $94.50 at the chosen per-call assumptions. The earlier
+full three-arm plan also included a no-skill baseline and estimated 693 calls
+per model, or $145.53. These are planning estimates, not quoted prices or
+measured charges. A two-arm run verifies forced and automatic correctness but
+does not refresh same-run baseline uplift or retention metrics. No aggregate
+100% claim follows from the targeted probes.
