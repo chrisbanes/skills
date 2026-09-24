@@ -103,3 +103,17 @@ classified that verdict as a false negative because the rubric required only
 the String shim. The new guidance is a broader API check, not evidence of a
 corrected case score. Lint, the 99-case corpus check, and the focused Kotlin
 eval tests pass. These revisions have no new model scores.
+
+Revision `719dc8b` makes focus test guidance name a missing host or parent input
+seam when the inspected composable has no selector. The saved
+`router-overlap-animation-focus-testing:forced:3` reply had proposed an
+"actual selector" absent from the supplied UI. Revision `84bdcf9` adds
+privacy-bounded Gradle execution evidence to judge packets for workflow cases.
+In two saved `gradle-incidental-validation-direct` runs, the subject events
+showed the compact wrapper's create/run/finish sequence, while the judge packet
+contained only the final response and the judge rejected the wrapper criterion.
+The new packet carries normalized completed-command facts without raw commands,
+questions, paths, or logs. Both saved traces normalize to a completed workflow
+with bounded JSON results. Lint, 209 evaluator tests, and the 99-case corpus
+validation pass. The saved judge verdicts remain unchanged; no live rejudgment
+or new model run has passed automatic approval review.
