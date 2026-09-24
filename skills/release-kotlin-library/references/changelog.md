@@ -13,6 +13,15 @@ history, diffs, and relevant issue/PR evidence. Preserve curated wording; add
 missing consumer-visible changes, correct inaccuracies, omit internal-only
 changes, and resolve uncertain coverage before publication. A heading check
 cannot prove semantic completeness; report reviewed scope and gaps.
+For each change supported by a pull request, link its PR number directly to the
+canonical GitHub pull URL (for example, `[#123](https://github.com/OWNER/REPO/pull/123)`);
+do not rely on GitHub auto-linking a bare number. When the verified PR author
+is not a repository maintainer, include their verified name or username linked
+to their GitHub profile. Establish authorship from the PR and maintainer status
+from repository evidence. If the PR, author, profile URL, or maintainer status
+cannot be verified, report the gap and do not invent a link, identity, or
+classification. Preserve curated wording apart from the requested citation and
+contributor credit.
 
 For a final release, before editing make a temporary coverage ledger with one
 row for **each** supplied or repository-discoverable change since the previous
