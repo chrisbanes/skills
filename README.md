@@ -216,11 +216,12 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 0.0% | 83.3% | 100.0% |
 | [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | 100.0% |
 | [`shepherd`](skills/shepherd/SKILL.md) | — | — | 100.0% |
-| [`to-plan`](skills/to-plan/SKILL.md) | — | — | 66.7% |
+| [`to-plan`](skills/to-plan/SKILL.md) | — | — | 100.0% |
 
-The `grounded-writing` automatic cell uses the later focused repair probe;
-its baseline and the efficiency row below use the complete suite. See the
-[improvement result record](evals/artifacts/2026-09-24-gpt6-improvement-results.md)
+The `grounded-writing` automatic and `to-plan` restraint cells use later
+focused evidence. Baseline and efficiency values use the complete suite. See
+the [improvement result record](evals/artifacts/2026-09-24-gpt6-improvement-results.md)
+and [targeted probe record](evals/artifacts/2026-09-24-gpt6-targeted-100-probes.md)
 for provenance and remaining failures.
 
 ### Skill efficiency

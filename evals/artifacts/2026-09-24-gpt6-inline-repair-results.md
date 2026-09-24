@@ -208,17 +208,26 @@ last complete-suite values.
 The selected raw packets underlying the older complete three-suite run
 contained 30 distinct failed case/arm conditions in its forced and automatic
 arms, before later deterministic regrades. A case-ID and arm comparison of
-those packets with the later targeted `results.json` files found
+those packets with the later targeted result packets found
 a separate three-repetition raw pass for all 30 conditions. This is coverage
 of the historical failure list, not a current full-corpus score: the passing
 probes differ in source, case, and skill-catalog snapshots, and conditions
 that passed in the old full run were not all rechecked.
 
-A later audit of the individual raw packets confirmed that all 30 conditions
-have a three-repetition pass whose case digest and captured skill-file hashes
-match the current files. That comparison does not establish one shared catalog
-or evaluator snapshot across the probes, nor does it retest the conditions
-that passed in the older complete run.
+A later audit of the individual raw packets confirmed current case digests for
+all 30 conditions, but initially checked staged skill paths against the wrong
+repository location. The corrected hash comparison found two forced
+`implement-with-subagents` conditions with older target skill text. A fresh
+current-skill run passed `implement-with-subagents-direct` and
+`implement-with-subagents-novel` 3/3 each in
+`/private/tmp/gpt6-targeted-implement-current-escalated-20260924`, with zero
+forbidden actions. All 30 historical failures now have a later
+three-repetition pass against the current case and target skill text. Some
+automatic runs staged older versions of other skills, and the probes do not
+share one catalog or evaluator snapshot; they do not retest every formerly
+passing condition. The first attempted implementation recheck produced only
+CLI initialization failures inside the sandbox, so those six invalid records
+are excluded from this claim.
 
 One formerly failed condition, `compose-state-authoring-direct:automatic`, had
 been repaired by a deterministic regrade of the old packet but lacked a later

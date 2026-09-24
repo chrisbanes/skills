@@ -65,11 +65,12 @@ suite-wide aggregate.
 | `release-kotlin-library` | 0.0% | 83.3% | 100.0% |
 | `run-github-project` | — | — | 100.0% |
 | `shepherd` | — | — | 100.0% |
-| `to-plan` | — | — | 66.7% |
+| `to-plan` | — | — | 100.0% |
 
-The `grounded-writing` automatic cell uses the later focused repair probe;
-its baseline and the efficiency row below use the complete suite. See the
-[improvement result record](artifacts/2026-09-24-gpt6-improvement-results.md)
+The `grounded-writing` automatic and `to-plan` restraint cells use later
+focused evidence. Baseline and efficiency values use the complete suite. See
+the [improvement result record](artifacts/2026-09-24-gpt6-improvement-results.md)
+and [targeted probe record](artifacts/2026-09-24-gpt6-targeted-100-probes.md)
 for provenance and remaining failures.
 
 ### Skill efficiency
