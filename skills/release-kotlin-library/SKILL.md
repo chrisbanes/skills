@@ -67,8 +67,11 @@ snapshots when the repository does not maintain them.
    `<summary>Prerelease history</summary>`. Preserve their headings, anchors,
    dates and text, with blank lines around the enclosed Markdown. Leave older
    stable releases outside the block. If the renderer lacks collapsible HTML,
-   retain expanded entries. Inspect the resulting commit. Bind validation to
-   this state and invalidate it if relevant code changes. The helper must not
+   retain expanded entries. Before handing off, compare the actual stable
+   summary against every surviving row in the coverage ledger; confirm each
+   appears outside prerelease history and add any missing surviving change to
+   the stable summary. Inspect the resulting commit. Bind validation to this
+   state and invalidate it if relevant code changes. The helper must not
    publish during preparation.
 6. Present the prepared release for explicit user approval before publication:
    release version and tag, finalized changelog (or its absence), next development
