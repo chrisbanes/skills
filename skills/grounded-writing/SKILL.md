@@ -22,17 +22,21 @@ generic, or included only to imitate a personality.
 3. Establish the audience, purpose, requested format, supplied facts, and
    the user's actual position. Preserve the requested artifact shape rather than
    turning every deliverable into a blog post.
-4. In public developer documentation, explain observable behaviour, setting
-   choices, trade-offs, and relevant limitations. Remove implementation, test,
-   or diagnostic mechanics such as sampling thresholds, CPU masks, interpolation
-   details, and cooldown timing. Include a mechanic only when it is required for
-   correct API use, the mechanism itself is necessary to distinguish a
-   reader-facing setting choice, or the user explicitly requests it. If the
-   visible outcome informs the choice but the mechanism does not, explain the
-   outcome without the mechanism. Do not ask to expand internal mechanics as a
-   way to fill a public-documentation gap. Retain public contracts and the
-   context needed to interpret claims. This boundary does not apply to internal
-   design documents or technical reports.
+4. In public developer documentation, explain the observable difference between
+   settings and the practical trade-off in supported terms: what each gains and
+   gives up, and when to choose it. If the draft lacks evidence for that choice,
+   name the missing information instead of inferring it. Remove implementation,
+   test, or diagnostic mechanics such as sampling thresholds, CPU masks, and
+   interpolation details. Preserve stated reader-visible outcomes and
+   transitions, including timing that affects what users see or choose, but
+   describe the outcome rather than how it is implemented. For example, retain
+   that an effect returns to `Full` after a delay without describing the
+   cooldown machinery. Include a mechanic only when it is required for correct
+   API use, necessary to distinguish a reader-facing setting choice, or
+   explicitly requested. Do not ask to expand internal mechanics as a way to
+   fill a public-documentation gap. Retain public contracts and the context
+   needed to interpret claims. This boundary does not apply to internal design
+   documents or technical reports.
 5. Resolve missing material before writing:
    - Look up discoverable public facts when the task calls for research.
    - If a missing personal opinion or experience would materially change the
@@ -68,12 +72,11 @@ Finish only when all of these are true:
 
 - The result still satisfies the requested format and purpose.
 - For reader-facing setting documentation, a developer can tell what changes,
-  when to choose each setting, the practical trade-off, the public contract,
-  and the meaningful limitation. Keep implementation mechanics out unless they
-  are required for correct API use, the mechanism itself is necessary to
-  distinguish the setting choice, or the user explicitly requests it. When an
-  observable effect informs that choice but its mechanism is unnecessary,
-  describe the effect rather than the mechanism.
+  what each setting gains and gives up, when to choose each, the public
+  contract, and the meaningful limitation. Preserve relevant reader-visible
+  transitions and timing in outcome terms. Keep implementation mechanics out
+  unless they are required for correct API use, necessary to distinguish the
+  setting choice, or explicitly requested.
 - Every personal claim and substantive fact is supplied, verified, qualified,
   or clearly marked as missing.
 - The argument is concrete enough to follow without promotional filler.
