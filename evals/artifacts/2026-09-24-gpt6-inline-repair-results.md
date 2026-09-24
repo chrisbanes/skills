@@ -318,3 +318,12 @@ After the region-inventory wording, `compose-slot-api-pattern-direct` passed
 the novel 3/3 in each arm and the automatic no-change 3/3 above, this covers
 the component skill's direct, novel, and restraint controls at that skill
 snapshot. These separate focused runs do not establish a full-corpus score.
+
+## Animation novel automatic stability check
+
+The `compose-animations-novel` automatic arm passed 3/3 at the current case and
+skill snapshot in `/private/tmp/gpt6-targeted-animation-novel-auto-20260924`.
+All three runs reported `compose-animations`, passed both objective and judge
+checks, and recorded no forbidden actions. The earlier animation triad was a
+one-repetition-per-case screen; this check adds three-repetition evidence for
+this one case and arm only.
