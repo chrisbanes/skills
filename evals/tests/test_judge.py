@@ -2,6 +2,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL
@@ -15,6 +16,32 @@ from evals.harness.judge import (
     run_judge,
 )
 from evals.tests.test_grade import make_case, make_result
+
+
+def gradle_workflow_case(root: Path):
+    case = make_case(root)
+    return replace(
+        case,
+        required_command_patterns=(
+            r"gradle_run\.py create",
+            r"gradle_run\.py run",
+            r"gradle_run\.py finish",
+        ),
+    )
+
+
+def command_event(
+    command: str, output: str = "", *, exit_code=0, event_type="item.completed"
+):
+    return {
+        "type": event_type,
+        "item": {
+            "type": "command_execution",
+            "command": command,
+            "aggregated_output": output,
+            "exit_code": exit_code,
+        },
+    }
 
 
 class BlindedJudgeTest(unittest.TestCase):
@@ -45,7 +72,10 @@ class BlindedJudgeTest(unittest.TestCase):
         case = make_case(self.root)
         result = make_result(
             self.root,
-            events=({"type": "thread.started", "skills.config": "forced"},),
+            events=(
+                {"type": "thread.started", "skills.config": "forced"},
+                command_event("echo PRIVATE_TRACE_SECRET"),
+            ),
         )
         grade = ObjectiveGrade(
             objective_pass=True,
@@ -71,6 +101,8 @@ class BlindedJudgeTest(unittest.TestCase):
         self.assertEqual("done", packet["response"]["summary"])
         self.assertEqual("ok", packet["validator_evidence"][0]["stdout"])
         self.assertNotIn("check.py", rendered)
+        self.assertNotIn("PRIVATE_TRACE_SECRET", rendered)
+        self.assertNotIn("gradle_execution_evidence", packet)
 
     def test_packet_contains_initial_source_for_read_only_judgment(self):
         case = make_case(self.root, task_mode="review")
@@ -118,6 +150,154 @@ class BlindedJudgeTest(unittest.TestCase):
 
         self.assertNotIn(".agents/skills/compose-state-and-effects/SKILL.md", packet["initial_state"])
         self.assertNotIn("secret skill instructions", json.dumps(packet))
+
+    def test_gradle_workflow_packet_includes_bounded_redacted_execution_evidence(self):
+        case = gradle_workflow_case(self.root)
+        workflow = "a" * 32
+        secret = "PRIVATE_COMMAND_QUESTION_AND_LOG_SECRET"
+        skill_text = "private skill text sentinel"
+        events = (
+            command_event(
+                "python3 /private/user/.agents/skills/gradle-run/scripts/gradle_run.py create",
+                event_type="item.started",
+            ),
+            command_event(
+                "python3 /private/user/.agents/skills/gradle-run/scripts/gradle_run.py create",
+                json.dumps({"workflow": workflow, "directory": "/private/path"}),
+            ),
+            command_event(
+                "python3 /private/user/.agents/skills/gradle-run/scripts/gradle_run.py "
+                f'run --workflow {workflow} --scope targeted --question "{secret}" '
+                "-- ./gradlew --offline test",
+                event_type="item.started",
+            ),
+            command_event(
+                "python3 /private/user/.agents/skills/gradle-run/scripts/gradle_run.py "
+                f'run --workflow {workflow} --scope targeted --question "{secret}" '
+                "-- ./gradlew --offline test",
+                json.dumps(
+                    {
+                        "command": f"./gradlew --offline test {secret}",
+                        "scope": "targeted",
+                        "exit_status": 0,
+                        "excerpt": [secret, skill_text],
+                        "failed_tasks": [],
+                        "log": f"/private/path/{secret}.log",
+                    }
+                ),
+            ),
+            command_event(
+                f"python3 /private/user/.agents/skills/gradle-run/scripts/gradle_run.py finish --workflow {workflow}",
+                json.dumps({"finished": workflow}),
+            ),
+            command_event(
+                f"cat /private/path/{secret}.log", secret, exit_code=0
+            ),
+        )
+        result = make_result(self.root, events=events)
+
+        packet = build_judge_packet(
+            case, result, ObjectiveGrade(True, False, (), (), ())
+        )
+        evidence = packet["gradle_execution_evidence"]
+        rendered_evidence = json.dumps(evidence, sort_keys=True)
+
+        self.assertEqual(4, evidence["captured_command_event_count"])
+        self.assertFalse(evidence["truncated"])
+        self.assertEqual("create", evidence["steps"][0]["operation"])
+        self.assertEqual("workflow-1", evidence["steps"][0]["workflow"])
+        run = evidence["steps"][1]
+        self.assertEqual("run", run["operation"])
+        self.assertEqual("workflow-1", run["workflow"])
+        self.assertEqual("targeted", run["scope"])
+        self.assertTrue(run["question_present"])
+        self.assertEqual(
+            {"launcher": "gradlew", "test_task_requested": True, "offline": True},
+            run["nested_gradle"],
+        )
+        self.assertTrue(run["bounded_json_summary"])
+        self.assertEqual("finish", evidence["steps"][2]["operation"])
+        self.assertEqual("workflow-1", evidence["steps"][2]["workflow"])
+        self.assertTrue(evidence["steps"][3]["possible_log_read"])
+        for private_value in (
+            secret,
+            skill_text,
+            workflow,
+            "/private/user/",
+            "/private/path/",
+            "skills_used",
+            "automatic",
+            "forced",
+            "objective_pass",
+        ):
+            self.assertNotIn(private_value, rendered_evidence)
+
+        without_events = build_judge_packet(
+            case, make_result(self.root), ObjectiveGrade(True, False, (), (), ())
+        )
+        self.assertNotEqual(packet["candidate_id"], without_events["candidate_id"])
+        self.assertEqual([], without_events["gradle_execution_evidence"]["steps"])
+
+    def test_gradle_workflow_packet_keeps_failed_incomplete_steps_as_evidence(self):
+        case = gradle_workflow_case(self.root)
+        workflow = "b" * 32
+        failed_summary = json.dumps(
+            {
+                "command": "./gradlew --offline test",
+                "scope": "targeted",
+                "exit_status": 1,
+                "excerpt": ["failure detail must not be forwarded"],
+                "failed_tasks": ["test"],
+                "log": "/private/logs/full.log",
+            }
+        )
+        events = (
+            command_event(
+                "python3 gradle_run.py create",
+                json.dumps({"workflow": workflow, "directory": "/private"}),
+            ),
+            command_event(
+                f"python3 gradle_run.py run --workflow {workflow} --scope targeted "
+                '--question "Was the test successful?" -- ./gradlew --offline test',
+                failed_summary,
+                exit_code=1,
+            ),
+        )
+
+        packet = build_judge_packet(
+            case,
+            make_result(self.root, events=events),
+            ObjectiveGrade(False, False, ("failed",), (), ()),
+        )
+        evidence = packet["gradle_execution_evidence"]
+        rendered_evidence = json.dumps(evidence, sort_keys=True)
+
+        self.assertEqual(["create", "run"], [step["operation"] for step in evidence["steps"]])
+        self.assertEqual(1, evidence["steps"][1]["exit_code"])
+        self.assertTrue(evidence["steps"][1]["bounded_json_summary"])
+        self.assertNotIn("failure detail", rendered_evidence)
+        self.assertNotIn("/private", rendered_evidence)
+        self.assertNotIn("workflow_complete", rendered_evidence)
+        self.assertNotIn("objective_pass", rendered_evidence)
+
+    def test_gradle_execution_evidence_caps_command_events(self):
+        case = gradle_workflow_case(self.root)
+        events = tuple(
+            command_event(f"echo PRIVATE_TRACE_SECRET_{index}")
+            for index in range(70)
+        )
+
+        packet = build_judge_packet(
+            case,
+            make_result(self.root, events=events),
+            ObjectiveGrade(True, False, (), (), ()),
+        )
+        evidence = packet["gradle_execution_evidence"]
+
+        self.assertEqual(64, len(evidence["steps"]))
+        self.assertTrue(evidence["truncated"])
+        self.assertEqual(70, evidence["captured_command_event_count"])
+        self.assertNotIn("PRIVATE_TRACE_SECRET", json.dumps(evidence))
 
     def test_judge_command_disables_every_skill_and_uses_read_only_sandbox(self):
         packet = self.root / "packet.json"

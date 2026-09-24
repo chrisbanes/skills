@@ -12,7 +12,11 @@ from typing import Any
 
 from evals.harness.cases import EvalCase
 from evals.harness.codex import SubjectResult, discover_skill_paths, parse_codex_jsonl
-from evals.harness.grade import ObjectiveGrade
+from evals.harness.grade import (
+    ObjectiveGrade,
+    _requires_gradle_workflow,
+    gradle_execution_evidence,
+)
 
 
 @dataclass(frozen=True)
@@ -65,19 +69,24 @@ def build_judge_packet(
         "summary": result.final_output.get("summary", ""),
         "evidence": result.final_output.get("evidence", []),
     }
+    workflow_evidence = (
+        gradle_execution_evidence(result.events)
+        if _requires_gradle_workflow(case.required_command_patterns)
+        else None
+    )
     initial_state = _initial_state(result.workspace)
-    identity_source = json.dumps(
-        {
-            "task": case.prompt,
-            "rubric": case.rubric,
-            "initial_state": initial_state,
-            "diff": result.diff,
-            "response": response,
-        },
-        sort_keys=True,
-    ).encode()
+    identity_payload = {
+        "task": case.prompt,
+        "rubric": case.rubric,
+        "initial_state": initial_state,
+        "diff": result.diff,
+        "response": response,
+    }
+    if workflow_evidence is not None:
+        identity_payload["gradle_execution_evidence"] = workflow_evidence
+    identity_source = json.dumps(identity_payload, sort_keys=True).encode()
     candidate_id = hashlib.sha256(identity_source).hexdigest()[:20]
-    return {
+    packet = {
         "candidate_id": candidate_id,
         "task": case.prompt,
         "task_mode": case.task_mode,
@@ -96,6 +105,9 @@ def build_judge_packet(
             for index, validator in enumerate(grade.validators, start=1)
         ],
     }
+    if workflow_evidence is not None:
+        packet["gradle_execution_evidence"] = workflow_evidence
+    return packet
 
 
 def _disabled_skill_config(skill_paths: tuple[Path, ...]) -> str:
