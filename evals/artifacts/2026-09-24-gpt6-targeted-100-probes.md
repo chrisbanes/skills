@@ -39,9 +39,18 @@ full-suite workflow scorecard still records 50.0% forced and 61.1% automatic
 positive outcomes, 88.9% automatic negative-control restraint, and one
 forbidden-action failure.
 
-Next, address the observed Compose state-hoisting edit outside its allowlist;
-recheck `grounded-writing` automatic negative restraint and novel coverage;
-then work through `release-kotlin-library`, `shepherd`, and remaining
-Compose/Kotlin routing misses. Rerun the frozen three-suite corpus after those
-repairs. The [improvement plan](2026-09-23-gpt6-improvement-plan.md) records
-the original priorities and gates.
+The Compose state-hoisting failures were narrower than first reported: two
+forced replies added an `@Preview` import without declared tooling and did not
+report the setup gap. Both diffs stayed within the allowed Kotlin file. Revision
+`6f21cd1` clarifies that previewable content does not require an `@Preview`
+annotation and requires checking tooling before adding one. Lint and the
+99-case corpus validation pass. A targeted live probe was attempted twice but
+stopped before any model call because `codex --version` hung in evaluator
+preflight, including after escalation. This revision has no model score yet.
+
+Next, recheck that Compose repair and `grounded-writing` automatic negative
+restraint and novel coverage; then work through `release-kotlin-library`,
+`shepherd`, and remaining Compose/Kotlin routing misses. Rerun the frozen
+three-suite corpus after those repairs. The
+[improvement plan](2026-09-23-gpt6-improvement-plan.md) records the original
+priorities and gates.
