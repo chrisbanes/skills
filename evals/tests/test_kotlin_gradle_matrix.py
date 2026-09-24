@@ -1,5 +1,6 @@
 import json
 import re
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,7 +8,15 @@ from unittest.mock import patch
 
 from evals.harness.cases import validate_corpus
 from evals.harness.codex import prepare_workspace
-from evals.harness.experiment import filter_cases, preflight, reconcile_automatic_eligibility
+from evals.harness.experiment import (
+    CODEX_VERSION_TIMEOUT_SECONDS,
+    COMMAND_OUTPUT_TIMEOUT_SECONDS,
+    GRADLE_PREFLIGHT_TIMEOUT_SECONDS,
+    _command_output,
+    filter_cases,
+    preflight,
+    reconcile_automatic_eligibility,
+)
 from evals.harness.grade import grade_subject
 from evals.harness.suites import KOTLIN_GRADLE_SKILLS
 from evals.tests.test_grade import make_result
@@ -326,6 +335,90 @@ fun profileFor(rawUserId: String, store: ProfileStore): User =
             [str(fixture / "subject-gradlew"), "--offline", "--no-scan", "test"],
             commands,
         )
+        timeout_by_command = {
+            tuple(call.args[0]): call.kwargs.get(
+                "timeout_seconds", COMMAND_OUTPUT_TIMEOUT_SECONDS
+            )
+            for call in command_output.call_args_list
+        }
+        self.assertEqual(
+            CODEX_VERSION_TIMEOUT_SECONDS,
+            timeout_by_command[("codex", "--version")],
+        )
+        self.assertEqual(
+            COMMAND_OUTPUT_TIMEOUT_SECONDS,
+            timeout_by_command[("git", "rev-parse", "HEAD")],
+        )
+        self.assertEqual(
+            GRADLE_PREFLIGHT_TIMEOUT_SECONDS,
+            timeout_by_command[
+                (str(fixture / "gradlew"), "--offline", "--no-scan", "test")
+            ],
+        )
+
+    def test_command_output_passes_a_bounded_default_timeout(self):
+        completed = subprocess.CompletedProcess(
+            args=["git", "rev-parse", "HEAD"], returncode=0, stdout="abc\n", stderr=""
+        )
+        with patch(
+            "evals.harness.experiment.subprocess.run", return_value=completed
+        ) as run:
+            output = _command_output(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT)
+
+        self.assertEqual("abc", output)
+        self.assertEqual(COMMAND_OUTPUT_TIMEOUT_SECONDS, run.call_args.kwargs["timeout"])
+
+    def test_cli_version_timeout_fails_with_installation_guidance(self):
+        timeout = subprocess.TimeoutExpired(
+            cmd=["codex", "--version"], timeout=CODEX_VERSION_TIMEOUT_SECONDS
+        )
+        with patch(
+            "evals.harness.experiment.subprocess.run", side_effect=timeout
+        ) as run:
+            with self.assertRaisesRegex(
+                RuntimeError,
+                r"codex --version timed out after 10s.*installation.*signature",
+            ):
+                preflight(REPO_ROOT, "codex", ())
+
+        self.assertEqual(CODEX_VERSION_TIMEOUT_SECONDS, run.call_args.kwargs["timeout"])
+
+    def test_gradle_fixture_timeout_reports_fixture_and_offline_guidance(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        case = next(
+            case
+            for case in report.cases
+            if (REPO_ROOT / "evals" / "fixtures" / case.fixture / "gradlew").is_file()
+        )
+        fixture = REPO_ROOT / "evals" / "fixtures" / case.fixture
+        timeout = subprocess.TimeoutExpired(
+            cmd=[str(fixture / "gradlew"), "--offline", "--no-scan", "test"],
+            timeout=GRADLE_PREFLIGHT_TIMEOUT_SECONDS,
+        )
+        codex_completed = subprocess.CompletedProcess(
+            args=["codex", "--version"], returncode=0, stdout="ok\n", stderr=""
+        )
+        git_completed = subprocess.CompletedProcess(
+            args=["git", "rev-parse", "HEAD"],
+            returncode=0,
+            stdout="ok\n",
+            stderr="",
+        )
+        with patch(
+            "evals.harness.experiment.subprocess.run",
+            side_effect=[
+                codex_completed,
+                git_completed,
+                timeout,
+            ],
+        ) as run:
+            with self.assertRaisesRegex(
+                RuntimeError,
+                r"gradlew --offline --no-scan test timed out after 180s.*offline Gradle dependencies",
+            ):
+                preflight(REPO_ROOT, "codex", (case,))
+
+        self.assertEqual(GRADLE_PREFLIGHT_TIMEOUT_SECONDS, run.call_args.kwargs["timeout"])
 
 
 if __name__ == "__main__":

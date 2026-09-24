@@ -56,6 +56,10 @@ RUN_CONTROL_FIELDS = (
     "judge_model",
 )
 
+COMMAND_OUTPUT_TIMEOUT_SECONDS = 30
+CODEX_VERSION_TIMEOUT_SECONDS = 10
+GRADLE_PREFLIGHT_TIMEOUT_SECONDS = 180
+
 
 def _routing_expectations(
     case: EvalCase, arm: str, repo_root: Path
@@ -309,24 +313,60 @@ def _skill_source_paths(repo_root: Path) -> tuple[Path, ...]:
     )
 
 
-def _command_output(command: list[str], *, cwd: Path) -> str:
-    completed = subprocess.run(
-        command, cwd=cwd, text=True, capture_output=True, check=True
-    )
+def _command_output(
+    command: list[str],
+    *,
+    cwd: Path,
+    timeout_seconds: int = COMMAND_OUTPUT_TIMEOUT_SECONDS,
+    timeout_hint: str | None = None,
+) -> str:
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            text=True,
+            capture_output=True,
+            check=True,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as error:
+        message = (
+            f"Command {shlex.join(command)} timed out after {timeout_seconds}s "
+            f"in {cwd}."
+        )
+        if timeout_hint:
+            message += f" {timeout_hint}"
+        raise RuntimeError(message) from error
     return completed.stdout.strip()
+
+
+def _codex_version(repo_root: Path, codex_executable: str) -> str:
+    return _command_output(
+        [codex_executable, "--version"],
+        cwd=repo_root,
+        timeout_seconds=CODEX_VERSION_TIMEOUT_SECONDS,
+        timeout_hint=(
+            "Check the Codex CLI installation and executable code signature, then retry."
+        ),
+    )
 
 
 def preflight(
     repo_root: Path, codex_executable: str, cases: Iterable[EvalCase]
 ) -> tuple[str, str]:
-    codex_version = _command_output([codex_executable, "--version"], cwd=repo_root)
+    codex_version = _codex_version(repo_root, codex_executable)
     skill_sha = _command_output(["git", "rev-parse", "HEAD"], cwd=repo_root)
     for fixture_name in sorted({case.fixture for case in cases}):
         fixture = repo_root / "evals" / "fixtures" / fixture_name
         wrapper = fixture / "gradlew"
         if wrapper.is_file():
             _command_output(
-                [str(wrapper), "--offline", "--no-scan", "test"], cwd=fixture
+                [str(wrapper), "--offline", "--no-scan", "test"],
+                cwd=fixture,
+                timeout_seconds=GRADLE_PREFLIGHT_TIMEOUT_SECONDS,
+                timeout_hint=(
+                    "Check the offline Gradle dependencies and inspect the fixture build output."
+                ),
             )
     return codex_version, skill_sha
 
@@ -844,7 +884,7 @@ def rejudge_packets(
     }
     if not execute:
         return plan
-    codex_version = _command_output([codex_executable, "--version"], cwd=repo_root)
+    codex_version = _codex_version(repo_root, codex_executable)
     skill_paths = discover_skill_paths(repo_root)
     skill_catalog_digest = _skill_catalog_digest(skill_paths)
     completed = 0
