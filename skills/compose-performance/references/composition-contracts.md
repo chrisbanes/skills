@@ -7,6 +7,12 @@ it does not emit layout, allocate positional state, invoke composable content, o
 run effects. The runtime can then avoid allocating a group for accessor-style
 calls such as design-system token accessors.
 
+The restriction concerns operations on the composer, not whether the value is
+backed by mutable snapshot state. Reading `State.value` after a read-only
+`CompositionLocal.current` access is still a read; do not report that read alone
+as a contract violation. Check for a composer write, a non-read-only composable
+call, or an effect before recommending removal of the annotation.
+
 Add the annotation only when every composable call in the body is itself
 read-only, or the body only reads values such as `LocalFoo.current` and performs
 pure computation. Do not add it because a function merely looks small.

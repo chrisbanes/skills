@@ -42,6 +42,8 @@ from app wiring and composition-owned runtime objects.
    reference merely because its topic is adjacent.
 7. Route frame-rate reads, cross-phase back-writing, and
    `@ReadOnlyComposable` contracts to [Compose performance](../compose-performance/SKILL.md).
+   For that contract, distinguish a read of snapshot `State.value` from an
+   operation that changes the composer; the state read alone is not a violation.
 8. Before responding to a screen-ownership review, verify all three screen
    seams in step 4 when visible code needs them.
 9. Finish when every state value has one owner, every effect has a justified
