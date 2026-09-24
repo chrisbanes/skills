@@ -26,6 +26,8 @@ distinguishes ChatGPT-plan usage from API-key billing.
 | Implement with subagents direct, novel, and no-change after integrated-head acceptance edit | 9/9 | Ineligible | `/private/tmp/gpt6-implement-integration-acceptance-recheck` |
 | To-plan direct, novel, and no-change at `2276f9d` | 9/9 | Ineligible | `/private/tmp/gpt6-to-plan-final-preflight` |
 | Benchmark reversal after explicit run-order wording | 3/3 | 3/3 | `/private/tmp/gpt6-benchmark-run-order-recheck` |
+| Invalid orchestration graph after clarification wording | 3/3 | Ineligible | `/private/tmp/gpt6-implement-invalid-graph-recheck` |
+| Implement with subagents direct, novel, and no-change after final acceptance and clarification wording | 9/9 | Ineligible | `/private/tmp/gpt6-implement-final-triad-after-clarification` |
 
 Each row is a combined objective-and-judge raw result. Each individual run has
 one recorded skill-catalog digest, but the digests differ between runs and the
@@ -62,6 +64,22 @@ remains in `/private/tmp/gpt6-full-2276f9d-workflows`. The benchmark skill now
 requires run order to be named in the recommendation; the reversal case passed
 3/3 forced and 3/3 automatic in the focused recheck. This partial attempt is
 also excluded from suite scores.
+
+A third two-arm workflow attempt at `3899d1a` stopped after 37 completed
+records, 36 passing. `implement-with-subagents-direct:forced:1` accepted
+task-scoped commits and called for affected validation at the integrated head,
+but did not explicitly require a textual and semantic conflict check before
+accepting the joined diff. The failed packet remains in
+`/private/tmp/gpt6-full-3899d1a-workflows`. The first focused triad after the
+acceptance wording passed four of five completed records; its invalid-graph
+repetition 2 prescribed how to repair an invalid graph without the plan owner's
+clarification. That stopped probe remains in
+`/private/tmp/gpt6-implement-two-stage-acceptance-recheck`. The skill now
+requires both integrated-head checks and a hold for plan-owner clarification.
+The invalid-graph case then passed 3/3 forced in a fresh focused run. Neither
+stopped attempt contributes a suite score.
+The final direct, novel, and no-change orchestration recheck passed 9/9 forced
+on one skill snapshot, with no forbidden actions.
 
 Local validation at the writing repair commit: `npm test` passed 171 tests with
 one skip and 210 eval-harness tests. The later orchestration and benchmark

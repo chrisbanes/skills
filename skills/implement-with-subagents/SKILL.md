@@ -47,10 +47,16 @@ It is not bundled here. Never install it implicitly; report
    reuse passing checks only when their inputs and environment remain unchanged.
    An accepted item is complete, not assignable again.
 3. Report the next action (or no action), evidence, and any acceptance gap. Stop
-   before implementation. If an integration changed a validated input, name
-   rerunning the affected validation at the current integrated head as a
-   required acceptance action, even when an invalid dependency graph also
-   blocks dispatch. Calling the earlier report stale does not state the action.
+   before implementation. For an invalid dependency graph, hold dispatch and
+   return the specific defects to the plan owner for clarification; do not
+   choose which dependency to remove, invent a missing task, or prescribe a
+   corrected queue as if that choice were authorized. Separate task-commit
+   acceptance from integrated-head acceptance: explicitly require a textual
+   and semantic conflict check of the joined diff and rerun affected validation
+   at that exact head before accepting the join or dispatching a dependent. If
+   an integration changed a validated input, name that rerun as a required
+   acceptance action even when an invalid dependency graph also blocks
+   dispatch. Calling the earlier report stale does not state the action.
 
 ## Implementation mode
 
