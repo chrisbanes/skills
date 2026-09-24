@@ -29,8 +29,8 @@ Use exactly one source-appropriate template.
 
 ### Planning decisions
 
-- <Non-obvious contract-realizing choice, supporting repository evidence, and
-  decision the implementer must preserve.>
+- <Non-obvious contract-realizing choice and supporting evidence; do not
+  restate Guardrails.>
 - <Optional: material assumption, proportionate evidence or bounded proof, and
   the result or failure gate. Express any proof using the existing slice fields;
   dependent slices name its task ID.>
@@ -72,7 +72,7 @@ focused command>`; expect <specific successful result proving this slice>.
 
 | Acceptance criterion | Slice | Verification |
 | --- | ---: | --- |
-| <One observable acceptance criterion> | <slice number> | <Exact focused test/check and the result that proves it> |
+| <One observable acceptance criterion> | <slice number> | <Named focused check in the slice> |
 
 ### Final validation
 
@@ -82,22 +82,17 @@ focused command>`; expect <specific successful result proving this slice>.
 
 ### Review focus
 
-- <Ticket-specific risk for implementation review.>
+- <Ticket-specific risk not already stated in Guardrails; omit when there is none.>
 
-### Allowed deviations
+### Allowed deviations (when task-specific)
 
-- Within the fixed contract, <bounded mechanical choices or none> may be
-  repaired after one focused diagnosis pass and at most two
-  repair edit-and-validation cycles across all unexpected mismatches; normal
-  test-first implementation cycles do not count. Report the repair.
+- <Any task-specific mechanical allowance; omit when the standard handoff rule
+  is sufficient.>
 
-### Re-plan triggers
+### Re-plan triggers (when task-specific)
 
-- Stop for any required design or contract change, overlapping baseline change,
-  a mismatch unresolved after the repair budget is exhausted, or
-  <task-specific material condition>. Report the
-  evidence, attempted repair and validation, and remaining decision or upstream
-  change; do not invoke `to-plan` from the implementation worktree.
+- <A material task-specific stop condition beyond the standard re-plan rules;
+  omit when none applies.>
 ```
 
 ## Conversation plan
@@ -121,8 +116,8 @@ focused command>`; expect <specific successful result proving this slice>.
 
 ## Planning decisions
 
-- <Non-obvious contract-realizing choice, supporting repository evidence, and
-  decision the implementer must preserve.>
+- <Non-obvious contract-realizing choice and supporting evidence; do not
+  restate Guardrails.>
 - <Optional: material assumption, proportionate evidence or bounded proof, and
   the result or failure gate. Express any proof using the existing slice fields;
   dependent slices name its task ID.>
@@ -164,7 +159,7 @@ focused command>`; expect <specific successful result proving this slice>.
 
 | Acceptance criterion | Slice | Verification |
 | --- | ---: | --- |
-| <One observable acceptance criterion> | <slice number> | <Exact focused test/check and the result that proves it> |
+| <One observable acceptance criterion> | <slice number> | <Named focused check in the slice> |
 
 ## Final validation
 
@@ -174,20 +169,15 @@ focused command>`; expect <specific successful result proving this slice>.
 
 ## Review focus
 
-- <Task-specific risk for implementation review.>
+- <Task-specific risk for implementation review; omit when there is none.>
 
-## Allowed deviations
+## Allowed deviations (when task-specific)
 
-- Within the fixed contract, <bounded mechanical choices or none> may be
-  repaired after one focused diagnosis pass and at most two
-  repair edit-and-validation cycles across all unexpected mismatches; normal
-  test-first implementation cycles do not count. Report the repair.
+- <Any task-specific mechanical allowance; omit when the standard handoff rule
+  is sufficient.>
 
-## Re-plan triggers
+## Re-plan triggers (when task-specific)
 
-- Stop for any required design or contract change, overlapping baseline change,
-  a mismatch unresolved after the repair budget is exhausted, or
-  <task-specific material condition>. Report the
-  evidence, attempted repair and validation, and remaining decision or upstream
-  change; do not invoke `to-plan` from the implementation worktree.
+- <A material task-specific stop condition beyond the standard re-plan rules;
+  omit when none applies.>
 ```

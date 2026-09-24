@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -267,6 +268,16 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "planning-boundary",
             },
             rubric_ids,
+        )
+        proportionality = next(
+            criterion
+            for criterion in specificity.rubric
+            if criterion["id"] == "proportionality"
+        )
+        self.assertIn("states the shared contract once in Guardrails", proportionality["text"])
+        self.assertIn(
+            "names exact per-slice files, tests, inputs, and commands",
+            proportionality["text"],
         )
         with tempfile.TemporaryDirectory(prefix="workflow-plan-specificity-") as temp_dir:
             workspace = prepare_workspace(
@@ -673,6 +684,84 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             any("must not depend on each other" in failure for failure in dependency_failures),
             dependency_failures,
         )
+
+    def test_specificity_proportionality_rejects_prior_verbose_plan(self):
+        artifact = (
+            REPO_ROOT
+            / "evals/artifacts/2026-09-24-to-plan-specificity-targeted-repair-run.md"
+        ).read_text(encoding="utf-8")
+        verbose_plan = re.search(r"```markdown\n(.*?)\n```", artifact, re.DOTALL)
+        self.assertIsNotNone(verbose_plan)
+        self.assertIn("## Allowed deviations", verbose_plan.group(1))
+        self.assertIn("## Re-plan triggers", verbose_plan.group(1))
+
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case for case in report.cases if case.id == "to-plan-specificity-calibration"
+        )
+        with tempfile.TemporaryDirectory(prefix="workflow-plan-proportionality-") as temp_dir:
+            workspace = Path(temp_dir)
+            plan_path = workspace / ".scratch/to-plan/verbose.md"
+            plan_path.parent.mkdir(parents=True)
+            plan_path.write_text(verbose_plan.group(1), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, "-B", str(REPO_ROOT / "evals/validators/text_case.py"), case.id],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("forbidden evidence remains", completed.stderr)
+        self.assertIn("Allowed deviations", completed.stderr)
+
+        concise_plan = (
+            "<!-- to-plan:conversation-plan:v1 id=123e4567-e89b-42d3-a456-426614174000 -->\n"
+            "# Quote diagnostic paths\n\n"
+            "## Implementation context\n\n"
+            "`manifest_reader.py:missing_manifest_error` and "
+            "`profile_loader.py:invalid_profile_error` preserve their prefixes and path text.\n\n"
+            "## Implementation slices\n\n"
+            "### 1. Quote missing-manifest paths\n"
+            "**Task ID:** `T1`\n**Depends on:** `none`\n"
+            "**Files and symbols:** `manifest_reader.py`, "
+            "`tests/test_manifest_reader.py`.\n"
+            "**Test:** Change the exact expected output for "
+            "`configs/team manifest.json` to `manifest not found: 'configs/team manifest.json'`; "
+            "run `python3 -B -m unittest tests.test_manifest_reader` before the implementation "
+            "and observe the unquoted result fail.\n"
+            "**Validate:** From the repository root, run "
+            "`python3 -B -m unittest tests.test_manifest_reader`; the test passes.\n"
+            "**Complete when:** The exact quoted result passes its focused test.\n\n"
+            "### 2. Quote invalid-profile paths\n"
+            "**Task ID:** `T2`\n**Depends on:** `none`\n"
+            "**Files and symbols:** `profile_loader.py`, "
+            "`tests/test_profile_loader.py`.\n"
+            "**Test:** Change the exact expected output for "
+            "`configs/team manifest.json` to `invalid profile at 'configs/team manifest.json'`; "
+            "run `python3 -B -m unittest tests.test_profile_loader` before the implementation "
+            "and observe the unquoted result fail.\n"
+            "**Validate:** From the repository root, run "
+            "`python3 -B -m unittest tests.test_profile_loader`; the test passes.\n"
+            "**Complete when:** The exact quoted result passes its focused test.\n\n"
+            "## Acceptance coverage\n\n"
+            "| Criterion | Slice | Verification |\n| --- | ---: | --- |\n"
+            "| Missing-manifest path is quoted unchanged. | 1 | T1 focused test. |\n"
+            "| Invalid-profile path is quoted unchanged. | 2 | T2 focused test. |\n"
+        )
+        with tempfile.TemporaryDirectory(prefix="workflow-plan-concise-") as temp_dir:
+            workspace = Path(temp_dir)
+            plan_path = workspace / ".scratch/to-plan/concise.md"
+            plan_path.parent.mkdir(parents=True)
+            plan_path.write_text(concise_plan, encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, "-B", str(REPO_ROOT / "evals/validators/text_case.py"), case.id],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(0, completed.returncode, completed.stderr)
 
     def test_material_assumption_proof_case_requires_dependent_implementation(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

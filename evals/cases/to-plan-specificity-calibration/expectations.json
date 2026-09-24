@@ -22,6 +22,10 @@
         "profile_loader.py",
         "invalid_profile_error",
         "configs/team manifest.json"
+      ],
+      "must_not_contain": [
+        "## Allowed deviations",
+        "## Re-plan triggers"
       ]
     }
   ],

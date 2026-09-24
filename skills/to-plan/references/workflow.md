@@ -95,7 +95,15 @@ otherwise marks them ready. Treat older plans without dependency metadata as
 one sequential chain in listed order; new plans must include the metadata.
 Use test-first slices unless an automated red test is impractical and explain
 the exception. Do not leave exploration or design decisions to implementation.
-Scale detail to risk; avoid full implementations and boilerplate.
+Scale detail to risk; avoid full implementations and boilerplate. State a
+shared contract once in Guardrails. Use Approach for the route, Planning
+decisions for non-obvious choices, and Implementation context for current code
+facts; do not repeat those sections' shared constraints in each other or in
+Review focus. Slices still need their own exact files, inputs, assertions,
+commands, and results. Acceptance rows should name the behavior and point to
+the slice's focused check instead of paraphrasing the full contract. Omit
+generic deviation and re-plan boilerplate when only standard handoff rules
+apply; include those sections only for distinct task-specific conditions.
 
 Perform an executor-readiness review from the written plan alone. A fresh,
 lower-capability executor must locate and order every edit, distinguish existing

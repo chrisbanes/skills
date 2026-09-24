@@ -38,7 +38,7 @@
     },
     {
       "id": "proportionality",
-      "text": "Keeps each independently testable call site in its required separate slice, keeps the plan concise, and adds no speculative proof or unrelated steps"
+      "text": "Keeps independently testable call sites in separate slices; states the shared contract once in Guardrails without repeating it in Approach, Planning decisions, Implementation context, or Review focus; names exact per-slice files, tests, inputs, and commands; maps concise acceptance rows to the relevant slice check; omits generic deviation or re-plan boilerplate without a task-specific condition; and adds no speculative proof or unrelated steps"
     },
     {
       "id": "planning-boundary",
