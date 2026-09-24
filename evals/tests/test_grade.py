@@ -110,7 +110,9 @@ class DeterministicGradeTest(unittest.TestCase):
         target_path = ".agents/skills/compose-state-and-effects/SKILL.md"
         allowed_commands = (
             f"cat {target_path}",
+            f"cat -- {target_path}",
             f"/bin/zsh -lc 'cat {target_path}'",
+            f"/bin/zsh -lc 'cat -- {target_path}'",
         )
         for command in allowed_commands:
             with self.subTest(command=command):
@@ -132,6 +134,7 @@ class DeterministicGradeTest(unittest.TestCase):
 
         rejected_commands = (
             "cat draft.md",
+            f"cat -- {target_path} draft.md",
             "/bin/zsh -lc 'cat draft.md'",
             "cat .agents/skills/other-skill/SKILL.md",
             f"/bin/zsh -lc 'cat {target_path} && cat draft.md'",

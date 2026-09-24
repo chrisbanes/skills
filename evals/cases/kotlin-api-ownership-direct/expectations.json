@@ -1,5 +1,6 @@
 {
   "files": ["src/main/kotlin/example/Subject.kt"],
+  "mask_kotlin_comments": true,
   "must_match": [
     "(?s)@Deprecated\\b[\\s\\S]*?\\bfun\\s+String\\.loadProfile\\s*\\(",
     "(?s)\\bfun\\s+String\\.loadProfile\\s*\\(\\s*(\\w+)\\s*:\\s*(?!(?:[\\w.]*\\.)?String\\b)(?:[\\w.]*\\.)?[A-Z]\\w*[^)]*\\)\\s*(?::\\s*[\\w?.<>]+)?\\s*(?:=\\s*|\\{(?:\\s*return|[^}]*?\\n[ \\t]*return)\\s+)\\1\\s*\\.\\s*\\w+\\s*\\(",

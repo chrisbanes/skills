@@ -262,6 +262,8 @@ def _is_target_skill_entrypoint_read(case: EvalCase, command: str) -> bool:
             return False
         executable = PurePosixPath(invocation[0])
 
+    if len(invocation) > 1 and invocation[1] == "--":
+        invocation = (invocation[0], *invocation[2:])
     if (
         executable.name != "cat"
         or len(invocation) != 2

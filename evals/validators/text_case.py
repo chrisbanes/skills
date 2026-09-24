@@ -7,6 +7,52 @@ import sys
 from pathlib import Path
 
 
+def _mask_kotlin_comments(subject: str) -> str:
+    """Blank Kotlin comments while retaining code positions and line breaks."""
+    chars = list(subject)
+    index = 0
+    while index < len(subject):
+        if subject.startswith('"""', index):
+            end = subject.find('"""', index + 3)
+            index = len(subject) if end < 0 else end + 3
+            continue
+        if subject[index] in ('"', "'"):
+            quote = subject[index]
+            index += 1
+            while index < len(subject):
+                if subject[index] == "\\":
+                    index += 2
+                elif subject[index] == quote:
+                    index += 1
+                    break
+                else:
+                    index += 1
+            continue
+        start = index
+        if subject.startswith("//", index):
+            end = subject.find("\n", index)
+            index = len(subject) if end < 0 else end
+        elif subject.startswith("/*", index):
+            depth = 1
+            index += 2
+            while index < len(subject) and depth:
+                if subject.startswith("/*", index):
+                    depth += 1
+                    index += 2
+                elif subject.startswith("*/", index):
+                    depth -= 1
+                    index += 2
+                else:
+                    index += 1
+        else:
+            index += 1
+            continue
+        for offset in range(start, index):
+            if chars[offset] not in "\r\n":
+                chars[offset] = " "
+    return "".join(chars)
+
+
 def _mask_fenced_code(subject: str) -> str:
     """Blank fenced code while preserving line breaks and source offsets."""
     masked: list[str] = []
@@ -730,8 +776,13 @@ def main(argv: list[str]) -> int:
     failures: list[str] = []
 
     def validate_subject(subject: str, rules: dict[str, object], label: str) -> None:
+        regex_subject = (
+            _mask_kotlin_comments(subject)
+            if rules.get("mask_kotlin_comments")
+            else subject
+        )
         for pattern in rules.get("must_match", []):
-            if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is None:
+            if re.search(pattern, regex_subject, re.MULTILINE | re.DOTALL) is None:
                 failures.append(f"{label}: missing required pattern: {pattern!r}")
         bullet_rules = rules.get("markdown_bullets")
         if bullet_rules:
@@ -751,7 +802,7 @@ def main(argv: list[str]) -> int:
                 ):
                     failures.append(f"{label}: missing required pattern in a release bullet: {requirement!r}")
         for pattern in rules.get("must_not_match", []):
-            if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is not None:
+            if re.search(pattern, regex_subject, re.MULTILINE | re.DOTALL) is not None:
                 failures.append(f"{label}: forbidden pattern remains: {pattern!r}")
         for required in rules.get("must_contain", []):
             if required not in subject:

@@ -1,6 +1,7 @@
 import json
 import re
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -20,6 +21,7 @@ from evals.harness.experiment import (
 from evals.harness.grade import grade_subject
 from evals.harness.score import _routing_metrics
 from evals.harness.suites import KOTLIN_GRADLE_SKILLS
+from evals.validators.text_case import _mask_kotlin_comments
 from evals.tests.test_grade import make_result
 
 
@@ -167,7 +169,13 @@ fun profileFor(userId: String, store: ProfileStore): User =
         for source in sources:
             with self.subTest(source=source):
                 for pattern in patterns:
-                    self.assertIsNotNone(re.search(pattern, source, re.MULTILINE | re.DOTALL))
+                    self.assertIsNotNone(
+                        re.search(
+                            pattern,
+                            _mask_kotlin_comments(source),
+                            re.MULTILINE | re.DOTALL,
+                        )
+                    )
 
         direct_repository_access = """interface ProfileStore {
     fun loadProfile(rawUserId: String): User
@@ -194,7 +202,54 @@ fun String.loadProfile(store: ProfileStore): User {
     return ProfileDatabase.loadProfile(this)
 }
 """
-        self.assertIsNone(re.search(shim_delegation, commented_delegation))
+        block_commented_delegation = """@Deprecated("Use ProfileStore")
+fun String.loadProfile(store: ProfileStore): User {
+    /* A nested comment /* still a comment */
+    return store.loadProfile(this)
+    */
+    return ProfileDatabase.loadProfile(this)
+}
+"""
+        for source in (commented_delegation, block_commented_delegation):
+            with self.subTest(source=source):
+                self.assertIsNone(
+                    re.search(
+                        shim_delegation,
+                        _mask_kotlin_comments(source),
+                        re.MULTILINE | re.DOTALL,
+                    )
+                )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            source_path = Path(temp_dir) / "src/main/kotlin/example/Subject.kt"
+            source_path.parent.mkdir(parents=True)
+            invalid_source = (
+                """interface ProfileStore {
+    fun loadProfile(rawUserId: String): User
+}
+"""
+                + block_commented_delegation
+                + """
+fun profileFor(userId: String, store: ProfileStore): User =
+    store.loadProfile(userId)
+"""
+            )
+            for source, expected_code in ((sources[2], 0), (invalid_source, 1)):
+                with self.subTest(validator_exit=expected_code):
+                    source_path.write_text(source, encoding="utf-8")
+                    result = subprocess.run(
+                        [
+                            sys.executable,
+                            "-B",
+                            str(REPO_ROOT / "evals/validators/text_case.py"),
+                            "kotlin-api-ownership-direct",
+                        ],
+                        cwd=temp_dir,
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    self.assertEqual(expected_code, result.returncode, result.stderr)
 
     def test_event_channel_expectation_accepts_equivalent_bounded_capacities(self):
         expectation_path = (
