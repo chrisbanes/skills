@@ -67,5 +67,10 @@ only when its independent behavior changes the same work.
   sealed result that hides cases or branch payload. Plain route delivery with
   no separate branching issue does not need it. Do not add Compose without the
   evidence required in step 3.
+- Encapsulating a Compose snapshot property behind a read-only public accessor
+  remains one state-ownership decision. Do not add `kotlin-api-design` merely
+  because the accessor is public; add it when the same change also needs a
+  separate function-ownership, domain-type, compatibility, or platform-boundary
+  decision.
 - Load [`gradle-run`](../gradle-run/SKILL.md) only for planned Gradle execution
   or an existing Gradle workflow, not incidental Kotlin or Compose advice.

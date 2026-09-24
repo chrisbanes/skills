@@ -202,3 +202,35 @@ The final-source focused `shepherd` direct, novel, and no-change triad passed
 probes remain separate and are not counted as passes. These targeted results do
 not establish a current full-corpus percentage; the README tables retain the
 last complete-suite values.
+
+## Historical failure coverage and routing precision
+
+The selected raw packets underlying the older complete three-suite run
+contained 30 distinct failed case/arm conditions in its forced and automatic
+arms, before later deterministic regrades. A case-ID and arm comparison of
+those packets with the later targeted `results.json` files found
+a separate three-repetition raw pass for all 30 conditions. This is coverage
+of the historical failure list, not a current full-corpus score: the passing
+probes differ in source, case, and skill-catalog snapshots, and conditions
+that passed in the old full run were not all rechecked.
+
+One formerly failed condition, `compose-state-authoring-direct:automatic`, had
+been repaired by a deterministic regrade of the old packet but lacked a later
+subject run. It passed 3/3 on the current case in
+`/private/tmp/gpt6-targeted-state-authoring-direct-20260924`, with no forbidden
+actions. That probe reported an extra `kotlin-api-design` skill in one reply,
+giving its selected-case routing precision 75%. The source showed one Compose
+state encapsulation decision rather than an independent Kotlin API decision.
+The router now makes that boundary explicit.
+
+At the revised router snapshot, `compose-state-authoring-direct` and the
+`compose-side-effects-negative` restraint control passed 3/3 each in the
+automatic arm, with only `compose-state-and-effects` reported, zero forbidden
+actions, and 100% selected-case routing precision and recall:
+`/private/tmp/gpt6-targeted-compose-api-routing-20260924`. The independent
+Kotlin API plus sealed-branch router control also passed 3/3 automatic with
+both expected skills reported and 100% routing precision and recall:
+`/private/tmp/gpt6-targeted-kotlin-api-routing-control-20260924`. Each run had
+one catalog digest internally; the two runs have the same digest, while the
+earlier state-authoring probe used a different catalog digest. Do not treat the
+75%-to-100% comparison as a controlled causal estimate.
