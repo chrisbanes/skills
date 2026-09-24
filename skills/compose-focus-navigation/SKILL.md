@@ -21,6 +21,9 @@ Focus is stateful UI behavior: make targets and exceptional edges explicit, then
 | Custom interactive surface that is not already focusable | `Modifier.focusable()` plus role/semantics as appropriate |
 
 2. Request initial or restored focus from `LaunchedEffect`, keyed to the condition that makes the target present. For lazy content, keep requesters by stable item id and request only after the item is composed. Inside `AnimatedContent`, use the content lambda's target consistently for rendered identity, tags, requester ownership, and the effect key; captured outer state gives outgoing and incoming content the same identity.
+   In a review, a finding about `requestFocus()` running in the composable body
+   is incomplete until it names the event or keyed effect that should issue
+   the request after its target is available.
 3. Keep default spatial search unless a concrete edge, jump, or trap is wrong. Encode only those exceptions with `focusProperties`.
 4. Handle keys only for behavior that is not normal click or traversal. Consume exactly the handled event; throttle rapid D-pad work at its expensive owner, not across the screen.
 5. Restore by semantic identity after refresh: retain the focused id when it exists, otherwise choose a deterministic fallback.
