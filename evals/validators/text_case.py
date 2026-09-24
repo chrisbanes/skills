@@ -60,7 +60,7 @@ def _mask_raw_html_blocks(subject: str) -> str:
     block_start = re.compile(
         rf" {{0,3}}</?(?:{block_tags})(?=[ \t>/]|$)", re.IGNORECASE
     )
-    raw_start = re.compile(r" {0,3}<(?:pre|script|style|textarea)(?=[ \t>]|$)", re.IGNORECASE)
+    raw_start = re.compile(r"[ \t]*<(?:pre|script|style|textarea)(?=[ \t>]|$)", re.IGNORECASE)
     raw_end = re.compile(r"</(?:pre|script|style|textarea)\s*>", re.IGNORECASE)
     custom_start = re.compile(
         r" {0,3}</?[A-Za-z][A-Za-z0-9:-]*(?:[ \t]+[^<>\n]*)?[ \t]*/?>[ \t]*(?:\r?\n)?$"
@@ -190,23 +190,48 @@ def _mask_markdown_link_destinations(subject: str) -> str:
     return "".join(chars)
 
 
-def has_visible_markdown_link(subject: str, pattern: str) -> bool:
+def _visible_link_start(subject: str, start: int) -> bool:
+    backslashes = 0
+    while start - backslashes - 1 >= 0 and subject[start - backslashes - 1] == "\\":
+        backslashes += 1
+    if backslashes % 2:
+        return False
+    prefix = start - backslashes - 1
+    if prefix >= 0 and subject[prefix] == "!":
+        image_escapes = 0
+        while prefix - image_escapes - 1 >= 0 and subject[prefix - image_escapes - 1] == "\\":
+            image_escapes += 1
+        if image_escapes % 2 == 0:
+            return False
+    return True
+
+
+def _markdown_references(subject: str) -> dict[str, str]:
+    visible = _mask_raw_html_blocks(_mask_html_comments(_mask_fenced_code(subject)))
+    references: dict[str, str] = {}
+    for match in re.finditer(
+        r"^ {0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]+)>|([^\s]+))[ \t]*$",
+        visible,
+        re.MULTILINE,
+    ):
+        references.setdefault(" ".join(match.group(1).split()).casefold(), match.group(2) or match.group(3))
+    return references
+
+
+def has_visible_markdown_link(subject: str, pattern: str, references: dict[str, str]) -> bool:
     for start, end, _, _ in _markdown_links(subject):
-        if re.fullmatch(pattern, subject[start:end], re.IGNORECASE) is None:
-            continue
-        backslashes = 0
-        while start - backslashes - 1 >= 0 and subject[start - backslashes - 1] == "\\":
-            backslashes += 1
-        if backslashes % 2:
-            continue
-        prefix = start - backslashes - 1
-        if prefix >= 0 and subject[prefix] == "!":
-            image_escapes = 0
-            while prefix - image_escapes - 1 >= 0 and subject[prefix - image_escapes - 1] == "\\":
-                image_escapes += 1
-            if image_escapes % 2 == 0:
-                continue
-        return True
+        if _visible_link_start(subject, start) and re.fullmatch(
+            pattern, subject[start:end], re.IGNORECASE
+        ):
+            return True
+    for match in re.finditer(r"\[([^\]\n]+)\]\[([^\]\n]*)\]", subject):
+        label = match.group(1)
+        reference = " ".join((match.group(2) or label).split()).casefold()
+        destination = references.get(reference)
+        if destination and _visible_link_start(subject, match.start()) and re.fullmatch(
+            pattern, f"[{label}]({destination})", re.IGNORECASE
+        ):
+            return True
     return False
 
 
@@ -501,6 +526,7 @@ def main(argv: list[str]) -> int:
                 failures.append(f"{label}: missing required pattern: {pattern!r}")
         bullet_rules = rules.get("markdown_bullets")
         if bullet_rules:
+            references = _markdown_references(subject)
             bullets = [
                 (bullet, _mask_markdown_link_destinations(bullet))
                 for bullet in markdown_bullets_under_heading(subject, bullet_rules["heading"])
@@ -508,7 +534,10 @@ def main(argv: list[str]) -> int:
             for requirement in bullet_rules["required"]:
                 if not any(
                     all(re.search(pattern, visible_text, re.IGNORECASE) for pattern in requirement["text"])
-                    and all(has_visible_markdown_link(bullet, pattern) for pattern in requirement["links"])
+                    and all(
+                        has_visible_markdown_link(bullet, pattern, references)
+                        for pattern in requirement["links"]
+                    )
                     for bullet, visible_text in bullets
                 ):
                     failures.append(f"{label}: missing required pattern in a release bullet: {requirement!r}")

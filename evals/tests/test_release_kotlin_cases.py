@@ -524,6 +524,15 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn('missing required pattern in a release bullet', result.stderr)
 
+    def test_reference_style_pr_citation_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '[#812][pr-812]',
+        ) + '\n[pr-812]: https://github.com/chrisbanes/skills/pull/812\n'
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
     def test_pr_link_in_html_attribute_fails(self):
         original = self.completed_changelog()
         updated = original.replace(
@@ -597,6 +606,8 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
             '  </div>',
             '\n\n  <x-credit>\n  [#812](https://github.com/chrisbanes/skills/pull/812)\n'
             '  </x-credit>',
+            '\n\n    <script>\n    [#812](https://github.com/chrisbanes/skills/pull/812)\n'
+            '    </script>',
         ):
             with self.subTest(replacement=replacement):
                 updated = original.replace(
