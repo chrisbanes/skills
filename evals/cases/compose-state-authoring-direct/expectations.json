@@ -6,7 +6,7 @@
     "mutableStateOf"
   ],
   "must_contain_any": [
-    ["private set", "private var"],
+    ["private set", "private var", "private val"],
     ["private set", "val count"]
   ],
   "must_not_contain": []

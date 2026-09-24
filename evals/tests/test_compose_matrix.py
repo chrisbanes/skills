@@ -238,6 +238,34 @@ class Counter {
 
             self.assertTrue(grade_subject(case, result).objective_pass)
 
+    def test_state_authoring_accepts_private_mutable_state_value(self):
+        report = validate_corpus(REPO_ROOT, suite="compose")
+        case = next(
+            case for case in report.cases if case.id == "compose-state-authoring-direct"
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = prepare_workspace(case, REPO_ROOT, Path(temp_dir) / case.id)
+            subject = workspace / "src/main/kotlin/example/Subject.kt"
+            subject.write_text(
+                """package example
+
+import androidx.compose.runtime.mutableStateOf
+
+class CounterState {
+    private val countState = mutableStateOf(0)
+    val count: Int get() = countState.value
+    fun increment() { countState.value += 1 }
+}
+""",
+                encoding="utf-8",
+            )
+            result = make_result(
+                workspace, paths=("src/main/kotlin/example/Subject.kt",)
+            )
+
+            self.assertTrue(grade_subject(case, result).objective_pass)
+
     def test_direct_validators_accept_semantic_equivalents_seen_in_live_runs(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
         replacements = (
