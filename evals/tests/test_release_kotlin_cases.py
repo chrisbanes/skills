@@ -326,6 +326,44 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn('missing required pattern in a release bullet', result.stderr)
 
+    def test_plus_marked_release_bullets_pass(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '- Fix request cancellation so underlying work stops ',
+            '+ Fix request cancellation so underlying work stops ',
+        ).replace(
+            '- Add streaming responses with bounded buffering ',
+            '+ Add streaming responses with bounded buffering ',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_links_in_adjacent_mixed_marker_items_fail(self):
+        original = self.completed_changelog()
+        for marker in ('+', '1.'):
+            with self.subTest(marker=marker):
+                updated = original.replace(
+                    '([#812](https://github.com/chrisbanes/skills/pull/812))',
+                    '(PR #812)\n'
+                    f'{marker} Related: '
+                    '[#812](https://github.com/chrisbanes/skills/pull/812)',
+                )
+                self.assertNotEqual(original, updated)
+                result = self.validate(updated)
+                self.assertEqual(1, result.returncode)
+                self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_pr_link_only_in_html_comment_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '<!-- [#812](https://github.com/chrisbanes/skills/pull/812) -->',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
     def test_release_links_cannot_replace_original_notes(self):
         updated = self.completed_changelog().replace(
             '- Add streaming responses with unbounded buffering.',
