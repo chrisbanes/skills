@@ -271,3 +271,21 @@ failed control packet remains in
 
 These repairs improve the selected behavior and case contract. They do not
 resolve the remaining header over-routing or establish a full-corpus 100% score.
+
+## Component slot novel follow-up
+
+The post-change `compose-slot-api-pattern-novel` probe passed 3/3 forced but
+missed one automatic repetition before it was stopped. That reply reviewed the
+nullable avatar and actions slots and root layout, but overlooked the literal
+message body as caller-variable content. The failed raw packet remains in
+`/private/tmp/gpt6-targeted-component-slot-novel-20260924`.
+
+The component skill now inventories all rendered regions, including literal
+text and icons, before classifying fixed semantic content versus caller-variable
+content in a broad API review. Under that revision, the same novel case passed
+3/3 forced and 3/3 automatic, with one catalog digest and zero forbidden
+actions: `/private/tmp/gpt6-targeted-component-novel-region-inventory-20260924`.
+The fixed-semantic no-change control passed 3/3 automatic at the same skill
+revision, again with zero forbidden actions:
+`/private/tmp/gpt6-targeted-component-semantic-negative-20260924`. These are
+separate focused runs, not a full-corpus score.
