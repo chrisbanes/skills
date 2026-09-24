@@ -60,7 +60,10 @@ val id = UserId.parse(raw)
 
 5. Check visibility, imports, collisions, and compatibility. For extensions,
    also check nullable receivers, generics, and future-member precedence.
-   Compile and test; on failure, narrow the API or return to step 1.
+   When an interface changes, check existing implementers as well as callers:
+   a deprecated forwarding extension does not preserve source compatibility
+   if an abstract interface member was renamed or removed. Compile and test;
+   on failure, narrow the API or return to step 1.
 
 Do not use an extension to hide parsing, repository access, or clock/locale
 policy. Fluent syntax, Kotlin idiom, and existing code do not create ownership.
