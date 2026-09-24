@@ -368,3 +368,14 @@ Case digests and the staged `grounded-writing` skill hash match the current
 files. Sandbox-only attempts in both rounds failed at CLI initialization
 before model output and are excluded. The README automatic cell now uses this
 complete focused skill result; unrelated suite metrics remain unchanged.
+
+## Compose UI testing automatic score
+
+The current `compose-ui-testing-patterns` direct, novel, and no-change cases
+passed 3/3 each in the automatic arm, with one catalog digest, current case
+digests and target skill hash, 100% selected-case routing precision and recall,
+and zero forbidden actions:
+`/private/tmp/gpt6-targeted-compose-testing-current-auto-20260924`. The
+sandboxed preflight failed before model calls; the successful focused retry is
+the evidence for the updated README automatic cell. Other suite metrics are
+unchanged.

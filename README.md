@@ -205,7 +205,7 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`compose-performance`](skills/compose-performance/SKILL.md) | 83.3% | 100.0% | 100.0% |
 | [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 83.3% | 95.8% | 100.0% |
-| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 66.7% | 100.0% |
+| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 100.0% | 100.0% |
 | [`gradle-run`](skills/gradle-run/SKILL.md) | 41.7% | 91.7% | 100.0% |
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 58.3% | 66.7% | 100.0% |
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 44.4% | 88.9% | 100.0% |
@@ -218,8 +218,9 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`shepherd`](skills/shepherd/SKILL.md) | — | — | 100.0% |
 | [`to-plan`](skills/to-plan/SKILL.md) | — | — | 100.0% |
 
-The `grounded-writing` automatic and `to-plan` restraint cells use later
-focused evidence. Baseline and efficiency values use the complete suite. See
+The `compose-ui-testing-patterns` and `grounded-writing` automatic cells, and
+the `to-plan` restraint cell, use later focused evidence. Baseline and
+efficiency values use the complete suite. See
 the [improvement result record](evals/artifacts/2026-09-24-gpt6-improvement-results.md)
 and [targeted probe record](evals/artifacts/2026-09-24-gpt6-targeted-100-probes.md)
 for provenance and remaining failures.

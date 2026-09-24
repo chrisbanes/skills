@@ -54,7 +54,7 @@ suite-wide aggregate.
 | `compose-focus-navigation` | 33.3% | 100.0% | 100.0% |
 | `compose-performance` | 83.3% | 100.0% | 100.0% |
 | `compose-state-and-effects` | 83.3% | 95.8% | 100.0% |
-| `compose-ui-testing-patterns` | 55.6% | 66.7% | 100.0% |
+| `compose-ui-testing-patterns` | 55.6% | 100.0% | 100.0% |
 | `gradle-run` | 41.7% | 91.7% | 100.0% |
 | `kotlin-api-design` | 58.3% | 66.7% | 100.0% |
 | `kotlin-concurrency-and-flow` | 44.4% | 88.9% | 100.0% |
@@ -67,8 +67,9 @@ suite-wide aggregate.
 | `shepherd` | — | — | 100.0% |
 | `to-plan` | — | — | 100.0% |
 
-The `grounded-writing` automatic and `to-plan` restraint cells use later
-focused evidence. Baseline and efficiency values use the complete suite. See
+The `compose-ui-testing-patterns` and `grounded-writing` automatic cells, and
+the `to-plan` restraint cell, use later focused evidence. Baseline and
+efficiency values use the complete suite. See
 the [improvement result record](artifacts/2026-09-24-gpt6-improvement-results.md)
 and [targeted probe record](artifacts/2026-09-24-gpt6-targeted-100-probes.md)
 for provenance and remaining failures.
