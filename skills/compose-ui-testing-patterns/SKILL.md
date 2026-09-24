@@ -104,6 +104,9 @@ state rather than fragile pointer simulation.
 ## Keyboard and focus
 
 For keyboard, TV, and desktop UI, drive navigation with the same input model users use (keys/D-pad), not clicks alone. Assert focused semantics, not colors or scale; reserve screenshots for visual focus treatment.
+If the inspected composable exposes no input surface that can change the state,
+name the missing host or parent interaction seam before proposing a key-driven
+test; do not assume a selector or control exists in the supplied UI.
 
 Details—focus graph, `FocusRequester`, restoration, key handlers, and test patterns: [`compose-focus-navigation`](../compose-focus-navigation/SKILL.md).
 
