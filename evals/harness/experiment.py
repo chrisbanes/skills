@@ -149,13 +149,12 @@ def _result_routing_expectations(
     events: object,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     expected_skills, allowed_skills = _routing_expectations(case, arm, repo_root)
-    if (
-        arm == "automatic"
-        and "gradle-run" in allowed_skills
-        and "gradle-run" not in expected_skills
-        and _gradle_was_executed(events)
-    ):
-        expected_skills = (*expected_skills, "gradle-run")
+    if arm == "automatic" and "gradle-run" in allowed_skills:
+        if _gradle_was_executed(events):
+            if "gradle-run" not in expected_skills:
+                expected_skills = (*expected_skills, "gradle-run")
+        elif "gradle-run" not in expected_skills:
+            allowed_skills = tuple(skill for skill in allowed_skills if skill != "gradle-run")
     return expected_skills, allowed_skills
 
 
@@ -768,8 +767,12 @@ def write_rejudged_reports(
     records: list[dict[str, Any]],
     *,
     audit_seed: int,
+    repo_root: Path,
 ) -> dict[str, Path]:
+    skill_paths = discover_skill_paths(repo_root)
+    skill_catalog_digest = _skill_catalog_digest(skill_paths)
     packets: dict[tuple[str, int], tuple[str, dict[str, Any]]] = {}
+    packet_paths: dict[str, Path] = {}
     for packet_path in sorted((output_dir / "judge-packets").glob("*.json")):
         try:
             candidate_id, fingerprint_prefix, repetition = packet_path.stem.rsplit(
@@ -784,6 +787,7 @@ def write_rejudged_reports(
         if key in packets:
             raise ValueError(f"duplicate judge packet for fingerprint: {packet_path}")
         packets[key] = (packet_path.stem, packet)
+        packet_paths[packet_path.stem] = packet_path
 
     judgments: dict[str, tuple[str, dict[str, Any]]] = {}
     for result_path in sorted((output_dir / "rejudgments").glob("*/*.json")):
@@ -798,6 +802,34 @@ def write_rejudged_reports(
         ):
             raise ValueError(f"invalid rejudgment payload: {result_path}")
         packet_name = result_path.parent.name
+        packet_path = packet_paths.get(packet_name)
+        if packet_path is None:
+            continue
+        judge_model = payload.get("judge_model")
+        codex_version = payload.get("codex_version")
+        if not isinstance(judge_model, dict) or not isinstance(codex_version, str):
+            raise ValueError(f"rejudgment lacks run controls: {result_path}")
+        model = judge_model.get("model")
+        reasoning = judge_model.get("reasoning")
+        if not isinstance(model, str) or not isinstance(reasoning, str):
+            raise ValueError(f"invalid rejudgment model: {result_path}")
+        prompt_digest = hashlib.sha256(
+            build_judge_command(
+                packet_path,
+                repo_root,
+                JudgeConfig(model, reasoning),
+                skill_paths=skill_paths,
+            )[-1].encode()
+        ).hexdigest()
+        current_fingerprint = _rejudgment_fingerprint(
+            packet_path,
+            JudgeConfig(model, reasoning),
+            skill_catalog_digest=skill_catalog_digest,
+            codex_version=codex_version,
+            judge_prompt_digest=prompt_digest,
+        )
+        if fingerprint != current_fingerprint:
+            continue
         if packet_name in judgments:
             raise ValueError(f"ambiguous rejudgments for packet: {packet_name}")
         judgments[packet_name] = (fingerprint, payload)
@@ -819,7 +851,7 @@ def write_rejudged_reports(
         candidate_id = packet["candidate_id"]
         rejudgment = judgments.get(packet_name)
         if rejudgment is None:
-            raise ValueError(f"missing rejudgment for packet: {packet_name}")
+            raise ValueError(f"missing current rejudgment for packet: {packet_name}")
         rejudgment_fingerprint, judgment = rejudgment
         if judgment["candidate_id"] != candidate_id:
             raise ValueError(f"rejudgment candidate mismatch: {packet_name}")

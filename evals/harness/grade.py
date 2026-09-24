@@ -1113,8 +1113,15 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
             case, command
         )
 
-    disallowed_command_execution = case.forbid_all_commands and any(
-        not is_allowed_skill_read(item) for item in command_execution_events
+    distinct_command_ids = {
+        ("id", item["id"])
+        if isinstance(item.get("id"), str)
+        else ("event", index)
+        for index, item in enumerate(command_execution_events)
+    }
+    disallowed_command_execution = case.forbid_all_commands and (
+        len(distinct_command_ids) > 1
+        or any(not is_allowed_skill_read(item) for item in command_execution_events)
     )
     if disallowed_command_execution:
         failures.append("command execution forbidden for this case")

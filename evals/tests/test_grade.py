@@ -178,6 +178,36 @@ class DeterministicGradeTest(unittest.TestCase):
         self.assertFalse(grade.objective_pass)
         self.assertTrue(grade.forbidden_action_failure)
 
+    def test_analysis_only_forced_case_rejects_a_second_entrypoint_read(self):
+        case = EvalCase(
+            **{**make_case(self.workspace).__dict__, "forbid_all_commands": True}
+        )
+        command = "cat .agents/skills/compose-state-and-effects/SKILL.md"
+        once = make_result(
+            self.workspace,
+            arm="forced",
+            events=(
+                {"type": "item.started", "item": {
+                    "id": "read-1", "type": "command_execution", "command": command,
+                }},
+                {"type": "item.completed", "item": {
+                    "id": "read-1", "type": "command_execution", "command": command,
+                }},
+            ),
+        )
+        twice = make_result(
+            self.workspace,
+            arm="forced",
+            events=(*once.events, {"type": "item.completed", "item": {
+                "id": "read-2", "type": "command_execution", "command": command,
+            }}),
+        )
+
+        self.assertTrue(grade_subject(case, once).objective_pass)
+        repeated = grade_subject(case, twice)
+        self.assertFalse(repeated.objective_pass)
+        self.assertTrue(repeated.forbidden_action_failure)
+
     def test_rejects_any_review_write_and_dangerous_trace_event(self):
         case = make_case(self.workspace, task_mode="review")
         result = make_result(

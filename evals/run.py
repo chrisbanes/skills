@@ -232,6 +232,7 @@ def main(argv: list[str] | None = None) -> int:
                 output_dir,
                 records,
                 audit_seed=args.audit_seed,
+                repo_root=repo_root,
             )
         except (CaseValidationError, OSError, ValueError) as error:
             print(error, file=sys.stderr)

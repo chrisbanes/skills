@@ -18,6 +18,7 @@ from evals.harness.experiment import (
     reconcile_automatic_eligibility,
 )
 from evals.harness.grade import grade_subject
+from evals.harness.score import _routing_metrics
 from evals.harness.suites import KOTLIN_GRADLE_SKILLS
 from evals.tests.test_grade import make_result
 
@@ -147,6 +148,20 @@ fun String.loadProfile(
 fun profileFor(userId: String, repository: com.example.ProfileRepository): User =
     repository.loadProfile(userId)
 """,
+            """interface ProfileStore {
+    fun loadProfile(rawUserId: String): User
+}
+
+@Deprecated("Use ProfileStore.loadProfile")
+fun String.loadProfile(store: ProfileStore): User {
+    // Preserve the source-compatible entry point.
+    val originalId = this
+    return store.loadProfile(this)
+}
+
+fun profileFor(userId: String, store: ProfileStore): User =
+    store.loadProfile(userId)
+""",
         )
 
         for source in sources:
@@ -173,6 +188,13 @@ fun profileFor(rawUserId: String, store: ProfileStore): User =
         self.assertIsNone(
             re.search(shim_delegation, direct_repository_access, re.MULTILINE | re.DOTALL)
         )
+        commented_delegation = """@Deprecated("Use ProfileStore")
+fun String.loadProfile(store: ProfileStore): User {
+    // return store.loadProfile(this)
+    return ProfileDatabase.loadProfile(this)
+}
+"""
+        self.assertIsNone(re.search(shim_delegation, commented_delegation))
 
     def test_event_channel_expectation_accepts_equivalent_bounded_capacities(self):
         expectation_path = (
@@ -274,6 +296,11 @@ fun profileFor(rawUserId: String, store: ProfileStore): User =
         self.assertTrue(
             all("gradle-run" not in record["expected_skills"] for record in records)
         )
+        self.assertTrue(
+            all("gradle-run" not in record["allowed_skills"] for record in records)
+        )
+        records[0]["reported_skills"] = [*records[0]["expected_skills"], "gradle-run"]
+        self.assertLess(_routing_metrics([records[0]])[0], 1.0)
 
         records[0]["subject"]["events"] = [
             {
@@ -289,6 +316,7 @@ fun profileFor(rawUserId: String, store: ProfileStore): User =
         ]
         reconcile_automatic_eligibility(REPO_ROOT, cases, records)
         self.assertIn("gradle-run", records[0]["expected_skills"])
+        self.assertIn("gradle-run", records[0]["allowed_skills"])
 
     def test_kotlin_fixture_is_pinned_and_offline_ready(self):
         fixture = REPO_ROOT / "evals" / "fixtures" / "kotlin-jvm"

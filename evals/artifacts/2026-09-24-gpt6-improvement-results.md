@@ -5,6 +5,12 @@ high reasoning, judged by `gpt-6-sol` at high
 reasoning. The [original run](2026-09-23-gpt6-luna-high.md) remains intact.
 The [corpus audit](2026-09-23-gpt6-corpus-audit.md) records every case-contract
 change and the original packet decisions.
+The [score evidence ledger](2026-09-24-gpt6-score-evidence.jsonl) preserves
+case, arm, repetition, fingerprints, run controls, and pass/fail fields for the
+selected frozen suites and the focused runs cited here and in the later repair
+records. It omits full model transcripts and workspace diffs. The ledger lets
+readers inspect outcome accounting after local raw directories expire, but it
+does not support an independent qualitative rejudgment.
 
 The plan first audited objective/judge disagreements and impossible case
 contracts, then changed only skill decisions supported by the traces. It

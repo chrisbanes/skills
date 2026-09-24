@@ -1,3 +1,4 @@
+import hashlib
 import json
 import tempfile
 import unittest
@@ -12,13 +13,14 @@ from evals.harness.experiment import (
     _judge_packet_path,
     _rejudgment_fingerprint,
     _rejudgment_result_path,
+    _skill_catalog_digest,
     _skill_source_paths,
     load_raw_records,
     next_attempt_workspace,
     rejudge_packets,
     write_rejudged_reports,
 )
-from evals.harness.judge import JudgeConfig
+from evals.harness.judge import JudgeConfig, build_judge_command
 from evals.harness.results import (
     FingerprintMismatch,
     load_result,
@@ -35,6 +37,23 @@ class ResultLifecycleTest(unittest.TestCase):
 
     def tearDown(self):
         self.temp_dir.cleanup()
+
+    def write_matching_rejudgment(self, packet_path: Path, payload: dict) -> None:
+        config = JudgeConfig("gpt-5.6-sol", "high")
+        fingerprint = _rejudgment_fingerprint(
+            packet_path,
+            config,
+            skill_catalog_digest=_skill_catalog_digest(()),
+            codex_version="codex-cli 1",
+            judge_prompt_digest=hashlib.sha256(
+                build_judge_command(packet_path, self.root, config, skill_paths=())[-1].encode()
+            ).hexdigest(),
+        )
+        write_result(
+            _rejudgment_result_path(self.root, packet_path, fingerprint),
+            fingerprint,
+            {**payload, "codex_version": "codex-cli 1"},
+        )
 
     def write_raw_record(self, case: str, arm: str, repetition: int, **overrides):
         payload = {
@@ -280,10 +299,8 @@ class ResultLifecycleTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        rejudgment_path = self.root / "rejudgments" / packet_path.stem / "result.json"
-        write_result(
-            rejudgment_path,
-            "rejudgment-sha",
+        self.write_matching_rejudgment(
+            packet_path,
             {
                 "candidate_id": candidate_id,
                 "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
@@ -304,6 +321,16 @@ class ResultLifecycleTest(unittest.TestCase):
                 },
             },
         )
+        write_result(
+            self.root / "rejudgments" / packet_path.stem / ("0" * 64 + ".json"),
+            "0" * 64,
+            {
+                "candidate_id": candidate_id,
+                "codex_version": "codex-cli 1",
+                "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
+                "judge": {"returncode": 1, "output": {}},
+            },
+        )
         original = {
             "id": "case:none:1",
             "fingerprint": fingerprint,
@@ -321,7 +348,10 @@ class ResultLifecycleTest(unittest.TestCase):
             "judge": {"returncode": 1, "output": {}},
         }
 
-        paths = write_rejudged_reports(self.root, [original], audit_seed=3)
+        with patch("evals.harness.experiment.discover_skill_paths", return_value=()):
+            paths = write_rejudged_reports(
+                self.root, [original], audit_seed=3, repo_root=self.root
+            )
 
         rejudged = json.loads(paths["results"].read_text(encoding="utf-8"))
         self.assertTrue(rejudged[0]["judge_pass"])
@@ -344,8 +374,38 @@ class ResultLifecycleTest(unittest.TestCase):
             "repetition": 1,
         }
 
-        with self.assertRaisesRegex(ValueError, "missing rejudgment"):
-            write_rejudged_reports(self.root, [original], audit_seed=3)
+        with self.assertRaisesRegex(ValueError, "missing current rejudgment"):
+            write_rejudged_reports(
+                self.root, [original], audit_seed=3, repo_root=self.root
+            )
+
+    def test_rejudged_report_refuses_judgment_from_old_prompt(self):
+        fingerprint = "a" * 64
+        packet_path = _judge_packet_path(self.root, "candidate", fingerprint, 1)
+        packet_path.parent.mkdir(parents=True)
+        packet_path.write_text(
+            json.dumps({"candidate_id": "candidate", "rubric": []}),
+            encoding="utf-8",
+        )
+        self.write_matching_rejudgment(
+            packet_path,
+            {
+                "candidate_id": "candidate",
+                "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
+                "judge": {"returncode": 0, "output": {"criteria": [], "overall_pass": True}},
+            },
+        )
+        original = {
+            "id": "case:none:1", "fingerprint": fingerprint,
+            "repetition": 1, "arm": "none",
+        }
+
+        with patch("evals.harness.experiment.discover_skill_paths", return_value=()), \
+             patch("evals.harness.experiment.build_judge_command", return_value=["changed prompt"]):
+            with self.assertRaisesRegex(ValueError, "missing current rejudgment"):
+                write_rejudged_reports(
+                    self.root, [original], audit_seed=3, repo_root=self.root
+                )
 
     def test_rejudged_report_skips_ineligible_automatic_records(self):
         fingerprint = "a" * 64
@@ -361,10 +421,8 @@ class ResultLifecycleTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        rejudgment_path = self.root / "rejudgments" / packet_path.stem / "result.json"
-        write_result(
-            rejudgment_path,
-            "rejudgment-sha",
+        self.write_matching_rejudgment(
+            packet_path,
             {
                 "candidate_id": candidate_id,
                 "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
@@ -410,9 +468,11 @@ class ResultLifecycleTest(unittest.TestCase):
             "automatic_eligible": False,
         }
 
-        paths = write_rejudged_reports(
-            self.root, [included, ineligible], audit_seed=3
-        )
+        with patch("evals.harness.experiment.discover_skill_paths", return_value=()):
+            paths = write_rejudged_reports(
+                self.root, [included, ineligible], audit_seed=3,
+                repo_root=self.root,
+            )
 
         rejudged = json.loads(paths["results"].read_text(encoding="utf-8"))
         self.assertEqual(["case:none:1"], [record["id"] for record in rejudged])

@@ -7,6 +7,9 @@ planning assumptions, not measured billing. Raw packets and scorecards are in
 the listed temporary directories. Those directories are not included in this
 repository, so another maintainer cannot independently replay these runs once
 the local copies are removed.
+The compact [score evidence ledger](2026-09-24-gpt6-score-evidence.jsonl)
+preserves their record identities, run controls, and outcome fields without
+copying full transcripts into the repository.
 
 The bundled CLI reported `Logged in using ChatGPT` for the later full-run
 attempt. On that login, the dollar figures required by this harness do not
