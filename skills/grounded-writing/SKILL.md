@@ -36,9 +36,14 @@ generic, or included only to imitate a personality.
    terms and omit their implementation mechanics. Include a mechanic only when
    it is required for correct API use, necessary to distinguish a reader-facing
    setting choice, or explicitly requested. Do not ask to expand internal
-   mechanics as a way to fill a public-documentation gap. Retain public
-   contracts and the context needed to interpret claims. This boundary does not
-   apply to internal design documents or technical reports.
+   mechanics as a way to fill a public-documentation gap. Before drafting or
+   revising public developer documentation, identify its public contracts and
+   guarantees shared across alternatives, including compatibility expectations,
+   and check that supported guarantees remain explicit in the result. If the
+   source leaves a contract uncertain, verify it when research is in scope or
+   flag the gap rather than silently dropping or inventing it. Retain the
+   context needed to interpret claims. This boundary does not apply to internal
+   design documents or technical reports.
 5. Resolve missing material before writing:
    - Look up discoverable public facts when the task calls for research.
    - If a missing personal opinion or experience would materially change the
@@ -75,11 +80,12 @@ Finish only when all of these are true:
 - The result still satisfies the requested format and purpose.
 - For reader-facing setting documentation, a developer can tell what changes,
   what each setting gains and gives up, when to choose each, the public
-  contract, and the meaningful limitation. Include transitions or timing only
-  when evidence establishes their public or decision relevance; otherwise omit
-  them with the implementation detail or flag material uncertainty. Keep
-  implementation mechanics out unless they are required for correct API use,
-  necessary to distinguish the setting choice, or explicitly requested.
+  contract, including supported guarantees shared across options, and the
+  meaningful limitation. Include transitions or timing only when evidence
+  establishes their public or decision relevance; otherwise omit them with the
+  implementation detail or flag material uncertainty. Keep implementation
+  mechanics out unless they are required for correct API use, necessary to
+  distinguish the setting choice, or explicitly requested.
 - Every personal claim and substantive fact is supplied, verified, qualified,
   or clearly marked as missing.
 - The argument is concrete enough to follow without promotional filler.
