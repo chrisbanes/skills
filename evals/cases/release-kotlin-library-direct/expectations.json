@@ -21,12 +21,12 @@
       [
         "streaming",
         "bounded",
-        "\\[\\#812\\]\\(https://github\\.com/chrisbanes/skills/pull/812\\)"
+        "(?<![!\\\\])\\[\\#812\\]\\(https://github\\.com/chrisbanes/skills/pull/812\\)"
       ],
       [
         "\\bcancel",
-        "\\[\\#845\\]\\(https://github\\.com/chrisbanes/skills/pull/845\\)",
-        "\\[(?:Avery Example|avery-example)\\]\\(https://github\\.com/avery-example\\)"
+        "(?<![!\\\\])\\[\\#845\\]\\(https://github\\.com/chrisbanes/skills/pull/845\\)",
+        "(?<![!\\\\])\\[(?:Avery Example|avery-example)\\]\\(https://github\\.com/avery-example\\)"
       ]
     ]
   }

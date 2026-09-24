@@ -49,7 +49,7 @@ def _mask_html_comments(subject: str) -> str:
 
 def _mask_inline_code(subject: str) -> str:
     return re.sub(
-        r"(?<!`)(`+)(?!`)(.*?)\1(?!`)",
+        r"(?<!\\)(?<!`)(`+)(?!`)(.*?)(?<!\\)\1(?!`)",
         lambda match: re.sub(r"[^\r\n]", " ", match.group()),
         subject,
         flags=re.DOTALL,
@@ -64,6 +64,7 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
     ).splitlines()
     bullets: list[str] = []
     current: list[str] = []
+    content_indent = 0
     in_section = False
     after_blank = False
 
@@ -83,9 +84,15 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
         if re.fullmatch(r"[ \t]*(?:-{3,}|_{3,}|\*{3,})[ \t]*", visible):
             finish()
             continue
-        if re.match(r" {0,3}(?:[-+*]|\d+[.)])[ \t]+", visible):
-            finish()
-            current.append(visible)
+        marker = re.match(r"( {0,3})([-+*]|\d+[.)])([ \t]+)", visible)
+        if marker:
+            indent = len(marker.group(1))
+            if current and indent >= content_indent:
+                current.append(visible)
+            else:
+                finish()
+                current.append(visible)
+                content_indent = indent + len(marker.group(2)) + len(marker.group(3))
             after_blank = False
             continue
         if not current:
