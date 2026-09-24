@@ -39,9 +39,13 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    non-blocking unless instructed otherwise.
 6. Handle each target in its own head checkout and batch every known actionable
    item. Until a code-related CI failure, validate proportionately. After one,
-   inspect its evidence, run every locally available CI-equivalent check, fix all
-   failures, and rerun the full local suite before one repair push. Report exact
-   checks unavailable locally instead of using CI as an iterative test runner.
+   inspect its evidence and identify local equivalents from the actual workflow
+   and check configuration. If those are unavailable, say which checks and local
+   equivalents remain unknown and stop before a targeted code repair or any
+   claim of verification. Otherwise run every locally available CI-equivalent
+   check, fix all failures, and rerun the full local suite before one repair push.
+   Report exact checks unavailable locally instead of using CI as an iterative
+   test runner.
    Reply after an addressed change or answer; resolve its thread only after the reply and required push succeed.
    Do not combine heads, push after every comment, resolve a local-only fix, or comment when nothing changed.
 7. Recheck CI after the verified repair push; return to step 6 on another
@@ -56,4 +60,10 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 
 ## Finish or escalate
 
-Continue until the user stops monitoring, every target is merged or closed, or an escalation is needed. Report the target, current CI/review state, actions taken, and the next required human decision. Escalate immediately for ambiguous platform/target selection, an unresolved conflict, material human judgment, conflicting reviewer direction, or a failure that remains after three repair cycles.
+Continue until the user stops monitoring, every target is merged or closed, or
+an escalation is needed. Report the target, current CI/review state, actions
+taken, checks actually run (say none when none ran), checks unavailable or
+unknown, and the next required human decision. Escalate immediately for
+ambiguous platform/target selection, an unresolved conflict, material human
+judgment, conflicting reviewer direction, or a failure that remains after three
+repair cycles.
