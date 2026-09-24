@@ -8,9 +8,11 @@ from unittest.mock import patch
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL
 from evals.harness.experiment import (
+    JUDGE_PROTOCOL_SOURCES,
     _attempt_payload,
     _case_digest,
     _judge_packet_path,
+    _judge_protocol_digest,
     _rejudgment_fingerprint,
     _rejudgment_result_path,
     _skill_catalog_digest,
@@ -137,6 +139,17 @@ class ResultLifecycleTest(unittest.TestCase):
         first = result_fingerprint(**common, judge_protocol_digest="prompt-one")
         second = result_fingerprint(**common, judge_protocol_digest="prompt-two")
         self.assertNotEqual(first, second)
+
+    def test_packet_dependency_changes_judge_protocol_digest(self):
+        for name in JUDGE_PROTOCOL_SOURCES:
+            (self.root / name).write_text("original", encoding="utf-8")
+        baseline = _judge_protocol_digest(self.root)
+        for name in JUDGE_PROTOCOL_SOURCES:
+            with self.subTest(source=name):
+                path = self.root / name
+                path.write_text("changed", encoding="utf-8")
+                self.assertNotEqual(baseline, _judge_protocol_digest(self.root))
+                path.write_text("original", encoding="utf-8")
 
     def test_case_digest_includes_fixture_but_ignores_generated_outputs(self):
         case_dir = self.root / "evals" / "cases" / "sample"

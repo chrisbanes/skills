@@ -60,6 +60,15 @@ RUN_CONTROL_FIELDS = (
 COMMAND_OUTPUT_TIMEOUT_SECONDS = 30
 CODEX_VERSION_TIMEOUT_SECONDS = 10
 GRADLE_PREFLIGHT_TIMEOUT_SECONDS = 180
+JUDGE_PROTOCOL_SOURCES = ("cases.py", "codex.py", "experiment.py", "grade.py", "judge.py")
+
+
+def _judge_protocol_digest(harness_dir: Path) -> str:
+    digest = hashlib.sha256()
+    for name in JUDGE_PROTOCOL_SOURCES:
+        digest.update(name.encode())
+        digest.update((harness_dir / name).read_bytes())
+    return digest.hexdigest()
 
 
 def _routing_expectations(
@@ -529,9 +538,7 @@ def execute_experiment(
     skill_catalog_digest = _skill_catalog_digest(
         tuple(sorted({*skill_paths, *skill_sources}, key=str))
     )
-    judge_protocol_digest = hashlib.sha256(
-        Path(__file__).with_name("judge.py").read_bytes()
-    ).hexdigest()
+    judge_protocol_digest = _judge_protocol_digest(Path(__file__).parent)
     records: list[dict[str, Any]] = []
     for case, arm in conditions:
         for repetition in range(1, repetitions + 1):
