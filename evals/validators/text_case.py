@@ -240,6 +240,9 @@ def main(argv: list[str]) -> int:
         for pattern in rules.get("must_match", []):
             if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is None:
                 failures.append(f"{label}: missing required pattern: {pattern!r}")
+        for pattern in rules.get("must_match_unfenced", []):
+            if re.search(pattern, _mask_fenced_code(subject), re.MULTILINE | re.DOTALL) is None:
+                failures.append(f"{label}: missing required pattern outside fenced code: {pattern!r}")
         for pattern in rules.get("must_not_match", []):
             if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is not None:
                 failures.append(f"{label}: forbidden pattern remains: {pattern!r}")

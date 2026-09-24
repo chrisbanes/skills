@@ -129,6 +129,39 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn('missing required pattern', result.stderr)
 
+    def test_pr_links_after_thematic_break_fail(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example))',
+            '(PR #845)\n---\n'
+            '[#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example)',
+        ).replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '(PR #812)\n---\n'
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern', result.stderr)
+
+    def test_release_bullets_only_in_fenced_code_fail(self):
+        original = self.completed_changelog()
+        first_bullet = original.index('- Fix request cancellation so underlying work stops')
+        summary_end = original.index('\n\n<details>', first_bullet)
+        updated = (
+            original[:first_bullet]
+            + '```md\n'
+            + original[first_bullet:summary_end]
+            + '\n```'
+            + original[summary_end:]
+        )
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern outside fenced code', result.stderr)
+
     def test_pr_links_only_in_prerelease_history_fail(self):
         updated = self.completed_changelog().replace(
             '([#845](https://github.com/chrisbanes/skills/pull/845); '
