@@ -10,6 +10,12 @@ assumptions, not measured billing.
 | Case and revision | Forced | Automatic | Raw output |
 | --- | ---: | ---: | --- |
 | Compose state hoisting direct, `0aa790e` | 3/3 | 3/3 | `/private/tmp/gpt6-compose-state-hoisting-alt-cli-3rep` |
+| Compose focus navigation novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-focus-novel-alt-cli-3rep` |
+| Compose recomposition performance novel, `2114de7` | 2/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
+| Compose state authoring novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
+| Compose animation/focus/testing overlap, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
+| Kotlin Flow state/events novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-kotlin-flow-concurrency-alt-cli-3rep` |
+| Kotlin concurrency router, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-kotlin-flow-concurrency-alt-cli-3rep` |
 | Shepherd novel, `0aa790e` | 3/3 | Ineligible | `/private/tmp/gpt6-shepherd-novel-alt-cli-3rep` |
 | Release direct, `0aa790e` | 2/3 | 2/3 | `/private/tmp/gpt6-release-direct-alt-cli-3rep` |
 | Grounded writing direct, `ab748e1` | 3/3 | 1/3 | `/private/tmp/gpt6-grounded-writing-alt-cli-3rep` |
@@ -21,6 +27,15 @@ assumptions, not measured billing.
 The Compose revision fixed the observed preview-tooling scope miss in all six
 targeted repetitions. The shepherd check-inventory revision passed all three
 forced repetitions. Neither result establishes a complete-suite score.
+
+The later Compose and Kotlin reviews were run at the same skill source revision
+`2114de7`. Focus navigation, state authoring, the three-skill overlap, Flow
+state/events, and the concurrency router all passed their forced-arm rechecks.
+The recomposition review passed twice, but repetition 2 proposed an
+`onSizeChanged` swap, equality guard, and layout-content change without
+measurements establishing a need for those changes. The judge retained a
+failure on its restraint criterion. Automatic arms for these six cases remain
+untested at this revision.
 
 In the pre-ledger release run, one forced and one automatic subject placed
 bounded streaming only in prerelease history, omitting it from the final stable
@@ -83,6 +98,14 @@ rubric to explain the recorded miss.
    boundary and no-change readiness behavior. Acceptance requires release
    direct, novel, and no-change cases in each eligible arm with three
    repetitions, and inspection of any remaining objective/judge disagreement.
+3. **Compose performance review restraint** (`Depends on: none`): inspect
+   `compose-recomposition-performance-novel:forced:2` in the later Compose run.
+   It identified the layout-to-composition feedback risk but proposed an
+   unmeasured callback change, redundant equality guard, and label-layout
+   change. Keep the diagnosis and require measured evidence before proposing
+   a stability or layout rewrite. Preserve the direct and no-change controls;
+   recheck the affected direct, novel, and no-change cases with three
+   repetitions in each eligible arm.
 
 After both accepted repairs are integrated, freeze the skill catalog and run
 the full corpus with the selected CLI and model pair. Inspect every failure and
