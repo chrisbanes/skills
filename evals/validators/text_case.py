@@ -62,31 +62,44 @@ def _mask_raw_html_blocks(subject: str) -> str:
     )
     raw_start = re.compile(r" {0,3}<(?:pre|script|style|textarea)(?=[ \t>]|$)", re.IGNORECASE)
     raw_end = re.compile(r"</(?:pre|script|style|textarea)\s*>", re.IGNORECASE)
+    custom_start = re.compile(
+        r" {0,3}</?[A-Za-z][A-Za-z0-9:-]*(?:[ \t]+[^<>\n]*)?[ \t]*/?>[ \t]*(?:\r?\n)?$"
+    )
     masked: list[str] = []
     in_block = False
     in_raw = False
+    previous_blank = True
 
     for line in subject.splitlines(keepends=True):
         if in_raw:
             masked.append(re.sub(r"[^\r\n]", " ", line))
             if raw_end.search(line):
                 in_raw = False
+            previous_blank = not line.strip()
             continue
         if in_block and line.strip():
             masked.append(re.sub(r"[^\r\n]", " ", line))
+            previous_blank = False
             continue
         if not line.strip():
             in_block = False
             masked.append(line)
+            previous_blank = True
             continue
         if raw_start.match(line):
             in_raw = raw_end.search(line) is None
-        elif block_start.match(line):
+        elif block_start.match(line) or (
+            previous_blank
+            and custom_start.match(line)
+            and not re.match(r" {0,3}</?details\b", line, re.IGNORECASE)
+        ):
             in_block = True
         else:
             masked.append(line)
+            previous_blank = False
             continue
         masked.append(re.sub(r"[^\r\n]", " ", line))
+        previous_blank = False
     return "".join(masked)
 
 
@@ -130,17 +143,57 @@ def _mask_markdown_link_titles(subject: str) -> str:
     return "".join(chars)
 
 
+def _markdown_links(subject: str) -> list[tuple[int, int, int, int]]:
+    """Find inline links, including destinations with balanced parentheses."""
+    links: list[tuple[int, int, int, int]] = []
+    offset = 0
+    while match := re.search(r"\[[^\]\n]*\]\(", subject[offset:]):
+        start = offset + match.start()
+        position = offset + match.end()
+        angle = position < len(subject) and subject[position] == "<"
+        destination_start = position + int(angle)
+        depth = 0
+        while position < len(subject):
+            char = subject[position]
+            if char == "\\":
+                position += 2
+                continue
+            if angle:
+                if char == ">":
+                    destination_end = position
+                    position += 1
+                    while position < len(subject) and subject[position] != ")":
+                        position += 1
+                    break
+            elif char == "(":
+                depth += 1
+            elif char == ")":
+                if depth == 0:
+                    destination_end = position
+                    break
+                depth -= 1
+            position += 1
+        if position < len(subject) and subject[position] == ")":
+            links.append((start, position + 1, destination_start, destination_end))
+            offset = position + 1
+        else:
+            offset = start + 1
+    return links
+
+
 def _mask_markdown_link_destinations(subject: str) -> str:
     chars = list(subject)
-    for match in re.finditer(r"\[[^\]\n]*\]\(<?([^\s)>]+)>?", subject):
-        for index in range(*match.span(1)):
-            chars[index] = " "
+    for _, _, start, end in _markdown_links(subject):
+        for index in range(start, end):
+            if chars[index] not in "\r\n":
+                chars[index] = " "
     return "".join(chars)
 
 
 def has_visible_markdown_link(subject: str, pattern: str) -> bool:
-    for match in re.finditer(pattern, subject, re.IGNORECASE):
-        start = match.start()
+    for start, end, _, _ in _markdown_links(subject):
+        if re.fullmatch(pattern, subject[start:end], re.IGNORECASE) is None:
+            continue
         backslashes = 0
         while start - backslashes - 1 >= 0 and subject[start - backslashes - 1] == "\\":
             backslashes += 1
@@ -199,6 +252,10 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
         if marker:
             indent = len(marker.group(1))
             marker_content_indent = len(marker.group().expandtabs(4))
+            code_on_marker = marker_content_indent - indent - len(marker.group(2)) > 4
+            if code_on_marker:
+                marker_content_indent = indent + len(marker.group(2)) + 1
+                visible = marker.group()
             if current and indent >= content_indent:
                 current.append(visible)
                 while len(item_indents) > 1 and indent <= item_indents[-1][0]:
@@ -210,7 +267,7 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
                 content_indent = marker_content_indent
                 item_indents = [(indent, content_indent)]
             after_blank = False
-            in_indented_code = False
+            in_indented_code = code_on_marker
             continue
         if not current:
             continue

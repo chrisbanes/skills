@@ -291,14 +291,19 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
 
     def test_description_terms_only_in_link_destination_fail(self):
         original = self.completed_changelog()
-        updated = original.replace(
-            '- Add streaming responses with bounded buffering ',
-            '- Add response support [context](https://example.test/streaming/bounded) ',
-        )
-        self.assertNotEqual(original, updated)
-        result = self.validate(updated)
-        self.assertEqual(1, result.returncode)
-        self.assertIn('missing required pattern in a release bullet', result.stderr)
+        for destination in (
+            'https://example.test/streaming/bounded',
+            'https://example.test/streaming_(x)bounded',
+        ):
+            with self.subTest(destination=destination):
+                updated = original.replace(
+                    '- Add streaming responses with bounded buffering ',
+                    f'- Add response support [context]({destination}) ',
+                )
+                self.assertNotEqual(original, updated)
+                result = self.validate(updated)
+                self.assertEqual(1, result.returncode)
+                self.assertIn('missing required pattern in a release bullet', result.stderr)
 
     def test_description_terms_in_link_label_pass(self):
         original = self.completed_changelog()
@@ -338,6 +343,17 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         updated = original.replace(
             '([#812](https://github.com/chrisbanes/skills/pull/812))',
             '\n\n      [#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_pr_link_only_in_marker_line_code_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '- Add streaming responses with bounded buffering ',
+            '-     Add streaming responses with bounded buffering ',
         )
         self.assertNotEqual(original, updated)
         result = self.validate(updated)
@@ -496,6 +512,18 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
                 self.assertEqual(1, result.returncode)
                 self.assertIn('missing required pattern in a release bullet', result.stderr)
 
+    def test_pr_citation_inside_another_link_destination_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '[context](<https://example.test/?x='
+            '[#812](https://github.com/chrisbanes/skills/pull/812)>)',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
     def test_pr_link_in_html_attribute_fails(self):
         original = self.completed_changelog()
         updated = original.replace(
@@ -567,6 +595,8 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
             '\n\n  <div> [#812](https://github.com/chrisbanes/skills/pull/812) </div>',
             '\n\n  <div>\n  [#812](https://github.com/chrisbanes/skills/pull/812)\n'
             '  </div>',
+            '\n\n  <x-credit>\n  [#812](https://github.com/chrisbanes/skills/pull/812)\n'
+            '  </x-credit>',
         ):
             with self.subTest(replacement=replacement):
                 updated = original.replace(
