@@ -437,3 +437,18 @@ other five results are in `/private/tmp/gpt6-kotlin-router-template-direct-contr
 selected 21 packets, objective and judge checks passed and no forbidden
 actions were recorded. The README automatic cell combines distinct focused
 catalogs; it is not a same-catalog suite score.
+
+## Kotlin API design automatic score
+
+The five `kotlin-api-design` corpus cases each have a later 3/3 automatic
+pass on the current case and skill text. The member-restraint negative,
+platform-boundary novel, and value-class direct cases passed 9/9 with one
+catalog digest and zero forbidden actions in
+`/private/tmp/gpt6-targeted-kotlin-api-remaining-auto-20260924`. Ownership
+direct passed in `/private/tmp/gpt6-focused-gaps-kotlin-1`, and the API router
+case passed in `/private/tmp/gpt6-targeted-kotlin-api-routing-control-20260924`.
+Across the selected 15 packets, objective and judge checks passed and no
+forbidden actions were recorded. One platform-boundary reply additionally
+reported `kotlin-concurrency-and-flow`; routing precision is distinct from
+the correctness cell. The README automatic cell combines distinct focused
+catalogs, not a same-catalog suite score.
