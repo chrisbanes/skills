@@ -62,8 +62,10 @@ snapshots when the repository does not maintain them.
    loading or requiring local dotenv values.
 5. Prepare the release: update the version, finalize the changelog heading and
    applicable published-module API snapshots, run configured checks, and commit
-   only release files. When finalizing a stable release entry, group that cycle's
-   original prerelease entries beneath its summary in a `<details>` block with
+   only release files. When finalizing a stable release entry, draft the stable
+   summary from every surviving coverage-ledger row in final-behavior wording
+   before grouping that cycle's original prerelease entries beneath it in a
+   `<details>` block with
    `<summary>Prerelease history</summary>`. Preserve their headings, anchors,
    dates and text, with blank lines around the enclosed Markdown. Leave older
    stable releases outside the block. If the renderer lacks collapsible HTML,
