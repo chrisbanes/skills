@@ -21,14 +21,12 @@
         "missing_manifest_error",
         "profile_loader.py",
         "invalid_profile_error",
-        "path_diagnostics.py",
-        "quote_path",
         "configs/team manifest.json"
       ]
     }
   ],
   "task_graph": {
-    "required_edges": [["T2", "T1"]],
+    "required_edges": [],
     "require_acyclic": true
   }
 }

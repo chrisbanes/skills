@@ -5,6 +5,14 @@ calibration and its one-function counterexample. It covers only the recorded
 case versions and settings below; it does not establish repeatability or
 automatic routing behavior.
 
+**Superseded calibration evidence:** Watson found that the original calibration
+fixture's tests already asserted the desired quoted strings and that its prompt
+prescribed the slice layout. The original calibration result below is retained
+as historical evidence only; it does not establish red/green planning or
+workflow-driven slice discovery. The repaired fixture and less directed prompt,
+with preserved plans and judge evidence, are recorded in
+[`2026-09-24-to-plan-specificity-reviewable-run.md`](2026-09-24-to-plan-specificity-reviewable-run.md).
+
 ## Run
 
 - Run directory: `.scratch/skill-evals/cb13-specificity-20260924`

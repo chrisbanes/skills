@@ -1,5 +1,6 @@
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -206,17 +207,66 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
         self.assertEqual("workflow-plan", specificity.fixture)
         self.assertTrue(specificity.calibration)
-        self.assertIn("two focused, test-first increments", specificity.prompt)
+        self.assertIn("Both `manifest_reader.py:missing_manifest_error`", specificity.prompt)
+        self.assertNotIn("two slices", specificity.prompt.lower())
+        self.assertNotIn("t1", specificity.prompt.lower())
+        self.assertNotIn("t2", specificity.prompt.lower())
+        self.assertNotIn("test-first", specificity.prompt.lower())
+        self.assertNotIn("acceptance row", specificity.prompt.lower())
         expectations = json.loads(
             (specificity.directory / "expectations.json").read_text(encoding="utf-8")
         )
-        self.assertEqual([["T2", "T1"]], expectations["task_graph"]["required_edges"])
+        self.assertEqual([], expectations["task_graph"]["required_edges"])
         self.assertTrue(expectations["task_graph"]["require_acyclic"])
+        required_text = expectations["file_globs"][0]["must_contain"]
+        self.assertNotIn("path_diagnostics.py", required_text)
+        self.assertNotIn("quote_path", required_text)
         overlay = specificity.directory / "overlay"
-        self.assertTrue((overlay / "manifest_reader.py").is_file())
-        self.assertTrue((overlay / "profile_loader.py").is_file())
-        self.assertTrue((overlay / "tests/test_manifest_reader.py").is_file())
-        self.assertTrue((overlay / "tests/test_profile_loader.py").is_file())
+        manifest = (overlay / "manifest_reader.py").read_text(encoding="utf-8")
+        profile = (overlay / "profile_loader.py").read_text(encoding="utf-8")
+        manifest_test = (overlay / "tests/test_manifest_reader.py").read_text(
+            encoding="utf-8"
+        )
+        profile_test = (overlay / "tests/test_profile_loader.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("return f\"manifest not found: {path}\"", manifest)
+        self.assertIn("return f\"invalid profile at {path}\"", profile)
+        self.assertIn('"manifest not found: configs/team manifest.json"', manifest_test)
+        self.assertIn('"invalid profile at configs/team manifest.json"', profile_test)
+        self.assertNotIn("'configs/team manifest.json'", manifest_test)
+        self.assertNotIn("'configs/team manifest.json'", profile_test)
+        rubric_ids = {criterion["id"] for criterion in specificity.rubric}
+        self.assertEqual(
+            {
+                "complete-coverage",
+                "baseline-and-red-green",
+                "concrete-tests",
+                "consistent-dependencies",
+                "proportionality",
+                "planning-boundary",
+            },
+            rubric_ids,
+        )
+        with tempfile.TemporaryDirectory(prefix="workflow-plan-specificity-") as temp_dir:
+            workspace = prepare_workspace(
+                specificity, REPO_ROOT, Path(temp_dir) / "fixture"
+            )
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    "-m",
+                    "unittest",
+                    "tests.test_manifest_reader",
+                    "tests.test_profile_loader",
+                ],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(0, completed.returncode, completed.stderr)
         for skill in WORKFLOWS_WRITING_SKILLS:
             kinds = {case.kind for case in benchmark if skill in case.target_skills}
             with self.subTest(skill=skill):
