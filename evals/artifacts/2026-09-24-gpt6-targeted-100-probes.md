@@ -97,6 +97,9 @@ recommended a channel under a single-consumer assumption without addressing
 whether every active consumer needs delivery. Revision `b2fddd1` adds an
 interface-implementer compatibility check to function-ownership guidance. A
 saved `kotlin-api-ownership-direct:automatic` diff retained the deprecated
-String extension but renamed an abstract `ProfileStore` member, breaking
-existing implementers. Lint, the 99-case corpus check, and the focused Kotlin
+String extension but renamed an abstract `ProfileStore` member. The judge
+treated existing implementer compatibility as a failure; the original audit
+classified that verdict as a false negative because the rubric required only
+the String shim. The new guidance is a broader API check, not evidence of a
+corrected case score. Lint, the 99-case corpus check, and the focused Kotlin
 eval tests pass. These revisions have no new model scores.
