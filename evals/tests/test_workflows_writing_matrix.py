@@ -704,6 +704,18 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             symbol_failures,
         )
 
+        later_edit = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path; "
+            "inspect `profile_loader.py` for conventions, then edit "
+            "`profile_loader.py` here.\n",
+        )
+        later_edit_failures = validate_task_graph(later_edit, rules["task_graph"])
+        self.assertTrue(
+            any("also implements 'invalid-profile'" in failure for failure in later_edit_failures),
+            later_edit_failures,
+        )
+
         verification_only = separated.replace(
             "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
             "**Implementation:** Change `manifest_reader.py` to quote the path. "
@@ -726,6 +738,16 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertEqual(
             [],
             validate_task_graph(mixed_actions, rules["task_graph"]),
+        )
+
+        unchanged_reference = separated.replace(
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n",
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`; "
+            "leave `profile_loader.py` and `tests/test_profile_loader.py` unchanged.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(unchanged_reference, rules["task_graph"]),
         )
 
         dotted_paths = separated

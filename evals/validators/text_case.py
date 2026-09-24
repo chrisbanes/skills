@@ -232,27 +232,27 @@ def validate_task_graph(
         )
 
     def path_action(clause: str, path: str) -> str | None:
-        match = re.search(
+        saw_inspection = False
+        for match in re.finditer(
             rf"(?<![A-Za-z0-9_./-])(?:\./)?{re.escape(path)}(?![A-Za-z0-9_./-])",
             clause,
-        )
-        if match is None:
-            return None
-        actions = list(
-            re.finditer(
-                rf"\b(?:{edit_verbs}|{inspection_verbs})\b",
-                clause[: match.start()],
-                re.IGNORECASE,
-            )
-        )
-        if not actions:
-            return None
-        last_action = actions[-1]
-        if last_action.group().lower() in edit_verbs.split("|") and not is_negated(
-            clause, last_action.start()
         ):
-            return "edit"
-        return "inspect"
+            actions = list(
+                re.finditer(
+                    rf"\b(?:{edit_verbs}|{inspection_verbs})\b",
+                    clause[: match.start()],
+                    re.IGNORECASE,
+                )
+            )
+            if not actions:
+                continue
+            last_action = actions[-1]
+            if last_action.group().lower() in edit_verbs.split("|") and not is_negated(
+                clause, last_action.start()
+            ):
+                return "edit"
+            saw_inspection = True
+        return "inspect" if saw_inspection else None
 
     def edits_path(text: str, path: str) -> bool:
         return any(
@@ -269,6 +269,10 @@ def validate_task_graph(
                 r"\b(?:inspect only|no edits?|read.only|do not edit|do not change)\b",
                 clause,
                 re.IGNORECASE,
+            ):
+                continue
+            if re.search(r"\b(?:leave|keep)\b", clause, re.IGNORECASE) and re.search(
+                r"\bunchanged\b", clause, re.IGNORECASE
             ):
                 continue
             action = path_action(clause, path)
