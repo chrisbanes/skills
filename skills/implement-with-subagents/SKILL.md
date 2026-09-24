@@ -47,7 +47,10 @@ It is not bundled here. Never install it implicitly; report
    reuse passing checks only when their inputs and environment remain unchanged.
    An accepted item is complete, not assignable again.
 3. Report the next action (or no action), evidence, and any acceptance gap. Stop
-   before implementation.
+   before implementation. If an integration changed a validated input, name
+   rerunning the affected validation at the current integrated head as a
+   required acceptance action, even when an invalid dependency graph also
+   blocks dispatch. Calling the earlier report stale does not state the action.
 
 ## Implementation mode
 

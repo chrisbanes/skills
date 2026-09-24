@@ -6,6 +6,12 @@ These targeted live runs used `gpt-6-luna/high` as subject and
 planning assumptions, not measured billing. Raw packets and scorecards are in
 the listed temporary directories.
 
+The bundled CLI reported `Logged in using ChatGPT` for the later full-run
+attempt. On that login, the dollar figures required by this harness do not
+describe a direct API-key charge; the calls consume the account's Codex plan
+allowance. [Official Codex pricing](https://learn.chatgpt.com/docs/pricing)
+distinguishes ChatGPT-plan usage from API-key billing.
+
 | Probe | Forced | Automatic | Raw output |
 | --- | ---: | ---: | --- |
 | Kotlin concurrency and API router controls | 6/6 | 6/6 | `/private/tmp/gpt6-inline-kotlin-smoke` |
@@ -17,6 +23,7 @@ the listed temporary directories.
 | Writing direct and no-change before final review-gate edit | 6/6 | 6/6 | `/private/tmp/gpt6-inline-writing-final5` |
 | Writing novel before final review-gate edit | 3/3 | 2/3 | `/private/tmp/gpt6-inline-writing-final5` |
 | Writing novel automatic after final review-gate edit | Not run | 3/3 | `/private/tmp/gpt6-inline-writing-novel-final7` |
+| Implement with subagents direct, novel, and no-change after integrated-head acceptance edit | 9/9 | Ineligible | `/private/tmp/gpt6-implement-integration-acceptance-recheck` |
 
 Each row is a combined objective-and-judge raw result. Each individual run has
 one recorded skill-catalog digest, but the digests differ between runs and the
@@ -34,6 +41,16 @@ repetition 3 identified implementation mechanics but did not explicitly
 recommend removing them. A later partial recheck still missed a separate
 visible-difference request in one automatic review. The final automatic
 novel recheck passed 3/3 after the review finish gate named that check.
+
+A later two-arm workflow suite attempt at commit `ca50c6f` stopped after 41
+completed raw records, of which 40 passed. Its one failure,
+`implement-with-subagents-negative:forced:2`, held dispatch for an invalid
+graph and shared-file overlap but called an integration report stale without
+explicitly requiring affected validation at the current integrated head. The
+original failed packet remains in `/private/tmp/gpt6-full-ca50c6f-workflows`.
+The skill now requires that acceptance action even when another blocker also
+holds dispatch; its direct, novel, and no-change forced recheck passed 9/9.
+The stopped partial run is not a suite score.
 
 Local validation after the final writing edits: `npm test` passed 171 tests
 with one skip and 210 eval-harness tests; `npm run lint`,
