@@ -174,7 +174,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(21, len(benchmark))
-        self.assertEqual(16, len(calibration))
+        self.assertEqual(17, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(21, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -186,6 +186,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "to-plan-authorized-draft-direct",
                 "to-plan-material-assumption-proof-calibration",
                 "to-plan-material-assumption-proof-novel",
+                "to-plan-specificity-calibration",
                 "to-plan-prior-confirmed-novel",
                 "to-plan-unresolved-choice-negative",
                 "to-plan-discussion-only-negative",
@@ -200,6 +201,22 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             },
             {case.id for case in calibration},
         )
+        specificity = next(
+            case for case in calibration if case.id == "to-plan-specificity-calibration"
+        )
+        self.assertEqual("workflow-plan", specificity.fixture)
+        self.assertTrue(specificity.calibration)
+        self.assertIn("two focused, test-first increments", specificity.prompt)
+        expectations = json.loads(
+            (specificity.directory / "expectations.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual([["T2", "T1"]], expectations["task_graph"]["required_edges"])
+        self.assertTrue(expectations["task_graph"]["require_acyclic"])
+        overlay = specificity.directory / "overlay"
+        self.assertTrue((overlay / "manifest_reader.py").is_file())
+        self.assertTrue((overlay / "profile_loader.py").is_file())
+        self.assertTrue((overlay / "tests/test_manifest_reader.py").is_file())
+        self.assertTrue((overlay / "tests/test_profile_loader.py").is_file())
         for skill in WORKFLOWS_WRITING_SKILLS:
             kinds = {case.kind for case in benchmark if skill in case.target_skills}
             with self.subTest(skill=skill):

@@ -53,6 +53,14 @@ replanning on failure; dependent slices must name the proof task ID. Do not add 
 proof when existing evidence settles the assumption, and do not leave unresolved
 design choices as open-ended implementation exploration.
 
+Before slicing, make a brief file-responsibility map from the inspected code:
+record the existing files and symbols that own the behavior, tests, and wiring,
+then group edits into observable increments that can each receive a focused
+review and verification. Include setup, documentation, and integration edits in
+the increment whose behavior they support. Keep independent increments separate
+when each has its own useful check; keep tightly coupled edits together when
+splitting them would leave an unreviewable or untestable intermediate state.
+
 An authorized Planning transition, decision-complete current task, or confirmed
 conversation source authorizes the smallest coherent contract-realizing design.
 Record non-obvious choices and evidence. Escalate only conflicting authority,
@@ -87,6 +95,15 @@ lower-capability executor must locate and order every edit, distinguish existing
 from new symbols, create meaningful tests, wire consumers, and validate without
 broad rediscovery. Resolve gaps through discovery; put unresolvable ones in the
 blocker set.
+
+As part of this review, trace every source requirement to an acceptance row and
+its implementing slice. Check that paths, existing and new symbol names,
+interfaces, call-site wiring, task dependencies, and validation commands agree
+across the plan. Replace vague instructions such as “add appropriate tests” or
+“run relevant checks” with concrete inputs, assertions, commands, working
+directories, and observable results. Remove placeholders and steps that do not
+advance an acceptance criterion. Scale the detail to the change's risk and keep
+the proof, failure, and source-authority gates above unchanged.
 
 ## Manage, publish, and hand off
 

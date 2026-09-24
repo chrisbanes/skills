@@ -1,0 +1,46 @@
+{
+  "id": "to-plan-specificity-calibration",
+  "title": "Plan two path diagnostics in focused increments",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow-plan",
+  "allowed_write_paths": [".scratch/to-plan"],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "to-plan-specificity-calibration"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "complete-coverage",
+      "text": "Maps each requested path-diagnostic behavior to an acceptance row, its implementation slice, and the focused verification that proves it"
+    },
+    {
+      "id": "specific-increments",
+      "text": "Plans two independently verifiable increments: quote the missing-manifest diagnostic through the shared formatter, then use that formatter at the separate invalid-profile diagnostic call site"
+    },
+    {
+      "id": "concrete-tests",
+      "text": "Names exact existing and new files and symbols, test setup, path inputs containing spaces, exact expected quoted diagnostic assertions, expected red failures, focused test commands, working directory, and green result for each increment"
+    },
+    {
+      "id": "consistent-dependencies",
+      "text": "Uses stable task IDs and explicit dependency lists; the profile call-site slice depends on the shared formatter slice, all references and acceptance slice numbers agree, and the graph is acyclic"
+    },
+    {
+      "id": "proportionality",
+      "text": "Keeps two related call-site changes concise, shares one formatting contract, and adds no speculative proof task or unrelated implementation steps"
+    },
+    {
+      "id": "planning-boundary",
+      "text": "Writes only one local plan and does not edit source files or contact a provider"
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

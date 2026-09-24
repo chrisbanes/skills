@@ -194,12 +194,13 @@ dependency, because that prerequisite is constant across its three scored arms
 and is not a public skill or a routing target. Its missing-provider challenge
 deliberately omits that fixture dependency.
 
-Fourteen additional workflow cases are calibration-only. Select them
+Fifteen additional workflow cases are calibration-only. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
-unresolved decisions, proof-gated report publication, and verification evidence
-reuse versus missing, stale, failed, or explicitly required fresh evidence. The
-local-planning cases check the generated plan artifact. The scored orchestration
+unresolved decisions, proof-gated report publication, implementation-plan
+specificity for complex work with a one-function counterexample, and verification
+evidence reuse versus missing, stale, failed, or explicitly required fresh
+evidence. The local-planning cases check the generated plan artifact. The scored orchestration
 triad exercises a ready fork/join, a serial dependency chain, and restraint for
 a cyclic or incomplete graph, unsafe shared-file overlap, and validation
 invalidated at an integrated head. Two additional orchestration calibrations

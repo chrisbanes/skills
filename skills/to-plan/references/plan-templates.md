@@ -54,22 +54,25 @@ concurrently.>
 
 **Task ID:** `<stable unique ID, e.g. T1>`
 **Depends on:** `none` (reserved root marker; not a task ID) | `<task ID>, ...`
-**Prerequisites:** <Earlier slice or none; relevant context or exemplar.>
-**Files and symbols:** <Existing files/symbols to edit and new files/symbols to
-create, labelled existing/new.>
-**Test:** <Exact test file and seam; fixture/setup; inputs/actions; assertions;
-and expected red failure, or why an automated red test is impractical.>
-**Implementation:** <Ordered edits, including interfaces or pseudocode when
-needed, control/data flow, branches/errors/edge cases, and call-site wiring.>
+**Prerequisites:** <Earlier slice or none; include the result of any required
+proof and the proof task ID where applicable.>
+**Files and symbols:** <Name each existing file/symbol to edit and each new
+file/symbol to create; state its responsibility and how it connects to callers.>
+**Test:** <Exact test file and seam, setup/fixture, concrete inputs/actions,
+assertions, and expected red failure; explain if an automated red test is
+impractical.>
+**Implementation:** <Ordered edits that produce this slice's observable
+deliverable; state interface/ownership and call-site wiring where relevant, plus
+material branches, errors, and edge cases.>
 **Validate:** From `<working directory>`, after <setup or none>, run `<exact
-focused command>`; expect <specific successful result>.
-**Complete when:** <Observable completion condition.>
+focused command>`; expect <specific successful result proving this slice>.
+**Complete when:** <Observable deliverable and its focused check are complete.>
 
 ### Acceptance coverage
 
 | Acceptance criterion | Slice | Verification |
 | --- | ---: | --- |
-| <Criterion> | <number> | <Test or precise manual check> |
+| <One observable acceptance criterion> | <slice number> | <Exact focused test/check and the result that proves it> |
 
 ### Final validation
 
@@ -143,22 +146,25 @@ concurrently.>
 
 **Task ID:** `<stable unique ID, e.g. T1>`
 **Depends on:** `none` (reserved root marker; not a task ID) | `<task ID>, ...`
-**Prerequisites:** <Earlier slice or none; relevant context or exemplar.>
-**Files and symbols:** <Existing files/symbols to edit and new files/symbols to
-create, labelled existing/new.>
-**Test:** <Exact test file and seam; fixture/setup; inputs/actions; assertions;
-and expected red failure, or why an automated red test is impractical.>
-**Implementation:** <Ordered edits, including interfaces or pseudocode when
-needed, control/data flow, branches/errors/edge cases, and call-site wiring.>
+**Prerequisites:** <Earlier slice or none; include the result of any required
+proof and the proof task ID where applicable.>
+**Files and symbols:** <Name each existing file/symbol to edit and each new
+file/symbol to create; state its responsibility and how it connects to callers.>
+**Test:** <Exact test file and seam, setup/fixture, concrete inputs/actions,
+assertions, and expected red failure; explain if an automated red test is
+impractical.>
+**Implementation:** <Ordered edits that produce this slice's observable
+deliverable; state interface/ownership and call-site wiring where relevant, plus
+material branches, errors, and edge cases.>
 **Validate:** From `<working directory>`, after <setup or none>, run `<exact
-focused command>`; expect <specific successful result>.
-**Complete when:** <Observable completion condition.>
+focused command>`; expect <specific successful result proving this slice>.
+**Complete when:** <Observable deliverable and its focused check are complete.>
 
 ## Acceptance coverage
 
 | Acceptance criterion | Slice | Verification |
 | --- | ---: | --- |
-| <Criterion> | <number> | <Test or precise manual check> |
+| <One observable acceptance criterion> | <slice number> | <Exact focused test/check and the result that proves it> |
 
 ## Final validation
 

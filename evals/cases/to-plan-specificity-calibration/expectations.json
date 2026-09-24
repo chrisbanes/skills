@@ -1,0 +1,34 @@
+{
+  "files": [],
+  "file_globs": [
+    {
+      "pattern": ".scratch/to-plan/*.md",
+      "count": 1,
+      "must_match": [
+        "<!-- to-plan:conversation-plan:v1 id=[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12} -->"
+      ],
+      "must_contain": [
+        "## Implementation context",
+        "## Implementation slices",
+        "## Acceptance coverage",
+        "**Files and symbols:**",
+        "**Task ID:**",
+        "**Depends on:**",
+        "**Test:**",
+        "**Validate:**",
+        "**Complete when:**",
+        "manifest_reader.py",
+        "missing_manifest_error",
+        "profile_loader.py",
+        "invalid_profile_error",
+        "path_diagnostics.py",
+        "quote_path",
+        "configs/team manifest.json"
+      ]
+    }
+  ],
+  "task_graph": {
+    "required_edges": [["T2", "T1"]],
+    "require_acyclic": true
+  }
+}
