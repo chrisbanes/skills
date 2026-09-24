@@ -8,6 +8,10 @@
   "expected_skills": [
     "compose-state-and-effects"
   ],
+  "allowed_skills": [
+    "compose-state-and-effects",
+    "kotlin-concurrency-and-flow"
+  ],
   "task_mode": "review",
   "kind": "routing",
   "fixture": "compose-jvm",

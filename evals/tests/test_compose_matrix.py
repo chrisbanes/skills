@@ -81,6 +81,20 @@ class ComposeMatrixTest(unittest.TestCase):
         self.assertNotIn("testability", case.prompt.lower())
         self.assertIn("state-driven content", case.prompt.lower())
 
+    def test_one_shot_navigation_allows_a_separate_delivery_review(self):
+        report = validate_corpus(REPO_ROOT, suite="compose")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "router-overlap-state-effect-ownership"
+        )
+
+        self.assertEqual(("compose-state-and-effects",), case.expected_skills)
+        self.assertEqual(
+            ("compose-state-and-effects", "kotlin-concurrency-and-flow"),
+            case.allowed_skills,
+        )
+
     def test_state_hoisting_direct_keeps_preview_tooling_outside_allowed_scope(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
         case = next(

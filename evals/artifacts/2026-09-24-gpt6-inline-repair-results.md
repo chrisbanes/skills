@@ -234,3 +234,40 @@ both expected skills reported and 100% routing precision and recall:
 one catalog digest internally; the two runs have the same digest, while the
 earlier state-authoring probe used a different catalog digest. Do not treat the
 75%-to-100% comparison as a controlled causal estimate.
+
+## Overlap routing and component review follow-up
+
+Two older automatic router packets had extra reported skills while passing
+their behavior rubrics. The animated-header case sometimes loaded
+`compose-component-design`; the one-shot-navigation case sometimes loaded
+`kotlin-concurrency-and-flow`. A fresh header repetition again loaded the
+component skill and gave unsolicited slot/modifier advice. Another loaded it
+without any component finding. Moving a scope reminder into the router's main
+procedure still produced an extra component read on its first repetition, so
+that unproven router edit was reverted. The header routing-precision miss remains
+unresolved; the stopped packets are in
+`/private/tmp/gpt6-targeted-router-overlap-precision-20260924`,
+`/private/tmp/gpt6-targeted-router-overlap-final-20260924`, and
+`/private/tmp/gpt6-targeted-header-scope-20260924`.
+
+The older event-collector reply used Flow guidance for an independent delivery
+and replay question within the requested one-shot navigation review. The case
+now allows `kotlin-concurrency-and-flow` as an optional specialist while still
+requiring `compose-state-and-effects`. At the corrected case fingerprint, all
+three automatic repetitions passed, reported both skills, and identified the
+delivery contract gap, with no forbidden actions and one catalog digest:
+`/private/tmp/gpt6-targeted-state-event-optional-flow-20260924`.
+
+The initial component-router control then exposed a separate real miss: one
+reply identified that a `String` limits variable card content but did not
+decide whether the profile region needs a slot. The component skill's review
+finish check now requires a slot-versus-semantic-primitive decision for a
+requested variable region. Its focused direct, no-change, and overlapping
+review cases passed 3/3 each in the automatic arm, with zero forbidden actions
+and one catalog digest:
+`/private/tmp/gpt6-targeted-component-slot-decision-20260924`. The original
+failed control packet remains in
+`/private/tmp/gpt6-targeted-router-overlap-boundaries-20260924`.
+
+These repairs improve the selected behavior and case contract. They do not
+resolve the remaining header over-routing or establish a full-corpus 100% score.

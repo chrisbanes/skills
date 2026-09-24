@@ -28,9 +28,12 @@ policy choices that vary by use.
 5. Keep simple conditional structure inline; extract only a coherent reusable
    contract.
 6. Read the relevant focused reference below before editing public signatures.
-7. Finish with no edit when the existing API already satisfies the requested
-   concern. Otherwise finish when callers can position the component, supply
-   variable content, and understand ownership without hidden switches.
+7. In a review, decide explicitly whether each requested variable visual region
+   should remain a semantic primitive or become a caller slot; naming a content
+   limitation alone does not make that API decision. Finish with no edit when
+   the existing API already satisfies the requested concern. Otherwise finish
+   when callers can position the component, supply variable content, and
+   understand ownership without hidden switches.
 
 ## Topic router
 
