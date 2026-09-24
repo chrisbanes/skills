@@ -309,3 +309,12 @@ routing precision and recall are both 100%, with one catalog digest:
 `/private/tmp/gpt6-targeted-header-optional-component-20260924`. The case
 change has a new fingerprint; old packets and their original routing scores
 remain intact. This is a focused case result, not a current full-corpus score.
+
+## Final component direct control
+
+After the region-inventory wording, `compose-slot-api-pattern-direct` passed
+3/3 forced and 3/3 automatic, with one catalog digest and no forbidden actions:
+`/private/tmp/gpt6-targeted-component-direct-final-20260924`. Together with
+the novel 3/3 in each arm and the automatic no-change 3/3 above, this covers
+the component skill's direct, novel, and restraint controls at that skill
+snapshot. These separate focused runs do not establish a full-corpus score.
