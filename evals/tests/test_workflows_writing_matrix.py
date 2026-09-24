@@ -481,6 +481,20 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "The improved consistency cannot be quantified without raw results.",
             )
         )
+        self.assertIsNotNone(
+            re.search(
+                variability_pattern,
+                "The results were more consistent, but this does not establish which control caused it.",
+                re.DOTALL,
+            )
+        )
+        self.assertIsNotNone(
+            re.search(
+                variability_pattern,
+                "The results were more consistent. The evidence does not isolate the effect of affinity.",
+                re.DOTALL,
+            )
+        )
         self.assertIsNone(re.search(variability_pattern, "Results were more consistent."))
         self.assertIsNone(re.search(variability_pattern, "Per-run range is unavailable."))
         self.assertIsNotNone(
@@ -488,6 +502,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
         self.assertIsNotNone(
             re.search(missing_data_pattern, "The raw results and traces were not included.")
+        )
+        self.assertIsNotNone(
+            re.search(missing_data_pattern, "The note does not include raw results or traces.")
         )
 
     def test_benchmark_count_guards_ignore_citations_and_build_metadata(self):

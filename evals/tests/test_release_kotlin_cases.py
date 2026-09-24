@@ -35,6 +35,13 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
     def test_preserved_notes_and_evidenced_fix_pass(self):
         self.assertEqual(0, self.validate(self.completed_changelog()).returncode)
 
+    def test_next_snapshot_heading_can_follow_prerelease_details(self):
+        updated = self.completed_changelog().replace(
+            '</details>\n\n## 1.4.0',
+            '</details>\n\n## 2.0.1-SNAPSHOT\n\n## 1.4.0',
+        )
+        self.assertEqual(0, self.validate(updated).returncode)
+
     def test_cancelling_wording_in_stable_summary_passes(self):
         updated = self.completed_changelog().replace(
             'Fix request cancellation so underlying work stops.',
