@@ -24,11 +24,15 @@ repository identity. `--auto` requires an issue in the current invocation.
 Otherwise use conversation mode. An inline task is a new source unless it
 explicitly selects an established issue. Creating a plan authorizes a local
 conversation draft, not GitHub writes; discussion or review alone authorizes no
-draft. Do not infer source authority from a proposal, tool output, incidental
-link, partial interview, or several plausible summaries. If multiple issue
-identifiers are named without an authoritative source, ask explicitly which
-issue should govern and what role the other plays; a general question about how
-they relate does not resolve source selection.
+draft. For a discussion-only review of a supplied plan, answer the requested
+assessment and stop. Executor-readiness checks and command-level handoff details
+apply when drafting a plan or preparing its implementation handoff, not to a
+discussion-only review; apply them during review only if the user asks whether
+the plan is executor-ready. Do not infer source authority from a proposal, tool
+output, incidental link, partial interview, or several plausible summaries. If
+multiple issue identifiers are named without an authoritative source, ask
+explicitly which issue should govern and what role the other plays; a general
+question about how they relate does not resolve source selection.
 
 Before any work, read these references completely in order:
 
@@ -47,13 +51,14 @@ blocks mutations and dependent work, not safe independent checks. Before
 drafting, publishing, or handoff, return every blocker with impact, recommended
 resolution, and required upstream change.
 
-For an incomplete conversation source, the pre-draft handoff is two-stage: ask
-one direct, answerable question for the next material decision and keep drafting
-blocked; do not merely name the missing decision. Once the contract is complete,
-present a concise self-contained summary of the goal, acceptance criteria,
-scope, constraints, and decisions, then explicitly ask the user to confirm that
-summary before drafting. Do not treat an unresolved or partially confirmed
-interview as approval.
+When a material user decision blocks the next step, put its direct, answerable
+question in the response; do not merely narrate “I asked” or name the missing
+decision. For an incomplete conversation source, ask one such question for the
+next material decision and keep drafting blocked. In the same response, state
+that after the answer completes the contract, you will present a concise
+self-contained summary of the goal, acceptance criteria, scope, constraints,
+and decisions and ask the user to confirm it before drafting. Do not treat an
+unresolved or partially confirmed interview as approval.
 
 Do not create or switch branches, or edit source and test files. Use the shared
 workflow's clean baseline and repository discovery rules. Every acceptance
