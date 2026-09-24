@@ -73,3 +73,20 @@ automatic approval review before execution because the subject and judge calls
 would transmit repository skill text to an external model service. No new
 subject or judge packet was sent. Explicit approval for that payload and
 destination has been requested; no later GPT-6 score is claimed here.
+
+Revision `5f1ad9d` adds an actual stable-summary cross-check to the release
+preparation handoff. In the saved `release-kotlin-library-direct:forced:1`
+packet, the subject identified bounded streaming as a surviving change but
+left it only in prerelease history; this is a real miss. A local regrade of the
+saved release shard with the current deterministic matcher gives two forced
+and two automatic combined passes out of three each. The other two failed
+packets have objective passes but retained judge failures concerning the
+allowed placement of `2.0.1-SNAPSHOT`; no raw verdict was changed.
+The regraded packets are in
+`/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-workflows-writing-shard-07-escalated/regraded/results.json`.
+
+Revision `005e3cd` requires the shepherd repair loop to establish the actual
+check inventory and report checks run versus checks whose local equivalents
+remain unknown. It addresses two saved `shepherd-novel:forced` replies that
+omitted the latter distinction. Both revisions pass lint and corpus validation;
+the release case tests also pass. Neither revision has a new model score.
