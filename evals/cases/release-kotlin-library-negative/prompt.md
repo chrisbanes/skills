@@ -4,4 +4,4 @@ There is no CHANGELOG.md. VERSION_NAME is 1.3.0-SNAPSHOT. CI for the current com
 
 The published modules use only Gradle’s built-in `maven-publish`; `gradle-maven-publish-plugin` is not applied, directly or through a convention plugin.
 
-The supplied changelog mentions PR #44, but no PR URL, author, profile, or repository maintainer evidence is available. Assess release readiness only from the supplied information. Do not fabricate a PR URL or contributor identity or classify its author as a maintainer/non-maintainer.
+A separate note in the request mentions PR #44, but no changelog file or PR URL, author, profile, or repository maintainer evidence is available. Assess release readiness only from the supplied information. Do not fabricate a PR URL or contributor identity or classify its author as a maintainer/non-maintainer.

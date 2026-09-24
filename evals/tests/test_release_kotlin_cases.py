@@ -26,7 +26,12 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         original = (ROOT / 'evals/cases/release-kotlin-library-direct/overlay/CHANGELOG.md').read_text()
         updated = original.replace(
             '- Keep this curated entry exactly.',
-            '- Keep this curated entry exactly.\n- Fix request cancellation so underlying work stops.\n- Add streaming responses with bounded buffering.',
+            '- Keep this curated entry exactly.\n'
+            '- Fix request cancellation so underlying work stops '
+            '([#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example)).\n'
+            '- Add streaming responses with bounded buffering '
+            '([#812](https://github.com/chrisbanes/skills/pull/812)).',
         )
         return updated.replace('## Unreleased', '## 2.0.0').replace(
             '## 2.0.0-rc00', '<details>\n<summary>Prerelease history</summary>\n\n## 2.0.0-rc00',
@@ -44,7 +49,9 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
 
     def test_missing_cancellation_concept_in_stable_summary_fails(self):
         updated = self.completed_changelog().replace(
-            '- Fix request cancellation so underlying work stops.\n', '',
+            '- Fix request cancellation so underlying work stops '
+            '([#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example)).\n', '',
         )
         result = self.validate(updated)
         self.assertEqual(1, result.returncode)
@@ -52,10 +59,13 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
 
     def test_cancellation_only_in_prerelease_details_fails(self):
         updated = self.completed_changelog().replace(
-            '- Fix request cancellation so underlying work stops.\n', '',
+            '- Fix request cancellation so underlying work stops '
+            '([#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example)).\n', '',
         ).replace(
-            '## 2.0.0-alpha01\n',
-            '## 2.0.0-alpha01\n\n- Fix request cancellation so underlying work stops.\n',
+            '- Add streaming responses with unbounded buffering.',
+            '- Add streaming responses with unbounded buffering.\n'
+            '- Fix request cancellation so underlying work stops.',
         )
         result = self.validate(updated)
         self.assertEqual(1, result.returncode)
@@ -67,7 +77,8 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
 
     def test_rc_delta_only_fails(self):
         updated = self.completed_changelog().replace(
-            '- Add streaming responses with bounded buffering.\n', '',
+            '- Add streaming responses with bounded buffering '
+            '([#812](https://github.com/chrisbanes/skills/pull/812)).\n', '',
         )
         self.assertNotEqual(0, self.validate(updated).returncode)
 
