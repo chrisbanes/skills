@@ -211,7 +211,7 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 44.4% | 88.9% | 100.0% |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 33.3% | 72.2% | 100.0% |
 | [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 33.3% | 50.0% | 100.0% |
-| [`grounded-writing`](skills/grounded-writing/SKILL.md) | 0.0% | 66.7% | 100.0% |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | 0.0% | 100.0% | 100.0% |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 0.0% | 83.3% | 100.0% |
 | [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | 100.0% |

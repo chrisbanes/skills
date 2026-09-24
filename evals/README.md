@@ -60,7 +60,7 @@ suite-wide aggregate.
 | `kotlin-concurrency-and-flow` | 44.4% | 88.9% | 100.0% |
 | `kotlin-control-flow` | 33.3% | 72.2% | 100.0% |
 | `android-benchmark-comparison` | 33.3% | 50.0% | 100.0% |
-| `grounded-writing` | 0.0% | 66.7% | 100.0% |
+| `grounded-writing` | 0.0% | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
 | `release-kotlin-library` | 0.0% | 83.3% | 100.0% |
 | `run-github-project` | — | — | 100.0% |

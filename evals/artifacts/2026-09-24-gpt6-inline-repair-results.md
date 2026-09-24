@@ -348,3 +348,23 @@ at the current case and skill snapshot in
 `/private/tmp/gpt6-targeted-animation-negative-auto-20260924`. All three runs
 reported `compose-animations`, passed objective and judge checks, and recorded
 no forbidden actions. This remains a focused result, not a suite score.
+
+## Grounded-writing automatic score and restraint
+
+At the preceding skill snapshot, a focused direct, novel, and no-change
+automatic run passed 8/9. The failing `grounded-writing-negative:automatic:3`
+inserted an unverified device placeholder into an approved internal report;
+the judge accepted it, but the objective check correctly flagged the
+undeclared write. Its raw packet remains in
+`/private/tmp/gpt6-targeted-writing-current-auto-escalated-20260924`.
+
+The skill now distinguishes an internal report from a rerun protocol when
+deciding whether a missing identifier warrants an edit. A fresh run of the
+same three cases passed 9/9 automatic, including 3/3 for the no-change
+control, with one catalog digest, 100% selected-case routing precision and
+recall, and zero forbidden actions:
+`/private/tmp/gpt6-targeted-writing-restraint-repair-escalated-20260924`.
+Case digests and the staged `grounded-writing` skill hash match the current
+files. Sandbox-only attempts in both rounds failed at CLI initialization
+before model output and are excluded. The README automatic cell now uses this
+complete focused skill result; unrelated suite metrics remain unchanged.

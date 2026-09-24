@@ -85,9 +85,10 @@ generic, or included only to imitate a personality.
    prevent the document's intended use before touching the file. If neither is
    present, leave an adequate draft unchanged. Rewording an already usable
    instruction to make it more explicit is optional polish, not a material
-   clarity fix. The same applies to optional precision or reproducibility
-   details. Do not add a placeholder for an unverified detail unless that
-   missing detail blocks the draft's intended use. Explain the material facts,
+   clarity fix. Do not turn an internal report into a rerun protocol: missing
+   identifiers or reproducibility details justify an edit only when a stated
+   claim or action depends on them. Do not add a placeholder for an unverified
+   detail unless it blocks the draft's intended use. Explain the material facts,
    mechanism, and qualification that make a no-change result appropriate; a
    bare “no edit needed” does not show that the checks
    were completed.
