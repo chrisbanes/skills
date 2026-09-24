@@ -31,9 +31,18 @@ branch, and let the compiler prove closed-domain coverage.
    conditions instead of guarding one of them.
 4. For a closed enum, Boolean, sealed type, or nullable closed type, name every
    case and omit `else`. Match objects by value and class/data-class subtypes
-   with `is`; retain the smart-cast payload when the mapping needs it. If the
-   input is an open server/platform value or needs real fallback/logging, keep
-   `else`.
+   with `is`. When a data-bearing sealed case is collapsed by a catch-all, show
+   the branch-level use in the review:
+
+   ```kotlin
+   is Outcome.Failed -> safeFailureLabel(outcome.reason)
+   ```
+
+   The `is` check smart-casts `outcome`, so the branch can use `reason` without
+   a cast. The helper name is illustrative; choose a safe mapping for the
+   caller contract. Do not replace this branch-level explanation with a note
+   that unspecified callers can inspect the original result. If the input is
+   an open server/platform value or needs real fallback/logging, keep `else`.
 5. Use an early return only when it removes invalid or nullable state from the
    main path. Keep nesting that expresses cleanup, transaction, or error
    handling.
@@ -41,14 +50,24 @@ branch, and let the compiler prove closed-domain coverage.
    duplicate casts. If they do not, keep the original shape or take a smaller
    refactor.
 7. Compile and test. On failure, return to the smallest applicable earlier step
-   or retain the prior shape. In a review, name the explicit cases and the
-   subtype member retained through smart casts when that data drives the
-   mapping. For example, replacing a sealed result's catch-all with `Missing`
-   and `Failed` is incomplete if `Failed.reason` should determine the output:
-   say that the `is Failed` branch can use its smart-cast `reason` without a
-   cast. Do not stop at naming exhaustive branches when a branch's payload
-   determines its output. Finish when the subject, fallbacks, and branch data
-   are obvious to a reader and the resulting shape is easier to scan.
+   or retain the prior shape. In a review of a closed sealed mapping, when a
+   data-bearing subtype affects the mapping or its safe handling, put the typed
+   branch and member access in the finding itself, not only in analysis or as a
+   general note to add explicit cases. Use this pseudocode template with the
+   actual subtype and payload member substituted:
+
+   ```kotlin
+   is <DataSubtype> -> map(result.<payload>)
+   ```
+
+   This is a template, not literal Kotlin: the `is` test smart-casts `result`,
+   and the member access shows how the branch uses its payload. If the public
+   value stays generic, state how the branch handles the detail or why it is
+   deliberately discarded. Naming cases alone or sending callers to inspect the
+   original value is not complete branch guidance. Apply this only to closed,
+   data-bearing cases; retain `else` for open-world values or real fallbacks.
+   Finish when the subject, fallbacks, and relevant branch data are obvious to a
+   reader and the resulting shape is easier to scan.
 
 ## Recipes
 
