@@ -47,6 +47,49 @@ def _mask_html_comments(subject: str) -> str:
     )
 
 
+def _mask_raw_html_blocks(subject: str) -> str:
+    """Blank CommonMark raw HTML blocks while retaining line boundaries."""
+    block_tags = (
+        "address|article|aside|base|basefont|blockquote|body|caption|center|"
+        "col|colgroup|dd|dialog|dir|div|dl|dt|fieldset|figcaption|figure|"
+        "footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|"
+        "legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|"
+        "option|p|param|search|section|summary|table|tbody|td|tfoot|th|"
+        "thead|title|tr|track|ul"
+    )
+    block_start = re.compile(
+        rf" {{0,3}}</?(?:{block_tags})(?=[ \t>/]|$)", re.IGNORECASE
+    )
+    raw_start = re.compile(r" {0,3}<(?:pre|script|style|textarea)(?=[ \t>]|$)", re.IGNORECASE)
+    raw_end = re.compile(r"</(?:pre|script|style|textarea)\s*>", re.IGNORECASE)
+    masked: list[str] = []
+    in_block = False
+    in_raw = False
+
+    for line in subject.splitlines(keepends=True):
+        if in_raw:
+            masked.append(re.sub(r"[^\r\n]", " ", line))
+            if raw_end.search(line):
+                in_raw = False
+            continue
+        if in_block and line.strip():
+            masked.append(re.sub(r"[^\r\n]", " ", line))
+            continue
+        if not line.strip():
+            in_block = False
+            masked.append(line)
+            continue
+        if raw_start.match(line):
+            in_raw = raw_end.search(line) is None
+        elif block_start.match(line):
+            in_block = True
+        else:
+            masked.append(line)
+            continue
+        masked.append(re.sub(r"[^\r\n]", " ", line))
+    return "".join(masked)
+
+
 def _mask_inline_html_tags(subject: str) -> str:
     return re.sub(
         r"<(?!/?details\b)/?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*?)?\s*/?>",
@@ -111,6 +154,7 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
     lines = subject.splitlines()
     visible = _mask_fenced_code(subject)
     visible = _mask_html_comments(visible)
+    visible = _mask_raw_html_blocks(visible)
     visible = _mask_html_code_blocks(visible)
     visible = _mask_inline_html_tags(visible)
     visible = _mask_inline_code(visible)
@@ -146,7 +190,7 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
         marker = re.match(r"( {0,3})([-+*]|\d+[.)])([ \t]+)", visible)
         if marker:
             indent = len(marker.group(1))
-            marker_content_indent = indent + len(marker.group(2)) + len(marker.group(3))
+            marker_content_indent = len(marker.group().expandtabs(4))
             if current and indent >= content_indent:
                 current.append(visible)
                 while len(item_indents) > 1 and indent <= item_indents[-1][0]:
