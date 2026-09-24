@@ -81,6 +81,14 @@ stopped attempt contributes a suite score.
 The final direct, novel, and no-change orchestration recheck passed 9/9 forced
 on one skill snapshot, with no forbidden actions.
 
+A subsequent two-arm attempt from `9f6eff0` was stopped at the user's scope
+question. Its saved raw records are 8/8 workflows/writing, 6/6 Kotlin/Gradle,
+and 5/5 Compose, with no forbidden-action failures. The run directories are
+`/private/tmp/gpt6-full-9f6eff0-workflows`,
+`/private/tmp/gpt6-full-9f6eff0-kotlin`, and
+`/private/tmp/gpt6-full-9f6eff0-compose`. None is a complete suite score. No
+further model calls are planned until the evaluation scope is clarified.
+
 Local validation at the writing repair commit: `npm test` passed 171 tests with
 one skip and 210 eval-harness tests. The later orchestration and benchmark
 wording edits passed `npm run lint`, `python3 evals/run.py validate` (99 cases),
