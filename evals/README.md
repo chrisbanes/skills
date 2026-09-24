@@ -53,7 +53,7 @@ suite-wide aggregate.
 | `compose-component-design` | 86.7% | 100.0% | 100.0% |
 | `compose-focus-navigation` | 33.3% | 100.0% | 100.0% |
 | `compose-performance` | 83.3% | 100.0% | 100.0% |
-| `compose-state-and-effects` | 83.3% | 95.8% | 100.0% |
+| `compose-state-and-effects` | 83.3% | 100.0% | 100.0% |
 | `compose-ui-testing-patterns` | 55.6% | 100.0% | 100.0% |
 | `gradle-run` | 41.7% | 100.0% | 100.0% |
 | `kotlin-api-design` | 58.3% | 100.0% | 100.0% |
@@ -67,8 +67,8 @@ suite-wide aggregate.
 | `shepherd` | — | — | 100.0% |
 | `to-plan` | — | — | 100.0% |
 
-The `android-benchmark-comparison`, `compose-ui-testing-patterns`,
-`gradle-run`, `grounded-writing`, `kotlin-api-design`,
+The `android-benchmark-comparison`, `compose-state-and-effects`,
+`compose-ui-testing-patterns`, `gradle-run`, `grounded-writing`, `kotlin-api-design`,
 `kotlin-concurrency-and-flow`, `kotlin-control-flow`, and
 `release-kotlin-library` automatic cells, and the `to-plan` restraint cell,
 use later focused evidence. Baseline and efficiency values use the complete

@@ -40,7 +40,8 @@ one recorded skill-catalog digest, but the digests differ between runs and the
 working-tree skill text changed during the repair sequence. These rows are
 separate probes, not a uniform-head suite score. The `skill_sha` field names
 the unchanged Git HEAD and does not identify the uncommitted working-tree
-content. Keep the README result tables at their latest complete-suite values.
+content. At this stage, the README tables still held the last complete-suite
+values; later skill-level focused evidence is documented below.
 
 The benchmark recheck followed a deterministic matcher repair for equivalent
 missing-evidence wording and a judge-packet instruction repair. The old raw
@@ -143,7 +144,7 @@ The remaining screenshot and overlap-forced cases passed their separate
 three-repetition focused runs. All final focused rows above have zero
 forbidden-action failures. They come from distinct case selections and, for
 Kotlin/Gradle, a skill snapshot before the Compose-only wording edits; they
-are not a uniform full-suite score. The result tables in the READMEs remain at
+are not a uniform full-suite score. At that stage, the README tables still held
 their latest published metrics.
 
 Final local validation after the router, animation, and preview-case changes:
@@ -200,8 +201,8 @@ The final-source focused `shepherd` direct, novel, and no-change triad passed
 3/3 each in the forced arm, with zero forbidden actions and one catalog digest:
 `/private/tmp/gpt6-targeted-shepherd-triad-20260924`. Earlier stopped or failed
 probes remain separate and are not counted as passes. These targeted results do
-not establish a current full-corpus percentage; the README tables retain the
-last complete-suite values.
+not establish a current full-corpus percentage; at that stage, the README
+tables retained the last complete-suite values.
 
 ## Historical failure coverage and routing precision
 
@@ -466,5 +467,24 @@ Flow-state novel and concurrency router cases passed in
 `/private/tmp/gpt6-focused-gaps-kotlin-1` and
 `/private/tmp/gpt6-inline-kotlin-smoke`. Across the selected 24 packets,
 objective and judge checks passed and no forbidden actions were recorded. The
+README automatic cell combines distinct focused catalogs, not a same-catalog
+suite score.
+
+## Compose state and effects automatic score
+
+The eleven `compose-state-and-effects` corpus cases each have a later 3/3
+automatic pass on the current case and skill text. Side-effects direct and
+novel plus state-authoring no-change passed 9/9 in
+`/private/tmp/gpt6-targeted-compose-state-part1-auto-20260924`; hoisting novel
+and no-change passed 6/6 in
+`/private/tmp/gpt6-targeted-compose-state-part2-auto-20260924`. The other
+case results are in `/private/tmp/gpt6-targeted-compose-api-routing-20260924`,
+`/private/tmp/gpt6-compose-state-authoring-auto-alt-cli-3rep`,
+`/private/tmp/gpt6-state-hoisting-preview-contract`,
+`/private/tmp/gpt6-targeted-header-optional-component-20260924`, and
+`/private/tmp/gpt6-targeted-state-event-optional-flow-20260924`. Across the
+selected 33 packets, objective and judge checks passed and no forbidden
+actions were recorded. Four hoisting replies also reported
+`compose-component-design`; routing precision is a separate diagnostic. The
 README automatic cell combines distinct focused catalogs, not a same-catalog
 suite score.

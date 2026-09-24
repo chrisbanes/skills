@@ -204,7 +204,7 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`compose-component-design`](skills/compose-component-design/SKILL.md) | 86.7% | 100.0% | 100.0% |
 | [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`compose-performance`](skills/compose-performance/SKILL.md) | 83.3% | 100.0% | 100.0% |
-| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 83.3% | 95.8% | 100.0% |
+| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 83.3% | 100.0% | 100.0% |
 | [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 100.0% | 100.0% |
 | [`gradle-run`](skills/gradle-run/SKILL.md) | 41.7% | 100.0% | 100.0% |
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 58.3% | 100.0% | 100.0% |
@@ -218,8 +218,8 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`shepherd`](skills/shepherd/SKILL.md) | — | — | 100.0% |
 | [`to-plan`](skills/to-plan/SKILL.md) | — | — | 100.0% |
 
-The `android-benchmark-comparison`, `compose-ui-testing-patterns`,
-`gradle-run`, `grounded-writing`, `kotlin-api-design`,
+The `android-benchmark-comparison`, `compose-state-and-effects`,
+`compose-ui-testing-patterns`, `gradle-run`, `grounded-writing`, `kotlin-api-design`,
 `kotlin-concurrency-and-flow`, `kotlin-control-flow`, and
 `release-kotlin-library` automatic cells, and the `to-plan` restraint cell,
 use later focused evidence. Baseline and efficiency values use the complete
