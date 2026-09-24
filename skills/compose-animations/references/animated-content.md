@@ -43,3 +43,4 @@ AnimatedContent(
 | A data refresh stays in the same shape | One key for that branch |
 
 Without `contentKey`, unequal payloads can animate as new content. Keep that default only when the payload change itself is the desired transition.
+For a nullable selected item where every distinct value should swap, the default value identity is appropriate. A presence key such as `{ it != null }` groups all non-null items together and suppresses their transition.

@@ -488,3 +488,21 @@ actions were recorded. Four hoisting replies also reported
 `compose-component-design`; routing precision is a separate diagnostic. The
 README automatic cell combines distinct focused catalogs, not a same-catalog
 suite score.
+
+## AnimatedContent item identity focused repair
+
+A current `compose-animations-direct` forced probe in
+`/private/tmp/gpt6-animation-direct-current-focused` failed its first judge
+check: the subject used `contentKey = { it != null }`, which grouped distinct
+non-null selected items under one identity. The objective validator passed,
+but the judge correctly rejected the missing item-to-item transition. That
+probe was stopped after the failure; its old raw result remains failed.
+
+The animation skill and its `AnimatedContent` reference now distinguish a
+stable item identity from a shared presence or branch key. A fresh focused run
+in `/private/tmp/gpt6-animation-direct-identity-fix` passed 3/3 forced and
+3/3 automatic with zero forbidden actions. All six records use the same case
+digest, skill snapshot, catalog digest, `gpt-6-luna/high` subject,
+`gpt-6-sol/high` judge, and Codex CLI `0.156.1`. This verifies this one case
+and both skill arms; it does not replace a complete suite result. The README
+automatic cell was already 100% and remains unchanged.

@@ -16,7 +16,10 @@ Pick the smallest API that expresses the motion and its lifecycle.
 3. Check lifecycle: an alpha animation keeps content composed; `AnimatedVisibility` removes it after exit. Do not use a fade when unmounting is required.
 4. For `AnimatedContent`, render from the content lambda target and choose a
    `contentKey` only when visual identity differs from payload equality. In a
-   review, name any rendered expression that captures outer target state and
+   swap between distinct items, keep the target value as the identity (the
+   default) or key by a stable item ID; do not collapse different items to a
+   shared presence or branch key. In a review, name any rendered expression that
+   captures outer target state and
    recommend using the lambda target there. If a test must prove transition
    identity, check outgoing and incoming content during the overlap; checking
    only the settled destination misses a shared-identity bug. Read
