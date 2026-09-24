@@ -13,9 +13,11 @@ assumptions, not measured billing.
 | Compose focus navigation novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-focus-novel-alt-cli-3rep` |
 | Compose recomposition performance novel, `2114de7` | 2/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
 | Compose state authoring novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
+| Compose state authoring novel, `ee3584e` | Not run | 3/3 | `/private/tmp/gpt6-compose-state-authoring-auto-alt-cli-3rep` |
 | Compose animation/focus/testing overlap, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
 | Kotlin Flow state/events novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-kotlin-flow-concurrency-alt-cli-3rep` |
 | Kotlin concurrency router, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-kotlin-flow-concurrency-alt-cli-3rep` |
+| Kotlin concurrency router, `ee3584e` | Not run | 2/3 | `/private/tmp/gpt6-kotlin-concurrency-router-auto-alt-cli-3rep` |
 | Shepherd novel, `0aa790e` | 3/3 | Ineligible | `/private/tmp/gpt6-shepherd-novel-alt-cli-3rep` |
 | Release direct, `0aa790e` | 2/3 | 2/3 | `/private/tmp/gpt6-release-direct-alt-cli-3rep` |
 | Grounded writing direct, `ab748e1` | 3/3 | 1/3 | `/private/tmp/gpt6-grounded-writing-alt-cli-3rep` |
@@ -34,8 +36,22 @@ state/events, and the concurrency router all passed their forced-arm rechecks.
 The recomposition review passed twice, but repetition 2 proposed an
 `onSizeChanged` swap, equality guard, and layout-content change without
 measurements establishing a need for those changes. The judge retained a
-failure on its restraint criterion. Automatic arms for these six cases remain
-untested at this revision.
+failure on its restraint criterion. The later state-authoring automatic run
+passed all three repetitions at `ee3584e`, whose skill source matches
+`2114de7`. Automatic arms for the other five cases remain untested at this
+revision.
+
+The source revisions differ only in this result record, but the evaluator
+recorded different external skill-catalog digests for the later automatic
+runs. Treat the forced and automatic rows as separate probes, not a single
+paired scorecard.
+
+The Kotlin concurrency router's later automatic run passed twice. Repetition
+3 named the explicit `Route.Profile` branch but omitted using its subtype data
+through the smart cast; the judge retained a branch-finding failure. The
+subject reported `kotlin-concurrency-and-flow` and
+`compose-state-and-effects`, rather than `kotlin-control-flow`, so the routing
+and content evidence both need inspection before a skill edit.
 
 In the pre-ledger release run, one forced and one automatic subject placed
 bounded streaming only in prerelease history, omitting it from the final stable
@@ -70,7 +86,7 @@ until a new uniform-head run finishes and its failures are audited.
 
 ## Ready repair work
 
-The two remaining skill edits are independent and may be implemented serially
+The remaining skill edits are independent and may be implemented serially
 from this integrated head. Neither requires a change to the corpus or judge
 rubric to explain the recorded miss.
 
@@ -106,8 +122,16 @@ rubric to explain the recorded miss.
    a stability or layout rewrite. Preserve the direct and no-change controls;
    recheck the affected direct, novel, and no-change cases with three
    repetitions in each eligible arm.
+4. **Kotlin branch routing and smart-cast review** (`Depends on: none`):
+   inspect `router-kotlin-concurrency-control:automatic:3` in the later Kotlin
+   run. The Flow recommendation handled single-consumer versus broadcast
+   delivery, but the branch review stopped at exhaustiveness and did not use
+   `Route.Profile` subtype data through the smart cast. Check automatic skill
+   selection as well as the review advice. Keep the counterexample where no
+   independent branch decision exists; recheck the router cases in forced and
+   automatic arms with three repetitions each.
 
-After both accepted repairs are integrated, freeze the skill catalog and run
+After the accepted repairs are integrated, freeze the skill catalog and run
 the full corpus with the selected CLI and model pair. Inspect every failure and
 forbidden action before updating the two README result tables. Report forced
 and automatic outcomes separately; do not infer 100% from targeted checks.
