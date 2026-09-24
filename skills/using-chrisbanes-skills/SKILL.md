@@ -59,6 +59,9 @@ only when its independent behavior changes the same work.
   a separate concern. Add state ownership or performance only when animation
   work changes that concern too.
 - Pair focus navigation with UI testing when the task also needs a test shape.
+  For a focus-aware `AnimatedContent` swap, load Compose animations as well:
+  rendering each outgoing and incoming branch from its content-lambda target
+  is a separate identity decision from focus timing and the interaction test.
 - Add [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) when a Kotlin
   concern also has an independent branch decision, such as a catch-all over a
   sealed result that hides cases or branch payload. Plain route delivery with

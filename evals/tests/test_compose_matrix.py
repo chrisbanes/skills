@@ -98,7 +98,9 @@ class ComposeMatrixTest(unittest.TestCase):
             ("src/main/kotlin/example/Subject.kt",), case.allowed_write_paths
         )
         self.assertNotIn("build.gradle.kts", case.allowed_write_paths)
-        self.assertIn("if adding preview tooling is necessary", scope_criterion)
+        self.assertIn("previewable without an @preview wrapper", scope_criterion)
+        self.assertIn("if the solution adds a wrapper", scope_criterion)
+        self.assertIn("reports the setup gap", scope_criterion)
         self.assertIn("build file", scope_criterion)
 
         with tempfile.TemporaryDirectory() as temp_dir:

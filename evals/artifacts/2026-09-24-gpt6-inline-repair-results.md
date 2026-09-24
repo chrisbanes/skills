@@ -28,6 +28,12 @@ distinguishes ChatGPT-plan usage from API-key billing.
 | Benchmark reversal after explicit run-order wording | 3/3 | 3/3 | `/private/tmp/gpt6-benchmark-run-order-recheck` |
 | Invalid orchestration graph after clarification wording | 3/3 | Ineligible | `/private/tmp/gpt6-implement-invalid-graph-recheck` |
 | Implement with subagents direct, novel, and no-change after final acceptance and clarification wording | 9/9 | Ineligible | `/private/tmp/gpt6-implement-final-triad-after-clarification` |
+| Previously weak Kotlin/Gradle cases: incidental validation, API ownership, Flow events | 9/9 | 9/9 | `/private/tmp/gpt6-focused-gaps-kotlin-1` |
+| Compose focus-navigation and state-authoring novel cases | 6/6 | 6/6 | `/private/tmp/gpt6-router-animation-identity-fix` |
+| Compose state-hoisting direct after preview contract clarification | 3/3 | 3/3 | `/private/tmp/gpt6-state-hoisting-preview-contract` |
+| Compose screenshot-review novel | 3/3 | 3/3 | `/private/tmp/gpt6-compose-screenshot-focused` |
+| Focus-aware AnimatedContent overlap after router and animation guidance repair | 3/3 | 3/3 | Forced: `/private/tmp/gpt6-compose-overlap-forced-focused`; automatic: `/private/tmp/gpt6-router-animation-identity-fix` |
+| Animation direct, novel, and no-change regression screen | 3/3 | 3/3 | `/private/tmp/gpt6-animation-regression-triad` |
 
 Each row is a combined objective-and-judge raw result. Each individual run has
 one recorded skill-catalog digest, but the digests differ between runs and the
@@ -99,6 +105,53 @@ revision is not established by the focused rows above. Compose includes
 observed mistakes, but text inspection is not a new outcome score. These are
 priority checks if the next run is focused; they do not replace a complete
 two-arm result needed to verify a suite-wide 100% claim.
+
+The user selected focused checks. The first one-repetition screen passed all
+six Kotlin/Gradle conditions and nine of ten Compose conditions. The Compose
+miss, `router-overlap-animation-focus-testing:automatic:1`, read focus and
+testing guidance but skipped Compose animations and overlooked the rendered
+`Text(selectedId)` outer-state capture. The forced arm loaded all three skills
+and named that defect. The router now adds animation guidance for this
+independent identity decision. Its first automatic recheck passed, but the
+second identified the capture without saying to render from the lambda target
+or testing both branches during overlap. That attempt stopped at 2/3 and
+remains in `/private/tmp/gpt6-router-animation-focus-fix`. The animation skill
+now names the specific review recommendation and overlap test. Its next fresh
+automatic run passed 3/3. A one-repetition direct, novel, and no-change screen
+of the animation skill passed 6/6 across forced and automatic arms.
+
+The final-source Compose focus run then stopped after 16 records, 15 passing:
+`compose-state-hoisting-direct:forced:1` made the plain content state-driven and
+stayed within the allowed source file, but the judge demanded a Preview tooling
+gap even though no `@Preview` wrapper or import was attempted. This is a judge
+false negative under the conditional rubric: previous skill misses for this case
+had added a Preview import without declared tooling, whereas this saved diff
+did not. The original failed packet remains in
+`/private/tmp/gpt6-router-animation-identity-fix`. The case rubric now states
+that sample-state content need not add a wrapper and requires a setup-gap
+report when a wrapper actually needs undeclared tooling. A fresh forced and
+automatic run under the corrected case fingerprint passed 3/3 each. One
+fingerprint-mismatch attempt exited before new model calls; the saved and
+current fingerprints were compared and found equal before the same bounded
+run resumed. Saved Compose packets show two catalog digests; their recorded
+path lists differ by three external Sites plugin skills that appeared during the
+focused work. Each selected case has one digest across its repetitions, but
+the separate focused runs cannot be combined into a single suite score. No
+raw packet was overwritten.
+
+The remaining screenshot and overlap-forced cases passed their separate
+three-repetition focused runs. All final focused rows above have zero
+forbidden-action failures. They come from distinct case selections and, for
+Kotlin/Gradle, a skill snapshot before the Compose-only wording edits; they
+are not a uniform full-suite score. The result tables in the READMEs remain at
+their latest published metrics.
+
+Final local validation after the router, animation, and preview-case changes:
+`npm run lint`, `python3 evals/run.py validate` (99 cases), `git diff --check`,
+and `npm test` (171 tests with one skip, plus 210 eval-harness tests) passed.
+The preview contract test was updated to assert the corrected conditional
+boundary; the first full test run failed on its superseded phrase before that
+repair.
 
 Local validation at the writing repair commit: `npm test` passed 171 tests with
 one skip and 210 eval-harness tests. The later orchestration and benchmark

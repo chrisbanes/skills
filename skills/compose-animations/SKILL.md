@@ -14,7 +14,14 @@ Pick the smallest API that expresses the motion and its lifecycle.
 1. Identify the job: show or hide a subtree, animate one value, coordinate values from one state, resize content, swap content, or handle user-driven motion.
 2. Choose the matching API from the table. Prefer target-state APIs; use `Animatable` only when gestures, interruption, or imperative control require it.
 3. Check lifecycle: an alpha animation keeps content composed; `AnimatedVisibility` removes it after exit. Do not use a fade when unmounting is required.
-4. For `AnimatedContent`, render from the content lambda target and choose a `contentKey` only when visual identity differs from payload equality. Read [AnimatedContent identity](references/animated-content.md) for state-holder details.
+4. For `AnimatedContent`, render from the content lambda target and choose a
+   `contentKey` only when visual identity differs from payload equality. In a
+   review, name any rendered expression that captures outer target state and
+   recommend using the lambda target there. If a test must prove transition
+   identity, check outgoing and incoming content during the overlap; checking
+   only the settled destination misses a shared-identity bug. Read
+   [AnimatedContent identity](references/animated-content.md) for state-holder
+   details.
 5. Keep animated `State` in layout or draw block modifiers when it changes at frame rate; route deeper diagnosis to [Compose performance](../compose-performance/SKILL.md).
 6. Use Navigation Compose transitions for destination swaps it owns, and dedicated libraries for art-based motion.
 7. Finish when the API, lifecycle, and content identity match the UI, no simpler API fits, and the relevant behavior is verified.
