@@ -430,7 +430,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         self.assertTrue(case.forbid_all_commands)
         self.assertIn("unnamed macOS check", case.prompt)
-        self.assertIn("exact check name", " ".join(item["text"] for item in case.rubric))
+        rubric = " ".join(item["text"] for item in case.rubric)
+        self.assertIn("exact check name", rubric)
+        self.assertIn("single forced-skill entrypoint read", rubric)
+        self.assertIn("full local suite before one repair push", rubric)
 
     def test_formatting_negative_supplies_the_text_and_preserves_the_noop(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

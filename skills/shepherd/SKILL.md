@@ -43,7 +43,9 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    and check configuration. If those are unavailable, say which checks and local
    equivalents remain unknown and stop before a targeted code repair or any
    claim of verification. Otherwise run every locally available CI-equivalent
-   check, fix all failures, and rerun the full local suite before one repair push.
+   check, fix all failures, and rerun the full local suite to a passing result
+   before one repair push. If any applicable local check still fails, hold the
+   push and continue the local repair loop.
    Report exact checks unavailable locally instead of using CI as an iterative
    test runner.
    Reply after an addressed change or answer; resolve its thread only after the reply and required push succeed.
@@ -63,7 +65,13 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 Continue until the user stops monitoring, every target is merged or closed, or
 an escalation is needed. Report the target, current CI/review state, actions
 taken, checks actually run (say none when none ran), checks unavailable or
-unknown, and the next required human decision. Escalate immediately for
-ambiguous platform/target selection, an unresolved conflict, material human
-judgment, conflicting reviewer direction, or a failure that remains after three
-repair cycles.
+unknown, and the next required human decision. When failure evidence is missing,
+request the exact check name and log, PR diff and head commit, and workflow/check
+configuration before proposing a targeted repair. Give the verification order:
+run the available CI-equivalent checks on the required host, fix their failures,
+rerun the full local suite, and push once only after those checks pass. Use CI
+as confirmation. Do not claim any of those steps happened when only describing
+the plan. Escalate immediately for ambiguous platform/target selection, an
+unresolved conflict,
+material human judgment, conflicting reviewer direction, or a failure that
+remains after three repair cycles.

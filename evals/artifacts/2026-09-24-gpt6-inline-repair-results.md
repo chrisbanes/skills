@@ -168,3 +168,37 @@ per model, or $145.53. These are planning estimates, not quoted prices or
 measured charges. A two-arm run verifies forced and automatic correctness but
 does not refresh same-run baseline uplift or retention metrics. No aggregate
 100% claim follows from the targeted probes.
+
+## Further focused checks
+
+At the later source snapshot, `gradle-fingerprint-diagnosis-novel` passed 3/3
+forced and 3/3 automatic with no forbidden actions in
+`/private/tmp/gpt6-targeted-fingerprint-3rep-20260924`. A preceding 1/1
+screen in `/private/tmp/gpt6-targeted-fingerprint-20260924` is separate
+evidence; its directory could not be extended because the evaluator detected a
+fingerprint change. The fresh three-repetition run uses one catalog digest.
+
+The first fresh `shepherd-novel` probe found two distinct problems. Its case
+rubric prohibited all commands while the prompt expressly permitted one
+forced-skill entrypoint read, and it required a single macOS verification while
+the skill required the actual CI-equivalent checks and full local suite. The
+case rubric now states the permitted read and the evidence-led local verification
+sequence. The first corrected subject run still omitted the full-suite step; a
+later reply said only “code or diff context” instead of requesting the PR diff
+explicitly. The skill's finish gate now requests the exact check/log, PR diff,
+head commit, and workflow configuration, and makes passing local checks a gate
+before one repair push.
+
+One judge also declined to read its evidence packet because it applied the
+subject's no-command restriction to itself. The judge prompt now clarifies that
+the restriction governs the subject, while permitting a read-only packet read.
+Two saved subject packets passed separate rejudgment under that clarification;
+their raw failed judgments remain unchanged in
+`/private/tmp/gpt6-targeted-shepherd-skillfix-20260924`.
+
+The final-source focused `shepherd` direct, novel, and no-change triad passed
+3/3 each in the forced arm, with zero forbidden actions and one catalog digest:
+`/private/tmp/gpt6-targeted-shepherd-triad-20260924`. Earlier stopped or failed
+probes remain separate and are not counted as passes. These targeted results do
+not establish a current full-corpus percentage; the README tables retain the
+last complete-suite values.
