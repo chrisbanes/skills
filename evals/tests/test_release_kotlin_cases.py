@@ -364,6 +364,29 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn('missing required pattern in a release bullet', result.stderr)
 
+    def test_pr_link_only_in_inline_code_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '`[#812](https://github.com/chrisbanes/skills/pull/812)`',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_link_in_indented_sibling_item_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '(PR #812)\n'
+            ' - Related: [#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
     def test_release_links_cannot_replace_original_notes(self):
         updated = self.completed_changelog().replace(
             '- Add streaming responses with unbounded buffering.',

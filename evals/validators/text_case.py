@@ -47,10 +47,21 @@ def _mask_html_comments(subject: str) -> str:
     )
 
 
+def _mask_inline_code(subject: str) -> str:
+    return re.sub(
+        r"(?<!`)(`+)(?!`)(.*?)\1(?!`)",
+        lambda match: re.sub(r"[^\r\n]", " ", match.group()),
+        subject,
+        flags=re.DOTALL,
+    )
+
+
 def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
     """Collect visible top-level bullets before the next release or details block."""
     lines = subject.splitlines()
-    visible_lines = _mask_html_comments(_mask_fenced_code(subject)).splitlines()
+    visible_lines = _mask_inline_code(
+        _mask_html_comments(_mask_fenced_code(subject))
+    ).splitlines()
     bullets: list[str] = []
     current: list[str] = []
     in_section = False
@@ -72,7 +83,7 @@ def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
         if re.fullmatch(r"[ \t]*(?:-{3,}|_{3,}|\*{3,})[ \t]*", visible):
             finish()
             continue
-        if re.match(r"(?:[-+*]|\d+[.)])[ \t]+", visible):
+        if re.match(r" {0,3}(?:[-+*]|\d+[.)])[ \t]+", visible):
             finish()
             current.append(visible)
             after_blank = False
