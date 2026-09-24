@@ -507,6 +507,44 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             re.search(missing_data_pattern, "The note does not include raw results or traces.")
         )
 
+    def test_benchmark_direct_accepts_explicit_absence_of_raw_results_and_traces(self):
+        expectation = json.loads(
+            (
+                REPO_ROOT
+                / "evals/cases/android-benchmark-comparison-direct/expectations.json"
+            ).read_text(encoding="utf-8")
+        )
+        missing_data_pattern = next(
+            pattern
+            for pattern in expectation["must_match"]
+            if "not (?:provided|supplied|attached|included)" in pattern
+        )
+
+        accepted = (
+            "The report contains no raw results or traces.",
+            "The report contains neither the raw results nor traces.",
+        )
+        saved_report_excerpts = (
+            "The run record is referenced, but the supplied evidence contains no raw\n"
+            "results or traces. It also gives no completed-case or iteration counts, so\n"
+            "coverage cannot be verified.",
+            "The note references a run record, but the supplied material contains neither\n"
+            "the raw results nor traces. It also gives no completed-case or iteration\n"
+            "counts, metric definition, per-run spread, or exact device and run conditions.",
+        )
+        partial_evidence = (
+            "The report contains no raw results, but the traces are available.",
+            "The report includes the raw results and traces.",
+        )
+
+        for text in (*accepted, *saved_report_excerpts):
+            with self.subTest(text=text):
+                self.assertIsNotNone(re.search(missing_data_pattern, text))
+
+        for text in partial_evidence:
+            with self.subTest(text=text):
+                self.assertIsNone(re.search(missing_data_pattern, text))
+
     def test_benchmark_count_guards_ignore_citations_and_build_metadata(self):
         expectation = json.loads(
             (
