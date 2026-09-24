@@ -26,6 +26,10 @@ Use exactly one source-appropriate template.
 
 - <Behavior or contract that must remain unchanged.>
 - <Explicitly out-of-scope work.>
+- For mechanical mismatches within this fixed contract, allow one focused
+  diagnosis and at most two repair edit-and-validation cycles; normal test-first
+  cycles do not count. Stop for a design or contract change, overlapping baseline
+  change, or exhausted repair budget, and report the evidence and remaining decision.
 
 ### Planning decisions
 
@@ -113,6 +117,10 @@ focused command>`; expect <specific successful result proving this slice>.
 
 - <Behavior or contract that must remain unchanged.>
 - <Explicitly out-of-scope work.>
+- For mechanical mismatches within this fixed contract, allow one focused
+  diagnosis and at most two repair edit-and-validation cycles; normal test-first
+  cycles do not count. Stop for a design or contract change, overlapping baseline
+  change, or exhausted repair budget, and report the evidence and remaining decision.
 
 ## Planning decisions
 

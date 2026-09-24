@@ -206,6 +206,88 @@ def validate_task_graph(
         )
         return re.search(pattern, files_field) is not None
 
+    def field(body: str, name: str) -> str:
+        match = re.search(
+            rf"^\*\*{re.escape(name)}:\*\*[ \t]*([\s\S]*?)"
+            r"(?=^\*\*[^\n]+:\*\*|\Z)",
+            body,
+            re.MULTILINE,
+        )
+        return match.group(1) if match else ""
+
+    edit_verbs = r"edit|create|add|update|change|modify|replace|write"
+    inspection_verbs = r"inspect|read|verify|check|review"
+
+    def is_negated(text: str, action_start: int) -> bool:
+        return re.search(
+            r"\b(?:no|not|never|without|don't|do not)\s+$",
+            text[max(0, action_start - 20) : action_start],
+            re.IGNORECASE,
+        ) is not None
+
+    def has_edit_action(text: str) -> bool:
+        return any(
+            not is_negated(text, action.start())
+            for action in re.finditer(rf"\b(?:{edit_verbs})\b", text, re.IGNORECASE)
+        )
+
+    def path_action(clause: str, path: str) -> str | None:
+        match = re.search(
+            rf"(?<![A-Za-z0-9_./-]){re.escape(path)}(?![A-Za-z0-9_./-])",
+            clause,
+        )
+        if match is None:
+            return None
+        actions = list(
+            re.finditer(
+                rf"\b(?:{edit_verbs}|{inspection_verbs})\b",
+                clause[: match.start()],
+                re.IGNORECASE,
+            )
+        )
+        if not actions:
+            return None
+        last_action = actions[-1]
+        if last_action.group().lower() in edit_verbs.split("|") and not is_negated(
+            clause, last_action.start()
+        ):
+            return "edit"
+        return "inspect"
+
+    def edits_path(text: str, path: str) -> bool:
+        return any(
+            path_action(clause, path) == "edit"
+            for clause in re.split(r";|(?<=\.)\s+(?=[A-Z])", text)
+        )
+
+    def owns_path(body: str, path: str) -> bool:
+        files_field = field(body, "Files and symbols")
+        for clause in re.split(r";|(?<=\.)\s+(?=[A-Z])", files_field):
+            if not lists_path(clause, path):
+                continue
+            if re.search(
+                r"\b(?:inspect only|no edits?|read.only|do not edit|do not change)\b",
+                clause,
+                re.IGNORECASE,
+            ):
+                continue
+            action = path_action(clause, path)
+            if action == "edit":
+                return True
+            if action == "inspect":
+                continue
+            if re.match(
+                rf"^\s*(?:[-*]\s*)?(?:{inspection_verbs})\b",
+                clause,
+                re.IGNORECASE,
+            ):
+                continue
+            if has_edit_action(field(body, "Test")) and has_edit_action(
+                field(body, "Implementation")
+            ):
+                return True
+        return False
+
     for requirement in separate_slice_requirements:
         if not isinstance(requirement, dict):
             failures.append(
@@ -228,15 +310,7 @@ def validate_task_graph(
         matches = [
             task_id
             for task_id, body in task_bodies.items()
-            if (
-                files_field := re.search(
-                    r"^\*\*Files and symbols:\*\*[ \t]*([\s\S]*?)"
-                    r"(?=^\*\*[^\n]+:\*\*|\Z)",
-                    body,
-                    re.MULTILINE,
-                )
-            )
-            and all(lists_path(files_field.group(1), path) for path in owned_files)
+            if all(owns_path(body, path) for path in owned_files)
         ]
         if len(matches) != 1:
             failures.append(
@@ -251,6 +325,22 @@ def validate_task_graph(
             )
         else:
             matched_tasks[task_id] = requirement_id
+
+    for task_id, requirement_id in matched_tasks.items():
+        implementation = field(task_bodies[task_id], "Implementation")
+        for other in separate_slice_requirements:
+            if not isinstance(other, dict) or other.get("id") == requirement_id:
+                continue
+            other_files = other.get("owned_files")
+            if not isinstance(other_files, list) or any(
+                not isinstance(path, str) for path in other_files
+            ):
+                continue
+            if any(edits_path(implementation, path) for path in other_files):
+                failures.append(
+                    f"{label}: independent behavior {requirement_id!r} slice {task_id!r} "
+                    f"also implements {other['id']!r}"
+                )
 
     def depends_transitively(task_id: str, target: str) -> bool:
         pending = list(tasks.get(task_id, set()))

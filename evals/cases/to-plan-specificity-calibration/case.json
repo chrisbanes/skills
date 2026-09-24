@@ -38,7 +38,7 @@
     },
     {
       "id": "proportionality",
-      "text": "Keeps independently testable call sites in separate slices; avoids repeating detailed shared-contract requirements across planning sections while allowing a brief Approach summary; names exact per-slice files, tests, inputs, and commands; maps concise acceptance rows to the relevant slice check; omits generic deviation or re-plan boilerplate without a task-specific condition; and adds no speculative proof or unrelated steps"
+      "text": "Keeps independently testable call sites in separate slices; avoids repeating detailed shared-contract requirements across planning sections while allowing a brief Approach summary; names exact per-slice files, tests, inputs, and commands; maps concise acceptance rows to the relevant slice check; states the standard diagnosis and two-cycle repair limit once in Guardrails without generic deviation or re-plan sections; and adds no speculative proof or unrelated steps"
     },
     {
       "id": "planning-boundary",

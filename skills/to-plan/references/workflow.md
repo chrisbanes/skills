@@ -102,8 +102,10 @@ facts; do not repeat those sections' shared constraints in each other or in
 Review focus. Slices still need their own exact files, inputs, assertions,
 commands, and results. Acceptance rows should name the behavior and point to
 the slice's focused check instead of paraphrasing the full contract. Omit
-generic deviation and re-plan boilerplate when only standard handoff rules
-apply; include those sections only for distinct task-specific conditions.
+generic deviation and re-plan sections when only standard handoff rules apply;
+keep the concise standard diagnosis, repair, and stop limits in Guardrails so
+the published plan carries them. Include additional sections only for distinct
+task-specific conditions.
 
 Perform an executor-readiness review from the written plan alone. A fresh,
 lower-capability executor must locate and order every edit, distinguish existing

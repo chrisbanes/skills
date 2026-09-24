@@ -280,6 +280,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "names exact per-slice files, tests, inputs, and commands",
             proportionality["text"],
         )
+        self.assertIn("standard diagnosis and two-cycle repair limit", proportionality["text"])
         with tempfile.TemporaryDirectory(prefix="workflow-plan-specificity-") as temp_dir:
             workspace = prepare_workspace(
                 specificity, REPO_ROOT, Path(temp_dir) / "fixture"
@@ -643,23 +644,103 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "**Depends on:** `none`\n"
             "**Files and symbols:** Existing `tests/test_manifest_reader.py` —\n"
             "`ManifestReaderTest.test_quotes_missing_manifest_path`; existing\n"
-            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n\n"
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n"
+            "**Test:** Change the manifest assertion and observe a red test.\n"
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n\n"
             "### 2. Quote invalid-profile paths\n"
             "**Task ID:** `T2`\n"
             "**Depends on:** `none`\n"
             "**Files and symbols:** Existing `tests/test_profile_loader.py` —\n"
             "`ProfileLoaderTest.test_quotes_invalid_profile_path`; existing\n"
             "`profile_loader.py` — `invalid_profile_error(path: str) -> str`.\n"
+            "**Test:** Change the profile assertion and observe a red test.\n"
+            "**Implementation:** Change `profile_loader.py` to quote the path.\n"
             "## Acceptance coverage\n"
         )
         separated = separated.replace(
-            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n",
-            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n"
-            "**Test:** Also inspect `profile_loader.py` and `tests/test_profile_loader.py`.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n"
+            "**Validate:** Also inspect `profile_loader.py` and `tests/test_profile_loader.py`.\n",
         )
         self.assertEqual(
             [],
             validate_task_graph(separated, rules["task_graph"]),
+        )
+
+        inspection_only = separated.replace(
+            "**Files and symbols:** Existing `tests/test_profile_loader.py` —\n"
+            "`ProfileLoaderTest.test_quotes_invalid_profile_path`; existing\n"
+            "`profile_loader.py` — `invalid_profile_error(path: str) -> str`.\n",
+            "**Files and symbols:** Inspect `profile_loader.py` and "
+            "`tests/test_profile_loader.py`; no edit required.\n",
+        )
+        inspection_failures = validate_task_graph(inspection_only, rules["task_graph"])
+        self.assertTrue(
+            any("invalid-profile" in failure for failure in inspection_failures),
+            inspection_failures,
+        )
+
+        hidden_grouping = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path; "
+            "also change `profile_loader.py` and `tests/test_profile_loader.py` here.\n",
+        )
+        hidden_failures = validate_task_graph(hidden_grouping, rules["task_graph"])
+        self.assertTrue(
+            any("also implements 'invalid-profile'" in failure for failure in hidden_failures),
+            hidden_failures,
+        )
+
+        verification_only = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path. "
+            "Inspect `profile_loader.py` and `tests/test_profile_loader.py` "
+            "afterward to verify no regression.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(verification_only, rules["task_graph"]),
+        )
+
+        mixed_actions = separated.replace(
+            "**Files and symbols:** Existing `tests/test_manifest_reader.py` —\n"
+            "`ManifestReaderTest.test_quotes_missing_manifest_path`; existing\n"
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n",
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`tests/test_manifest_reader.py`, and inspect `profile_loader.py` "
+            "and `tests/test_profile_loader.py`.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(mixed_actions, rules["task_graph"]),
+        )
+
+        existing_inspection_only = separated.replace(
+            "**Files and symbols:** Existing `tests/test_profile_loader.py` —\n"
+            "`ProfileLoaderTest.test_quotes_invalid_profile_path`; existing\n"
+            "`profile_loader.py` — `invalid_profile_error(path: str) -> str`.\n",
+            "**Files and symbols:** Existing `profile_loader.py` — inspect only, "
+            "no edit; existing `tests/test_profile_loader.py` — inspect only, no edit.\n",
+        ).replace(
+            "**Implementation:** Change `profile_loader.py` to quote the path.\n",
+            "**Implementation:** No change required.\n",
+        )
+        existing_inspection_failures = validate_task_graph(
+            existing_inspection_only, rules["task_graph"]
+        )
+        self.assertTrue(
+            any("invalid-profile" in failure for failure in existing_inspection_failures),
+            existing_inspection_failures,
+        )
+
+        revision4_artifact = (
+            REPO_ROOT / "evals/artifacts/2026-09-24-to-plan-specificity-revision4-run.md"
+        ).read_text(encoding="utf-8")
+        revision4_plan = re.search(r"```markdown\n(.*?)\n```", revision4_artifact, re.DOTALL)
+        self.assertIsNotNone(revision4_plan)
+        self.assertEqual(
+            [],
+            validate_task_graph(revision4_plan.group(1), rules["task_graph"]),
         )
 
         test_file_only = separated.replace(
@@ -742,23 +823,25 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "## Implementation slices\n\n"
             "### 1. Quote missing-manifest paths\n"
             "**Task ID:** `T1`\n**Depends on:** `none`\n"
-            "**Files and symbols:** `manifest_reader.py`, "
+            "**Files and symbols:** Edit `manifest_reader.py`, "
             "`tests/test_manifest_reader.py`.\n"
             "**Test:** Change the exact expected output for "
             "`configs/team manifest.json` to `manifest not found: 'configs/team manifest.json'`; "
             "run `python3 -B -m unittest tests.test_manifest_reader` before the implementation "
             "and observe the unquoted result fail.\n"
+            "**Implementation:** Change `manifest_reader.py` to return the quoted path.\n"
             "**Validate:** From the repository root, run "
             "`python3 -B -m unittest tests.test_manifest_reader`; the test passes.\n"
             "**Complete when:** The exact quoted result passes its focused test.\n\n"
             "### 2. Quote invalid-profile paths\n"
             "**Task ID:** `T2`\n**Depends on:** `none`\n"
-            "**Files and symbols:** `profile_loader.py`, "
+            "**Files and symbols:** Edit `profile_loader.py`, "
             "`tests/test_profile_loader.py`.\n"
             "**Test:** Change the exact expected output for "
             "`configs/team manifest.json` to `invalid profile at 'configs/team manifest.json'`; "
             "run `python3 -B -m unittest tests.test_profile_loader` before the implementation "
             "and observe the unquoted result fail.\n"
+            "**Implementation:** Change `profile_loader.py` to return the quoted path.\n"
             "**Validate:** From the repository root, run "
             "`python3 -B -m unittest tests.test_profile_loader`; the test passes.\n"
             "**Complete when:** The exact quoted result passes its focused test.\n\n"
