@@ -28,6 +28,7 @@ assumptions, not measured billing.
 | Grounded writing no-change, `ab748e1` | 3/3 | 1/3 | `/private/tmp/gpt6-grounded-writing-alt-cli-3rep` |
 | Release direct after ledger-order repair, `15415a2` | 3/3 | 2/3 | `/private/tmp/gpt6-release-direct-ledger-alt-cli-3rep` |
 | Grounded writing direct after shared-contract repair, `15415a2` | Not run | 3/3 | `/private/tmp/gpt6-writing-direct-contract-alt-cli-3rep` |
+| Android benchmark direct, `c65d99d` | Not run | 1/3 raw | `/private/tmp/gpt6-benchmark-direct-auto-alt-cli-3rep` |
 
 The Compose revision fixed the observed preview-tooling scope miss in all six
 targeted repetitions. The shepherd check-inventory revision passed all three
@@ -66,6 +67,16 @@ The explicit-only `implement-with-subagents` skill passed its direct, novel,
 and no-change triad at three forced repetitions each on revision `53ddfc9`.
 This rechecks the earlier dependency-integration, conflict, and failed-
 acceptance handoff misses without broadening its automatic eligibility.
+
+The later benchmark direct automatic run has two failed raw packets. In
+repetition 2, the edited `comparison.md` says neither raw results nor traces
+are included, but the deterministic matcher rejects that equivalent missing-
+evidence phrasing. In repetitions 2 and 3, the judge says `comparison.md` is
+absent although the captured subject diff changes that file. These are
+evaluator disagreements, not evidence that the subject omitted the file. Keep
+both raw results failed until the matcher and judge-packet instructions are
+repaired and the saved packets are separately regraded or rejudged. Do not
+count a manual audit as a raw model pass.
 
 In the pre-ledger release run, one forced and one automatic subject placed
 bounded streaming only in prerelease history, omitting it from the final stable
@@ -144,6 +155,15 @@ rubric to explain the recorded miss.
    selection as well as the review advice. Keep the counterexample where no
    independent branch decision exists; recheck the router cases in forced and
    automatic arms with three repetitions each.
+5. **Benchmark evaluator evidence** (`Depends on: none`): inspect benchmark
+   direct automatic repetitions 2 and 3. Extend the deterministic missing-
+   evidence matcher to accept the subject's equivalent “neither raw results nor
+   traces are included” wording while retaining invented-count guards. Make
+   the judge treat the supplied diff as the authoritative record of edited
+   files rather than inferring absence from its read-only review workspace.
+   Add narrow tests for both saved packets and counterexamples, then regrade
+   and rejudge without altering the original packets. A fresh model run is
+   required for a new raw score at a changed evaluator fingerprint.
 
 After the accepted repairs are integrated, freeze the skill catalog and run
 the full corpus with the selected CLI and model pair. Inspect every failure and
