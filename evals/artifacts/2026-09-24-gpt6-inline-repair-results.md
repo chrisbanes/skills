@@ -89,6 +89,17 @@ and 5/5 Compose, with no forbidden-action failures. The run directories are
 `/private/tmp/gpt6-full-9f6eff0-compose`. None is a complete suite score. No
 further model calls are planned until the evaluation scope is clarified.
 
+The older complete scorecards also identify cases whose result on the current
+revision is not established by the focused rows above. Compose includes
+`compose-focus-navigation-novel`, `compose-state-authoring-novel`,
+`compose-state-hoisting-direct`, `compose-ui-testing-patterns-novel`, and
+`router-overlap-animation-focus-testing`. Kotlin/Gradle includes
+`gradle-incidental-validation-direct`, `kotlin-api-ownership-direct`, and
+`kotlin-flow-state-events-novel`. Current instructions address some of the
+observed mistakes, but text inspection is not a new outcome score. These are
+priority checks if the next run is focused; they do not replace a complete
+two-arm result needed to verify a suite-wide 100% claim.
+
 Local validation at the writing repair commit: `npm test` passed 171 tests with
 one skip and 210 eval-harness tests. The later orchestration and benchmark
 wording edits passed `npm run lint`, `python3 evals/run.py validate` (99 cases),
