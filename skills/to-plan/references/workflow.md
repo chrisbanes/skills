@@ -43,6 +43,31 @@ edge cases; never invent repository facts.
 
 ## Resolve decisions and draft
 
+Before drafting, identify assumptions whose failure would invalidate the chosen
+approach or cause substantial rework. Resolve them with proportionate
+repository evidence or read-only checks when practical, and record the finding.
+If only new code, target hardware, or the target runtime can test an assumption,
+make a bounded proof the first prerequisite of dependent implementation. State
+the hypothesis, setup, observable pass/fail condition, and what stops or triggers
+replanning on failure; dependent slices must name the proof task ID. Do not add a
+proof when existing evidence settles the assumption, and do not leave unresolved
+design choices as open-ended implementation exploration.
+
+Before slicing, make a brief file-responsibility map from the inspected code:
+record the existing files and symbols that own the behavior, tests, and wiring,
+then group edits into observable increments that can each receive a focused
+review and verification. Include setup, documentation, and integration edits in
+the increment whose behavior they support. Keep independent increments separate
+when each has its own useful check; keep tightly coupled edits together when
+splitting them would leave an unreviewable or untestable intermediate state.
+Set boundaries around independently changeable behaviors, not just a shared
+theme: when separate call sites have their own focused checks and no required
+cross-dependency, plan separate increments even if they use the same formatting
+rule or belong to the same feature. Combine them only when repository evidence
+shows a concrete dependency that makes an intermediate state untestable or
+unreviewable; name that dependency and the gated work explicitly. A common
+concept or nearby files alone do not establish coupling.
+
 An authorized Planning transition, decision-complete current task, or confirmed
 conversation source authorizes the smallest coherent contract-realizing design.
 Record non-obvious choices and evidence. Escalate only conflicting authority,
@@ -70,13 +95,32 @@ otherwise marks them ready. Treat older plans without dependency metadata as
 one sequential chain in listed order; new plans must include the metadata.
 Use test-first slices unless an automated red test is impractical and explain
 the exception. Do not leave exploration or design decisions to implementation.
-Scale detail to risk; avoid full implementations and boilerplate.
+Scale detail to risk; avoid full implementations and boilerplate. State a
+shared contract once in Guardrails. Use Approach for the route, Planning
+decisions for non-obvious choices, and Implementation context for current code
+facts; do not repeat those sections' shared constraints in each other or in
+Review focus. Slices still need their own exact files, inputs, assertions,
+commands, and results. Acceptance rows should name the behavior and point to
+the slice's focused check instead of paraphrasing the full contract. Omit
+generic deviation and re-plan sections when only standard handoff rules apply;
+keep the concise standard diagnosis, repair, and stop limits in Guardrails so
+the published plan carries them. Include additional sections only for distinct
+task-specific conditions.
 
 Perform an executor-readiness review from the written plan alone. A fresh,
 lower-capability executor must locate and order every edit, distinguish existing
 from new symbols, create meaningful tests, wire consumers, and validate without
 broad rediscovery. Resolve gaps through discovery; put unresolvable ones in the
 blocker set.
+
+As part of this review, trace every source requirement to an acceptance row and
+its implementing slice. Check that paths, existing and new symbol names,
+interfaces, call-site wiring, task dependencies, and validation commands agree
+across the plan. Replace vague instructions such as “add appropriate tests” or
+“run relevant checks” with concrete inputs, assertions, commands, working
+directories, and observable results. Remove placeholders and steps that do not
+advance an acceptance criterion. Scale the detail to the change's risk and keep
+the proof, failure, and source-authority gates above unchanged.
 
 ## Manage, publish, and hand off
 

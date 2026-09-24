@@ -26,11 +26,18 @@ Use exactly one source-appropriate template.
 
 - <Behavior or contract that must remain unchanged.>
 - <Explicitly out-of-scope work.>
+- For mechanical mismatches within this fixed contract, allow one focused
+  diagnosis and at most two repair edit-and-validation cycles; normal test-first
+  cycles do not count. Stop for a design or contract change, overlapping baseline
+  change, or exhausted repair budget, and report the evidence and remaining decision.
 
 ### Planning decisions
 
-- <Non-obvious contract-realizing choice, supporting repository evidence, and
-  decision the implementer must preserve.>
+- <Non-obvious contract-realizing choice and supporting evidence; do not
+  restate Guardrails.>
+- <Optional: material assumption, proportionate evidence or bounded proof, and
+  the result or failure gate. Express any proof using the existing slice fields;
+  dependent slices name its task ID.>
 
 ### Implementation context
 
@@ -51,22 +58,25 @@ concurrently.>
 
 **Task ID:** `<stable unique ID, e.g. T1>`
 **Depends on:** `none` (reserved root marker; not a task ID) | `<task ID>, ...`
-**Prerequisites:** <Earlier slice or none; relevant context or exemplar.>
-**Files and symbols:** <Existing files/symbols to edit and new files/symbols to
-create, labelled existing/new.>
-**Test:** <Exact test file and seam; fixture/setup; inputs/actions; assertions;
-and expected red failure, or why an automated red test is impractical.>
-**Implementation:** <Ordered edits, including interfaces or pseudocode when
-needed, control/data flow, branches/errors/edge cases, and call-site wiring.>
+**Prerequisites:** <Earlier slice or none; include the result of any required
+proof and the proof task ID where applicable.>
+**Files and symbols:** <Name each existing file/symbol to edit and each new
+file/symbol to create; state its responsibility and how it connects to callers.>
+**Test:** <Exact test file and seam, setup/fixture, concrete inputs/actions,
+assertions, and expected red failure; explain if an automated red test is
+impractical.>
+**Implementation:** <Ordered edits that produce this slice's observable
+deliverable; state interface/ownership and call-site wiring where relevant, plus
+material branches, errors, and edge cases.>
 **Validate:** From `<working directory>`, after <setup or none>, run `<exact
-focused command>`; expect <specific successful result>.
-**Complete when:** <Observable completion condition.>
+focused command>`; expect <specific successful result proving this slice>.
+**Complete when:** <Observable deliverable and its focused check are complete.>
 
 ### Acceptance coverage
 
 | Acceptance criterion | Slice | Verification |
 | --- | ---: | --- |
-| <Criterion> | <number> | <Test or precise manual check> |
+| <One observable acceptance criterion> | <slice number> | <Named focused check in the slice> |
 
 ### Final validation
 
@@ -76,22 +86,17 @@ focused command>`; expect <specific successful result>.
 
 ### Review focus
 
-- <Ticket-specific risk for implementation review.>
+- <Ticket-specific risk not already stated in Guardrails; omit when there is none.>
 
-### Allowed deviations
+### Allowed deviations (when task-specific)
 
-- Within the fixed contract, <bounded mechanical choices or none> may be
-  repaired after one focused diagnosis pass and at most two
-  repair edit-and-validation cycles across all unexpected mismatches; normal
-  test-first implementation cycles do not count. Report the repair.
+- <Any task-specific mechanical allowance; omit when the standard handoff rule
+  is sufficient.>
 
-### Re-plan triggers
+### Re-plan triggers (when task-specific)
 
-- Stop for any required design or contract change, overlapping baseline change,
-  a mismatch unresolved after the repair budget is exhausted, or
-  <task-specific material condition>. Report the
-  evidence, attempted repair and validation, and remaining decision or upstream
-  change; do not invoke `to-plan` from the implementation worktree.
+- <A material task-specific stop condition beyond the standard re-plan rules;
+  omit when none applies.>
 ```
 
 ## Conversation plan
@@ -112,11 +117,18 @@ focused command>`; expect <specific successful result>.
 
 - <Behavior or contract that must remain unchanged.>
 - <Explicitly out-of-scope work.>
+- For mechanical mismatches within this fixed contract, allow one focused
+  diagnosis and at most two repair edit-and-validation cycles; normal test-first
+  cycles do not count. Stop for a design or contract change, overlapping baseline
+  change, or exhausted repair budget, and report the evidence and remaining decision.
 
 ## Planning decisions
 
-- <Non-obvious contract-realizing choice, supporting repository evidence, and
-  decision the implementer must preserve.>
+- <Non-obvious contract-realizing choice and supporting evidence; do not
+  restate Guardrails.>
+- <Optional: material assumption, proportionate evidence or bounded proof, and
+  the result or failure gate. Express any proof using the existing slice fields;
+  dependent slices name its task ID.>
 
 ## Implementation context
 
@@ -137,22 +149,25 @@ concurrently.>
 
 **Task ID:** `<stable unique ID, e.g. T1>`
 **Depends on:** `none` (reserved root marker; not a task ID) | `<task ID>, ...`
-**Prerequisites:** <Earlier slice or none; relevant context or exemplar.>
-**Files and symbols:** <Existing files/symbols to edit and new files/symbols to
-create, labelled existing/new.>
-**Test:** <Exact test file and seam; fixture/setup; inputs/actions; assertions;
-and expected red failure, or why an automated red test is impractical.>
-**Implementation:** <Ordered edits, including interfaces or pseudocode when
-needed, control/data flow, branches/errors/edge cases, and call-site wiring.>
+**Prerequisites:** <Earlier slice or none; include the result of any required
+proof and the proof task ID where applicable.>
+**Files and symbols:** <Name each existing file/symbol to edit and each new
+file/symbol to create; state its responsibility and how it connects to callers.>
+**Test:** <Exact test file and seam, setup/fixture, concrete inputs/actions,
+assertions, and expected red failure; explain if an automated red test is
+impractical.>
+**Implementation:** <Ordered edits that produce this slice's observable
+deliverable; state interface/ownership and call-site wiring where relevant, plus
+material branches, errors, and edge cases.>
 **Validate:** From `<working directory>`, after <setup or none>, run `<exact
-focused command>`; expect <specific successful result>.
-**Complete when:** <Observable completion condition.>
+focused command>`; expect <specific successful result proving this slice>.
+**Complete when:** <Observable deliverable and its focused check are complete.>
 
 ## Acceptance coverage
 
 | Acceptance criterion | Slice | Verification |
 | --- | ---: | --- |
-| <Criterion> | <number> | <Test or precise manual check> |
+| <One observable acceptance criterion> | <slice number> | <Named focused check in the slice> |
 
 ## Final validation
 
@@ -162,20 +177,15 @@ focused command>`; expect <specific successful result>.
 
 ## Review focus
 
-- <Task-specific risk for implementation review.>
+- <Task-specific risk for implementation review; omit when there is none.>
 
-## Allowed deviations
+## Allowed deviations (when task-specific)
 
-- Within the fixed contract, <bounded mechanical choices or none> may be
-  repaired after one focused diagnosis pass and at most two
-  repair edit-and-validation cycles across all unexpected mismatches; normal
-  test-first implementation cycles do not count. Report the repair.
+- <Any task-specific mechanical allowance; omit when the standard handoff rule
+  is sufficient.>
 
-## Re-plan triggers
+## Re-plan triggers (when task-specific)
 
-- Stop for any required design or contract change, overlapping baseline change,
-  a mismatch unresolved after the repair budget is exhausted, or
-  <task-specific material condition>. Report the
-  evidence, attempted repair and validation, and remaining decision or upstream
-  change; do not invoke `to-plan` from the implementation worktree.
+- <A material task-specific stop condition beyond the standard re-plan rules;
+  omit when none applies.>
 ```

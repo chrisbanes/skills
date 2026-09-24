@@ -1,6 +1,7 @@
 import json
 import re
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -175,7 +176,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(21, len(benchmark))
-        self.assertEqual(14, len(calibration))
+        self.assertEqual(17, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(21, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -185,6 +186,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "implement-with-subagents-missing-provider-challenge",
                 "run-github-project-missing-provider-challenge",
                 "to-plan-authorized-draft-direct",
+                "to-plan-material-assumption-proof-calibration",
+                "to-plan-material-assumption-proof-novel",
+                "to-plan-specificity-calibration",
                 "to-plan-prior-confirmed-novel",
                 "to-plan-unresolved-choice-negative",
                 "to-plan-discussion-only-negative",
@@ -199,6 +203,105 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             },
             {case.id for case in calibration},
         )
+        specificity = next(
+            case for case in calibration if case.id == "to-plan-specificity-calibration"
+        )
+        self.assertEqual("workflow-plan", specificity.fixture)
+        self.assertTrue(specificity.calibration)
+        self.assertIn("Both `manifest_reader.py:missing_manifest_error`", specificity.prompt)
+        self.assertNotIn("two slices", specificity.prompt.lower())
+        self.assertNotIn("t1", specificity.prompt.lower())
+        self.assertNotIn("t2", specificity.prompt.lower())
+        self.assertNotIn("test-first", specificity.prompt.lower())
+        self.assertNotIn("acceptance row", specificity.prompt.lower())
+        expectations = json.loads(
+            (specificity.directory / "expectations.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual([], expectations["task_graph"]["required_edges"])
+        self.assertTrue(expectations["task_graph"]["require_acyclic"])
+        self.assertEqual(
+            [
+                {
+                    "id": "missing-manifest",
+                    "owned_files": [
+                        "manifest_reader.py",
+                        "tests/test_manifest_reader.py",
+                    ],
+                    "owned_symbols": ["missing_manifest_error"],
+                },
+                {
+                    "id": "invalid-profile",
+                    "owned_files": [
+                        "profile_loader.py",
+                        "tests/test_profile_loader.py",
+                    ],
+                    "owned_symbols": ["invalid_profile_error"],
+                },
+            ],
+            expectations["task_graph"]["separate_slice_requirements"],
+        )
+        required_text = expectations["file_globs"][0]["must_contain"]
+        self.assertNotIn("path_diagnostics.py", required_text)
+        self.assertNotIn("quote_path", required_text)
+        overlay = specificity.directory / "overlay"
+        manifest = (overlay / "manifest_reader.py").read_text(encoding="utf-8")
+        profile = (overlay / "profile_loader.py").read_text(encoding="utf-8")
+        manifest_test = (overlay / "tests/test_manifest_reader.py").read_text(
+            encoding="utf-8"
+        )
+        profile_test = (overlay / "tests/test_profile_loader.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("return f\"manifest not found: {path}\"", manifest)
+        self.assertIn("return f\"invalid profile at {path}\"", profile)
+        self.assertIn('"manifest not found: configs/team manifest.json"', manifest_test)
+        self.assertIn('"invalid profile at configs/team manifest.json"', profile_test)
+        self.assertNotIn("'configs/team manifest.json'", manifest_test)
+        self.assertNotIn("'configs/team manifest.json'", profile_test)
+        rubric_ids = {criterion["id"] for criterion in specificity.rubric}
+        self.assertEqual(
+            {
+                "complete-coverage",
+                "baseline-and-red-green",
+                "independent-slice-boundaries",
+                "concrete-tests",
+                "consistent-dependencies",
+                "proportionality",
+                "planning-boundary",
+            },
+            rubric_ids,
+        )
+        proportionality = next(
+            criterion
+            for criterion in specificity.rubric
+            if criterion["id"] == "proportionality"
+        )
+        self.assertIn("avoids repeating detailed shared-contract requirements", proportionality["text"])
+        self.assertIn("allowing a brief Approach summary", proportionality["text"])
+        self.assertIn(
+            "names exact per-slice files, tests, inputs, and commands",
+            proportionality["text"],
+        )
+        self.assertIn("standard diagnosis and two-cycle repair limit", proportionality["text"])
+        with tempfile.TemporaryDirectory(prefix="workflow-plan-specificity-") as temp_dir:
+            workspace = prepare_workspace(
+                specificity, REPO_ROOT, Path(temp_dir) / "fixture"
+            )
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    "-m",
+                    "unittest",
+                    "tests.test_manifest_reader",
+                    "tests.test_profile_loader",
+                ],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(0, completed.returncode, completed.stderr)
         for skill in WORKFLOWS_WRITING_SKILLS:
             kinds = {case.kind for case in benchmark if skill in case.target_skills}
             with self.subTest(skill=skill):
@@ -667,6 +770,445 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
 
         self.assertEqual([], failures)
+
+    def test_specificity_validator_rejects_grouped_independent_call_sites(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case for case in report.cases if case.id == "to-plan-specificity-calibration"
+        )
+        rules = json.loads(
+            (case.directory / "expectations.json").read_text(encoding="utf-8")
+        )
+        grouped = (
+            "## Implementation slices\n\n"
+            "### 1. Quote both diagnostics\n"
+            "**Task ID:** `T1`\n"
+            "**Depends on:** `none`\n"
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`tests/test_manifest_reader.py`; edit `profile_loader.py` and "
+            "`tests/test_profile_loader.py`.\n"
+            "## Acceptance coverage\n"
+        )
+        separation_failures = validate_task_graph(grouped, rules["task_graph"])
+        self.assertTrue(
+            any("share slice" in failure for failure in separation_failures),
+            separation_failures,
+        )
+
+        separated = (
+            "## Implementation slices\n\n"
+            "### 1. Quote missing-manifest paths\n"
+            "**Task ID:** `T1`\n"
+            "**Depends on:** `none`\n"
+            "**Files and symbols:** Existing `tests/test_manifest_reader.py` —\n"
+            "`ManifestReaderTest.test_quotes_missing_manifest_path`; existing\n"
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n"
+            "**Test:** Change the manifest assertion and observe a red test.\n"
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n\n"
+            "### 2. Quote invalid-profile paths\n"
+            "**Task ID:** `T2`\n"
+            "**Depends on:** `none`\n"
+            "**Files and symbols:** Existing `tests/test_profile_loader.py` —\n"
+            "`ProfileLoaderTest.test_quotes_invalid_profile_path`; existing\n"
+            "`profile_loader.py` — `invalid_profile_error(path: str) -> str`.\n"
+            "**Test:** Change the profile assertion and observe a red test.\n"
+            "**Implementation:** Change `profile_loader.py` to quote the path.\n"
+            "## Acceptance coverage\n"
+        )
+        separated = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n"
+            "**Validate:** Also inspect `profile_loader.py` and `tests/test_profile_loader.py`.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(separated, rules["task_graph"]),
+        )
+
+        inspection_only = separated.replace(
+            "**Files and symbols:** Existing `tests/test_profile_loader.py` —\n"
+            "`ProfileLoaderTest.test_quotes_invalid_profile_path`; existing\n"
+            "`profile_loader.py` — `invalid_profile_error(path: str) -> str`.\n",
+            "**Files and symbols:** Inspect `profile_loader.py` and "
+            "`tests/test_profile_loader.py`; no edit required.\n",
+        )
+        inspection_failures = validate_task_graph(inspection_only, rules["task_graph"])
+        self.assertTrue(
+            any("invalid-profile" in failure for failure in inspection_failures),
+            inspection_failures,
+        )
+
+        hidden_grouping = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path; "
+            "also change `profile_loader.py` and `tests/test_profile_loader.py` here.\n",
+        )
+        hidden_failures = validate_task_graph(hidden_grouping, rules["task_graph"])
+        self.assertTrue(
+            any("edits independent behavior 'invalid-profile'" in failure for failure in hidden_failures),
+            hidden_failures,
+        )
+
+        hidden_symbol = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path; "
+            "also update `invalid_profile_error` here.\n",
+        )
+        symbol_failures = validate_task_graph(hidden_symbol, rules["task_graph"])
+        self.assertTrue(
+            any("edits independent behavior 'invalid-profile'" in failure for failure in symbol_failures),
+            symbol_failures,
+        )
+
+        later_edit = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path; "
+            "inspect `profile_loader.py` for conventions, then edit "
+            "`profile_loader.py` here.\n",
+        )
+        later_edit_failures = validate_task_graph(later_edit, rules["task_graph"])
+        self.assertTrue(
+            any("edits independent behavior 'invalid-profile'" in failure for failure in later_edit_failures),
+            later_edit_failures,
+        )
+
+        unmatched_edit = separated.replace(
+            "## Implementation slices\n\n",
+            "## Implementation slices\n\n"
+            "### 1. Edit both formatters\n"
+            "**Task ID:** `T0`\n**Depends on:** `none`\n"
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`profile_loader.py`.\n\n",
+        ).replace(
+            "### 1. Quote missing-manifest paths", "### 2. Quote missing-manifest paths"
+        ).replace(
+            "### 2. Quote invalid-profile paths", "### 3. Quote invalid-profile paths"
+        )
+        unmatched_failures = validate_task_graph(unmatched_edit, rules["task_graph"])
+        self.assertTrue(
+            any("slice 'T0' edits independent behavior" in failure for failure in unmatched_failures),
+            unmatched_failures,
+        )
+
+        implement_wording = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path; "
+            "implement quoting in `profile_loader.py` here.\n",
+        )
+        implement_failures = validate_task_graph(implement_wording, rules["task_graph"])
+        self.assertTrue(
+            any("edits independent behavior 'invalid-profile'" in failure for failure in implement_failures),
+            implement_failures,
+        )
+
+        verification_only = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path. "
+            "Inspect `profile_loader.py` and `tests/test_profile_loader.py` "
+            "afterward to verify no regression.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(verification_only, rules["task_graph"]),
+        )
+
+        mixed_actions = separated.replace(
+            "**Files and symbols:** Existing `tests/test_manifest_reader.py` —\n"
+            "`ManifestReaderTest.test_quotes_missing_manifest_path`; existing\n"
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n",
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`tests/test_manifest_reader.py`, and inspect `profile_loader.py` "
+            "and `tests/test_profile_loader.py`.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(mixed_actions, rules["task_graph"]),
+        )
+
+        unchanged_reference = separated.replace(
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n",
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`; "
+            "leave `profile_loader.py` and `tests/test_profile_loader.py` unchanged.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(unchanged_reference, rules["task_graph"]),
+        )
+
+        mixed_unchanged = separated.replace(
+            "**Files and symbols:** Existing `tests/test_manifest_reader.py` —\n"
+            "`ManifestReaderTest.test_quotes_missing_manifest_path`; existing\n"
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n",
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`tests/test_manifest_reader.py`, leave `profile_loader.py` unchanged.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(mixed_unchanged, rules["task_graph"]),
+        )
+
+        mixed_no_edit = mixed_unchanged.replace(
+            "leave `profile_loader.py` unchanged",
+            "do not edit `profile_loader.py`",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(mixed_no_edit, rules["task_graph"]),
+        )
+
+        unchanged_symbol = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path "
+            "while keeping `invalid_profile_error` unchanged.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(unchanged_symbol, rules["task_graph"]),
+        )
+
+        dotted_paths = separated
+        for path in (
+            "manifest_reader.py",
+            "tests/test_manifest_reader.py",
+            "profile_loader.py",
+            "tests/test_profile_loader.py",
+        ):
+            dotted_paths = dotted_paths.replace(f"`{path}`", f"`./{path}`")
+        self.assertEqual(
+            [],
+            validate_task_graph(dotted_paths, rules["task_graph"]),
+        )
+
+        existing_inspection_only = separated.replace(
+            "**Files and symbols:** Existing `tests/test_profile_loader.py` —\n"
+            "`ProfileLoaderTest.test_quotes_invalid_profile_path`; existing\n"
+            "`profile_loader.py` — `invalid_profile_error(path: str) -> str`.\n",
+            "**Files and symbols:** Existing `profile_loader.py` — inspect only, "
+            "no edit; existing `tests/test_profile_loader.py` — inspect only, no edit.\n",
+        ).replace(
+            "**Implementation:** Change `profile_loader.py` to quote the path.\n",
+            "**Implementation:** No change required.\n",
+        )
+        existing_inspection_failures = validate_task_graph(
+            existing_inspection_only, rules["task_graph"]
+        )
+        self.assertTrue(
+            any("invalid-profile" in failure for failure in existing_inspection_failures),
+            existing_inspection_failures,
+        )
+
+        revision4_artifact = (
+            REPO_ROOT / "evals/artifacts/2026-09-24-to-plan-specificity-revision4-run.md"
+        ).read_text(encoding="utf-8")
+        revision4_plan = re.search(r"```markdown\n(.*?)\n```", revision4_artifact, re.DOTALL)
+        self.assertIsNotNone(revision4_plan)
+        self.assertEqual(
+            [],
+            validate_task_graph(revision4_plan.group(1), rules["task_graph"]),
+        )
+
+        test_file_only = separated.replace(
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.",
+            "",
+        )
+        ownership_failures = validate_task_graph(test_file_only, rules["task_graph"])
+        self.assertTrue(
+            any("missing-manifest" in failure for failure in ownership_failures),
+            ownership_failures,
+        )
+
+        wrong_prefix = separated.replace(
+            "tests/test_manifest_reader.py", "other/tests/test_manifest_reader.py"
+        ).replace(
+            "tests/test_profile_loader.py", "other/tests/test_profile_loader.py"
+        )
+        prefix_failures = validate_task_graph(wrong_prefix, rules["task_graph"])
+        self.assertTrue(
+            any("missing-manifest" in failure for failure in prefix_failures),
+            prefix_failures,
+        )
+        self.assertTrue(
+            any("invalid-profile" in failure for failure in prefix_failures),
+            prefix_failures,
+        )
+
+        dependent = separated.replace(
+            "### 2. Quote invalid-profile paths\n"
+            "**Task ID:** `T2`\n**Depends on:** `none`",
+            "### 2. Prepare shared fixture\n"
+            "**Task ID:** `T3`\n**Depends on:** `T1`\n\n"
+            "### 3. Quote invalid-profile paths\n"
+            "**Task ID:** `T2`\n**Depends on:** `T3`",
+        )
+        dependency_failures = validate_task_graph(dependent, rules["task_graph"])
+        self.assertTrue(
+            any("must not depend on each other" in failure for failure in dependency_failures),
+            dependency_failures,
+        )
+
+    def test_specificity_proportionality_rejects_prior_verbose_plan(self):
+        artifact = (
+            REPO_ROOT
+            / "evals/artifacts/2026-09-24-to-plan-specificity-targeted-repair-run.md"
+        ).read_text(encoding="utf-8")
+        verbose_plan = re.search(r"```markdown\n(.*?)\n```", artifact, re.DOTALL)
+        self.assertIsNotNone(verbose_plan)
+        self.assertIn("## Allowed deviations", verbose_plan.group(1))
+        self.assertIn("## Re-plan triggers", verbose_plan.group(1))
+
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case for case in report.cases if case.id == "to-plan-specificity-calibration"
+        )
+        with tempfile.TemporaryDirectory(prefix="workflow-plan-proportionality-") as temp_dir:
+            workspace = Path(temp_dir)
+            plan_path = workspace / ".scratch/to-plan/verbose.md"
+            plan_path.parent.mkdir(parents=True)
+            plan_path.write_text(verbose_plan.group(1), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, "-B", str(REPO_ROOT / "evals/validators/text_case.py"), case.id],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("forbidden evidence remains", completed.stderr)
+        self.assertIn("Allowed deviations", completed.stderr)
+
+        concise_plan = (
+            "<!-- to-plan:conversation-plan:v1 id=123e4567-e89b-42d3-a456-426614174000 -->\n"
+            "# Quote diagnostic paths\n\n"
+            "## Approach\n\n"
+            "Quote each diagnostic path and verify both focused tests.\n\n"
+            "## Implementation context\n\n"
+            "`manifest_reader.py:missing_manifest_error` and "
+            "`profile_loader.py:invalid_profile_error` preserve their prefixes and path text.\n\n"
+            "## Implementation slices\n\n"
+            "### 1. Quote missing-manifest paths\n"
+            "**Task ID:** `T1`\n**Depends on:** `none`\n"
+            "**Files and symbols:** Edit `manifest_reader.py`, "
+            "`tests/test_manifest_reader.py`.\n"
+            "**Test:** Change the exact expected output for "
+            "`configs/team manifest.json` to `manifest not found: 'configs/team manifest.json'`; "
+            "run `python3 -B -m unittest tests.test_manifest_reader` before the implementation "
+            "and observe the unquoted result fail.\n"
+            "**Implementation:** Change `manifest_reader.py` to return the quoted path.\n"
+            "**Validate:** From the repository root, run "
+            "`python3 -B -m unittest tests.test_manifest_reader`; the test passes.\n"
+            "**Complete when:** The exact quoted result passes its focused test.\n\n"
+            "### 2. Quote invalid-profile paths\n"
+            "**Task ID:** `T2`\n**Depends on:** `none`\n"
+            "**Files and symbols:** Edit `profile_loader.py`, "
+            "`tests/test_profile_loader.py`.\n"
+            "**Test:** Change the exact expected output for "
+            "`configs/team manifest.json` to `invalid profile at 'configs/team manifest.json'`; "
+            "run `python3 -B -m unittest tests.test_profile_loader` before the implementation "
+            "and observe the unquoted result fail.\n"
+            "**Implementation:** Change `profile_loader.py` to return the quoted path.\n"
+            "**Validate:** From the repository root, run "
+            "`python3 -B -m unittest tests.test_profile_loader`; the test passes.\n"
+            "**Complete when:** The exact quoted result passes its focused test.\n\n"
+            "## Acceptance coverage\n\n"
+            "| Criterion | Slice | Verification |\n| --- | ---: | --- |\n"
+            "| Missing-manifest path is quoted unchanged. | 1 | T1 focused test. |\n"
+            "| Invalid-profile path is quoted unchanged. | 2 | T2 focused test. |\n"
+        )
+        with tempfile.TemporaryDirectory(prefix="workflow-plan-concise-") as temp_dir:
+            workspace = Path(temp_dir)
+            plan_path = workspace / ".scratch/to-plan/concise.md"
+            plan_path.parent.mkdir(parents=True)
+            plan_path.write_text(concise_plan, encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, "-B", str(REPO_ROOT / "evals/validators/text_case.py"), case.id],
+                cwd=workspace,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_material_assumption_proof_case_requires_dependent_implementation(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "to-plan-material-assumption-proof-calibration"
+        )
+        self.assertEqual("workflow-report-publication", case.fixture)
+        self.assertTrue(case.calibration)
+        self.assertIn("early-proof", case.prompt)
+        self.assertIn("T3 must depend directly on T1, as well as T2", case.prompt)
+        fixture = REPO_ROOT / "evals/fixtures/workflow-report-publication"
+        publisher = (fixture / "report_publisher.py").read_text(encoding="utf-8")
+        config = json.loads((fixture / "report_config.json").read_text(encoding="utf-8"))
+        self.assertIn("def publish_report", publisher)
+        self.assertIn("published.write_bytes(contents)", publisher)
+        self.assertNotIn("os.replace", publisher)
+        self.assertLess(
+            publisher.index("published.write_bytes(contents)"),
+            publisher.index("mark_published("),
+        )
+        self.assertEqual(
+            {
+                "staging_mount": "/runtime/reports/staging",
+                "published_mount": "/runtime/reports/published",
+            },
+            config,
+        )
+        expectations = json.loads(
+            (case.directory / "expectations.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            [["T2", "T1"], ["T3", "T1"], ["T3", "T2"]],
+            expectations["task_graph"]["required_edges"],
+        )
+        self.assertTrue(expectations["task_graph"]["require_acyclic"])
+
+    def test_novel_material_assumption_proof_case_is_not_scripted(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case
+            for case in report.cases
+            if case.id == "to-plan-material-assumption-proof-novel"
+        )
+        self.assertEqual("novel", case.kind)
+        self.assertTrue(case.calibration)
+        self.assertEqual("workflow-report-publication", case.fixture)
+        self.assertIn("configured staging mount", case.prompt)
+        self.assertIn("configured published mount", case.prompt)
+        self.assertNotIn("proof", case.prompt.lower())
+        self.assertNotIn("os.replace", case.prompt)
+        self.assertNotIn("T3", case.prompt)
+        rubric_ids = {item["id"] for item in case.rubric}
+        self.assertTrue(
+            {
+                "repository-evidence",
+                "bounded-proof",
+                "failure-gate",
+                "task-dependency",
+                "proposed-publication",
+            }
+            <= rubric_ids
+        )
+        expectations = json.loads(
+            (case.directory / "expectations.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            [["T2", "T1"]],
+            expectations["task_graph"]["required_edges"],
+        )
+        self.assertTrue(expectations["task_graph"]["require_acyclic"])
+
+    def test_evidence_backed_plan_counterexample_rejects_speculative_proof(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(
+            case for case in report.cases if case.id == "to-plan-authorized-draft-direct"
+        )
+        self.assertTrue(case.calibration)
+        rubric = {item["id"]: item["text"] for item in case.rubric}
+        self.assertIn("one implementation slice", rubric["proportionality"])
+        self.assertIn("without a speculative proof task", rubric["proportionality"])
 
     def test_task_graph_validator_ignores_fenced_markdown_headings_and_fields(self):
         subject = (

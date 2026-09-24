@@ -1,0 +1,46 @@
+{
+  "id": "to-plan-material-assumption-proof-novel",
+  "title": "Plan safe publication of completed reports",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow-report-publication",
+  "allowed_write_paths": [".scratch/to-plan"],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "to-plan-material-assumption-proof-novel"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "repository-evidence",
+      "text": "Uses report_publisher.py and report_config.json to accurately distinguish the current direct write to the published mount from a proposed publication flow using the configured staging and published mounts"
+    },
+    {
+      "id": "bounded-proof",
+      "text": "Recognizes that safe publication depends on an unverified target-runtime assumption, and plans a bounded proof with a concrete setup and observable success condition before dependent implementation"
+    },
+    {
+      "id": "proposed-publication",
+      "text": "Plans staging under the configured staging mount and an atomic replacement into the published mount only after proof passes, then marks the report published; does not describe this as current behavior or add a redundant implementation task"
+    },
+    {
+      "id": "failure-gate",
+      "text": "Makes proof failure stop dependent implementation and require re-planning, rather than introducing a fallback implementation within that slice"
+    },
+    {
+      "id": "task-dependency",
+      "text": "Makes the proof a root task and the implementation directly dependent on it; any additional slice that depends on the proof also names it directly, and the task graph is acyclic"
+    },
+    {
+      "id": "planning-boundary",
+      "text": "Writes only a local plan and does not run a target-runtime proof, edit source, or contact a provider"
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

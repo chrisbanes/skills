@@ -185,6 +185,41 @@ class ScorecardTest(unittest.TestCase):
         item["subject"]["events"][1]["item"]["command"] = f"cat {paths[0]}"
         self.assertEqual("invocation_failure", forced_integrity_status(item))
 
+    def test_forced_read_accepts_codex_shell_wrapper_for_standalone_cat(self):
+        path = ".agents/skills/to-plan/SKILL.md"
+        preflight = {"valid": True, "targets": [{
+            "skill": "to-plan",
+            "staged_relative_path": path,
+            "staged_path": f"/workspace/{path}",
+            "staged_sha256": "entrypoint-sha",
+        }]}
+        item = record(
+            "case:forced", "forced", True, target=("to-plan",),
+            reported=("to-plan",), preflight=preflight,
+        )
+        item["subject"] = {
+            "events": [
+                {"type": "item.started", "item": {
+                    "id": "read", "type": "command_execution",
+                }},
+                {"type": "item.completed", "item": {
+                    "id": "read", "type": "command_execution", "status": "completed",
+                    "exit_code": 0,
+                    "command": f"/bin/zsh -lc 'cat {path}'",
+                }},
+            ],
+            "captured_skill_files": [{
+                "path": path, "staged_sha256": "entrypoint-sha", "status": "complete",
+                "matched_events": [{"id": "read", "output_sha256": "output-sha"}],
+            }],
+        }
+
+        self.assertEqual("valid", forced_integrity_status(item))
+        item["subject"]["events"][1]["item"]["command"] = (
+            f"/bin/zsh -lc 'cat {path} && pwd'"
+        )
+        self.assertEqual("invocation_failure", forced_integrity_status(item))
+
     def test_classifies_forced_integrity_from_preflight_reports_and_observed_reads(self):
         preflight = {
             "valid": True,

@@ -204,16 +204,17 @@ dependency, because that prerequisite is constant across its three scored arms
 and is not a public skill or a routing target. Its missing-provider challenge
 deliberately omits that fixture dependency.
 
-Twelve additional workflow compatibility cases are calibration-only. Select them
+Fifteen additional workflow cases are calibration-only. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
-unresolved decisions, and verification evidence reuse versus missing, stale,
-failed, or explicitly required fresh evidence. The local-planning cases check
-the generated plan artifact. The scored orchestration triad exercises a ready
-fork/join, a serial dependency chain, and restraint for a cyclic or incomplete
-graph, unsafe shared-file overlap, and validation invalidated at an integrated
-head. Two additional orchestration calibrations preserve runtime owner and
-capability checks and the accepted-item no-op behavior. These cases assess
+unresolved decisions, proof-gated report publication, implementation-plan
+specificity for complex work with a one-function counterexample, and verification
+evidence reuse versus missing, stale, failed, or explicitly required fresh
+evidence. The local-planning cases check the generated plan artifact. The scored orchestration
+triad exercises a ready fork/join, a serial dependency chain, and restraint for
+a cyclic or incomplete graph, unsafe shared-file overlap, and validation
+invalidated at an integrated head. Two additional orchestration calibrations
+preserve runtime owner and capability checks and the accepted-item no-op behavior. These cases assess
 supplied state read-only and do not prove live subagent execution.
 
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
@@ -310,9 +311,11 @@ python3 evals/run.py run \
 ```
 
 Use `--skill`, repeated `--case` or `--arm` filters, and `--output-dir` to bound
-a run. Raw results are atomic and fingerprinted by the case, arm, skill commit,
-Codex version, and both model settings. Reusing the same output directory resumes
-matching results and rejects stale fingerprints.
+a run. Use a fresh output directory for runs with these model settings because
+model settings are part of the result fingerprint. Raw results are atomic and
+fingerprinted by the case, arm, skill commit, Codex version, and both model
+settings. Reusing the same output directory resumes matching results and rejects
+stale fingerprints.
 The fingerprint also covers the discovered external skill catalog and the exact
 repository skill contents staged into subject workspaces, excluding generated
 Python bytecode caches.
@@ -339,7 +342,7 @@ command previews by default and writes separate fingerprinted rejudgments when
 ```shell
 python3 evals/run.py judge \
   --output-dir .scratch/skill-evals/<run-id> \
-  --judge-model gpt-5.6-sol --judge-reasoning high
+  --judge-model gpt-6-sol --judge-reasoning high
 ```
 
 It reconciles raw records with the current corpus first, then plans and

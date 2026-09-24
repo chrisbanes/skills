@@ -1,0 +1,42 @@
+{
+  "id": "to-plan-material-assumption-proof-calibration",
+  "title": "Gate implementation on a target-runtime proof",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow-report-publication",
+  "allowed_write_paths": [".scratch/to-plan"],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "to-plan-material-assumption-proof-calibration"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "bounded-proof",
+      "text": "Plans a first bounded target-runtime proof with the hypothesis that an atomic rename works between the two publication mounts, setup that creates a small file on the source mount and attempts the rename into the destination mount, and an observable pass condition that the destination contains the exact bytes and the source is gone"
+    },
+    {
+      "id": "failure-gate",
+      "text": "Makes proof failure stop the dependent publication implementation and trigger re-planning; does not treat a failed cross-mount rename as an implementation detail to work around during the dependent slice"
+    },
+    {
+      "id": "repository-evidence",
+      "text": "Uses repository evidence to distinguish current and proposed behavior: the existing `report_publisher.py:publish_report` writes directly to the configured published path using `write_bytes` and then marks it published; after a passing T1, the proposed change stages under the configured staging mount, uses `os.replace` into the published mount, and only then marks it published. It identifies `report_config.json` with `staging_mount`=`/runtime/reports/staging` and `published_mount`=`/runtime/reports/published`, and does not describe the proposed rename as existing behavior or plan redundant implementation"
+    },
+    {
+      "id": "task-dependency",
+      "text": "Declares the proof as root task T1, T2 as directly dependent on T1, and later validation task T3 as directly dependent on both T1 and T2. Every task dependent on the proof names T1 in its own dependency list; the task graph is acyclic"
+    },
+    {
+      "id": "planning-boundary",
+      "text": "Writes only a local plan and does not run the target-runtime proof, edit source, or contact a provider"
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

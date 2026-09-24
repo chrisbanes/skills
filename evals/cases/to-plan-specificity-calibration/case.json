@@ -1,0 +1,50 @@
+{
+  "id": "to-plan-specificity-calibration",
+  "title": "Plan two path diagnostics in focused increments",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow-plan",
+  "allowed_write_paths": [".scratch/to-plan"],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "to-plan-specificity-calibration"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "complete-coverage",
+      "text": "Maps both requested path-diagnostic behaviors to their implementation work and precise verification in the acceptance coverage, with no uncovered behavior or placeholder check"
+    },
+    {
+      "id": "baseline-and-red-green",
+      "text": "Recognizes that both existing tests assert the current unquoted output, updates the relevant assertions to the exact quoted output, and plans to observe those changed assertions fail before implementing the behavior and pass afterward"
+    },
+    {
+      "id": "independent-slice-boundaries",
+      "text": "Gives the missing-manifest and invalid-profile call sites separate independently deliverable implementation slices because each has its own test and neither depends on the other; the plan does not group them merely because they share the same formatting rule"
+    },
+    {
+      "id": "concrete-tests",
+      "text": "Names the relevant files, functions, test methods, spaced-path inputs, exact quoted outputs, focused commands, working directory, and observable passing results; any interface and symbol references agree throughout the plan"
+    },
+    {
+      "id": "consistent-dependencies",
+      "text": "Uses stable task IDs and explicit dependency lists when describing slices; dependencies refer to declared tasks, acceptance rows point to the matching slice and verification, and the graph is acyclic"
+    },
+    {
+      "id": "proportionality",
+      "text": "Keeps independently testable call sites in separate slices; avoids repeating detailed shared-contract requirements across planning sections while allowing a brief Approach summary; names exact per-slice files, tests, inputs, and commands; maps concise acceptance rows to the relevant slice check; states the standard diagnosis and two-cycle repair limit once in Guardrails without generic deviation or re-plan sections; and adds no speculative proof or unrelated steps"
+    },
+    {
+      "id": "planning-boundary",
+      "text": "Writes only one local plan and does not edit source files or contact a provider"
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

@@ -38,6 +38,306 @@ def _mask_fenced_code(subject: str) -> str:
     return "".join(masked)
 
 
+def _mask_html_comments(subject: str) -> str:
+    return re.sub(
+        r"<!--.*?(?:-->|$)",
+        lambda match: re.sub(r"[^\r\n]", " ", match.group()),
+        subject,
+        flags=re.DOTALL,
+    )
+
+
+def _mask_raw_html_blocks(subject: str) -> str:
+    """Blank CommonMark raw HTML blocks while retaining line boundaries."""
+    block_tags = (
+        "address|article|aside|base|basefont|blockquote|body|caption|center|"
+        "col|colgroup|dd|dialog|dir|div|dl|dt|fieldset|figcaption|figure|"
+        "footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|"
+        "legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|"
+        "option|p|param|search|section|summary|table|tbody|td|tfoot|th|"
+        "thead|title|tr|track|ul"
+    )
+    block_start = re.compile(
+        rf" {{0,3}}</?(?:{block_tags})(?=[ \t>/]|$)", re.IGNORECASE
+    )
+    raw_start = re.compile(r" {0,3}<(?:pre|script|style|textarea)(?=[ \t>]|$)", re.IGNORECASE)
+    raw_end = re.compile(r"</(?:pre|script|style|textarea)\s*>", re.IGNORECASE)
+    custom_start = re.compile(
+        r" {0,3}</?[A-Za-z][A-Za-z0-9:-]*(?:[ \t]+[^<>\n]*)?[ \t]*/?>[ \t]*(?:\r?\n)?$"
+    )
+    masked: list[str] = []
+    in_block = False
+    in_raw = False
+    previous_blank = True
+
+    for line in subject.splitlines(keepends=True):
+        if in_raw:
+            masked.append(re.sub(r"[^\r\n]", " ", line))
+            if raw_end.search(line):
+                in_raw = False
+            previous_blank = not line.strip()
+            continue
+        if in_block and line.strip():
+            masked.append(re.sub(r"[^\r\n]", " ", line))
+            previous_blank = False
+            continue
+        if not line.strip():
+            in_block = False
+            masked.append(line)
+            previous_blank = True
+            continue
+        if raw_start.match(line):
+            in_raw = raw_end.search(line) is None
+        elif block_start.match(line) or (
+            previous_blank
+            and custom_start.match(line)
+            and not re.match(r" {0,3}</?details\b", line, re.IGNORECASE)
+        ):
+            in_block = True
+        else:
+            masked.append(line)
+            previous_blank = False
+            continue
+        masked.append(re.sub(r"[^\r\n]", " ", line))
+        previous_blank = False
+    return "".join(masked)
+
+
+def _mask_inline_html_tags(subject: str) -> str:
+    return re.sub(
+        r"<(?!/?(?:details|pre|script|style|textarea)\b)"
+        r"/?[A-Za-z][A-Za-z0-9:-]*(?:\s[^<>]*?)?\s*/?>",
+        lambda match: re.sub(r"[^\r\n]", " ", match.group()),
+        subject,
+        flags=re.DOTALL,
+    )
+
+
+def _mask_html_code_blocks(subject: str) -> str:
+    return re.sub(
+        r"<(code|pre)\b[^>]*>.*?</\1\s*>",
+        lambda match: re.sub(r"[^\r\n]", " ", match.group()),
+        subject,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+
+
+def _mask_inline_code(subject: str) -> str:
+    return re.sub(
+        r"(?<!\\)(?<!`)(`+)(?!`)(.*?)\1(?!`)",
+        lambda match: re.sub(r"[^\r\n]", " ", match.group()),
+        subject,
+        flags=re.DOTALL,
+    )
+
+
+def _mask_markdown_link_titles(subject: str) -> str:
+    chars = list(subject)
+    for match in re.finditer(
+        r"\[[^\]\n]*\]\([^\s)\n]+[ \t]+([\"'])(.*?)\1\)",
+        subject,
+        re.DOTALL,
+    ):
+        for index in range(*match.span(2)):
+            if chars[index] not in "\r\n":
+                chars[index] = " "
+    return "".join(chars)
+
+
+def _markdown_links(subject: str) -> list[tuple[int, int, int, int]]:
+    """Find inline links, including destinations with balanced parentheses."""
+    links: list[tuple[int, int, int, int]] = []
+    offset = 0
+    while match := re.search(r"\[[^\]\n]*\]\(", subject[offset:]):
+        start = offset + match.start()
+        position = offset + match.end()
+        angle = position < len(subject) and subject[position] == "<"
+        destination_start = position + int(angle)
+        destination_end: int | None = None
+        depth = 0
+        while position < len(subject):
+            char = subject[position]
+            if char == "\\":
+                position += 2
+                continue
+            if angle:
+                if char == ">":
+                    destination_end = position
+                    position += 1
+                    while position < len(subject) and subject[position] != ")":
+                        position += 1
+                    break
+            elif char == "(":
+                depth += 1
+            elif char in " \t" and depth == 0 and destination_end is None:
+                destination_end = position
+            elif char == ")":
+                if depth == 0:
+                    if destination_end is None:
+                        destination_end = position
+                    break
+                depth -= 1
+            position += 1
+        if position < len(subject) and subject[position] == ")" and destination_end is not None:
+            links.append((start, position + 1, destination_start, destination_end))
+            offset = position + 1
+        else:
+            offset = start + 1
+    return links
+
+
+def _mask_markdown_link_destinations(subject: str) -> str:
+    chars = list(subject)
+    for _, _, start, end in _markdown_links(subject):
+        for index in range(start, end):
+            if chars[index] not in "\r\n":
+                chars[index] = " "
+    return "".join(chars)
+
+
+def _visible_link_start(subject: str, start: int) -> bool:
+    backslashes = 0
+    while start - backslashes - 1 >= 0 and subject[start - backslashes - 1] == "\\":
+        backslashes += 1
+    if backslashes % 2:
+        return False
+    prefix = start - backslashes - 1
+    if prefix >= 0 and subject[prefix] == "!":
+        image_escapes = 0
+        while prefix - image_escapes - 1 >= 0 and subject[prefix - image_escapes - 1] == "\\":
+            image_escapes += 1
+        if image_escapes % 2 == 0:
+            return False
+    return True
+
+
+def _markdown_references(subject: str) -> dict[str, str]:
+    visible = _mask_raw_html_blocks(_mask_html_comments(_mask_fenced_code(subject)))
+    references: dict[str, str] = {}
+    for match in re.finditer(
+        r"^ {0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]+)>|([^\s]+))"
+        r"(?:[ \t]+(?:\"[^\"]*\"|'[^']*'|\([^)]*\)))?[ \t]*$",
+        visible,
+        re.MULTILINE,
+    ):
+        references.setdefault(" ".join(match.group(1).split()).casefold(), match.group(2) or match.group(3))
+    return references
+
+
+def has_visible_markdown_link(subject: str, pattern: str, references: dict[str, str]) -> bool:
+    for start, end, destination_start, destination_end in _markdown_links(subject):
+        label_end = subject.find("](", start, end) + 1
+        link = f"{subject[start:label_end]}({subject[destination_start:destination_end]})"
+        if _visible_link_start(subject, start) and re.fullmatch(
+            pattern, link, re.IGNORECASE
+        ):
+            return True
+    without_destinations = _mask_markdown_link_destinations(subject)
+    for match in re.finditer(r"\[([^\]\n]+)\]\[([^\]\n]*)\]", without_destinations):
+        label = match.group(1)
+        reference = " ".join((match.group(2) or label).split()).casefold()
+        destination = references.get(reference)
+        if destination and _visible_link_start(subject, match.start()) and re.fullmatch(
+            pattern, f"[{label}]({destination})", re.IGNORECASE
+        ):
+            return True
+    return False
+
+
+def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
+    """Collect visible top-level bullets before the next release or details block."""
+    lines = subject.splitlines()
+    visible = _mask_fenced_code(subject)
+    visible = _mask_html_comments(visible)
+    visible = _mask_raw_html_blocks(visible)
+    visible = _mask_html_code_blocks(visible)
+    visible = _mask_inline_html_tags(visible)
+    visible = _mask_inline_code(visible)
+    visible_lines = _mask_markdown_link_titles(visible).splitlines()
+    bullets: list[str] = []
+    current: list[str] = []
+    content_indent = 0
+    item_indents: list[tuple[int, int]] = []
+    in_section = False
+    after_blank = False
+    in_indented_code = False
+
+    def finish() -> None:
+        if current:
+            continuations = [
+                line[content_indent:] if line.startswith(" " * content_indent) else line
+                for line in current[1:]
+            ]
+            bullets.append("\n".join([current[0], _mask_raw_html_blocks("\n".join(continuations))]))
+            current.clear()
+
+    for original, visible in zip(lines, visible_lines):
+        if not in_section:
+            if re.fullmatch(rf"##[ \t]+{re.escape(heading)}[ \t]*", visible):
+                in_section = True
+            continue
+        heading = re.match(r"( {0,3})##[ \t]", visible)
+        if (heading and (not current or len(heading.group(1)) < content_indent)) or re.match(
+            r"<details>", visible
+        ):
+            finish()
+            break
+        if re.fullmatch(r"[ \t]*(?:-{3,}|_{3,}|\*{3,})[ \t]*", visible):
+            finish()
+            continue
+        block = re.match(r"( {0,3})(?:>|#{1,6}[ \t]+)", visible)
+        if block and current and len(block.group(1)) < content_indent:
+            finish()
+            continue
+        marker = re.match(r"( {0,3})([-+*]|\d+[.)])([ \t]+)", visible)
+        if marker:
+            indent = len(marker.group(1))
+            marker_content_indent = len(marker.group().expandtabs(4))
+            code_on_marker = marker_content_indent - indent - len(marker.group(2)) > 4
+            if code_on_marker:
+                marker_content_indent = indent + len(marker.group(2)) + 1
+                visible = marker.group()
+            if current and indent >= content_indent:
+                current.append(visible)
+                while len(item_indents) > 1 and indent <= item_indents[-1][0]:
+                    item_indents.pop()
+                item_indents.append((indent, marker_content_indent))
+            else:
+                finish()
+                current.append(visible)
+                content_indent = marker_content_indent
+                item_indents = [(indent, content_indent)]
+            after_blank = False
+            in_indented_code = code_on_marker
+            continue
+        if not current:
+            continue
+        if not visible.strip():
+            if original.strip() and not original.startswith(("  ", "\t")):
+                finish()
+            elif not original.strip():
+                after_blank = True
+            continue
+        leading = visible[: len(visible) - len(visible.lstrip(" \t"))]
+        line_indent = len(leading.expandtabs(4))
+        while len(item_indents) > 1 and line_indent < item_indents[-1][1]:
+            item_indents.pop()
+        code_indent = item_indents[-1][1] + 4
+        if line_indent >= code_indent and (after_blank or in_indented_code):
+            current.append("")
+            in_indented_code = True
+            after_blank = False
+            continue
+        in_indented_code = False
+        if after_blank and not visible.startswith(("  ", "\t")):
+            finish()
+            continue
+        current.append(visible)
+        after_blank = False
+    finish()
+    return bullets
+
+
 def validate_task_graph(
     subject: str, rules: dict[str, object], label: str = "subject"
 ) -> list[str]:
@@ -100,6 +400,7 @@ def validate_task_graph(
         return [f"{label}: task graph has no implementation slices"]
 
     tasks: dict[str, set[str]] = {}
+    task_bodies: dict[str, str] = {}
     expected_number = 1
     for heading_index, heading in enumerate(slice_headings):
         title = heading.group(2).strip()
@@ -159,6 +460,7 @@ def validate_task_graph(
         if len(set(dependency_ids)) != len(dependency_ids):
             failures.append(f"{label}: task {task_id!r} repeats a dependency")
         tasks[task_id] = set(dependency_ids)
+        task_bodies[task_id] = body
 
     for task_id, dependencies in tasks.items():
         for dependency in dependencies:
@@ -189,6 +491,197 @@ def validate_task_graph(
             failures.append(
                 f"{label}: missing required dependency edge {task_id!r} -> {dependency!r}"
             )
+
+    separate_slice_requirements = rules.get("separate_slice_requirements", [])
+    if not isinstance(separate_slice_requirements, list):
+        return failures + [
+            f"{label}: separate_slice_requirements must be a list"
+        ]
+    matched_tasks: dict[str, str] = {}
+
+    def lists_path(files_field: str, path: str) -> bool:
+        pattern = (
+            rf"(?<![A-Za-z0-9_./-])(?:\./)?{re.escape(path)}"
+            rf"(?![A-Za-z0-9_./-])"
+        )
+        return re.search(pattern, files_field) is not None
+
+    def field(body: str, name: str) -> str:
+        match = re.search(
+            rf"^\*\*{re.escape(name)}:\*\*[ \t]*([\s\S]*?)"
+            r"(?=^\*\*[^\n]+:\*\*|\Z)",
+            body,
+            re.MULTILINE,
+        )
+        return match.group(1) if match else ""
+
+    edit_verbs = r"edit|create|add|update|change|modify|replace|write|implement"
+    inspection_verbs = (
+        r"inspect|read|verify|check|review|leave|leaving|keep|keeping|"
+        r"preserve|preserving|retain|retaining"
+    )
+
+    def is_negated(text: str, action_start: int) -> bool:
+        return re.search(
+            r"\b(?:no|not|never|without|don't|do not)\s+$",
+            text[max(0, action_start - 20) : action_start],
+            re.IGNORECASE,
+        ) is not None
+
+    def has_edit_action(text: str) -> bool:
+        return any(
+            not is_negated(text, action.start())
+            for action in re.finditer(rf"\b(?:{edit_verbs})\b", text, re.IGNORECASE)
+        )
+
+    def path_action(clause: str, path: str) -> str | None:
+        saw_inspection = False
+        for match in re.finditer(
+            rf"(?<![A-Za-z0-9_./-])(?:\./)?{re.escape(path)}(?![A-Za-z0-9_./-])",
+            clause,
+        ):
+            actions = list(
+                re.finditer(
+                    rf"\b(?:{edit_verbs}|{inspection_verbs})\b",
+                    clause[: match.start()],
+                    re.IGNORECASE,
+                )
+            )
+            if not actions:
+                continue
+            last_action = actions[-1]
+            if last_action.group().lower() in edit_verbs.split("|") and not is_negated(
+                clause, last_action.start()
+            ):
+                return "edit"
+            saw_inspection = True
+        return "inspect" if saw_inspection else None
+
+    def edits_path(text: str, path: str) -> bool:
+        return any(
+            path_action(clause, path) == "edit"
+            for clause in re.split(r";|(?<=\.)\s+(?=[A-Z])", text)
+        )
+
+    def owns_path(body: str, path: str) -> bool:
+        files_field = field(body, "Files and symbols")
+        for clause in re.split(r";|(?<=\.)\s+(?=[A-Z])", files_field):
+            if not lists_path(clause, path):
+                continue
+            action = path_action(clause, path)
+            if action == "edit":
+                return True
+            if action == "inspect":
+                continue
+            if re.search(
+                r"\b(?:inspect only|no edits?|read.only|do not edit|do not change)\b",
+                clause,
+                re.IGNORECASE,
+            ):
+                continue
+            if re.match(
+                rf"^\s*(?:[-*]\s*)?(?:{inspection_verbs})\b",
+                clause,
+                re.IGNORECASE,
+            ):
+                continue
+            if has_edit_action(field(body, "Test")) and has_edit_action(
+                field(body, "Implementation")
+            ):
+                return True
+        return False
+
+    for requirement in separate_slice_requirements:
+        if not isinstance(requirement, dict):
+            failures.append(
+                f"{label}: separate slice requirements must be objects"
+            )
+            continue
+        requirement_id = requirement.get("id")
+        owned_files = requirement.get("owned_files")
+        owned_symbols = requirement.get("owned_symbols", [])
+        if (
+            not isinstance(requirement_id, str)
+            or not requirement_id.strip()
+            or not isinstance(owned_files, list)
+            or not owned_files
+            or any(not isinstance(path, str) or not path for path in owned_files)
+            or not isinstance(owned_symbols, list)
+            or any(not isinstance(symbol, str) or not symbol for symbol in owned_symbols)
+        ):
+            failures.append(
+                f"{label}: separate slice requirements need an id, non-empty owned_files, and valid owned_symbols"
+            )
+            continue
+        matches = [
+            task_id
+            for task_id, body in task_bodies.items()
+            if all(owns_path(body, path) for path in owned_files)
+        ]
+        if len(matches) != 1:
+            failures.append(
+                f"{label}: independent behavior {requirement_id!r} must be contained in exactly one slice; found {len(matches)}"
+            )
+            continue
+        task_id = matches[0]
+        previous = matched_tasks.get(task_id)
+        if previous is not None:
+            failures.append(
+                f"{label}: independent behaviors {previous!r} and {requirement_id!r} share slice {task_id!r}"
+            )
+        else:
+            matched_tasks[task_id] = requirement_id
+
+    for task_id, body in task_bodies.items():
+        planned_edits = (
+            field(body, "Files and symbols"),
+            field(body, "Implementation"),
+        )
+        for requirement in separate_slice_requirements:
+            if not isinstance(requirement, dict):
+                continue
+            owned_files = requirement.get("owned_files")
+            owned_symbols = requirement.get("owned_symbols", [])
+            if not isinstance(owned_files, list) or any(
+                not isinstance(path, str) for path in owned_files
+            ):
+                continue
+            if not isinstance(owned_symbols, list) or any(
+                not isinstance(symbol, str) for symbol in owned_symbols
+            ):
+                continue
+            if matched_tasks.get(task_id) != requirement.get("id") and any(
+                edits_path(section, target)
+                for section in planned_edits
+                for target in [*owned_files, *owned_symbols]
+            ):
+                failures.append(
+                    f"{label}: slice {task_id!r} edits independent behavior "
+                    f"{requirement['id']!r} outside its owning slice"
+                )
+
+    def depends_transitively(task_id: str, target: str) -> bool:
+        pending = list(tasks.get(task_id, set()))
+        visited: set[str] = set()
+        while pending:
+            dependency = pending.pop()
+            if dependency == target:
+                return True
+            if dependency not in visited:
+                visited.add(dependency)
+                pending.extend(tasks.get(dependency, set()))
+        return False
+
+    matched = list(matched_tasks.items())
+    for index, (task_id, requirement_id) in enumerate(matched):
+        for other_task_id, other_requirement_id in matched[index + 1 :]:
+            if depends_transitively(task_id, other_task_id) or depends_transitively(
+                other_task_id, task_id
+            ):
+                failures.append(
+                    f"{label}: independent behaviors {requirement_id!r} and "
+                    f"{other_requirement_id!r} must not depend on each other"
+                )
 
     if rules.get("require_acyclic", False):
         visiting: set[str] = set()
@@ -240,6 +733,23 @@ def main(argv: list[str]) -> int:
         for pattern in rules.get("must_match", []):
             if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is None:
                 failures.append(f"{label}: missing required pattern: {pattern!r}")
+        bullet_rules = rules.get("markdown_bullets")
+        if bullet_rules:
+            references = _markdown_references(subject)
+            bullets = [
+                (bullet, _mask_markdown_link_destinations(bullet))
+                for bullet in markdown_bullets_under_heading(subject, bullet_rules["heading"])
+            ]
+            for requirement in bullet_rules["required"]:
+                if not any(
+                    all(re.search(pattern, visible_text, re.IGNORECASE) for pattern in requirement["text"])
+                    and all(
+                        has_visible_markdown_link(bullet, pattern, references)
+                        for pattern in requirement["links"]
+                    )
+                    for bullet, visible_text in bullets
+                ):
+                    failures.append(f"{label}: missing required pattern in a release bullet: {requirement!r}")
         for pattern in rules.get("must_not_match", []):
             if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is not None:
                 failures.append(f"{label}: forbidden pattern remains: {pattern!r}")

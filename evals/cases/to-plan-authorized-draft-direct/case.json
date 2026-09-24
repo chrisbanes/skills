@@ -38,7 +38,7 @@
     },
     {
       "id": "proportionality",
-      "text": "Keeps this obvious one-function change to a concise slice and uses a signature or pseudocode only if it removes real ambiguity; does not pad the plan with speculative branches, new abstractions, or near-complete code"
+      "text": "Keeps this evidence-backed one-function change to one implementation slice without a speculative proof task or proof prerequisite, because the repository already provides sufficient evidence; uses a signature or pseudocode only if it removes real ambiguity and does not add speculative implementation branches"
     },
     {
       "id": "executor-readiness",

@@ -1,0 +1,48 @@
+{
+  "files": [],
+  "file_globs": [
+    {
+      "pattern": ".scratch/to-plan/*.md",
+      "count": 1,
+      "must_match": [
+        "<!-- to-plan:conversation-plan:v1 id=[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12} -->"
+      ],
+      "must_contain": [
+        "## Implementation context",
+        "## Implementation slices",
+        "## Acceptance coverage",
+        "**Files and symbols:**",
+        "**Task ID:**",
+        "**Depends on:**",
+        "**Test:**",
+        "**Validate:**",
+        "**Complete when:**",
+        "manifest_reader.py",
+        "missing_manifest_error",
+        "profile_loader.py",
+        "invalid_profile_error",
+        "configs/team manifest.json"
+      ],
+      "must_not_contain": [
+        "## Allowed deviations",
+        "## Re-plan triggers"
+      ]
+    }
+  ],
+  "task_graph": {
+    "required_edges": [],
+    "require_acyclic": true,
+    "separate_slice_requirements": [
+      {
+        "id": "missing-manifest",
+        "owned_files": ["manifest_reader.py", "tests/test_manifest_reader.py"],
+        "owned_symbols": ["missing_manifest_error"]
+      },
+      {
+        "id": "invalid-profile",
+        "owned_files": ["profile_loader.py", "tests/test_profile_loader.py"],
+        "owned_symbols": ["invalid_profile_error"]
+      }
+    ]
+  }
+}

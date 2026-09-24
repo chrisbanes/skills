@@ -7,3 +7,5 @@ The published modules apply `com.vanniktech.maven.publish` from `gradle-maven-pu
 The previous stable release is 1.9.0; beta01 is the preceding prerelease. Repository convention uses incremental prerelease notes. Should beta02 notes cover changes since 1.9.0 or beta01?
 
 The user had approved an earlier prepared commit, but the current prepared commit contains a subsequent code and changelog change that has not been presented for approval. Explain how this affects any remaining publication action after recovery inspection.
+
+For changelog credit, available repository evidence says `maintainer-one` is a maintainer. PR #92 for a consumer-visible fix was authored by `maintainer-one`: https://github.com/example/library/pull/92; profile: https://github.com/maintainer-one. PR #97 for another consumer-visible fix was authored by `guest-contributor`: https://github.com/example/library/pull/97; profile: https://github.com/guest-contributor. The repository's current maintainer list does not include `guest-contributor`. Assess whether these changes need linked PR citations and contributor credit; do not infer maintainer status from familiarity or commit access.
