@@ -54,3 +54,22 @@ restraint and novel coverage; then work through `release-kotlin-library`,
 three-suite corpus after those repairs. The
 [improvement plan](2026-09-23-gpt6-improvement-plan.md) records the original
 priorities and gates.
+
+## Subsequent local repairs
+
+Revision `113a391` clarifies the `@ReadOnlyComposable` contract after two saved
+Compose reviews incorrectly treated a snapshot `State.value` read as a composer
+write. Revision `fd19701` requires a review of a composition-time focus request
+to name the event or keyed effect that should make it safe. Existing direct,
+novel, and no-change corpus coverage remains valid; these revisions have no
+live model score yet.
+
+Revision `2c17a3a` bounds evaluator preflight subprocesses. The installed
+`/opt/homebrew/bin/codex` still hangs on `--version`, but preflight now reports
+that failure after 10 seconds. The bundled ChatGPT CLI responds at version
+`0.155.0-alpha.16`, and the Compose fixture's offline test passed with Gradle
+cache access. A one-case probe using that alternate CLI was rejected by
+automatic approval review before execution because the subject and judge calls
+would transmit repository skill text to an external model service. No new
+subject or judge packet was sent. Explicit approval for that payload and
+destination has been requested; no later GPT-6 score is claimed here.
