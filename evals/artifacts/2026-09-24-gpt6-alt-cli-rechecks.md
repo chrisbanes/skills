@@ -18,6 +18,8 @@ assumptions, not measured billing.
 | Kotlin Flow state/events novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-kotlin-flow-concurrency-alt-cli-3rep` |
 | Kotlin concurrency router, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-kotlin-flow-concurrency-alt-cli-3rep` |
 | Kotlin concurrency router, `ee3584e` | Not run | 2/3 | `/private/tmp/gpt6-kotlin-concurrency-router-auto-alt-cli-3rep` |
+| Gradle incidental validation direct, `6f62dd7` | 3/3 | 3/3 | `/private/tmp/gpt6-gradle-incidental-alt-cli-3rep` |
+| Kotlin API ownership direct, `6f62dd7` | Not run | 3/3 | `/private/tmp/gpt6-kotlin-api-ownership-auto-alt-cli-3rep` |
 | Shepherd novel, `0aa790e` | 3/3 | Ineligible | `/private/tmp/gpt6-shepherd-novel-alt-cli-3rep` |
 | Release direct, `0aa790e` | 2/3 | 2/3 | `/private/tmp/gpt6-release-direct-alt-cli-3rep` |
 | Grounded writing direct, `ab748e1` | 3/3 | 1/3 | `/private/tmp/gpt6-grounded-writing-alt-cli-3rep` |
@@ -52,6 +54,12 @@ through the smart cast; the judge retained a branch-finding failure. The
 subject reported `kotlin-concurrency-and-flow` and
 `compose-state-and-effects`, rather than `kotlin-control-flow`, so the routing
 and content evidence both need inspection before a skill edit.
+
+The later Gradle incidental-validation run passed all forced and automatic
+repetitions with the normalized execution evidence available to the judge.
+The Kotlin API ownership automatic recheck passed all three repetitions after
+the interface-implementer compatibility guidance. These are separate targeted
+runs at skill source revision `6f62dd7`, not replacement suite scores.
 
 In the pre-ledger release run, one forced and one automatic subject placed
 bounded streaming only in prerelease history, omitting it from the final stable
