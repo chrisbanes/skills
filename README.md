@@ -208,7 +208,7 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 100.0% | 100.0% |
 | [`gradle-run`](skills/gradle-run/SKILL.md) | 41.7% | 100.0% | 100.0% |
 | [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 58.3% | 100.0% | 100.0% |
-| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 44.4% | 88.9% | 100.0% |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 44.4% | 100.0% | 100.0% |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 0.0% | 100.0% | 100.0% |
@@ -219,10 +219,11 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`to-plan`](skills/to-plan/SKILL.md) | — | — | 100.0% |
 
 The `android-benchmark-comparison`, `compose-ui-testing-patterns`,
-`gradle-run`, `grounded-writing`, `kotlin-api-design`, `kotlin-control-flow`,
-and `release-kotlin-library` automatic cells, and the `to-plan` restraint
-cell, use later focused evidence. Baseline and efficiency values use the
-complete suite. See
+`gradle-run`, `grounded-writing`, `kotlin-api-design`,
+`kotlin-concurrency-and-flow`, `kotlin-control-flow`, and
+`release-kotlin-library` automatic cells, and the `to-plan` restraint cell,
+use later focused evidence. Baseline and efficiency values use the complete
+suite. See
 the [improvement result record](evals/artifacts/2026-09-24-gpt6-improvement-results.md)
 and [targeted probe record](evals/artifacts/2026-09-24-gpt6-targeted-100-probes.md)
 for provenance and remaining failures.

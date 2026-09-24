@@ -452,3 +452,19 @@ forbidden actions were recorded. One platform-boundary reply additionally
 reported `kotlin-concurrency-and-flow`; routing precision is distinct from
 the correctness cell. The README automatic cell combines distinct focused
 catalogs, not a same-catalog suite score.
+
+## Kotlin concurrency and Flow automatic score
+
+The eight `kotlin-concurrency-and-flow` corpus cases each have a later 3/3
+automatic pass on the current case and skill text. Coroutine ownership, Flow
+event delivery, and executor no-change passed 9/9 in
+`/private/tmp/gpt6-targeted-kotlin-concurrency-part1-auto-20260924`.
+Detached-thread ownership, interruptible blocking, and suspend-API restraint
+passed 9/9 in
+`/private/tmp/gpt6-targeted-kotlin-concurrency-part2-auto-20260924`. The
+Flow-state novel and concurrency router cases passed in
+`/private/tmp/gpt6-focused-gaps-kotlin-1` and
+`/private/tmp/gpt6-inline-kotlin-smoke`. Across the selected 24 packets,
+objective and judge checks passed and no forbidden actions were recorded. The
+README automatic cell combines distinct focused catalogs, not a same-catalog
+suite score.
