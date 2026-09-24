@@ -53,7 +53,9 @@ or choosing a default.
    or remaining uncertainty. When a reversal is unresolved, state the full
    sequence still needed: matching coverage, balanced or reversed order,
    measured-interval trace inspection, and restoration of any changed affinity
-   settings. Label any earlier default choice provisional.
+   settings. Name *run order* explicitly in the recommendation: a "balanced
+   comparison" alone does not tell the team to balance or reverse run order.
+   Label any earlier default choice provisional.
 
 ## Boundaries
 

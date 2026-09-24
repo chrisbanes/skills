@@ -24,6 +24,8 @@ distinguishes ChatGPT-plan usage from API-key billing.
 | Writing novel before final review-gate edit | 3/3 | 2/3 | `/private/tmp/gpt6-inline-writing-final5` |
 | Writing novel automatic after final review-gate edit | Not run | 3/3 | `/private/tmp/gpt6-inline-writing-novel-final7` |
 | Implement with subagents direct, novel, and no-change after integrated-head acceptance edit | 9/9 | Ineligible | `/private/tmp/gpt6-implement-integration-acceptance-recheck` |
+| To-plan direct, novel, and no-change at `2276f9d` | 9/9 | Ineligible | `/private/tmp/gpt6-to-plan-final-preflight` |
+| Benchmark reversal after explicit run-order wording | 3/3 | 3/3 | `/private/tmp/gpt6-benchmark-run-order-recheck` |
 
 Each row is a combined objective-and-judge raw result. Each individual run has
 one recorded skill-catalog digest, but the digests differ between runs and the
@@ -52,9 +54,19 @@ The skill now requires that acceptance action even when another blocker also
 holds dispatch; its direct, novel, and no-change forced recheck passed 9/9.
 The stopped partial run is not a suite score.
 
-Local validation after the final writing edits: `npm test` passed 171 tests
-with one skip and 210 eval-harness tests; `npm run lint`,
-`python3 evals/run.py validate` (99 cases), and `git diff --check` passed.
+A second two-arm workflow attempt at `2276f9d` stopped after 17 completed
+records, 16 passing. `android-benchmark-comparison-novel:automatic:1`
+recommended a "balanced comparison" without explicitly asking to balance or
+reverse *run order*, leaving the next experiment ambiguous. Its failed packet
+remains in `/private/tmp/gpt6-full-2276f9d-workflows`. The benchmark skill now
+requires run order to be named in the recommendation; the reversal case passed
+3/3 forced and 3/3 automatic in the focused recheck. This partial attempt is
+also excluded from suite scores.
+
+Local validation at the writing repair commit: `npm test` passed 171 tests with
+one skip and 210 eval-harness tests. The later orchestration and benchmark
+wording edits passed `npm run lint`, `python3 evals/run.py validate` (99 cases),
+and `git diff --check`, with the focused live rechecks recorded above.
 
 The remaining score gate is a frozen run across all three suites at the
 integrated head, with forced and automatic outcomes reported separately and
