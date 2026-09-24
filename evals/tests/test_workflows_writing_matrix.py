@@ -274,7 +274,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             for criterion in specificity.rubric
             if criterion["id"] == "proportionality"
         )
-        self.assertIn("states the shared contract once in Guardrails", proportionality["text"])
+        self.assertIn("avoids repeating detailed shared-contract requirements", proportionality["text"])
+        self.assertIn("allowing a brief Approach summary", proportionality["text"])
         self.assertIn(
             "names exact per-slice files, tests, inputs, and commands",
             proportionality["text"],
@@ -718,6 +719,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         concise_plan = (
             "<!-- to-plan:conversation-plan:v1 id=123e4567-e89b-42d3-a456-426614174000 -->\n"
             "# Quote diagnostic paths\n\n"
+            "## Approach\n\n"
+            "Quote each diagnostic path and verify both focused tests.\n\n"
             "## Implementation context\n\n"
             "`manifest_reader.py:missing_manifest_error` and "
             "`profile_loader.py:invalid_profile_error` preserve their prefixes and path text.\n\n"
