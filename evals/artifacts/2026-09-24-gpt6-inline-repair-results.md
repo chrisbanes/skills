@@ -421,3 +421,19 @@ Across the selected 15 packets, objective and judge checks passed and no
 forbidden actions were recorded. The README automatic cell combines focused
 case results from different catalog snapshots; it is not a current
 same-catalog suite score.
+
+## Kotlin control flow automatic score
+
+The seven `kotlin-control-flow` corpus cases each have a later 3/3 automatic
+pass on the current case and skill text. The two remaining gaps,
+`kotlin-control-exhaustiveness-novel` and `kotlin-control-guards-direct`,
+passed 6/6 with one catalog digest and zero forbidden actions in
+`/private/tmp/gpt6-targeted-kotlin-control-remaining-auto-20260924`. The
+other five results are in `/private/tmp/gpt6-kotlin-router-template-direct-control`,
+`/private/tmp/gpt6-kotlin-router-template-open-negative`,
+`/private/tmp/gpt6-targeted-kotlin-api-routing-control-20260924`,
+`/private/tmp/gpt6-inline-kotlin-smoke`, and
+`/private/tmp/gpt6-targeted-gradle-remaining-auto-20260924`. Across the
+selected 21 packets, objective and judge checks passed and no forbidden
+actions were recorded. The README automatic cell combines distinct focused
+catalogs; it is not a same-catalog suite score.
