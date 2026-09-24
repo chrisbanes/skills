@@ -130,6 +130,14 @@ def _mask_markdown_link_titles(subject: str) -> str:
     return "".join(chars)
 
 
+def _mask_markdown_link_destinations(subject: str) -> str:
+    chars = list(subject)
+    for match in re.finditer(r"\[[^\]\n]*\]\(<?([^\s)>]+)>?", subject):
+        for index in range(*match.span(1)):
+            chars[index] = " "
+    return "".join(chars)
+
+
 def has_visible_markdown_link(subject: str, pattern: str) -> bool:
     for match in re.finditer(pattern, subject, re.IGNORECASE):
         start = match.start()
@@ -436,12 +444,15 @@ def main(argv: list[str]) -> int:
                 failures.append(f"{label}: missing required pattern: {pattern!r}")
         bullet_rules = rules.get("markdown_bullets")
         if bullet_rules:
-            bullets = markdown_bullets_under_heading(subject, bullet_rules["heading"])
+            bullets = [
+                (bullet, _mask_markdown_link_destinations(bullet))
+                for bullet in markdown_bullets_under_heading(subject, bullet_rules["heading"])
+            ]
             for requirement in bullet_rules["required"]:
                 if not any(
-                    all(re.search(pattern, bullet, re.IGNORECASE) for pattern in requirement["text"])
+                    all(re.search(pattern, visible_text, re.IGNORECASE) for pattern in requirement["text"])
                     and all(has_visible_markdown_link(bullet, pattern) for pattern in requirement["links"])
-                    for bullet in bullets
+                    for bullet, visible_text in bullets
                 ):
                     failures.append(f"{label}: missing required pattern in a release bullet: {requirement!r}")
         for pattern in rules.get("must_not_match", []):

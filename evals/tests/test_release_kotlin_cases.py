@@ -289,6 +289,26 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         )
         self.assertEqual(0, self.validate(updated).returncode)
 
+    def test_description_terms_only_in_link_destination_fail(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '- Add streaming responses with bounded buffering ',
+            '- Add response support [context](https://example.test/streaming/bounded) ',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_description_terms_in_link_label_pass(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '- Add streaming responses with bounded buffering ',
+            '- Add [streaming responses](https://example.test) with bounded buffering ',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
     def test_fenced_example_with_later_description_and_link_passes(self):
         original = self.completed_changelog()
         updated = original.replace(
