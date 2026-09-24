@@ -228,6 +228,34 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         )
         self.assertEqual(0, self.validate(updated).returncode)
 
+    def test_wrapped_description_terms_on_stable_bullets_pass(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            'Fix request cancellation so underlying work stops '
+            '([#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example)).',
+            'Fix request behavior\n'
+            'so cancellation stops underlying work [#845]'
+            '(https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example).',
+        ).replace(
+            'Add streaming responses with bounded buffering '
+            '([#812](https://github.com/chrisbanes/skills/pull/812)).',
+            'Add response support\n'
+            'for streaming traffic with bounded buffering [#812]'
+            '(https://github.com/chrisbanes/skills/pull/812).',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertIn(
+            'Fix request behavior\nso cancellation stops underlying work [#845]',
+            updated,
+        )
+        self.assertIn(
+            'Add response support\nfor streaming traffic with bounded buffering [#812]',
+            updated,
+        )
+        self.assertEqual(0, self.validate(updated).returncode)
+
     def test_release_links_cannot_replace_original_notes(self):
         updated = self.completed_changelog().replace(
             '- Add streaming responses with unbounded buffering.',
