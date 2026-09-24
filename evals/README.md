@@ -72,10 +72,10 @@ The `android-benchmark-comparison`, `compose-state-and-effects`,
 `kotlin-concurrency-and-flow`, `kotlin-control-flow`, and
 `release-kotlin-library` automatic cells, and the `to-plan` restraint cell,
 use later focused evidence. Baseline and efficiency values use the complete
-suite. See
-the [improvement result record](artifacts/2026-09-24-gpt6-improvement-results.md)
-and [targeted probe record](artifacts/2026-09-24-gpt6-targeted-100-probes.md)
-for provenance and remaining failures.
+suite. The [improvement result record](artifacts/2026-09-24-gpt6-improvement-results.md),
+[targeted probe record](artifacts/2026-09-24-gpt6-targeted-100-probes.md),
+and [inline repair record](artifacts/2026-09-24-gpt6-inline-repair-results.md)
+give provenance and remaining failures.
 
 ### Skill efficiency
 

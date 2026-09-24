@@ -1,10 +1,59 @@
 # GPT-6 Luna/high skill improvement follow-up
 
-This follow-up implements the [score-improvement plan](2026-09-23-gpt6-improvement-plan.md)
-against `gpt-6-luna` at high reasoning, judged by `gpt-6-sol` at high
+This follow-up applies a measurement-first repair plan against `gpt-6-luna` at
+high reasoning, judged by `gpt-6-sol` at high
 reasoning. The [original run](2026-09-23-gpt6-luna-high.md) remains intact.
 The [corpus audit](2026-09-23-gpt6-corpus-audit.md) records every case-contract
 change and the original packet decisions.
+
+The plan first audited objective/judge disagreements and impossible case
+contracts, then changed only skill decisions supported by the traces. It
+required direct, novel, no-change, routing, and safety checks before claiming
+an improvement. A uniform three-suite rerun produced the frozen scorecards
+below; later user-authorized work used focused checks only. The later focused
+repairs and their remaining limits are recorded in the
+[inline repair record](2026-09-24-gpt6-inline-repair-results.md).
+
+### Intermediate alternate-CLI checks
+
+The following focused runs used the ChatGPT-bundled Codex CLI
+`0.155.0-alpha.16` after the installed CLI stalled at its version preflight.
+They used `gpt-6-luna/high` as subject and `gpt-6-sol/high` as judge. Each
+row preserves its original raw result and source revision; different rows
+must not be combined into one suite score.
+The raw directories are machine-local and are not included in this repository;
+the committed tables and audit decisions do not permit a full replay after
+those directories are removed.
+
+| Case and revision | Forced | Automatic | Raw output |
+| --- | ---: | ---: | --- |
+| Compose state hoisting direct, `0aa790e` | 3/3 | 3/3 | `/private/tmp/gpt6-compose-state-hoisting-alt-cli-3rep` |
+| Compose focus navigation novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-focus-novel-alt-cli-3rep` |
+| Compose recomposition performance novel, `2114de7` | 2/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
+| Compose state authoring novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
+| Compose state authoring novel, `ee3584e` | Not run | 3/3 | `/private/tmp/gpt6-compose-state-authoring-auto-alt-cli-3rep` |
+| Compose animation/focus/testing overlap, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-compose-remaining-forced-alt-cli-3rep` |
+| Kotlin Flow state/events novel, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-kotlin-flow-concurrency-alt-cli-3rep` |
+| Kotlin concurrency router, `2114de7` | 3/3 | Not run | `/private/tmp/gpt6-kotlin-flow-concurrency-alt-cli-3rep` |
+| Kotlin concurrency router, `ee3584e` | Not run | 2/3 | `/private/tmp/gpt6-kotlin-concurrency-router-auto-alt-cli-3rep` |
+| Gradle incidental validation direct, `6f62dd7` | 3/3 | 3/3 | `/private/tmp/gpt6-gradle-incidental-alt-cli-3rep` |
+| Kotlin API ownership direct, `6f62dd7` | Not run | 3/3 | `/private/tmp/gpt6-kotlin-api-ownership-auto-alt-cli-3rep` |
+| Shepherd novel, `0aa790e` | 3/3 | Ineligible | `/private/tmp/gpt6-shepherd-novel-alt-cli-3rep` |
+| Implement with subagents direct, novel, and no-change, `53ddfc9` | 9/9 | Ineligible | `/private/tmp/gpt6-implement-subagents-alt-cli-3rep` |
+| Release direct, `0aa790e` | 2/3 | 2/3 | `/private/tmp/gpt6-release-direct-alt-cli-3rep` |
+| Grounded writing direct, `ab748e1` | 3/3 | 1/3 | `/private/tmp/gpt6-grounded-writing-alt-cli-3rep` |
+| Grounded writing novel, `ab748e1` | 1/3 | 1/3 | `/private/tmp/gpt6-grounded-writing-alt-cli-3rep` |
+| Grounded writing no-change, `ab748e1` | 3/3 | 1/3 | `/private/tmp/gpt6-grounded-writing-alt-cli-3rep` |
+| Release direct after ledger-order repair, `15415a2` | 3/3 | 2/3 | `/private/tmp/gpt6-release-direct-ledger-alt-cli-3rep` |
+| Grounded writing direct after shared-contract repair, `15415a2` | Not run | 3/3 | `/private/tmp/gpt6-writing-direct-contract-alt-cli-3rep` |
+| Android benchmark direct, `c65d99d` | Not run | 1/3 raw | `/private/tmp/gpt6-benchmark-direct-auto-alt-cli-3rep` |
+
+These probes exposed the preview-tooling scope miss, an unmeasured Compose
+performance rewrite, a smart-cast routing omission, a release approval-handoff
+miss, and writing restraint failures. The benchmark direct automatic probe
+also exposed an objective matcher disagreement and judge false negatives about
+an edited file. Later repairs and fresh outcomes are documented in the inline
+repair record; no failed raw packet was relabelled as a pass.
 
 ## Measurement and skill changes
 

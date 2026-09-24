@@ -52,8 +52,8 @@ Next, recheck that Compose repair and `grounded-writing` automatic negative
 restraint and novel coverage; then work through `release-kotlin-library`,
 `shepherd`, and remaining Compose/Kotlin routing misses. Rerun the frozen
 three-suite corpus after those repairs. The
-[improvement plan](2026-09-23-gpt6-improvement-plan.md) records the original
-priorities and gates.
+[improvement result record](2026-09-24-gpt6-improvement-results.md) records the
+original priorities and gates.
 
 ## Subsequent local repairs
 

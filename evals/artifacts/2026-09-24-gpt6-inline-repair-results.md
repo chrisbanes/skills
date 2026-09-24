@@ -4,7 +4,9 @@ These targeted live runs used `gpt-6-luna/high` as subject and
 `gpt-6-sol/high` as judge through the ChatGPT-bundled Codex CLI
 `0.155.0-alpha.16`. The per-call figures passed to the harness were cost
 planning assumptions, not measured billing. Raw packets and scorecards are in
-the listed temporary directories.
+the listed temporary directories. Those directories are not included in this
+repository, so another maintainer cannot independently replay these runs once
+the local copies are removed.
 
 The bundled CLI reported `Logged in using ChatGPT` for the later full-run
 attempt. On that login, the dollar figures required by this harness do not
