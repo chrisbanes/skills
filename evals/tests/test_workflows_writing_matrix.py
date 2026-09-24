@@ -672,6 +672,21 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             ownership_failures,
         )
 
+        wrong_prefix = separated.replace(
+            "tests/test_manifest_reader.py", "other/tests/test_manifest_reader.py"
+        ).replace(
+            "tests/test_profile_loader.py", "other/tests/test_profile_loader.py"
+        )
+        prefix_failures = validate_task_graph(wrong_prefix, rules["task_graph"])
+        self.assertTrue(
+            any("missing-manifest" in failure for failure in prefix_failures),
+            prefix_failures,
+        )
+        self.assertTrue(
+            any("invalid-profile" in failure for failure in prefix_failures),
+            prefix_failures,
+        )
+
         dependent = separated.replace(
             "### 2. Quote invalid-profile paths\n"
             "**Task ID:** `T2`\n**Depends on:** `none`",

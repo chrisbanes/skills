@@ -200,10 +200,9 @@ def validate_task_graph(
     matched_tasks: dict[str, str] = {}
 
     def lists_path(files_field: str, path: str) -> bool:
-        slash_boundary = "" if "/" in path else "/"
         pattern = (
-            rf"(?<![A-Za-z0-9_.{slash_boundary}-]){re.escape(path)}"
-            rf"(?![A-Za-z0-9_.{slash_boundary}-])"
+            rf"(?<![A-Za-z0-9_./-]){re.escape(path)}"
+            rf"(?![A-Za-z0-9_./-])"
         )
         return re.search(pattern, files_field) is not None
 
