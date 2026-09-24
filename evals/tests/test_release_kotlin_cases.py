@@ -41,10 +41,13 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         self.assertEqual(0, self.validate(self.completed_changelog()).returncode)
 
     def test_cancelling_wording_in_stable_summary_passes(self):
-        updated = self.completed_changelog().replace(
-            'Fix request cancellation so underlying work stops.',
-            'Cancelling a public request now stops the underlying work.',
+        original = self.completed_changelog()
+        updated = original.replace(
+            'Fix request cancellation so underlying work stops ',
+            'Cancelling a public request now stops underlying work ',
         )
+        self.assertNotEqual(original, updated)
+        self.assertIn('Cancelling a public request now stops underlying work', updated)
         self.assertEqual(0, self.validate(updated).returncode)
 
     def test_missing_cancellation_concept_in_stable_summary_fails(self):
@@ -81,6 +84,28 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
             '([#812](https://github.com/chrisbanes/skills/pull/812)).\n', '',
         )
         self.assertNotEqual(0, self.validate(updated).returncode)
+
+    def test_pr_links_under_older_release_fail(self):
+        updated = self.completed_changelog().replace(
+            ' ([#845](https://github.com/chrisbanes/skills/pull/845); '
+            '[Avery Example](https://github.com/avery-example))',
+            '',
+        ).replace(
+            ' ([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '',
+        ).replace(
+            '- Initial stable API.',
+            '- Initial stable API.\n\n'
+            '- Related changes: [#812](https://github.com/chrisbanes/skills/pull/812), '
+            '[#845](https://github.com/chrisbanes/skills/pull/845), '
+            '[Avery Example](https://github.com/avery-example).',
+        )
+        self.assertIn('[#812](https://github.com/chrisbanes/skills/pull/812)', updated)
+        self.assertIn('[#845](https://github.com/chrisbanes/skills/pull/845)', updated)
+        self.assertIn('[Avery Example](https://github.com/avery-example)', updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern', result.stderr)
 
     def test_release_links_cannot_replace_original_notes(self):
         updated = self.completed_changelog().replace(
