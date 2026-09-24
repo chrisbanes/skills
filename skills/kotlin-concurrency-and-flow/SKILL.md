@@ -23,6 +23,10 @@ the product contract.
    or hide unstructured launches behind non-suspending APIs.
 4. Model renderable, current data as state and imperative one-shot work as an
    event only when its loss and replay behavior are explicitly acceptable.
+   Ask whether one consumer handles each event or every active consumer must
+   receive it. A `Channel` hands each event to one consumer; a configured
+   `SharedFlow` broadcasts to active consumers. If that consumer contract is
+   unknown, state both options and the decision needed before choosing one.
    For a one-consumer navigation handoff that must survive a collector gap,
    choose a buffered `Channel` exposed as `receiveAsFlow()`; do not preserve a
    replay-zero `SharedFlow` after identifying event loss as the defect.
