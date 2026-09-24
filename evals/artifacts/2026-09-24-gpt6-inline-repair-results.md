@@ -406,3 +406,18 @@ result rather than a suite score. One direct reply reported the extra
 benchmark skill reported. The README automatic correctness cell uses the
 complete nine-packet benchmark subset; routing precision is a separate
 diagnostic.
+
+## Gradle automatic score
+
+The five `gradle-run` corpus cases each have a later 3/3 automatic pass on the
+current case and skill entrypoint: completed-validation no-change in
+`/private/tmp/gpt6-full-9f6eff0-kotlin`, fingerprint diagnosis in
+`/private/tmp/gpt6-targeted-fingerprint-3rep-20260924`, incidental validation
+in `/private/tmp/gpt6-focused-gaps-kotlin-1`, and sensitive output plus the
+Kotlin/Gradle router case in
+`/private/tmp/gpt6-targeted-gradle-remaining-auto-20260924`. The two newly
+checked cases passed 6/6 with one catalog digest and zero forbidden actions.
+Across the selected 15 packets, objective and judge checks passed and no
+forbidden actions were recorded. The README automatic cell combines focused
+case results from different catalog snapshots; it is not a current
+same-catalog suite score.
