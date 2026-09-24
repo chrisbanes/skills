@@ -418,6 +418,40 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
                 self.assertEqual(1, result.returncode)
                 self.assertIn('missing required pattern in a release bullet', result.stderr)
 
+    def test_pr_link_in_html_attribute_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '[#812](https://github.com/chrisbanes/skills/pull/812)',
+            '<span title="[#812](https://github.com/chrisbanes/skills/pull/812)">'
+            'PR #812</span>',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
+
+    def test_code_span_ending_in_backslash_preserves_later_link(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            'Add streaming responses with bounded buffering '
+            '([#812](https://github.com/chrisbanes/skills/pull/812)).',
+            'Add streaming `call\\` with bounded buffering '
+            '[#812](https://github.com/chrisbanes/skills/pull/812). `tail`',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_visible_link_after_escaped_punctuation_passes(self):
+        original = self.completed_changelog()
+        for prefix in (r'\!', r'\\'):
+            with self.subTest(prefix=prefix):
+                updated = original.replace(
+                    '[#812](https://github.com/chrisbanes/skills/pull/812)',
+                    prefix + '[#812](https://github.com/chrisbanes/skills/pull/812)',
+                )
+                self.assertNotEqual(original, updated)
+                self.assertEqual(0, self.validate(updated).returncode)
+
     def test_release_links_cannot_replace_original_notes(self):
         updated = self.completed_changelog().replace(
             '- Add streaming responses with unbounded buffering.',

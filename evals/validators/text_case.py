@@ -47,20 +47,48 @@ def _mask_html_comments(subject: str) -> str:
     )
 
 
-def _mask_inline_code(subject: str) -> str:
+def _mask_inline_html_tags(subject: str) -> str:
     return re.sub(
-        r"(?<!\\)(?<!`)(`+)(?!`)(.*?)(?<!\\)\1(?!`)",
+        r"<(?!/?details\b)[^>]*>",
         lambda match: re.sub(r"[^\r\n]", " ", match.group()),
         subject,
         flags=re.DOTALL,
     )
 
 
+def _mask_inline_code(subject: str) -> str:
+    return re.sub(
+        r"(?<!\\)(?<!`)(`+)(?!`)(.*?)\1(?!`)",
+        lambda match: re.sub(r"[^\r\n]", " ", match.group()),
+        subject,
+        flags=re.DOTALL,
+    )
+
+
+def has_visible_markdown_link(subject: str, pattern: str) -> bool:
+    for match in re.finditer(pattern, subject, re.IGNORECASE):
+        start = match.start()
+        backslashes = 0
+        while start - backslashes - 1 >= 0 and subject[start - backslashes - 1] == "\\":
+            backslashes += 1
+        if backslashes % 2:
+            continue
+        prefix = start - backslashes - 1
+        if prefix >= 0 and subject[prefix] == "!":
+            image_escapes = 0
+            while prefix - image_escapes - 1 >= 0 and subject[prefix - image_escapes - 1] == "\\":
+                image_escapes += 1
+            if image_escapes % 2 == 0:
+                continue
+        return True
+    return False
+
+
 def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
     """Collect visible top-level bullets before the next release or details block."""
     lines = subject.splitlines()
     visible_lines = _mask_inline_code(
-        _mask_html_comments(_mask_fenced_code(subject))
+        _mask_inline_html_tags(_mask_html_comments(_mask_fenced_code(subject)))
     ).splitlines()
     bullets: list[str] = []
     current: list[str] = []
@@ -317,12 +345,13 @@ def main(argv: list[str]) -> int:
         bullet_rules = rules.get("markdown_bullets")
         if bullet_rules:
             bullets = markdown_bullets_under_heading(subject, bullet_rules["heading"])
-            for patterns in bullet_rules["required"]:
+            for requirement in bullet_rules["required"]:
                 if not any(
-                    all(re.search(pattern, bullet, re.IGNORECASE) for pattern in patterns)
+                    all(re.search(pattern, bullet, re.IGNORECASE) for pattern in requirement["text"])
+                    and all(has_visible_markdown_link(bullet, pattern) for pattern in requirement["links"])
                     for bullet in bullets
                 ):
-                    failures.append(f"{label}: missing required pattern in a release bullet: {patterns!r}")
+                    failures.append(f"{label}: missing required pattern in a release bullet: {requirement!r}")
         for pattern in rules.get("must_not_match", []):
             if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is not None:
                 failures.append(f"{label}: forbidden pattern remains: {pattern!r}")
