@@ -31,11 +31,11 @@
     "separate_slice_requirements": [
       {
         "id": "missing-manifest",
-        "markers": ["manifest_reader.py", "tests/test_manifest_reader.py"]
+        "owned_files": ["manifest_reader.py", "tests/test_manifest_reader.py"]
       },
       {
         "id": "invalid-profile",
-        "markers": ["profile_loader.py", "tests/test_profile_loader.py"]
+        "owned_files": ["profile_loader.py", "tests/test_profile_loader.py"]
       }
     ]
   }

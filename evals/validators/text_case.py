@@ -198,6 +198,15 @@ def validate_task_graph(
             f"{label}: separate_slice_requirements must be a list"
         ]
     matched_tasks: dict[str, str] = {}
+
+    def lists_path(files_field: str, path: str) -> bool:
+        slash_boundary = "" if "/" in path else "/"
+        pattern = (
+            rf"(?<![A-Za-z0-9_.{slash_boundary}-]){re.escape(path)}"
+            rf"(?![A-Za-z0-9_.{slash_boundary}-])"
+        )
+        return re.search(pattern, files_field) is not None
+
     for requirement in separate_slice_requirements:
         if not isinstance(requirement, dict):
             failures.append(
@@ -205,22 +214,30 @@ def validate_task_graph(
             )
             continue
         requirement_id = requirement.get("id")
-        markers = requirement.get("markers")
+        owned_files = requirement.get("owned_files")
         if (
             not isinstance(requirement_id, str)
             or not requirement_id.strip()
-            or not isinstance(markers, list)
-            or not markers
-            or any(not isinstance(marker, str) or not marker for marker in markers)
+            or not isinstance(owned_files, list)
+            or not owned_files
+            or any(not isinstance(path, str) or not path for path in owned_files)
         ):
             failures.append(
-                f"{label}: separate slice requirements need an id and non-empty marker list"
+                f"{label}: separate slice requirements need an id and non-empty owned_files list"
             )
             continue
         matches = [
             task_id
             for task_id, body in task_bodies.items()
-            if all(marker in body for marker in markers)
+            if (
+                files_field := re.search(
+                    r"^\*\*Files and symbols:\*\*[ \t]*([\s\S]*?)"
+                    r"(?=^\*\*[^\n]+:\*\*|\Z)",
+                    body,
+                    re.MULTILINE,
+                )
+            )
+            and all(lists_path(files_field.group(1), path) for path in owned_files)
         ]
         if len(matches) != 1:
             failures.append(
@@ -235,6 +252,29 @@ def validate_task_graph(
             )
         else:
             matched_tasks[task_id] = requirement_id
+
+    def depends_transitively(task_id: str, target: str) -> bool:
+        pending = list(tasks.get(task_id, set()))
+        visited: set[str] = set()
+        while pending:
+            dependency = pending.pop()
+            if dependency == target:
+                return True
+            if dependency not in visited:
+                visited.add(dependency)
+                pending.extend(tasks.get(dependency, set()))
+        return False
+
+    matched = list(matched_tasks.items())
+    for index, (task_id, requirement_id) in enumerate(matched):
+        for other_task_id, other_requirement_id in matched[index + 1 :]:
+            if depends_transitively(task_id, other_task_id) or depends_transitively(
+                other_task_id, task_id
+            ):
+                failures.append(
+                    f"{label}: independent behaviors {requirement_id!r} and "
+                    f"{other_requirement_id!r} must not depend on each other"
+                )
 
     if rules.get("require_acyclic", False):
         visiting: set[str] = set()

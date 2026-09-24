@@ -38,7 +38,7 @@
     },
     {
       "id": "proportionality",
-      "text": "Chooses a reasonable grouping for the related diagnostic changes based on their shared formatting behavior, keeps the plan concise, and adds no speculative proof or unrelated steps; it does not assume a fixed slice count or order"
+      "text": "Keeps each independently testable call site in its required separate slice, keeps the plan concise, and adds no speculative proof or unrelated steps"
     },
     {
       "id": "planning-boundary",

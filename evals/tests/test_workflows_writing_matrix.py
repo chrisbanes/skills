@@ -222,11 +222,17 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             [
                 {
                     "id": "missing-manifest",
-                    "markers": ["manifest_reader.py", "tests/test_manifest_reader.py"],
+                    "owned_files": [
+                        "manifest_reader.py",
+                        "tests/test_manifest_reader.py",
+                    ],
                 },
                 {
                     "id": "invalid-profile",
-                    "markers": ["profile_loader.py", "tests/test_profile_loader.py"],
+                    "owned_files": [
+                        "profile_loader.py",
+                        "tests/test_profile_loader.py",
+                    ],
                 },
             ],
             expectations["task_graph"]["separate_slice_requirements"],
@@ -623,18 +629,49 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "### 1. Quote missing-manifest paths\n"
             "**Task ID:** `T1`\n"
             "**Depends on:** `none`\n"
-            "**Files and symbols:** Edit `manifest_reader.py` and "
-            "`tests/test_manifest_reader.py`.\n\n"
+            "**Files and symbols:** Existing `tests/test_manifest_reader.py` —\n"
+            "`ManifestReaderTest.test_quotes_missing_manifest_path`; existing\n"
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n\n"
             "### 2. Quote invalid-profile paths\n"
             "**Task ID:** `T2`\n"
             "**Depends on:** `none`\n"
-            "**Files and symbols:** Edit `profile_loader.py` and "
-            "`tests/test_profile_loader.py`.\n"
+            "**Files and symbols:** Existing `tests/test_profile_loader.py` —\n"
+            "`ProfileLoaderTest.test_quotes_invalid_profile_path`; existing\n"
+            "`profile_loader.py` — `invalid_profile_error(path: str) -> str`.\n"
             "## Acceptance coverage\n"
+        )
+        separated = separated.replace(
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n",
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n"
+            "**Test:** Also inspect `profile_loader.py` and `tests/test_profile_loader.py`.\n",
         )
         self.assertEqual(
             [],
             validate_task_graph(separated, rules["task_graph"]),
+        )
+
+        test_file_only = separated.replace(
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.",
+            "",
+        )
+        ownership_failures = validate_task_graph(test_file_only, rules["task_graph"])
+        self.assertTrue(
+            any("missing-manifest" in failure for failure in ownership_failures),
+            ownership_failures,
+        )
+
+        dependent = separated.replace(
+            "### 2. Quote invalid-profile paths\n"
+            "**Task ID:** `T2`\n**Depends on:** `none`",
+            "### 2. Prepare shared fixture\n"
+            "**Task ID:** `T3`\n**Depends on:** `T1`\n\n"
+            "### 3. Quote invalid-profile paths\n"
+            "**Task ID:** `T2`\n**Depends on:** `T3`",
+        )
+        dependency_failures = validate_task_graph(dependent, rules["task_graph"])
+        self.assertTrue(
+            any("must not depend on each other" in failure for failure in dependency_failures),
+            dependency_failures,
         )
 
     def test_material_assumption_proof_case_requires_dependent_implementation(self):
