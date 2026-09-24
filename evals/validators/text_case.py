@@ -215,8 +215,11 @@ def validate_task_graph(
         )
         return match.group(1) if match else ""
 
-    edit_verbs = r"edit|create|add|update|change|modify|replace|write"
-    inspection_verbs = r"inspect|read|verify|check|review"
+    edit_verbs = r"edit|create|add|update|change|modify|replace|write|implement"
+    inspection_verbs = (
+        r"inspect|read|verify|check|review|leave|leaving|keep|keeping|"
+        r"preserve|preserving|retain|retaining"
+    )
 
     def is_negated(text: str, action_start: int) -> bool:
         return re.search(
@@ -265,20 +268,16 @@ def validate_task_graph(
         for clause in re.split(r";|(?<=\.)\s+(?=[A-Z])", files_field):
             if not lists_path(clause, path):
                 continue
+            action = path_action(clause, path)
+            if action == "edit":
+                return True
+            if action == "inspect":
+                continue
             if re.search(
                 r"\b(?:inspect only|no edits?|read.only|do not edit|do not change)\b",
                 clause,
                 re.IGNORECASE,
             ):
-                continue
-            if re.search(r"\b(?:leave|keep)\b", clause, re.IGNORECASE) and re.search(
-                r"\bunchanged\b", clause, re.IGNORECASE
-            ):
-                continue
-            action = path_action(clause, path)
-            if action == "edit":
-                return True
-            if action == "inspect":
                 continue
             if re.match(
                 rf"^\s*(?:[-*]\s*)?(?:{inspection_verbs})\b",
@@ -333,28 +332,32 @@ def validate_task_graph(
         else:
             matched_tasks[task_id] = requirement_id
 
-    for task_id, requirement_id in matched_tasks.items():
-        implementation = field(task_bodies[task_id], "Implementation")
-        for other in separate_slice_requirements:
-            if not isinstance(other, dict) or other.get("id") == requirement_id:
+    for task_id, body in task_bodies.items():
+        planned_edits = (
+            field(body, "Files and symbols"),
+            field(body, "Implementation"),
+        )
+        for requirement in separate_slice_requirements:
+            if not isinstance(requirement, dict):
                 continue
-            other_files = other.get("owned_files")
-            other_symbols = other.get("owned_symbols", [])
-            if not isinstance(other_files, list) or any(
-                not isinstance(path, str) for path in other_files
+            owned_files = requirement.get("owned_files")
+            owned_symbols = requirement.get("owned_symbols", [])
+            if not isinstance(owned_files, list) or any(
+                not isinstance(path, str) for path in owned_files
             ):
                 continue
-            if not isinstance(other_symbols, list) or any(
-                not isinstance(symbol, str) for symbol in other_symbols
+            if not isinstance(owned_symbols, list) or any(
+                not isinstance(symbol, str) for symbol in owned_symbols
             ):
                 continue
-            if any(
-                edits_path(implementation, target)
-                for target in [*other_files, *other_symbols]
+            if matched_tasks.get(task_id) != requirement.get("id") and any(
+                edits_path(section, target)
+                for section in planned_edits
+                for target in [*owned_files, *owned_symbols]
             ):
                 failures.append(
-                    f"{label}: independent behavior {requirement_id!r} slice {task_id!r} "
-                    f"also implements {other['id']!r}"
+                    f"{label}: slice {task_id!r} edits independent behavior "
+                    f"{requirement['id']!r} outside its owning slice"
                 )
 
     def depends_transitively(task_id: str, target: str) -> bool:

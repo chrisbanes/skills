@@ -689,7 +689,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
         hidden_failures = validate_task_graph(hidden_grouping, rules["task_graph"])
         self.assertTrue(
-            any("also implements 'invalid-profile'" in failure for failure in hidden_failures),
+            any("edits independent behavior 'invalid-profile'" in failure for failure in hidden_failures),
             hidden_failures,
         )
 
@@ -700,7 +700,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
         symbol_failures = validate_task_graph(hidden_symbol, rules["task_graph"])
         self.assertTrue(
-            any("also implements 'invalid-profile'" in failure for failure in symbol_failures),
+            any("edits independent behavior 'invalid-profile'" in failure for failure in symbol_failures),
             symbol_failures,
         )
 
@@ -712,8 +712,37 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
         later_edit_failures = validate_task_graph(later_edit, rules["task_graph"])
         self.assertTrue(
-            any("also implements 'invalid-profile'" in failure for failure in later_edit_failures),
+            any("edits independent behavior 'invalid-profile'" in failure for failure in later_edit_failures),
             later_edit_failures,
+        )
+
+        unmatched_edit = separated.replace(
+            "## Implementation slices\n\n",
+            "## Implementation slices\n\n"
+            "### 1. Edit both formatters\n"
+            "**Task ID:** `T0`\n**Depends on:** `none`\n"
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`profile_loader.py`.\n\n",
+        ).replace(
+            "### 1. Quote missing-manifest paths", "### 2. Quote missing-manifest paths"
+        ).replace(
+            "### 2. Quote invalid-profile paths", "### 3. Quote invalid-profile paths"
+        )
+        unmatched_failures = validate_task_graph(unmatched_edit, rules["task_graph"])
+        self.assertTrue(
+            any("slice 'T0' edits independent behavior" in failure for failure in unmatched_failures),
+            unmatched_failures,
+        )
+
+        implement_wording = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path; "
+            "implement quoting in `profile_loader.py` here.\n",
+        )
+        implement_failures = validate_task_graph(implement_wording, rules["task_graph"])
+        self.assertTrue(
+            any("edits independent behavior 'invalid-profile'" in failure for failure in implement_failures),
+            implement_failures,
         )
 
         verification_only = separated.replace(
@@ -748,6 +777,37 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertEqual(
             [],
             validate_task_graph(unchanged_reference, rules["task_graph"]),
+        )
+
+        mixed_unchanged = separated.replace(
+            "**Files and symbols:** Existing `tests/test_manifest_reader.py` —\n"
+            "`ManifestReaderTest.test_quotes_missing_manifest_path`; existing\n"
+            "`manifest_reader.py` — `missing_manifest_error(path: str) -> str`.\n",
+            "**Files and symbols:** Edit `manifest_reader.py` and "
+            "`tests/test_manifest_reader.py`, leave `profile_loader.py` unchanged.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(mixed_unchanged, rules["task_graph"]),
+        )
+
+        mixed_no_edit = mixed_unchanged.replace(
+            "leave `profile_loader.py` unchanged",
+            "do not edit `profile_loader.py`",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(mixed_no_edit, rules["task_graph"]),
+        )
+
+        unchanged_symbol = separated.replace(
+            "**Implementation:** Change `manifest_reader.py` to quote the path.\n",
+            "**Implementation:** Change `manifest_reader.py` to quote the path "
+            "while keeping `invalid_profile_error` unchanged.\n",
+        )
+        self.assertEqual(
+            [],
+            validate_task_graph(unchanged_symbol, rules["task_graph"]),
         )
 
         dotted_paths = separated
