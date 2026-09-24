@@ -38,6 +38,53 @@ def _mask_fenced_code(subject: str) -> str:
     return "".join(masked)
 
 
+def markdown_bullets_under_heading(subject: str, heading: str) -> list[str]:
+    """Collect visible top-level bullets before the next release or details block."""
+    lines = subject.splitlines()
+    visible_lines = _mask_fenced_code(subject).splitlines()
+    bullets: list[str] = []
+    current: list[str] = []
+    in_section = False
+    after_blank = False
+
+    def finish() -> None:
+        if current:
+            bullets.append("\n".join(current))
+            current.clear()
+
+    for original, visible in zip(lines, visible_lines):
+        if not in_section:
+            if re.fullmatch(rf"##[ \t]+{re.escape(heading)}[ \t]*", visible):
+                in_section = True
+            continue
+        if re.match(r"##[ \t]|<details>", visible):
+            finish()
+            break
+        if re.fullmatch(r"[ \t]*(?:-{3,}|_{3,}|\*{3,})[ \t]*", visible):
+            finish()
+            continue
+        if re.match(r"[-*][ \t]+", visible):
+            finish()
+            current.append(visible)
+            after_blank = False
+            continue
+        if not current:
+            continue
+        if not visible.strip():
+            if original.strip() and not original.startswith(("  ", "\t")):
+                finish()
+            elif not original.strip():
+                after_blank = True
+            continue
+        if after_blank and not visible.startswith(("  ", "\t")):
+            finish()
+            continue
+        current.append(visible)
+        after_blank = False
+    finish()
+    return bullets
+
+
 def validate_task_graph(
     subject: str, rules: dict[str, object], label: str = "subject"
 ) -> list[str]:
@@ -240,9 +287,15 @@ def main(argv: list[str]) -> int:
         for pattern in rules.get("must_match", []):
             if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is None:
                 failures.append(f"{label}: missing required pattern: {pattern!r}")
-        for pattern in rules.get("must_match_unfenced", []):
-            if re.search(pattern, _mask_fenced_code(subject), re.MULTILINE | re.DOTALL) is None:
-                failures.append(f"{label}: missing required pattern outside fenced code: {pattern!r}")
+        bullet_rules = rules.get("markdown_bullets")
+        if bullet_rules:
+            bullets = markdown_bullets_under_heading(subject, bullet_rules["heading"])
+            for patterns in bullet_rules["required"]:
+                if not any(
+                    all(re.search(pattern, bullet, re.IGNORECASE) for pattern in patterns)
+                    for bullet in bullets
+                ):
+                    failures.append(f"{label}: missing required pattern in a release bullet: {patterns!r}")
         for pattern in rules.get("must_not_match", []):
             if re.search(pattern, subject, re.MULTILINE | re.DOTALL) is not None:
                 failures.append(f"{label}: forbidden pattern remains: {pattern!r}")

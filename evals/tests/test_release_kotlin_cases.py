@@ -160,7 +160,7 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
         )
         result = self.validate(updated)
         self.assertEqual(1, result.returncode)
-        self.assertIn('missing required pattern outside fenced code', result.stderr)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
 
     def test_pr_links_only_in_prerelease_history_fail(self):
         updated = self.completed_changelog().replace(
@@ -288,6 +288,43 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
             updated,
         )
         self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_fenced_example_with_later_description_and_link_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '- Add streaming responses with bounded buffering '
+            '([#812](https://github.com/chrisbanes/skills/pull/812)).',
+            '- Add response support:\n\n'
+            '  ```kotlin\n'
+            '  streamResponses()\n'
+            '  ```\n\n'
+            '  Streaming responses use bounded buffering '
+            '[#812](https://github.com/chrisbanes/skills/pull/812).',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_loose_list_continuation_link_passes(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '\n\n  [#812](https://github.com/chrisbanes/skills/pull/812)',
+        )
+        self.assertNotEqual(original, updated)
+        self.assertEqual(0, self.validate(updated).returncode)
+
+    def test_link_only_inside_fenced_example_fails(self):
+        original = self.completed_changelog()
+        updated = original.replace(
+            '([#812](https://github.com/chrisbanes/skills/pull/812))',
+            '\n  ```md\n'
+            '  [#812](https://github.com/chrisbanes/skills/pull/812)\n'
+            '  ```',
+        )
+        self.assertNotEqual(original, updated)
+        result = self.validate(updated)
+        self.assertEqual(1, result.returncode)
+        self.assertIn('missing required pattern in a release bullet', result.stderr)
 
     def test_release_links_cannot_replace_original_notes(self):
         updated = self.completed_changelog().replace(
