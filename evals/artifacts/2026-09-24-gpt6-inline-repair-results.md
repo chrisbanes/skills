@@ -214,6 +214,12 @@ of the historical failure list, not a current full-corpus score: the passing
 probes differ in source, case, and skill-catalog snapshots, and conditions
 that passed in the old full run were not all rechecked.
 
+A later audit of the individual raw packets confirmed that all 30 conditions
+have a three-repetition pass whose case digest and captured skill-file hashes
+match the current files. That comparison does not establish one shared catalog
+or evaluator snapshot across the probes, nor does it retest the conditions
+that passed in the older complete run.
+
 One formerly failed condition, `compose-state-authoring-direct:automatic`, had
 been repaired by a deterministic regrade of the old packet but lacked a later
 subject run. It passed 3/3 on the current case in
@@ -327,3 +333,9 @@ All three runs reported `compose-animations`, passed both objective and judge
 checks, and recorded no forbidden actions. The earlier animation triad was a
 one-repetition-per-case screen; this check adds three-repetition evidence for
 this one case and arm only.
+
+The `compose-animations-negative` automatic no-change control then passed 3/3
+at the current case and skill snapshot in
+`/private/tmp/gpt6-targeted-animation-negative-auto-20260924`. All three runs
+reported `compose-animations`, passed objective and judge checks, and recorded
+no forbidden actions. This remains a focused result, not a suite score.
