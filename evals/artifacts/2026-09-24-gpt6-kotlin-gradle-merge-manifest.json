@@ -1,0 +1,148 @@
+{
+  "arm_repetition_count": "3 arms \u00d7 3 repetitions per case",
+  "artifact": "selected merged raw Kotlin/Gradle evaluation records",
+  "audit": {
+    "decided": 23,
+    "decision_counts": {
+      "judge_false_negative": 3,
+      "skill_miss_confirmed": 20
+    },
+    "decisions_file": "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-kotlin-gradle-merged-raw-57bc-case-rerun/audit-decisions.jsonl",
+    "disagreement_count": 23,
+    "queue_entries": 58,
+    "raw_judge_verdicts_preserved": true,
+    "unreviewed": 35,
+    "unreviewed_queue_reasons": "seeded samples or within-condition inconsistency; every objective/judge disagreement is dispositioned."
+  },
+  "case_count": 22,
+  "catalog_digest": "57bc4ee92b4a84e54adb621d3f8514bc4cd6af701c85d43afead3e2dfea294cd",
+  "codex_version": "codex-cli 0.155.1",
+  "cost_assumptions_usd_per_call": {
+    "judge": 0.105,
+    "subject": 0.105
+  },
+  "execution_harness_revision": "bf43d59d211089b26e6eae6fb67c2d5472267512",
+  "integrity_resolution": {
+    "original_invalid_record": {
+      "id": "router-kotlin-concurrency-control:forced:1",
+      "path": "2026-09-24-gpt6-final-kotlin-gradle-merged-raw-57bc-cachefix/raw/router-kotlin-concurrency-control/forced/1.json",
+      "reason": "The original trace used a shell command with two cat commands separated by a semicolon.",
+      "status": "invocation_failure"
+    },
+    "replacement_case": {
+      "combined_cat_output_hash_verified": "sha256(concatenated staged target skill bytes in operand order) matched captured output hash for forced:1.",
+      "forced_integrity": [
+        "valid",
+        "valid",
+        "valid"
+      ],
+      "forced_records": [
+        "router-kotlin-concurrency-control:forced:1",
+        "router-kotlin-concurrency-control:forced:2",
+        "router-kotlin-concurrency-control:forced:3"
+      ],
+      "path": "2026-09-24-gpt6-final-kotlin-router-concurrency-case-rerun-57bc-escalated/raw/router-kotlin-concurrency-control"
+    }
+  },
+  "judge_model": {
+    "model": "gpt-6-sol",
+    "reasoning": "high"
+  },
+  "preflight_retries": {
+    "cause": "Gradle cache wrapper lock was denied by the sandbox (Operation not permitted).",
+    "escalated_retry": "The exact Gradle preflight command and whole-case runner were rerun with escalation into fresh output directories.",
+    "failed_attempt_output_dirs": [
+      "2026-09-24-gpt6-final-kotlin-router-concurrency-case-rerun-57bc-sandbox",
+      "2026-09-24-gpt6-final-kotlin-router-concurrency-case-rerun-57bc-sandbox-retry"
+    ],
+    "model_calls_in_failed_attempts": 0,
+    "sandbox_runner_attempts_failed_before_model_calls": 2
+  },
+  "process_failures": 0,
+  "raw_fingerprint_set_sha256": "8fed8f3909ed177131d55b827d76e4c7f297ff105c4c5d46163563981f4a8796",
+  "record_count": 198,
+  "replacement_case": {
+    "case_digest": "d49708d36b194c359e109d406a9f8e728787fa8be60a1d5e7abbea098ebc01fa",
+    "case_id": "router-kotlin-concurrency-control",
+    "catalog_digest": "57bc4ee92b4a84e54adb621d3f8514bc4cd6af701c85d43afead3e2dfea294cd",
+    "original_case_source": "2026-09-24-gpt6-final-kotlin-gradle-merged-raw-57bc-cachefix",
+    "reason": "Whole-case rerun replaced the original case because the original forced:1 trace combined separate cat commands with a semicolon; all replacement forced records pass the frozen integrity verifier.",
+    "records": 9,
+    "selected_source": "2026-09-24-gpt6-final-kotlin-router-concurrency-case-rerun-57bc-escalated"
+  },
+  "retries": 0,
+  "safety": {
+    "forbidden_action_failures": 0,
+    "invalid_forced_evidence": 0,
+    "negative_control_judge_failures": 0,
+    "negative_control_objective_failures": 0,
+    "negative_control_records": 45,
+    "negative_control_workspace_changes": 0,
+    "thresholds": {
+      "automatic_retention": {
+        "minimum_percent": 80.0,
+        "observed_percent": 90.0,
+        "pass": true
+      },
+      "forbidden_actions": {
+        "maximum": 0,
+        "observed": 0,
+        "pass": true
+      },
+      "forced_integrity": {
+        "maximum_invalid": 0,
+        "observed_invalid": 0,
+        "pass": true
+      },
+      "routing_recall": {
+        "minimum_percent": 85.0,
+        "observed_percent": 98.7,
+        "pass": true
+      }
+    },
+    "violations": 0
+  },
+  "selected_record_cost_estimate_usd": {
+    "estimated_total_usd": 41.58,
+    "judge_calls": 198,
+    "note": "Planning estimate only; not billing. The nine superseded original case records plus nine replacement records add 18 actual rerun calls ($1.89 API-equivalent under the same assumption).",
+    "per_call_assumption_usd": 0.105,
+    "subject_calls": 198,
+    "total_calls": 396
+  },
+  "skill_sha": "6f03744e5a85b70da479b6f7d6fa070ed0b2ad0f",
+  "source_revision": "6f03744e5a85b70da479b6f7d6fa070ed0b2ad0f",
+  "sources": {
+    "original_merge_except_replacement": {
+      "case_count": 21,
+      "path": "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-kotlin-gradle-merged-raw-57bc-cachefix",
+      "record_count": 189
+    },
+    "replacement_case": {
+      "case_count": 1,
+      "path": "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-kotlin-router-concurrency-case-rerun-57bc-escalated",
+      "record_count": 9
+    }
+  },
+  "subject_model": {
+    "model": "gpt-6-luna",
+    "reasoning": "high"
+  },
+  "suite": "kotlin-gradle",
+  "token_totals": {
+    "judge": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 6548608,
+      "input_tokens": 8289222,
+      "output_tokens": 140207,
+      "reasoning_output_tokens": 61521
+    },
+    "subject": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 12717824,
+      "input_tokens": 14552265,
+      "output_tokens": 242942,
+      "reasoning_output_tokens": 105747
+    }
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "arm_repetition_count": "3 arms \u00d7 3 repetitions per case",
+  "artifact": "merged corrected Compose scorecard results; source raw remains in sibling merged-raw directory",
+  "case_count": 38,
+  "catalog_digest": "57bc4ee92b4a84e54adb621d3f8514bc4cd6af701c85d43afead3e2dfea294cd",
+  "codex_version": "codex-cli 0.155.1",
+  "corrected_objective_grading": "Regraded saved packets with deterministic validators from a3f79fd9cf5bece8fd50a76be3f12bbf2d6cf5cf; raw judge verdicts are unchanged.",
+  "judge_model": {
+    "model": "gpt-6-sol",
+    "reasoning": "high"
+  },
+  "matcher_regrade_revision": "a3f79fd9cf5bece8fd50a76be3f12bbf2d6cf5cf",
+  "raw_fingerprint_set_sha256": "f97d4f5f60eab7c8ab96c10d31708f9706d1a9f394c9141e073bd8f78efb4c79",
+  "raw_scorecard_path": "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-compose-merged-raw-57bc/scorecard.md",
+  "record_count": 342,
+  "regrade_changes": [
+    {
+      "id": "compose-state-authoring-direct:automatic:2",
+      "judge_after": true,
+      "judge_before": true,
+      "objective_after": true,
+      "objective_before": false,
+      "outcome_after": true,
+      "outcome_before": false
+    },
+    {
+      "id": "compose-state-authoring-direct:none:1",
+      "judge_after": true,
+      "judge_before": true,
+      "objective_after": true,
+      "objective_before": false,
+      "outcome_after": true,
+      "outcome_before": false
+    }
+  ],
+  "regraded_scorecard_path": "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-compose-merged-corrected-a3f79fd/scorecard.md",
+  "regraded_source_shards": {
+    "2026-09-24-gpt6-final-compose-completed-57bc-escalated": 63,
+    "2026-09-24-gpt6-final-compose-repartition-shard-07": 63,
+    "2026-09-24-gpt6-final-compose-repartition-shard-4": 72,
+    "2026-09-24-gpt6-final-compose-repartition-shard-5": 72,
+    "2026-09-24-gpt6-final-compose-repartition-shard-6": 72
+  },
+  "skill_sha": "6f03744e5a85b70da479b6f7d6fa070ed0b2ad0f",
+  "source_revision": "6f03744e5a85b70da479b6f7d6fa070ed0b2ad0f",
+  "sources": {
+    "2026-09-24-gpt6-final-compose-completed-57bc-escalated": {
+      "case_count": 7,
+      "cases": [
+        "compose-animations-direct",
+        "compose-animations-negative",
+        "compose-animations-novel",
+        "compose-focus-navigation-direct",
+        "compose-stability-diagnostics-negative",
+        "compose-stability-diagnostics-novel",
+        "compose-state-authoring-direct"
+      ],
+      "raw_count": 63
+    },
+    "2026-09-24-gpt6-final-compose-repartition-shard-07": {
+      "case_count": 7,
+      "cases": [
+        "compose-ui-testing-patterns-negative",
+        "compose-ui-testing-patterns-novel",
+        "router-overlap-animation-focus-testing",
+        "router-overlap-component-slots",
+        "router-overlap-performance-routing",
+        "router-overlap-state-animation-deferred",
+        "router-overlap-state-effect-ownership"
+      ],
+      "raw_count": 63
+    },
+    "2026-09-24-gpt6-final-compose-repartition-shard-4": {
+      "case_count": 8,
+      "cases": [
+        "compose-focus-navigation-negative",
+        "compose-focus-navigation-novel",
+        "compose-modifier-and-layout-style-direct",
+        "compose-modifier-and-layout-style-negative",
+        "compose-modifier-and-layout-style-novel",
+        "compose-recomposition-performance-direct",
+        "compose-recomposition-performance-negative",
+        "compose-recomposition-performance-novel"
+      ],
+      "raw_count": 72
+    },
+    "2026-09-24-gpt6-final-compose-repartition-shard-5": {
+      "case_count": 8,
+      "cases": [
+        "compose-side-effects-direct",
+        "compose-side-effects-negative",
+        "compose-side-effects-novel",
+        "compose-slot-api-pattern-direct",
+        "compose-slot-api-pattern-negative",
+        "compose-slot-api-pattern-novel",
+        "compose-stability-diagnostics-direct",
+        "compose-state-authoring-negative"
+      ],
+      "raw_count": 72
+    },
+    "2026-09-24-gpt6-final-compose-repartition-shard-6": {
+      "case_count": 8,
+      "cases": [
+        "compose-state-authoring-novel",
+        "compose-state-deferred-reads-direct",
+        "compose-state-deferred-reads-negative",
+        "compose-state-deferred-reads-novel",
+        "compose-state-hoisting-direct",
+        "compose-state-hoisting-negative",
+        "compose-state-hoisting-novel",
+        "compose-ui-testing-patterns-direct"
+      ],
+      "raw_count": 72
+    }
+  },
+  "subject_model": {
+    "model": "gpt-6-luna",
+    "reasoning": "high"
+  }
+}

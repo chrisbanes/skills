@@ -1,6 +1,7 @@
 # Plan to improve the GPT-6 skill evaluation
 
-Status: proposed. This plan uses the three-repetition Luna/high subject and
+Status: implemented with the remaining limits in the
+[result record](2026-09-24-gpt6-improvement-results.md). This plan uses the three-repetition Luna/high subject and
 Sol/high judge run in [the result record](2026-09-23-gpt6-luna-high.md). Keep
 the raw run and its fingerprints intact. Improve real task behavior and
 measurement validity; do not rewrite expectations simply to raise a score.

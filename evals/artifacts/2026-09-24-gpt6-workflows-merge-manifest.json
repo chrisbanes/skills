@@ -1,0 +1,56 @@
+{
+  "merged_from": [
+    "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-workflows-writing-shard-06-escalated/regraded/results.json",
+    "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-workflows-writing-shard-07-escalated/regraded/results.json",
+    "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-workflows-writing-shard-08-escalated/regraded/results.json",
+    "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-workflow-negative-rerun-c290-escalated/regraded/results.json"
+  ],
+  "record_count": 153,
+  "case_arm_conditions": 51,
+  "repetitions_per_condition": 3,
+  "replaced_case": "android-benchmark-comparison-negative",
+  "replacement_case_provenance": "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-workflow-negative-rerun-c290-escalated",
+  "original_case_with_forced_reporting_failure_preserved_at": "/private/tmp/gpt6-eval-final-run/.scratch/skill-evals/2026-09-24-gpt6-final-workflows-writing-merged-v2/raw/android-benchmark-comparison-negative",
+  "run_controls": {
+    "suite": "workflows-writing",
+    "codex_version": "codex-cli 0.155.1",
+    "skill_sha": "6f03744e5a85b70da479b6f7d6fa070ed0b2ad0f",
+    "skill_catalog_digest": "c2901452795fd685c079156861ba31db672e2dc7d730df67d350121936bcbb19",
+    "subject_model": {
+      "model": "gpt-6-luna",
+      "reasoning": "high"
+    },
+    "judge_model": {
+      "model": "gpt-6-sol",
+      "reasoning": "high"
+    }
+  },
+  "regrade_code_revision": "edef6aa03d37aeb60de8fabed40dece896088b65",
+  "scores": {
+    "outcome_rates": {
+      "none": 0.1111111111111111,
+      "forced": 0.5,
+      "automatic": 0.6111111111111112
+    },
+    "negative_rates": {
+      "none": 0.6666666666666666,
+      "forced": 1.0,
+      "automatic": 0.8888888888888888
+    },
+    "forced_uplift": 0.3888888888888889,
+    "automatic_retention": 1.2857142857142856,
+    "routing_precision": 0.9230769230769231,
+    "routing_recall": 1.0,
+    "forbidden_action_failures": 1,
+    "invalid_forced_count": 0,
+    "gates": {
+      "forced_integrity": true,
+      "forced_uplift": true,
+      "automatic_retention": true,
+      "routing_precision": true,
+      "routing_recall": true,
+      "negative_controls": true,
+      "forbidden_actions": false
+    }
+  }
+}
