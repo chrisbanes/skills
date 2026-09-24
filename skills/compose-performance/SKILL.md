@@ -28,6 +28,13 @@ axis begins.
    changing read or calculation should move. A cross-phase write proves
    invalidation or an extra pass; do not claim oscillation or an infinite loop
    unless evidence shows values repeatedly changing. Do not stop at diagnosis.
+   When only source code is available, separate the proven feedback path from
+   its unmeasured runtime cost. Give a conditional repair direction based on
+   the intended measurement boundary; do not prescribe a callback swap,
+   equality guard, or content-layout rewrite as a performance fix without
+   evidence that it changes the observed problem. For an `Int` held in
+   `mutableStateOf` with the default structural equality policy, an unchanged
+   value already avoids invalidation.
 6. Change one axis at a time and re-measure the same transition.
 7. Finish when the evidence improves at the observed boundary without hiding
    state changes, caching stale values, or moving work to a less correct owner.

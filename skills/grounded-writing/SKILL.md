@@ -1,6 +1,6 @@
 ---
 name: grounded-writing
-description: Use when drafting or revising text for the user to publish or send, including short review comments, replies, and evidence-led technical prose.
+description: Use when drafting or reviewing public developer documentation, other text the user will publish or send, or a user-owned draft under an explicit editorial review, including review comments, replies, and internal technical reports.
 ---
 
 # Grounded Writing
@@ -13,10 +13,13 @@ generic, or included only to imitate a personality.
 
 ## Procedure
 
-1. Confirm that the text is for the user to publish or send. Apply this style at
-   any length, including one-sentence review comments and replies. Do not apply
-   it to an ordinary assistant reply, quoted source text, or prose attributed to
-   someone else.
+1. Confirm that the text is for the user to publish or send, or that the user
+   explicitly requested an editorial review of their own draft. Apply this
+   style at any length for publication or sending, including one-sentence
+   review comments and replies. For an internal report review, apply the truth
+   and material-edit checks without imposing public-documentation style. Do
+   not apply the skill to an ordinary assistant reply, quoted source text, or
+   prose attributed to someone else.
 2. Read [the style profile](references/style-profile.md) before drafting or
    revising.
 3. Establish the audience, purpose, requested format, supplied facts, and
@@ -24,13 +27,24 @@ generic, or included only to imitate a personality.
    turning every deliverable into a blog post.
 4. In public developer documentation, explain the observable difference between
    settings and the practical trade-off in supported terms: what each gains and
-   gives up, and when to choose it. If the draft lacks evidence for that choice,
+   gives up, and when to choose each setting. For a publication review, name
+   these as separate checks even when the draft lacks evidence to fill them in.
+   In a review, explicitly recommend removing each implementation mechanic
+   present in the draft that has no established reader-facing significance;
+   merely identifying it as a mechanic leaves the edit ambiguous.
+   If the draft lacks evidence for that choice,
    name the missing information instead of inferring it. Remove implementation,
    test, or diagnostic mechanics such as sampling thresholds, CPU masks, and
    interpolation details. Retain an observable transition or associated timing
    only when supplied or verified evidence shows it is part of the public
-   contract or materially informs how to use or choose the setting. Technical
-   specificity alone does not establish public relevance. If relevance could
+   contract or materially informs how to use or choose the setting. If a draft
+   says one setting returns to another, preserve that observable transition
+   conditionally while checking whether its timing is a public contract. Say
+   that it returns to the other setting without carrying over a “cooldown” term
+   or numeric delay unless that timing is verified as reader-facing behavior.
+   Do not remove the return behavior merely because its implementation timing
+   is unverified. Technical specificity alone does not establish public relevance.
+   If relevance could
    change the recommendation but is unknown, flag it for verification rather
    than treating it as settled behavior. Describe retained effects in outcome
    terms and omit their implementation mechanics. Include a mechanic only when
@@ -67,10 +81,15 @@ generic, or included only to imitate a personality.
    remove or qualify promotional framing that the supplied evidence does not
    directly support.
 10. For a review that permits edits only for material clarity or truth problems,
-   leave an adequate draft unchanged. Do not add a placeholder for an unverified
-   detail unless that missing detail blocks the draft's intended use. Explain
-   the material facts, mechanism, and qualification that make a no-change
-   result appropriate; a bare “no edit needed” does not show that the checks
+   identify the exact claim that is false or the specific misreading that would
+   prevent the document's intended use before touching the file. If neither is
+   present, leave an adequate draft unchanged. Rewording an already usable
+   instruction to make it more explicit is optional polish, not a material
+   clarity fix. The same applies to optional precision or reproducibility
+   details. Do not add a placeholder for an unverified detail unless that
+   missing detail blocks the draft's intended use. Explain the material facts,
+   mechanism, and qualification that make a no-change result appropriate; a
+   bare “no edit needed” does not show that the checks
    were completed.
 
 ## Finish gate
@@ -85,7 +104,11 @@ Finish only when all of these are true:
   establishes their public or decision relevance; otherwise omit them with the
   implementation detail or flag material uncertainty. Keep implementation
   mechanics out unless they are required for correct API use, necessary to
-  distinguish the setting choice, or explicitly requested.
+  distinguish the setting choice, or explicitly requested. In a review, ask
+  separately for the visible difference, the practical trade-off, and when to
+  choose each setting; a request for a trade-off alone does not cover the
+  visible difference. Explicitly recommend removing unsupported mechanics
+  present in the draft.
 - Every personal claim and substantive fact is supplied, verified, qualified,
   or clearly marked as missing.
 - The argument is concrete enough to follow without promotional filler.

@@ -30,6 +30,7 @@ from evals.harness.grade import ObjectiveGrade, _event_invocations, grade_subjec
 from evals.harness.judge import (
     JudgeConfig,
     JudgeResult,
+    build_judge_command,
     build_judge_packet,
     judge_covers_rubric,
     judge_output_valid,
@@ -529,6 +530,9 @@ def execute_experiment(
     skill_catalog_digest = _skill_catalog_digest(
         tuple(sorted({*skill_paths, *skill_sources}, key=str))
     )
+    judge_protocol_digest = hashlib.sha256(
+        Path(__file__).with_name("judge.py").read_bytes()
+    ).hexdigest()
     records: list[dict[str, Any]] = []
     for case, arm in conditions:
         for repetition in range(1, repetitions + 1):
@@ -541,6 +545,7 @@ def execute_experiment(
                 reasoning=run_config.reasoning,
                 judge_model=judge_config.model,
                 judge_reasoning=judge_config.reasoning,
+                judge_protocol_digest=judge_protocol_digest,
                 skill_catalog_digest=skill_catalog_digest,
             )
             result_path = output_dir / "raw" / case.id / arm / f"{repetition}.json"
@@ -896,6 +901,15 @@ def rejudge_packets(
             judge_config,
             skill_catalog_digest=skill_catalog_digest,
             codex_version=codex_version,
+            judge_prompt_digest=hashlib.sha256(
+                build_judge_command(
+                    packet_path,
+                    repo_root,
+                    judge_config,
+                    codex_executable=codex_executable,
+                    skill_paths=skill_paths,
+                )[-1].encode()
+            ).hexdigest(),
         )
         result_path = _rejudgment_result_path(output_dir, packet_path, fingerprint)
         if result_path.is_file():
@@ -954,12 +968,14 @@ def _rejudgment_fingerprint(
     *,
     skill_catalog_digest: str,
     codex_version: str,
+    judge_prompt_digest: str,
 ) -> str:
     identity = {
         "packet_digest": hashlib.sha256(packet_path.read_bytes()).hexdigest(),
         "judge_config": asdict(judge_config),
         "skill_catalog_digest": skill_catalog_digest,
         "codex_version": codex_version,
+        "judge_prompt_digest": judge_prompt_digest,
     }
     return hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()

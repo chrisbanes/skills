@@ -523,6 +523,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         accepted = (
             "The report contains no raw results or traces.",
             "The report contains neither the raw results nor traces.",
+            "Neither raw results nor traces are included in the supplied evidence.",
+            "The note does not provide its location, raw results, or traces.",
         )
         saved_report_excerpts = (
             "The run record is referenced, but the supplied evidence contains no raw\n"
@@ -535,6 +537,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         partial_evidence = (
             "The report contains no raw results, but the traces are available.",
             "The report includes the raw results and traces.",
+            "Neither raw results nor traces are fabricated here; both are attached.",
+            "The note does not provide raw results, but traces are attached.",
         )
 
         for text in (*accepted, *saved_report_excerpts):

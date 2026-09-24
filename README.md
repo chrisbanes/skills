@@ -107,11 +107,11 @@ for its lane-specific fallback and blocking behavior.
 
 ### Writing
 
-- [`grounded-writing`](skills/grounded-writing/SKILL.md) — draft or revise clear, evidence-led writing of any length, including review comments and replies, without inventing personal claims.
+- [`grounded-writing`](skills/grounded-writing/SKILL.md) — draft or review public developer documentation and other user-owned text, including internal report reviews, while preserving evidence, format, and material-edit restraint.
 
 ### Workflows
 
-- [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — prepare and verify Kotlin library releases using `gradle-maven-publish-plugin`, with changelog reconciliation, Metalava API snapshots, repository checks, safe credentials, and an adapted Haze release helper.
+- [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, reconcile changelogs and Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — validate task dependencies, dispatch only safe ready work concurrently in isolated worktrees, integrate accepted commits in dependency order, and recheck affected evidence at the integrated head; preserves serial fallback, repair ownership, review mode, and the external `implement` prerequisite.
 - [`to-plan`](skills/to-plan/SKILL.md) — turn one ready GitHub issue or an in-chat task into a repository-grounded, executor-ready recipe with stable task IDs, explicit acyclic dependencies, safe parallelism notes, concrete tests, and bounded repair rules.

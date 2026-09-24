@@ -24,6 +24,7 @@ def result_fingerprint(
     reasoning: str,
     judge_model: str | None = None,
     judge_reasoning: str | None = None,
+    judge_protocol_digest: str | None = None,
     skill_catalog_digest: str | None = None,
 ) -> str:
     fields = {
@@ -38,6 +39,8 @@ def result_fingerprint(
         fields["judge_model"] = judge_model
     if judge_reasoning is not None:
         fields["judge_reasoning"] = judge_reasoning
+    if judge_protocol_digest is not None:
+        fields["judge_protocol_digest"] = judge_protocol_digest
     if skill_catalog_digest is not None:
         fields["skill_catalog_digest"] = skill_catalog_digest
     encoded = json.dumps(fields, sort_keys=True, separators=(",", ":")).encode()

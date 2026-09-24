@@ -1,6 +1,6 @@
 {
   "files": ["comparison.md"],
-  "must_match": ["(?i)build", "(?i)raw", "(?i)trace", "(?i)(?:variab|spread|consisten.{0,160}(?:quantif|does not (?:establish|isolate|support)|cannot be assessed))", "(?i)completed", "(?i)controlled", "(?i)(?:not (?:provided|supplied|attached|included)|does not include|missing|unavailable|absent|contains?\\s+no\\s+(?:the\\s+)?raw\\s+results?\\s+or\\s+traces?|contains?\\s+neither\\s+(?:the\\s+)?raw\\s+results?\\s+nor\\s+traces?)"],
+  "must_match": ["(?i)build", "(?i)raw", "(?i)trace", "(?i)(?:variab|spread|consisten.{0,160}(?:quantif|does not (?:establish|isolate|support)|cannot be assessed))", "(?i)completed", "(?i)controlled", "(?i)(?:not (?:provided|supplied|attached|included)|does not include|missing|unavailable|absent|contains?\\s+no\\s+(?:the\\s+)?raw\\s+results?\\s+or\\s+traces?|contains?\\s+neither\\s+(?:the\\s+)?raw\\s+results?\\s+nor\\s+traces?|neither\\s+(?:the\\s+)?raw\\s+results?\\s+nor\\s+traces?\\s+(?:are|were)\\s+(?:provided|supplied|attached|included)|does not provide.{0,80}raw\\s+results?,?\\s+(?:or|and)\\s+traces?)"],
   "must_not_match": [
     "(?i)CPU frame (?:duration|time) (?:measures|is) GPU shader",
     "(?i)\\b(?:this|the|our)\\s+(?:android\\s+)?benchmark(?:\\s+comparison)?\\s+(?:completed|ran|used|included|measured|recorded)\\s+\\d+\\s+(?:completed\\s+)?cases?\\b",

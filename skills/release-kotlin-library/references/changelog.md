@@ -26,9 +26,9 @@ Include relevant breaking changes and migration guidance. A preserved alpha,
 beta, or RC note does not satisfy a stable-summary row. Deduplicate repeated
 entries and describe final behavior without carrying forward superseded or
 internal-only details.
-Retain original prerelease notes in full as the changelog's source of truth;
-never replace them with release-page links. Preserve formatting and prior stable
-entries outside the prerelease grouping. If no changelog exists, skip this
-procedure without creating one.
+Retain original prerelease notes in full and in their original order as the
+changelog's source of truth; never replace them with release-page links.
+Preserve formatting and prior stable entries outside the prerelease grouping.
+If no changelog exists, skip this procedure without creating one.
 Commit only authorized corrections before preparation so its clean-worktree gate
 holds.

@@ -27,8 +27,9 @@ only when its independent behavior changes the same work.
    change; do not load adjacent skills speculatively. For example, a flow
    delivery defect plus a separate catch-all over a sealed route needs both
    `kotlin-concurrency-and-flow` and `kotlin-control-flow`. Load the latter
-   because the branch mapping needs an explicit decision, not merely because a
-   `when` appears in the file.
+   because the branch mapping needs an explicit decision, including whether a
+   data-bearing subtype's payload is used through a smart cast or deliberately
+   discarded, not merely because a `when` appears in the file.
 6. Finish routing when every material concern has one focused owner and those
    skills are loaded before advice or edits.
 

@@ -24,6 +24,12 @@ preparation handoff, not a request for publication approval now.
    destination, publishing mechanism, and candidate-specific validation, with
    known values or `pending` for each. Do not replace the list with "full
    approval packet" or solicit publication approval during preparation.
+   When the repository identifies `com.vanniktech.maven.publish` through a
+   convention plugin, name that as the verified publishing mechanism. Keep the
+   local-versus-CI route, coordinates, and destination pending if they are not
+   supplied; do not turn the known mechanism into a pending item. If the notes
+   appear in the first part, point to that part accurately, rather than saying
+   they are "below" or merely available in a file.
 
 Before sending, check that all three parts contain substance, not just their
 labels. Do not advance version files, tag, publish, or claim a completed release

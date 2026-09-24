@@ -106,6 +106,19 @@ class ResultLifecycleTest(unittest.TestCase):
 
         self.assertNotEqual(first, second)
 
+    def test_judge_protocol_changes_the_experiment_fingerprint(self):
+        common = {
+            "case_digest": "case-sha",
+            "arm": "automatic",
+            "skill_sha": "skill-sha",
+            "codex_version": "codex-cli 1",
+            "model": "gpt-6-luna",
+            "reasoning": "high",
+        }
+        first = result_fingerprint(**common, judge_protocol_digest="prompt-one")
+        second = result_fingerprint(**common, judge_protocol_digest="prompt-two")
+        self.assertNotEqual(first, second)
+
     def test_case_digest_includes_fixture_but_ignores_generated_outputs(self):
         case_dir = self.root / "evals" / "cases" / "sample"
         fixture = self.root / "evals" / "fixtures" / "sample-jvm"
@@ -157,15 +170,26 @@ class ResultLifecycleTest(unittest.TestCase):
             config,
             skill_catalog_digest="catalog-sha",
             codex_version="codex-cli 1",
+            judge_prompt_digest="prompt-sha",
         )
         second = _rejudgment_fingerprint(
             packet,
             config,
             skill_catalog_digest="catalog-sha",
             codex_version="codex-cli 2",
+            judge_prompt_digest="prompt-sha",
         )
 
         self.assertNotEqual(first, second)
+
+        revised_prompt = _rejudgment_fingerprint(
+            packet,
+            config,
+            skill_catalog_digest="catalog-sha",
+            codex_version="codex-cli 1",
+            judge_prompt_digest="revised-prompt-sha",
+        )
+        self.assertNotEqual(first, revised_prompt)
 
     def test_rejudging_a_new_runtime_preserves_the_previous_result(self):
         packet = self.root / "judge-packets" / "candidate.json"

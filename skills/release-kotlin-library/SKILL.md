@@ -1,6 +1,6 @@
 ---
 name: release-kotlin-library
-description: Use when preparing, publishing, or checking readiness for a new Kotlin library version in a repository using gradle-maven-publish-plugin, including release changelog reconciliation, API snapshots, and publication verification.
+description: Use when preparing, publishing, or checking readiness for a Kotlin library release, including verifying its gradle-maven-publish-plugin prerequisite, reconciling changelogs and API snapshots, and checking publication.
 ---
 
 # Release Kotlin library
@@ -66,14 +66,16 @@ snapshots when the repository does not maintain them.
    summary from every surviving coverage-ledger row in final-behavior wording
    before grouping that cycle's original prerelease entries beneath it in a
    `<details>` block with
-   `<summary>Prerelease history</summary>`. Preserve their headings, anchors,
+   `<summary>Prerelease history</summary>`. Move the original prerelease entries
+   as one block without reordering them. Preserve their headings, anchors,
    dates and text, with blank lines around the enclosed Markdown. Leave older
    stable releases outside the block. If the renderer lacks collapsible HTML,
    retain expanded entries. Before handing off, compare the actual stable
    summary against every surviving row in the coverage ledger; confirm each
    appears outside prerelease history and add any missing surviving change to
-   the stable summary. Inspect the resulting commit. Bind validation to this
-   state and invalidate it if relevant code changes. The helper must not
+   the stable summary. Compare the grouped history against the source to verify
+   its original entry order. Inspect the resulting commit. Bind validation to
+   this state and invalidate it if relevant code changes. The helper must not
    publish during preparation.
 6. Present the prepared release for explicit user approval before publication:
    release version and tag, finalized changelog (or its absence), next development

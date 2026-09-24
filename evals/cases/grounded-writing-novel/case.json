@@ -11,7 +11,7 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "grounded-writing-novel"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "user-decision", "text": "The review asks for the visible difference, setting choice, and practical trade-off that a developer needs"},
-    {"id": "implementation-boundary", "text": "The review recommends moving interpolation and CPU-mask machinery out of public documentation while retaining relevant contracts and limitations"},
+    {"id": "implementation-boundary", "text": "The review recommends moving pixel-sampling and CPU-mask machinery out of public documentation while retaining relevant contracts and limitations"},
     {"id": "truth", "text": "The review does not invent a performance result or claim that the setting is universally better"}
   ],
   "provenance": {"kind": "synthetic"}
