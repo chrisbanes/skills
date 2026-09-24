@@ -55,9 +55,12 @@ generic, or included only to imitate a personality.
    unsupported certainty. Treat the headline and opening claim as substantive:
    remove or qualify promotional framing that the supplied evidence does not
    directly support.
-10. For a no-change review, name the material facts, mechanism, and qualification
-   that make the existing text publishable. A bare “no edit needed” does not
-   show that the truth and clarity checks were completed.
+10. For a review that permits edits only for material clarity or truth problems,
+   leave an adequate draft unchanged. Do not add a placeholder for an unverified
+   detail unless that missing detail blocks the draft's intended use. Explain
+   the material facts, mechanism, and qualification that make a no-change
+   result appropriate; a bare “no edit needed” does not show that the checks
+   were completed.
 
 ## Finish gate
 
