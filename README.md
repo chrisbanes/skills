@@ -118,6 +118,11 @@ for its lane-specific fallback and blocking behavior.
 - [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate the repository's GitHub Project workflow; preserve live authority, human Planning work, unknown outcomes, epics, checkpoints, triage, and authorized execution boundaries, with mode-specific external providers disclosed above.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
 
+Workflows that delegate agents share the [subagent selection and handoff
+reference](references/subagent-selection.md). Each workflow retains its own
+delegation trigger, authority, and acceptance rules. Skill-local links include
+the reference when a workflow is installed on its own.
+
 ### Migration from pre-cluster skills
 
 This is a breaking taxonomy change. Replace the removed entrypoints as follows:

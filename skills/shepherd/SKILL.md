@@ -23,9 +23,11 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 2. Establish targets and a handled-ID snapshot. Every external comment, review,
    or thread absent from that snapshot is new, including pre-session feedback.
    After each poll record feedback IDs, CI state, and this controller's comments.
-3. Before repeated polling, use one lowest-cost read-only evidence helper when
-   available. Give it targets and the snapshot; require new feedback IDs, body,
-   location, review state, non-manual CI state, failed jobs, and log references.
+3. Before repeated polling, use one lowest-cost capable read-only evidence
+   helper when available. Select and brief it using the shared
+   [selection and handoff reference](references/subagent-selection.md)
+   when available. Give it targets and the snapshot; require new feedback IDs,
+   body, location, review state, non-manual CI state, failed jobs, and log references.
    It never mutates. Keep triage, repairs, replies, pushes, resolution, retries,
    and merging with the authorized controller.
 4. Poll with the platform CLI using [provider commands](references/provider-commands.md),

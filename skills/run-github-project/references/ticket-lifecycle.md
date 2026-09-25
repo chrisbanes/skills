@@ -2,6 +2,11 @@
 
 ## Route agents by task
 
+Apply the shared
+[selection and handoff reference](subagent-selection.md)
+when available. The Project-specific routing and authority rules below remain
+binding.
+
 Route by behavioral capability, not local profile/model names. Use a read-only
 discovery helper for files/seams/tests/ownership, evidence helper for bounded
 mechanical analysis, default owner for normal planning/implementation/review

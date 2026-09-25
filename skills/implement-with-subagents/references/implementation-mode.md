@@ -25,7 +25,9 @@
    dispatch one task at a time. Dependents cannot start from a prerequisite's
    unintegrated branch.
 5. Select an implementation-capable subagent for each dispatched task using
-   the runtime mapping in the entrypoint.
+   the runtime mapping in the entrypoint and the shared
+   [selection and handoff reference](subagent-selection.md)
+   when available.
    Verify that it can edit, run validation, create the task-scoped commit, and
    continue the same owner session for repairs. Honour applicable user and
    repository agent selections and configured models. If the required capability
