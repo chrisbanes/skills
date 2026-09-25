@@ -204,7 +204,7 @@ dependency, because that prerequisite is constant across its three scored arms
 and is not a public skill or a routing target. Its missing-provider challenge
 deliberately omits that fixture dependency.
 
-Fifteen additional workflow cases are calibration-only. Select them
+Eighteen additional workflow cases are calibration-only. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
 unresolved decisions, proof-gated report publication, implementation-plan
@@ -216,6 +216,9 @@ a cyclic or incomplete graph, unsafe shared-file overlap, and validation
 invalidated at an integrated head. Two additional orchestration calibrations
 preserve runtime owner and capability checks and the accepted-item no-op behavior. These cases assess
 supplied state read-only and do not prove live subagent execution.
+Three shared-handoff calibrations check bounded implementation ownership,
+capability-based PR evidence helper selection, and restraint for one-off PR
+inspection. They also assess supplied state read-only.
 
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
 to select one advisory scorecard. The default remains `compose` for command
