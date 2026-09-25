@@ -1,0 +1,51 @@
+{
+  "id": "subagent-handoff-novel",
+  "title": "Check actual helper capability before recurring PR polling",
+  "family": "workflow",
+  "target_skills": [
+    "shepherd"
+  ],
+  "expected_skills": [
+    "shepherd"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "constant_skills": [],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-handoff-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "capability",
+      "text": "Checks actual tools and provider access, then selects the read-only capable persistent generic helper rather than relying on the reviewer role name."
+    },
+    {
+      "id": "bounded-brief",
+      "text": "Includes the PR target and handled-ID snapshot, required evidence and result format, read-only authority, and no further delegation."
+    },
+    {
+      "id": "controller-authority",
+      "text": "Keeps triage, repairs, replies, pushes, resolution, and merging with the controller; keeps the selected lead model unchanged."
+    },
+    {
+      "id": "no-side-effects",
+      "text": "Does not start monitoring or mutate state."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

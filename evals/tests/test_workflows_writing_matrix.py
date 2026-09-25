@@ -53,6 +53,25 @@ def plan_artifact(dependency: str = "none") -> str:
 
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
+    def test_subagent_handoff_reference_is_self_contained_for_each_consumer(self):
+        shared = (REPO_ROOT / "references/subagent-selection.md").read_bytes()
+        consumers = {
+            "implement-with-subagents": "references/implementation-mode.md",
+            "run-github-project": "references/ticket-lifecycle.md",
+            "gradle-run": "SKILL.md",
+            "shepherd": "SKILL.md",
+        }
+        for skill, caller in consumers.items():
+            with self.subTest(skill=skill):
+                directory = REPO_ROOT / "skills" / skill
+                reference = directory / "references/subagent-selection.md"
+                self.assertFalse(reference.is_symlink())
+                self.assertEqual(shared, reference.read_bytes())
+                self.assertIn(
+                    "subagent-selection.md",
+                    (directory / caller).read_text(encoding="utf-8"),
+                )
+
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
         entrypoint = (REPO_ROOT / "skills/run-github-project/SKILL.md").read_text(
             encoding="utf-8"
@@ -176,7 +195,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(21, len(benchmark))
-        self.assertEqual(17, len(calibration))
+        self.assertEqual(20, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(21, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -200,6 +219,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "implement-with-subagents-explicit-rerun-novel",
                 "implement-with-subagents-runtime-capability-calibration",
                 "implement-with-subagents-accepted-item-noop-calibration",
+                "subagent-handoff-direct",
+                "subagent-handoff-novel",
+                "subagent-handoff-negative",
             },
             {case.id for case in calibration},
         )

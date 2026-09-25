@@ -120,8 +120,8 @@ for its lane-specific fallback and blocking behavior.
 
 Workflows that delegate agents share the [subagent selection and handoff
 reference](references/subagent-selection.md). Each workflow retains its own
-delegation trigger, authority, and acceptance rules. Skill-local links include
-the reference when a workflow is installed on its own.
+delegation trigger, authority, and acceptance rules. Each consuming skill also
+contains a copy of the reference for standalone installation.
 
 ### Migration from pre-cluster skills
 

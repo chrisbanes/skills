@@ -1,0 +1,53 @@
+{
+  "id": "subagent-handoff-direct",
+  "title": "Keep a bounded implementation owner and controller acceptance",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-subagents",
+  "constant_skills": [
+    "implement"
+  ],
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-handoff-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "capability",
+      "text": "Chooses the implementation-capable resumable worker by capability and keeps the selected lead model unchanged."
+    },
+    {
+      "id": "bounded-brief",
+      "text": "Requires T1 scope, isolated base/worktree, files, relevant instructions, check, acceptance criteria, allowed actions, result and blocker, and a further-delegation boundary."
+    },
+    {
+      "id": "acceptance",
+      "text": "Retains the owner handle for repairs and requires controller inspection of commit and verification evidence before acceptance."
+    },
+    {
+      "id": "no-side-effects",
+      "text": "Performs read-only review without dispatch or mutation."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
