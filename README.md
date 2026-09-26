@@ -197,12 +197,13 @@ python3 evals/run.py plan \
   --json
 ```
 
-Repeat `--skill` for each changed skill; omit it to preview every case in a
-suite, and add `--case` filters when needed. Inspect `case_ids` in the JSON
-output and confirm the selected cases match the intended scope before reviewing
-call counts and estimated cost or requesting approval. Get explicit approval
-for that run's cost before executing the matching `run` command manually with
-`--execute`. Report invalid or inconclusive results. Before any rerun, preview
+Repeat `--skill` for each changed skill. Without a `--case` filter, omitting
+`--skill` selects all non-calibration cases in the suite. Calibration cases are
+excluded unless you pass their explicit IDs with `--case`. Inspect `case_ids` in
+the JSON output and confirm the selected cases match the intended scope before
+reviewing call counts and estimated cost or requesting approval. Get explicit
+approval for that run's cost before executing the matching `run` command manually
+with `--execute`. Report invalid or inconclusive results. Before any rerun, preview
 again, inspect its `case_ids`, review the calls and cost, and get new approval.
 Results remain advisory, not release gates. See
 [`evals/README.md`](evals/README.md) for suite selection and command options.
