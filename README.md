@@ -201,11 +201,14 @@ Repeat `--skill` for each changed skill. Without a `--case` filter, omitting
 `--skill` selects all non-calibration cases in the suite. Calibration cases are
 excluded unless you pass their explicit IDs with `--case`. Inspect `case_ids` in
 the JSON output and confirm the selected cases match the intended scope before
-reviewing call counts and estimated cost or requesting approval. Get explicit
-approval for that run's cost before executing the matching `run` command manually
-with `--execute`. Report invalid or inconclusive results. Before any rerun, preview
-again, inspect its `case_ids`, review the calls and cost, and get new approval.
-Results remain advisory, not release gates. See
+reviewing call counts and estimated cost. The `plan` preview includes only the
+counts and cost for first attempts. Execution may automatically retry each
+subject and judge call once. Before `--execute`, get explicit cost approval for
+up to twice the previewed subject calls, judge calls, and estimated cost, to
+cover one retry per call. Execute the matching `run` command manually. Report
+invalid or inconclusive results. Before any rerun, preview again, inspect its
+`case_ids`, review the calls and cost, and get new approval for the same retry
+headroom. Results remain advisory, not release gates. See
 [`evals/README.md`](evals/README.md) for suite selection and command options.
 
 ## Evaluating skills
