@@ -179,6 +179,17 @@ For a taxonomy change, also run the durable
 required references, safeguards, exceptions, and finish gates at the public
 agent-facing seam.
 
+Before publishing a release, manually run the advisory evaluations for the
+changed skills. Select each affected suite; when shared evaluation machinery
+changes, include every suite affected by that change. For each suite, use
+`python3 evals/run.py plan` with the intended filters and current subject and
+judge cost assumptions to review the cases, call counts, and estimated cost.
+Get explicit approval for that run's cost before executing it manually with
+`--execute`. Report invalid or inconclusive results. Before any rerun, review
+its planned calls and cost again and get new approval. Results remain advisory,
+not release gates. See [`evals/README.md`](evals/README.md) for suite selection
+and command options.
+
 ## Evaluating skills
 
 The advisory evaluator tests concrete scenarios modelled on real-world coding

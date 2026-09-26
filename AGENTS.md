@@ -30,6 +30,14 @@ Before considering any skill addition or edit complete, verify:
 - Update only metrics supported by the latest evidence; leave unrelated skill
   results unchanged.
 
+## Evaluation runs
+
+- Routine tasks may add or update evaluation coverage and run deterministic
+  checks, but must not execute live model evaluations unless the task explicitly
+  requests them. `npm run lint`, `npm run evals:validate`, and `npm test` do not
+  make live model calls.
+- For pre-release live evaluations, follow the manual checklist in `README.md`.
+
 ## Release/version system
 
 - Use CalVer: `YYYY.M.D` for the first release of a day and `YYYY.M.D.N` or
