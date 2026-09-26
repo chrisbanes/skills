@@ -181,14 +181,31 @@ agent-facing seam.
 
 Before publishing a release, manually run the advisory evaluations for the
 changed skills. Select each affected suite; when shared evaluation machinery
-changes, include every suite affected by that change. For each suite, use
-`python3 evals/run.py plan` with the intended filters and current subject and
-judge cost assumptions to review the cases, call counts, and estimated cost.
-Get explicit approval for that run's cost before executing it manually with
-`--execute`. Report invalid or inconclusive results. Before any rerun, review
-its planned calls and cost again and get new approval. Results remain advisory,
-not release gates. See [`evals/README.md`](evals/README.md) for suite selection
-and command options.
+changes, include every suite affected by that change. Preview each suite with
+the intended filters and current subject and judge cost assumptions:
+
+```sh
+python3 evals/run.py plan \
+  --suite <suite> \
+  --skill <changed-skill> \
+  --model <model> \
+  --reasoning <effort> \
+  --judge-model <judge-model> \
+  --judge-reasoning <effort> \
+  --subject-cost-per-call-usd <amount> \
+  --judge-cost-per-call-usd <amount> \
+  --json
+```
+
+Repeat `--skill` for each changed skill; omit it to preview every case in a
+suite, and add `--case` filters when needed. Inspect `case_ids` in the JSON
+output and confirm the selected cases match the intended scope before reviewing
+call counts and estimated cost or requesting approval. Get explicit approval
+for that run's cost before executing the matching `run` command manually with
+`--execute`. Report invalid or inconclusive results. Before any rerun, preview
+again, inspect its `case_ids`, review the calls and cost, and get new approval.
+Results remain advisory, not release gates. See
+[`evals/README.md`](evals/README.md) for suite selection and command options.
 
 ## Evaluating skills
 
