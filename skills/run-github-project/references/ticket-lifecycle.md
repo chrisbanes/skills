@@ -67,8 +67,11 @@ repeat the edit or move the issue to Planning. Ask one bounded read-only evidenc
 helper about that failure and give the result to the same ticket owner. Resume
 repair only with a concrete new direction. Otherwise preserve the claim and
 worktree as an exact ticket-local blocker and continue unrelated work. If no
-eligible `read-only-evidence` profile exists, preserve that same blocker and
-report the missing helper capability without retrying or rerouting the owner.
+Agent Setup exists, use the shared capability-based selection for an available
+read-only evidence helper. If Agent Setup exists but no eligible
+`read-only-evidence` profile is configured, or no runtime helper is available,
+preserve that same blocker and report the missing helper capability without
+retrying or rerouting the owner.
 Do not repeat the helper on unchanged evidence. Expected red tests in a
 test-first slice are not repair failures. Required CI uses its separate
 [three-round parking gate](drain-scheduler.md#terminal-required-ci-parking).
