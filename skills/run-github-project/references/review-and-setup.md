@@ -63,13 +63,17 @@ When adding or updating Agent Setup, discover the current runtime's available
 roles, models, reasoning levels, and access before proposing profiles. If the
 request supplies no agent choices, propose the smallest `configured` setup:
 one `default-owner` profile using `runtime-default` for model and reasoning,
-named as both planner and ticket default. Add helper profiles only when
-requested or needed for a specified capability. Enable `typesafe` only when
-requested for this repository and a versioned judgment model is selected;
-explain that it receives a sanitized brief and that service unavailability
-falls back to an eligible configured profile. Never put credentials in the
-configuration. Resolve missing choices without duplicating a profile or
-replacing a user pin.
+named as both planner and ticket default, plus one `read-only-evidence` profile
+when the runtime supports it. The [repair progress gate](ticket-lifecycle.md#repair-progress-gate)
+needs that helper after a repeated non-CI failure. If the runtime has no
+eligible read-only evidence role, disclose during setup that such a stall will
+remain an exact ticket-local blocker; never invent a helper. Add other helper
+profiles only when requested or needed for a specified capability. Enable
+`typesafe` only when requested for this repository and a versioned judgment
+model is selected. Explain that it receives a sanitized brief and that service
+unavailability falls back to an eligible configured profile. Never put
+credentials in the configuration. Resolve missing choices without duplicating
+a profile or replacing a user pin.
 
 Apply only the additions and evidence-backed changes, then validate the full
 binding and any agent profiles against the runtime and complete live reads. If
@@ -79,14 +83,21 @@ check remains unverified; do not report `configuration-valid`. Do not commit
 implicitly. Finish `configuration-ready-to-commit` only when validation passes
 and the diff is ready; once the configuration and trusted reference are
 committed on verified base, report `configuration-valid` only after fresh
-validation. Pause new claims while the edit is uncommitted.
+validation. Pause new claims while the edit is pending; existing claims may
+continue on their unchanged binding.
 
 Changing the committed configuration digest while a ticket still holds an old
-lease would invalidate that lease. The setup edit may be prepared while claims
-exist, but defer committing and activating it until those claims finish. If
-validation passes, report `configuration-ready-to-commit` with activation
-pending on claim completion; do not change their owners or leases. New routing
-and other configuration changes apply only after activation.
+lease would invalidate that lease. While old-digest claims exist, prepare the
+edit only in an already separate configuration checkout. Keep the controller
+and ticket checkouts used to resume those claims clean and on the old committed
+binding. If no separate checkout is available, present the proposed patch
+without writing it; setup does not create worktrees. Existing owners may finish
+their claims against the old digest, including feedback and repair. Defer
+committing the new configuration to verified base and activating it until all
+old-digest claims finish. If validation passes, report
+`configuration-ready-to-commit` with application or activation pending as
+appropriate; do not change existing owners or leases. New routing and other
+configuration changes apply only after activation.
 
 When no configuration exists, discover linked Projects and fields, ask
 unresolved questions one at a time, present complete configuration and the

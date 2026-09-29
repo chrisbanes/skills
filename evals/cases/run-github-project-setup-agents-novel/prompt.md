@@ -5,6 +5,9 @@ profiles: `steady-owner` for routine implementation and `complex-owner` for
 cross-system design. Both use runtime-default model and reasoning. Make
 `steady-owner` the planner and ticket default, and enable TypeSafe routing with
 the versioned judgment model `issue-router-v2`. The optional section is
-currently absent. Explain what setup can prepare now and when the new routing
-can activate. Use only this supplied state. Do not contact GitHub or TypeSafe,
-edit files, commit, or mutate any Project or ticket state.
+currently absent. A separate configuration checkout is available; the controller
+and ticket checkouts that resume the active claim are clean and still use the
+old committed binding. Explain where setup can prepare the edit, how the
+existing claim finishes, and when new routing can activate. Use only this
+supplied state. Do not contact GitHub or TypeSafe, edit files, commit, or mutate
+any Project or ticket state.

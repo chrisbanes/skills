@@ -12,7 +12,7 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-setup-agents-no-change"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "idempotence", "text": "The response leaves the already matching Agent Setup and trusted binding unchanged, with no duplicate section or profile"},
-    {"id": "no-overreach", "text": "The response reports configuration-valid from the supplied verified state and does not run migration, call TypeSafe, or edit Project state"}
+    {"id": "no-overreach", "text": "The response reports configuration-valid from the supplied verified state, repeats the unavailable-helper limitation without inventing a profile, and does not run migration, call TypeSafe, or edit Project state"}
   ],
   "provenance": {"kind": "synthetic"}
 }

@@ -62,6 +62,7 @@ this template over it. Follow the
 | Profile | Capability | Best suited to | Runtime role | Execution model | Reasoning |
 | --- | --- | --- | --- | --- | --- |
 | `<name>` | `default-owner` | `<bounded task description>` | `<role>` | `<model or runtime-default>` | `<level or runtime-default>` |
+| `<evidence-name>` | `read-only-evidence` | `Repeated non-CI failure investigation` | `<read-only role, if available>` | `<model or runtime-default>` | `<level or runtime-default>` |
 
 ## Wayfinder (optional)
 
@@ -122,11 +123,13 @@ runner-authored Ready handoff.
 Omit Agent Setup to use runtime-default agents under the existing capability
 rules. When present, require unique profile names, a default-owner profile for
 both planner and ticket defaults, and a runtime role with the required access
-for every profile. Add helper rows only when wanted, using
-`read-only-discovery`, `read-only-evidence`, or `exceptional-investigator`
-capabilities. The named defaults are preferences; table order is the
-deterministic fallback order for other eligible profiles. Give each profile a
-short, distinct task fit when multiple profiles share a capability under
+for every profile. Include a `read-only-evidence` row when the runtime supports
+it because the repair progress gate needs that helper. Add
+`read-only-discovery` or `exceptional-investigator` rows only when wanted. When
+no read-only evidence role is available, disclose that repeated non-CI stalls
+remain ticket-local blockers. The named defaults are preferences; table order
+is the deterministic fallback order for other eligible profiles. Give each
+profile a short, distinct task fit when multiple profiles share a capability under
 `typesafe` routing. Explicit execution models and reasoning levels must be
 supported by that runtime; `runtime-default` defers the choice to it. Profiles
 describe allowed agents, not new authority. Keep the user-selected lead model
@@ -135,6 +138,7 @@ and any explicit agent-model pin unchanged. Do not put API keys in this file.
 read [agent routing](agent-routing.md) before enabling it. TypeSafe may select
 only an eligible configured profile, never a new model or the lead model. Log
 confidence when exposed; do not configure an uncalibrated numeric cutoff.
+
 ## Live Merge-Policy Fingerprint
 
 At precondition validation, compute `sha256` over canonical JSON with sorted
