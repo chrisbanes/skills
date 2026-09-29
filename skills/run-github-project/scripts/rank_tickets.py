@@ -356,9 +356,12 @@ def is_backlog_cleanup_candidate(
         and has_current_user_assignment(ticket, current_user)
         and (
             ticket.get("replanRequest") is not None
-            or ticket.get("readyTransition") is not None
-            or ticket.get("implementationPlan") is not None
-            or ticket.get("implementationPlans") not in (None, [])
+            or (
+                isinstance(ticket.get("backlogTransition"), dict)
+                and ticket["backlogTransition"].get("actor") == current_user
+                and ticket["backlogTransition"].get("status") == backlog_status
+                and ticket["backlogTransition"].get("wasAutomated") is False
+            )
         )
     )
 

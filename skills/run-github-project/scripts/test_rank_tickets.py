@@ -463,7 +463,8 @@ class RankTicketsTest(unittest.TestCase):
             projectStatus="Backlog",
             labels=["ready-for-human"],
             assignees=["chris"],
-            openPullRequests=[pull_request(208)],
+            implementationPlan=None,
+            readyTransition=None,
             replanRequest=None,
             backlogTransition={
                 "id": "PVTE_208_backlog",
@@ -483,7 +484,9 @@ class RankTicketsTest(unittest.TestCase):
             [
                 {
                     "number": 208,
-                    "reasons": ["missing verified human-work report"],
+                    "reasons": [
+                        "ticket 208: readyTransition must be an object",
+                    ],
                 },
             ],
             output["blockedPlanningClaims"],
@@ -932,6 +935,32 @@ class RankTicketsTest(unittest.TestCase):
             23,
             labels=["ready-for-human"],
             assignees=["chris"],
+        )
+
+        returncode, output = run_ranker([human_work])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["blockedPlanningClaims"])
+        self.assertEqual(
+            [{"ticket": human_work, "action": "perform-human-work"}],
+            output["humanActions"],
+        )
+
+    def test_historical_execution_state_does_not_hide_human_work(self) -> None:
+        human_work = ticket(
+            27,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            replanRequest=None,
+            backlogTransition={
+                "id": "PVTE_27_backlog",
+                "actor": "maintainer",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
         )
 
         returncode, output = run_ranker([human_work])
