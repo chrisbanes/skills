@@ -381,11 +381,19 @@ class RankTicketsTest(unittest.TestCase):
         )
 
     def test_assigned_backlog_item_resumes_cleanup_without_consuming_slot(self) -> None:
+        replan = replan_request(
+            200,
+            disposition="human-required",
+            implementationHeadSha="head-200",
+            pullRequestUrl="https://github.com/acme/repo/pull/200",
+        )
         backlog = ticket(
             200,
             projectStatus="Backlog",
+            labels=["ready-for-human"],
             assignees=["chris"],
-            replanRequest=replan_request(200, disposition="human-required"),
+            openPullRequests=[pull_request(200)],
+            replanRequest=replan,
             backlogTransition={
                 "id": "PVTE_200_backlog",
                 "actor": "chris",
@@ -410,6 +418,75 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(
             ["resume-backlog-cleanup", "resume-implementation"],
             [entry["action"] for entry in output["claims"]],
+        )
+
+    def test_malformed_assigned_backlog_cleanup_remains_a_blocked_claim(self) -> None:
+        cleanup = ticket(
+            207,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            replanRequest=replan_request(
+                207,
+                disposition="unexpected",
+            ),
+            backlogTransition={
+                "id": "PVTE_207_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([cleanup])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["humanActions"])
+        self.assertEqual(
+            [
+                {
+                    "number": 207,
+                    "reasons": [
+                        "ticket 207: replanRequest.disposition must be "
+                        "'autonomous-replan' or 'human-required'",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
+    def test_assigned_backlog_cleanup_without_report_remains_blocked(self) -> None:
+        cleanup = ticket(
+            208,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            openPullRequests=[pull_request(208)],
+            replanRequest=None,
+            backlogTransition={
+                "id": "PVTE_208_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([cleanup])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["humanActions"])
+        self.assertEqual(
+            [
+                {
+                    "number": 208,
+                    "reasons": ["missing verified human-work report"],
+                },
+            ],
+            output["blockedPlanningClaims"],
         )
 
     def test_keeps_assigned_cleanup_separate_from_unassigned_triage(self) -> None:

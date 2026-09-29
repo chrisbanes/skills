@@ -344,6 +344,25 @@ def has_current_user_assignment(ticket: Any, current_user: str) -> bool:
     )
 
 
+def is_backlog_cleanup_candidate(
+    ticket: Any,
+    *,
+    current_user: str,
+    backlog_status: str,
+) -> bool:
+    return (
+        isinstance(ticket, dict)
+        and ticket.get("projectStatus") == backlog_status
+        and has_current_user_assignment(ticket, current_user)
+        and (
+            ticket.get("replanRequest") is not None
+            or ticket.get("readyTransition") is not None
+            or ticket.get("implementationPlan") is not None
+            or ticket.get("implementationPlans") not in (None, [])
+        )
+    )
+
+
 def parse_transition(value: Any, field: str, number: Any) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise InputError(f"ticket {number}: {field} must be an object")
@@ -1427,6 +1446,11 @@ def main() -> int:
                         if isinstance(label, str)
                     )
                 )
+                is_backlog_cleanup = is_backlog_cleanup_candidate(
+                    ticket,
+                    current_user=args.current_user,
+                    backlog_status=args.backlog_status,
+                )
                 if has_wayfinder_map_label:
                     invalid = {
                         "number": ticket["number"],
@@ -1467,6 +1491,7 @@ def main() -> int:
                         or (
                             isinstance(ticket["labels"], list)
                             and args.human_work_label in ticket["labels"]
+                            and not is_backlog_cleanup
                         )
                     )
                 ):
@@ -1505,6 +1530,11 @@ def main() -> int:
                     and isinstance(raw_ticket.get("labels"), list)
                     and args.human_work_label in raw_ticket["labels"]
                 )
+                is_backlog_cleanup = is_backlog_cleanup_candidate(
+                    raw_ticket,
+                    current_user=args.current_user,
+                    backlog_status=args.backlog_status,
+                )
                 is_wayfinder_claim = (
                     isinstance(raw_ticket, dict)
                     and isinstance(raw_ticket.get("labels"), list)
@@ -1515,7 +1545,9 @@ def main() -> int:
                     )
                     and has_current_user_assignment(raw_ticket, args.current_user)
                 )
-                if is_human_frontier_item:
+                if is_backlog_cleanup:
+                    invalid_planning_claimed.append(invalid)
+                elif is_human_frontier_item:
                     invalid_unclaimed.append(invalid)
                 elif is_wayfinder_claim:
                     invalid_planning_claimed.append(invalid)
