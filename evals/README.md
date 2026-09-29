@@ -4,8 +4,8 @@ This directory contains a reproducible, advisory evaluator with a shared core
 and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
 tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
-cover six Compose skills, four Kotlin/Gradle skills, and seven workflow/writing
-skills: `android-benchmark-comparison`, `grounded-writing`,
+cover six Compose skills, four Kotlin/Gradle skills, and eight workflow/writing
+skills: `android-benchmark-comparison`, `deliver-spec`, `grounded-writing`,
 `implement-with-subagents`, `release-kotlin-library`, `run-github-project`,
 `shepherd`, and `to-plan`. It is designed to answer three separate questions:
 
@@ -60,6 +60,7 @@ suite-wide aggregate.
 | `kotlin-concurrency-and-flow` | 44.4% | 100.0% | 100.0% |
 | `kotlin-control-flow` | 33.3% | 100.0% | 100.0% |
 | `android-benchmark-comparison` | 33.3% | 100.0% | 100.0% |
+| `deliver-spec` | — | — | — |
 | `grounded-writing` | 0.0% | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
 | `release-kotlin-library` | 0.0% | 100.0% | 100.0% |
@@ -192,9 +193,10 @@ The Kotlin/Gradle benchmark contains 22 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-The workflows/writing benchmark contains 18 scored cases: direct, novel, and
-no-change coverage for each of its six skills. The surrounding corpus also
-contains the two calibration-only missing-provider challenges described above.
+The workflows/writing benchmark contains 35 scored cases: direct, novel, and
+no-change coverage for each of its eight skills, plus additional workflow
+scenarios. The surrounding corpus also contains the two calibration-only
+missing-provider challenges described above.
 The release triad checks changelog reconciliation, uncertain prerelease recovery,
 and read-only readiness restraint without live publication or credentials.
 Its GitHub-style cases use supplied immutable state and rubric plus

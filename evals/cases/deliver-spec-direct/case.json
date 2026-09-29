@@ -1,0 +1,20 @@
+{
+  "id": "deliver-spec-direct",
+  "title": "Route an approved GitHub spec through the review gates",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "plan-gate", "text": "Reuses the current approved to-plan task graph and requires an independent read-only plan review before implementation; findings are repaired under to-plan's approval rules"},
+    {"id": "delivery", "text": "Creates exactly one draft PR, passes approved to-plan slices and the source review packet to implement-with-subagents before dispatch, honors its current prerequisites, and uses the provider's final joined review as the code gate without duplicating it at the same head"},
+    {"id": "repair-routing", "text": "Uses shepherd for feedback triage and PR actions rather than direct code repair; routes code repairs through implement-with-subagents and requires its final checks and joined review at the new head before the lead pushes"},
+    {"id": "authority", "text": "Does not merge without authority valid for this invocation, and makes no mutation or provider call in this analysis-only case"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

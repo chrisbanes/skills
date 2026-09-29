@@ -26,6 +26,7 @@ from evals.harness.experiment import write_subject_stdout_artifacts
 
 
 EXPLICIT_ONLY_SKILLS = (
+    "deliver-spec",
     "implement-with-subagents",
     "run-github-project",
     "shepherd",

@@ -1,0 +1,19 @@
+{
+  "id": "deliver-spec-novel",
+  "title": "Resume a local-spec PR with a pending required check",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "local-source", "text": "Uses conversation-mode to-plan for the approved local source, reviews the resulting plan independently, and does not invent GitHub issue or ticket closing links"},
+    {"id": "resume", "text": "Reconciles the existing draft PR and exact head before continuing; does not create a duplicate PR or assume the prior approval or gate state remains current"},
+    {"id": "pending", "text": "After about 30 minutes with a required check still pending, hands back the PR head and exact pending gate rather than reporting ready or merged"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

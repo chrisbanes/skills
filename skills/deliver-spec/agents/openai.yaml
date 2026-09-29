@@ -1,0 +1,6 @@
+interface:
+  display_name: "Deliver Spec"
+  short_description: "Coordinate an approved spec through a reviewed PR"
+  default_prompt: "Use $deliver-spec to deliver this approved spec through a reviewed pull request."
+policy:
+  allow_implicit_invocation: false
