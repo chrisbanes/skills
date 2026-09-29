@@ -16,26 +16,27 @@ Classify an open Backlog issue as follows:
 | Epic only | Closeable epic after native dependencies clear |
 | Epic plus human work | Human epic after native dependencies clear |
 | Human work only | Human action after native dependencies clear |
-| Ready for agent only | Human Planning authorization after native dependencies clear |
+| Ready for agent only | Planning candidate after native dependencies clear |
 | Needs triage | Existing triage lane after native dependencies clear |
 
 Reject `epic` plus `ready-for-agent` and multiple next-action labels. Treat an
 unlabelled non-epic Backlog issue as human-owned and outside this frontier.
 Permit an existing human assignee on human work, but never assign one from this
-workflow. Require a bare epic, Planning authorization request, or triage item
+workflow. Require a bare epic, Planning candidate, or triage item
 to have no assignee or open implementation pull request. Use only native open
 blockers and descendants as gates. Report a prose-only dependency discrepancy,
 but never enforce it.
 
 ## Build The Frontier
 
-1. Rank ready epics, human actions, and parked work by Priority, visible
+1. Rank ready epics, planning candidates, human actions, and parked work by Priority, visible
    Project position, then issue number.
 2. Return a bare unblocked epic as `readyEpics` with action `close-epic`.
 3. Return unblocked human work as `humanActions` with action
    `perform-human-work`.
-4. Return an unblocked Backlog `ready-for-agent` issue as `humanActions` with
-   action `move-to-planning`.
+4. Return an unblocked Backlog `ready-for-agent` issue as a normal candidate
+   with action `plan`; the controller performs and verifies its Planning
+   transition before assignment.
 5. Return a dependency-blocked item as role-tagged `parkedBlocked`.
 6. Derive what each action unlocks from reverse native blocker and parent-child
    relationships in the complete live graph. Do not infer unlocks from prose.
@@ -68,10 +69,10 @@ ready epics serially and continue through newly unlocked work.
 
 ## Wait For Human Work
 
-Never assign human work, move it to Planning, close it, or treat conversation
-approval as a durable Project transition. Require the configured execution
-approver to perform each `move-to-planning` transition. Observe human work
-completion only through refreshed authoritative GitHub state.
+Never assign role-labelled human work, move it to Planning, or close it.
+Observe its completion only through refreshed authoritative GitHub state. A
+Backlog `ready-for-agent` item is not human work and does not belong in this
+wait state.
 
 Return `waiting-for-human` only when no controller, planning, implementation,
 monitoring, or non-deferred triage action remains and `humanActions` is

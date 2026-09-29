@@ -1,6 +1,6 @@
 ---
 name: run-github-project
-description: Use when asked to set up, review, or operate a repository's GitHub Project workflow, including ready claims, human-owned Planning work, unknown remote mutation outcomes, Backlog triage, epics, checkpoints, next-issue execution, or an authorized drain.
+description: Use when asked to set up, review, or operate a repository's GitHub Project workflow, including ready claims, role-labelled human work, unknown remote mutation outcomes, Backlog triage, epics, checkpoints, next-issue execution, or an authorized drain.
 compatibility: "External skill providers are mode-specific: review and setup require none; execution, triage, and Wayfinder lanes use the providers documented in references/workflow-providers.md."
 disable-model-invocation: true
 ---
@@ -16,11 +16,11 @@ The Project is the live control plane. Apply these invariants throughout:
    worktree, branch, and non-merge PR mutations only.
 3. **Unknown outcomes:** reconcile a failed or timed-out remote mutation before
    retrying or reporting success.
-4. **Preservation:** retain blocked, dependency-gated, and human-owned work in
+4. **Preservation:** retain blocked, dependency-gated, and role-labelled human work in
    its authoritative frontier or partial-drain report; never change state merely
    to make the queue appear empty.
 
-Preserve Planning authority through contract-preserving replans, return true
+Preserve verified plan state through contract-preserving replans, return true
 human work to Backlog, and in `drain` pair occupied slots with warm worktrees
 and persistent ticket agents. Park only qualifying terminal required-CI claims
 outside capacity before refreshing the control plane.

@@ -2,7 +2,7 @@
 
 Use this optional branch only when the committed Project configuration enables
 Wayfinder and the installed `wayfinder` provider is discoverable. Keep the map
-as the decision record and the configured Project as the authorization control
+as the decision record and the configured Project as the execution control
 plane.
 
 In every human-facing frontier, narration, comment, and final report, refer to
@@ -21,12 +21,11 @@ Require fresh authoritative reads proving that a child is:
    label;
 4. marked with exactly one configured Wayfinder type label;
 5. natively unblocked with no open descendant; and
-6. authorized by the latest non-automated `Planning` transition from a
-   configured execution approver.
+6. backed by a latest transition event that resolves to `Planning`, regardless
+   of actor or automation source.
 
-Do not accept a parent map's Project membership, a label, a comment, or a
-previous invocation as authority for its child. A runner requeue never carries
-Wayfinder authority. Pass the complete normalized graph to `rank_tickets.py`
+Do not inherit a child's membership, Status, type, or blockers from its parent
+map, a comment, or a previous invocation. Pass the complete normalized graph to `rank_tickets.py`
 with all five Wayfinder labels only when the optional configuration is enabled.
 Pass the invocation mode to the ranker. In `next`, AFK and HITL tickets are
 normal `wayfind` candidates or `resume-wayfind` claims. In `drain`, only AFK
@@ -151,17 +150,17 @@ Apply the recorded plan idempotently and in this order:
    of scope, close it and add its linked gist and reason only to `Out of scope`.
    Reconcile every additionally closed child's configured Project Done/archive
    outcome by exact item ID;
-5. add every new child to the configured Project in `Backlog`, then refetch and
-   verify the complete live graph; and
+5. add every new child to the configured Project in `Planning`, then refetch
+   its transition and the complete live graph; and
 6. only when fresh reads prove the destination's way is clear, no open child
    remains, `Not yet specified` is empty, and `Decisions so far` plus
    `Out of scope` are current, non-duplicative indexes for their respective
    outcomes, post the map completion summary, close the map, and reconcile its
    configured Project Done/archive outcome in the same way.
 
-Controller creation and Backlog placement never authorize Planning. Each new
-child awaits a configured execution approver's fresh human `Planning`
-transition. Never move a resolved Wayfinder child to `Ready to implement`.
+Controller creation plus a verified `Planning` placement makes each new child
+eligible for its Wayfinder lane without an approver transition. Never move a
+resolved Wayfinder child to `Ready to implement`.
 
 When any completion condition does not hold, keep the map open. Unassign the
 selected child only after every recorded mutation and every applicable terminal

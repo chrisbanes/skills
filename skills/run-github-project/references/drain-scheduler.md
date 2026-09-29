@@ -352,8 +352,10 @@ by guess. Keep the runner assigned as the durable cleanup lease until the
 idempotent finish state proves that its PR, processes, resource grants,
 worktree, and branches are gone; unassign last. A later run may finish only an
 assigned Backlog cleanup with verified runner provenance. An unassigned Backlog
-item without the configured `needs-triage` label remains human-owned; an
-eligible labeled item belongs only to the triage tail lane.
+item with `ready-for-agent` is a planning candidate, one with the configured
+human-work label remains human-owned, and one with `needs-triage` belongs to the
+triage tail lane. Other unassigned Backlog work remains unclassified and
+human-owned.
 
 Pass the refresh gate before evaluating the finish state. Finish successfully
 only when the authoritative execution-clear predicate in

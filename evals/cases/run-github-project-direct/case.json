@@ -1,6 +1,6 @@
 {
   "id": "run-github-project-direct",
-  "title": "Preserve controller ownership of a ready claim",
+  "title": "Accept an automated Planning transition",
   "family": "workflow",
   "target_skills": ["run-github-project"],
   "expected_skills": ["run-github-project"],
@@ -11,8 +11,8 @@
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-direct"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "control-plane", "text": "The response identifies live project state as the authority before a claim or mutation"},
-    {"id": "controller", "text": "The response keeps claims and shared project mutation with the controller rather than an implementation worker"}
+    {"id": "planning-eligibility", "text": "The response treats the current Planning Status plus ready-for-agent label as eligible without requiring a manual transition or approved transition actor"},
+    {"id": "controller", "text": "The response keeps assignment and shared Project mutation with the controller rather than an implementation worker"}
   ],
   "provenance": {"kind": "synthetic"}
 }

@@ -26,8 +26,6 @@ DEFAULT_PROJECT_ARGUMENTS = (
     "sha256:config",
     "--base-branch",
     "main",
-    "--execution-approver",
-    "maintainer",
 )
 DEFAULT_STATUS_ARGUMENTS = (
     "--backlog-status",
@@ -472,7 +470,7 @@ class RankTicketsTest(unittest.TestCase):
             output["claims"][0]["action"],
         )
 
-    def test_unassigned_backlog_item_waits_for_human_planning_transition(self) -> None:
+    def test_unassigned_backlog_item_is_a_planning_candidate(self) -> None:
         backlog = ticket(
             204,
             projectStatus="Backlog",
@@ -491,18 +489,18 @@ class RankTicketsTest(unittest.TestCase):
 
         self.assertEqual(0, returncode)
         self.assertEqual([], output["claims"])
-        self.assertEqual([], output["candidates"])
         self.assertEqual(
             [
                 {
                     "ticket": backlog,
-                    "action": "move-to-planning",
+                    "action": "plan",
                 },
             ],
-            output["humanActions"],
+            output["candidates"],
         )
+        self.assertEqual([], output["humanActions"])
 
-    def test_human_planning_transition_after_backlog_starts_fresh(self) -> None:
+    def test_planning_transition_after_backlog_starts_fresh(self) -> None:
         planning = ticket(
             205,
             projectStatus="Planning",
@@ -886,7 +884,7 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
-    def test_ready_for_agent_backlog_item_requests_planning_transition(self) -> None:
+    def test_ready_for_agent_backlog_item_is_a_planning_candidate(self) -> None:
         ready = backlog_ticket(22, labels=["ready-for-agent"])
 
         returncode, output = run_ranker([ready])
@@ -895,9 +893,10 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual([], output["triageCandidates"])
         self.assertEqual([], output["parkedBlocked"])
         self.assertEqual(
-            [{"ticket": ready, "action": "move-to-planning"}],
-            output["humanActions"],
+            [{"ticket": ready, "action": "plan"}],
+            output["candidates"],
         )
+        self.assertEqual([], output["humanActions"])
 
     def test_human_action_does_not_hide_runnable_agent_work(self) -> None:
         human_work = backlog_ticket(24, labels=["ready-for-human"])
@@ -1221,8 +1220,8 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
-    def test_planning_transition_requires_configured_execution_approver(self) -> None:
-        unapproved = ticket(
+    def test_planning_transition_accepts_any_actor(self) -> None:
+        externally_transitioned = ticket(
             120,
             projectStatus="Planning",
             implementationPlan=None,
@@ -1234,23 +1233,11 @@ class RankTicketsTest(unittest.TestCase):
                 "wasAutomated": False,
             },
         )
-        valid = ticket(121)
-
-        returncode, output = run_ranker([unapproved, valid])
+        returncode, output = run_ranker([externally_transitioned])
 
         self.assertEqual(0, returncode)
-        self.assertEqual(121, first_entry(output)["ticket"]["number"])
-        self.assertEqual(
-            [
-                {
-                    "number": 120,
-                    "reasons": [
-                        "planning transition actor 'outsider' is not approved",
-                    ],
-                },
-            ],
-            output["excluded"],
-        )
+        self.assertEqual(120, first_entry(output)["ticket"]["number"])
+        self.assertEqual([], output["excluded"])
 
     def test_plan_edit_after_ready_invalidates_handoff(self) -> None:
         stale_handoff = ticket(
@@ -1344,7 +1331,7 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(170, output["excluded"][0]["number"])
         self.assertIn("strings or integers", output["excluded"][0]["reasons"][0])
 
-    def test_returns_authorized_planning_item_after_implementation_work(self) -> None:
+    def test_returns_planning_item_after_implementation_work(self) -> None:
         planning = ticket(
             180,
             projectStatus="Planning",
@@ -1394,7 +1381,7 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
-    def test_planning_requires_human_execution_approver_transition(self) -> None:
+    def test_planning_accepts_automated_transition(self) -> None:
         planning = ticket(
             183,
             projectStatus="Planning",
@@ -1411,11 +1398,8 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([planning])
 
         self.assertEqual(0, returncode)
-        self.assertEqual([], output["candidates"])
-        self.assertEqual(
-            [{"number": 183, "reasons": ["planning transition was automated"]}],
-            output["excluded"],
-        )
+        self.assertEqual("plan", output["candidates"][0]["action"])
+        self.assertEqual([], output["excluded"])
 
     def test_resumes_assigned_planning_claim(self) -> None:
         planning = ticket(
@@ -1476,7 +1460,7 @@ class RankTicketsTest(unittest.TestCase):
             output["claims"][0]["action"],
         )
 
-    def test_new_human_planning_transition_requests_replanning(self) -> None:
+    def test_new_planning_transition_requests_replanning(self) -> None:
         planning = ticket(
             189,
             projectStatus="Planning",
@@ -1569,43 +1553,47 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(0, returncode)
         self.assertEqual("resume-planning", output["claims"][0]["action"])
 
-    def test_runner_requeue_requires_verified_replan_report(self) -> None:
-        invalid_requeue = ticket(
+    def test_planning_transition_without_replan_state_starts_fresh(self) -> None:
+        requeued = ticket(
             199,
             projectStatus="Planning",
             assignees=["chris"],
         )
-        invalid_requeue["planningTransition"].update(
+        requeued["planningTransition"].update(
             actor="chris",
             createdAt="2026-07-28T12:00:00Z",
         )
 
-        returncode, output = run_ranker([invalid_requeue])
+        returncode, output = run_ranker([requeued])
 
         self.assertEqual(0, returncode)
-        self.assertEqual([], output["claims"])
-        self.assertEqual(
-            [
-                {
-                    "number": 199,
-                    "reasons": [
-                        "runner Planning requeue lacks a verified replan report",
-                    ],
-                },
-            ],
-            output["blockedPlanningClaims"],
-        )
+        self.assertEqual("resume-planning", output["claims"][0]["action"])
 
-    def test_runner_requeue_requires_report_to_name_retained_pr(self) -> None:
+    def test_planning_requeue_requires_report_to_name_retained_pr(self) -> None:
+        report = replan_request(
+            208,
+            pullRequestUrl="https://github.com/acme/repo/pull/208",
+            implementationHeadSha="wrong-head",
+        )
+        predecessor = implementation_plan(208, isMinimized=True)
+        current = implementation_plan(
+            208,
+            commentId="IC_plan_208_v2",
+            permalink="https://github.com/acme/repo/issues/208#issuecomment-plan-v2",
+            digest="sha256:plan-208-v2",
+            createdAt="2026-07-28T13:00:00Z",
+            publishedAt="2026-07-28T13:00:00Z",
+            updatedAt="2026-07-28T13:00:00Z",
+            revision=2,
+            supersedes=predecessor["permalink"],
+            replanRequest=report["permalink"],
+        )
         invalid_requeue = ticket(
             208,
             projectStatus="Planning",
             assignees=["chris"],
-            replanRequest=replan_request(
-                208,
-                pullRequestUrl="https://github.com/acme/repo/pull/208",
-                implementationHeadSha="wrong-head",
-            ),
+            replanRequest=report,
+            implementationPlans=[predecessor, current],
             openPullRequests=[pull_request(208)],
         )
         invalid_requeue["planningTransition"].update(
@@ -1618,7 +1606,7 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(0, returncode)
         self.assertEqual([], output["claims"])
         self.assertIn(
-            "runner Planning requeue lacks verified retained PR evidence",
+            "Planning requeue lacks verified retained PR evidence",
             output["blockedPlanningClaims"][0]["reasons"],
         )
 
@@ -1626,9 +1614,9 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker([invalid_requeue])
 
         self.assertEqual(0, returncode)
-        self.assertEqual("resume-planning", output["claims"][0]["action"])
+        self.assertEqual("resume-planning-handoff", output["claims"][0]["action"])
 
-    def test_runner_requeue_requires_verified_prior_ready_handoff(self) -> None:
+    def test_planning_requeue_requires_verified_prior_ready_handoff(self) -> None:
         invalid_requeue = ticket(
             198,
             projectStatus="Planning",
@@ -1655,7 +1643,7 @@ class RankTicketsTest(unittest.TestCase):
                 {
                     "number": 198,
                     "reasons": [
-                        "runner Planning requeue lacks a verified prior Ready handoff",
+                        "Planning requeue lacks a verified prior Ready handoff",
                     ],
                 },
             ],
@@ -1761,7 +1749,7 @@ class RankTicketsTest(unittest.TestCase):
             output["claims"][0]["action"],
         )
 
-    def test_ready_handoff_must_follow_latest_planning_authorization(self) -> None:
+    def test_ready_handoff_must_follow_latest_planning_transition(self) -> None:
         stale_handoff = ticket(
             195,
             assignees=["chris"],
@@ -1793,7 +1781,7 @@ class RankTicketsTest(unittest.TestCase):
                     "number": 195,
                     "reasons": [
                         "assigned to current user while project status is still ready",
-                        "ready transition predates the latest planning authorization",
+                        "ready transition predates the latest Planning transition",
                     ],
                 },
             ],
@@ -1831,7 +1819,7 @@ class RankTicketsTest(unittest.TestCase):
             [entry["action"] for entry in output["candidates"]],
         )
 
-    def test_wayfinder_requires_one_type_an_open_map_and_fresh_human_planning(self) -> None:
+    def test_wayfinder_requires_one_type_and_an_open_map(self) -> None:
         valid = wayfinder_ticket(303)
         wrong_parent = wayfinder_ticket(
             304,
@@ -1863,11 +1851,11 @@ class RankTicketsTest(unittest.TestCase):
 
         self.assertEqual(0, returncode)
         self.assertEqual(
-            [303],
+            [303, 306],
             [entry["ticket"]["number"] for entry in output["candidates"]],
         )
         self.assertEqual(
-            [304, 305, 306],
+            [304, 305],
             [entry["number"] for entry in output["excluded"]],
         )
 

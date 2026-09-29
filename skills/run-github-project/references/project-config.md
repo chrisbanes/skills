@@ -24,7 +24,6 @@ this template over it. Follow the
 - URL: `<url>`
 - Node ID: `<PVT_...>`
 - Filter: `<optional trusted Project filter, or none>`
-- Execution approver logins: `<login, login, ...>`
 
 ## Status
 
@@ -115,10 +114,11 @@ label identifies the parent map; the other four labels are mutually exclusive
 child types. Never create, rename, or infer any of them.
 
 Humans own the Project schema. Never create or rename Status options from the
-runner. Before migrating an existing queue, require zero `In progress` items
-and have an execution approver move every legacy Ready item to `Planning`.
-Revalidate even an existing marker plan through the planning lane before its
-runner-authored Ready handoff.
+runner. Before migrating an existing queue, require zero `In progress` items,
+then have the controller move every legacy Ready item to `Planning` and verify
+each transition. Revalidate even an existing marker plan through the planning
+lane before its runner-authored Ready handoff. An existing `Execution approver
+logins` entry is obsolete and must not affect eligibility.
 
 Omit Agent Setup to use runtime-default agents under the existing capability
 rules. When present, require unique profile names, a default-owner profile for

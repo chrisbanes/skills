@@ -26,7 +26,7 @@ Read closest trusted instructions and require an explicit reference to
 identity, default/base branches and closure policy; Project owner/number/URL/node
 ID; Status field and Backlog/Planning/Ready/In-progress/Done options; exact
 needs-triage, epic, and human-work labels; complete optional Wayfinder labels;
-Priority field/options; execution approvers; optional trusted filter; merge
+Priority field/options; optional trusted filter; merge
 method; Done automation/archive behavior. Store names with IDs; a renamed name
 is repairable drift but an ID resolving elsewhere stops work. Never create or
 rename Project fields/options. Apply the planning lane migration gate only when
@@ -109,6 +109,11 @@ commit may contain only that pair. Record committed digest, default branch, and
 [live merge-policy fingerprint](project-config.md#live-merge-policy-fingerprint);
 recheck them before every claim and merge and stop/preserve work on drift or
 unknown state.
+
+Treat a legacy `Execution approver logins` entry as obsolete configuration.
+Remove it during an otherwise authorized setup edit when no old-digest claim
+depends on the binding; otherwise report the deferred cleanup. Its presence or
+contents never gate Planning eligibility.
 
 Setup uses the read-only pagination, retry, and incomplete-read rules from
 [remote reconciliation](remote-reconciliation.md). If a complete configuration

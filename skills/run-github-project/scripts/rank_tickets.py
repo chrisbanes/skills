@@ -68,13 +68,6 @@ def parse_args() -> argparse.Namespace:
         help="Configured base branch targeted by resumable pull requests.",
     )
     parser.add_argument(
-        "--execution-approver",
-        action="append",
-        dest="execution_approvers",
-        required=True,
-        help="GitHub login allowed to authorize Planning transitions. Repeat as needed.",
-    )
-    parser.add_argument(
         "--backlog-status",
         default="Backlog",
         help="Configured Project status display name for untriaged or human work.",
@@ -597,7 +590,6 @@ def analyze_ticket(
     priorities: tuple[str, ...],
     repository: str,
     base_branch: str,
-    execution_approvers: tuple[str, ...],
 ) -> dict[str, Any]:
     number = ticket["number"]
     common = analyze_common_ticket(
@@ -633,22 +625,6 @@ def analyze_ticket(
             f"latest planning transition status {planning_transition['status']!r} "
             f"does not match {planning_status!r}",
         )
-    planning_actor_is_approver = (
-        not planning_transition["wasAutomated"]
-        and planning_transition["actor"] in execution_approvers
-    )
-    planning_actor_is_runner = (
-        not planning_transition["wasAutomated"]
-        and planning_transition["actor"] == current_user
-    )
-    if planning_transition["wasAutomated"]:
-        exclusions.append("planning transition was automated")
-    elif not planning_actor_is_approver and not planning_actor_is_runner:
-        exclusions.append(
-            "planning transition actor "
-            f"{planning_transition['actor']!r} is not approved",
-        )
-
     implementation_plans, implementation_plan = parse_implementation_plan_chain(
         ticket,
         number,
@@ -801,46 +777,44 @@ def analyze_ticket(
             )
         )
     )
-    planning_is_runner_requeue = (
+    planning_is_verified_requeue = (
         project_status == planning_status
-        and planning_actor_is_runner
         and valid_prior_ready_handoff
         and valid_autonomous_replan_report
         and retained_pr_matches_report
     )
-    planning_is_human_authority = (
-        planning_actor_is_approver
-        and not planning_is_runner_requeue
-    )
-    if (
-        project_status != planning_status
-        and planning_actor_is_runner
-        and not planning_actor_is_approver
-    ):
-        exclusions.append(
-            "planning transition actor "
-            f"{planning_transition['actor']!r} is not approved",
-        )
-    if (
+    planning_is_replan_claim = (
         project_status == planning_status
-        and planning_actor_is_runner
-        and not planning_is_runner_requeue
-        and not planning_is_human_authority
-    ):
+        and assigned_to_current_user
+        and (
+            (
+                replan_request is not None
+                and replan_request["disposition"] == "autonomous-replan"
+            )
+            or bool(own_closing_pull_requests)
+        )
+        and not (
+            ready_transition is not None
+            and backlog_transition is not None
+            and ready_transition["createdAt"] < backlog_transition["createdAt"]
+            and backlog_transition["createdAt"] < planning_transition["createdAt"]
+        )
+    )
+    if planning_is_replan_claim and not planning_is_verified_requeue:
         if not valid_prior_ready_handoff:
             exclusions.append(
-                "runner Planning requeue lacks a verified prior Ready handoff",
+                "Planning requeue lacks a verified prior Ready handoff",
             )
         elif not valid_autonomous_replan_report:
             exclusions.append(
-                "runner Planning requeue lacks a verified replan report",
+                "Planning requeue lacks a verified replan report",
             )
         elif not retained_pr_matches_report:
             exclusions.append(
-                "runner Planning requeue lacks verified retained PR evidence",
+                "Planning requeue lacks verified retained PR evidence",
             )
     if (
-        planning_is_runner_requeue
+        planning_is_verified_requeue
         and plan_is_current_in_planning
         and implementation_plan is not None
         and prior_plan is not None
@@ -881,7 +855,7 @@ def analyze_ticket(
                 )
             elif ready_transition["createdAt"] < planning_transition["createdAt"]:
                 exclusions.append(
-                    "ready transition predates the latest planning authorization",
+                    "ready transition predates the latest Planning transition",
                 )
             else:
                 valid_ready_handoff = ready_has_runner_provenance
@@ -1088,7 +1062,7 @@ def analyze_backlog_ticket(
             action = "triage"
         elif is_agent_work:
             role = "agent"
-            action = "move-to-planning"
+            action = "plan"
         elif is_epic:
             role = "epic"
             action = "close-epic"
@@ -1230,7 +1204,6 @@ def analyze_wayfinder_ticket(
     current_user: str,
     planning_status: str,
     priorities: tuple[str, ...],
-    execution_approvers: tuple[str, ...],
     configuration_digest: str,
     wayfinder_map_label: str,
     wayfinder_child_labels: dict[str, str],
@@ -1314,13 +1287,6 @@ def analyze_wayfinder_ticket(
             f"latest planning transition status {planning_transition['status']!r} "
             f"does not match {planning_status!r}",
         )
-    if planning_transition["wasAutomated"]:
-        exclusions.append("planning transition was automated")
-    elif planning_transition["actor"] not in execution_approvers:
-        exclusions.append(
-            "planning transition actor "
-            f"{planning_transition['actor']!r} is not approved",
-        )
     other_assignees = [assignee for assignee in assignees if assignee != current_user]
     if other_assignees:
         exclusions.append(f"assigned to {other_assignees}")
@@ -1387,9 +1353,6 @@ def main() -> int:
         priorities = tuple(args.priorities)
         if len(set(priorities)) != len(priorities):
             raise InputError("project priorities must be unique")
-        execution_approvers = tuple(args.execution_approvers)
-        if len(set(execution_approvers)) != len(execution_approvers):
-            raise InputError("execution approvers must be unique")
         wayfinder_labels = configured_wayfinder_labels(args)
         wayfinder_child_labels = (
             {
@@ -1489,7 +1452,6 @@ def main() -> int:
                             current_user=args.current_user,
                             planning_status=args.planning_status,
                             priorities=priorities,
-                            execution_approvers=execution_approvers,
                             configuration_digest=args.configuration_digest,
                             wayfinder_map_label=wayfinder_labels["map"],
                             wayfinder_child_labels=wayfinder_child_labels,
@@ -1529,7 +1491,6 @@ def main() -> int:
                             priorities=priorities,
                             repository=args.repository,
                             base_branch=args.base_branch,
-                            execution_approvers=execution_approvers,
                         ),
                     )
             except InputError as error:
@@ -1631,7 +1592,26 @@ def main() -> int:
             if not item["errors"] and not item["exclusions"]
         ]
 
-        selection_pool = [*eligible, *eligible_wayfinder]
+        eligible_backlog = [
+            item
+            for item in backlog_analyses
+            if not item["errors"] and not item["exclusions"]
+        ]
+        backlog_planning_candidates = [
+            {
+                **item,
+                "assignedToCurrentUser": False,
+                "resumeAction": "plan",
+            }
+            for item in eligible_backlog
+            if item["action"] == "plan" and not item["blockerReasons"]
+        ]
+
+        selection_pool = [
+            *eligible,
+            *eligible_wayfinder,
+            *backlog_planning_candidates,
+        ]
         if args.wayfinder_ticket is not None:
             selected = [
                 item
@@ -1768,11 +1748,6 @@ def main() -> int:
             for item in backlog_analyses
             if item["errors"] or item["exclusions"]
         ]
-        eligible_backlog = [
-            item
-            for item in backlog_analyses
-            if not item["errors"] and not item["exclusions"]
-        ]
         triage_candidates = sorted(
             (
                 item for item in eligible_backlog
@@ -1790,7 +1765,7 @@ def main() -> int:
         human_actions = sorted(
             (
                 item for item in eligible_backlog
-                if item["action"] in ("move-to-planning", "perform-human-work")
+                if item["action"] == "perform-human-work"
                 and not item["blockerReasons"]
             ),
             key=ticket_rank,

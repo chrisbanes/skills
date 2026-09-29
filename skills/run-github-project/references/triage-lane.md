@@ -36,7 +36,7 @@ and also blocks this tail lane despite consuming no slot. Treat
 `resume-backlog-cleanup` and `blockedPlanningClaims` the same way. Malformed or
 excluded unclaimed items do not block the tail lane. Ready epics run in the
 controller lane before triage. Human actions do not block triage; include any
-newly approved human-work or Planning action in the current frontier packet.
+newly classified human-work action in the current frontier packet.
 Never pause authorized execution to ask for a triage decision.
 
 In `next`, process at most the first ranked triage contender when no executable
@@ -82,8 +82,9 @@ hand the issue back to the maintainer without changing it.
 Use the batched post-mutation read to reconcile the approved outcome:
 
 - For `ready-for-agent`, require the provider's durable agent brief and exact
-  label transition. Leave the item in Backlog and report that it awaits a
-  human Planning transition; never manufacture execution authority.
+  label transition. Leave the item in Backlog; the next complete ranker pass
+  returns it as a planning candidate and the controller performs the Planning
+  transition before assignment.
 - For the configured human-work label, `needs-info`, or `wontfix`, require the
   provider's approved comment, label, and closure result as applicable. Leave
   open human work in Backlog for the human frontier.
@@ -100,7 +101,7 @@ Finish the triage lane only after a complete refreshed query finds no
 non-deferred unblocked triage contender. Report:
 
 - every triaged issue and reconciled outcome;
-- every issue awaiting human Planning authorization;
+- every issue newly queued for Planning;
 - every human action added to the frontier;
 - every deferred or blocked triage attempt;
 - every `parkedBlocked` issue and its live blockers; and

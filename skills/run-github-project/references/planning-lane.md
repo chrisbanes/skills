@@ -8,20 +8,20 @@ Configured Wayfinder children take the separate integration branch in
 class and non-preemption rules, but never use the implementation-plan marker,
 Ready handoff, or implementation lifecycle below.
 
-## Authority And Plan State
+## Eligibility And Plan State
 
 Require both:
 
 1. the exact `ready-for-agent` label; and
-2. the latest transition into `Planning` to be either:
-   - a non-automated event by a configured execution approver; or
-   - the authenticated runner's non-automated machine requeue backed by its
-     verified earlier Ready handoff and runner-authored replan report.
+2. current `Planning` Status with a latest transition event that resolves to
+   that Status.
 
-The human transition authorizes autonomous plan publication and implementation.
-The verified Ready handoff carries that authority across a contract-preserving
-machine requeue. Ordinary issue-body or comment edits do not revoke it. A newer
-human transition into `Planning` explicitly requests a new plan.
+Treat Project Status and the role label as the execution signal. Do not require
+a particular transition actor, a manual transition, or an execution approver.
+The latest transition into `Planning` is the plan-freshness boundary regardless
+of whether a person, the controller, or Project automation produced it.
+Ordinary issue-body or comment edits do not change that boundary. A newer
+transition into `Planning` requests a new plan.
 
 Recognize implementation-plan comments containing either:
 
@@ -39,7 +39,7 @@ revision, fork, foreign marker, or minimized leaf is a semantic planning
 blocker.
 
 Classify the active leaf as current in Planning only when its semantic payload
-was published at or after the authorizing Planning event and its planned branch
+was published at or after the latest Planning event and its planned branch
 matches the configured base. Treat the predecessor as stale immediately after
 a machine requeue. Compute its lease digest from the semantic plan payload,
 excluding a superseded banner or presentation-only `<details>` wrapper.
@@ -51,10 +51,13 @@ and minimized state in the authority lease.
 
 ## Plan A Planning Item
 
-1. Enter the controller lane, assign the issue exclusively to the authenticated
-   user, refetch and verify the assignment, then release the lane. Reconcile
-   an ambiguous assignment before retrying. Preserve the assignment through
-   planning and implementation.
+1. Enter the controller lane. When the selected `ready-for-agent` item is in
+   Backlog, move it to `Planning` as the authenticated runner and refetch the
+   resulting transition; when it is already in `Planning`, do not manufacture
+   another transition. Then assign the issue exclusively to the authenticated
+   user, refetch and verify the assignment, and release the lane. Reconcile an
+   ambiguous Status or assignment mutation before retrying. Preserve the
+   assignment through planning and implementation.
 2. Use one dedicated, reusable, clean planning worktree at a stable
    controller-recorded path outside the checkout, detached at the configured
    base. Refresh it only between tickets; never discard ignored build state.
@@ -218,18 +221,19 @@ When the owning ticket agent returns an `autonomous-replan` packet:
    reacquire the next free implementation slot ahead of new claims. Resume the
    same ticket context and let it reconcile retained work to the new plan.
 
-The ranker requires the verified report, preceding Ready handoff, and
-runner-authored Planning transition. A missing or mismatched link preserves a
-blocked planning claim. Any fresh human Planning transition supersedes the
-machine requeue and requests a new plan.
+The report, preceding Ready handoff, and following Planning transition remain
+recovery evidence for the retained implementation state. A missing or
+mismatched link preserves a blocked planning claim until the retained state is
+reconciled; resolving it does not require human authorization.
 
 ### Return Human Work To Backlog
 
 When the verified packet disposition is `human-required`:
 
 1. Publish and verify the same marker-owned exact evidence packet.
-2. Move the item to the configured Backlog option and verify the transition.
-   Do not clean anything when either the report or transition is ambiguous.
+2. Replace `ready-for-agent` with the configured human-work label, move the
+   item to the configured Backlog option, and verify both mutations. Do not
+   clean anything when the report, label, or transition outcome is ambiguous.
 3. Comment on and close any runner-owned implementation PR, linking the durable
    report. Reconcile an ambiguous close before continuing.
 4. Resolve active processes and named-resource grants, verify exact skill
@@ -247,10 +251,11 @@ When the verified packet disposition is `human-required`:
    residue that could not be reconciled, but do not retain a claim or slot for
    the Backlog item.
 
-A later non-automated Backlog-to-Planning transition by an execution approver
-is fresh authority. Start from the verified base, recover no deleted partial
-code, and publish a new plan revision that supersedes the historical leaf.
-Never move a human-owned Backlog item to Planning automatically.
+A later exact `ready-for-agent` label with the human-work label removed queues
+the issue again. The controller moves it from Backlog to Planning, starts from
+the verified base, recovers no deleted partial code, and publishes a new plan
+revision that supersedes the historical leaf. Never move an item carrying the
+human-work label to Planning automatically.
 
 Semantic planning blockers are issue-local. Preserve the assignment and retry
 them only when authoritative inputs change. Retry transient planner/tool
@@ -271,7 +276,8 @@ order:
 3. contract-preserving replan claims;
 4. other resumable Planning and verified handoff claims;
 5. new `Ready to implement` candidates;
-6. new `Planning` candidates, including configured AFK Wayfinder children.
+6. new `Planning` candidates, including unblocked Backlog `ready-for-agent`
+   items and configured AFK Wayfinder children.
 
 Within a class, use configured Priority, visible Project position, then issue
 number.
@@ -303,8 +309,9 @@ Before adopting this schema:
 1. require zero existing `In progress` items;
 2. have a human create and verify `Backlog`, `Planning`, and
    `Ready to implement`;
-3. configure their option IDs and execution approver logins;
-4. have an execution approver move every legacy Ready item to `Planning`;
+3. configure their option IDs;
+4. have the controller move every legacy Ready item to `Planning` and verify
+   each resulting transition;
 5. run `to-plan --auto` for each item, including those with an existing marker,
    before creating its runner-authored Ready handoff.
 

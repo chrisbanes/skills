@@ -12,7 +12,6 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --repository <owner/repository> \
   --configuration-digest <committed-configuration-digest> \
   --base-branch <base-branch> \
-  --execution-approver <login> [--execution-approver <login> ...] \
   --backlog-status <backlog-name> \
   --planning-status <planning-name> \
   --ready-status <ready-to-implement-name> \
@@ -194,7 +193,7 @@ execution-only author, draft, head, and base fields:
 ```
 
 Use that same Backlog shape for configured epics, human work, and
-`ready-for-agent` items awaiting Planning authorization. Preserve every exact
+`ready-for-agent` items queued for Planning. Preserve every exact
 label. The ranker derives the work shape and next action from configured label
 names; never add a synthetic role to its input.
 
@@ -205,12 +204,12 @@ configured repository or `owner/repository#number` strings for cross-repository
 issues; never pass GraphQL objects. Use a finite non-negative numeric Project
 position. An empty PR array is valid.
 
-For a first-time or human-reauthorized `Planning` item, `readyTransition` may be
-`null`. A runner-authored Planning requeue must include its preceding verified
-Ready transition. For any other accepted Status it must be the latest
-transition into `Ready to implement`. `planningTransition` is always the latest
-event entering Planning; the ranker distinguishes human authorization from a
-runner requeue by actor, the preceding Ready handoff, and `replanRequest`.
+For a first-time `Planning` item, `readyTransition` may be `null`. A
+runner-authored Planning requeue should include its preceding verified Ready
+transition and replan report as recovery evidence. For any other accepted
+Status, `readyTransition` must be the latest transition into `Ready to
+implement`. `planningTransition` is always the latest event entering Planning;
+its actor and automation source do not gate eligibility.
 
 Use `backlogTransition` only for an item currently in Backlog. It must be the
 latest transition into Backlog. An assigned Backlog item also requires a
@@ -218,8 +217,8 @@ runner-authored `replanRequest` with `disposition: "human-required"` so cleanup
 can resume after interruption. Keep that assignment as the durable cleanup
 lease until the controller verifies that every exact runner-owned artifact is
 absent and unassigns last. An unassigned Backlog item without the configured
-`needs-triage` label is human-owned and ineligible for runner execution; an
-eligible labeled item belongs only to the triage inventory.
+`needs-triage`, `ready-for-agent`, or configured human-work label is unclassified
+and ineligible for runner execution.
 
 Normalize every runner-owned v1 or v2 plan marker, including minimized
 comments, into `implementationPlans`. A v1 comment is a revision-one root. A v2
@@ -266,8 +265,9 @@ native blockers or descendants as `parkedBlocked`; return an unblocked item as
 
 For other unassigned Backlog work, apply
 [Epics And Human Frontier](human-frontier.md). Return a bare unblocked epic as
-`readyEpics`, and return unblocked human work or agent work awaiting Planning
-as `humanActions`. Permit an existing assignee only on human work. Role-tag
+`readyEpics`, return unblocked human work as `humanActions`, and include
+unblocked `ready-for-agent` work in `candidates` with action `plan`. Permit an
+existing assignee only on human work. Role-tag
 every dependency-blocked Backlog result in `parkedBlocked`.
 
 The ranker returns valid current-user claims and ordered unclaimed candidates:
@@ -289,7 +289,8 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
   "candidates": [
     {"ticket": {"number": 44}, "action": "resume-pr"},
     {"ticket": {"number": 45}, "action": "claim"},
-    {"ticket": {"number": 46}, "action": "plan"}
+    {"ticket": {"number": 46}, "action": "plan"},
+    {"ticket": {"number": 49}, "action": "plan"}
   ],
   "wayfinderHumanFrontier": [
     {"ticket": {"number": 52}, "action": "resolve-wayfinder-hitl", "type": "grilling"}
@@ -304,7 +305,6 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
     {"ticket": {"number": 48}, "action": "close-epic"}
   ],
   "humanActions": [
-    {"ticket": {"number": 49}, "action": "move-to-planning"},
     {"ticket": {"number": 50}, "action": "perform-human-work"}
   ],
   "parkedBlocked": [
