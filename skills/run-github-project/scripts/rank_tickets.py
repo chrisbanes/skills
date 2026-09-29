@@ -968,6 +968,23 @@ def analyze_ticket(
                     "human-work report does not identify the current plan",
                 )
             if (
+                ready_transition is not None
+                and replan_request["createdAt"] < ready_transition["createdAt"]
+            ):
+                exclusions.append(
+                    "human-work report predates the latest Ready handoff",
+                )
+            if own_closing_pull_requests and not (
+                len(own_closing_pull_requests) == 1
+                and replan_request["pullRequestUrl"]
+                == own_closing_pull_requests[0]["url"]
+                and replan_request["implementationHeadSha"]
+                == own_closing_pull_requests[0]["headSha"]
+            ):
+                exclusions.append(
+                    "human-work report does not match the retained PR",
+                )
+            if (
                 backlog_transition is not None
                 and backlog_transition["createdAt"] < replan_request["createdAt"]
             ):

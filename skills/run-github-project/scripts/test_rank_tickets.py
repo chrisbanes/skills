@@ -491,6 +491,82 @@ class RankTicketsTest(unittest.TestCase):
             output["blockedPlanningClaims"],
         )
 
+    def test_backlog_cleanup_report_must_match_retained_pr(self) -> None:
+        cleanup = ticket(
+            210,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            openPullRequests=[pull_request(210)],
+            replanRequest=replan_request(
+                210,
+                disposition="human-required",
+                implementationHeadSha="head-999",
+                pullRequestUrl="https://github.com/acme/repo/pull/999",
+            ),
+            backlogTransition={
+                "id": "PVTE_210_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([cleanup])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["humanActions"])
+        self.assertEqual(
+            [
+                {
+                    "number": 210,
+                    "reasons": [
+                        "human-work report does not match the retained PR",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
+    def test_backlog_cleanup_report_must_follow_ready_handoff(self) -> None:
+        cleanup = ticket(
+            211,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            replanRequest=replan_request(
+                211,
+                disposition="human-required",
+                createdAt="2026-07-28T09:30:00Z",
+            ),
+            backlogTransition={
+                "id": "PVTE_211_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([cleanup])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["humanActions"])
+        self.assertEqual(
+            [
+                {
+                    "number": 211,
+                    "reasons": [
+                        "human-work report predates the latest Ready handoff",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
     def test_keeps_assigned_cleanup_separate_from_unassigned_triage(self) -> None:
         cleanup = ticket(
             205,
