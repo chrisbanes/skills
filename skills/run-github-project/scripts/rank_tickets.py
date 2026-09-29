@@ -380,7 +380,7 @@ def is_backlog_cleanup_candidate(
         and isinstance(backlog_transition, dict)
         and backlog_transition.get("actor") == current_user
         and backlog_transition.get("status") == backlog_status
-        and backlog_transition.get("wasAutomated") is False
+        and backlog_transition.get("wasAutomated") is not True
         and (has_cleanup_report or has_runner_owned_pull_request)
     )
 

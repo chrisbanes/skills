@@ -457,6 +457,43 @@ class RankTicketsTest(unittest.TestCase):
             output["blockedPlanningClaims"],
         )
 
+    def test_malformed_cleanup_transition_remains_a_blocked_claim(self) -> None:
+        cleanup = ticket(
+            213,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            replanRequest=replan_request(
+                213,
+                disposition="human-required",
+            ),
+            backlogTransition={
+                "id": "PVTE_213_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": "false",
+            },
+        )
+
+        returncode, output = run_ranker([cleanup])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["humanActions"])
+        self.assertEqual(
+            [
+                {
+                    "number": 213,
+                    "reasons": [
+                        "ticket 213: backlogTransition.wasAutomated "
+                        "must be a boolean",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
     def test_assigned_backlog_cleanup_without_report_remains_blocked(self) -> None:
         cleanup = ticket(
             208,
