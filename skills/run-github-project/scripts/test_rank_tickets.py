@@ -426,7 +426,6 @@ class RankTicketsTest(unittest.TestCase):
             projectStatus="Backlog",
             labels=["ready-for-human"],
             assignees=["chris"],
-            openPullRequests=[pull_request(207)],
             replanRequest=replan_request(
                 207,
                 disposition="unexpected",

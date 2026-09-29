@@ -355,11 +355,7 @@ def is_backlog_cleanup_candidate(
     backlog_transition = ticket.get("backlogTransition")
     replan_request = ticket.get("replanRequest")
     pull_requests = ticket.get("openPullRequests")
-    has_cleanup_report = (
-        isinstance(replan_request, dict)
-        and replan_request.get("author") == current_user
-        and replan_request.get("disposition") == "human-required"
-    )
+    has_cleanup_report = replan_request is not None
     has_runner_owned_pull_request = (
         isinstance(pull_requests, list)
         and any(
