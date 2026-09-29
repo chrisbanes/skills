@@ -355,6 +355,11 @@ def is_backlog_cleanup_candidate(
     backlog_transition = ticket.get("backlogTransition")
     replan_request = ticket.get("replanRequest")
     pull_requests = ticket.get("openPullRequests")
+    transition_actor = (
+        backlog_transition.get("actor")
+        if isinstance(backlog_transition, dict)
+        else None
+    )
     has_cleanup_report = replan_request is not None
     if isinstance(replan_request, dict):
         report_author = replan_request.get("author")
@@ -378,8 +383,11 @@ def is_backlog_cleanup_candidate(
         ticket.get("projectStatus") == backlog_status
         and has_current_user_assignment(ticket, current_user)
         and isinstance(backlog_transition, dict)
-        and backlog_transition.get("actor") == current_user
-        and backlog_transition.get("status") == backlog_status
+        and not (
+            isinstance(transition_actor, str)
+            and transition_actor
+            and transition_actor != current_user
+        )
         and backlog_transition.get("wasAutomated") is not True
         and (has_cleanup_report or has_runner_owned_pull_request)
     )

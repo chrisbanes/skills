@@ -494,6 +494,54 @@ class RankTicketsTest(unittest.TestCase):
             output["blockedPlanningClaims"],
         )
 
+    def test_inconsistent_cleanup_transition_identity_remains_blocked(self) -> None:
+        cases = (
+            (
+                {"status": "Ready"},
+                "latest backlog transition status 'Ready' does not match 'Backlog'",
+            ),
+            (
+                {"actor": 42},
+                "ticket 215: backlogTransition.actor must be a non-empty string",
+            ),
+        )
+        for transition_overrides, expected_reason in cases:
+            with self.subTest(transition_overrides=transition_overrides):
+                backlog_transition = {
+                    "id": "PVTE_215_backlog",
+                    "actor": "chris",
+                    "createdAt": "2026-07-28T12:00:00Z",
+                    "status": "Backlog",
+                    "wasAutomated": False,
+                }
+                backlog_transition.update(transition_overrides)
+                cleanup = ticket(
+                    215,
+                    projectStatus="Backlog",
+                    labels=["ready-for-human"],
+                    assignees=["chris"],
+                    replanRequest=replan_request(
+                        215,
+                        disposition="human-required",
+                    ),
+                    backlogTransition=backlog_transition,
+                )
+
+                returncode, output = run_ranker([cleanup])
+
+                self.assertEqual(0, returncode)
+                self.assertEqual([], output["claims"])
+                self.assertEqual([], output["humanActions"])
+                self.assertEqual(
+                    [
+                        {
+                            "number": 215,
+                            "reasons": [expected_reason],
+                        },
+                    ],
+                    output["blockedPlanningClaims"],
+                )
+
     def test_malformed_cleanup_pr_evidence_remains_a_blocked_claim(self) -> None:
         cleanup = ticket(
             214,
