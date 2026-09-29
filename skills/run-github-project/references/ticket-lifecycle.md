@@ -81,9 +81,12 @@ terminal failure at a verified PR head. Keep that count in durable ticket
 evidence across interruption and resumption. After three rounds with the same
 sanitized failure and no new diagnostic direction, stop `next` with the exact
 check and log evidence. Preserve the claim, owner, worktree, branch, PR, and
-`In progress` status; do not park or release the slot. Resume only with a new
-diagnostic direction or explicit authority for one focused investigation after
-revalidating the claim. Never repeat an unchanged rerun to reset the count.
+`In progress` status; do not park or release the slot. Resume after revalidating
+the claim when a fresh read shows the failed required check terminal-green for
+the exact current PR head, then recheck all other applicable review and merge
+gates. Otherwise resume only with a new diagnostic direction or explicit
+authority for one focused investigation. A new run ID alone does not reset the
+count; never repeat an unchanged rerun to reset it.
 
 ## Pre-push, shepherd, and merge
 

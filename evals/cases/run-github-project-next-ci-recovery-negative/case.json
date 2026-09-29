@@ -1,0 +1,18 @@
+{
+  "id": "run-github-project-next-ci-recovery-negative",
+  "title": "Resume next after verified required-CI recovery",
+  "family": "workflow",
+  "target_skills": ["run-github-project"],
+  "expected_skills": ["run-github-project"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-next-ci-recovery-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "verified-recovery", "text": "The response resumes the same next ticket after a fresh read verifies that the previously failing required check is terminal-green on the exact current PR head"},
+    {"id": "recheck-gates", "text": "The response preserves the claim and owner, revalidates other applicable reviews and merge gates, and does not automatically merge or apply drain-only parking"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}
