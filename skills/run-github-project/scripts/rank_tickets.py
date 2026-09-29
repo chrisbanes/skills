@@ -350,19 +350,32 @@ def is_backlog_cleanup_candidate(
     current_user: str,
     backlog_status: str,
 ) -> bool:
-    return (
-        isinstance(ticket, dict)
-        and ticket.get("projectStatus") == backlog_status
-        and has_current_user_assignment(ticket, current_user)
-        and (
-            ticket.get("replanRequest") is not None
-            or (
-                isinstance(ticket.get("backlogTransition"), dict)
-                and ticket["backlogTransition"].get("actor") == current_user
-                and ticket["backlogTransition"].get("status") == backlog_status
-                and ticket["backlogTransition"].get("wasAutomated") is False
-            )
+    if not isinstance(ticket, dict):
+        return False
+    backlog_transition = ticket.get("backlogTransition")
+    replan_request = ticket.get("replanRequest")
+    pull_requests = ticket.get("openPullRequests")
+    has_cleanup_report = (
+        isinstance(replan_request, dict)
+        and replan_request.get("author") == current_user
+        and replan_request.get("disposition") == "human-required"
+    )
+    has_runner_owned_pull_request = (
+        isinstance(pull_requests, list)
+        and any(
+            isinstance(pull_request, dict)
+            and pull_request.get("author") == current_user
+            for pull_request in pull_requests
         )
+    )
+    return (
+        ticket.get("projectStatus") == backlog_status
+        and has_current_user_assignment(ticket, current_user)
+        and isinstance(backlog_transition, dict)
+        and backlog_transition.get("actor") == current_user
+        and backlog_transition.get("status") == backlog_status
+        and backlog_transition.get("wasAutomated") is False
+        and (has_cleanup_report or has_runner_owned_pull_request)
     )
 
 

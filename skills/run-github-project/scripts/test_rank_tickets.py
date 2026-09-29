@@ -426,6 +426,7 @@ class RankTicketsTest(unittest.TestCase):
             projectStatus="Backlog",
             labels=["ready-for-human"],
             assignees=["chris"],
+            openPullRequests=[pull_request(207)],
             replanRequest=replan_request(
                 207,
                 disposition="unexpected",
@@ -463,8 +464,7 @@ class RankTicketsTest(unittest.TestCase):
             projectStatus="Backlog",
             labels=["ready-for-human"],
             assignees=["chris"],
-            implementationPlan=None,
-            readyTransition=None,
+            openPullRequests=[pull_request(208)],
             replanRequest=None,
             backlogTransition={
                 "id": "PVTE_208_backlog",
@@ -485,7 +485,7 @@ class RankTicketsTest(unittest.TestCase):
                 {
                     "number": 208,
                     "reasons": [
-                        "ticket 208: readyTransition must be an object",
+                        "missing verified human-work report",
                     ],
                 },
             ],
@@ -956,6 +956,32 @@ class RankTicketsTest(unittest.TestCase):
             replanRequest=None,
             backlogTransition={
                 "id": "PVTE_27_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([human_work])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["blockedPlanningClaims"])
+        self.assertEqual(
+            [{"ticket": human_work, "action": "perform-human-work"}],
+            output["humanActions"],
+        )
+
+    def test_historical_replan_report_does_not_hide_human_work(self) -> None:
+        human_work = ticket(
+            28,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            replanRequest=replan_request(28),
+            backlogTransition={
+                "id": "PVTE_28_backlog",
                 "actor": "maintainer",
                 "createdAt": "2026-07-28T12:00:00Z",
                 "status": "Backlog",
