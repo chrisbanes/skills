@@ -11,8 +11,11 @@ Never install a provider implicitly.
 | `wayfinder` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill wayfinder` |
 | `research` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill research` |
 
-If `tdd` is unavailable, stop the execution lane and report its source and
-exact install command. Permit a triage-only tail run to continue.
+Require `tdd` only before a behavioral code change. If it is unavailable,
+preserve that ticket's claim and block only its behavioral implementation;
+continue documentation, configuration, read-only review, triage, and unrelated
+tickets. Report its source and exact install command. Do not treat a
+documentation-only change as behavioral merely because it accompanies a PR.
 
 `to-plan` is required only while processing `Planning`. If it is unavailable,
 block those planning items locally and continue implementation items whose
@@ -32,6 +35,11 @@ its decision-map procedure into this workflow.
 must invoke it in a background subagent; a generic helper is not an equivalent
 provider. If it is unavailable, block only research children and continue
 other authorized lanes. Never install it implicitly.
+
+TypeSafe is optional and used only when the trusted Agent Setup selects
+`typesafe` routing. Its service or credential failure falls back to the
+configured eligible profile under [agent routing](agent-routing.md); it never
+stops an otherwise valid ticket. Do not install a TypeSafe client implicitly.
 
 The explicit `run-github-project` procedure may dispatch `triage` to its
 recommendation boundary. Its disabled implicit invocation and maintainer

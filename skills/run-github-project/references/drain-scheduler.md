@@ -58,8 +58,9 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 Give each ticket agent exclusive ownership of its skill-owned worktree, branch,
 and PR. Permit independent ticket agents to edit, test, commit, push different
 branch refs, open or update their PRs, reply to review comments, and resolve
-addressed threads concurrently. Invalidate and repeat a review contract
-whenever that ticket's SHA changes.
+addressed threads concurrently. Invalidate review evidence affected by a SHA
+change and cover the new head under the [review evidence rule](review-contracts.md)
+before another push.
 
 Keep one controller lane for just-in-time claims and assignment, Project Status
 mutations, slot setup and cleanup, merges or merge-queue admission, issue
@@ -67,15 +68,17 @@ closure, and Done reconciliation. Serialize those actions and reconcile every
 ambiguous remote mutation before the next controller mutation. Ticket agents
 never mutate another slot or the controller-owned Project state.
 
-For each ticket pass, continue through implementation, verification, all review
-contracts, a focused commit, and a reconciled push plus PR creation or update.
+For each ticket pass, continue through implementation, verification, review
+coverage under the [review evidence rule](review-contracts.md), a focused
+commit, and a reconciled push plus PR creation or update.
 Then yield durable evidence to the controller and idle that persistent context.
 Resume the same agent for actionable feedback or base repair.
 
 Apply [Route Agents By Task](ticket-lifecycle.md#route-agents-by-task) and append its
 routing-ledger entry when selecting each persistent ticket agent and helper.
 Use the portable default-owner capability for every normal ticket owner and
-planner; never infer exceptional capability from topic, scope, plan size,
+planner, selecting only an eligible configured profile when Agent Setup is
+present. Never infer exceptional capability from topic, scope, plan size,
 module count, or language count.
 
 ### Conflict Admission Gate

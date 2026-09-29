@@ -29,13 +29,69 @@ needs-triage, epic, and human-work labels; complete optional Wayfinder labels;
 Priority field/options; execution approvers; optional trusted filter; merge
 method; Done automation/archive behavior. Store names with IDs; a renamed name
 is repairable drift but an ID resolving elsewhere stops work. Never create or
-rename Project fields/options. Apply the planning lane clean-cutover gate, and
-allow `closing-keyword` only when base is the default branch.
+rename Project fields/options. Apply the planning lane migration gate only when
+adopting that Status schema, not when adding or repairing mappings for a schema
+already in use. Allow `closing-keyword` only when base is the default branch.
+When Agent Setup is present, validate unique profile names, required default
+owner profiles, distinct task fit where TypeSafe could choose between profiles,
+runtime role/model/reasoning compatibility, and a configured versioned TypeSafe
+judgment model when `typesafe` is selected.
+TypeSafe availability is a dispatch-time fallback, not a setup blocker. Leave
+the selected lead model unchanged.
 
-When configuration or trusted reference is absent, discover linked Projects and
-fields, ask unresolved questions one at a time, present complete configuration
-and minimum trusted-instruction patch together, and write only after
-confirmation while preserving unrelated text. Creating/repairing pauses
+### Additive Setup for an Existing Repository
+
+Start with the working-tree configuration, its committed version, and the
+closest trusted instructions. Verify repository and Project identity against
+complete live reads. Reconcile each value: retain existing values that still
+match live state; add requested sections and missing required values; repair a
+name only when its stored ID still identifies the same object. Change an
+existing value only when the request or verified drift calls for it. Preserve
+unrelated fields, IDs, filter, merge policy, comments, local edits, and trusted
+instruction text. Never recreate the binding from the template or overwrite a
+user choice merely to make it match a proposed default. An absent optional
+section is normal, not drift.
+
+If the trusted instructions already point to the exact configuration file,
+leave them unchanged. If that reference is missing, propose the minimum patch
+to those instructions and write it after confirmation, preserving their other
+text and the existing configuration. Do not run the Status-schema migration
+gate for an already adopted schema, move Ready items, reroute an existing ticket
+owner, or touch Project, issue, or PR state.
+
+When adding or updating Agent Setup, discover the current runtime's available
+roles, models, reasoning levels, and access before proposing profiles. If the
+request supplies no agent choices, propose the smallest `configured` setup:
+one `default-owner` profile using `runtime-default` for model and reasoning,
+named as both planner and ticket default. Add helper profiles only when
+requested or needed for a specified capability. Enable `typesafe` only when
+requested for this repository and a versioned judgment model is selected;
+explain that it receives a sanitized brief and that service unavailability
+falls back to an eligible configured profile. Never put credentials in the
+configuration. Resolve missing choices without duplicating a profile or
+replacing a user pin.
+
+Apply only the additions and evidence-backed changes, then validate the full
+binding and any agent profiles against the runtime and complete live reads. If
+it already matches the request, leave the files unchanged. If remote validation
+is unavailable, keep the scoped local edit and report precisely which live
+check remains unverified; do not report `configuration-valid`. Do not commit
+implicitly. Finish `configuration-ready-to-commit` only when validation passes
+and the diff is ready; once the configuration and trusted reference are
+committed on verified base, report `configuration-valid` only after fresh
+validation. Pause new claims while the edit is uncommitted.
+
+Changing the committed configuration digest while a ticket still holds an old
+lease would invalidate that lease. The setup edit may be prepared while claims
+exist, but defer committing and activating it until those claims finish. If
+validation passes, report `configuration-ready-to-commit` with activation
+pending on claim completion; do not change their owners or leases. New routing
+and other configuration changes apply only after activation.
+
+When no configuration exists, discover linked Projects and fields, ask
+unresolved questions one at a time, present complete configuration and the
+minimum trusted-instruction patch together, and write only after confirmation
+while preserving unrelated text. Creating or repairing the pair pauses
 execution until both files are committed to verified base; do not commit
 implicitly. Validate the pair live. A user-authorized dedicated configuration
 commit may contain only that pair. Record committed digest, default branch, and

@@ -3,7 +3,7 @@
 ## Preconditions
 
 Read trusted repository instructions and validate the binding through the setup
-lane. Require `tdd` before implementation, `to-plan` for ordinary planning,
+lane. Require `tdd` before behavioral implementation, `to-plan` for ordinary planning,
 `research` only for a research Wayfinder child, `triage` for Backlog work, and
 the [review contracts](review-contracts.md) before ticket acceptance; read
 [human frontier](human-frontier.md),

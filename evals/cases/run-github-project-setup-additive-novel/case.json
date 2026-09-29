@@ -1,0 +1,19 @@
+{
+  "id": "run-github-project-setup-additive-novel",
+  "title": "Fill a missing mapping without changing configured agents",
+  "family": "workflow",
+  "target_skills": ["run-github-project"],
+  "expected_skills": ["run-github-project"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-setup-additive-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "existing-baseline", "text": "The response uses the existing binding and adds only the missing Low priority option ID from the supplied live read, without regenerating the configuration"},
+    {"id": "preserve-agents", "text": "The response retains the already configured Agent Setup and user model pin, and leaves the trusted reference and other mappings unchanged"},
+    {"id": "no-migration", "text": "The response treats this as a mapping addition for an adopted schema, reports ready-to-commit after validation, and does not run migration or mutate Project state"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

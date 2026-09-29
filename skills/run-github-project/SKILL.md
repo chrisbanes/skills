@@ -28,7 +28,8 @@ outside capacity before refreshing the control plane.
 ## Select the mode
 
 - `review`: inspect or explain only; no operation.
-- `setup`: configure, validate, or repair the binding only; no Project work.
+- `setup`: configure, validate, or incrementally update the binding only; no
+  Project work.
 - `next`: default execution; process at most one selected issue.
 - `drain`: only on explicit drain/run-all/repeat/until-empty request.
 
@@ -45,6 +46,9 @@ before preconditions; it is authoritative on required, conditional, optional
 providers, sources, installation commands, and lane-specific fallback. Never
 install a provider implicitly. Read all providers and specialist contracts
 required by the execution-controller lane before their relevant action.
+When the trusted configuration enables agent profiles, read
+[agent routing](references/agent-routing.md) before assigning a planner, ticket
+agent, or helper.
 For `drain`, read [drain scheduler](references/drain-scheduler.md) completely
 before drain queue work. For `next` or `drain`, read
 [review contracts](references/review-contracts.md) completely before acceptance
@@ -71,8 +75,12 @@ mode or impose a skill-defined ticket cap in `drain`.
 
 The selected lane defines terminal state and report evidence. `setup` reports
 only identity, configuration files/read-or-changed, live validation, unresolved
-values, committed-base state, and one configuration result. Execution reports
-mode, capacity, configuration digest, live queries, authority, scheduler,
-providers, routing ledger, frontiers, parked/triage/reconciliation outcomes, and
-per-ticket selection, lease/plan, branch/commit/PR, verification/review,
-reconciled mutation/merge, and final preserved or cleaned state.
+values, committed-base state, and one configuration result. Lead an execution
+report with the outcome, completed tickets, work still moving, exact blockers,
+and the user's next action, if any. Link to durable issue, PR, and checkpoint
+evidence instead of repeating unchanged queries or no-op events. Keep mode,
+capacity, configuration digest, live-query and authority evidence, routing
+ledger, frontiers, parked/triage/reconciliation outcomes, and per-ticket
+selection, lease/plan, branch/commit/PR, verification/review, reconciled
+mutation/merge, and preserved or cleaned state available in a concise appendix
+when needed to audit a decision or resume work.

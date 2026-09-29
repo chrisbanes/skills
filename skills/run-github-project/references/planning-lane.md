@@ -65,6 +65,15 @@ and minimized state in the authority lease.
    /to-plan --auto <canonical issue URL>
    ```
 
+   For this workflow, require the plan's Guardrails to distinguish a wrong
+   approved-plan seam or repository assumption from an implementation defect.
+   The former uses `to-plan`'s one diagnosis and two repair-cycle allowance;
+   ordinary in-scope implementation, integration, test, fixture, documentation,
+   and CI repairs stay with the ticket owner under the progress rules below.
+   The generic `to-plan` compile and fixture examples use its budget here only
+   when a wrong plan assumption caused the failure.
+   Do not accept a new plan whose repair wording contradicts that distinction.
+
 4. Allow bounded read-only discovery descendants from currently spare agent
    capacity. They never own the ticket or mutate state. When repository
    evidence exposes one specific unresolved architecture, security, rendering,
@@ -140,14 +149,25 @@ current base:
 
 ### Replan Packet Contract
 
-A mechanical mismatch within the approved plan's explicit repair allowance and
-remaining budget does not by itself invalidate the plan. Follow the worker
-contract for those repairs; do not change behavior, design decisions, interfaces,
-testing seams, or validation, and do not bypass overlapping-baseline checks.
+Classify an unexpected failure by cause, not its file type or whether it occurs
+before or after a push. A wrong factual seam or repository assumption in the
+approved plan is a mechanical plan mismatch: reserve one focused diagnosis and
+at most two repair edit-and-validation cycles under that plan's budget. A wrong
+approved design decision, exhausted mechanical budget, changed accepted
+contract, or uncertain baseline overlap requires the packet below.
 
-When repository evidence invalidates the approved plan or a mismatch remains
-after the permitted repair budget is exhausted, require the owning ticket agent to stop writes and return
-one packet containing:
+An implementation defect within the accepted outcome, scope, acceptance
+criteria, and plan decisions is an ordinary in-scope repair, including
+integration, CI, test, fixture, and documentation fixes. The owning agent
+records the cause and affected evidence, repairs in its existing slot, and
+repeats affected verification and review. The mechanical plan-mismatch budget
+does not count these repairs. Apply the [repair progress gate](ticket-lifecycle.md#repair-progress-gate)
+when attempts reproduce the same failure; required CI also follows the
+[terminal required-CI rule](drain-scheduler.md#terminal-required-ci-parking).
+
+When repository evidence invalidates the approved plan or the required
+adjustment exceeds its accepted contract, require the owning ticket agent to
+stop writes and return one packet containing:
 
 - disposition: `autonomous-replan` or `human-required`;
 - active plan permalink and payload digest;

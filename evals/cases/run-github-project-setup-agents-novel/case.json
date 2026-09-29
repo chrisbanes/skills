@@ -1,0 +1,18 @@
+{
+  "id": "run-github-project-setup-agents-novel",
+  "title": "Prepare Agent Setup while preserving active claims",
+  "family": "workflow",
+  "target_skills": ["run-github-project"],
+  "expected_skills": ["run-github-project"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-setup-agents-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "incremental-edit", "text": "The response prepares only Agent Setup with the two named profiles, steady-owner defaults, and issue-router-v2, retaining the existing binding"},
+    {"id": "lease-safety", "text": "The response reports ready-to-commit with activation pending until active old-digest claims finish, without rerouting them or invoking the initial migration gate"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

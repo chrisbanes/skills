@@ -50,7 +50,7 @@ install them, and the workflows never install them implicitly.
 | Consumer | Requirement | Provider | Source and install |
 |---|---|---|---|
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) implementation mode | Required | `implement`, with its current `tdd` and `code-review` companions | [Matt Pocock's skills](https://github.com/mattpocock/skills): run `npx skills add mattpocock/skills` and select all three skills |
-| [`run-github-project`](skills/run-github-project/SKILL.md) execution lane | Required | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
+| [`run-github-project`](skills/run-github-project/SKILL.md) behavioral implementation | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | `run-github-project` Backlog triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
 | `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-github-project/references/workflow-providers.md) |
 | `run-github-project` correctness review | Optional | `code-review` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill code-review` |
@@ -115,7 +115,7 @@ for its lane-specific fallback and blocking behavior.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — validate task dependencies, dispatch only safe ready work concurrently in isolated worktrees, integrate accepted commits in dependency order, and recheck affected evidence at the integrated head; preserves serial fallback, repair ownership, review mode, and the external `implement` prerequisite.
 - [`to-plan`](skills/to-plan/SKILL.md) — turn one ready GitHub issue or an in-chat task into a repository-grounded, executor-ready recipe with stable task IDs, explicit acyclic dependencies, safe parallelism notes, concrete tests, and bounded repair rules.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate the repository's GitHub Project workflow; preserve live authority, human Planning work, unknown outcomes, epics, checkpoints, triage, and authorized execution boundaries, with mode-specific external providers disclosed above.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, add to an existing Project binding using its verified values as the starting point, review, or operate the repository's GitHub Project workflow with optional configured agent profiles and TypeSafe routing; preserve live authority, human Planning work, unknown outcomes, epics, checkpoints, triage, and authorized execution boundaries, with mode-specific external providers disclosed above.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
 
 Workflows that delegate agents share the [subagent selection and handoff

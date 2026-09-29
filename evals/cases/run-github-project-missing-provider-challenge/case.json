@@ -1,6 +1,6 @@
 {
   "id": "run-github-project-missing-provider-challenge",
-  "title": "Block only the execution lane when tdd is unavailable",
+  "title": "Block only behavioral implementation when tdd is unavailable",
   "family": "workflow",
   "target_skills": ["run-github-project"],
   "expected_skills": ["run-github-project"],
@@ -29,7 +29,7 @@
     },
     {
       "id": "lane-boundary",
-      "text": "The response blocks the execution lane without installing a provider or broadening the failure to review, setup, or unrelated lanes"
+      "text": "The response preserves only the behavioral ticket as blocked, allows the unrelated documentation ticket to proceed, and does not install a provider"
     }
   ],
   "provenance": {"kind": "synthetic"},
