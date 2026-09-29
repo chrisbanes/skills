@@ -1,0 +1,18 @@
+{
+  "id": "run-github-project-next-ci-stall-novel",
+  "title": "Stop a repeated required-CI failure in next mode",
+  "family": "workflow",
+  "target_skills": ["run-github-project"],
+  "expected_skills": ["run-github-project"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-next-ci-stall-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "bounded-next", "text": "After three verified required-CI repair rounds with the same failure and no new direction, the response stops next with the exact check and log blocker rather than repeating repair or CI"},
+    {"id": "preserved-claim", "text": "The response preserves the claim, owner, worktree, branch, PR, and In progress status; it does not apply drain-only parking or release the slot"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

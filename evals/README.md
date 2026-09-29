@@ -125,8 +125,8 @@ Each eligible `case × arm` condition runs three times by default. A case that
 targets no implicitly invokable skill is excluded from the automatic arm before
 execution. The 38-case Compose suite schedules 342 subject calls and 342
 blinded judge calls. The 22-case Kotlin/Gradle suite schedules 198 subject calls
-and 198 blinded judge calls. The 30-case workflows/writing suite schedules 207
-subject calls and 207 blinded judge calls.
+and 198 blinded judge calls. The 31-case workflows/writing suite schedules 213
+subject calls and 213 blinded judge calls.
 
 All subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,

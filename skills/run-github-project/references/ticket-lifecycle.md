@@ -73,8 +73,17 @@ read-only evidence helper. If Agent Setup exists but no eligible
 preserve that same blocker and report the missing helper capability without
 retrying or rerouting the owner.
 Do not repeat the helper on unchanged evidence. Expected red tests in a
-test-first slice are not repair failures. Required CI uses its separate
+test-first slice are not repair failures. In `drain`, required CI uses its
 [three-round parking gate](drain-scheduler.md#terminal-required-ci-parking).
+In `next`, count a required-CI repair round only after the owner makes a
+bounded fix or evidence-supported rerun and the required check again reaches
+terminal failure at a verified PR head. Keep that count in durable ticket
+evidence across interruption and resumption. After three rounds with the same
+sanitized failure and no new diagnostic direction, stop `next` with the exact
+check and log evidence. Preserve the claim, owner, worktree, branch, PR, and
+`In progress` status; do not park or release the slot. Resume only with a new
+diagnostic direction or explicit authority for one focused investigation after
+revalidating the claim. Never repeat an unchanged rerun to reset the count.
 
 ## Pre-push, shepherd, and merge
 
