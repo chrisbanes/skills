@@ -973,30 +973,40 @@ class RankTicketsTest(unittest.TestCase):
         )
 
     def test_historical_replan_report_does_not_hide_human_work(self) -> None:
-        human_work = ticket(
-            28,
-            projectStatus="Backlog",
-            labels=["ready-for-human"],
-            assignees=["chris"],
-            replanRequest=replan_request(28),
-            backlogTransition={
-                "id": "PVTE_28_backlog",
-                "actor": "maintainer",
-                "createdAt": "2026-07-28T12:00:00Z",
-                "status": "Backlog",
-                "wasAutomated": False,
-            },
+        reports = (
+            replan_request(28),
+            replan_request(
+                28,
+                disposition="human-required",
+                author="maintainer",
+            ),
         )
+        for report in reports:
+            with self.subTest(report=report):
+                human_work = ticket(
+                    28,
+                    projectStatus="Backlog",
+                    labels=["ready-for-human"],
+                    assignees=["chris"],
+                    replanRequest=report,
+                    backlogTransition={
+                        "id": "PVTE_28_backlog",
+                        "actor": "chris",
+                        "createdAt": "2026-07-28T12:00:00Z",
+                        "status": "Backlog",
+                        "wasAutomated": False,
+                    },
+                )
 
-        returncode, output = run_ranker([human_work])
+                returncode, output = run_ranker([human_work])
 
-        self.assertEqual(0, returncode)
-        self.assertEqual([], output["claims"])
-        self.assertEqual([], output["blockedPlanningClaims"])
-        self.assertEqual(
-            [{"ticket": human_work, "action": "perform-human-work"}],
-            output["humanActions"],
-        )
+                self.assertEqual(0, returncode)
+                self.assertEqual([], output["claims"])
+                self.assertEqual([], output["blockedPlanningClaims"])
+                self.assertEqual(
+                    [{"ticket": human_work, "action": "perform-human-work"}],
+                    output["humanActions"],
+                )
 
     def test_unrelated_runner_owned_pr_does_not_hide_human_work(self) -> None:
         human_work = ticket(

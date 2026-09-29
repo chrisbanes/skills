@@ -356,6 +356,15 @@ def is_backlog_cleanup_candidate(
     replan_request = ticket.get("replanRequest")
     pull_requests = ticket.get("openPullRequests")
     has_cleanup_report = replan_request is not None
+    if isinstance(replan_request, dict):
+        report_author = replan_request.get("author")
+        report_disposition = replan_request.get("disposition")
+        if (
+            isinstance(report_author, str)
+            and report_author
+            and report_author != current_user
+        ) or report_disposition == "autonomous-replan":
+            has_cleanup_report = False
     has_runner_owned_pull_request = (
         isinstance(pull_requests, list)
         and any(
