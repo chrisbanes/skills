@@ -494,6 +494,40 @@ class RankTicketsTest(unittest.TestCase):
             output["blockedPlanningClaims"],
         )
 
+    def test_malformed_cleanup_pr_evidence_remains_a_blocked_claim(self) -> None:
+        cleanup = ticket(
+            214,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            openPullRequests=[pull_request(214, closesIssue="true")],
+            replanRequest=None,
+            backlogTransition={
+                "id": "PVTE_214_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([cleanup])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["humanActions"])
+        self.assertEqual(
+            [
+                {
+                    "number": 214,
+                    "reasons": [
+                        "ticket 214: pull request closesIssue must be a boolean",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
     def test_assigned_backlog_cleanup_without_report_remains_blocked(self) -> None:
         cleanup = ticket(
             208,
