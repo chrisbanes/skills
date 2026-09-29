@@ -567,6 +567,44 @@ class RankTicketsTest(unittest.TestCase):
             output["blockedPlanningClaims"],
         )
 
+    def test_backlog_cleanup_blocks_conflicting_action_labels(self) -> None:
+        for conflicting_label in ("ready-for-agent", "needs-triage"):
+            with self.subTest(conflicting_label=conflicting_label):
+                cleanup = ticket(
+                    212,
+                    projectStatus="Backlog",
+                    labels=["ready-for-human", conflicting_label],
+                    assignees=["chris"],
+                    replanRequest=replan_request(
+                        212,
+                        disposition="human-required",
+                    ),
+                    backlogTransition={
+                        "id": "PVTE_212_backlog",
+                        "actor": "chris",
+                        "createdAt": "2026-07-28T12:00:00Z",
+                        "status": "Backlog",
+                        "wasAutomated": False,
+                    },
+                )
+
+                returncode, output = run_ranker([cleanup])
+
+                self.assertEqual(0, returncode)
+                self.assertEqual([], output["claims"])
+                self.assertEqual([], output["humanActions"])
+                self.assertEqual(
+                    [
+                        {
+                            "number": 212,
+                            "reasons": [
+                                "conflicting Backlog action labels",
+                            ],
+                        },
+                    ],
+                    output["blockedPlanningClaims"],
+                )
+
     def test_keeps_assigned_cleanup_separate_from_unassigned_triage(self) -> None:
         cleanup = ticket(
             205,

@@ -628,6 +628,8 @@ def analyze_ticket(
     planning_status: str,
     ready_status: str,
     in_progress_status: str,
+    needs_triage_label: str,
+    human_work_label: str,
     priorities: tuple[str, ...],
     repository: str,
     base_branch: str,
@@ -653,6 +655,15 @@ def analyze_ticket(
 
     errors = common["errors"]
     exclusions = common["exclusions"]
+    if (
+        recovering_backlog_cleanup
+        and human_work_label in labels
+        and (
+            AGENT_WORK_LABEL in labels
+            or needs_triage_label in labels
+        )
+    ):
+        exclusions.append("conflicting Backlog action labels")
     if AGENT_WORK_LABEL not in labels and not recovering_backlog_cleanup:
         exclusions.append(f"missing {AGENT_WORK_LABEL} label")
 
@@ -1552,6 +1563,8 @@ def main() -> int:
                             planning_status=args.planning_status,
                             ready_status=args.ready_status,
                             in_progress_status=args.in_progress_status,
+                            needs_triage_label=args.needs_triage_label,
+                            human_work_label=args.human_work_label,
                             priorities=priorities,
                             repository=args.repository,
                             base_branch=args.base_branch,
