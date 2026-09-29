@@ -365,6 +365,7 @@ def is_backlog_cleanup_candidate(
         and any(
             isinstance(pull_request, dict)
             and pull_request.get("author") == current_user
+            and pull_request.get("closesIssue") is True
             for pull_request in pull_requests
         )
     )

@@ -999,6 +999,33 @@ class RankTicketsTest(unittest.TestCase):
             output["humanActions"],
         )
 
+    def test_unrelated_runner_owned_pr_does_not_hide_human_work(self) -> None:
+        human_work = ticket(
+            29,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            openPullRequests=[pull_request(29, closesIssue=False)],
+            replanRequest=None,
+            backlogTransition={
+                "id": "PVTE_29_backlog",
+                "actor": "chris",
+                "createdAt": "2026-07-28T12:00:00Z",
+                "status": "Backlog",
+                "wasAutomated": False,
+            },
+        )
+
+        returncode, output = run_ranker([human_work])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["blockedPlanningClaims"])
+        self.assertEqual(
+            [{"ticket": human_work, "action": "perform-human-work"}],
+            output["humanActions"],
+        )
+
     def test_malformed_assigned_human_work_is_not_a_planning_claim(self) -> None:
         human_work = backlog_ticket(
             24,
