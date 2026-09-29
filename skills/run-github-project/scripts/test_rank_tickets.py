@@ -542,6 +542,36 @@ class RankTicketsTest(unittest.TestCase):
                     output["blockedPlanningClaims"],
                 )
 
+    def test_malformed_cleanup_transition_object_remains_blocked(self) -> None:
+        cleanup = ticket(
+            216,
+            projectStatus="Backlog",
+            labels=["ready-for-human"],
+            assignees=["chris"],
+            replanRequest=replan_request(
+                216,
+                disposition="human-required",
+            ),
+            backlogTransition="invalid",
+        )
+
+        returncode, output = run_ranker([cleanup])
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["humanActions"])
+        self.assertEqual(
+            [
+                {
+                    "number": 216,
+                    "reasons": [
+                        "ticket 216: backlogTransition must be an object",
+                    ],
+                },
+            ],
+            output["blockedPlanningClaims"],
+        )
+
     def test_malformed_cleanup_pr_evidence_remains_a_blocked_claim(self) -> None:
         cleanup = ticket(
             214,
