@@ -39,6 +39,10 @@
       "text": "On the later invocation, the new auto-merge grant can unlock #51 and its associated configured issue closure, but cannot resolve #55 stakeholder scope or authorize unrelated epic closure. Verifies live leases and final-head gates and a resume record referencing the pause before restoring work."
     },
     {
+      "id": "external-merge-reconciliation",
+      "text": "Checks fresh terminal PR state before requiring a new merge grant. Reconciles #51's verified external merge under execution authority, retires its obsolete pause with linked terminal evidence, and never redispatches implementation or restores its slot. Under close-after-merge with no issue-close grant, preserves the merged result and pauses only the still-needed closure instead of demanding merge permission or closing without authority."
+    },
+    {
       "id": "changed-head",
       "text": "The changed-head observation invalidates earlier review evidence and requires affected final-head verification/review before merging, without a duplicate PR or inherited authority from the pause comment."
     },

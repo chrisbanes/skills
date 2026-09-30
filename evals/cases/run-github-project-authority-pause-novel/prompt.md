@@ -18,5 +18,10 @@ human-required replan packet proposing a changed acceptance contract. No human
 has directed abandoning its partial branch or transferring it to Backlog.
 Consider also a changed-head branch
 of this later observation where the prior review no longer covers the diff.
+In a separate later `drain` without an auto-merge grant, #51's exact PR has
+already been merged externally. Its verified merged head and merge commit
+match the preserved PR, the issue is closed by closing-keyword policy, and Done
+automation has completed. Contrast a close-after-merge variant where the issue
+is still open and the current invocation has no issue-close grant.
 Explain the immediate ticket updates, capacity and dependency behavior, later
 resume conditions, and finish state when only verified human pauses remain.
