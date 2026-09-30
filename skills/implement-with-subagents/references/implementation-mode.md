@@ -5,6 +5,11 @@
    unrelated uncommitted changes. Identify or create a clean integration branch
    from that `HEAD`, and record its base SHA. Do not stash, reset, or absorb
    user work.
+   Before allocating workers, inventory available checkouts through their
+   owning runtime and establish the lifecycle record described below. Record
+   each exact path and runtime identity, classifying the integration checkout,
+   pre-existing or adopted checkouts, and run-created worker slots; never infer
+   ownership from a directory name.
 2. Resolve the implementation prerequisites in the entrypoint. For each
    behavior-changing item, identify user-approved test seams in the supplied
    spec or tickets. If a seam is missing, obtain agreement before dispatching
