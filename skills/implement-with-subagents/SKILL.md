@@ -1,71 +1,77 @@
 ---
 name: implement-with-subagents
-description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including queue atomicity, task-scoped commit acceptance, and repair ownership.
-compatibility: "Review mode has no external skill dependency. Implementation mode requires Matt Pocock's separately installed `implement` workflow; its current contract also invokes `tdd` and `code-review`."
+description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including dependency order, task-scoped acceptance, and repair ownership.
+compatibility: "Review mode has no external skill dependency. Implementation mode uses Matt Pocock's separately installed `tdd` for behavior changes and `code-review` for the final joined branch when its tracker setup is available."
 disable-model-invocation: true
 ---
 
 # Implement with subagents
 
-Keep orchestration and implementation ownership separate: the controller
-schedules, and one implementation subagent owns each work item through
-completion. Validate task dependencies before dispatch. Run only ready,
-independent tasks concurrently in isolated worktrees; integrate accepted commits
-in dependency order and recheck affected evidence at the integrated head. Use
-serial execution when safe isolation or capacity is unavailable. Return failed
-acceptance evidence to the same owner, never repair it in the controller.
-
-## Check the prerequisite
-
-Review mode has no external dependency. Implementation mode requires the
-`implement` skill from [Matt Pocock's skill set](https://github.com/mattpocock/skills).
-It is not bundled here. Never install it implicitly; report
-`npx skills add mattpocock/skills` and require the user to select `implement`,
-`tdd`, and `code-review` when it is absent.
+Keep implementation ownership with one subagent per work item. The controller
+validates the task graph, dispatches independent ready work in isolated
+worktrees, accepts each task once before integration, and integrates accepted
+commits in dependency order. After an ordinary integration, rerun affected
+checks and release dependents without a second lead sign-off. Keep the
+controller out of task-owned code and return repairs to the relevant owner.
 
 ## Select the mode
 
 - Use `review` only to assess supplied orchestration without running it.
-- Use `implement` only to execute supplied tickets or plan tasks.
+- Use `implement` only to execute supplied tickets or plan tasks. This mode
+  does not invoke the separate `/implement` skill.
+
+## Check implementation prerequisites
+
+Review mode has no external dependency. For implementation, identify the
+behavior-changing items and their user-approved test seams before delegation.
+Their owners use the separately installed [`tdd`](https://github.com/mattpocock/skills)
+skill directly. If a behavior item has no approved seam, obtain agreement
+before dispatch; if `tdd` is unavailable, stop before dispatching that item.
+Documentation and other items without a meaningful test seam use focused
+validation instead. Never install a dependency implicitly.
+
+Resolve the final review capability before delegation. Use the separately
+installed `code-review` skill on the joined branch when its issue-tracker setup
+is available. Its two reviewers are a justified exception to a repository's
+one-auxiliary default. If missing tracker setup prevents that skill from
+running against a supplied local spec, use a fresh independent read-only
+reviewer against that spec and the repository standards. If neither route is
+available, stop and report the
+missing capability. Do not require issue-tracker setup solely to review a
+local-spec run.
 
 ## Review procedure
 
 1. Inspect only permitted repository and orchestration state. Do not start an
    agent, edit, commit, or contact a remote service.
-2. Assess queue atomicity, dependency order, implementation ownership,
-   task-scoped acceptance, repair ownership, and controller mutation boundaries.
-   Acceptance requires a task-scoped commit, independent inspection of its full
-   diff, and requested task-level validation evidence before advancing. Separate
-   worktrees do not make tasks independent when they edit the same file or one
-   relies on another's unmerged code; serialize those tasks. Before dispatching
-   a dependent, integrate each accepted prerequisite, check the joined diff for
-   textual and semantic conflicts, and rerun affected validation at that exact
-   integration head. Do not proceed until those checks pass; an isolated
-   prerequisite commit alone is insufficient. For example, dispatch independent
-   `API` and `DOC`, integrate their accepted commits, validate their joined head,
-   and only then dispatch `WIRE`. Return failed acceptance to the same owner;
-   reuse passing checks only when their inputs and environment remain unchanged.
-   An accepted item is complete, not assignable again.
-3. Report the next action (or no action), evidence, and any acceptance gap. Stop
-   before implementation. For an invalid dependency graph, hold dispatch and
-   return the specific defects to the plan owner for clarification; do not
-   choose which dependency to remove, invent a missing task, or prescribe a
-   corrected queue as if that choice were authorized. Separate task-commit
-   acceptance from integrated-head acceptance: explicitly require a textual
-   and semantic conflict check of the joined diff and rerun affected validation
-   at that exact head before accepting the join or dispatching a dependent. If
-   an integration changed a validated input, name that rerun as a required
-   acceptance action even when an invalid dependency graph also blocks
-   dispatch. Calling the earlier report stale does not state the action.
+2. Assess the task graph, safe concurrency, implementation ownership,
+   task-scoped commits, owner self-review, focused validation, and controller
+   acceptance before integration. An owner's report alone does not satisfy
+   task acceptance. Separate worktrees do not make shared-file edits or work
+   depending on unintegrated code independent.
+3. Check that each prerequisite is integrated and its affected validation
+   passes at that exact head before releasing a dependent. A passing task
+   branch is insufficient when integration changes relevant inputs. Do not
+   require a second discretionary lead acceptance after an ordinary merge;
+   inspect the joined diff when cross-file interactions, changed shared
+   interfaces, or merge resolutions can change meaning. Reuse passing checks
+   only when their inputs and
+   environment remain unchanged. An accepted item is complete, not assignable
+   again.
+4. Report the next action, evidence, and any acceptance gap. Stop before
+   implementation. For an invalid dependency graph, hold dispatch and return
+   the specific defects to the plan owner; do not invent or remove tasks or
+   dependencies. Name any affected check that must be rerun at the integrated
+   head, even when another blocker also prevents dispatch.
 
 ## Implementation mode
 
 Before delegation, read
 [the implementation-mode procedure](references/implementation-mode.md)
-completely. It is mandatory for implementation mode and owns queue construction,
-runtime selection, owner packets, independent acceptance, integration, repairs,
-and final validation. Stop when its dependency, task-scoped commit, or
-capability gate cannot be satisfied; never implement an item in the controller.
+completely. It owns preflight, dispatch, owner packets, task acceptance,
+integration, repairs, and final validation. Stop when a dependency, task-scoped
+commit, or capability gate cannot be satisfied; never implement an item in the
+controller.
 
 ## Runtime mapping
 
@@ -84,7 +90,10 @@ capability checks:
 
 In `review`, finish only with the non-mutating assessment, evidence, and any
 acceptance gap. In `implement`, finish only when every queued item has a
-task-scoped, reviewed, verified commit, the final worktree matches the recorded
-pre-existing state, and no owner-reported blocker remains. Report the
-item-to-commit mapping and final validation; otherwise finish blocked at the
-first incomplete gate.
+task-scoped, self-reviewed commit accepted before integration, all affected
+checks and the full required suite pass at the final integrated head, the
+joined review is current, and the integration checkout is clean. Preserve any
+unrelated user work from the starting checkout. Report the item-to-commit
+mapping, exact integrated head, final validation and review evidence, and any
+blocker; otherwise stop at the first incomplete gate. PR and tracker delivery
+are outside this skill.

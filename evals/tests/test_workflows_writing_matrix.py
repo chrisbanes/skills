@@ -97,7 +97,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertIn("drain-scheduler.md", controller)
         self.assertIn("review-contracts.md", controller)
 
-    def test_integration_failure_guidance_restores_only_verified_controller_branch(self):
+    def test_subagent_flow_keeps_one_task_gate_and_repairs_forward(self):
         entrypoint = (REPO_ROOT / "skills/implement-with-subagents/SKILL.md").read_text(
             encoding="utf-8"
         )
@@ -105,89 +105,21 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         guidance = (
             REPO_ROOT / "skills/implement-with-subagents/references/implementation-mode.md"
         ).read_text(encoding="utf-8")
-        integration_step = " ".join(
-            guidance.split("9. Integrate", maxsplit=1)[1]
-            .split("10. After every repair", maxsplit=1)[0]
-            .split()
-        )
-
-        conflict_path = integration_step.split(
-            "If the Git operation conflicts before", maxsplit=1
-        )[1].split("If the integration operation completes", maxsplit=1)[0]
-        completed_path = integration_step.split(
-            "If the integration operation completes", maxsplit=1
-        )[1]
-
-        post_integration_capture = (
-            "record the integration branch and its exact `HEAD` SHA as that "
-            "attempt's post-integration SHA"
-        )
-        self.assertIn(post_integration_capture, integration_step)
-        self.assertLess(
-            integration_step.index(post_integration_capture),
-            integration_step.index("Recheck every affected validation"),
-        )
-
-        self.assertIn("git merge --abort", conflict_path)
-        self.assertIn("git cherry-pick --abort", conflict_path)
-        self.assertIn("recorded pre-attempt SHA", conflict_path)
-        self.assertIn("worktree is clean", conflict_path)
-        self.assertIn(
-            "same owner the exact pre-attempt SHA and conflict evidence",
-            conflict_path,
-        )
-        self.assertIn(
-            "git worktree add -b <repair-branch> <repair-path> <recorded-pre-attempt-sha>",
-            conflict_path,
-        )
-        self.assertIn("replay their task-scoped commit(s) there in order", conflict_path)
-        self.assertIn("git cherry-pick <task-commit-sha>", conflict_path)
-        self.assertIn("resolves any replay conflict in that isolated worktree", conflict_path)
-        self.assertIn("Do not retry the stale task branch unchanged", conflict_path)
-
-        self.assertIn("do not use an abort command", completed_path)
-        self.assertIn("pre-attempt state was clean", completed_path)
-        self.assertIn("current branch is still that integration branch", completed_path)
-        self.assertIn("HEAD` is still the exact post-integration SHA", completed_path)
-        self.assertIn("worktree is currently clean", completed_path)
-        self.assertIn("Preserve the failed integrated tree first", completed_path)
-        self.assertIn("fresh controller-owned recovery branch", completed_path)
-        self.assertIn("does not already exist", completed_path)
-        self.assertIn("create it without force", completed_path)
-        self.assertIn(
-            "git branch <recovery-branch> <recorded-post-integration-sha>",
-            completed_path,
-        )
-        self.assertIn("recovery branch still resolves to the exact post-integration SHA", completed_path)
-        self.assertLess(
-            completed_path.index("`git rev-parse <recovery-branch>` resolves to the exact post-integration SHA"),
-            completed_path.index("git reset --hard <recorded-pre-attempt-sha>"),
-        )
-        self.assertIn("create a new task-owned repair branch and isolated worktree from that recovery ref", completed_path)
-        self.assertIn(
-            "git worktree add -b <repair-branch> <repair-path> <recovery-branch>",
-            completed_path,
-        )
-        self.assertIn(
-            "inspect the complete repaired branch range from the recorded pre-attempt SHA",
-            completed_path,
-        )
-        self.assertIn(
-            "integrate the entire repaired task branch in dependency order",
-            completed_path,
-        )
-        self.assertIn(
-            "including both the original task change from the failed integration "
-            "and its repair commits",
-            completed_path,
-        )
-        self.assertIn("Do not cherry-pick only the repair commit", completed_path)
-        self.assertIn("Rerun affected evidence on the reintegrated tree", completed_path)
-        self.assertIn("git reset --hard <recorded-pre-attempt-sha>", completed_path)
-        self.assertIn("do not reset task-owned branches or other refs/worktrees", completed_path)
-        self.assertIn("do not remove untracked files or unrelated changes", completed_path)
-        self.assertIn("exact recorded pre-attempt SHA and clean", completed_path)
-        self.assertIn("stop and report the integration checkout as blocked", completed_path)
+        normalized = " ".join(guidance.split())
+        self.assertIn("approved test seams", normalized)
+        self.assertIn("owner self-review", normalized)
+        self.assertIn("before integration", normalized)
+        self.assertIn("no second lead sign-off", normalized)
+        self.assertIn("failed integrated `HEAD`", normalized)
+        self.assertIn("completed merge or cherry-pick", normalized)
+        self.assertIn("repair forward", normalized)
+        self.assertIn("final integrated HEAD", normalized)
+        self.assertIn("pre-attempt SHA", normalized)
+        self.assertIn("abort that operation", normalized)
+        self.assertIn("original owner, who replays its work", normalized)
+        self.assertIn("new isolated task branch", normalized)
+        self.assertNotIn("git reset --hard", guidance)
+        self.assertNotIn("invoke the installed `implement` skill", guidance)
 
     def test_has_skill_triads_and_workflow_calibration_coverage_without_routing(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
@@ -195,7 +127,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(32, len(benchmark))
-        self.assertEqual(20, len(calibration))
+        self.assertEqual(24, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(32, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -219,6 +151,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "implement-with-subagents-explicit-rerun-novel",
                 "implement-with-subagents-runtime-capability-calibration",
                 "implement-with-subagents-accepted-item-noop-calibration",
+                "implement-with-subagents-tdd-docs-direct",
+                "implement-with-subagents-fix-forward-novel",
+                "implement-with-subagents-final-review-stale-negative",
+                "implement-with-subagents-dirty-checkout-negative",
                 "subagent-handoff-direct",
                 "subagent-handoff-novel",
                 "subagent-handoff-negative",
@@ -351,7 +287,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertTrue(
             all(
                 case.target_skills == ("implement-with-subagents",)
-                and case.constant_skills == ("implement",)
+                and not case.constant_skills
                 for case in subagent_cases
             )
         )
@@ -363,7 +299,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             )
         )
 
-    def test_workflow_fixture_supplies_the_implement_dependency_in_every_arm(self):
+    def test_subagent_review_fixture_has_no_implementation_dependency(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         case = next(
             case
@@ -379,17 +315,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     case, arm, REPO_ROOT, workspace, config, skill_paths=()
                 )
                 rendered = " ".join(command)
-                self.assertIn(
-                    str(workspace / ".agents/skills/implement/SKILL.md"), rendered
-                )
-                self.assertIn("enabled = true", rendered)
-                self.assertIn(
-                    "Evaluator-owned fixture dependencies to omit: implement",
-                    rendered,
-                )
-                self.assertIn(
-                    "Enabled public skills are not fixture dependencies", rendered
-                )
+                self.assertNotIn(".agents/skills/implement/SKILL.md", rendered)
+                self.assertNotIn("Evaluator-owned fixture dependencies", rendered)
 
                 prepare_workspace(
                     case,
@@ -397,8 +324,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     workspace,
                     enabled_skills=automatically_invokable_public_skills(REPO_ROOT),
                 )
-                self.assertTrue(
-                    (workspace / ".agents/skills/implement/SKILL.md").is_file()
+                self.assertFalse(
+                    (workspace / ".agents/skills/implement/SKILL.md").exists()
                 )
                 if arm == "automatic":
                     self.assertNotIn(
@@ -420,7 +347,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                         ).exists()
                     )
 
-    def test_missing_provider_challenge_omits_the_implement_dependency(self):
+    def test_missing_tdd_challenge_has_no_provider_fixture(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         case = next(
             case
@@ -434,7 +361,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             prepare_workspace(case, REPO_ROOT, workspace, enabled_skills=())
 
             self.assertFalse(
-                (workspace / ".agents/skills/implement/SKILL.md").exists()
+                (workspace / ".agents/skills/tdd/SKILL.md").exists()
             )
 
     def test_advanced_workflow_skills_require_explicit_invocation(self):
@@ -704,18 +631,6 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         for text in harmless_context:
             with self.subTest(text=text):
                 self.assertFalse(any(re.search(pattern, text) for pattern in patterns))
-
-    def test_behavioral_expectations_do_not_assert_fixture_prose(self):
-        expectations = json.loads(
-            (
-                REPO_ROOT
-                / "evals/cases/implement-with-subagents-novel/expectations.json"
-            ).read_text(encoding="utf-8")
-        )
-
-        self.assertNotIn(
-            "minimal `implement` dependency", expectations.get("must_contain", [])
-        )
 
     def test_workflow_prompts_do_not_disclose_the_target_skill(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

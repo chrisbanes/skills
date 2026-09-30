@@ -11,9 +11,6 @@
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow-subagents",
-  "constant_skills": [
-    "implement"
-  ],
   "allowed_write_paths": [],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
@@ -31,7 +28,7 @@
   "rubric": [
     {
       "id": "serial-dependency",
-      "text": "Dispatches only SCHEMA first, then integrates and accepts before dispatching WRITER, then READER"
+      "text": "Dispatches only SCHEMA first, accepts its task commit before integration, then runs affected integrated checks before WRITER, then READER"
     },
     {
       "id": "overlap",
