@@ -72,27 +72,26 @@
 
    After a completed integration, record its exact post-integration `HEAD`.
    Recheck only validation affected by changed inputs at that head, including
-   shared interfaces, generated output, and merge resolutions. Inspect the
-   joined diff when cross-file interactions or merge resolutions can change
-   meaning. When checks pass,
-   release newly ready dependents with no second lead sign-off. Do not rerun
-   unrelated passing checks or hold a dependent for a routine duplicate
-   acceptance ceremony.
-9. If a completed merge fails affected validation, keep the failed integrated
-   `HEAD` on the integration branch; do not abort, reset, or dispatch dependents
-   from it. If validation changed the worktree, stop until those changes are
-   accounted for without discarding user work. Pause further integration while
-   the failure is repaired. Trace the failure to the relevant original owner or
-   owners. If attribution is unclear,
-   investigate read-only first; assign a new bounded implementation owner only
-   when no prior owner fits. Give each repair owner the failed head SHA, failing
-   output, and affected scope. Have that owner create an isolated branch from
+   shared interfaces, generated output, and merge or cherry-pick resolutions.
+   Inspect the joined diff when cross-file interactions or conflict resolutions
+   can change meaning. When checks pass, release newly ready dependents with
+   no second lead sign-off. Do not rerun unrelated passing checks or hold a
+   dependent for a routine duplicate acceptance ceremony.
+9. If a completed merge or cherry-pick fails affected validation, keep the
+   failed integrated `HEAD` on the integration branch; do not abort, reset, or
+   dispatch dependents from it. If validation changed the worktree, stop until
+   those changes are accounted for without discarding user work. Pause further
+   integration while the failure is repaired. Trace the failure to the relevant
+   original owner or owners. If attribution is unclear, investigate read-only
+   first; assign a new bounded implementation owner only when no prior owner
+   fits. Give each repair owner the failed head SHA, failing output, and
+   affected scope. Have that owner create an isolated branch from
    the failed head and repair forward with a task-scoped commit. Apply step 7
    to the repair commit, verify the integration branch remains at the failed
    SHA and clean, then integrate the repair and rerun affected checks. Stop if
    that failed-head state was lost. Keep unrelated completed owner branches
-   intact for later integration. Stop if the failed state cannot be preserved or a
-   repair cannot pass; never discard the failed integrated commit.
+   intact for later integration. Stop if the failed state cannot be preserved
+   or a repair cannot pass; never discard the failed integrated commit.
 10. After all items are integrated, run the full user- and repository-required
     suite on the final integrated HEAD. Review the joined diff from the recorded
     starting base with `code-review` when its tracker setup is available. If

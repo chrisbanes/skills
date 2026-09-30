@@ -111,6 +111,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertIn("before integration", normalized)
         self.assertIn("no second lead sign-off", normalized)
         self.assertIn("failed integrated `HEAD`", normalized)
+        self.assertIn("completed merge or cherry-pick", normalized)
         self.assertIn("repair forward", normalized)
         self.assertIn("final integrated HEAD", normalized)
         self.assertIn("pre-attempt SHA", normalized)
