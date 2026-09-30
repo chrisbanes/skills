@@ -15,9 +15,9 @@
    spec or tickets. If a seam is missing, obtain agreement before dispatching
    that item. Read the installed `tdd` skill and give its path to the owner;
    stop before behavior work when it is unavailable. Identify the final review
-   route before delegation: installed `code-review` with tracker setup, or an
-   independent read-only reviewer when missing tracker setup prevents that
-   skill from reviewing a supplied local spec. Stop if neither can run.
+   capability before delegation: one fresh independent read-only reviewer
+   against the approved source and repository standards under the entrypoint's
+   review contract. Stop if independent review cannot run.
 3. Build and validate the task graph. Require unique stable task IDs, explicit
    dependency lists, declared dependency targets, and an acyclic graph. Reserve
    the case-insensitive task ID `none` for the `Depends on: none` root marker.
@@ -109,15 +109,16 @@
 10. After all items are integrated, run the full user- and repository-required
     suite on the final integrated HEAD. If it fails, preserve that exact
     integrated head, pause further integration, and repair forward under step 9.
-    Review the joined diff from the recorded starting base with `code-review`
-    when its tracker setup is available. If missing tracker setup prevents it
-    from reviewing a supplied local spec, give that spec, the repository
-    standards, and joined diff to a fresh independent read-only reviewer.
+    Give the approved source, repository standards, and joined diff from the
+    recorded starting base to one fresh independent read-only reviewer under
+    the entrypoint's review contract.
     Return findings to the relevant original owners, accept their task-scoped
     repairs under step 7, and integrate them under steps 8-9. After any repair,
-    rerun affected checks, the full required suite, and the joined review at
-    the new final head. Do not treat review or test evidence from an earlier
-    head as final. Apply the checkout lifecycle rules below at completion,
+    rerun affected checks and renew review of the changed range and its
+    interactions. Repeat the full suite or full review when required or when
+    prior evidence is invalid or the affected scope cannot be bounded. Verify
+    that combined evidence covers the new final head. Apply the checkout lifecycle
+    rules below at completion,
     blockers, and interruption. Finish only when the integration worktree is
     clean, unrelated starting work is preserved, checkout accounting is
     complete, and the entrypoint's finish gate is met.

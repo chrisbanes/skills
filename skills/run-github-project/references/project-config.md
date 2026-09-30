@@ -53,10 +53,8 @@ this template over it. Follow the
 
 ## Agent Setup (optional)
 
-- Routing: `<configured or typesafe>`
 - Default planner profile: `<profile name>`
 - Default ticket profile: `<profile name>`
-- TypeSafe judgment model: `<versioned model ID, only for typesafe routing>`
 
 | Profile | Capability | Best suited to | Runtime role | Execution model | Reasoning |
 | --- | --- | --- | --- | --- | --- |
@@ -127,20 +125,21 @@ Omit Agent Setup to use runtime-default agents under the existing capability
 rules. When present, require unique profile names, a default-owner profile for
 both planner and ticket defaults, and a runtime role with the required access
 for every profile. Include a `read-only-evidence` row when the runtime supports
-it because the repair progress gate needs that helper. Add
+it because the repair progress gate needs that helper. Ensure a configured
+read-only profile also supports independent judgment-based review; the same
+profile may cover evidence and review if its runtime role supports both. Add
 `read-only-discovery` or `exceptional-investigator` rows only when wanted. When
 no read-only evidence role is available, disclose that repeated non-CI stalls
 remain ticket-local blockers. The named defaults are preferences; table order
 is the deterministic fallback order for other eligible profiles. Give each
-profile a short, distinct task fit when multiple profiles share a capability under
-`typesafe` routing. Explicit execution models and reasoning levels must be
-supported by that runtime; `runtime-default` defers the choice to it. Profiles
-describe allowed agents, not new authority. Keep the user-selected lead model
-and any explicit agent-model pin unchanged. Do not put API keys in this file.
-`typesafe` routing is optional and sends a sanitized ticket brief to TypeSafe;
-read [agent routing](agent-routing.md) before enabling it. TypeSafe may select
-only an eligible configured profile, never a new model or the lead model. Log
-confidence when exposed; do not configure an uncalibrated numeric cutoff.
+profile a short task description. Explicit execution models and reasoning levels
+must be supported by that runtime; `runtime-default` defers the choice to it.
+Profiles describe allowed agents, not new authority. Keep the user-selected lead
+model and explicit agent-model pins unchanged. Select agents deterministically
+under [agent routing](agent-routing.md); no routing service is used.
+Legacy `Routing` and `TypeSafe judgment model` fields are obsolete: ignore them
+at dispatch and remove them during an authorized setup edit, preserving active
+binding leases under the setup procedure.
 
 ## Live Merge-Policy Fingerprint
 

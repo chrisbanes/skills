@@ -12,7 +12,7 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-final-review-stale-negative"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "final-head", "text": "Rejects the old full-suite and joined-review evidence as final because source changed at the repaired head"},
-    {"id": "fallback-review", "text": "Requires the full suite and a fresh independent read-only joined review against the supplied local spec at the repaired head when tracker setup blocks code-review"},
+    {"id": "fallback-review", "text": "Requires full required validation and one fresh independent read-only review of the joined diff at bbbbbbb because interaction scope cannot be bounded. Supplies the approved spec and standards without requiring an external review skill or tracker setup. Returns repairs to the original owner."},
     {"id": "restraint", "text": "Does not declare the branch complete, perform remote delivery, or mutate the supplied review-only state"}
   ],
   "provenance": {"kind": "synthetic"},

@@ -11,10 +11,11 @@
   "allowed_write_paths": [],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-direct"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "plan-gate", "text": "Reuses the current approved to-plan task graph and requires an independent read-only plan review before implementation; findings are repaired under to-plan's approval rules"},
-    {"id": "delivery", "text": "Passes approved to-plan slices and the source review packet to implement-with-subagents before dispatch, honors its current prerequisites, creates exactly one draft PR only after the provider finishes with a non-empty final integrated diff, and uses its final joined review as the code gate without duplication"},
-    {"id": "empty-diff", "text": "Does not treat the initial empty diff as no-change; reports no-change only after the provider finishes with an empty final integrated diff"},
-    {"id": "repair-routing", "text": "Uses shepherd for feedback triage and PR actions rather than direct code repair; routes code repairs through implement-with-subagents and requires its final checks and joined review at the new head before the lead pushes"},
+    {"id": "plan-gate", "text": "Reuses the current approved to-plan task graph and its completed independent review without inventing another plan or test-seam approval gate"},
+    {"id": "direct-owner", "text": "Keeps the tightly coupled sequential slices and in-scope repairs with the delivery lead by default, requires no child worker or extra worktree just to separate implementation from coordination, and preserves approved TDD seams for behavior changes"},
+    {"id": "final-review", "text": "Requires one fresh independent read-only reviewer against the approved source, repository standards, exact clean candidate HEAD, and validation evidence; verifies the draft PR has that reviewed head, renews affected review after repairs, and has no dependency on external code-review or issue-tracker setup"},
+    {"id": "empty-diff", "text": "Does not treat the initial empty diff as no-change; reports no-change only after implementation and verification finish with an empty final diff."},
+    {"id": "repair-routing", "text": "Uses shepherd for CI feedback and PR operations while code repairs remain with the delivery lead by default; renews affected checks and review at a repaired head before pushing"},
     {"id": "authority", "text": "Does not merge without authority valid for this invocation, and makes no mutation or provider call in this analysis-only case"}
   ],
   "provenance": {"kind": "synthetic"}

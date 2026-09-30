@@ -12,7 +12,7 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-setup-agents-direct"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "additive-setup", "text": "The response starts from the existing binding, removes the obsolete execution-approver entry, adds Agent Setup, and preserves verified Project IDs, Status, labels, merge policy, and trusted reference"},
-    {"id": "minimal-default", "text": "Without agent preferences, the response proposes a configured default-owner runtime-default profile for planner and ticket plus the available read-only-evidence helper, not TypeSafe or invented model choices"},
+    {"id": "minimal-default", "text": "Proposes runtime-default planner and ticket owner plus one read-only investigator profile covering both evidence and independent review; uses deterministic defaults without TypeSafe, invented models, or a mechanical checker as sole reviewer."},
     {"id": "setup-boundary", "text": "The response reports ready-to-commit after validation without migrating Ready items, changing Project state, rebuilding the binding, or committing implicitly"}
   ],
   "provenance": {"kind": "synthetic"}

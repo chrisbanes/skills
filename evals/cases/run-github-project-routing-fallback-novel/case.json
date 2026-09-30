@@ -11,7 +11,7 @@
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-routing-fallback-novel"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "eligible-fallback", "text": "For the unpinned new assignment, the response uses the first eligible configured profile when TypeSafe is unusable and the preferred default is unavailable"},
+    {"id": "eligible-fallback", "text": "Uses first eligible fast-owner for unpinned assignment A without an external routing call; does not mistake unsupported capability for temporary capacity contention."},
     {"id": "explicit-pin", "text": "For the separately pinned assignment, the response preserves it as blocked rather than switching to a different execution model"}
   ],
   "provenance": {"kind": "synthetic"}

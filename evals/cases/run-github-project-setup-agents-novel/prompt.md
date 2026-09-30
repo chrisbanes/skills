@@ -1,13 +1,10 @@
-An existing repository has a valid committed Project binding and trusted
-reference. One ticket is In progress under that configuration digest. The user
-asks the workflow's `setup` mode to add two runtime-supported default-owner
-profiles: `steady-owner` for routine implementation and `complex-owner` for
-cross-system design. Both use runtime-default model and reasoning. Make
-`steady-owner` the planner and ticket default, and enable TypeSafe routing with
-the versioned judgment model `issue-router-v2`. The optional section is
-currently absent. A separate configuration checkout is available; the controller
-and ticket checkouts that resume the active claim are clean and still use the
-old committed binding. Explain where setup can prepare the edit, how the
-existing claim finishes, and when new routing can activate. Use only this
-supplied state. Do not contact GitHub or TypeSafe, edit files, commit, or mutate
-any Project or ticket state.
+A valid committed Project binding has one active ticket under its digest. Its
+Agent Setup has two supported default-owner profiles, steady-owner and
+complex-owner, with steady-owner the planner and ticket default. It also has a
+read-only profile capable of evidence analysis and independent review. Legacy
+Routing: typesafe and TypeSafe judgment model: issue-router-v2 fields remain.
+The user authorizes setup to remove obsolete routing configuration, preserving
+profiles and defaults. A separate configuration checkout is available. Explain
+where the edit is prepared, how the active old-digest claim finishes, and when
+the updated binding activates. Do not contact services, edit files, commit, or
+mutate state in this supplied-state assessment.

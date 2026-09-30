@@ -50,14 +50,14 @@ install them, and the workflows never install them implicitly.
 | Consumer | Requirement | Provider | Source and install |
 |---|---|---|---|
 | `deliver-spec` GitHub readiness | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
-| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tickets | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
-| `implement-with-subagents` final joined review | Conditional | `code-review` when issue-tracker setup is available; otherwise an independent read-only review of a supplied local spec | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill code-review` |
+| `deliver-spec` and [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tasks | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | [`run-github-project`](skills/run-github-project/SKILL.md) behavioral implementation | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | `run-github-project` Backlog triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
 | `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-github-project/references/workflow-providers.md) |
-| `run-github-project` delivery joined review | Conditional | `code-review` with working tracker setup, or an independent read-only review against the materialized spec | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill code-review` |
-| `run-github-project` reuse and clarity review | Optional | `review-and-simplify-changes` | [Dimillian/Skills](https://github.com/Dimillian/Skills): `npx skills add Dimillian/Skills --skill review-and-simplify-changes` |
-| `run-github-project` over-engineering review | Optional | `ponytail-review` | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail): `npx skills add DietrichGebert/ponytail --skill ponytail-review` |
+
+Delivery and parallel implementation use one fresh independent read-only reviewer
+against the approved source and repository standards; no external review skill
+or issue-tracker setup is required.
 
 Review mode in `implement-with-subagents`, and review or setup mode in
 `run-github-project`, do not require these external skills. See the
@@ -113,12 +113,12 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
-- [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or a verified Project-controller handoff through planning, independent plan review, `implement-with-subagents`, final-head code review, and PR shepherding.
+- [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or a verified Project-controller handoff through planning, direct implementation, independent plan and final-head review, and PR shepherding; delegate implementation only for requested orchestration or useful parallel tasks.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, reconcile changelogs and Metalava API snapshots, and follow repository checks and publication gates.
-- [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
-- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — dispatch independent ready work in isolated worktrees, use `tdd` directly at approved behavior seams, accept each task once before integration, and rerun affected checks without a second routine lead sign-off; preserve same-owner repair, final joined review, and read-only review mode while reusing sequential worker slots and accounting for safe retirement or retention.
+- [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; the implementation owner diagnoses and fixes failures, with optional read-only investigation helpers.
+- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — use when orchestration is requested or parallel work is useful; dispatch independent ready work in isolated worktrees, use `tdd` directly at approved behavior seams, accept each task once before integration, and rerun affected checks without a second routine lead sign-off; preserve same-owner repair, final joined review, and read-only review mode while reusing sequential worker slots and accounting for safe retirement or retention.
 - [`to-plan`](skills/to-plan/SKILL.md) — turn one ready GitHub issue or an in-chat task into a repository-grounded, executor-ready recipe with stable task IDs, explicit acyclic dependencies, safe parallelism notes, concrete tests, and bounded repair rules.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with configured agent profiles and optional TypeSafe routing; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, and record ticket-local pauses while the board continues.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, and record ticket-local pauses while the board continues.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
 
 Workflows that delegate agents share the [subagent selection and handoff

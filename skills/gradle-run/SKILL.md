@@ -52,20 +52,19 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    Do not substitute compilation for requested fixture tests. Read only the
    bounded JSON summary; report both the managed wrapper and nested Gradle task,
    the question, and its bounded answer.
-5. For Gradle-centered work, create one fresh persistent diagnostic owner with
-   read-only repository access and the ability to run the wrapper. Select and
-   brief it using the shared
-   [selection and handoff reference](references/subagent-selection.md) when
-   available. The owner runs the wrapper and diagnoses; it may not edit or
-   delegate Gradle ownership. Keep it available for the workflow. Report its
-   model and reasoning only when exposed. The parent owns repository edits. If
-   that owner cannot exist, stop rather than running the loop in the parent.
-6. Have the owner reuse actionable summaries, group warnings/failures by
+5. For Gradle-centered work, keep diagnosis, repository edits, and wrapper
+   execution with the current implementation owner by default. Delegate a
+   bounded read-only investigation only when it offers useful independent
+   analysis. Select and brief an optional helper using the shared
+   [selection and handoff reference](references/subagent-selection.md).
+   Keep one wrapper execution owner at a time; a helper reports evidence and
+   recommendations to that owner. Continue directly when no helper is available.
+6. Reuse actionable summaries, group warnings/failures by
    fingerprint, and return source/line evidence plus the narrowest next command.
    Run broad only for an aggregate question that targeted evidence cannot
    answer. On a repeated primary source/compiler fingerprint, stop rebuilding;
    inspect the cited source line and nearby declaration, import, or receiver
-   context before revising the diagnosis. Verify each parent change with the
+   context before revising the diagnosis. Verify each source change with the
    same wrapper and narrowest applicable task. In the final diagnosis, name the
    focused inspection as the next action; do not claim a source fix before it.
    A new question does not permit a blind repeat.

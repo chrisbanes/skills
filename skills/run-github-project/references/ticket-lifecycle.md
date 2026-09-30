@@ -11,11 +11,12 @@ selected lead model unchanged.
 
 Route by behavioral capability, not local profile/model names. Use a read-only
 discovery helper for files/seams/tests/ownership, evidence helper for bounded
-mechanical analysis, default owner for normal planning/implementation/review
-repairs, and exceptional investigator only for concrete unresolved architecture,
+mechanical analysis, default owner for normal planning, implementation, and
+repairs, and a fresh read-only reviewer for independent acceptance. Use an
+exceptional investigator only for concrete unresolved architecture,
 security, rendering, performance, or data-integrity evidence that the default
-owner cannot safely resolve. Record task, portable role, actual runtime choice,
-and exceptional justification in a routing ledger. Generic runtimes encode role
+owner cannot safely resolve. Record task, actual runtime choice, and exceptional
+justification in the existing ownership record. Generic runtimes encode role
 and boundaries in prompt; unavailable controls use runtime default.
 
 Default owners handle every planner and normal ticket. Helpers are bounded
@@ -55,8 +56,9 @@ packet only when that contract requires it. For every ordinary implementation
 ticket, invoke `deliver-spec` with this verified packet under its
 [Project handoff procedure](../../deliver-spec/references/project-handoff.md).
 Keep the persistent ticket context as delivery lead and integration owner.
-Missing provider capability blocks only that ticket; never substitute lead
-implementation. Wayfinder, triage, and epic lanes keep their own procedures.
+Missing required capability blocks only that ticket. The ticket delivery lead
+implements directly by default; child implementation owners are optional.
+Wayfinder, triage, and epic lanes keep their own procedures.
 
 ### Repair progress gate
 
@@ -90,11 +92,10 @@ count; never repeat an unchanged rerun to reset it.
 
 ## Pre-push, shepherd, and merge
 
-Before the first push, complete every review contract on the frozen candidate,
-preferably using `review-and-simplify-changes` and `ponytail-review` for their
-respective contracts. Reuse `deliver-spec`'s joined review for each contract
-it explicitly covered at that head; run only missing contracts, not a duplicate
-correctness pass. Fix every actionable finding or give an evidence-based
+Before the first push, give every review contract on the frozen candidate to
+one fresh independent read-only reviewer. Reuse `deliver-spec`'s review for each
+contract it explicitly covered at that head; run only missing contracts, not a
+duplicate correctness pass. Fix every actionable finding or give an evidence-based
 disposition except for explicitly very low priority findings. If a repair
 changes the reviewed candidate, rerun affected checks and review the changed
 range plus its interaction with the previously reviewed effective diff. Broaden to
@@ -107,10 +108,11 @@ PRs include the configured closing or non-closing issue link, rationale,
 validation, and residual risks. Keep claim/agent while open; drain follows
 Remote Waiting and terminal-CI parking,
 next shepherds directly through `deliver-spec`'s Project mode. For feedback,
-invoke `shepherd` for triage and PR actions, route code repairs through the
-original implementation owners, integrate their commits in the same ticket
-worktree, reapply TDD for behavior, repeat affected validation and review against
-the new final HEAD, reply inline where possible, and resolve only after reply
+invoke `shepherd` for triage and PR actions. Keep code repairs with the ticket
+owner or original delegated implementation owners, integrating delegated commits
+in the same ticket worktree. Reapply TDD for behavior and repeat affected
+validation and review against the new final HEAD, reply inline where possible,
+and resolve only after reply
 and required fix. Address every comment unless explicitly
 very low priority; return material maintainer direction to the controller for
 a ticket-local decision pause. Silence is not approval:

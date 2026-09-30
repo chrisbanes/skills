@@ -12,7 +12,8 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-novel"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "local-source", "text": "Uses conversation-mode to-plan for the approved local source, reviews the resulting plan independently, and does not invent GitHub issue or ticket closing links"},
-    {"id": "resume", "text": "Reconciles the existing draft PR and exact head before continuing; does not create a duplicate PR or assume the prior approval or gate state remains current"},
+    {"id": "resume", "text": "Reconciles the existing draft PR and exact head before continuing; does not create a duplicate PR or assume prior approval or gate state remains current"},
+    {"id": "review", "text": "Obtains one fresh independent read-only review against the approved source, repository standards, and exact current PR head without requiring external code-review or issue-tracker setup"},
     {"id": "pending", "text": "After about 30 minutes with a required check still pending, hands back the PR head and exact pending gate rather than reporting ready or merged"}
   ],
   "provenance": {"kind": "synthetic"}

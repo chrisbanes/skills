@@ -13,6 +13,7 @@
     {"argv": ["python3", "@validators/text_case.py", "gradle-fingerprint-diagnosis-novel"], "timeout_seconds": 30}
   ],
   "rubric": [
+    {"id": "optional-helper", "text": "Continues focused read-only source diagnosis directly despite unavailable helper capacity, keeps future fixes with the implementation owner, and does not invent a mandatory diagnostic handoff or edit permission."},
     {"id": "stop-repeat", "text": "The response stops the unchanged rebuild loop and does not disguise it with a new question or broader command"},
     {"id": "next-evidence", "text": "The response revises the diagnosis from the primary source failure and identifies a narrower evidence-gathering step before another run"}
   ],

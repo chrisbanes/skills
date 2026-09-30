@@ -1,7 +1,7 @@
 ---
 name: deliver-spec
 description: Use when explicitly asked to deliver one approved GitHub or local spec through a reviewed pull request, or delegated one claimed implementation ticket by a running Project controller.
-compatibility: "Requires implement-with-subagents; triage is conditional. External dependencies follow provider gates. Never installs providers."
+compatibility: "Behavior changes require tdd; triage is conditional. Parallel implementation may use implement-with-subagents. Never installs providers."
 disable-model-invocation: true
 ---
 
@@ -9,8 +9,9 @@ disable-model-invocation: true
 
 ## Core principle
 
-Coordinate one spec through existing skills. Own PR identity and final-head
-evidence; leave planning, implementation, and PR repairs with their providers.
+Deliver one spec with a single implementation owner and independent review.
+Own implementation, repairs, PR identity, and final-head evidence; delegate
+independent subtasks only when useful.
 Manage approval in standalone mode; accept the controller's verified authority
 in Project mode. Never select work from a Project queue.
 
@@ -36,33 +37,51 @@ Project run already owns that issue, return it to that controller.
    source, acceptance criteria, code facts, dependencies, and tests. Resolve
    findings through `to-plan` and reapprove repaired conversation plans. Stop
    without a reviewed and approved plan.
-4. Resolve `implement-with-subagents` in implementation mode; honor its current
-   prerequisite, task, and finish gates. Never install providers. Materialize
-   GitHub or in-chat source and plan in an owner-only system-temp file; recreate
-   it on resume. Pass approved `to-plan` slices as plan tasks with the approved
-   source path, plan, repository standards, and verified fixed-point base. After
-   the provider finishes, create and verify exactly one draft PR if the final
-   integrated diff is non-empty, or reuse the verified PR on resume. Use closing
-   links only for real, verified GitHub issues, never for local sources or plan
-   slices.
-5. Use the provider's final joined review as the code gate; do not repeat it at
-   the same head. Verify it covered the approved source and standards even if
-   commits cite another issue; correct or stop. Resolve findings and re-review
-   affected changes on the final PR head; stop if neither its `code-review`
-   route nor its allowed local-spec fallback can run.
-6. Use `shepherd` to triage CI and reviewer feedback and handle PR operations;
-   override its direct code-repair step. Route code repairs through
-   `implement-with-subagents`, then require its final checks and joined review
-   at the new head before the lead pushes. Return scope or design changes for
-   a decision. Recheck the final head after each push. Merge only with explicit
-   authority valid for this invocation. After about 30 minutes of pending gates,
-   hand back the exact pending checks, feedback, PR, and head for later resume.
+4. Keep implementation with the delivery lead by default. Record the fixed
+   base and use a clean task checkout, preserving unrelated user work. Implement
+   approved slices in dependency order and validate their acceptance criteria.
+   For behavior changes, require the separately installed `tdd` skill and
+   approved test seams before editing; obtain missing seam agreement and stop
+   that behavior work if `tdd` is unavailable. Documentation and other work
+   without a meaningful test seam use focused validation. Materialize the
+   approved source and plan in an owner-only system-temp file for review;
+   recreate it on resume.
+   Use `implement-with-subagents` only for explicitly requested orchestration
+   or independently useful parallel tasks. Honor its ownership, isolation,
+   acceptance, integration, and repair gates when selected. Keep a single
+   tightly coupled task with the delivery lead; do not require a child worker
+   or extra worktree solely to separate implementation from coordination.
+5. Self-review the task scope, commit only task-owned changes, and run the
+   required checks with the tested revision and results recorded. Require one
+   fresh independent read-only reviewer for every delivery PR. Resolve that
+   capability before implementation; if
+   unavailable, report the blocker rather than waive review. Use an investigator
+   in review mode or equivalent, with no inherited implementation conversation.
+   Supply the approved source, plan, repository standards, fixed base, exact
+   candidate head, and validation evidence. Require requirements and standards
+   findings with evidence and a `ship`, `fix-first`, or `rethink` verdict.
+   No external review skill or issue-tracker setup is required. Reuse a current
+   final joined review from `implement-with-subagents` when it covers these
+   inputs. Add reviewers only for distinct risks or substantial scope.
+   Return findings to the implementation owner. After repairs, rerun affected
+   checks and review the changed range plus interactions; broaden when earlier
+   evidence is invalid or affected scope cannot be bounded. Confirm combined
+   evidence covers the final clean head before pushing. Create and verify one
+   draft PR for a nonempty integrated diff, or reuse the verified PR on resume.
+   Use closing links only for real, verified GitHub issues.
+6. Use `shepherd` for CI and reviewer feedback and PR operations. Keep code
+   repairs with the delivery lead, or the original task owner when delegated.
+   Apply the same TDD, validation, and independent review gates to repairs and
+   recheck the final head after each push. Return scope or design changes for a
+   decision. Merge only with explicit authority valid for this invocation.
+   After about 30 minutes of pending gates, hand back the exact pending checks,
+   feedback, PR, and head for later resume.
 
 ## Finish gate
 
 Report `ready` only when the final head passes applicable checks and reviews
 with findings resolved; `merged` only after authorized merge readback;
-`no-change` only when the provider finishes with an empty final integrated
-diff; `pending` with exact outstanding gates; otherwise `blocked` with the
+`no-change` only when implementation and verification finish with an empty
+final diff; `pending` with exact outstanding gates; otherwise `blocked` with the
 needed decision or capability. Preserve the PR and source pointers on pending
 or blocked runs. Do not report a prior head as the reviewed result.
