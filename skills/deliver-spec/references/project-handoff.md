@@ -12,38 +12,40 @@ handoff or take over a Project claim.
    configuration and authority leases, fixed base, worktree/branch/PR head,
    review evidence, repair usage, and agent capacity. Reconcile live state on
    resume; return gaps to the controller without selecting or claiming work.
-   Require hard runtime capacity for the lead plus an independent descendant
-   and the chosen review provider's reviewer count. Return a capability blocker
-   when that cannot fit; queue temporarily busy but sufficient capacity.
+   Resolve capacity for one independent reviewer before implementation; review
+   can follow implementation sequentially. Do not require child-worker
+   capacity for direct implementation. Queue temporarily busy reviewer capacity;
+   report a capability blocker only when independent review cannot run.
 2. Accept the verified execution handoff as satisfying the implementation
-   provider's source, plan, and user-approved test-seam prerequisites. Require
+   workflow's source, plan, and user-approved test-seam prerequisites. Require
    no further human confirmation for an in-scope stage. Independently review
    the plan against source, criteria, repository facts, dependencies, and tests
    unless current evidence covers those exact inputs. Return findings to the
    controller for `to-plan --auto` repair and a verified handoff; automatically
    review repaired inputs. Preserve Project repair budgets and replan rules.
 3. Follow `deliver-spec`'s implementation procedure with the supplied tasks and
-   materialized source. Keep the persistent ticket agent as integration owner
-   and non-merge PR owner. `implement-with-subagents` owns isolated tasks,
-   acceptance, integration, and same-owner repairs. Task descendants write
-   only their isolated branches. Count all descendants against currently spare
-   Project capacity; serialize when one fits and yield when none is free.
-   Never replace a task owner with lead implementation.
+   materialized source. Keep the persistent ticket agent as implementation,
+   integration, repair, and non-merge PR owner by default. Use
+   `implement-with-subagents` only for requested orchestration or independently
+   useful parallel tasks. When selected, task descendants retain isolated
+   branches and same-owner repairs; count them against spare Project capacity
+   and serialize or yield when needed. Do not take over an already delegated
+   task solely to bypass its ownership rules.
 4. Before any push, satisfy the Project's
    [review contracts](../../run-github-project/references/review-contracts.md).
-   Record contracts covered by the provider's joined review at the final clean
-   head and run only missing contracts. Return repairs to their owners and
-   renew affected evidence. Use the provider's independent local-spec fallback
-   only when missing tracker setup prevents its named review; otherwise report
-   the capability blocker. Never waive final review.
+   Give the single independent reviewer all applicable contracts and record
+   coverage at the final clean head; run only missing contracts. Return repairs
+   to their owners and renew affected evidence. No external review skill or
+   tracker setup is required. Never waive final review.
 5. Reuse the supplied branch and verified PR. After review, push and reconcile
    the exact head; create one draft PR only for a nonempty integrated diff.
    Use `Fixes #<ticket>` for `closing-keyword`, or a non-closing issue link for
    `close-after-merge`. Mark ready and verify that state when applicable checks
    and reviews cover the final head. For an empty diff, return `no-change` and
    verification evidence for controller reconciliation.
-6. Use `shepherd` for feedback and PR operations, with code repairs through task
-   owners. Apply Project verification, repair, monitoring, and CI-parking rules
+6. Use `shepherd` for feedback and PR operations, with code repairs through
+   the delivery lead or original delegated owners. Apply Project verification,
+   repair, monitoring, and CI-parking rules
    instead of generic shepherd cadence or the standalone 30-minute handback.
    In `drain`, process controller-discovered actionable events using its remote
    snapshot; do not start a second polling loop or evidence helper. Yield exact

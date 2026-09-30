@@ -17,6 +17,7 @@
     {"argv": ["python3", "@validators/text_case.py", "gradle-incidental-validation-direct"], "timeout_seconds": 30}
   ],
   "rubric": [
+    {"id": "direct-owner", "text": "Runs authorized validation in the current owner without creating a helper or blocking on unavailable diagnostic-agent capacity."},
     {"id": "bounded-wrapper", "text": "The Gradle test runs through one compact-output wrapper workflow rather than streaming or reopening full logs"},
     {"id": "focused-validation", "text": "The current agent keeps this incidental validation focused, records a non-empty verification question, reports the bounded result, and finishes the workflow"}
   ],

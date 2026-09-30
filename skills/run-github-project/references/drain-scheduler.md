@@ -78,8 +78,9 @@ commit, and a reconciled push plus PR creation or update.
 Then yield durable evidence to the controller and idle that persistent context.
 Resume the same agent for actionable feedback or base repair.
 
-Apply [Route Agents By Task](ticket-lifecycle.md#route-agents-by-task) and append its
-routing-ledger entry when selecting each persistent ticket agent and helper.
+Apply [Route Agents By Task](ticket-lifecycle.md#route-agents-by-task) and record
+the selected agent in the existing ownership record when selecting each
+persistent ticket agent and helper.
 Use the portable default-owner capability for every normal ticket owner and
 planner, selecting only an eligible configured profile when Agent Setup is
 present. Never infer exceptional capability from topic, scope, plan size,
@@ -154,8 +155,10 @@ Reconcile any named resource grant before reconstructing or resuming a lost
 ticket agent.
 Descendant agents at any depth use only currently spare agent capacity.
 Discovery and review helpers are read-only at immutable SHAs and route findings
-to their owning ticket or planning agent. `deliver-spec` may dispatch isolated
-implementation owners through `implement-with-subagents`; they write only their
+to their owning ticket or planning agent. The ticket agent normally implements
+and repairs directly. For independently useful parallel tasks or explicitly
+requested orchestration, `deliver-spec` may dispatch isolated implementation
+owners through `implement-with-subagents`; they write only their
 own task worktrees and branches and return commits to their ticket delivery lead.
 Task implementation and review descendants never mutate Project, issue, or PR
 state. An implementation helper yields before

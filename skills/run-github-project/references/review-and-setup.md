@@ -33,11 +33,9 @@ rename Project fields/options. Apply the planning lane migration gate only when
 adopting that Status schema, not when adding or repairing mappings for a schema
 already in use. Allow `closing-keyword` only when base is the default branch.
 When Agent Setup is present, validate unique profile names, required default
-owner profiles, distinct task fit where TypeSafe could choose between profiles,
-runtime role/model/reasoning compatibility, and a configured versioned TypeSafe
-judgment model when `typesafe` is selected.
-TypeSafe availability is a dispatch-time fallback, not a setup blocker. Leave
-the selected lead model unchanged.
+owner profiles, and runtime role/model/reasoning compatibility. Keep the
+selected lead model unchanged. Agent selection uses configured defaults and
+capability checks without an external routing service.
 
 ### Additive Setup for an Existing Repository
 
@@ -61,19 +59,21 @@ owner, or touch Project, issue, or PR state.
 
 When adding or updating Agent Setup, discover the current runtime's available
 roles, models, reasoning levels, and access before proposing profiles. If the
-request supplies no agent choices, propose the smallest `configured` setup:
+request supplies no agent choices, propose the smallest setup:
 one `default-owner` profile using `runtime-default` for model and reasoning,
 named as both planner and ticket default, plus one `read-only-evidence` profile
-when the runtime supports it. The [repair progress gate](ticket-lifecycle.md#repair-progress-gate)
+when the runtime supports it. Prefer a read-only role capable of both evidence
+analysis and independent review; otherwise include a separate review-capable
+profile. Disclose a missing independent reviewer as a delivery capability
+blocker. The [repair progress gate](ticket-lifecycle.md#repair-progress-gate)
 needs that helper after a repeated non-CI failure. If the runtime has no
 eligible read-only evidence role, disclose during setup that such a stall will
 remain an exact ticket-local blocker; never invent a helper. Add other helper
-profiles only when requested or needed for a specified capability. Enable
-`typesafe` only when requested for this repository and a versioned judgment
-model is selected. Explain that it receives a sanitized brief and that service
-unavailability falls back to an eligible configured profile. Never put
-credentials in the configuration. Resolve missing choices without duplicating
-a profile or replacing a user pin.
+profiles only when requested or needed for a specified capability. Remove obsolete
+`Routing` and `TypeSafe judgment model` fields during an authorized setup edit
+subject to the active-lease rules below; do not migrate live bindings during
+execution. Resolve missing choices without duplicating a profile or replacing
+a user pin.
 
 Apply only the additions and evidence-backed changes, then validate the full
 binding and any agent profiles against the runtime and complete live reads. If

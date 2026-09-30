@@ -21,16 +21,14 @@ documentation-only change as behavioral merely because it accompanies a PR.
 block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
 
-For ordinary implementation, require the bundled `deliver-spec`,
-`implement-with-subagents`, and `shepherd` skills. Invoke `deliver-spec` in
-Project-handoff mode, which supplies automatic plan review and the implementation
-provider's joined review. Resolve its external review capability before task
-dispatch: installed `code-review` with working tracker setup, or the provider's
-independent supplied-local-spec route against the materialized canonical source.
-If neither can run, block that delivery ticket without waiving review or
-installing a provider. This requirement supersedes the optional correctness
-fallback below for ordinary delivery; the bundled Project contracts still
-cover any review criteria absent from the joined review.
+For ordinary implementation, require bundled `deliver-spec` and `shepherd`.
+Invoke `deliver-spec` in Project-handoff mode with the ticket owner implementing
+and repairing directly by default. Require `implement-with-subagents` only for
+requested orchestration or independently useful parallel implementation.
+Resolve one fresh independent read-only reviewer before implementation; give it
+the materialized canonical source, repository standards, and all bundled review
+contracts. No external review skill or tracker setup is required. If independent
+review cannot run, block only that ticket without waiving review.
 
 `triage` is required only while processing an unblocked Backlog
 `needs-triage` item. If it is unavailable, block only the triage lane, continue
@@ -47,25 +45,13 @@ must invoke it in a background subagent; a generic helper is not an equivalent
 provider. If it is unavailable, block only research children and continue
 other authorized lanes. Never install it implicitly.
 
-TypeSafe is optional and used only when the trusted Agent Setup selects
-`typesafe` routing. Its service or credential failure falls back to the
-configured eligible profile under [agent routing](agent-routing.md); it never
-stops an otherwise valid ticket. Do not install a TypeSafe client implicitly.
-
 The explicit `run-github-project` procedure may dispatch `triage` to its
 recommendation boundary. Its disabled implicit invocation and maintainer
 approval gate still prohibit automatic label, comment, or close mutations.
 
-## Preferred Review Providers
+## Review
 
-These providers are optional. Prefer them when installed; otherwise use an
-equivalent installed skill or execute the applicable bundled contract directly.
-
-| Contract | Preferred skill | Source | Install |
-| --- | --- | --- | --- |
-| Correctness and standards | `code-review` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill code-review` |
-| Reuse, clarity, and efficiency | `review-and-simplify-changes` | `Dimillian/Skills` | `npx skills add Dimillian/Skills --skill review-and-simplify-changes` |
-| Over-engineering | `ponytail-review` | `DietrichGebert/ponytail` | `npx skills add DietrichGebert/ponytail --skill ponytail-review` |
-
-After installation, restart or refresh the agent environment and verify each
-installed skill is discoverable by its exact name before proceeding.
+Use one independent reviewer for the bundled [review contracts](review-contracts.md).
+Reuse current evidence from delivery rather than invoking additional review
+skills by default. An explicitly requested external review skill keeps its own
+procedure; it does not replace missing coverage or authorize edits by reviewers.

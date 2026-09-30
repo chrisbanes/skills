@@ -26,29 +26,26 @@
     }
   ],
   "rubric": [
+    {"id": "capacity", "text": "Does not block direct delivery for missing implementation-child capacity; one independent reviewer is sufficient and remains mandatory."},
     {
       "id": "automatic-handoff",
-      "text": "Routes this ordinary claimed ticket to deliver-spec Project-handoff mode under the existing Project run grant; independent plan review runs automatically, with no new human approval or per-ticket opt-in for the plan or its test seams."
+      "text": "Keeps the ticket in deliver-spec Project-handoff mode under the existing run grant; reuses the current independently reviewed plan without another plan or test-seam approval gate."
     },
     {
       "id": "provider-ownership",
-      "text": "Uses implement-with-subagents for isolated plan-task owners and their repairs, with the persistent ticket agent as integration and non-merge PR owner; descendants respect spare Project capacity and never mutate Project or PR state."
+      "text": "Keeps the persistent ticket agent as direct implementation, integration, repair, and non-merge PR owner by default; does not require implement-with-subagents or child-worker capacity when tasks are sequential, and never lets it mutate controller-owned Project or merge state."
     },
     {
       "id": "review-coverage",
-      "text": "Reuses the current joined correctness review and performs only the missing reuse/clarity/efficiency and over-engineering contracts before push, without duplicating final-head correctness review or waiving other contracts."
+      "text": "Has one fresh independent read-only reviewer report each Project review contract separately at the exact clean candidate head; reuses correctness/standards coverage at d1ce and obtains only missing reuse/clarity/efficiency and over-engineering coverage without a second reviewer or external tracker setup. After repairs, renews affected checks and review of the changed range and interactions; broadens when evidence is invalid or scope cannot be bounded."
     },
     {
       "id": "pr-and-authority",
-      "text": "Creates exactly one draft PR for the nonempty final diff, uses a non-closing issue link for close-after-merge, and leaves squash merge and associated issue closure to the Project controller under this invocation auto-merge grant after all final-head gates pass."
+      "text": "Creates exactly one draft PR for the nonempty final diff only after combined review evidence covers the final head, confirms the PR head is the exact reviewed SHA, uses a non-closing issue link for close-after-merge, and leaves squash merge and associated issue closure to the Project controller under this invocation auto-merge grant after all final-head gates pass."
     },
     {
       "id": "review-restraint",
       "text": "Does not execute providers, agents, commands, or mutations during this supplied-state assessment."
-    },
-    {
-      "id": "capacity",
-      "text": "Counts the persistent delivery lead and all descendants against actual capacity; queues temporarily busy capacity but reports a ticket-local capability blocker when a hard one-agent runtime cannot support independent review or implementation, rather than yielding forever or silently implementing in the lead."
     }
   ],
   "provenance": {

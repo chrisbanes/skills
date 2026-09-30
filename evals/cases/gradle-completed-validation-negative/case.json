@@ -13,6 +13,7 @@
     {"argv": ["python3", "@validators/text_case.py", "gradle-completed-validation-negative"], "timeout_seconds": 30}
   ],
   "rubric": [
+    {"id": "no-helper", "text": "Does not create a diagnostic helper or claim missing helper capacity blocks reuse of current successful evidence."},
     {"id": "reuse-evidence", "text": "The response accepts the current successful targeted result for the unchanged source instead of rerunning Gradle"},
     {"id": "restraint", "text": "The response makes no source, build, generated, or log changes and does not create a redundant wrapper workflow"}
   ],

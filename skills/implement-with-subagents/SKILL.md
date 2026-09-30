@@ -1,12 +1,14 @@
 ---
 name: implement-with-subagents
 description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including dependency order, task-scoped acceptance, and repair ownership.
-compatibility: "Review mode has no external skill dependency. Implementation mode uses Matt Pocock's separately installed `tdd` for behavior changes and `code-review` for the final joined branch when its tracker setup is available."
+compatibility: "Review mode has no external skill dependency. Implementation mode uses Matt Pocock's separately installed `tdd` for behavior changes and one fresh independent read-only reviewer for the final joined branch."
 disable-model-invocation: true
 ---
 
 # Implement with subagents
 
+Use this workflow for explicitly requested orchestration or independently useful
+parallel tasks. Ordinary single-task delivery stays with its delivery owner.
 Keep implementation ownership with one subagent per work item and reuse a
 bounded pool of worker checkouts. The controller validates the task graph,
 dispatches independent ready work in distinct checkouts, accepts each task once
@@ -32,15 +34,15 @@ before dispatch; if `tdd` is unavailable, stop before dispatching that item.
 Documentation and other items without a meaningful test seam use focused
 validation instead. Never install a dependency implicitly.
 
-Resolve the final review capability before delegation. Use the separately
-installed `code-review` skill on the joined branch when its issue-tracker setup
-is available. Its two reviewers are a justified exception to a repository's
-one-auxiliary default. If missing tracker setup prevents that skill from
-running against a supplied local spec, use a fresh independent read-only
-reviewer against that spec and the repository standards. If neither route is
-available, stop and report the
-missing capability. Do not require issue-tracker setup solely to review a
-local-spec run.
+Resolve one independent read-only reviewer before delegation. Use a fresh
+investigator in review mode (or an equivalent runtime role) with a
+self-contained brief: approved source, plan, repository standards, fixed base,
+and exact candidate head. Do not inherit the implementation conversation.
+Require findings with evidence and a `ship`, `fix-first`, or `rethink` verdict
+against both requirements and standards. No external review skill or tracker
+setup is required. If independent review cannot run, report the missing
+capability; never waive final review. Add reviewers only for distinct risks or
+substantial scope that justify separate assignments.
 
 ## Review procedure
 
