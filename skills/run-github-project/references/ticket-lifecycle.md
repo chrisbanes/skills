@@ -51,12 +51,12 @@ instructions and own
 worktree/branch/PR only; never controller mutations; treat plan as approved
 outcome, make evidence-backed in-scope adjustments under the
 [replan packet contract](planning-lane.md#replan-packet-contract), and return a
-packet only when that contract requires it; inspect minimal scope; invoke `tdd`
-at the agreed plan seam before behavioral change; work red-green vertical
-slices; run focused checks per slice and full applicable checks on the frozen
-candidate; complete review on that candidate; make coherent focused commits;
-revalidate authority and pre-push, push/open-update PR, reconcile remote result,
-and return exact SHA/evidence.
+packet only when that contract requires it. For every ordinary implementation
+ticket, invoke `deliver-spec` with this verified packet under its
+[Project handoff procedure](../../deliver-spec/references/project-handoff.md).
+Keep the persistent ticket context as delivery lead and integration owner.
+Missing provider capability blocks only that ticket; never substitute lead
+implementation. Wayfinder, triage, and epic lanes keep their own procedures.
 
 ### Repair progress gate
 
@@ -92,7 +92,9 @@ count; never repeat an unchanged rerun to reset it.
 
 Before the first push, complete every review contract on the frozen candidate,
 preferably using `review-and-simplify-changes` and `ponytail-review` for their
-respective contracts. Fix every actionable finding or give an evidence-based
+respective contracts. Reuse `deliver-spec`'s joined review for each contract
+it explicitly covered at that head; run only missing contracts, not a duplicate
+correctness pass. Fix every actionable finding or give an evidence-based
 disposition except for explicitly very low priority findings. If a repair
 changes the reviewed candidate, rerun affected checks and review the changed
 range plus its interaction with the previously reviewed effective diff. Broaden to
@@ -101,18 +103,24 @@ invalidated or the affected scope cannot be bounded. Before every push, verify
 that the combined evidence covers the exact final HEAD and that no actionable
 finding remains; never treat unchanged prior checks as proof for changed code.
 
-PRs include `Fixes #<ticket>`, rationale, validation, and residual risks. Keep
-claim/agent while open; drain follows Remote Waiting and terminal-CI parking,
-next shepherds directly. For feedback, batch fixes in same worktree, reapply TDD
-for behavior, repeat affected validation and review against the new final HEAD,
-reply inline where possible, and
-resolve only after reply and required fix. Address every comment unless explicitly
-very low priority; stop for material maintainer direction. Silence is not approval:
+PRs include the configured closing or non-closing issue link, rationale,
+validation, and residual risks. Keep claim/agent while open; drain follows
+Remote Waiting and terminal-CI parking,
+next shepherds directly through `deliver-spec`'s Project mode. For feedback,
+invoke `shepherd` for triage and PR actions, route code repairs through the
+original implementation owners, integrate their commits in the same ticket
+worktree, reapply TDD for behavior, repeat affected validation and review against
+the new final HEAD, reply inline where possible, and resolve only after reply
+and required fix. Address every comment unless explicitly
+very low priority; return material maintainer direction to the controller for
+a ticket-local decision pause. Silence is not approval:
 merge only with required reviews/checks terminal-green, mergeable PR, and
 recorded authority. Use scheduler/wait mechanisms, never long sleep.
 
 Before merge, revalidate authority, approvals, CI, mergeability, configuration,
-and merge authority. Follow configured merge/queue, serialize oldest ready slot
+and merge authority. When a merge or associated closure grant is absent,
+apply the [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket).
+Follow configured merge/queue, serialize oldest ready slot
 unless dependency requires otherwise, and reconcile exact merge. Enforce closure
 policy, reconcile Done automation without archiving/removing directly, stop on
 unexpected outcomes, cleanly detach/snap worktree to base without `git clean`,

@@ -21,6 +21,17 @@ documentation-only change as behavioral merely because it accompanies a PR.
 block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
 
+For ordinary implementation, require the bundled `deliver-spec`,
+`implement-with-subagents`, and `shepherd` skills. Invoke `deliver-spec` in
+Project-handoff mode, which supplies automatic plan review and the implementation
+provider's joined review. Resolve its external review capability before task
+dispatch: installed `code-review` with working tracker setup, or the provider's
+independent supplied-local-spec route against the materialized canonical source.
+If neither can run, block that delivery ticket without waiving review or
+installing a provider. This requirement supersedes the optional correctness
+fallback below for ordinary delivery; the bundled Project contracts still
+cover any review criteria absent from the joined review.
+
 `triage` is required only while processing an unblocked Backlog
 `needs-triage` item. If it is unavailable, block only the triage lane, continue
 authorized execution, and report its source and exact install command from the

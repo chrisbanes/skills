@@ -15,14 +15,16 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    worktree, branch, PR, verified SHA, remote-wait deadline, and fix-round count.
    Start unrelated ticket agents concurrently by default when agent capacity
    permits.
-3. Keep every claimed issue `In progress` until merge reconciliation. Derive
+3. Keep every implementation claim `In progress` until merge reconciliation. Derive
    operational state from its slot, PR, checks, and reviews; require no extra
    Project Status values.
 4. Reconstruct slots and parked claims after restart through
-   [Terminal Required-CI Parking](#terminal-required-ci-parking), using GitHub
+   [Terminal Required-CI Parking](#terminal-required-ci-parking) and
+   [ticket authority pauses](authority-and-pauses.md), using GitHub
    claims and marker records plus verified skill-owned worktrees. Use local
    caches only as hints.
-5. Preserve invalid current-user claims as blocked slots, resume every valid
+5. Recover verified authority pauses outside capacity before ranking. Preserve
+   invalid current-user claims as blocked slots, resume every other valid
    claim, then fill free slots. Stop for reconciliation when all active and
    blocked-slot claims together exceed the invocation's slot limit.
 6. Keep one separate planning lane. It preserves assignment and planning
@@ -36,7 +38,9 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    when the handoff reacquires a slot. A Backlog handoff instead removes all
    skill-owned artifacts and retains no claim.
 8. Apply [Terminal Required-CI Parking](#terminal-required-ci-parking) only to a
-   qualifying failure after its repair budget. Parked implementation claims
+   qualifying failure after its repair budget, and the
+   [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket) for missing
+   authority or a decision. Parked implementation claims
    consume neither an implementation slot nor agent capacity.
 9. Keep Backlog triage as a tail lane. Follow
    the authoritative execution-clear predicate in
@@ -148,9 +152,13 @@ Keep each slot's ticket agent idle between passes; resume it with refreshed
 durable state and discard it only when the slot frees, reconstructing if lost.
 Reconcile any named resource grant before reconstructing or resuming a lost
 ticket agent.
-Descendant agents at any depth use only currently spare agent capacity and
-are read-only at immutable SHAs, route findings to the owning ticket or planning
-agent, and never own or mutate tickets. An implementation helper yields before
+Descendant agents at any depth use only currently spare agent capacity.
+Discovery and review helpers are read-only at immutable SHAs and route findings
+to their owning ticket or planning agent. `deliver-spec` may dispatch isolated
+implementation owners through `implement-with-subagents`; they write only their
+own task worktrees and branches and return commits to their ticket delivery lead.
+Task implementation and review descendants never mutate Project, issue, or PR
+state. An implementation helper yields before
 its occupied slot agent must resume. Never preempt a planning agent after
 planning starts; queue the implementation event until planning finishes or its
 bounded liveness recovery releases capacity.
@@ -165,6 +173,8 @@ actions that fit the slot and active-agent limits. Exhaust each class before
 dispatching the next:
 
 1. Finish any interrupted assigned-Backlog cleanup before new claims.
+   Reconcile resumable authority pauses and park newly blocked operations
+   through their controller procedure before selecting another ticket.
 2. Merge the oldest merge-ready slot, unless an explicit dependency requires a
    different order. Admit or merge only one at a time.
 3. Reconcile the highest-ranked ready epic with issue-close authority, then
@@ -225,8 +235,10 @@ interrupted current-runner cleanup is recoverable.
 
 ## Terminal Required-CI Parking
 
-Classify only a required-CI failure isolated to one ticket as parkable. Access,
-authentication, authorization, configuration, review, base-repair, merge,
+This CI procedure classifies only a required-CI failure isolated to one ticket
+as parkable. Missing user authority uses
+[ticket authority pauses](authority-and-pauses.md), not CI repair rounds. Access,
+authentication, configuration, review, base-repair, merge,
 ambiguous-mutation, shared-infrastructure, and correlated failures are not
 parkable. Preserve or stop them through their existing failure-isolation rule.
 
@@ -334,7 +346,9 @@ After a merge:
 ## Failure Isolation And Finish Gate
 
 Preserve a ticket-local blocker in its occupied slot while repair remains
-within budget. Only a qualifying terminal required-CI failure follows
+within budget. A missing grant or material decision follows
+[ticket authority pauses](authority-and-pauses.md) and releases verified paused
+work from active capacity. A qualifying terminal required-CI failure follows
 [Terminal Required-CI Parking](#terminal-required-ci-parking); other terminal
 ticket blockers remain preserved in their slots. Stop the whole drain for
 changed configuration, lost permissions, invalid base state, merge-policy
@@ -361,11 +375,13 @@ Pass the refresh gate before evaluating the finish state. Finish successfully
 only when the authoritative execution-clear predicate in
 [Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, the complete live
 query has no non-deferred triage candidate after merge reconciliation, no
-marked Wayfinder reconciliation claim remains, and no human action, Wayfinder
+marked Wayfinder reconciliation claim remains, and no authority/decision pause,
+human action, Wayfinder
 human-frontier item, or assigned Wayfinder HITL attention item remains.
 Dependency-parked
 Backlog items do not prevent success; report their live blockers. If only human
-actions, Wayfinder human-frontier items, and/or assigned HITL attention remain,
+actions, verified authority/decision pauses, Wayfinder human-frontier items,
+and/or assigned HITL attention remain,
 return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and
 the Wayfinder frontier. If no

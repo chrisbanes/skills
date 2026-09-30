@@ -37,6 +37,9 @@ and also blocks this tail lane despite consuming no slot. Treat
 excluded unclaimed items do not block the tail lane. Ready epics run in the
 controller lane before triage. Human actions do not block triage; include any
 newly classified human-work action in the current frontier packet.
+Verified [authority/decision pauses](authority-and-pauses.md) also do not block
+tail triage; exclude those exact records from the execution-clear predicate
+while retaining their native dependencies in the complete graph.
 Never pause authorized execution to ask for a triage decision.
 
 In `next`, process at most the first ranked triage contender when no executable

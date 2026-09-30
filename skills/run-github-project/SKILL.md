@@ -22,8 +22,8 @@ The Project is the live control plane. Apply these invariants throughout:
 
 Preserve verified plan state through contract-preserving replans, return true
 human work to Backlog, and in `drain` pair occupied slots with warm worktrees
-and persistent ticket agents. Park only qualifying terminal required-CI claims
-outside capacity before refreshing the control plane.
+and persistent ticket agents. Park verified authority pauses and qualifying
+terminal required-CI claims outside capacity before refreshing the control plane.
 
 ## Select the mode
 
@@ -46,6 +46,10 @@ before preconditions; it is authoritative on required, conditional, optional
 providers, sources, installation commands, and lane-specific fallback. Never
 install a provider implicitly. Read all providers and specialist contracts
 required by the execution-controller lane before their relevant action.
+Read [run authority and ticket pauses](references/authority-and-pauses.md).
+Use `next --auto-merge` or `drain --auto-merge` to grant merge authority for this
+invocation. Without it, deliver to ready PRs and pause only their merges while
+the board continues.
 When the trusted configuration enables agent profiles, read
 [agent routing](references/agent-routing.md) before assigning a planner, ticket
 agent, or helper.
@@ -67,9 +71,9 @@ It never ranks/claims, changes Project/issue/PR state, creates worktrees, plans,
 implements, pushes, or merges. It finishes only `configuration-valid`,
 `configuration-ready-to-commit`, or `configuration-blocked`.
 
-`next` and `drain` require the controller and lifecycle lanes. Standing authority
-expires on stop, timeout, crash, or interruption. Do not support publish-only
-mode or impose a skill-defined ticket cap in `drain`.
+`next` and `drain` require the controller and lifecycle lanes. Do not impose a
+skill-defined ticket cap in
+`drain`; a merge pause is resumable work, not a separate publish-only mode.
 
 ## Final report
 
