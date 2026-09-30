@@ -28,13 +28,14 @@ providers. Never select work from a Project queue.
    findings through `to-plan` and reapprove repaired conversation plans. Stop
    without a reviewed and approved plan.
 4. Resolve `implement-with-subagents` in implementation mode; honor its current
-   prerequisite, task, and finish gates. Never install providers. Create and
-   verify exactly one draft PR before implementation, or reuse the verified PR
-   on resume. Pass approved `to-plan` slices as plan tasks with the approved
-   source path, plan, repository standards, and verified fixed-point base.
-   Materialize GitHub or in-chat source and plan in an owner-only system-temp
-   file; recreate it on resume. Use closing links only for real, verified
-   GitHub issues, never for local sources or plan slices.
+   prerequisite, task, and finish gates. Never install providers. Materialize
+   GitHub or in-chat source and plan in an owner-only system-temp file; recreate
+   it on resume. Pass approved `to-plan` slices as plan tasks with the approved
+   source path, plan, repository standards, and verified fixed-point base. After
+   the provider finishes, create and verify exactly one draft PR if the final
+   integrated diff is non-empty, or reuse the verified PR on resume. Use closing
+   links only for real, verified GitHub issues, never for local sources or plan
+   slices.
 5. Use the provider's final joined review as the code gate; do not repeat it at
    the same head. Verify it covered the approved source and standards even if
    commits cite another issue; correct or stop. Resolve findings and re-review
@@ -52,6 +53,7 @@ providers. Never select work from a Project queue.
 
 Report `ready` only when the final head passes applicable checks and reviews
 with findings resolved; `merged` only after authorized merge readback;
-`pending` with exact outstanding gates; otherwise `blocked` with the needed
-decision or capability. Preserve the PR and source pointers on pending or
-blocked runs. Do not report a prior head as the reviewed result.
+`no-change` only when the provider finishes with an empty final integrated
+diff; `pending` with exact outstanding gates; otherwise `blocked` with the
+needed decision or capability. Preserve the PR and source pointers on pending
+or blocked runs. Do not report a prior head as the reviewed result.
