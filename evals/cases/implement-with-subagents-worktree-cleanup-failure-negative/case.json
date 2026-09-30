@@ -1,0 +1,54 @@
+{
+  "id": "implement-with-subagents-worktree-cleanup-failure-negative",
+  "title": "Report retirement failure separately from code verification",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|curl|wget|http)\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*(?:add|am|apply|cherry-pick|clean|clone|commit|fetch|merge|mv|pull|push|rebase|reset|restore|rm|stash|switch|init|update-ref|worktree\\s+(?:add|move|prune|remove|repair|lock|unlock))\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*branch\\s+(?:(?:-d|-D|-m|-M|-c|-C|-f|--delete|--move|--copy|--force|--set-upstream-to|--unset-upstream|--edit-description)\\b|[^-\\s])",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*tag\\s+(?:(?:-d|-D|-a|-s|-u|-f|-m|-F|--delete|--annotate|--sign|--force|--message|--file)\\b|[^-\\s])",
+    "\\b(?:rm|rmdir|Remove-Item)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-worktree-cleanup-failure-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "separate-gates",
+      "text": "Reports code verification as successful while marking the workflow cleanup-incomplete and overall completion blocked"
+    },
+    {
+      "id": "exact-retention-evidence",
+      "text": "Names the exact checkout and archive error, cites provider readback that it remains active, and records its retained disposition"
+    },
+    {
+      "id": "no-false-retirement",
+      "text": "Does not claim retirement or overall completion; preserves branch references and does not delete directories through the shell or retry blindly"
+    },
+    {
+      "id": "finish-accounting",
+      "text": "Accounts for every run-created checkout at finish, including the retained integration checkout and legitimate exceptions with reasons"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

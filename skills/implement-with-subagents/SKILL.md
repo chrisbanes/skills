@@ -7,11 +7,13 @@ disable-model-invocation: true
 
 # Implement with subagents
 
-Keep implementation ownership with one subagent per work item. The controller
-validates the task graph, dispatches independent ready work in isolated
-worktrees, accepts each task once before integration, and integrates accepted
-commits in dependency order. After an ordinary integration, rerun affected
-checks and release dependents without a second lead sign-off. Keep the
+Keep implementation ownership with one subagent per work item and reuse a
+bounded pool of worker checkouts. The controller validates the task graph,
+dispatches independent ready work in distinct checkouts, accepts each task once
+before integration, and integrates accepted commits in dependency order. After
+an ordinary integration, rerun affected checks and release dependents without
+a second lead sign-off. Retire eligible surplus checkouts, preserve task refs,
+and account for checkout dispositions at completion or interruption. Keep the
 controller out of task-owned code and return repairs to the relevant owner.
 
 ## Select the mode
@@ -43,12 +45,15 @@ local-spec run.
 ## Review procedure
 
 1. Inspect only permitted repository and orchestration state. Do not start an
-   agent, edit, commit, or contact a remote service.
+   agent, edit, commit, change branches, perform worktree lifecycle operations,
+   or contact a remote service.
 2. Assess the task graph, safe concurrency, implementation ownership,
    task-scoped commits, owner self-review, focused validation, and controller
    acceptance before integration. An owner's report alone does not satisfy
    task acceptance. Separate worktrees do not make shared-file edits or work
-   depending on unintegrated code independent.
+   depending on unintegrated code independent. Check reuse-first allocation,
+   distinct slots for active writers, and existing-checkout access for
+   read-only helpers.
 3. Check that each prerequisite is integrated and its affected validation
    passes at that exact head before releasing a dependent. A passing task
    branch is insufficient when integration changes relevant inputs. Do not
@@ -59,10 +64,11 @@ local-spec run.
    environment remain unchanged. An accepted item is complete, not assignable
    again.
 4. Report the next action, evidence, and any acceptance gap. Stop before
-   implementation. For an invalid dependency graph, hold dispatch and return
-   the specific defects to the plan owner; do not invent or remove tasks or
-   dependencies. Name any affected check that must be rerun at the integrated
-   head, even when another blocker also prevents dispatch.
+   implementation. Check release eligibility, safe retirement, and checkout
+   dispositions without mutating them. For an invalid dependency graph, hold
+   dispatch and return the specific defects to the plan owner; do not invent or
+   remove tasks or dependencies. Name any affected check that must be rerun at
+   the integrated head, even when another blocker also prevents dispatch.
 
 ## Implementation mode
 
@@ -93,7 +99,10 @@ acceptance gap. In `implement`, finish only when every queued item has a
 task-scoped, self-reviewed commit accepted before integration, all affected
 checks and the full required suite pass at the final integrated head, the
 joined review is current, and the integration checkout is clean. Preserve any
-unrelated user work from the starting checkout. Report the item-to-commit
-mapping, exact integrated head, final validation and review evidence, and any
-blocker; otherwise stop at the first incomplete gate. PR and tracker delivery
-are outside this skill.
+unrelated user work from the starting checkout. Account for every run-created
+worker checkout as retired with verified readback or retained with a reason,
+and preserve task branch refs. Eligible retirement failure or missing cleanup
+capability leaves the workflow incomplete even when code verification passed.
+Report the item-to-commit mapping, exact integrated head, final validation and
+review evidence, checkout dispositions, and any blocker; otherwise stop at the
+first incomplete gate. PR and tracker delivery are outside this skill.

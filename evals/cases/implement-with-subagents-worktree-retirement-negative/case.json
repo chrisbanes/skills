@@ -1,0 +1,54 @@
+{
+  "id": "implement-with-subagents-worktree-retirement-negative",
+  "title": "Preserve checkouts that are not safe to retire",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|curl|wget|http)\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*(?:add|am|apply|cherry-pick|clean|clone|commit|fetch|merge|mv|pull|push|rebase|reset|restore|rm|stash|switch|init|update-ref|worktree\\s+(?:add|move|prune|remove|repair|lock|unlock))\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*branch\\s+(?:(?:-d|-D|-m|-M|-c|-C|-f|--delete|--move|--copy|--force|--set-upstream-to|--unset-upstream|--edit-description)\\b|[^-\\s])",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*tag\\s+(?:(?:-d|-D|-a|-s|-u|-f|-m|-F|--delete|--annotate|--sign|--force|--message|--file)\\b|[^-\\s])",
+    "\\b(?:rm|rmdir|Remove-Item)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-worktree-retirement-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "ownership-boundary",
+      "text": "Does not automatically retire unrelated, pre-existing or adopted, pinned, or shared checkouts, and gives each retained checkout a reason"
+    },
+    {
+      "id": "preserve-work-and-processes",
+      "text": "Does not force-remove, reset, clean, or retire dirty or active checkouts, and preserves and accounts for the ignored report still needed"
+    },
+    {
+      "id": "capacity-exceptions",
+      "text": "Applies the cap to usable worker slots without discarding recovery or preservation exceptions to force compliance"
+    },
+    {
+      "id": "eligible-cleanup",
+      "text": "Distinguishes justified retention from eligible idle run-owned surplus slots that should still be retired with verified lifecycle evidence"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

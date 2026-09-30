@@ -1,0 +1,3 @@
+All tasks, final checks, and joined review passed. The eligible, clean, run-created managed worker checkout at `/workspace/worker-1` remains with its branch reference preserved. Its native archive operation reports `snapshot I/O error: permission denied`, and provider inventory readback still lists `/workspace/worker-1` as active.
+
+Review the completion report and next lifecycle action. Include the retained integration checkout and any legitimate retention exceptions in the run's checkout accounting. Local read-only inspection only; do not start owners, mutate files, run Git mutations or worktree lifecycle operations, retry the archive, delete the directory through the shell, or contact an external service.

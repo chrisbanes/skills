@@ -1,0 +1,54 @@
+{
+  "id": "implement-with-subagents-worktree-reuse-direct",
+  "title": "Reuse worker slots across sequential work",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-subagents",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|curl|wget|http)\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*(?:add|am|apply|cherry-pick|clean|clone|commit|fetch|merge|mv|pull|push|rebase|reset|restore|rm|stash|switch|init|update-ref|worktree\\s+(?:add|move|prune|remove|repair|lock|unlock))\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*branch\\s+(?:(?:-d|-D|-m|-M|-c|-C|-f|--delete|--move|--copy|--force|--set-upstream-to|--unset-upstream|--edit-description)\\b|[^-\\s])",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*tag\\s+(?:(?:-d|-D|-a|-s|-u|-f|-m|-F|--delete|--annotate|--sign|--force|--message|--file)\\b|[^-\\s])",
+    "\\b(?:rm|rmdir|Remove-Item)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-worktree-reuse-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "reuse-first-slot",
+      "text": "Reuses the existing idle worker slot for one writer and creates only one additional slot for the second concurrent writer"
+    },
+    {
+      "id": "concurrency-and-review",
+      "text": "Keeps API and DOC in distinct checkouts while active, does not switch a branch used by an active owner, and gives the read-only reviewer an existing checkout without allocating a worker slot"
+    },
+    {
+      "id": "join-before-dependent",
+      "text": "Requires accepting and integrating both prerequisite commits and passing affected checks at the joined head before dispatching WIRE"
+    },
+    {
+      "id": "sequential-reuse",
+      "text": "Reuses a released worker slot for WIRE from the new integrated head on a fresh unique task branch and hands off the exact path, branch, base, and ownership"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

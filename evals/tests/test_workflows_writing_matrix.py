@@ -127,7 +127,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(35, len(benchmark))
-        self.assertEqual(27, len(calibration))
+        self.assertEqual(31, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(35, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -155,6 +155,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "implement-with-subagents-fix-forward-novel",
                 "implement-with-subagents-final-review-stale-negative",
                 "implement-with-subagents-dirty-checkout-negative",
+                "implement-with-subagents-worktree-reuse-direct",
+                "implement-with-subagents-worktree-repair-novel",
+                "implement-with-subagents-worktree-retirement-negative",
+                "implement-with-subagents-worktree-cleanup-failure-negative",
                 "subagent-handoff-direct",
                 "subagent-handoff-novel",
                 "subagent-handoff-negative",
