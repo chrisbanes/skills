@@ -1,6 +1,6 @@
 ---
 name: deliver-spec
-description: Use when explicitly asked to deliver one approved GitHub or local spec through a reviewed pull request.
+description: Use when explicitly asked to deliver one approved GitHub or local spec through a reviewed pull request, or delegated one claimed implementation ticket by a running Project controller.
 compatibility: "Requires implement-with-subagents; triage is conditional. External dependencies follow provider gates. Never installs providers."
 disable-model-invocation: true
 ---
@@ -9,16 +9,25 @@ disable-model-invocation: true
 
 ## Core principle
 
-Coordinate one spec through existing skills. Own approval, PR identity, and
-final-head evidence; leave planning, implementation, and PR repairs with their
-providers. Never select work from a Project queue.
+Coordinate one spec through existing skills. Own PR identity and final-head
+evidence; leave planning, implementation, and PR repairs with their providers.
+Manage approval in standalone mode; accept the controller's verified authority
+in Project mode. Never select work from a Project queue.
+
+## Select the mode
+
+For an active `run-github-project` controller's verified ticket handoff, read
+[Project controller handoff](references/project-handoff.md) and apply its
+procedure instead of the standalone approval, merge, and timeout rules below.
+The Project controller retains all shared state and merge authority.
+For a direct named-spec request, use the standalone procedure below; if a
+Project run already owns that issue, return it to that controller.
 
 ## Procedure
 
 1. Resolve the named source, repository, approved contract, and any existing
    branch or PR from fresh state. On resume, reconcile the PR, exact head,
-   checks, feedback, and authority before acting. If a Project run owns the
-   issue, hand it back rather than claim it here.
+   checks, feedback, and authority before acting.
 2. For a GitHub issue missing `ready-for-agent`, use `triage` and wait for its
    approved outcome; do not change labels yourself. Local sources skip GitHub
    triage but need explicit stakeholder approval. Reuse a current `to-plan`

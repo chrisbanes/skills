@@ -1545,6 +1545,101 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
+    def test_resumes_exact_linked_pr_under_close_after_merge(self) -> None:
+        for assignees in ([], ["chris"]):
+            with self.subTest(assignees=assignees):
+                linked = ticket(
+                    60,
+                    projectStatus="In progress" if assignees else "Ready",
+                    assignees=assignees,
+                    openPullRequests=[
+                        pull_request(600, closesIssue=False, linksIssue=True),
+                    ],
+                )
+                returncode, output = run_ranker(
+                    [linked], "--issue-closure", "close-after-merge",
+                )
+                self.assertEqual(0, returncode)
+                self.assertEqual("resume-pr", first_entry(output)["action"])
+
+    def test_nonclosing_pr_requires_policy_and_exact_link(self) -> None:
+        for policy, link in (
+            ("closing-keyword", True),
+            ("close-after-merge", False),
+            ("close-after-merge", None),
+        ):
+            with self.subTest(policy=policy, link=link):
+                pr = pull_request(600, closesIssue=False)
+                if link is not None:
+                    pr["linksIssue"] = link
+                returncode, output = run_ranker(
+                    [ticket(60, openPullRequests=[pr])],
+                    "--issue-closure", policy,
+                )
+                self.assertEqual(0, returncode)
+                self.assertEqual([], output["candidates"])
+                self.assertEqual(60, output["excluded"][0]["number"])
+
+    def test_linked_pr_keeps_owner_base_and_competitor_gates(self) -> None:
+        for overrides, competitor in (
+            ({"author": "other-user"}, False),
+            ({"baseRefName": "other-base"}, False),
+            ({"baseRepository": "other/repo"}, False),
+            ({}, True),
+            ({"linksIssue": "true"}, False),
+        ):
+            with self.subTest(overrides=overrides, competitor=competitor):
+                pr = pull_request(600, closesIssue=False, linksIssue=True)
+                pr.update(overrides)
+                prs = [pr, pull_request(601)] if competitor else [pr]
+                returncode, output = run_ranker(
+                    [ticket(60, openPullRequests=prs)],
+                    "--issue-closure", "close-after-merge",
+                )
+                self.assertEqual(0, returncode)
+                self.assertEqual([], output["candidates"])
+                self.assertTrue(output["excluded"])
+
+    def test_linked_pr_recovery_matches_report_head_in_both_lanes(self) -> None:
+        for status, disposition, action in (
+            ("Planning", "autonomous-replan", "resume-planning"),
+            ("Backlog", "human-required", "resume-backlog-cleanup"),
+        ):
+            with self.subTest(status=status):
+                retained = ticket(
+                    208,
+                    projectStatus=status,
+                    labels=["ready-for-human"] if status == "Backlog"
+                    else ["ready-for-agent"],
+                    assignees=["chris"],
+                    openPullRequests=[
+                        pull_request(208, closesIssue=False, linksIssue=True),
+                    ],
+                    replanRequest=replan_request(
+                        208, disposition=disposition,
+                        pullRequestUrl="https://github.com/acme/repo/pull/208",
+                        implementationHeadSha="wrong-head",
+                    ),
+                )
+                transition = {
+                    "id": "PVTE_recovery", "actor": "chris",
+                    "createdAt": "2026-07-28T12:00:00Z",
+                    "status": status, "wasAutomated": False,
+                }
+                retained["planningTransition" if status == "Planning"
+                         else "backlogTransition"] = transition
+                for head in ("wrong-head", "head-208"):
+                    retained["replanRequest"]["implementationHeadSha"] = head
+                    returncode, output = run_ranker(
+                        [retained], "--issue-closure", "close-after-merge",
+                    )
+                    self.assertEqual(0, returncode)
+                    if head == "wrong-head":
+                        self.assertEqual([], output["claims"])
+                        self.assertTrue(output["blockedPlanningClaims"])
+                    else:
+                        self.assertEqual(action, output["claims"][0]["action"])
+
     def test_malformed_unclaimed_item_is_reported_without_stopping(self) -> None:
         malformed = {
             "number": 70,

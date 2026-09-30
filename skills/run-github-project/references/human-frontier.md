@@ -50,7 +50,9 @@ because the packet is non-empty.
 ## Reconcile A Ready Epic
 
 Enter the controller lane and require standing issue-close authority covering
-the epic. Refetch it and require all of:
+the epic. If absent, record an unclaimed
+[authority pause](authority-and-pauses.md#pause-one-ticket) and continue the
+drain; never prompt before taking another eligible action. Refetch it and require all of:
 
 1. open issue state and configured repository and Project membership;
 2. Backlog Status and the configured epic label;
@@ -75,15 +77,17 @@ Backlog `ready-for-agent` item is not human work and does not belong in this
 wait state.
 
 Return `waiting-for-human` only when no controller, planning, implementation,
-monitoring, or non-deferred triage action remains and `humanActions` is
-non-empty. This result is resumable and is neither success nor partial drain.
+monitoring, or non-deferred triage action remains and `humanActions` or verified
+authority/decision pauses are non-empty. This result is resumable and is
+neither success nor partial drain.
 Report the complete frontier packet, parked dependency chain, and actions that
 would become available next.
 
 On a later invocation, reconstruct the frontier from GitHub. Expire all prior
-standing mutation authority and obtain one fresh confirmation covering the
-remaining eligible merges and epic closures. Use no local checkpoint as an
-authority source.
+standing mutation authority and use the new invocation's explicit instruction
+or `--auto-merge` grant under [run authority](authority-and-pauses.md).
+Keep uncovered operations paused while the board continues. Use no local
+checkpoint as an authority source and request no blanket confirmation.
 
 ## Finish Gate
 

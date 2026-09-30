@@ -52,6 +52,9 @@ mutation authority. In `next`, scope it to that selected ticket. In `drain`,
 scope it to every eligible AFK Wayfinder ticket encountered. Merge authority,
 issue-close authority, and invocation alone do not imply Wayfinder authority.
 Require fresh per-ticket approval before a live HITL resolution.
+If a required grant is absent, record an unclaimed
+[authority pause](authority-and-pauses.md#pause-one-ticket) for that child and
+continue other drain work. Do not hold up the board for a permission prompt.
 
 Read the installed `wayfinder` skill and follow its resolution semantics; do
 not reproduce its map procedure here. If it is missing, malformed, or blocked

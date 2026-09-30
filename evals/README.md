@@ -205,7 +205,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-Twenty-two additional workflow cases are calibration-only. Select them
+Twenty-five additional workflow cases are calibration-only. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
 unresolved decisions, proof-gated report publication, implementation-plan
@@ -222,6 +222,11 @@ supplied state read-only and do not prove live subagent execution.
 Three shared-handoff calibrations check bounded implementation ownership,
 capability-based PR evidence helper selection, and restraint for one-off PR
 inspection. They also assess supplied state read-only.
+Three Project-delivery calibrations cover automatic `deliver-spec` handoff,
+run-scoped `--auto-merge`, ticket-local authority pauses with continued board
+progress, durable resumption, and restraint for absent grants, read-only modes,
+and stale final-head review. They use immutable synthetic state and have no
+live-provider or model-run evidence.
 
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
 to select one advisory scorecard. The default remains `compose` for command

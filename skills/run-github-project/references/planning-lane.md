@@ -226,11 +226,30 @@ recovery evidence for the retained implementation state. A missing or
 mismatched link preserves a blocked planning claim until the retained state is
 reconciled; resolving it does not require human authorization.
 
-### Return Human Work To Backlog
+### Pause A Stakeholder Decision
 
 When the verified packet disposition is `human-required`:
 
-1. Publish and verify the same marker-owned exact evidence packet.
+1. Publish and verify the marker-owned exact evidence packet.
+2. Apply the [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket)
+   referencing that packet for the exact decision and authoritative source to
+   change. A pending decision never triggers Backlog cleanup.
+3. Resume only from a recorded human outcome, not a merge flag or another
+   unchanged run. When the outcome keeps implementation with agents, reconcile
+   the newly accepted source contract. Give the controlled replanning procedure
+   above an `autonomous-replan` packet referencing the decision and prior plan;
+   that procedure publishes it once and retains artifacts and repair history.
+   Review the new plan automatically before implementation resumes.
+
+### Return Human Work To Backlog
+
+Use this cleanup only after a recorded stakeholder decision explicitly directs
+abandoning the retained partial work and transferring the ticket to human work.
+An unresolved packet or missing authority never authorizes this cleanup:
+
+1. Publish and verify one decision-bearing `human-required` report under the
+   [normalized replan contract](normalized-ticket.md), linking the stakeholder
+   direction and prior packet. Reuse it if already current and verified.
 2. Replace `ready-for-agent` with the configured human-work label, move the
    item to the configured Backlog option, and verify both mutations. Do not
    clean anything when the report, label, or transition outcome is ambiguous.
@@ -263,7 +282,7 @@ failures through the bounded reconciled recovery above. Never consume an
 implementation slot merely to wait for a planning blocker.
 
 Treat a `to-plan` Blocked result labelled `human-required` as one of these
-planning blockers, not as the worker packet that enters Backlog cleanup. No
+planning blockers and record a verified decision pause, not Backlog cleanup. No
 implementation slot or implementation artifact exists at that stage.
 
 ## Scheduling

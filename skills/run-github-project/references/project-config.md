@@ -97,6 +97,9 @@ this template over it. Follow the
 - Automation description: `<workflow and trigger, or none>`
 ```
 
+The binding specifies how merging works. Establish invocation-scoped permission
+under [run authority](authority-and-pauses.md).
+
 Keep human-readable names beside IDs so startup validation can distinguish a
 rename from an ID that now identifies a different object. Preserve repository-
 specific comments and additions when repairing stale mappings.

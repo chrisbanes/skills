@@ -12,6 +12,7 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --repository <owner/repository> \
   --configuration-digest <committed-configuration-digest> \
   --base-branch <base-branch> \
+  --issue-closure <closing-keyword-or-close-after-merge> \
   --backlog-status <backlog-name> \
   --planning-status <planning-name> \
   --ready-status <ready-to-implement-name> \
@@ -39,7 +40,13 @@ reject non-finite Project positions. Run `--help` if the installed script's
 interface is uncertain rather than guessing an option.
 
 Provide every field below to `scripts/rank_tickets.py` from fresh, completely
-paginated GitHub and Project reads. Use this shape for execution contenders:
+paginated GitHub and Project reads. Before dispatch ranking, the controller
+recovers [authority pauses](authority-and-pauses.md#recover-and-resume) and
+retains active verified pauses in its separate frontier, outside the ranker's
+active claims/candidates, as for parked CI claims. Keep every paused issue in
+the complete dependency graph used to hydrate blockers and descendants; never
+erase a blocker to make a dependent runnable. Do not invent an authority flag
+or pause field for this ranker CLI. Use this shape for execution contenders:
 
 ```json
 {
@@ -95,6 +102,7 @@ paginated GitHub and Project reads. Use this shape for execution contenders:
       "url": "https://github.com/owner/repository/pull/91",
       "author": "octocat",
       "closesIssue": true,
+      "linksIssue": true,
       "headRepository": "owner/repository",
       "headRefName": "cb/issue-42",
       "headSha": "0123456789abcdef",
@@ -204,6 +212,13 @@ configured repository or `owner/repository#number` strings for cross-repository
 issues; never pass GraphQL objects. Use a finite non-negative numeric Project
 position. An empty PR array is valid.
 
+Set `linksIssue` only from a freshly verified exact issue link in the PR; absent
+or ambiguous evidence is false. Closing PRs already prove that link and may omit
+the field. Under `close-after-merge`, a non-closing PR requires `linksIssue: true`
+to resume; a branch name or historical report alone is insufficient. Keep all
+other open implementation PRs in the array as competitors. The ranker defaults
+to `closing-keyword` for compatibility; pass the binding's policy explicitly.
+
 For a first-time `Planning` item, `readyTransition` may be `null`. A
 runner-authored Planning requeue should include its preceding verified Ready
 transition and replan report as recovery evidence. For any other accepted
@@ -213,7 +228,9 @@ its actor and automation source do not gate eligibility.
 
 Use `backlogTransition` only for an item currently in Backlog. It must be the
 latest transition into Backlog. An assigned Backlog item also requires a
-runner-authored `replanRequest` with `disposition: "human-required"` so cleanup
+runner-authored `replanRequest` with `disposition: "human-required"` linking
+recorded stakeholder direction to abandon partial work and transfer to human
+work, so cleanup
 can resume after interruption. Keep that assignment as the durable cleanup
 lease until the controller verifies that every exact runner-owned artifact is
 absent and unassigns last. An unassigned Backlog item without the configured
@@ -252,7 +269,10 @@ For an automatic requeue, normalize the verified report comment as:
 }
 ```
 
-Use `human-required` instead of `autonomous-replan` for the Backlog path.
+Use `human-required` instead of `autonomous-replan` for an explicitly directed
+Backlog cleanup path. A pending human-required decision stays in its original
+Status under a verified authority pause, outside dispatch ranking; it never
+enters Backlog cleanup merely from that disposition.
 Retained head and PR fields may be null but must identify exact durable state
 when present. The report must precede the resulting Status transition and
 identify the plan that authorized the prior Ready handoff.

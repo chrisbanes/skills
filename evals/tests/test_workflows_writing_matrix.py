@@ -127,7 +127,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(35, len(benchmark))
-        self.assertEqual(24, len(calibration))
+        self.assertEqual(27, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(35, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -158,6 +158,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "subagent-handoff-direct",
                 "subagent-handoff-novel",
                 "subagent-handoff-negative",
+                "run-github-project-delivery-direct",
+                "run-github-project-authority-pause-novel",
+                "run-github-project-auto-merge-restraint-negative",
             },
             {case.id for case in calibration},
         )
