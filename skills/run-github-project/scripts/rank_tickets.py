@@ -68,6 +68,12 @@ def parse_args() -> argparse.Namespace:
         help="Configured base branch targeted by resumable pull requests.",
     )
     parser.add_argument(
+        "--issue-closure",
+        choices=("closing-keyword", "close-after-merge"),
+        default="closing-keyword",
+        help="Configured issue-closure policy for identifying linked pull requests.",
+    )
+    parser.add_argument(
         "--backlog-status",
         default="Backlog",
         help="Configured Project status display name for untriaged or human work.",
@@ -243,6 +249,10 @@ def pull_request_values(
             raise InputError(
                 f"ticket {number}: pull request closesIssue must be a boolean",
             )
+        if "linksIssue" in value and not isinstance(value["linksIssue"], bool):
+            raise InputError(
+                f"ticket {number}: pull request linksIssue must be a boolean",
+            )
         if not require_execution_fields:
             result.append(value)
             continue
@@ -344,11 +354,19 @@ def has_current_user_assignment(ticket: Any, current_user: str) -> bool:
     )
 
 
+def matches_issue_policy(pull_request: dict[str, Any], issue_closure: str) -> bool:
+    return pull_request.get("closesIssue") is True or (
+        issue_closure == "close-after-merge"
+        and pull_request.get("linksIssue") is True
+    )
+
+
 def is_backlog_cleanup_candidate(
     ticket: Any,
     *,
     current_user: str,
     backlog_status: str,
+    issue_closure: str,
 ) -> bool:
     if not isinstance(ticket, dict):
         return False
@@ -389,7 +407,14 @@ def is_backlog_cleanup_candidate(
         and any(
             isinstance(pull_request, dict)
             and pull_request.get("author") == current_user
-            and pull_request.get("closesIssue") is not False
+            and (
+                pull_request.get("closesIssue") is not False
+                or (
+                    issue_closure == "close-after-merge"
+                    and "linksIssue" in pull_request
+                    and pull_request["linksIssue"] is not False
+                )
+            )
             for pull_request in pull_requests
         )
     )
@@ -649,6 +674,7 @@ def analyze_ticket(
     priorities: tuple[str, ...],
     repository: str,
     base_branch: str,
+    issue_closure: str,
 ) -> dict[str, Any]:
     number = ticket["number"]
     common = analyze_common_ticket(
@@ -825,23 +851,23 @@ def analyze_ticket(
         pull_request for pull_request in pull_requests
         if pull_request["author"] == current_user
     ]
-    own_closing_pull_requests = [
+    own_linked_pull_requests = [
         pull_request for pull_request in own_pull_requests
-        if pull_request["closesIssue"]
+        if matches_issue_policy(pull_request, issue_closure)
     ]
     retained_pr_matches_report = (
         replan_request is not None
         and (
             (
                 replan_request["pullRequestUrl"] is None
-                and not own_closing_pull_requests
+                and not own_linked_pull_requests
             )
             or (
-                len(own_closing_pull_requests) == 1
+                len(own_linked_pull_requests) == 1
                 and replan_request["pullRequestUrl"]
-                == own_closing_pull_requests[0]["url"]
+                == own_linked_pull_requests[0]["url"]
                 and replan_request["implementationHeadSha"]
-                == own_closing_pull_requests[0]["headSha"]
+                == own_linked_pull_requests[0]["headSha"]
             )
         )
     )
@@ -859,7 +885,7 @@ def analyze_ticket(
                 replan_request is not None
                 and replan_request["disposition"] == "autonomous-replan"
             )
-            or bool(own_closing_pull_requests)
+            or bool(own_linked_pull_requests)
         )
         and not (
             ready_transition is not None
@@ -1001,12 +1027,12 @@ def analyze_ticket(
                 exclusions.append(
                     "human-work report predates the latest Ready handoff",
                 )
-            if own_closing_pull_requests and not (
-                len(own_closing_pull_requests) == 1
+            if own_linked_pull_requests and not (
+                len(own_linked_pull_requests) == 1
                 and replan_request["pullRequestUrl"]
-                == own_closing_pull_requests[0]["url"]
+                == own_linked_pull_requests[0]["url"]
                 and replan_request["implementationHeadSha"]
-                == own_closing_pull_requests[0]["headSha"]
+                == own_linked_pull_requests[0]["headSha"]
             ):
                 exclusions.append(
                     "human-work report does not match the retained PR",
@@ -1022,22 +1048,22 @@ def analyze_ticket(
             exclusions.append("human work required in Backlog")
 
     wrong_target_pull_requests = [
-        pull_request for pull_request in own_closing_pull_requests
+        pull_request for pull_request in own_linked_pull_requests
         if (
             pull_request["baseRepository"] != repository
             or pull_request["baseRefName"] != base_branch
         )
     ]
     resumable_pull_requests = [
-        pull_request for pull_request in own_closing_pull_requests
+        pull_request for pull_request in own_linked_pull_requests
         if (
             pull_request["baseRepository"] == repository
             and pull_request["baseRefName"] == base_branch
         )
     ]
-    own_nonclosing_pull_requests = [
+    own_unlinked_pull_requests = [
         pull_request for pull_request in own_pull_requests
-        if not pull_request["closesIssue"]
+        if not matches_issue_policy(pull_request, issue_closure)
     ]
     other_pull_requests = [
         pull_request for pull_request in pull_requests
@@ -1056,10 +1082,13 @@ def analyze_ticket(
             "has implementation PRs by other users "
             f"{[pull_request['url'] for pull_request in other_pull_requests]}",
         )
-    for pull_request in own_nonclosing_pull_requests:
+    for pull_request in own_unlinked_pull_requests:
         exclusions.append(
-            "current user's PR does not close the issue "
-            f"{pull_request['url']}",
+            (
+                "current user's PR does not close the issue "
+                if issue_closure == "closing-keyword"
+                else "current user's PR does not link the issue "
+            ) + pull_request["url"],
         )
     for pull_request in wrong_target_pull_requests:
         exclusions.append(
@@ -1516,6 +1545,7 @@ def main() -> int:
                     ticket,
                     current_user=args.current_user,
                     backlog_status=args.backlog_status,
+                    issue_closure=args.issue_closure,
                 )
                 if has_wayfinder_map_label:
                     invalid = {
@@ -1584,6 +1614,7 @@ def main() -> int:
                             priorities=priorities,
                             repository=args.repository,
                             base_branch=args.base_branch,
+                            issue_closure=args.issue_closure,
                         ),
                     )
             except InputError as error:
@@ -1602,6 +1633,7 @@ def main() -> int:
                     raw_ticket,
                     current_user=args.current_user,
                     backlog_status=args.backlog_status,
+                    issue_closure=args.issue_closure,
                 )
                 is_wayfinder_claim = (
                     isinstance(raw_ticket, dict)

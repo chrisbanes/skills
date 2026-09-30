@@ -1,0 +1,58 @@
+{
+  "id": "run-github-project-delivery-direct",
+  "title": "Deliver a claimed Project ticket under one auto-merge grant",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-delivery-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "automatic-handoff",
+      "text": "Routes this ordinary claimed ticket to deliver-spec Project-handoff mode under the existing Project run grant; independent plan review runs automatically, with no new human approval or per-ticket opt-in for the plan or its test seams."
+    },
+    {
+      "id": "provider-ownership",
+      "text": "Uses implement-with-subagents for isolated plan-task owners and their repairs, with the persistent ticket agent as integration and non-merge PR owner; descendants respect spare Project capacity and never mutate Project or PR state."
+    },
+    {
+      "id": "review-coverage",
+      "text": "Reuses the current joined correctness review and performs only the missing reuse/clarity/efficiency and over-engineering contracts before push, without duplicating final-head correctness review or waiving other contracts."
+    },
+    {
+      "id": "pr-and-authority",
+      "text": "Creates exactly one draft PR for the nonempty final diff, uses a non-closing issue link for close-after-merge, and leaves squash merge and associated issue closure to the Project controller under this invocation auto-merge grant after all final-head gates pass."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Does not execute providers, agents, commands, or mutations during this supplied-state assessment."
+    },
+    {
+      "id": "capacity",
+      "text": "Counts the persistent delivery lead and all descendants against actual capacity; queues temporarily busy capacity but reports a ticket-local capability blocker when a hard one-agent runtime cannot support independent review or implementation, rather than yielding forever or silently implementing in the lead."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

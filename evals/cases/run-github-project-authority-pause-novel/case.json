@@ -1,0 +1,62 @@
+{
+  "id": "run-github-project-authority-pause-novel",
+  "title": "Park one merge pause while draining unrelated work and recover it later",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-authority-pause-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "local-pause",
+      "text": "Does not treat absent merge or epic-close authority as a global precondition failure; records and verifies exact ticket-local missing-operation and resume evidence on #51 and #54 without holding up the board or prompting before other work."
+    },
+    {
+      "id": "preserve-and-progress",
+      "text": "Preserves #51 status, assignment, branch, worktree and PR; verifies quiescence, releases grants and the implementation slot only after a durable pause record, then refreshes and starts #52 in a separate worktree; #53 remains dependency-blocked. Does not close the PR or run Backlog replan cleanup for a merge grant."
+    },
+    {
+      "id": "resume-authority",
+      "text": "On the later invocation, the new auto-merge grant can unlock #51 and its associated configured issue closure, but cannot resolve #55 stakeholder scope or authorize unrelated epic closure. Verifies live leases and final-head gates and a resume record referencing the pause before restoring work."
+    },
+    {
+      "id": "external-merge-reconciliation",
+      "text": "Checks fresh terminal PR state before requiring a new merge grant. Reconciles #51's verified external merge under execution authority, retires its obsolete pause with linked terminal evidence, and never redispatches implementation or restores its slot. Under close-after-merge with no issue-close grant, preserves the merged result and pauses only the still-needed closure instead of demanding merge permission or closing without authority."
+    },
+    {
+      "id": "changed-head",
+      "text": "The changed-head observation invalidates earlier review evidence and requires affected final-head verification/review before merging, without a duplicate PR or inherited authority from the pause comment."
+    },
+    {
+      "id": "finish",
+      "text": "Continues all independent runnable board work and returns waiting-for-human only after a complete refreshed query proves solely verified human or authority pauses remain; unknown marker outcomes or integrity blockers require partial-drain. Remains read-only in this assessment."
+    },
+    {
+      "id": "decision-preservation",
+      "text": "Treats the actual human-required packet on #55 as a decision pause preserving its PR and partial work, not automatic Backlog transfer, PR closure, branch deletion, or cleanup. Only a recorded stakeholder direction to abandon work can authorize that cleanup; an accepted new contract resumes controlled replanning with retained artifacts."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
