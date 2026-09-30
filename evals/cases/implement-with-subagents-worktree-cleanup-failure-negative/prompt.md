@@ -1,0 +1,3 @@
+All tasks, final checks, and joined review passed. An eligible, clean, run-created managed worker checkout remains. Its native archive operation reports an error, and provider readback still lists that checkout as active.
+
+Review the completion report and next lifecycle action. Include the retained integration checkout and any legitimate retention exceptions in the run's checkout accounting. Local read-only inspection only; do not start owners, mutate files, run Git mutations or worktree lifecycle operations, retry the archive, delete the directory through the shell, or contact an external service.

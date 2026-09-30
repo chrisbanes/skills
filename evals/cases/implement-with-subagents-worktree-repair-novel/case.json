@@ -1,0 +1,54 @@
+{
+  "id": "implement-with-subagents-worktree-repair-novel",
+  "title": "Repair an integrated failure in a newly assigned worker slot",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|curl|wget|http)\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*(?:add|am|apply|cherry-pick|clean|clone|commit|fetch|merge|mv|pull|push|rebase|reset|restore|rm|stash|switch|init|update-ref|worktree\\s+(?:add|move|prune|remove|repair|lock|unlock))\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*branch\\s+(?:(?:-d|-D|-m|-M|-c|-C|-f|--delete|--move|--copy|--force|--set-upstream-to|--unset-upstream|--edit-description)\\b|[^-\\s])",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*tag\\s+(?:(?:-d|-D|-a|-s|-u|-f|-m|-F|--delete|--annotate|--sign|--force|--message|--file)\\b|[^-\\s])",
+    "\\b(?:rm|rmdir|Remove-Item)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-worktree-repair-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "same-owner-new-slot",
+      "text": "Keeps the original WIRE owner and assigns it the free suitable slot with an explicit new path and base handoff from failed integrated head 2222222 on a fresh unique repair branch"
+    },
+    {
+      "id": "preserve-failure",
+      "text": "Preserves integrated head 2222222 and the original task branch references, pauses dependents and further integration, and leaves the slot occupied by another owner untouched"
+    },
+    {
+      "id": "repair-acceptance",
+      "text": "Requires task-scoped repair acceptance by independent inspection and reruns the affected checks after integrating the repair before continuing"
+    },
+    {
+      "id": "stopped-run-disposition",
+      "text": "Retires the verified surplus completed run-owned checkout when cleanup can proceed, retains the still-active unfinished checkout, and reports each disposition with its reason"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

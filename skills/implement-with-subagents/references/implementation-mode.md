@@ -22,14 +22,19 @@
    behavior-preserving commits. Record shared-file, interface, and integration
    constraints. Stop on invalid or ambiguous graphs rather than choosing a
    new dependency for the plan owner.
-4. Dispatch the ready frontier. Concurrent items must be independent, have
-   adequate agent capacity, and each receive an isolated worktree based on the
-   same current integrated `HEAD`. This explicit workflow invocation permits
-   multiple implementation owners for safe independent items despite a
-   one-auxiliary default. Serialize unsafe overlap or unavailable isolation or
-   capacity. A dependent is ready only after every prerequisite is integrated
-   and its affected checks pass at that integrated head. Do not start it from
-   a prerequisite's unintegrated branch.
+4. Keep the integration checkout stable and dispatch the ready frontier.
+   Reuse one worker checkout for sequential work. Concurrent items must be
+   independent, have adequate capacity, and each receive a distinct isolated
+   checkout based on the same current integrated `HEAD`; reuse a suitable idle
+   slot before creating another. Create only when concurrency or isolation
+   requires it and runtime and repository rules permit. This explicit workflow
+   invocation permits multiple implementation owners for safe independent
+   items despite a one-auxiliary default. Serialize unsafe overlap or
+   unavailable safe isolation or capacity. A dependent is ready only after
+   every prerequisite is integrated and its affected checks pass at that
+   integrated head. Do not start it from a prerequisite's unintegrated branch.
+   Give read-only helpers access to an existing checkout without allocating a
+   worker slot, and never switch a checkout used by an active owner or process.
 5. Select an implementation-capable subagent using the entrypoint's runtime
    mapping and the shared [selection and handoff reference](subagent-selection.md).
    Confirm it can edit, validate, commit, and resume the same owner session for
@@ -38,9 +43,10 @@
    controller; wait for temporarily unavailable capacity. Retain each owner
    handle. Give each owner a decision-complete packet with pointers to the
    exact task, spec, approved test seams where applicable, repository
-   instructions, recorded base SHA, owned files, acceptance criteria, and
-   focused validation. State that other agents may be editing independently,
-   and require preservation of unrelated changes.
+   instructions, recorded base SHA, exact checkout path and task branch,
+   owned files, acceptance criteria, and focused validation. State that other
+   agents may be editing independently, and require preservation of unrelated
+   changes.
 6. Have each owner implement only its item. For behavior changes, invoke `tdd`
    directly at the approved test seams and follow its red-green loop. For
    documentation or configuration without a meaningful test seam, use focused
@@ -66,17 +72,18 @@
    before completion, abort that operation and verify the branch is again at
    the recorded SHA and clean. Stop if that state cannot be restored. Give the
    conflict and pre-attempt SHA to the original owner, who replays its work in
-   a new isolated task branch from that SHA and returns a task-scoped commit
-   with fresh affected evidence.
-   Never resolve task-owned source conflicts in the controller.
+   a new isolated task branch from that SHA using an available worker slot and
+   returns a task-scoped commit with fresh affected evidence. Never resolve
+   task-owned source conflicts in the controller.
 
    After a completed integration, record its exact post-integration `HEAD`.
    Recheck only validation affected by changed inputs at that head, including
    shared interfaces, generated output, and merge or cherry-pick resolutions.
    Inspect the joined diff when cross-file interactions or conflict resolutions
-   can change meaning. When checks pass, release newly ready dependents with
-   no second lead sign-off. Do not rerun unrelated passing checks or hold a
-   dependent for a routine duplicate acceptance ceremony.
+   can change meaning. Release a worker checkout only under the lifecycle gate
+   below. When checks pass, release newly ready dependents with no second lead
+   sign-off. Do not rerun unrelated passing checks or hold a dependent for a
+   routine duplicate acceptance ceremony.
 9. If a completed merge or cherry-pick fails affected validation, keep the
    failed integrated `HEAD` on the integration branch; do not abort, reset, or
    dispatch dependents from it. If validation changed the worktree, stop until
@@ -84,27 +91,73 @@
    integration while the failure is repaired. Trace the failure to the relevant
    original owner or owners. If attribution is unclear, investigate read-only
    first; assign a new bounded implementation owner only when no prior owner
-   fits. Give each repair owner the failed head SHA, failing output, and
-   affected scope. Have that owner create an isolated branch from
-   the failed head and repair forward with a task-scoped commit. Apply step 7
-   to the repair commit, verify the integration branch remains at the failed
-   SHA and clean, then integrate the repair and rerun affected checks. Stop if
-   that failed-head state was lost. Keep unrelated completed owner branches
-   intact for later integration. Stop if the failed state cannot be preserved
-   or a repair cannot pass; never discard the failed integrated commit.
+   fits. Retain the applicable owner handle and give the repair owner the failed
+   head SHA, failing output, affected scope, and an idle suitable worker
+   checkout under the lifecycle rules below. Have that owner create a fresh
+   unique branch from the failed head and repair forward with a task-scoped
+   commit. Apply step 7 to the repair commit, verify the integration branch
+   remains at the failed SHA and clean, then integrate the repair and rerun
+   affected checks. Stop if that failed-head state was lost. Keep unrelated
+   completed owner branches intact for later integration. Stop if the failed
+   state cannot be preserved or a repair cannot pass; never discard the failed
+   integrated commit.
 10. After all items are integrated, run the full user- and repository-required
-    suite on the final integrated HEAD. Review the joined diff from the recorded
-    starting base with `code-review` when its tracker setup is available. If
-    missing tracker setup prevents it from reviewing a supplied local spec,
-    give that spec, the repository standards, and joined diff to a fresh
-    independent read-only reviewer.
+    suite on the final integrated HEAD. If it fails, preserve that exact
+    integrated head, pause further integration, and repair forward under step 9.
+    Review the joined diff from the recorded starting base with `code-review`
+    when its tracker setup is available. If missing tracker setup prevents it
+    from reviewing a supplied local spec, give that spec, the repository
+    standards, and joined diff to a fresh independent read-only reviewer.
     Return findings to the relevant original owners, accept their task-scoped
     repairs under step 7, and integrate them under steps 8-9. After any repair,
     rerun affected checks, the full required suite, and the joined review at
     the new final head. Do not treat review or test evidence from an earlier
-    head as final. Finish only when the integration worktree is clean,
-    unrelated starting work is preserved, and the entrypoint's finish gate is
-    met.
+    head as final. Apply the checkout lifecycle rules below at completion,
+    blockers, and interruption. Finish only when the integration worktree is
+    clean, unrelated starting work is preserved, checkout accounting is
+    complete, and the entrypoint's finish gate is met.
+
+## Worker checkout lifecycle
+
+Maintain this record in the workflow's existing reporting context, not a new
+committed ledger. Record each checkout's provenance and runtime identity, exact
+path, owner, task branch and base, accepted commits, integration and check
+evidence, active use, and disposition. Distinguish the stable integration
+checkout, run-created worker slots, and pre-existing or adopted checkouts.
+Never infer ownership from a directory name. Pre-existing, adopted, pinned,
+and shared checkouts are not automatically retired.
+
+Release a slot only after its accepted task commit and original branch ref are
+recorded and preserved, integration succeeds, affected checks pass at the exact
+integrated SHA, its owner and processes stop using it, it is clean, and needed
+untracked or ignored artifacts are accounted for. Otherwise retain it. Before
+reuse, create a fresh unique task branch from the recorded current integrated
+SHA, verify the branch and SHA, and hand off the exact path, branch, base, and
+instructions. Never reset or delete an old branch to reuse its checkout.
+
+Retire released surplus slots when remaining work no longer needs their
+capacity, retaining one for sequential work and only justified capacity for
+future concurrent writers. At completion, retire all eligible run-created
+worker slots. On a blocker or interruption, retire eligible surplus when
+execution remains available; retain active, unfinished, failing, dirty, or
+otherwise unsafe checkouts. If interruption prevents cleanup, report it at the
+next opportunity. Preserve the integration checkout, user work, and required
+ignored artifacts. Do not force cleanup to meet a capacity cap.
+
+Use the runtime's native operation for managed worktrees and verify retirement
+through provider inventory. For plain Git worktrees owned by the run, remove
+only the exact eligible path without force and verify it is absent from
+`git worktree list --porcelain`. Never shell-delete a managed checkout, force
+removal, prune globally, or delete branch refs. If ownership or eligibility is
+uncertain, retain and report the checkout.
+
+Account for every run-created checkout as retired with verified readback or
+retained with a reason. Record the integration checkout as retained and explain
+retained exclusions. If eligible retirement fails or cleanup capability is
+missing, report code verification separately and mark the workflow
+cleanup-incomplete; do not claim overall completion. Include the exact path,
+error, and provider readback. Do not retry blindly.
+
 
 ## Ownership boundaries
 

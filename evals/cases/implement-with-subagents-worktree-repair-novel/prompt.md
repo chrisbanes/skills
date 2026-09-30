@@ -1,0 +1,3 @@
+WIRE was accepted and integrated at head 2222222, and its affected task checks initially passed. A later required full-suite endpoint check fails at that same head. The original WIRE owner session is retained, but its old checkout has been released and is now occupied by another task. A different idle run-owned worker slot is available. Another completed checkout is no longer needed, while a separate unfinished owner is still running.
+
+Review the repair and stopped-run cleanup actions. Local read-only inspection only; do not start owners, mutate files, run Git mutations or worktree lifecycle operations, or contact an external service.

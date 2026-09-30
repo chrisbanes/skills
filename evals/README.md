@@ -205,7 +205,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-Twenty-two additional workflow cases are calibration-only. Select them
+Twenty-six additional workflow cases are calibration-only. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
 unresolved decisions, proof-gated report publication, implementation-plan
@@ -217,8 +217,12 @@ a cyclic or incomplete graph, unsafe shared-file overlap, and validation
 invalidated at an integrated head. Additional orchestration calibrations cover
 direct TDD at an approved behavior seam, documentation without TDD, completed
 integration failures repaired forward, final review freshness, dirty-start
-restraint, runtime owner capability, and the accepted-item no-op behavior. These cases assess
-supplied state read-only and do not prove live subagent execution.
+restraint, runtime owner capability, and the accepted-item no-op behavior.
+Four worktree lifecycle cases cover bounded slot reuse, same-owner repair in a
+different slot, preservation of checkouts and artifacts that are unsafe to
+retire, and cleanup failure that blocks workflow completion despite successful
+code verification. These cases assess supplied state read-only and do not prove
+live subagent execution.
 Three shared-handoff calibrations check bounded implementation ownership,
 capability-based PR evidence helper selection, and restraint for one-off PR
 inspection. They also assess supplied state read-only.
