@@ -1,0 +1,18 @@
+{
+  "id": "deliver-spec-negative",
+  "title": "Hold an untriaged issue before planning or delivery",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "triage", "text": "Routes the unready GitHub issue through existing triage and retains its maintainer approval boundary before ready-for-agent can be claimed"},
+    {"id": "no-change", "text": "Does not invoke to-plan or implement-with-subagents, create a branch or PR, change labels, or merge while the readiness transition is unapproved"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

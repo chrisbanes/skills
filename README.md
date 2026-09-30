@@ -49,6 +49,7 @@ install them, and the workflows never install them implicitly.
 
 | Consumer | Requirement | Provider | Source and install |
 |---|---|---|---|
+| `deliver-spec` GitHub readiness | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tickets | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | `implement-with-subagents` final joined review | Conditional | `code-review` when issue-tracker setup is available; otherwise an independent read-only review of a supplied local spec | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill code-review` |
 | [`run-github-project`](skills/run-github-project/SKILL.md) behavioral implementation | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
@@ -112,6 +113,7 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
+- [`deliver-spec`](skills/deliver-spec/SKILL.md) — explicitly coordinate one approved spec through triage when needed, `to-plan`, independent plan review, `implement-with-subagents`, final-head code review, and PR shepherding.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, reconcile changelogs and Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; Gradle-centered workflows use one read-only diagnostic owner while parents retain edits.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — dispatch independent ready work in isolated worktrees, use `tdd` directly at approved behavior seams, accept each task once before integration, and rerun affected checks without a second routine lead sign-off; preserve same-owner repair, final joined review, and read-only review mode.
@@ -249,6 +251,7 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 44.4% | 100.0% | 100.0% |
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 33.3% | 100.0% | 100.0% |
+| [`deliver-spec`](skills/deliver-spec/SKILL.md) | — | — | — |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 0.0% | 100.0% | 100.0% |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 0.0% | 100.0% | 100.0% |
