@@ -11,9 +11,6 @@
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow-subagents",
-  "constant_skills": [
-    "implement"
-  ],
   "allowed_write_paths": [],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit)\\b"
@@ -31,7 +28,7 @@
   "rubric": [
     {
       "id": "accepted-noop",
-      "text": "Treats the task-scoped reviewed commit with fresh passing validation as complete and takes no further orchestration action."
+      "text": "Treats the task-scoped commit accepted before integration and fresh passing affected validation at the integrated head as complete, without a second lead sign-off."
     },
     {
       "id": "no-owner-reassignment",

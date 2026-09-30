@@ -7,7 +7,6 @@
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow-subagents",
-  "constant_skills": ["implement"],
   "allowed_write_paths": [],
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-missing-output-negative"], "timeout_seconds": 30}],

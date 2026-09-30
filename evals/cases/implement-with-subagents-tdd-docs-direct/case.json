@@ -1,0 +1,21 @@
+{
+  "id": "implement-with-subagents-tdd-docs-direct",
+  "title": "Use TDD at an approved behavior seam without imposing it on docs",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-subagents",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-tdd-docs-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "direct-tdd", "text": "Directs the behavior owner to use tdd at the user-approved public seam and does not invoke the separate implement skill"},
+    {"id": "docs-exception", "text": "Uses focused documentation validation and owner self-review for the documentation-only item without inventing a TDD seam"},
+    {"id": "safe-frontier", "text": "Allows both ready independent items to run concurrently in isolated worktrees, subject to capability and capacity"},
+    {"id": "restraint", "text": "Reviews the supplied state without starting agents or mutating the repository"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

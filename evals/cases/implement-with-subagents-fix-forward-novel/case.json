@@ -1,0 +1,21 @@
+{
+  "id": "implement-with-subagents-fix-forward-novel",
+  "title": "Repair a completed failing integration forward",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit|reset)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "implement-with-subagents-fix-forward-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "preserve-head", "text": "Keeps the completed failing integrated head and pauses dependent dispatch and further integration without resetting or aborting it"},
+    {"id": "same-owner", "text": "Returns the exact failing head and check output to the original affected owner for an isolated repair branch based on that head"},
+    {"id": "reaccept-recheck", "text": "Requires pre-integration lead inspection of the task-scoped repair commit and reruns affected validation after integrating it forward"},
+    {"id": "restraint", "text": "Does not perform Git mutations during this review-only case"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

@@ -11,9 +11,6 @@
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow-subagents",
-  "constant_skills": [
-    "implement"
-  ],
   "allowed_write_paths": [],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
@@ -35,11 +32,11 @@
     },
     {
       "id": "join-order",
-      "text": "Waits to dispatch WIRE until both prerequisite commits are accepted and integrated"
+      "text": "Waits to dispatch WIRE until both prerequisite commits are accepted before integration, integrated, and their affected checks pass at that head"
     },
     {
       "id": "integrated-evidence",
-      "text": "Checks conflicts and reruns affected validation at the integrated head before accepting and proceeding"
+      "text": "Checks conflicts and reruns affected validation at the integrated head before releasing WIRE, without a second discretionary lead acceptance after ordinary merges"
     }
   ],
   "provenance": {

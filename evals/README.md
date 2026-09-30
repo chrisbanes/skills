@@ -178,7 +178,7 @@ them explicitly with `--case` when deciding whether they should graduate into
 the benchmark.
 
 Two calibration-only workflow challenges exercise actionable failure behavior
-when the required external `implement` or `tdd` provider is unavailable. They
+when a required external `tdd` provider is unavailable. They
 are likewise excluded from default plans and published scorecards.
 
 The Kotlin/Gradle benchmark contains 22 scored cases:
@@ -198,13 +198,12 @@ contains the two calibration-only missing-provider challenges described above.
 The release triad checks changelog reconciliation, uncertain prerelease recovery,
 and read-only readiness restraint without live publication or credentials.
 Its GitHub-style cases use supplied immutable state and rubric plus
-forbidden-action grading; they do not contact a provider. Only
-`implement-with-subagents` declares the evaluator-owned `implement` fixture
-dependency, because that prerequisite is constant across its three scored arms
-and is not a public skill or a routing target. Its missing-provider challenge
-deliberately omits that fixture dependency.
+forbidden-action grading; they do not contact a provider. The
+`implement-with-subagents` review-mode cases have no external fixture
+dependency. Its missing-provider challenge supplies a behavior ticket without
+`tdd` and checks that implementation does not start.
 
-Eighteen additional workflow cases are calibration-only. Select them
+Twenty-two additional workflow cases are calibration-only. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
 unresolved decisions, proof-gated report publication, implementation-plan
@@ -213,8 +212,10 @@ evidence reuse versus missing, stale, failed, or explicitly required fresh
 evidence. The local-planning cases check the generated plan artifact. The scored orchestration
 triad exercises a ready fork/join, a serial dependency chain, and restraint for
 a cyclic or incomplete graph, unsafe shared-file overlap, and validation
-invalidated at an integrated head. Two additional orchestration calibrations
-preserve runtime owner and capability checks and the accepted-item no-op behavior. These cases assess
+invalidated at an integrated head. Additional orchestration calibrations cover
+direct TDD at an approved behavior seam, documentation without TDD, completed
+integration failures repaired forward, final review freshness, dirty-start
+restraint, runtime owner capability, and the accepted-item no-op behavior. These cases assess
 supplied state read-only and do not prove live subagent execution.
 Three shared-handoff calibrations check bounded implementation ownership,
 capability-based PR evidence helper selection, and restraint for one-off PR

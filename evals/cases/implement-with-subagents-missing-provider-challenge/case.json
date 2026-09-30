@@ -1,6 +1,6 @@
 {
   "id": "implement-with-subagents-missing-provider-challenge",
-  "title": "Stop with actionable implement provider guidance",
+  "title": "Stop behavior work with actionable missing TDD guidance",
   "family": "workflow",
   "target_skills": ["implement-with-subagents"],
   "expected_skills": ["implement-with-subagents"],
@@ -25,7 +25,7 @@
   "rubric": [
     {
       "id": "provider-guidance",
-      "text": "The response identifies mattpocock/skills as the source of the missing implement skill, provides the npx skills add mattpocock/skills installation command, and states that implement, tdd, and code-review must be selected"
+      "text": "The response identifies the missing tdd skill for the behavior ticket, provides actionable setup guidance from mattpocock/skills, and does not require or recommend installing implement"
     },
     {
       "id": "restraint",
