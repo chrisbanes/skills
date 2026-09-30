@@ -32,7 +32,7 @@
   "rubric": [
     {
       "id": "same-owner-new-slot",
-      "text": "Keeps the original WIRE owner and assigns it the free suitable slot with an explicit new path and base handoff from failed integrated head 2222222 on a fresh unique repair branch"
+      "text": "Keeps the original WIRE owner and proposes assigning it the free suitable slot, requiring the exact checkout path once assigned and a base handoff from failed integrated head 2222222 on a fresh unique repair branch; does not invent an unavailable path"
     },
     {
       "id": "preserve-failure",
