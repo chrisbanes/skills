@@ -17,7 +17,7 @@ continue documentation, configuration, read-only review, triage, and unrelated
 tickets. Report its source and exact install command. Do not treat a
 documentation-only change as behavioral merely because it accompanies a PR.
 
-`to-plan` is required only while processing `Planning`. If it is unavailable,
+`to-plan` is required only while processing `Todo`. If it is unavailable,
 block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
 
@@ -30,13 +30,13 @@ the materialized canonical source, repository standards, and all bundled review
 contracts. No external review skill or tracker setup is required. If independent
 review cannot run, block only that ticket without waiving review.
 
-`triage` is required only while processing an unblocked Backlog
+`triage` is required only while processing an unblocked Todo
 `needs-triage` item. If it is unavailable, block only the triage lane, continue
 authorized execution, and report its source and exact install command from the
 table.
 
 `wayfinder` is required only while resolving an eligible configured Wayfinder
-child. If it is unavailable, block only that Wayfinder Planning item and
+child. If it is unavailable, block only that Wayfinder Todo item and
 continue ordinary planning and execution. Never install it implicitly or copy
 its decision-map procedure into this workflow.
 

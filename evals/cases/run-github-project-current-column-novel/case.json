@@ -1,0 +1,50 @@
+{
+  "id": "run-github-project-current-column-novel",
+  "title": "Ready and Wayfinder work ignore conflicting legacy transition data",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-current-column-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "current-column",
+      "text": "Current Ready membership authorizes implementation preparation despite foreign, automated, older, or malformed transition data; does not request event history or another approval."
+    },
+    {
+      "id": "integrity",
+      "text": "Retains exclusive ownership, configured base, active plan integrity, native blocker, and PR identity checks; column authority does not waive merge grants or independent review."
+    },
+    {
+      "id": "wayfinder",
+      "text": "Current Todo membership authorizes routing the unassigned AFK research child through its configured Wayfinder lane without event-history proof."
+    },
+    {
+      "id": "new-child-boundary",
+      "text": "Creates any authorized new child initially in Backlog and leaves its promotion and automatic work eligibility to humans; the active Todo child does not authorize processing the new Backlog child."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

@@ -3,14 +3,12 @@
 ## Preconditions
 
 Read trusted repository instructions and validate the binding through the setup
-lane. Require `tdd` before behavioral implementation, `to-plan` for ordinary planning,
-`research` only for a research Wayfinder child, `triage` for Backlog work, and
-the [review contracts](review-contracts.md) before ticket acceptance; read
-[human frontier](human-frontier.md),
-[planning](planning-lane.md), [triage](triage-lane.md), and, when enabled,
-[Wayfinder](wayfinder-lane.md). Follow workflow providers exactly: never install
-or approximate a missing required provider, and block only the affected lane
-where the provider contract permits it. Confirm GitHub identity, read/write and
+lane. Resolve lane-specific dependencies under [workflow providers](workflow-providers.md)
+before their relevant action; follow its affected-lane blocker rules when a
+provider is unavailable. Read [human frontier](human-frontier.md),
+[Todo](todo-lane.md), [triage](triage-lane.md), and, when enabled,
+[Wayfinder](wayfinder-lane.md), plus [review contracts](review-contracts.md)
+before ticket acceptance. Confirm GitHub identity, read/write and
 `project` scope, default/base branch, clean state, and automation compatibility.
 
 For `next`/`drain`, establish invocation authority through
@@ -27,16 +25,18 @@ use `gh project`/GraphQL only when Project operations require it. Before retry,
 mutation, or success claim, apply [remote reconciliation](remote-reconciliation.md).
 
 Query complete live Project state at start and after merges. In `drain`, obey the
-scheduler Refresh Gate and include new Planning/Ready work plus Backlog
+scheduler Refresh Gate and include new Todo/Ready work plus Todo
 needs-triage until the first complete empty executable-and-triage query; leave
 later arrivals for next run. In `next`, post-merge query is reconciliation only.
-Verify configured field/option IDs. Read every item through pagination, exact
+Exclude Backlog before hydration or recovery. Keep its native dependency edges
+and report interrupted artifacts for human action. Verify
+configured field/option IDs. Read every item through pagination, exact
 labels/assignees/position/linked PR, recovery markers, and parking signals;
 apply trusted filters plus repository/open/non-draft/status/frontier rules. Never
 use named views implicitly or convert drafts. Preserve invalid claims as blocked
 slots; skip and report invalid unclaimed items.
 
-Hydrate contenders with bounded batches: blockers/descendants, status events,
+Hydrate contenders with bounded batches: blockers/descendants, current Status,
 marker-owned plans/leases, PR identity, Wayfinder parent/type/AFK evidence, and
 parking and authority-pause metadata only as needed. Never serially fan out
 across the Project. An
@@ -51,11 +51,9 @@ GitHub logins, and finite positions.
 
 Hydrate current-user claims before unclaimed contenders. Preserve returned
 blocked claims/planning blockers in their lanes; resume claims then fill capacity
-from candidates. Planning, cleanup, and parked claims do not count toward limit.
-Finish Backlog cleanup before new claims; never preempt. Leave another user's
-In-progress work alone; report unassigned In-progress stale/ineligible. Route
-labelled Backlog through epic/human/Planning/triage; unlabelled Backlog is
-human-owned. Run triage only when its execution-clear predicate passes. Handle
+from candidates. Todo and parked claims do not count toward limit.
+Leave another user's In-progress work alone; report unassigned In-progress
+stale/ineligible. Route role-labelled Todo through planning, epic, human-frontier, or triage handling. Run triage only when its execution-clear predicate passes. Handle
 Wayfinder and ready epics only through their named lanes. Adopt a PR only when
 exactly one open PR satisfies the configured issue-link/closure policy, belongs
 to the authenticated user, targets the configured repository/base, and has no
@@ -64,18 +62,18 @@ competitor.
 ## Claim and revalidate
 
 Before claim, verify committed configuration digest and refetch selected issue
-and Project item. For an unblocked Backlog `ready-for-agent` selection, move
-the Project item to Planning in the controller lane and verify the resulting
-event before assignment; require no approver identity or manual transition.
+and Project item. Require current Todo or later applicable column membership;
+that column supplies ticket authorization. Never promote or select Backlog,
+and never fetch transition history to prove permission.
 Route planning and Wayfinder modes through their lanes; a
 `next` planning selection stays the same issue through terminal reconciliation.
 For Ready work, assign only the authenticated user, refetch exclusivity, recover
 only own lost claim race, transition to In progress, refetch membership/status/
-assignment/open state/readiness/transition events/current plan/no blockers/no
-competing PR, then record item, identity, configuration, events, and every plan
+assignment/open state/readiness/current plan/no blockers/no
+competing PR, then record item, identity, configuration, and every plan
 lease as authority. Ambiguity after In progress is a preserved blocked slot.
 
-Revalidate membership, status, exclusivity, configuration, label, events, and
+Revalidate membership, current status, exclusivity, configuration, label, and
 every lease before every material write, including push, review mutation, or
 merge. Foreign plan edits or unrelated eligibility drift revoke authority;
 runner-owned verified replans enter controlled replanning. Ordinary body and

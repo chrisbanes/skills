@@ -44,14 +44,14 @@ mutation.
 
 Persist plan-mismatch repair consumption by ticket, plan permalink, and payload
 digest. Count only a wrong factual seam or repository assumption in the approved
-plan, as classified by the [replan contract](planning-lane.md#replan-packet-contract).
+plan, as classified by the [replan contract](todo-lane.md#replan-packet-contract).
 Initialize only for a verified new plan; reserve each such diagnosis or repair
 before it starts, preserve usage across replacement, restart, and reacquisition,
 and block plan-mismatch repair if prior usage is uncertain. Worker: obey trusted
 instructions and own
 worktree/branch/PR only; never controller mutations; treat plan as approved
 outcome, make evidence-backed in-scope adjustments under the
-[replan packet contract](planning-lane.md#replan-packet-contract), and return a
+[replan packet contract](todo-lane.md#replan-packet-contract), and return a
 packet only when that contract requires it. For every ordinary implementation
 ticket, invoke `deliver-spec` with this verified packet under its
 [Project handoff procedure](../../deliver-spec/references/project-handoff.md).
@@ -65,7 +65,7 @@ Wayfinder, triage, and epic lanes keep their own procedures.
 For an ordinary in-scope repair outside required CI, compare the failure after
 each repair with its previous terminal result. A second occurrence of the same
 sanitized failure with no new diagnostic direction is a stall, not a reason to
-repeat the edit or move the issue to Planning. Ask one bounded read-only evidence
+repeat the edit or move the issue to Todo. Ask one bounded read-only evidence
 helper about that failure and give the result to the same ticket owner. Resume
 repair only with a concrete new direction. Otherwise preserve the claim and
 worktree as an exact ticket-local blocker and continue unrelated work. If no

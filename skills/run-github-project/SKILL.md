@@ -1,11 +1,22 @@
 ---
 name: run-github-project
-description: Use when asked to set up, review, or operate a repository's GitHub Project workflow, including ready claims, role-labelled human work, unknown remote mutation outcomes, Backlog triage, epics, checkpoints, next-issue execution, or an authorized drain.
+description: Use when asked to set up, review, or operate a repository's GitHub Project workflow, including ready claims, role-labelled human work, unknown remote mutation outcomes, Todo triage, epics, checkpoints, next-issue execution, or an authorized drain.
 compatibility: "External skill providers are mode-specific: review and setup require none; execution, triage, and Wayfinder lanes use the providers documented in references/workflow-providers.md."
 disable-model-invocation: true
 ---
 
 # Run GitHub Project
+
+Use `Backlog` → `Todo` → `Ready to implement` → `In progress` → `Done` as
+the default board lanes. `Todo` queues planning. Resolve lane names in this
+procedure and its references through the trusted binding's verified names and
+option IDs; preserve existing configured names. Current column membership
+supplies ticket authorization; never inspect column transition history for
+permission, plan freshness, or a Ready handoff. Backlog is read-only: never
+claim, plan, triage, close epics, resume cleanup, or promote its items. Only
+humans move items out of Backlog. Continue automatic work only in Todo and
+later applicable columns, subject to ownership, dependencies, plan integrity,
+and the current run's operation-specific grants.
 
 The Project is the live control plane. Apply these invariants throughout:
 
@@ -21,17 +32,18 @@ The Project is the live control plane. Apply these invariants throughout:
    to make the queue appear empty.
 
 Preserve verified plan state through contract-preserving replans, return true
-human work to Backlog, and in `drain` pair occupied slots with warm worktrees
+human work to a decision pause, and in `drain` pair occupied slots with warm worktrees
 and persistent ticket agents. Park verified authority pauses and qualifying
 terminal required-CI claims outside capacity before refreshing the control plane.
 
 ## Select the mode
 
-- `review`: inspect or explain only; no operation.
-- `setup`: configure, validate, or incrementally update the binding only; no
-  Project work.
+- `review`: inspect or explain only; finish under the review contract.
+- `setup`: configure or validate the binding only; finish under the setup contract.
+  Neither mode dispatches Project work or requires execution dependencies.
 - `next`: default execution; process at most one selected issue.
-- `drain`: only on explicit drain/run-all/repeat/until-empty request.
+- `drain`: only on explicit drain/run-all/repeat/until-empty request; no
+  skill-defined ticket cap. A merge pause remains resumable work.
 
 A named Wayfinder child remains `next`; it grants neither drain authority nor a
 claim bypass. Before any mode-specific action, read the matching mandatory lane:
@@ -58,28 +70,9 @@ before drain queue work. For `next` or `drain`, read
 [review contracts](references/review-contracts.md) completely before acceptance
 work.
 
-## Cross-mode boundaries
-
-`review` may inspect only permitted repository, supplied, and read-only remote
-state. It never configures, ranks, claims, transitions, triages, plans,
-delegates, mutates, pushes, merges, or closes. Finish `review-complete` with
-evidence, safe next action, and uncertainty, or `review-blocked`.
-
-`setup` reads the configuration required to produce and validate a binding but
-requires neither execution dependencies or authority nor clean execution state.
-It never ranks/claims, changes Project/issue/PR state, creates worktrees, plans,
-implements, pushes, or merges. It finishes only `configuration-valid`,
-`configuration-ready-to-commit`, or `configuration-blocked`.
-
-`next` and `drain` require the controller and lifecycle lanes. Do not impose a
-skill-defined ticket cap in
-`drain`; a merge pause is resumable work, not a separate publish-only mode.
-
 ## Final report
 
-The selected lane defines terminal state and report evidence. `setup` reports
-only identity, configuration files/read-or-changed, live validation, unresolved
-values, committed-base state, and one configuration result. Lead an execution
+Use the selected lane's terminal state and report contract. Lead an execution
 report with the outcome, completed tickets, work still moving, exact blockers,
 and the user's next action, if any. Link to durable issue, PR, and checkpoint
 evidence instead of repeating unchanged queries or no-op events. Keep mode,
