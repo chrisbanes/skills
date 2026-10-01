@@ -35,10 +35,10 @@
 
 Use this procedure when a specific operation needs authority absent from the
 current run, or a ticket needs a material stakeholder decision. A pending
-`human-required` packet uses this preservation pause; Backlog cleanup requires
-recorded stakeholder direction to abandon partial work and transfer the ticket
-to human work. Missing merge or closure authority alone is not a replan or a
-reason to close a PR. Board-wide loss of reliable reads or writes remains an
+`human-required` packet uses this preservation pause. Explicit abandonment
+cleanup must finish while the ticket is still in an eligible column, before
+any final return to Backlog. Never resume or mutate Backlog work. Missing
+merge or closure authority alone is not a replan or a reason to close a PR. Board-wide loss of reliable reads or writes remains an
 integrity blocker.
 
 1. Stop only the affected operation and its ticket's writers. Reconcile any
@@ -79,7 +79,10 @@ resume condition, or preserved evidence changes.
 
 ## Recover And Resume
 
-1. At startup, reconstruct pauses from live runner-owned marker comments and
+1. At startup, exclude Backlog items from automatic recovery. Preserve their
+   dependency edges and any known interrupted artifacts for a read-only report;
+   do not publish a pause/resume comment or clean artifacts on those tickets.
+   Reconstruct eligible-column pauses from live runner-owned marker comments and
    the complete ticket graph before ranking. At each Refresh Gate, compare
    lightweight marker and ticket/artifact observations; hydrate full records
    only when reconstructing them or those observations change. Reuse unchanged

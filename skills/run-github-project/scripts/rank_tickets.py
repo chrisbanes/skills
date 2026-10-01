@@ -18,7 +18,6 @@ class InputError(ValueError):
 IMPLEMENTATION_ACTIONS = {"resume-pr", "resume-implementation"}
 AGENT_WORK_LABEL = "ready-for-agent"
 CLAIM_ACTION_RANK = {
-    "resume-backlog-cleanup": 0,
     "resume-pr": 1,
     "resume-implementation": 1,
     "resume-wayfinder-reconciliation": 2,
@@ -76,11 +75,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--backlog-status",
         default="Backlog",
-        help="Configured Project status display name for untriaged or human work.",
+        help="Configured human-controlled Project status excluded from automatic work.",
     )
     parser.add_argument(
         "--planning-status",
-        default="Planning",
+        default="Todo",
         help="Configured GitHub Project status display name that queues planning.",
     )
     parser.add_argument(
@@ -94,9 +93,14 @@ def parse_args() -> argparse.Namespace:
         help="Configured GitHub Project status display name that marks an item active.",
     )
     parser.add_argument(
+        "--done-status",
+        default="Done",
+        help="Configured terminal Project status allowed for recorded Wayfinder recovery.",
+    )
+    parser.add_argument(
         "--needs-triage-label",
         default="needs-triage",
-        help="Configured issue label that queues an unblocked Backlog item for triage.",
+        help="Configured issue label that queues an unblocked Todo item for triage.",
     )
     parser.add_argument(
         "--epic-label",
@@ -313,8 +317,6 @@ def require_ticket_shape(ticket: Any) -> dict[str, Any]:
         "blockedBy",
         "openDescendants",
         "openPullRequests",
-        "planningTransition",
-        "readyTransition",
     }
     missing = sorted(required - ticket.keys())
     if missing:
@@ -359,88 +361,6 @@ def matches_issue_policy(pull_request: dict[str, Any], issue_closure: str) -> bo
         issue_closure == "close-after-merge"
         and pull_request.get("linksIssue") is True
     )
-
-
-def is_backlog_cleanup_candidate(
-    ticket: Any,
-    *,
-    current_user: str,
-    backlog_status: str,
-    issue_closure: str,
-) -> bool:
-    if not isinstance(ticket, dict):
-        return False
-    backlog_transition = ticket.get("backlogTransition")
-    replan_request = ticket.get("replanRequest")
-    pull_requests = ticket.get("openPullRequests")
-    transition_actor = (
-        backlog_transition.get("actor")
-        if isinstance(backlog_transition, dict)
-        else None
-    )
-    has_cleanup_transition = (
-        backlog_transition is not None
-        and (
-            not isinstance(backlog_transition, dict)
-            or (
-                not (
-                    isinstance(transition_actor, str)
-                    and transition_actor
-                    and transition_actor != current_user
-                )
-                and backlog_transition.get("wasAutomated") is not True
-            )
-        )
-    )
-    has_cleanup_report = replan_request is not None
-    if isinstance(replan_request, dict):
-        report_author = replan_request.get("author")
-        report_disposition = replan_request.get("disposition")
-        if (
-            isinstance(report_author, str)
-            and report_author
-            and report_author != current_user
-        ) or report_disposition == "autonomous-replan":
-            has_cleanup_report = False
-    has_runner_owned_pull_request = (
-        isinstance(pull_requests, list)
-        and any(
-            isinstance(pull_request, dict)
-            and pull_request.get("author") == current_user
-            and (
-                pull_request.get("closesIssue") is not False
-                or (
-                    issue_closure == "close-after-merge"
-                    and "linksIssue" in pull_request
-                    and pull_request["linksIssue"] is not False
-                )
-            )
-            for pull_request in pull_requests
-        )
-    )
-    return (
-        ticket.get("projectStatus") == backlog_status
-        and has_current_user_assignment(ticket, current_user)
-        and has_cleanup_transition
-        and (has_cleanup_report or has_runner_owned_pull_request)
-    )
-
-
-def parse_transition(value: Any, field: str, number: Any) -> dict[str, Any]:
-    if not isinstance(value, dict):
-        raise InputError(f"ticket {number}: {field} must be an object")
-    result = {
-        "id": nonempty_string(value.get("id"), f"{field}.id", number),
-        "actor": nonempty_string(value.get("actor"), f"{field}.actor", number),
-        "createdAt": timestamp(value.get("createdAt"), f"{field}.createdAt", number),
-        "status": nonempty_string(value.get("status"), f"{field}.status", number),
-        "wasAutomated": value.get("wasAutomated"),
-    }
-    if not isinstance(result["wasAutomated"], bool):
-        raise InputError(
-            f"ticket {number}: {field}.wasAutomated must be a boolean",
-        )
-    return result
 
 
 def parse_replan_request(value: Any, number: Any) -> dict[str, Any]:
@@ -665,7 +585,6 @@ def analyze_ticket(
     ticket: dict[str, Any],
     *,
     current_user: str,
-    backlog_status: str,
     planning_status: str,
     ready_status: str,
     in_progress_status: str,
@@ -691,34 +610,13 @@ def analyze_ticket(
     priority_rank = common["priorityRank"]
     project_status = ticket["projectStatus"]
     assigned_to_current_user = current_user in assignees
-    recovering_backlog_cleanup = (
-        project_status == backlog_status and assigned_to_current_user
-    )
-
     errors = common["errors"]
     exclusions = common["exclusions"]
-    if (
-        recovering_backlog_cleanup
-        and human_work_label in labels
-        and (
-            AGENT_WORK_LABEL in labels
-            or needs_triage_label in labels
-        )
-    ):
-        exclusions.append("conflicting Backlog action labels")
-    if AGENT_WORK_LABEL not in labels and not recovering_backlog_cleanup:
+    if AGENT_WORK_LABEL not in labels:
         exclusions.append(f"missing {AGENT_WORK_LABEL} label")
+    if human_work_label in labels or needs_triage_label in labels:
+        exclusions.append("conflicting execution role labels")
 
-    planning_transition = parse_transition(
-        ticket["planningTransition"],
-        "planningTransition",
-        number,
-    )
-    if planning_transition["status"] != planning_status:
-        errors.append(
-            f"latest planning transition status {planning_transition['status']!r} "
-            f"does not match {planning_status!r}",
-        )
     implementation_plans, implementation_plan = parse_implementation_plan_chain(
         ticket,
         number,
@@ -729,20 +627,7 @@ def analyze_ticket(
         "implementationPlans": implementation_plans,
     }
     plan_is_usable = False
-    plan_is_current_in_planning = False
-    plan_published_at: datetime | None = None
-    plan_updated_at: datetime | None = None
     if implementation_plan is not None:
-        plan_published_at = timestamp(
-            implementation_plan.get("publishedAt"),
-            "implementationPlan.publishedAt",
-            number,
-        )
-        plan_updated_at = timestamp(
-            implementation_plan.get("updatedAt"),
-            "implementationPlan.updatedAt",
-            number,
-        )
         plan_targets_base = implementation_plan["plannedBranch"] == base_branch
         plan_authored_by_runner = implementation_plan["author"] == current_user
         if not plan_targets_base and project_status != planning_status:
@@ -756,14 +641,7 @@ def analyze_ticket(
                 f"{implementation_plan['author']!r} does not match "
                 f"current user {current_user!r}",
             )
-        plan_is_usable = (
-            plan_targets_base
-            and plan_authored_by_runner
-        )
-        plan_is_current_in_planning = (
-            plan_published_at >= planning_transition["createdAt"]
-            and plan_is_usable
-        )
+        plan_is_usable = plan_targets_base and plan_authored_by_runner
         foreign_plan_authors = sorted(
             {
                 plan["author"]
@@ -776,76 +654,31 @@ def analyze_ticket(
                 "implementation plan history authors "
                 f"{foreign_plan_authors} do not match current user {current_user!r}",
             )
+    if project_status != planning_status and implementation_plan is None:
+        exclusions.append("missing current implementation plan")
 
     replan_request = (
         parse_replan_request(ticket.get("replanRequest"), number)
         if ticket.get("replanRequest") is not None
         else None
     )
-    backlog_transition = (
-        parse_transition(ticket.get("backlogTransition"), "backlogTransition", number)
-        if ticket.get("backlogTransition") is not None
-        else None
-    )
-
-    valid_ready_handoff = False
-    ready_transition = (
-        parse_transition(ticket["readyTransition"], "readyTransition", number)
-        if ticket["readyTransition"] is not None
-        else None
-    )
-    if project_status != planning_status and ready_transition is None:
-        raise InputError(f"ticket {number}: readyTransition must be an object")
-
-    ready_has_runner_provenance = (
-        ready_transition is not None
-        and ready_transition["status"] == ready_status
-        and not ready_transition["wasAutomated"]
-        and ready_transition["actor"] == current_user
-    )
-    prior_plan = implementation_plan
+    prior_plan = None
     if replan_request is not None:
         prior_plan = next(
             (
                 plan for plan in implementation_plans
                 if (
-                    plan["permalink"]
-                    == replan_request["previousPlanPermalink"]
+                    plan["permalink"] == replan_request["previousPlanPermalink"]
                     and plan["digest"] == replan_request["previousPlanDigest"]
                 )
             ),
             None,
         )
-    prior_plan_published_at = (
-        timestamp(
-            prior_plan.get("publishedAt"),
-            "implementationPlan.publishedAt",
-            number,
-        )
-        if prior_plan is not None
-        else None
-    )
-    prior_plan_is_usable = (
-        prior_plan is not None
-        and prior_plan["plannedBranch"] == base_branch
-        and prior_plan["author"] == current_user
-    )
-    valid_prior_ready_handoff = (
-        ready_has_runner_provenance
-        and ready_transition is not None
-        and prior_plan_published_at is not None
-        and ready_transition["createdAt"] >= prior_plan_published_at
-        and prior_plan_is_usable
-        and ready_transition["createdAt"] < planning_transition["createdAt"]
-    )
     valid_autonomous_replan_report = (
         replan_request is not None
         and prior_plan is not None
         and replan_request["author"] == current_user
         and replan_request["disposition"] == "autonomous-replan"
-        and ready_transition is not None
-        and replan_request["createdAt"] >= ready_transition["createdAt"]
-        and replan_request["createdAt"] <= planning_transition["createdAt"]
     )
     own_pull_requests = [
         pull_request for pull_request in pull_requests
@@ -871,181 +704,46 @@ def analyze_ticket(
             )
         )
     )
-    planning_is_verified_requeue = (
-        project_status == planning_status
-        and valid_prior_ready_handoff
-        and valid_autonomous_replan_report
-        and retained_pr_matches_report
-    )
-    planning_is_replan_claim = (
+    if (
         project_status == planning_status
         and assigned_to_current_user
-        and (
-            (
-                replan_request is not None
-                and replan_request["disposition"] == "autonomous-replan"
-            )
-            or bool(own_linked_pull_requests)
-        )
-        and not (
-            ready_transition is not None
-            and backlog_transition is not None
-            and ready_transition["createdAt"] < backlog_transition["createdAt"]
-            and backlog_transition["createdAt"] < planning_transition["createdAt"]
-        )
-    )
-    if planning_is_replan_claim and not planning_is_verified_requeue:
-        if not valid_prior_ready_handoff:
-            exclusions.append(
-                "Planning requeue lacks a verified prior Ready handoff",
-            )
-        elif not valid_autonomous_replan_report:
-            exclusions.append(
-                "Planning requeue lacks a verified replan report",
-            )
-        elif not retained_pr_matches_report:
-            exclusions.append(
-                "Planning requeue lacks verified retained PR evidence",
-            )
-    if (
-        planning_is_verified_requeue
-        and plan_is_current_in_planning
-        and implementation_plan is not None
-        and prior_plan is not None
+        and (replan_request is not None or bool(own_linked_pull_requests))
     ):
+        if not valid_autonomous_replan_report:
+            exclusions.append(f"{planning_status} requeue lacks a verified replan report")
+        elif not retained_pr_matches_report:
+            exclusions.append(f"{planning_status} requeue lacks verified retained PR evidence")
+    if valid_autonomous_replan_report:
         replan_revisions = [
             plan for plan in implementation_plans
             if plan["revision"] > prior_plan["revision"]
         ]
-        if (
-            not replan_revisions
-            or any(
-                plan["replanRequest"] != replan_request["permalink"]
-                for plan in replan_revisions
-            )
+        plan_is_usable = bool(replan_revisions) and plan_is_usable
+        if not replan_revisions and project_status != planning_status:
+            exclusions.append("implementation plan awaits a verified replan revision")
+        if any(
+            plan["replanRequest"] != replan_request["permalink"]
+            for plan in replan_revisions
         ):
-            exclusions.append(
-                "active plan revision does not link the verified replan report",
-            )
-    if project_status != planning_status and ready_transition is not None:
-        if ready_transition["status"] != ready_status:
-            errors.append(
-                f"latest ready transition status {ready_transition['status']!r} "
-                f"does not match {ready_status!r}",
-            )
-        if ready_transition["wasAutomated"]:
-            exclusions.append("ready transition came from Project workflow automation")
-        elif ready_transition["actor"] != current_user:
-            exclusions.append(
-                f"ready transition actor {ready_transition['actor']!r} "
-                f"does not match current user {current_user!r}",
-            )
-        if plan_updated_at is None:
-            exclusions.append("missing current implementation plan")
-        elif plan_is_usable:
-            if ready_transition["createdAt"] < plan_updated_at:
-                exclusions.append(
-                    "ready transition predates the current implementation plan",
-                )
-            elif ready_transition["createdAt"] < planning_transition["createdAt"]:
-                exclusions.append(
-                    "ready transition predates the latest Planning transition",
-                )
-            else:
-                valid_ready_handoff = ready_has_runner_provenance
+            exclusions.append("active plan revision does not link the verified replan report")
 
-    if (
-        str(ticket["state"]).upper() != "OPEN"
-        and not recovering_backlog_cleanup
-    ):
+    if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
-
-    if project_status not in (
-        backlog_status,
-        planning_status,
-        ready_status,
-        in_progress_status,
-    ):
+    if project_status not in (planning_status, ready_status, in_progress_status):
         errors.append(
             "expected project status "
-            f"{backlog_status!r}, {planning_status!r}, {ready_status!r}, "
-            f"or {in_progress_status!r}, "
+            f"{planning_status!r}, {ready_status!r}, or {in_progress_status!r}, "
             f"found {project_status!r}",
         )
-
-    if blockers and not recovering_backlog_cleanup:
+    if blockers:
         exclusions.append(f"blocked by {blockers}")
-    if open_descendants and not recovering_backlog_cleanup:
+    if open_descendants:
         exclusions.append(f"open descendants {open_descendants}")
-
     other_assignees = [assignee for assignee in assignees if assignee != current_user]
     if other_assignees:
         exclusions.append(f"assigned to {other_assignees}")
     if project_status == in_progress_status and not assignees:
         exclusions.append("in progress without an assignee")
-    if project_status == backlog_status:
-        if backlog_transition is None:
-            exclusions.append("missing verified Backlog transition")
-        elif backlog_transition["status"] != backlog_status:
-            errors.append(
-                f"latest backlog transition status {backlog_transition['status']!r} "
-                f"does not match {backlog_status!r}",
-            )
-        elif (
-            backlog_transition["wasAutomated"]
-            or backlog_transition["actor"] != current_user
-        ):
-            exclusions.append(
-                "Backlog transition lacks current-runner provenance",
-            )
-        if replan_request is None:
-            exclusions.append("missing verified human-work report")
-        else:
-            if replan_request["author"] != current_user:
-                exclusions.append(
-                    "human-work report author "
-                    f"{replan_request['author']!r} does not match "
-                    f"current user {current_user!r}",
-                )
-            if replan_request["disposition"] != "human-required":
-                exclusions.append(
-                    "Backlog replan report is not marked human-required",
-                )
-            if implementation_plan is not None and (
-                replan_request["previousPlanPermalink"]
-                != implementation_plan["permalink"]
-                or replan_request["previousPlanDigest"]
-                != implementation_plan["digest"]
-            ):
-                exclusions.append(
-                    "human-work report does not identify the current plan",
-                )
-            if (
-                ready_transition is not None
-                and replan_request["createdAt"] < ready_transition["createdAt"]
-            ):
-                exclusions.append(
-                    "human-work report predates the latest Ready handoff",
-                )
-            if own_linked_pull_requests and not (
-                len(own_linked_pull_requests) == 1
-                and replan_request["pullRequestUrl"]
-                == own_linked_pull_requests[0]["url"]
-                and replan_request["implementationHeadSha"]
-                == own_linked_pull_requests[0]["headSha"]
-            ):
-                exclusions.append(
-                    "human-work report does not match the retained PR",
-                )
-            if (
-                backlog_transition is not None
-                and backlog_transition["createdAt"] < replan_request["createdAt"]
-            ):
-                exclusions.append(
-                    "Backlog transition predates the human-work report",
-                )
-        if not assigned_to_current_user:
-            exclusions.append("human work required in Backlog")
 
     wrong_target_pull_requests = [
         pull_request for pull_request in own_linked_pull_requests
@@ -1069,14 +767,6 @@ def analyze_ticket(
         pull_request for pull_request in pull_requests
         if pull_request["author"] != current_user
     ]
-    if (
-        assigned_to_current_user
-        and project_status == ready_status
-        and not valid_ready_handoff
-    ):
-        errors.append(
-            "assigned to current user while project status is still ready",
-        )
     if other_pull_requests:
         exclusions.append(
             "has implementation PRs by other users "
@@ -1102,18 +792,16 @@ def analyze_ticket(
             f"{[pull_request['url'] for pull_request in pull_requests]}",
         )
 
-    if project_status == backlog_status and assigned_to_current_user:
-        action = "resume-backlog-cleanup"
-    elif project_status == planning_status:
+    if project_status == planning_status:
         action = (
             "resume-planning-handoff"
-            if assigned_to_current_user and plan_is_current_in_planning
+            if assigned_to_current_user and plan_is_usable
             else ("resume-planning" if assigned_to_current_user else "plan")
         )
     elif (
         project_status == ready_status
         and assigned_to_current_user
-        and valid_ready_handoff
+        and plan_is_usable
     ):
         action = "resume-planning-handoff"
     else:
@@ -1129,7 +817,7 @@ def analyze_ticket(
     }
 
 
-def analyze_backlog_ticket(
+def analyze_role_ticket(
     ticket: dict[str, Any],
     *,
     needs_triage_label: str,
@@ -1161,7 +849,7 @@ def analyze_backlog_ticket(
     needs_triage = needs_triage_label in labels
     action_roles = [is_agent_work, is_human_work, needs_triage]
     if sum(action_roles) > 1:
-        exclusions.append("conflicting Backlog action labels")
+        exclusions.append("conflicting Todo action labels")
     if is_epic and is_agent_work:
         exclusions.append("epic cannot be ready for agent implementation")
 
@@ -1174,14 +862,11 @@ def analyze_backlog_ticket(
         elif needs_triage:
             role = "triage"
             action = "triage"
-        elif is_agent_work:
-            role = "agent"
-            action = "plan"
         elif is_epic:
             role = "epic"
             action = "close-epic"
         else:
-            exclusions.append("unclassified Backlog work")
+            exclusions.append("unclassified Todo work")
 
     if assignees and role not in ("human", "human-epic"):
         exclusions.append(f"assigned to {assignees}")
@@ -1211,6 +896,7 @@ def parse_wayfinder_parent(
     ticket: dict[str, Any],
     *,
     map_label: str,
+    authorized_statuses: tuple[str, ...],
     allow_closed: bool = False,
 ) -> int:
     number = ticket["number"]
@@ -1236,6 +922,8 @@ def parse_wayfinder_parent(
         or map_label not in parent_labels
     ):
         raise InputError("parent is not an open Wayfinder map")
+    if parent.get("projectStatus") not in authorized_statuses:
+        raise InputError("Wayfinder map parent is not in an authorized Project status")
     return parent_number
 
 
@@ -1317,6 +1005,7 @@ def analyze_wayfinder_ticket(
     *,
     current_user: str,
     planning_status: str,
+    recovery_statuses: tuple[str, ...],
     priorities: tuple[str, ...],
     configuration_digest: str,
     wayfinder_map_label: str,
@@ -1355,11 +1044,14 @@ def analyze_wayfinder_ticket(
     parent_number = parse_wayfinder_parent(
         ticket,
         map_label=wayfinder_map_label,
+        authorized_statuses=recovery_statuses,
         allow_closed=reconciliation is not None,
     )
 
     assigned_to_current_user = current_user in assignees
     if reconciliation is not None:
+        if ticket["projectStatus"] not in recovery_statuses:
+            exclusions.append("not in an authorized Wayfinder recovery status")
         if reconciliation["mapNumber"] != parent_number:
             raise InputError(
                 f"ticket {number}: Wayfinder reconciliation map does not match parent",
@@ -1387,20 +1079,10 @@ def analyze_wayfinder_ticket(
             "exclusions": exclusions,
         }
 
-    if str(ticket["state"]).upper() != "OPEN":
-        exclusions.append("not open")
     if ticket["projectStatus"] != planning_status:
         exclusions.append(f"not in {planning_status!r}")
-    planning_transition = parse_transition(
-        ticket["planningTransition"],
-        "planningTransition",
-        number,
-    )
-    if planning_transition["status"] != planning_status:
-        errors.append(
-            f"latest planning transition status {planning_transition['status']!r} "
-            f"does not match {planning_status!r}",
-        )
+    if str(ticket["state"]).upper() != "OPEN":
+        exclusions.append("not open")
     other_assignees = [assignee for assignee in assignees if assignee != current_user]
     if other_assignees:
         exclusions.append(f"assigned to {other_assignees}")
@@ -1482,6 +1164,7 @@ def main() -> int:
             args.planning_status,
             args.ready_status,
             args.in_progress_status,
+            args.done_status,
         )
         if len(set(statuses)) != len(statuses):
             raise InputError("project statuses must be unique")
@@ -1516,16 +1199,31 @@ def main() -> int:
         seen_numbers: set[int] = set()
         execution_analyses: list[dict[str, Any]] = []
         wayfinder_analyses: list[dict[str, Any]] = []
-        backlog_analyses: list[dict[str, Any]] = []
+        role_analyses: list[dict[str, Any]] = []
         invalid_unclaimed: list[dict[str, Any]] = []
         invalid_claimed: list[dict[str, Any]] = []
         invalid_planning_claimed: list[dict[str, Any]] = []
         for raw_ticket in payload:
+            number = raw_ticket.get("number") if isinstance(raw_ticket, dict) else None
+            if isinstance(number, int) and not isinstance(number, bool):
+                if number in seen_numbers:
+                    raise InputError(f"duplicate ticket number {number}")
+                seen_numbers.add(number)
+            if (
+                isinstance(raw_ticket, dict)
+                and raw_ticket.get("projectStatus") == args.backlog_status
+            ):
+                invalid_unclaimed.append(
+                    {
+                        "number": raw_ticket.get("number", "?"),
+                        "reasons": [
+                            "Backlog is human-controlled; automatic work is not authorized",
+                        ],
+                    },
+                )
+                continue
             try:
                 ticket = require_ticket_shape(raw_ticket)
-                if ticket["number"] in seen_numbers:
-                    raise InputError(f"duplicate ticket number {ticket['number']}")
-                seen_numbers.add(ticket["number"])
                 labels = ticket["labels"]
                 has_wayfinder_map_label = (
                     wayfinder_labels is not None
@@ -1540,12 +1238,6 @@ def main() -> int:
                         for label in labels
                         if isinstance(label, str)
                     )
-                )
-                is_backlog_cleanup = is_backlog_cleanup_candidate(
-                    ticket,
-                    current_user=args.current_user,
-                    backlog_status=args.backlog_status,
-                    issue_closure=args.issue_closure,
                 )
                 if has_wayfinder_map_label:
                     invalid = {
@@ -1571,6 +1263,10 @@ def main() -> int:
                             ticket,
                             current_user=args.current_user,
                             planning_status=args.planning_status,
+                            recovery_statuses=(
+                                args.planning_status, args.ready_status,
+                                args.in_progress_status, args.done_status,
+                            ),
                             priorities=priorities,
                             configuration_digest=args.configuration_digest,
                             wayfinder_map_label=wayfinder_labels["map"],
@@ -1578,21 +1274,14 @@ def main() -> int:
                         ),
                     )
                 elif (
-                    ticket["projectStatus"] == args.backlog_status
-                    and (
-                        not has_current_user_assignment(
-                            ticket,
-                            args.current_user,
-                        )
-                        or (
-                            isinstance(ticket["labels"], list)
-                            and args.human_work_label in ticket["labels"]
-                            and not is_backlog_cleanup
-                        )
-                    )
+                    ticket["projectStatus"] == args.planning_status
+                    and isinstance(labels, list)
+                    and any(label in labels for label in (
+                        args.needs_triage_label, args.epic_label, args.human_work_label,
+                    ))
                 ):
-                    backlog_analyses.append(
-                        analyze_backlog_ticket(
+                    role_analyses.append(
+                        analyze_role_ticket(
                             ticket,
                             needs_triage_label=args.needs_triage_label,
                             epic_label=args.epic_label,
@@ -1605,7 +1294,6 @@ def main() -> int:
                         analyze_ticket(
                             ticket,
                             current_user=args.current_user,
-                            backlog_status=args.backlog_status,
                             planning_status=args.planning_status,
                             ready_status=args.ready_status,
                             in_progress_status=args.in_progress_status,
@@ -1625,15 +1313,9 @@ def main() -> int:
                 }
                 is_human_frontier_item = (
                     isinstance(raw_ticket, dict)
-                    and raw_ticket.get("projectStatus") == args.backlog_status
+                    and raw_ticket.get("projectStatus") == args.planning_status
                     and isinstance(raw_ticket.get("labels"), list)
                     and args.human_work_label in raw_ticket["labels"]
-                )
-                is_backlog_cleanup = is_backlog_cleanup_candidate(
-                    raw_ticket,
-                    current_user=args.current_user,
-                    backlog_status=args.backlog_status,
-                    issue_closure=args.issue_closure,
                 )
                 is_wayfinder_claim = (
                     isinstance(raw_ticket, dict)
@@ -1645,9 +1327,7 @@ def main() -> int:
                     )
                     and has_current_user_assignment(raw_ticket, args.current_user)
                 )
-                if is_backlog_cleanup:
-                    invalid_planning_claimed.append(invalid)
-                elif is_human_frontier_item:
+                if is_human_frontier_item:
                     invalid_unclaimed.append(invalid)
                 elif is_wayfinder_claim:
                     invalid_planning_claimed.append(invalid)
@@ -1656,7 +1336,6 @@ def main() -> int:
                         isinstance(raw_ticket, dict)
                         and raw_ticket.get("projectStatus")
                         in (
-                            args.backlog_status,
                             args.planning_status,
                             args.ready_status,
                         )
@@ -1664,11 +1343,6 @@ def main() -> int:
                         invalid_planning_claimed.append(invalid)
                     else:
                         invalid_claimed.append(invalid)
-                elif (
-                    isinstance(raw_ticket, dict)
-                    and raw_ticket.get("projectStatus") == args.backlog_status
-                ):
-                    invalid_unclaimed.append(invalid)
                 else:
                     invalid_unclaimed.append(invalid)
 
@@ -1694,7 +1368,6 @@ def main() -> int:
                 item["assignedToCurrentUser"]
                 and item["ticket"]["projectStatus"]
                 in (
-                    args.backlog_status,
                     args.planning_status,
                     args.ready_status,
                 )
@@ -1724,26 +1397,12 @@ def main() -> int:
             if not item["errors"] and not item["exclusions"]
         ]
 
-        eligible_backlog = [
+        eligible_roles = [
             item
-            for item in backlog_analyses
+            for item in role_analyses
             if not item["errors"] and not item["exclusions"]
         ]
-        backlog_planning_candidates = [
-            {
-                **item,
-                "assignedToCurrentUser": False,
-                "resumeAction": "plan",
-            }
-            for item in eligible_backlog
-            if item["action"] == "plan" and not item["blockerReasons"]
-        ]
-
-        selection_pool = [
-            *eligible,
-            *eligible_wayfinder,
-            *backlog_planning_candidates,
-        ]
+        selection_pool = [*eligible, *eligible_wayfinder]
         if args.wayfinder_ticket is not None:
             selected = [
                 item
@@ -1877,33 +1536,33 @@ def main() -> int:
                 "number": item["ticket"]["number"],
                 "reasons": item["errors"] + item["exclusions"],
             }
-            for item in backlog_analyses
+            for item in role_analyses
             if item["errors"] or item["exclusions"]
         ]
         triage_candidates = sorted(
             (
-                item for item in eligible_backlog
+                item for item in eligible_roles
                 if item["action"] == "triage" and not item["blockerReasons"]
             ),
             key=ticket_rank,
         )
         ready_epics = sorted(
             (
-                item for item in eligible_backlog
+                item for item in eligible_roles
                 if item["action"] == "close-epic" and not item["blockerReasons"]
             ),
             key=ticket_rank,
         )
         human_actions = sorted(
             (
-                item for item in eligible_backlog
+                item for item in eligible_roles
                 if item["action"] == "perform-human-work"
                 and not item["blockerReasons"]
             ),
             key=ticket_rank,
         )
         parked_blocked = sorted(
-            (item for item in eligible_backlog if item["blockerReasons"]),
+            (item for item in eligible_roles if item["blockerReasons"]),
             key=ticket_rank,
         )
         wayfinder_human_frontier = sorted(

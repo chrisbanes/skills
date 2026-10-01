@@ -14,9 +14,10 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --base-branch <base-branch> \
   --issue-closure <closing-keyword-or-close-after-merge> \
   --backlog-status <backlog-name> \
-  --planning-status <planning-name> \
+  --planning-status <todo-name> \
   --ready-status <ready-to-implement-name> \
   --in-progress-status <in-progress-name> \
+  --done-status <done-name> \
   --needs-triage-label <needs-triage-label> \
   --epic-label <epic-label> \
   --human-work-label <human-work-label> \
@@ -62,21 +63,6 @@ or pause field for this ranker CLI. Use this shape for execution contenders:
   "assignees": [{"login": "octocat"}],
   "blockedBy": [41, "other/repository#7"],
   "openDescendants": [43],
-  "planningTransition": {
-    "id": "PVTE_planning",
-    "actor": "maintainer",
-    "createdAt": "2026-07-28T08:00:00Z",
-    "status": "Planning",
-    "wasAutomated": false
-  },
-  "backlogTransition": null,
-  "readyTransition": {
-    "id": "PVTE_ready",
-    "actor": "octocat",
-    "createdAt": "2026-07-28T10:00:00Z",
-    "status": "Ready to implement",
-    "wasAutomated": false
-  },
   "replanRequest": null,
   "implementationPlans": [
     {
@@ -114,7 +100,7 @@ or pause field for this ranker CLI. Use this shape for execution contenders:
 }
 ```
 
-When Wayfinder is enabled, a configured Wayfinder child uses the Planning
+When Wayfinder is enabled, a configured Wayfinder child uses the Todo
 shape above plus its direct parent and, for a task, its controller-derived mode:
 
 ```json
@@ -122,22 +108,26 @@ shape above plus its direct parent and, for a task, its controller-derived mode:
   "parentIssue": {
     "number": 7,
     "state": "OPEN",
+    "projectStatus": "Todo",
     "labels": ["wayfinder:map"]
   },
   "labels": ["wayfinder:research"],
-  "readyTransition": null,
   "implementationPlans": [],
   "wayfinderTaskMode": null,
   "wayfinderAfkEvidence": null
 }
 ```
 
-The parent must be the direct map parent, not an inferred ancestor. Use exactly
+The parent must be the direct map parent, not an inferred ancestor. Hydrate its
+current Project Status too; require a configured Todo-or-later column for the
+parent before automatic map work or recovery. Missing, unknown, and Backlog
+parent Status block the child; a child's column never authorizes its map.
+Use exactly
 one configured type label. Research is AFK; prototype and grilling are HITL.
 For a task, use `"afk"` only with non-empty fresh evidence that every action is
 safely autonomous; use `"hitl"` or `null` for a human or ambiguous task.
-Wayfinder children require the schema fields above, but not a Ready transition
-or any implementation-plan entries.
+Wayfinder children require the schema fields above, but no implementation-plan
+entries or transition-history fields.
 
 For an interrupted terminal reconciliation, add the normalized authoritative
 marker below. Recovery inventory may supply a closed child, a closed parent,
@@ -172,8 +162,8 @@ Use `resolved` only for a decision on the route and `out-of-scope` only for a
 scope disposition. The recorded plan must place their linked gists in
 `Decisions so far` and `Out of scope`, respectively.
 
-Use the same canonical shape for Backlog triage contenders, with transition and
-replan fields set to `null` and `implementationPlans` empty when absent. Backlog
+Use the same canonical shape for Todo triage contenders, with `replanRequest`
+set to `null` and `implementationPlans` empty when absent. Their
 `openPullRequests` entries need only `number`, `url`, and `closesIssue`; omit
 execution-only author, draft, head, and base fields:
 
@@ -183,30 +173,26 @@ execution-only author, draft, head, and base fields:
   "title": "Unblocked issue awaiting triage",
   "url": "https://github.com/owner/repository/issues/43",
   "state": "OPEN",
-  "projectItemId": "PVTI_backlog",
-  "projectStatus": "Backlog",
+  "projectItemId": "PVTI_triage",
+  "projectStatus": "Todo",
   "projectPriority": "High",
   "projectPosition": 18,
   "labels": ["needs-triage"],
   "assignees": [],
   "blockedBy": [],
   "openDescendants": [],
-  "backlogTransition": null,
-  "planningTransition": null,
-  "readyTransition": null,
   "replanRequest": null,
   "implementationPlans": [],
   "openPullRequests": []
 }
 ```
 
-Use that same Backlog shape for configured epics, human work, and
-`ready-for-agent` items queued for Planning. Preserve every exact
+Use that same Todo shape for configured epics, human work, and
+`ready-for-agent` items already queued for planning. Preserve every exact
 label. The ranker derives the work shape and next action from configured label
 names; never add a synthetic role to its input.
 
-Use GitHub logins, never display names, for assignees, PR authors, and
-transition actors. Normalize `labels` to exact label names. Normalize
+Use GitHub logins, never display names, for assignees and PR authors. Normalize `labels` to exact label names. Normalize
 `blockedBy` and `openDescendants` entries to integer issue numbers for the
 configured repository or `owner/repository#number` strings for cross-repository
 issues; never pass GraphQL objects. Use a finite non-negative numeric Project
@@ -219,26 +205,22 @@ to resume; a branch name or historical report alone is insufficient. Keep all
 other open implementation PRs in the array as competitors. The ranker defaults
 to `closing-keyword` for compatibility; pass the binding's policy explicitly.
 
-For a first-time `Planning` item, `readyTransition` may be `null`. A
-runner-authored Planning requeue should include its preceding verified Ready
-transition and replan report as recovery evidence. For any other accepted
-Status, `readyTransition` must be the latest transition into `Ready to
-implement`. `planningTransition` is always the latest event entering Planning;
-its actor and automation source do not gate eligibility.
+Current Project Status supplies ticket authorization. Do not hydrate status
+history. `planningTransition`, `readyTransition`, and `backlogTransition` are
+obsolete inputs: omit them; legacy values are ignored even when malformed,
+foreign, automated, or missing. Check usable active-plan integrity and the
+configured base rather than comparing publication times with column events.
 
-Use `backlogTransition` only for an item currently in Backlog. It must be the
-latest transition into Backlog. An assigned Backlog item also requires a
-runner-authored `replanRequest` with `disposition: "human-required"` linking
-recorded stakeholder direction to abandon partial work and transfer to human
-work, so cleanup
-can resume after interruption. Keep that assignment as the durable cleanup
-lease until the controller verifies that every exact runner-owned artifact is
-absent and unassigns last. An unassigned Backlog item without the configured
-`needs-triage`, `ready-for-agent`, or configured human-work label is unclassified
-and ineligible for runner execution.
+Backlog items are always excluded from dispatch, including assigned items with
+old cleanup reports, PRs, or Wayfinder reconciliation markers. Never place
+Backlog work in claims, planning candidates, triage candidates, ready epics,
+human actions, or automatic cleanup. Keep its dependency edges in the complete
+live graph and report interrupted artifacts for human handling.
 
-Normalize every runner-owned v1 or v2 plan marker, including minimized
-comments, into `implementationPlans`. A v1 comment is a revision-one root. A v2
+Hydrate every comment containing `<!-- to-plan:implementation-plan:v1 -->` or
+`<!-- to-plan:implementation-plan:v2 -->`, including minimized comments, and
+normalize it into `implementationPlans`. Require runner authorship. A v1
+comment is a revision-one root. A v2
 comment records its positive `revision`, predecessor permalink in
 `supersedes`, triggering report permalink in `replanRequest` when applicable,
 and payload publication time in `publishedAt`. Compute `digest` from the
@@ -249,7 +231,10 @@ Require one root, contiguous revisions, one child per revision, and one
 unminimized leaf. The ranker returns that leaf as the synthesized
 `implementationPlan` in each selected ticket. Reject forks, gaps, duplicate
 revisions, missing predecessors, foreign marker authors, and a minimized active
-leaf. For compatibility, the ranker also accepts the former singular
+leaf. A verified runner-authored `autonomous-replan` report naming a plan's exact
+permalink and payload digest invalidates that predecessor in every execution
+column until a later revision links the report. Todo may plan its replacement;
+Ready and In-progress work remain blocked. For compatibility, the ranker also accepts the former singular
 `implementationPlan` input as one v1 root.
 
 For an automatic requeue, normalize the verified report comment as:
@@ -269,26 +254,24 @@ For an automatic requeue, normalize the verified report comment as:
 }
 ```
 
-Use `human-required` instead of `autonomous-replan` for an explicitly directed
-Backlog cleanup path. A pending human-required decision stays in its original
-Status under a verified authority pause, outside dispatch ranking; it never
-enters Backlog cleanup merely from that disposition.
-Retained head and PR fields may be null but must identify exact durable state
-when present. The report must precede the resulting Status transition and
-identify the plan that authorized the prior Ready handoff.
+A pending `human-required` decision stays in its original eligible column
+under a verified authority pause, outside dispatch ranking. Explicit
+abandonment cleanup must finish before a final transfer to Backlog; never
+recover cleanup there. Retained head and PR fields may be null but must identify
+exact durable state when present. The replan report identifies its predecessor
+plan and retained artifacts; no column-event ordering is required.
 
-For Backlog triage contenders, the ranker ignores historical Planning, Ready,
-and plan fields. Require the configured `needs-triage` label, no assignee, and
-no open implementation pull request. Return an otherwise valid item with open
-native blockers or descendants as `parkedBlocked`; return an unblocked item as
-`triageCandidates`. Never feed either collection into an implementation slot.
+For Todo triage contenders, require the configured `needs-triage` label, no
+assignee, and no open implementation pull request. Return an otherwise valid
+item with open native blockers or descendants as `parkedBlocked`; return an
+unblocked item as `triageCandidates`. Neither consumes an implementation slot.
 
-For other unassigned Backlog work, apply
+For other role-labelled Todo work, apply
 [Epics And Human Frontier](human-frontier.md). Return a bare unblocked epic as
-`readyEpics`, return unblocked human work as `humanActions`, and include
-unblocked `ready-for-agent` work in `candidates` with action `plan`. Permit an
-existing assignee only on human work. Role-tag
-every dependency-blocked Backlog result in `parkedBlocked`.
+`readyEpics`, unblocked human work as `humanActions`, and unblocked
+`ready-for-agent` work in `candidates` with action `plan`. Permit an existing
+assignee only on human work. Role-tag dependency-blocked Todo results in
+`parkedBlocked`. Never infer a human promotion from labels on a Backlog item.
 
 The ranker returns valid current-user claims and ordered unclaimed candidates:
 
@@ -303,8 +286,7 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
   ],
   "claims": [
     {"ticket": {"number": 41}, "action": "resume-implementation"},
-    {"ticket": {"number": 42}, "action": "resume-planning-handoff"},
-    {"ticket": {"number": 43}, "action": "resume-backlog-cleanup"}
+    {"ticket": {"number": 42}, "action": "resume-planning-handoff"}
   ],
   "candidates": [
     {"ticket": {"number": 44}, "action": "resume-pr"},
@@ -341,18 +323,14 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
 Treat each `ticket` as the complete normalized object shown above. The
 controller owns scheduling; the ranker only validates claims and orders
 candidates. Each `blockedClaims` entry occupies a slot and preserves a claimed
-implementation ticket that requires reconciliation. Planning claims and
+implementation ticket that requires reconciliation. Todo claims and
 `blockedPlanningClaims` preserve ownership but do not consume an implementation
-slot; both still prevent the Backlog triage tail from starting. Ready epics and
-human actions consume neither slots nor agent capacity. Triage
-`resume-backlog-cleanup` also consumes no implementation slot, must finish
-before new claims, and prevents the triage tail from starting. Its cleanup is
-idempotent: already-absent owned artifacts satisfy their individual finish
-checks, but the assignment remains until the complete cleanup state is
-verified. Triage candidates are ordered separately and run only through
-[Backlog Triage Lane](triage-lane.md). Process ready epics and human actions
-through [Epics And Human Frontier](human-frontier.md); Backlog `parkedBlocked`
-items consume neither a slot nor an agent.
+slot; both still prevent the Todo triage tail from starting. Ready epics and
+human actions consume neither slots nor agent capacity. Triage candidates are
+ordered separately and run only through [Todo Triage Lane](triage-lane.md).
+Process ready epics and human actions through
+[Epics And Human Frontier](human-frontier.md); Todo `parkedBlocked` items consume
+neither a slot nor an agent. No Backlog cleanup action is emitted.
 
 When enabled in `next`, the ranker emits any eligible Wayfinder candidate as
 `wayfind` and an assigned one as `resume-wayfind`. In `drain`, it emits only AFK
@@ -360,9 +338,10 @@ work in those collections and returns configured prototype, grilling, HITL,
 and ambiguous task children in `wayfinderHumanFrontier` only while unassigned,
 ordered by Priority, position, and issue number. It returns assigned eligible
 HITL children separately in `wayfinderClaimedHitl`. A terminal recovery is
-always an assigned `resume-wayfinder-reconciliation` claim. All are Planning
-work and consume no implementation slot. Route every form through
-[Wayfinder Planning Lane](wayfinder-lane.md).
+always an assigned `resume-wayfinder-reconciliation` claim in a configured
+Todo-or-later column, including Done for interrupted terminal reconciliation.
+New Wayfinder work requires Todo. None consumes an implementation slot. Route every form through
+[Wayfinder Todo Lane](wayfinder-lane.md).
 
 When `--wayfinder-ticket` is present in `next`, the output includes
 `selectedWayfinderTicket` and returns only that child as new work. The ranker
@@ -379,5 +358,5 @@ contract. Keep a parked implementation claim with an unchanged verified
 observation fingerprint outside the normalized array and `max-claims` count. A
 changed observation fingerprint triggers deep hydration but does not by itself
 resume the claim or reset its repair budget. This inventory is distinct from
-`blockedClaims` and Backlog `parkedBlocked`; it blocks triage and successful
+`blockedClaims` and Todo `parkedBlocked`; it blocks triage and successful
 drain completion without occupying an implementation slot.

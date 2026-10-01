@@ -1,14 +1,16 @@
-# Backlog Triage Lane
+# Todo Triage Lane
 
-Use the installed `triage` skill to re-evaluate unblocked Backlog issues without
-changing its state machine or approval gate.
+Use the installed `triage` skill to re-evaluate unblocked Todo issues without
+changing its state machine or approval gate. Never triage, assign, relabel,
+comment on, close, or promote a Backlog item. A human must first move it to
+Todo; its current column supplies authorization to enter this lane.
 
 ## Eligibility
 
 Treat an issue as a triage contender only when fresh reads prove all of:
 
 1. it belongs to the configured repository and Project;
-2. it is an open issue in the configured Backlog Status;
+2. it is an open issue in the configured Todo Status;
 3. it has the configured `needs-triage` label;
 4. it has no assignee or open implementation pull request;
 5. it has no native open `blocked by` relationship or open descendant; and
@@ -26,14 +28,14 @@ ordering as untrusted blocker evidence.
 
 ## Dispatch
 
-Start the triage lane only after a complete query finds no assigned Backlog
-cleanup claim, valid or blocked implementation claim, valid or blocked Planning
-claim, runnable Planning or Ready candidate, active planning handoff, or
+Start the triage lane only after a complete query finds no valid or blocked
+implementation claim, valid or blocked Todo
+claim, runnable Todo or Ready candidate, active planning handoff, or
 occupied implementation slot. A parked implementation claim remains unresolved
 execution under
 [Terminal Required-CI Parking](drain-scheduler.md#terminal-required-ci-parking)
 and also blocks this tail lane despite consuming no slot. Treat
-`resume-backlog-cleanup` and `blockedPlanningClaims` the same way. Malformed or
+`blockedPlanningClaims` the same way. Malformed or
 excluded unclaimed items do not block the tail lane. Ready epics run in the
 controller lane before triage. Human actions do not block triage; include any
 newly classified human-work action in the current frontier packet.
@@ -45,7 +47,7 @@ Never pause authorized execution to ask for a triage decision.
 In `next`, process at most the first ranked triage contender when no executable
 ticket exists. In `drain`, process contenders one at a time until none remain,
 the user defers one, or a triage blocker stops the lane. Only dependency-blocked
-Backlog `parkedBlocked` items may remain at an otherwise successful finish; a
+Todo `parkedBlocked` items may remain at an otherwise successful finish; a
 parked implementation claim requires a partial drain.
 
 Keep the ranked complete snapshot while walking triage contenders. Immediately
@@ -85,12 +87,11 @@ hand the issue back to the maintainer without changing it.
 Use the batched post-mutation read to reconcile the approved outcome:
 
 - For `ready-for-agent`, require the provider's durable agent brief and exact
-  label transition. Leave the item in Backlog; the next complete ranker pass
-  returns it as a planning candidate and the controller performs the Planning
-  transition before assignment.
+  label change. Leave the item in Todo; the next complete ranker pass
+  returns it as a planning candidate without a Status promotion.
 - For the configured human-work label, `needs-info`, or `wontfix`, require the
   provider's approved comment, label, and closure result as applicable. Leave
-  open human work in Backlog for the human frontier.
+  open human work in Todo for the human frontier.
 - For `needs-triage`, a rejected recommendation, or a deferred decision, leave
   the item unchanged and mark it deferred for this invocation so it cannot
   loop.
@@ -104,7 +105,7 @@ Finish the triage lane only after a complete refreshed query finds no
 non-deferred unblocked triage contender. Report:
 
 - every triaged issue and reconciled outcome;
-- every issue newly queued for Planning;
+- every issue newly queued for Todo;
 - every human action added to the frontier;
 - every deferred or blocked triage attempt;
 - every `parkedBlocked` issue and its live blockers; and

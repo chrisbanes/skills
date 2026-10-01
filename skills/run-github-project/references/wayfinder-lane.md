@@ -1,4 +1,4 @@
-# Wayfinder Planning Lane
+# Wayfinder Todo Lane
 
 Use this optional branch only when the committed Project configuration enables
 Wayfinder and the installed `wayfinder` provider is discoverable. Keep the map
@@ -13,16 +13,22 @@ machine-readable payloads and diagnostics.
 
 Require fresh authoritative reads proving that a child is:
 
-1. an open item in the configured repository and Project, in `Planning`, and
+1. an open item in the configured repository and Project, in `Todo`, and
    allowed by the trusted Project filter;
 2. unassigned, or assigned only to the authenticated runner while resuming its
    existing Wayfinder claim;
 3. the direct child of an open parent carrying the configured `wayfinder:map`
    label;
 4. marked with exactly one configured Wayfinder type label;
-5. natively unblocked with no open descendant; and
-6. backed by a latest transition event that resolves to `Planning`, regardless
-   of actor or automation source.
+5. natively unblocked with no open descendant.
+
+Current Todo membership supplies authorization. Do not fetch or inspect its
+transition history. Backlog children never qualify, including claimed items
+with reconciliation markers.
+
+Require the direct parent map's current Project column to be Todo or a later
+configured column too. Block missing, unknown, or Backlog parent membership;
+child authorization never grants permission to process its Backlog map.
 
 Do not inherit a child's membership, Status, type, or blockers from its parent
 map, a comment, or a previous invocation. Pass the complete normalized graph to `rank_tickets.py`
@@ -38,9 +44,9 @@ even when Project ordering would choose another item. Never use explicit
 selection to bypass another current-user claim; stop and report those durable
 claims instead. Reject explicit Wayfinder selection in `drain`.
 
-Use the existing Planning scheduling class: resumed Wayfinder claims occupy the
-resumable-Planning class and eligible fresh Wayfinder tickets occupy the
-new-Planning class. Within either class, use configured Priority, visible
+Use the existing Todo scheduling class: resumed Wayfinder claims occupy the
+resumable-Todo class and eligible fresh Wayfinder tickets occupy the
+new-Todo class. Within either class, use configured Priority, visible
 Project position, then issue number. They never consume implementation capacity
 and never enter `Ready to implement`, `In progress`, or an implementation PR
 flow.
@@ -60,7 +66,7 @@ Read the installed `wayfinder` skill and follow its resolution semantics; do
 not reproduce its map procedure here. If it is missing, malformed, or blocked
 for an unclaimed child, block and report only that Wayfinder item. Continue
 ordinary planning and execution. Preserve an assigned invalid child as a
-blocked Planning claim.
+blocked Todo claim.
 
 ## Dispatch By Mode
 
@@ -69,7 +75,7 @@ finish after that one child reaches a reconciled terminal state. An AFK research
 or task ticket follows the same one-ticket boundary. The current interactive
 context is that one Wayfinder session so HITL remains a live human exchange.
 
-In `drain`, use spare Planning capacity for AFK research and AFK task tickets.
+In `drain`, use spare Todo capacity for AFK research and AFK task tickets.
 Treat a task as AFK only when its ticket and fresh live evidence prove every
 action is safely executable without human input; otherwise classify it HITL.
 For every non-research AFK child selected by `drain`, start a fresh Wayfinder
@@ -92,7 +98,7 @@ HITL ticket already assigned to the runner in the separate
 `wayfinderClaimedHitl` attention collection. Never call an assigned ticket part
 of the frontier, and never resume it without fresh per-ticket HITL approval.
 
-Keep one durable Planning controller lease, but not one reusable provider
+Keep one durable Todo controller lease, but not one reusable provider
 context. Only the controller may assign, comment, close, edit a map, create
 issues, add Project items, or wire dependencies. The research subagent owns
 only its throwaway research branch and artifact. Serialize tracker and Project
@@ -133,6 +139,18 @@ the result before retrying creation. Exclude presentation-only text from
 `planDigest`. Assignment is the durable lease. Do not close the child, edit the
 map, or perform another terminal mutation until the marker is authoritative.
 
+Before mutating an existing issue, refetch its current Project column. Require Todo or a later configured column for each map or child being
+updated or closed, including additional out-of-scope children. If any target
+is in Backlog, missing, or unknown, preserve the recorded reconciliation and
+report the exact human promotion needed; never promote or mutate that target.
+An already-closed Done target satisfies only its recorded completed step.
+
+Treat an authorized new child's initial body, dependency links, and Backlog
+placement as one recorded creation operation under the eligible parent. Verify
+exact creation ownership before resuming an incomplete operation. Once initial
+Backlog placement is verified, do not edit or dispatch that child; leave later
+changes and promotion to humans.
+
 Apply the recorded plan idempotently and in this order:
 
 1. close the selected child when still open and verify closure;
@@ -153,17 +171,16 @@ Apply the recorded plan idempotently and in this order:
    of scope, close it and add its linked gist and reason only to `Out of scope`.
    Reconcile every additionally closed child's configured Project Done/archive
    outcome by exact item ID;
-5. add every new child to the configured Project in `Planning`, then refetch
-   its transition and the complete live graph; and
+5. add newly created children to the configured Project in Backlog as their
+   initial placement and verify that value under the recorded creation operation.
+   Refetch the complete live graph; and
 6. only when fresh reads prove the destination's way is clear, no open child
    remains, `Not yet specified` is empty, and `Decisions so far` plus
    `Out of scope` are current, non-duplicative indexes for their respective
    outcomes, post the map completion summary, close the map, and reconcile its
    configured Project Done/archive outcome in the same way.
 
-Controller creation plus a verified `Planning` placement makes each new child
-eligible for its Wayfinder lane without an approver transition. Never move a
-resolved Wayfinder child to `Ready to implement`.
+Never move a resolved Wayfinder child to `Ready to implement`.
 
 When any completion condition does not hold, keep the map open. Unassign the
 selected child only after every recorded mutation and every applicable terminal
@@ -174,8 +191,9 @@ does not justify reordering map reconciliation ahead of that closure.
 ## Resume Reconciliation
 
 At startup, query runner-assigned marked Wayfinder children independently of
-the ordinary open-Project inventory. Refetch the marker, its recorded Project
-item even when archived, the child, the direct map parent even when closed, and
+the ordinary open-Project inventory. First check the current child and parent
+columns: Backlog never resumes, even with a valid marker. Refetch the marker,
+its recorded Project item even when archived, the child, the direct map parent even when closed, and
 the complete live map graph. Require exactly one authoritative marker, its
 author and sole assignee to be the authenticated runner, its Project item and
 map identities to match, and its configuration digest to match the invocation's
@@ -198,5 +216,6 @@ ticket is reported.
 In `drain`, an ordered human frontier or assigned HITL attention collection is
 not a failure and must not pause independent lanes. Report the selected linked
 ticket name, authority scope, provider result, map reconciliation, created
-Backlog children, completion state, remaining human frontier, and assigned HITL
+children awaiting human promotion, completion state, remaining human frontier,
+and assigned HITL
 attention.

@@ -11,7 +11,7 @@
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-repair-novel"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "owner-continuity", "text": "The response keeps a verified in-scope CI fixture repair with the existing ticket owner instead of requiring a Planning status round trip"},
+    {"id": "owner-continuity", "text": "The response keeps a verified in-scope CI fixture repair with the existing ticket owner instead of requiring a Todo status round trip"},
     {"id": "final-head-evidence", "text": "The response repeats affected checks and review on the changed head and preserves the existing review evidence only where still valid"}
   ],
   "provenance": {"kind": "synthetic"}

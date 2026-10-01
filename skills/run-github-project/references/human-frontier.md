@@ -1,6 +1,6 @@
 # Epics And Human Frontier
 
-Use this lane for Backlog work whose next action belongs to the controller or
+Use this lane for Todo work whose next action belongs to the controller or
 a human rather than an implementation agent.
 
 ## Classify Work
@@ -9,37 +9,32 @@ Treat the configured `epic` label as the work shape. Treat the exact
 `ready-for-agent`, configured human-work, and configured `needs-triage` labels
 as mutually exclusive next-action roles.
 
-Classify an open Backlog issue as follows:
+Classify an open Todo issue as follows:
 
 | Labels | Result |
 | --- | --- |
-| Epic only | Closeable epic after native dependencies clear |
-| Epic plus human work | Human epic after native dependencies clear |
-| Human work only | Human action after native dependencies clear |
-| Ready for agent only | Planning candidate after native dependencies clear |
-| Needs triage | Existing triage lane after native dependencies clear |
+| Epic only | `readyEpics` / `close-epic` |
+| Epic plus human work | `humanActions` / `perform-human-work` |
+| Human work only | `humanActions` / `perform-human-work` |
+| Ready for agent only | Normal Todo candidate / `plan` |
+| Needs triage | `triageCandidates` / `triage` |
 
 Reject `epic` plus `ready-for-agent` and multiple next-action labels. Treat an
-unlabelled non-epic Backlog issue as human-owned and outside this frontier.
+unlabelled non-epic Todo issue as human-owned and outside this frontier.
 Permit an existing human assignee on human work, but never assign one from this
-workflow. Require a bare epic, Planning candidate, or triage item
+workflow. Require a bare epic, Todo candidate, or triage item
 to have no assignee or open implementation pull request. Use only native open
 blockers and descendants as gates. Report a prose-only dependency discrepancy,
 but never enforce it.
 
 ## Build The Frontier
 
-1. Rank ready epics, planning candidates, human actions, and parked work by Priority, visible
-   Project position, then issue number.
-2. Return a bare unblocked epic as `readyEpics` with action `close-epic`.
-3. Return unblocked human work as `humanActions` with action
-   `perform-human-work`.
-4. Return an unblocked Backlog `ready-for-agent` issue as a normal candidate
-   with action `plan`; the controller performs and verifies its Planning
-   transition before assignment.
-5. Return a dependency-blocked item as role-tagged `parkedBlocked`.
-6. Derive what each action unlocks from reverse native blocker and parent-child
-   relationships in the complete live graph. Do not infer unlocks from prose.
+1. Verify labels, ownership, and native dependencies under the classification
+   above. Return unblocked items in the table's collections; return blocked
+   items as role-tagged `parkedBlocked`.
+2. Rank each collection by Priority, visible Project position, then issue number.
+3. Derive each action's direct unlocks from reverse native blocker and
+   parent-child relationships in the complete live graph, never from prose.
 
 Present one ordered frontier packet containing every current human action and
 its direct unlocks. Present it when its action, issue, blockers, or direct
@@ -55,7 +50,7 @@ the epic. If absent, record an unclaimed
 drain; never prompt before taking another eligible action. Refetch it and require all of:
 
 1. open issue state and configured repository and Project membership;
-2. Backlog Status and the configured epic label;
+2. current Todo Status and the configured epic label;
 3. no next-action role label, assignee, or open implementation pull request;
 4. no native open blocker or descendant; and
 5. unchanged configuration digest and verified base.
@@ -71,10 +66,8 @@ ready epics serially and continue through newly unlocked work.
 
 ## Wait For Human Work
 
-Never assign role-labelled human work, move it to Planning, or close it.
-Observe its completion only through refreshed authoritative GitHub state. A
-Backlog `ready-for-agent` item is not human work and does not belong in this
-wait state.
+Never assign role-labelled human work, move it to Todo, or close it.
+Observe its completion only through refreshed authoritative GitHub state.
 
 Return `waiting-for-human` only when no controller, planning, implementation,
 monitoring, or non-deferred triage action remains and `humanActions` or verified

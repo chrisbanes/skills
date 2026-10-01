@@ -68,7 +68,7 @@ shows a concrete dependency that makes an intermediate state untestable or
 unreviewable; name that dependency and the gated work explicitly. A common
 concept or nearby files alone do not establish coupling.
 
-An authorized Planning transition, decision-complete current task, or confirmed
+Current Todo membership, a decision-complete current task, or a confirmed
 conversation source authorizes the smallest coherent contract-realizing design.
 Record non-obvious choices and evidence. Escalate only conflicting authority,
 material user-visible outcome/scope/acceptance choices, security/privacy/

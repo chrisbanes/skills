@@ -1,10 +1,10 @@
-# Planning Lane
+# Todo Lane
 
-Use this lifecycle for Project items in `Planning` and for the verified handoff
+Use this lifecycle for Project items in `Todo` and for the verified handoff
 into implementation.
 
 Configured Wayfinder children take the separate integration branch in
-[Wayfinder Planning Lane](wayfinder-lane.md). They share this lane's scheduling
+[Wayfinder Todo Lane](wayfinder-lane.md). They share this lane's scheduling
 class and non-preemption rules, but never use the implementation-plan marker,
 Ready handoff, or implementation lifecycle below.
 
@@ -13,49 +13,23 @@ Ready handoff, or implementation lifecycle below.
 Require both:
 
 1. the exact `ready-for-agent` label; and
-2. current `Planning` Status with a latest transition event that resolves to
-   that Status.
+2. current `Todo` Status.
 
-Treat Project Status and the role label as the execution signal. Do not require
-a particular transition actor, a manual transition, or an execution approver.
-The latest transition into `Planning` is the plan-freshness boundary regardless
-of whether a person, the controller, or Project automation produced it.
-Ordinary issue-body or comment edits do not change that boundary. A newer
-transition into `Planning` requests a new plan.
+Verify the active marked plan under the [normalized-ticket contract](normalized-ticket.md):
+runner authorship, revision chain, semantic payload digest, and configured base.
+Hydrate minimized predecessors; accept only the unique unminimized leaf. Plan
+missing or stale plans; preserve invalid chains and foreign markers as semantic
+blockers. Never fall back to an unmarked Agent Brief.
+Record the plan identities and metadata in the authority lease and screen base
+SHA drift before implementation. Column membership supplies authority; a verified
+replan report determines when a replacement revision is needed.
 
-Recognize implementation-plan comments containing either:
+## Plan a Todo item
 
-```html
-<!-- to-plan:implementation-plan:v1 -->
-<!-- to-plan:implementation-plan:v2 -->
-```
-
-Treat a v1 comment as a revision-one root. Require each v2 comment to record a
-positive revision, the predecessor permalink or `none`, and the triggering
-replan-report permalink or `none`. Hydrate minimized comments too. Require one
-runner-authored root, contiguous revisions, no forks, and one unminimized leaf.
-That leaf is the active implementation plan. A missing predecessor, duplicate
-revision, fork, foreign marker, or minimized leaf is a semantic planning
-blocker.
-
-Classify the active leaf as current in Planning only when its semantic payload
-was published at or after the latest Planning event and its planned branch
-matches the configured base. Treat the predecessor as stale immediately after
-a machine requeue. Compute its lease digest from the semantic plan payload,
-excluding a superseded banner or presentation-only `<details>` wrapper.
-
-Do not recognize `## Agent Brief` or any unmarked fallback. Record the active
-and predecessor comment IDs, permalinks, revisions, authors, payload digests,
-creation, publication and update times, planned branch and SHA, replan report,
-and minimized state in the authority lease.
-
-## Plan A Planning Item
-
-1. Enter the controller lane. When the selected `ready-for-agent` item is in
-   Backlog, move it to `Planning` as the authenticated runner and refetch the
-   resulting transition; when it is already in `Planning`, do not manufacture
-   another transition. Then assign the issue exclusively to the authenticated
-   user, refetch and verify the assignment, and release the lane. Reconcile an
+1. Enter the controller lane and refetch current `Todo` membership. If the
+   item is in Backlog, stop its automatic work and preserve its artifacts;
+   only a human can promote it. Assign the issue exclusively to the
+   authenticated user, refetch and verify the assignment, and release the lane. Reconcile an
    ambiguous Status or assignment mutation before retrying. Preserve the
    assignment through planning and implementation.
 2. Use one dedicated, reusable, clean planning worktree at a stable
@@ -77,15 +51,9 @@ and minimized state in the authority lease.
    when a wrong plan assumption caused the failure.
    Do not accept a new plan whose repair wording contradicts that distinction.
 
-4. Allow bounded read-only discovery descendants from currently spare agent
-   capacity. They never own the ticket or mutate state. When repository
-   evidence exposes one specific unresolved architecture, security, rendering,
-   performance, or data-integrity question, record why the default owner is
-   insufficient and permit one bounded read-only exceptional investigator for
-   that question. Topic, scope, plan size, or language count never supplies
-   that evidence. Stop at the durable decision boundary when the answer
-   requires a new product, public contract, architecture, or safety decision;
-   never replace the whole planner.
+4. Follow [Route agents by task](ticket-lifecycle.md#route-agents-by-task)
+   for bounded read-only discovery or an evidence-justified investigator, using
+   only spare agent capacity. Stop at its durable decision boundary.
 5. Never preempt planning after it starts. Planning does not occupy an
    implementation slot and does not reserve the controller lane during read-only
    work.
@@ -102,11 +70,9 @@ and minimized state in the authority lease.
    hygiene failure but continue because the chain is authoritative. Treat
    missing `to-plan` as an issue-local planning blocker; it must not block
    implementation items with current plans.
-8. Move the item to `Ready to implement` as the authenticated runner. Refetch
-   and require a non-automated Ready transition by that runner after both the
-   Planning event and the plan's latest update. That reconciled event attests
-   that `to-plan --auto` revalidated an identical older plan even when it made
-   no comment edit.
+8. Move the item to `Ready to implement` and refetch its current Status,
+   assignment, and usable active plan. Verify the mutation by current field
+   value; do not query or inspect its transition event.
 9. In `next`, or when an implementation slot is free, move the same item to
    `In progress`, verify the full authority lease, and start its slot. Otherwise
    preserve the assigned verified Ready handoff, release the planner, and
@@ -125,7 +91,7 @@ sets another. Agent loss, crash, or timeout is a liveness failure, not
 preemption:
 
 1. stop the failed planner when possible and release its agent capacity;
-2. refetch assignment, Status, Planning and Ready events, and the marker plan;
+2. refetch assignment, current Status, and the marker plan;
 3. reconcile an ambiguous comment or Status mutation before retrying;
 4. complete an already-verified handoff, or restart a fresh planner in the same
    clean planning worktree;
@@ -134,14 +100,15 @@ preemption:
 
 ## Resume And Re-plan
 
-Resume an assigned `Planning` item before starting new Planning work:
+Resume an assigned `Todo` item before starting new Todo work:
 
 - run planning when the plan is missing or stale;
 - finish the Ready handoff when the plan is current.
 
-Resume an assigned `Ready to implement` item only when its current plan and the
-later runner-authored Ready event form a verified handoff. Otherwise preserve
-it as a blocked planning claim without consuming an implementation slot.
+Resume an assigned `Ready to implement` item when its current column,
+exclusive ownership, and usable active plan pass verification. No historical
+Ready event is required. Preserve a missing or invalid plan as a blocked
+planning claim without consuming an implementation slot.
 
 Before the Ready or In-progress transition, compare the planned SHA with the
 current base:
@@ -207,8 +174,8 @@ When the owning ticket agent returns an `autonomous-replan` packet:
    Refetch and verify it.
    If publication or verification fails, keep the ticket In progress and its
    slot occupied.
-3. Move the item to Planning as the runner, refetch it, and require the new
-   transition to follow the verified report and preceding Ready handoff.
+3. Move the item to Todo and refetch its current Status, assignment, report,
+   and retained artifacts. Verify the field value without a transition event.
 4. Release the implementation slot without preempting another worker. Preserve
    exclusive assignment, deterministic branch and worktree, open PR, dirty
    partial work, and idle ticket context as one priority replan claim. These
@@ -221,10 +188,10 @@ When the owning ticket agent returns an `autonomous-replan` packet:
    reacquire the next free implementation slot ahead of new claims. Resume the
    same ticket context and let it reconcile retained work to the new plan.
 
-The report, preceding Ready handoff, and following Planning transition remain
-recovery evidence for the retained implementation state. A missing or
-mismatched link preserves a blocked planning claim until the retained state is
-reconciled; resolving it does not require human authorization.
+The report's predecessor plan identity and exact retained PR/head remain
+recovery evidence. A missing or mismatched link preserves a blocked planning
+claim until reconciled. Current Todo membership supplies planning authority;
+no preceding Ready event or following Todo event is required.
 
 ### Pause A Stakeholder Decision
 
@@ -241,40 +208,25 @@ When the verified packet disposition is `human-required`:
    that procedure publishes it once and retains artifacts and repair history.
    Review the new plan automatically before implementation resumes.
 
-### Return Human Work To Backlog
+### Abandon Partial Work And Return It To Backlog
 
-Use this cleanup only after a recorded stakeholder decision explicitly directs
-abandoning the retained partial work and transferring the ticket to human work.
-An unresolved packet or missing authority never authorizes this cleanup:
+Use this only after a recorded stakeholder direction explicitly abandons the
+partial work. While the item is still in Todo or a later eligible column:
 
-1. Publish and verify one decision-bearing `human-required` report under the
-   [normalized replan contract](normalized-ticket.md), linking the stakeholder
-   direction and prior packet. Reuse it if already current and verified.
-2. Replace `ready-for-agent` with the configured human-work label, move the
-   item to the configured Backlog option, and verify both mutations. Do not
-   clean anything when the report, label, or transition outcome is ambiguous.
-3. Comment on and close any runner-owned implementation PR, linking the durable
-   report. Reconcile an ambiguous close before continuing.
-4. Resolve active processes and named-resource grants, verify exact skill
-   ownership, then deliberately remove the dirty or clean ticket worktree and
-   delete its skill-created local and remote branches. Never delete a foreign
-   or ambiguously owned artifact.
-5. Refetch and require no active process or resource grant, no open runner PR,
-   and no exact skill-owned worktree, local branch, or remote branch. Treat
-   absent artifacts as an idempotent cleanup success after a restart.
-6. Unassign the runner only after that cleanup finish state is verified, then
-   refetch and require that it no longer owns the issue. Until this final
-   mutation reconciles, the assignment is the durable cleanup lease returned
-   by `resume-backlog-cleanup`.
-7. Discard the ticket agent and release every scheduler resource. Report any
-   residue that could not be reconciled, but do not retain a claim or slot for
-   the Backlog item.
+1. Publish and verify the decision-bearing report and exact owned artifacts.
+2. Reconcile the explicit PR closure and skill-owned process, resource,
+   worktree, and branch cleanup. Preserve any foreign or ambiguous artifact.
+3. Verify cleanup, replace the agent role with the configured human-work role,
+   and unassign the runner. Keep unresolved cleanup paused in the current
+   eligible column; do not transfer an unfinished cleanup lease to Backlog.
+4. Return the item to Backlog only as the final verified transfer. Release its
+   scheduler resources and perform no further automatic work on it.
 
-A later exact `ready-for-agent` label with the human-work label removed queues
-the issue again. The controller moves it from Backlog to Planning, starts from
-the verified base, recovers no deleted partial code, and publishes a new plan
-revision that supersedes the historical leaf. Never move an item carrying the
-human-work label to Planning automatically.
+If a human moves any active item to Backlog, stop its writers, release capacity,
+and preserve/report its assignment and artifacts without issue, PR, or artifact
+cleanup. A later run must not resume Backlog cleanup. Only a human promotion
+out of Backlog can make it eligible again; labels alone never do so. Revalidate
+any retained plan and artifact state once the current column permits work.
 
 Semantic planning blockers are issue-local. Preserve the assignment and retry
 them only when authoritative inputs change. Retry transient planner/tool
@@ -290,18 +242,18 @@ implementation slot or implementation artifact exists at that stage.
 Use the ranker as the single selector for both lanes. Process classes in this
 order:
 
-1. interrupted Backlog cleanup claims;
-2. existing implementation and PR claims;
-3. contract-preserving replan claims;
-4. other resumable Planning and verified handoff claims;
-5. new `Ready to implement` candidates;
-6. new `Planning` candidates, including unblocked Backlog `ready-for-agent`
-   items and configured AFK Wayfinder children.
+1. existing implementation and PR claims;
+2. contract-preserving replan claims;
+3. other resumable Todo and verified handoff claims;
+4. new `Ready to implement` candidates;
+5. new `Todo` candidates, including configured AFK Wayfinder children.
+
+Exclude Backlog from every scheduling and recovery class.
 
 Within a class, use configured Priority, visible Project position, then issue
 number.
 
-In `next`, selecting a Planning item commits the invocation to that one issue:
+In `next`, selecting a Todo item commits the invocation to that one issue:
 plan it, hand it off, implement it, merge it, and reconcile it before finishing.
 Do not select another issue.
 
@@ -310,7 +262,7 @@ In `drain`, follow the
 active-agent capacity, and non-preemption.
 
 An unclaimed Wayfinder prototype, grilling ticket, or HITL/ambiguous task is a
-normal Planning candidate in `next`, but process it only with fresh per-ticket
+normal Todo candidate in `next`, but process it only with fresh per-ticket
 Wayfinder authority. When the user explicitly names the child, it replaces
 Project ordering for new work but never bypasses another durable claim. In
 `drain`, an unclaimed HITL child is a human-frontier item while an assigned one
@@ -323,16 +275,6 @@ subagents.
 
 ## Migration Gate
 
-Before adopting this schema:
-
-1. require zero existing `In progress` items;
-2. have a human create and verify `Backlog`, `Planning`, and
-   `Ready to implement`;
-3. configure their option IDs;
-4. have the controller move every legacy Ready item to `Planning` and verify
-   each resulting transition;
-5. run `to-plan --auto` for each item, including those with an existing marker,
-   before creating its runner-authored Ready handoff.
-
-Do not automate Project option creation or rename. Do not preserve an Agent
-Brief compatibility path.
+Before adopting a new Status schema, apply the human-owned migration gate in
+[project configuration](project-config.md). A display-name rename alone does
+not require that migration.

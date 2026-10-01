@@ -29,22 +29,22 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    blocked-slot claims together exceed the invocation's slot limit.
 6. Keep one separate planning lane. It preserves assignment and planning
    handoff claims but never consumes one of the configured implementation slots.
-   Follow [Planning Lane](planning-lane.md) for its worktree, agent, authority,
-   handoff, and blocker rules. Do not reserve agent capacity for Planning;
+   Follow [Todo Lane](todo-lane.md) for its worktree, agent, authority,
+   handoff, and blocker rules. Do not reserve agent capacity for Todo;
    start it only from currently spare capacity, then never preempt it.
 7. When an implementation slot requeues for contract-preserving planning,
    release the slot but park its assignment, branch, worktree, PR, dirty work
    and idle ticket context on the planning claim. Restore that same ownership
-   when the handoff reacquires a slot. A Backlog handoff instead removes all
-   skill-owned artifacts and retains no claim.
+   when the handoff reacquires a slot. Handle a human move to Backlog under the
+   [failure-isolation procedure](#failure-isolation-and-finish-gate).
 8. Apply [Terminal Required-CI Parking](#terminal-required-ci-parking) only to a
    qualifying failure after its repair budget, and the
    [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket) for missing
    authority or a decision. Parked implementation claims
    consume neither an implementation slot nor agent capacity.
-9. Keep Backlog triage as a tail lane. Follow
+9. Keep Todo triage as a tail lane. Follow
    the authoritative execution-clear predicate in
-   [Backlog Triage Lane](triage-lane.md#dispatch). It consumes no implementation
+   [Todo Triage Lane](triage-lane.md#dispatch). It consumes no implementation
    slot and processes one issue at a time.
 10. Keep ready epics and human actions in the separate
    [Epics And Human Frontier](human-frontier.md). They consume neither a slot
@@ -81,10 +81,6 @@ Resume the same agent for actionable feedback or base repair.
 Apply [Route Agents By Task](ticket-lifecycle.md#route-agents-by-task) and record
 the selected agent in the existing ownership record when selecting each
 persistent ticket agent and helper.
-Use the portable default-owner capability for every normal ticket owner and
-planner, selecting only an eligible configured profile when Agent Setup is
-present. Never infer exceptional capability from topic, scope, plan size,
-module count, or language count.
 
 ### Conflict Admission Gate
 
@@ -169,14 +165,14 @@ bounded liveness recovery releases capacity.
 ## Scheduling
 
 Before starting new work, recover and select claim classes in the order defined
-by [Planning Lane](planning-lane.md#scheduling).
+by [Todo Lane](todo-lane.md#scheduling).
 
 At every controller event or worker yield, perform all independent runnable
 actions that fit the slot and active-agent limits. Exhaust each class before
 dispatching the next:
 
-1. Finish any interrupted assigned-Backlog cleanup before new claims.
-   Reconcile resumable authority pauses and park newly blocked operations
+1. Exclude Backlog from automatic work and recovery. Reconcile eligible
+   resumable authority pauses and park newly blocked operations
    through their controller procedure before selecting another ticket.
 2. Merge the oldest merge-ready slot, unless an explicit dependency requires a
    different order. Admit or merge only one at a time.
@@ -187,22 +183,22 @@ dispatching the next:
 5. Resume paused local implementation slots in claim order.
 6. Finish a current contract-preserving replan, other plan, or verified
    planning handoff without preemption. Choose preserved replan claims before
-   other Planning claims.
+   other Todo claims.
 7. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
    `Ready to implement` tickets one at a time, and launch unrelated slot agents
    until the in-flight or active-agent limit is reached.
-8. Start the next ranked `Planning` item with the default-owner capability only
+8. Start the next ranked `Todo` item with the default-owner capability only
    when the planning lane and active agent capacity are free after maximizing
    runnable implementation. An AFK Wayfinder research or task item uses this
    same step, but each non-research child receives a fresh provider context and
    research uses the required `research` subagent. Resume a marked Wayfinder
-   reconciliation before new Planning work. Surface unassigned Wayfinder HITL
+   reconciliation before new Todo work. Surface unassigned Wayfinder HITL
    frontier work and assigned HITL attention without dispatching either.
 9. Monitor all remote slots together only when no local or controller action
    remains.
 10. After the authoritative execution-clear predicate in
-   [Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, process the next
-   unblocked Backlog `needs-triage` item through the triage tail lane.
+   [Todo Triage Lane](triage-lane.md#dispatch) is satisfied, process the next
+   unblocked Todo `needs-triage` item through the triage tail lane.
 
 At startup and after every refreshed query, present the changed human frontier
 packet from [Epics And Human Frontier](human-frontier.md), together with the
@@ -212,7 +208,7 @@ wait for either while any step above remains runnable.
 ### Refresh Gate
 
 Require one successful complete Project query and verified-base refresh before
-new selection after a merge, parked or released slot, Planning or Backlog
+new selection after a merge, parked or released slot, Todo or Ready
 handoff, epic closure, user prompt, controller resumption, or other event that
 can change capacity, dependencies, or eligibility. Rebuild and rank every class
 from that snapshot before a new claim or capacity-dependent dispatch, and apply
@@ -224,17 +220,9 @@ complete post-mutation query satisfies the gate; reuse that snapshot until a
 later relevant mutation or event invalidates it. Never preempt a valid occupied
 slot for newly higher-priority work.
 
-Planning runs read-only beside implementation, enters the controller lane only
-at assignment, comment publication, and Status transitions, and continues to
-completion without preemption. Once handed off, the same assigned issue enters
-the next available implementation slot. Apply the planning lane's reconciled
-three-attempt recovery to planner loss, crash, or timeout; do not classify
-those execution failures as semantic blockers.
-
-Contract-preserving replan claims outrank all new Ready and Planning work but
-never preempt an active agent. They retain their original claim order when
-several slots requeue. Backlog items are never queue candidates; only an
-interrupted current-runner cleanup is recoverable.
+Use [Todo Lane](todo-lane.md) for handoffs and bounded planner recovery.
+When several slots requeue, retain their original claim order ahead of new
+Ready and Todo work; never preempt an active agent.
 
 ## Terminal Required-CI Parking
 
@@ -363,26 +351,23 @@ occurrence. Discover and add the narrow named lock before retrying. Pause new
 claims when the same collision or infrastructure failure affects two slots or
 the verified base.
 
-After a verified Backlog handoff, cleanup failure is ticket-local. Release
-scheduler capacity, report the exact unreconciled artifact, and never delete it
-by guess. Keep the runner assigned as the durable cleanup lease until the
-idempotent finish state proves that its PR, processes, resource grants,
-worktree, and branches are gone; unassign last. A later run may finish only an
-assigned Backlog cleanup with verified runner provenance. An unassigned Backlog
-item with `ready-for-agent` is a planning candidate, one with the configured
-human-work label remains human-owned, and one with `needs-triage` belongs to the
-triage tail lane. Other unassigned Backlog work remains unclassified and
-human-owned.
+If an item is now in Backlog, stop its writers and release capacity. Preserve
+and report any assignment, PR, process checkpoint, worktree, or branch without
+mutating that ticket or cleaning its artifacts. Backlog role labels and prior
+ownership never authorize work; only a human promotion makes it eligible again.
+Keep Backlog issues in the native dependency graph, so they can still block
+eligible dependants, but exclude them from automatic frontier actions.
 
 Pass the refresh gate before evaluating the finish state. Finish successfully
 only when the authoritative execution-clear predicate in
-[Backlog Triage Lane](triage-lane.md#dispatch) is satisfied, the complete live
+[Todo Triage Lane](triage-lane.md#dispatch) is satisfied, the complete live
 query has no non-deferred triage candidate after merge reconciliation, no
 marked Wayfinder reconciliation claim remains, and no authority/decision pause,
 human action, Wayfinder
 human-frontier item, or assigned Wayfinder HITL attention item remains.
-Dependency-parked
-Backlog items do not prevent success; report their live blockers. If only human
+Excluded Backlog items do not prevent completion of the authorized queue;
+report any of them that blocks eligible work or retains interrupted artifacts.
+Dependency-parked Todo items retain their normal blocker reporting. If only human
 actions, verified authority/decision pauses, Wayfinder human-frontier items,
 and/or assigned HITL attention remain,
 return

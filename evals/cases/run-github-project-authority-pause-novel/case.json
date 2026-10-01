@@ -52,7 +52,7 @@
     },
     {
       "id": "decision-preservation",
-      "text": "Treats the actual human-required packet on #55 as a decision pause preserving its PR and partial work, not automatic Backlog transfer, PR closure, branch deletion, or cleanup. Only a recorded stakeholder direction to abandon work can authorize that cleanup; an accepted new contract resumes controlled replanning with retained artifacts."
+      "text": "Treats the actual human-required packet on #55 as a decision pause preserving its PR and partial work, not automatic Backlog transfer, PR closure, branch deletion, or cleanup. Only a recorded stakeholder direction to abandon work can authorize cleanup while the ticket remains in Todo or a later eligible column, before a final return to Backlog; never resume cleanup in Backlog; an accepted new contract resumes controlled replanning with retained artifacts."
     }
   ],
   "provenance": {

@@ -52,7 +52,7 @@ install them, and the workflows never install them implicitly.
 | `deliver-spec` GitHub readiness | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
 | `deliver-spec` and [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tasks | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | [`run-github-project`](skills/run-github-project/SKILL.md) behavioral implementation | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
-| `run-github-project` Backlog triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
+| `run-github-project` Todo triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
 | `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-github-project/references/workflow-providers.md) |
 
 Delivery and parallel implementation use one fresh independent read-only reviewer
@@ -118,7 +118,7 @@ for its lane-specific fallback and blocking behavior.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; the implementation owner diagnoses and fixes failures, with optional read-only investigation helpers.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — use when orchestration is requested or parallel work is useful; dispatch independent ready work in isolated worktrees, use `tdd` directly at approved behavior seams, accept each task once before integration, and rerun affected checks without a second routine lead sign-off; preserve same-owner repair, final joined review, and read-only review mode while reusing sequential worker slots and accounting for safe retirement or retention.
 - [`to-plan`](skills/to-plan/SKILL.md) — turn one ready GitHub issue or an in-chat task into a repository-grounded, executor-ready recipe with stable task IDs, explicit acyclic dependencies, safe parallelism notes, concrete tests, and bounded repair rules.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, and record ticket-local pauses while the board continues.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with current-column authorization, human-only Backlog promotion, and deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, and record ticket-local pauses while the board continues.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
 
 Workflows that delegate agents share the [subagent selection and handoff

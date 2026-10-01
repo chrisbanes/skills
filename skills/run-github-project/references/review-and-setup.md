@@ -24,14 +24,16 @@ Read closest trusted instructions and require an explicit reference to
 `docs/agents/run-github-project.md`; use
 [project configuration](project-config.md) as its structure. Require repository
 identity, default/base branches and closure policy; Project owner/number/URL/node
-ID; Status field and Backlog/Planning/Ready/In-progress/Done options; exact
+ID; Status field and Backlog/Todo/Ready/In-progress/Done options; exact
 needs-triage, epic, and human-work labels; complete optional Wayfinder labels;
 Priority field/options; optional trusted filter; merge
 method; Done automation/archive behavior. Store names with IDs; a renamed name
 is repairable drift but an ID resolving elsewhere stops work. Never create or
 rename Project fields/options. Apply the planning lane migration gate only when
 adopting that Status schema, not when adding or repairing mappings for a schema
-already in use. Allow `closing-keyword` only when base is the default branch.
+already in use. Humans perform any legacy-item placement; setup and execution
+never promote Backlog or require transition-history authorization. Allow
+`closing-keyword` only when base is the default branch.
 When Agent Setup is present, validate unique profile names, required default
 owner profiles, and runtime role/model/reasoning compatibility. Keep the
 selected lead model unchanged. Agent selection uses configured defaults and
@@ -113,7 +115,7 @@ unknown state.
 Treat a legacy `Execution approver logins` entry as obsolete configuration.
 Remove it during an otherwise authorized setup edit when no old-digest claim
 depends on the binding; otherwise report the deferred cleanup. Its presence or
-contents never gate Planning eligibility.
+contents never gate Todo eligibility.
 
 Setup uses the read-only pagination, retry, and incomplete-read rules from
 [remote reconciliation](remote-reconciliation.md). If a complete configuration

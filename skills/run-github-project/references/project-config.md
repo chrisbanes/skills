@@ -31,8 +31,8 @@ this template over it. Follow the
 - Field ID: `<PVTSSF_...>`
 - Backlog name: `<Backlog>`
 - Backlog option ID: `<option-id>`
-- Planning name: `<Planning>`
-- Planning option ID: `<option-id>`
+- Todo name: `<Todo>`
+- Todo option ID: `<option-id>`
 - Ready to implement name: `<Ready to implement>`
 - Ready to implement option ID: `<option-id>`
 - In progress name: `<In progress>`
@@ -102,6 +102,15 @@ Keep human-readable names beside IDs so startup validation can distinguish a
 rename from an ID that now identifies a different object. Preserve repository-
 specific comments and additions when repairing stale mappings.
 
+`Todo` is the default display name for the lane that queues planning. Pass its
+configured name through `--planning-status`; planning action names and
+`blockedPlanningClaims` still describe that work. Current column membership is
+authority. Never read transition history to prove authorization or a handoff.
+Preserve an existing binding's verified lane name, including `Planning`, until
+a human renames the live option and an authorized setup reconciles the same
+option ID. A display-name rename alone does not require moving items or running
+the Status-schema migration.
+
 Treat the epic label as a work-shape declaration and the human-work label as a
 next-action role. Require both mappings even when the current Project has no
 matching issue. Never infer either role from issue titles or bodies. Humans
@@ -114,12 +123,15 @@ resolves to another label. A renamed matching ID is repairable drift. The map
 label identifies the parent map; the other four labels are mutually exclusive
 child types. Never create, rename, or infer any of them.
 
-Humans own the Project schema. Never create or rename Status options from the
-runner. Before migrating an existing queue, require zero `In progress` items,
-then have the controller move every legacy Ready item to `Planning` and verify
-each transition. Revalidate even an existing marker plan through the planning
-lane before its runner-authored Ready handoff. An existing `Execution approver
-logins` entry is obsolete and must not affect eligibility.
+Humans own the Project schema and all promotion out of Backlog. Never create
+or rename Status options, promote Backlog, or process Backlog work from the
+runner. Before adopting a new schema, require zero `In progress` items and
+have humans create and verify `Backlog`, `Todo`, and `Ready to implement` options,
+configure their IDs, and place legacy work needing a new plan in Todo. Do not
+retain an Agent Brief compatibility path. Revalidate
+usable marker plans by their identity, integrity, and configured base; do not
+require Status event history. An existing `Execution approver logins` entry is
+obsolete and must not affect eligibility.
 
 Omit Agent Setup to use runtime-default agents under the existing capability
 rules. When present, require unique profile names, a default-owner profile for
