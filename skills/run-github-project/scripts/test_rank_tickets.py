@@ -931,6 +931,25 @@ class RankTicketsTest(unittest.TestCase):
             output["parkedBlocked"],
         )
 
+    def test_relabelled_todo_claim_remains_a_blocked_planning_claim(self) -> None:
+        for labels in (
+            ["needs-triage"], ["epic"],
+            ["ready-for-agent", "needs-triage"], ["ready-for-agent", "epic"],
+        ):
+            with self.subTest(labels=labels):
+                claimed = ticket(414, projectStatus="Todo", labels=labels,
+                                 assignees=["chris"])
+                returncode, output = run_ranker([claimed, ticket(415)])
+                self.assertEqual(0, returncode)
+                self.assertEqual([414], [entry["number"]
+                                         for entry in output["blockedPlanningClaims"]])
+                self.assertTrue(output["blockedPlanningClaims"][0]["reasons"])
+                for key in ("claims", "excluded", "triageCandidates", "readyEpics",
+                            "humanActions", "parkedBlocked"):
+                    self.assertEqual([], output[key], key)
+                self.assertEqual([415], [entry["ticket"]["number"]
+                                         for entry in output["candidates"]])
+
     def test_current_user_assignment_does_not_turn_human_work_into_cleanup(self) -> None:
         human_work = todo_role_ticket(
             23,

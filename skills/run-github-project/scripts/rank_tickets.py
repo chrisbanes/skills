@@ -1280,15 +1280,23 @@ def main() -> int:
                         args.needs_triage_label, args.epic_label, args.human_work_label,
                     ))
                 ):
-                    role_analyses.append(
-                        analyze_role_ticket(
-                            ticket,
-                            needs_triage_label=args.needs_triage_label,
-                            epic_label=args.epic_label,
-                            human_work_label=args.human_work_label,
-                            priorities=priorities,
-                        ),
+                    role_analysis = analyze_role_ticket(
+                        ticket,
+                        needs_triage_label=args.needs_triage_label,
+                        epic_label=args.epic_label,
+                        human_work_label=args.human_work_label,
+                        priorities=priorities,
                     )
+                    if (
+                        has_current_user_assignment(ticket, args.current_user)
+                        and args.human_work_label not in labels
+                    ):
+                        invalid_planning_claimed.append({
+                            "number": ticket["number"],
+                            "reasons": role_analysis["errors"] + role_analysis["exclusions"],
+                        })
+                    else:
+                        role_analyses.append(role_analysis)
                 else:
                     execution_analyses.append(
                         analyze_ticket(
