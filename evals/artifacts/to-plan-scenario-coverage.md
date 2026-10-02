@@ -2,8 +2,9 @@
 
 The runtime RED/GREEN scenarios formerly embedded in `to-plan` are maintained
 as evaluation requirements. The synthetic corpus cannot contact GitHub, so
-GitHub-dependent scenarios remain explicit live-execution requirements rather
-than simulated passing tests.
+GitHub-dependent scenarios retain explicit live-execution requirements. Offline
+normalized artifact checks below validate only mechanical identity and lineage;
+they do not simulate a passing provider workflow.
 
 | Runtime safeguard | Current evidence | Status |
 | --- | --- | --- |
@@ -21,3 +22,24 @@ than simulated passing tests.
 These cases do not establish Astra or 5.6 compatibility until the approved
 model comparison runs. They preserve the original safeguards while separating
 deterministic local evidence from provider-dependent behavior.
+
+## Issue 95 coverage
+
+- `to-plan-integration-amendment-direct`: UI06-style validator compatibility,
+  private-data exclusions and retained-control inventory; both consumer handoffs.
+- `to-plan-integration-amendment-novel`: receipt decoder relocation and retained
+  writer ownership; explicit identities, error paths and affected review.
+- `to-plan-integration-amendment-negative`: non-overlap/no-op restraint plus
+  foreign, unknown, material, stale/forked and ambiguous-publication blockers.
+  The objective grader checks no writes; the rubric scores the response routes
+  and their supporting evidence, including the pre-publication consumer-capability
+  blocker, with no claim of deterministic semantic grading.
+- `test_to_plan_contract.py`: offline public-seam and CLI tests reject altered
+  anchors, stale candidates, broken history, unsupported epochs and unverified
+  result/readiness claims. Trusted expected anchors are evaluator-owned, outside
+  subject outputs. These checks cannot establish semantic compatibility or live
+  authority and completeness.
+
+Definitions and deterministic tests are current; these three cases have not
+been run against a model. Provider publication/readback and actual consumer
+adoption remain unverified. Existing score tables are unchanged.

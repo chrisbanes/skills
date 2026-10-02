@@ -414,3 +414,10 @@ Append a decision to the run's JSONL audit ledger:
 python3 evals/run.py audit --output-dir .scratch/skill-evals/<run-id> \
   --id <case:arm:repetition> --decision accept --rationale "Evidence checked"
 ```
+
+Three additional `to-plan` calibration cases cover unchanged-scope integration
+amendments, receipt/concurrency-sensitive integration, and no-change/unsafe-route
+restraint. Offline artifact checks validate identity, digest and lineage against
+evaluator-owned anchors; they do not establish live publication, semantic review
+quality or consumer adoption. The case definitions are validated; no new model
+results are reported.

@@ -834,6 +834,17 @@ def main(argv: list[str]) -> int:
                     print("task_graph expectation must be an object", file=sys.stderr)
                     return 2
                 failures.extend(validate_task_graph(subject, graph_rules, label))
+    contract_rule = expectations.get("effective_contract")
+    if contract_rule is not None:
+        # Trust stays with the evaluator; never read it from subject workspace.
+        sys.path.insert(0, str(evals_root.parent))
+        from evals.validators.plan_contract import validate_effective_contract
+        try:
+            artifact = json.loads((workspace / contract_rule["artifact"]).read_text(encoding="utf-8"))
+            trusted = json.loads((expectation_path.parent / contract_rule["trusted"]).read_text(encoding="utf-8"))
+            failures.extend(validate_effective_contract(artifact, trusted))
+        except (OSError, KeyError, TypeError, ValueError) as error:
+            failures.append(f"cannot read effective contract: {error}")
     if failures:
         print("\n".join(failures), file=sys.stderr)
         return 1
