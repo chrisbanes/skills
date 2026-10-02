@@ -1,7 +1,7 @@
 ---
 name: deliver-spec
-description: Use when explicitly asked to deliver one approved GitHub or local spec through a reviewed pull request, or delegated one claimed implementation ticket by a running Project controller.
-compatibility: "Behavior changes require tdd; triage is conditional. Parallel implementation may use implement-with-subagents. Never installs providers."
+description: Use when explicitly asked to deliver an approved GitHub or local spec through a reviewed pull request, or when a Project controller delegates one claimed implementation ticket.
+compatibility: "Implementation coordination uses the bundled procedure. Behavior changes require the separately installed tdd skill; triage is conditional. Never installs providers."
 disable-model-invocation: true
 ---
 
@@ -9,9 +9,10 @@ disable-model-invocation: true
 
 ## Core principle
 
-Deliver one spec with a single implementation owner and independent review.
-Own implementation, repairs, PR identity, and final-head evidence; delegate
-independent subtasks only when useful.
+Deliver one spec through coordinated implementation owners and independent
+review. The delivery lead owns architecture, integration, task acceptance,
+repairs to lead-owned coordination work, non-merge PR delivery, and final-head
+evidence; workers own settled, bounded implementation tasks and their repairs.
 Manage approval in standalone mode; accept the controller's verified authority
 in Project mode. Never select work from a Project queue.
 
@@ -39,45 +40,53 @@ Project run already owns that issue, return it to that controller.
    source, acceptance criteria, code facts, dependencies, and tests. Resolve
    findings through `to-plan` and reapprove repaired conversation plans. Stop
    without a reviewed and approved plan.
-4. Keep implementation with the delivery lead by default. Record the fixed
-   base and use a clean task checkout, preserving unrelated user work. Implement
-   approved slices in dependency order and validate their acceptance criteria.
-   Read [Evidence and review](references/evidence-and-review.md) before
-   implementation and apply its reuse and validation procedure.
-   For behavior changes, require the separately installed `tdd` skill and
-   approved test seams before editing; obtain missing seam agreement and stop
-   that behavior work if `tdd` is unavailable. Documentation and other work
-   without a meaningful test seam use focused validation. Materialize the
-   reviewer packet from [Evidence and review](references/evidence-and-review.md)
-   in an owner-only system-temp file; recreate it on resume.
-   Use `implement-with-subagents` only for explicitly requested orchestration
-   or independently useful parallel tasks. Honor its ownership, isolation,
-   acceptance, integration, and repair gates when selected. Keep a single
-   tightly coupled task with the delivery lead; do not require a child worker
-   or extra worktree solely to separate implementation from coordination.
-5. Self-review the task scope, commit only task-owned changes, and run the
-   required checks with the provenance and applicability recorded under
-   [Evidence and review](references/evidence-and-review.md). Require one
-   fresh independent read-only reviewer for every delivery PR. Resolve that
-   capability before implementation; if
-   unavailable, report the blocker rather than waive review. Use an investigator
-   in review mode or equivalent, with no inherited implementation conversation.
-   Supply the self-contained reviewer packet, including prior findings,
-   dispositions and outstanding coverage. Require requirements and standards
-   findings with evidence and a `ship`, `fix-first`, or `rethink` verdict.
-   The default route requires no external review skill or issue-tracker setup.
-   Honor an explicitly invoked provider's actual contract under the reference;
-   report missing scope or capacity rather than narrowing its invocation. Reuse
-   a current final joined review from `implement-with-subagents` when it covers these
-   inputs. Add reviewers only for distinct risks or substantial scope.
-   Return findings to the implementation owner. After repairs, rerun affected
-   checks and review the changed range plus interactions; broaden when earlier
-   evidence is invalid or affected scope cannot be bounded. Confirm combined
-   evidence covers the final clean head before pushing. Create and verify one
-   draft PR for a nonempty integrated diff, or reuse the verified PR on resume.
-   Use closing links only for real, verified GitHub issues.
+4. Reconcile implementation and acceptance evidence before dispatch; never
+   reassign accepted work or reimplement a current candidate just to satisfy
+   worker routing. Resolve final-reviewer capability before any implementation
+   and worker capability/capacity before new nontrivial work or a worker repair.
+   Before either implementation path, record the fixed base and use a clean
+   task checkout. Stop if unrelated uncommitted changes are present. Reuse a
+   suitable clean checkout; create isolated worktrees only when concurrency or
+   repository isolation requires them.
+   Assign each new settled task to a worker, including one task in sequential
+   work; do not split tasks artificially. The lead may directly edit only a
+   fully understood, low-risk change when handoff clearly costs more and no
+   useful concurrent work exists. Record that reason; the lead owns repairs to
+   this initial edit, never a worker's task. This exception needs no worker.
+   Otherwise follow the bundled [implementation procedure](references/implementation-mode.md)
+   for single, sequential and concurrent tasks. It owns worker capability,
+   isolation, dispatch, capacity, acceptance, integration, waiting and
+   same-owner repair. Dispatch proven independent work by default without a
+   separate request for parallelism; keep making useful independent progress
+   while workers run. For
+   behavior changes, require approved test seams and the separately installed
+   `tdd` skill before editing; stop if unavailable. Use focused validation when
+   there is no meaningful test seam. Follow [Evidence and review](references/evidence-and-review.md)
+   for evidence provenance, applicability, amendment reuse and reviewer packets.
+5. Each implementation owner self-reviews, commits only task-owned changes,
+   and reports required checks with provenance under Evidence and review; this
+   also applies to the lead's qualifying edit. Accept each delegated task once
+   before integration. Require one fresh independent read-only reviewer per
+   delivery PR, with capability resolved before implementation. If unavailable,
+   report a blocker; never waive review. Use an investigator in review mode or
+   equivalent without inherited implementation context. Give it the local
+   evidence reference's owner-only packet, including prior findings and
+   dispositions. Require evidence-backed requirements and standards findings
+   with a `ship`, `fix-first`, or `rethink` verdict. Honor explicitly invoked
+   provider contracts, scope, roles, capacity and output; report missing
+   coverage rather than narrowing or substituting. The default route needs no
+   external review skill or tracker. Reuse a current joined review from the
+   bundled procedure only when it covers the exact inputs; add reviewers only
+   for distinct risks or substantial scope. Return findings to the owner. After
+   repairs, rerun affected checks and review changed ranges and interactions;
+   broaden when evidence is invalid or scope cannot be bounded. Confirm combined
+   coverage of the final clean head before pushing. Create and verify one draft
+   PR for a nonempty integrated diff, or reuse the verified PR on resume. Use
+   closing links only for verified GitHub issues.
 6. Use `shepherd` for CI and reviewer feedback and PR operations. Keep code
-   repairs with the delivery lead, or the original task owner when delegated.
+   repairs with the original implementation owner; only repairs to the lead's
+   permitted initial direct edit remain with the lead. Never move a worker's
+   repair to the lead.
    Apply the same TDD, validation, and independent review gates to repairs and
    recheck the final head after each push. Return scope or design changes for a
    decision. Merge only with explicit authority valid for this invocation.

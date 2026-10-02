@@ -113,10 +113,10 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
-- [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or a verified Project-controller handoff through planning, direct implementation, independent plan and final-head review, and PR shepherding; retain verified integration work, validation provenance and complete reviewer handoffs while honoring selected review contracts.
+- [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or verified Project-controller handoff through worker-owned implementation, lead integration and acceptance, independent plan and final-head review, and PR shepherding; retain validation provenance and complete reviewer handoffs while honoring selected review contracts.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, reconcile changelogs and Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; the implementation owner diagnoses and fixes failures, with optional read-only investigation helpers.
-- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — use when orchestration is requested or parallel work is useful; dispatch independent ready work in isolated worktrees, use `tdd` directly at approved behavior seams, accept each task once before integration, and rerun affected checks without a second routine lead sign-off; preserve same-owner repair, final joined review, and read-only review mode while reusing sequential worker slots and accounting for safe retirement or retention.
+- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — coordinate one or more worker-owned implementation tasks through dependency-aware dispatch, task acceptance, integration, and same-owner repair; dispatch independent ready work concurrently within actual capacity, reuse sequential worker slots, and support read-only orchestration review.
 - [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans and reviewed integration amendments with authenticated publication and explicit consumer handoffs.
 - [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with current-column authorization, human-only Backlog promotion, and deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, preflight execution and qualification prerequisites, prioritize active delivery through safe planner checkpoints, and record ticket-local pauses while independent work continues.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
@@ -125,6 +125,9 @@ Workflows that delegate agents share the [subagent selection and handoff
 reference](references/subagent-selection.md). Each workflow retains its own
 delegation trigger, authority, and acceptance rules. Each consuming skill also
 contains a copy of the reference for standalone installation.
+`deliver-spec` and `implement-with-subagents` also bundle synchronized copies of
+the implementation procedure, so spec delivery can delegate without installing
+the orchestration skill separately.
 
 ### Migration from pre-cluster skills
 

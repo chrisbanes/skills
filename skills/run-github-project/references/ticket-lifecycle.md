@@ -62,12 +62,14 @@ For every ordinary implementation
 ticket, invoke `deliver-spec` with this verified packet under its
 [Project handoff procedure](../../deliver-spec/references/project-handoff.md).
 Keep the persistent ticket context as delivery lead and integration owner.
-Return observed implementation/repair/review/CI phase boundaries and capacity
-or resource waits with the existing handoff evidence so the controller can
-persist [timings](drain-scheduler.md#phase-timing-and-stalls) across compaction.
-Retain interval identities on resume rather than restarting elapsed counters.
-Missing required capability blocks only that ticket. The ticket delivery lead
-implements directly by default; child implementation owners are optional.
+`deliver-spec` owns the implementation-worker and integration procedure;
+preserve its same-owner repair rule and fit all descendants within the
+controller's actual spare capacity. Return observed implementation, repair,
+review, and CI phase boundaries, plus capacity or resource waits, with the
+existing handoff evidence so the controller can persist
+[timings](drain-scheduler.md#phase-timing-and-stalls) across compaction. Retain
+interval identities on resume rather than restarting elapsed counters. Missing
+required capability blocks only that ticket.
 Wayfinder, triage, and epic lanes keep their own procedures.
 
 ### Repair progress gate

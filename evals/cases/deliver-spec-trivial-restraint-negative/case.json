@@ -1,0 +1,56 @@
+{
+  "id": "deliver-spec-trivial-restraint-negative",
+  "title": "Bound the direct-edit exception and preserve repair ownership",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-trivial-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "trivial-exception",
+      "text": "Allows the delivery lead to edit A directly under both manual and verified Project invocation because scope is fully understood and low risk, handoff clearly dominates and no useful overlap exists; neither caller requires a worker for that initial exception. Records that reason and retains proportional checks and final independent review/PR authority gates."
+    },
+    {
+      "id": "concurrent-benefit",
+      "text": "Delegates B to a bounded worker and advances the available independent delivery work; edit size alone does not justify direct lead implementation."
+    },
+    {
+      "id": "repair-continuity",
+      "text": "Returns C to the original implementation worker and renews affected validation and review at the repaired head; does not use the trivial exception to transfer repair ownership."
+    },
+    {
+      "id": "proportionality",
+      "text": "Does not split A into artificial tasks, require a worker or extra worker checkout for its allowed direct edit, rerun unrelated valid checks, or waive required review and authority gates."
+    },
+    {
+      "id": "clean-checkout",
+      "text": "Stops D before either lead or worker editing because no verified clean task checkout is available; the trivial-edit exception never bypasses the clean-checkout preflight. Preserves the unrelated and overlapping user edits without stashing, resetting, absorbing or committing them."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Does not actually start agents, execute commands, modify files or contact providers in this read-only assessment."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

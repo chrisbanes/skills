@@ -12,10 +12,13 @@ handoff or take over a Project claim.
    configuration and authority leases, fixed base, worktree/branch/PR head,
    review evidence, repair usage, and agent capacity. Reconcile live state on
    resume; return gaps to the controller without selecting or claiming work.
-   Resolve capacity for one independent reviewer before implementation; review
-   can follow implementation sequentially. Do not require child-worker
-   capacity for direct implementation. Queue temporarily busy reviewer capacity;
-   report a capability blocker only when independent review cannot run.
+   Resolve independent-reviewer capability before any implementation. Resolve
+   worker capability and capacity before new nontrivial implementation or a
+   worker-owned repair; apply `deliver-spec`'s low-risk lead-edit exception as
+   written. Reconcile existing candidate evidence without reassigning accepted
+   work or requiring a worker merely to finish review and delivery. Review can
+   follow implementation sequentially. Queue temporarily busy capacity; report
+   a capability blocker only when the required capability cannot run.
 2. Accept the verified execution handoff as satisfying the implementation
    workflow's source, plan, and user-approved test-seam prerequisites. Require
    no further human confirmation for an in-scope stage. Independently review
@@ -28,16 +31,16 @@ handoff or take over a Project claim.
    and budgets; return unsupported or invalid handoffs to the controller. It
    alone revalidates claims/leases and schedules continuation. Preserve Project
    repair budgets and replan rules.
-3. Follow `deliver-spec`'s implementation procedure with the supplied tasks and
-   materialized source, including the shared
-   [implementation and validation procedure](evidence-and-review.md). Keep the
-   persistent ticket agent as implementation, integration, repair, and non-merge
-   PR owner by default. Use
-   `implement-with-subagents` only for requested orchestration or independently
-   useful parallel tasks. When selected, task descendants retain isolated
-   branches and same-owner repairs; count them against spare Project capacity
-   and serialize or yield when needed. Do not take over an already delegated
-   task solely to bypass its ownership rules.
+3. Apply `deliver-spec`'s documented low-risk lead-edit exception where it
+   qualifies. Apply [Evidence and review](evidence-and-review.md)'s
+   implementation and validation procedure to every path, including that
+   initial lead edit. For all other supplied implementation, follow the bundled
+   [implementation procedure](implementation-mode.md), which delegates single,
+   sequential and concurrent tasks to workers and owns their implementation
+   gates. Keep the persistent ticket context as architecture, integration,
+   acceptance and non-merge PR delivery lead. Count descendants against actual
+   spare Project capacity and preserve controller scheduling priority. Do not
+   transfer a delegated task or repair to the lead.
 4. Before any push, satisfy the Project's
    [review contracts](../../run-github-project/references/review-contracts.md).
    Give the single independent reviewer the
@@ -55,7 +58,9 @@ handoff or take over a Project claim.
    and reviews cover the final head. For an empty diff, return `no-change` and
    verification evidence for controller reconciliation.
 6. Use `shepherd` for feedback and PR operations, with code repairs through
-   the delivery lead or original delegated owners. Apply Project verification,
+   the original implementation owner; only repairs to the lead's permitted
+   initial direct edit remain with the lead. Never move a worker's repair to
+   the lead. Apply Project verification,
    repair, monitoring, and CI-parking rules
    instead of generic shepherd cadence or the standalone 30-minute handback.
    In `drain`, process controller-discovered actionable events using its remote

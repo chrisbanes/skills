@@ -200,7 +200,7 @@ The Kotlin/Gradle benchmark contains 22 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-The workflows/writing benchmark contains 35 scored cases: direct, novel, and
+The workflows/writing benchmark contains 38 scored cases: direct, novel, and
 no-change coverage for each of its eight skills, plus additional workflow
 scenarios. The surrounding corpus also contains the two calibration-only
 missing-provider challenges described above.
@@ -212,7 +212,8 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-Twenty-nine additional workflow cases are calibration-only. Select them
+The workflows/writing corpus contains 41 calibration-only cases, including
+the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
 unresolved decisions, proof-gated report publication, implementation-plan
@@ -233,6 +234,14 @@ live subagent execution.
 Three shared-handoff calibrations check bounded implementation ownership,
 capability-based PR evidence helper selection, and restraint for one-off PR
 inspection. They also assess supplied state read-only.
+Three delivery calibrations compare manual and Project delegation, safe fork/join
+execution under caller capacity, temporary capacity versus absent worker
+capability, and the trivial-edit exception versus useful overlap and retained
+repair ownership and the clean-checkout preflight. They assess immutable state
+without live execution.
+Deterministic coverage stages `deliver-spec` alone, follows its local procedure
+and handoff links, and checks that its bundled procedure matches the orchestration
+skill's copy.
 Three Project-delivery calibrations cover automatic `deliver-spec` handoff,
 run-scoped `--auto-merge`, ticket-local authority pauses with continued board
 progress, durable resumption, and restraint for absent grants, read-only modes,
