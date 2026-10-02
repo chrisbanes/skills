@@ -83,8 +83,9 @@ large.
 Use exactly one plan template. Every observable slice names prerequisites,
 affected files and ownership/interfaces, the intended increment, concrete test
 seams and acceptance evidence, exact command plus working directory/setup/result,
-and observable completion. Reference authoritative requirements by stable
-identity instead of copying the specification. For a known one-function change,
+and observable completion. Reference retrievable authoritative requirements by stable identity instead of
+copying the specification. Conversation plans must embed the approved source
+contract needed for a fresh session; a chat reference is not retrievable evidence. For a known one-function change,
 a short edit description and exact acceptance check can be sufficient.
 Require ordered recipes, detailed symbol inventories, wiring, material branches,
 errors and failure evidence where uncertainty, safety or a necessary seam makes
@@ -117,8 +118,10 @@ keep the concise standard diagnosis, repair, and stop limits in Guardrails so
 the published plan carries them. Include additional sections only for distinct
 task-specific conditions.
 
-Perform an executor-readiness review from the written plan and its identified
-source alone. A fresh executor must locate and order the increments, understand
+Perform an executor-readiness review from the written plan and its retrievable
+source. For conversation mode, review the plan alone: include the approved goal,
+acceptance criteria, scope, constraints and material decisions in the artifact,
+without relying on chat history. A fresh executor must locate and order the increments, understand
 ownership and interfaces, create meaningful tests and validate without reopening
 material decisions. Routine implementation choices within that contract remain
 with the executor; missing authority, behavior or architecture decisions do not.

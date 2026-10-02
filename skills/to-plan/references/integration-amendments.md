@@ -87,7 +87,8 @@ Include the source manifest itself in the review packet with source URLs and
 exact content digests; verify it against the pinned manifest digest. Review and
 publication authority are separately authenticated metadata, never inferred from
 `classification`. Consumers must reject unknown version semantics rather than
-silently ignore them.
+silently ignore them. Reject missing or extra v1 payload keys; extending the
+semantic schema requires a recognized version, not an ignored extra member.
 
 `candidate` is the retained pre-integration starting SHA. `expected_head` is
 the PR head observed at publication: equal to `candidate` for pending integration,
@@ -192,7 +193,9 @@ to the full plan alone.
   blocks a ready claim, not authorized integration. A result record adds execution
   evidence; it cannot revise the immutable integration decision. New decisions
   require a new amendment or replan. Chain further amendments from the preceding
-  verified result candidate, never an unexecuted guessed result.
+  verified result candidate, never an unexecuted guessed result. Bind that prior
+  result to its effective tip/digest, starting candidate, resulting candidate,
+  target base, owner and PR; a matching next-start SHA alone is insufficient.
 - **`run-github-project`:** Verify that effective contract and the existing
   exclusive claim, current-column authority, native blockers/qualification,
   leases, base/head and retained owner/artifacts. Revalidate affected leases in

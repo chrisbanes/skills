@@ -12,6 +12,14 @@ import json
 import re
 
 
+AMENDMENT_FIELDS = frozenset({
+    "source", "plan", "sequence", "previous", "old_base", "new_base", "candidate",
+    "expected_head", "result_candidate", "owner", "worktree", "branch", "pr",
+    "classification", "rationale", "overlap", "integration", "retained_work",
+    "invalidated_evidence", "required_evidence",
+})
+
+
 def _canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
@@ -72,6 +80,7 @@ def validate_effective_contract(packet, trusted):
         previous = {"url": plan["url"], "digest": plan["digest"]}
         base = trusted["initial_base"]
         payload = None
+        prior_payload = None
         for sequence, record in enumerate(packet["amendments"], 1):
             fences = re.findall(r"```json\n(.*?)\n```", record["body"], re.S)
             markers = re.findall(r"<!--\s*to-plan:integration-amendment:([^>]*?)\s*-->", record["body"])
@@ -80,6 +89,14 @@ def validate_effective_contract(packet, trusted):
             payload = json.loads(fences[0], object_pairs_hook=_unique_object)
             if not isinstance(payload, dict) or not _canonical_types(payload):
                 return ["non-canonical amendment payload"]
+            if set(payload) != AMENDMENT_FIELDS:
+                return ["unknown or missing v1 amendment field"]
+            for key in ("source", "plan", "previous"):
+                identity = payload[key]
+                if not isinstance(identity, dict) or set(identity) != {"url", "digest"}:
+                    return [f"invalid v1 {key} identity fields"]
+                if not isinstance(identity["url"], str) or not identity["url"].strip() or not _sha(identity["digest"], 64):
+                    return [f"invalid v1 {key} identity"]
             if type(payload["sequence"]) is not int:
                 return ["invalid amendment sequence"]
             if not all(_sha(payload[key], 40) for key in ("old_base", "new_base", "candidate", "expected_head")):
@@ -109,12 +126,19 @@ def validate_effective_contract(packet, trusted):
                     return [f"missing concrete {key}"]
             if sequence > 1:
                 result = trusted.get("prior_results", {}).get(previous["url"])
-                if result != {"effective": previous, "base": payload["old_base"], "candidate": payload["candidate"]}:
+                if result != {
+                    "effective": previous, "base": payload["old_base"],
+                    "candidate": payload["candidate"], "starting_candidate": prior_payload["candidate"],
+                    "pr": prior_payload["pr"], "owner": prior_payload["owner"],
+                }:
                     return ["missing or stale preceding integration result"]
+                if prior_payload["result_candidate"] is not None and result["candidate"] != prior_payload["result_candidate"]:
+                    return ["preceding result contradicts its amendment"]
             if payload["sequence"] != sequence or payload["previous"] != previous:
                 return ["amendment sequence/predecessor mismatch"]
             if _digest(_canonical(payload)) != record["digest"]:
                 return ["amendment digest mismatch"]
+            prior_payload = payload
             previous = {"url": record["url"], "digest": _digest(_canonical({
                 "previous": previous["digest"], "amendment": record["digest"]}))}
         if packet["effective"] != previous:

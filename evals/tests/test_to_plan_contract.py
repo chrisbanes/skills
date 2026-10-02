@@ -115,9 +115,14 @@ class ContractTest(unittest.TestCase):
         trusted['base'], trusted['head'] = 'd' * 40, 'e' * 40
         self.assertTrue(validate_effective_contract(packet, trusted), 'unexecuted predecessor')
         trusted['prior_results'] = {prior['url']: {'effective': prior, 'base': 'b' * 40,
-                                                'candidate': 'e' * 40}}
+                                                'candidate': 'e' * 40, 'starting_candidate': 'c' * 40,
+                                                'pr': trusted['pr'], 'owner': trusted['owner']}}
+        incomplete = copy.deepcopy(trusted)
+        for field in ['starting_candidate', 'pr', 'owner']:
+            incomplete['prior_results'][prior['url']].pop(field)
+        self.assertTrue(validate_effective_contract(packet, incomplete), 'unbound prior result')
         self.assertEqual([], validate_effective_contract(packet, trusted))
-        for mutation in ['gap', 'fork', 'missing', 'stale-tip', 'unrelated-result']:
+        for mutation in ['gap', 'fork', 'missing', 'stale-tip', 'unrelated-result', 'unrelated-start', 'unrelated-owner', 'unrelated-pr']:
             with self.subTest(mutation=mutation):
                 p, t = copy.deepcopy(packet), copy.deepcopy(trusted)
                 if mutation == 'gap':
@@ -130,8 +135,11 @@ class ContractTest(unittest.TestCase):
                     p['amendments'].pop()
                     p['effective'] = prior
                     t['base'], t['head'] = 'b' * 40, 'c' * 40
-                else:
+                elif mutation == 'unrelated-result':
                     t['prior_results'][prior['url']]['candidate'] = 'f' * 40
+                else:
+                    field = {'unrelated-start': 'starting_candidate', 'unrelated-owner': 'owner', 'unrelated-pr': 'pr'}[mutation]
+                    t['prior_results'][prior['url']][field] = 'unrelated'
                 self.assertTrue(validate_effective_contract(p, t))
 
     def test_ready_requires_trusted_exact_result_and_evidence(self):
@@ -278,6 +286,56 @@ class ContractTest(unittest.TestCase):
         record = p['amendments'][0]
         record['body'] += '\n<!-- to-plan:integration-amendment:v99 -->'
         t['bodies'][record['url']] = digest(record['body'])
+        self.assertTrue(validate_effective_contract(p, t))
+
+    def test_v1_rejects_unknown_semantic_fields(self):
+        for value in [1, 'new policy', None, {}]:
+            p, t = fixture()
+            replace_payload(p, t, {'unknown': value})
+            self.assertTrue(validate_effective_contract(p, t))
+
+    def test_restraint_case_checks_decisions_not_fixture_heading(self):
+        root = Path(__file__).resolve().parents[2]
+        case = 'to-plan-integration-amendment-negative'
+        command = [sys.executable, str(root / 'evals/validators/text_case.py'), case]
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            (workspace / 'state.md').write_text('Immutable evaluation state')
+            result = subprocess.run(command, cwd=workspace, capture_output=True)
+            self.assertNotEqual(0, result.returncode, 'fixture alone is insufficient')
+            (workspace / '.scratch').mkdir()
+            routes = {'foreign': 'blocked', 'non_overlap': 'screened-baseline',
+                      'identical': 'no-op', 'unknown': 'blocked',
+                      'material': 'stakeholder-replan', 'stale': 'blocked',
+                      'ambiguous_write': 'reconcile-before-retry'}
+            artifact = workspace / '.scratch/assessment.json'
+            artifact.write_text(json.dumps(routes))
+            self.assertEqual(0, subprocess.run(command, cwd=workspace, capture_output=True).returncode)
+            routes['material'] = 'amendment'
+            artifact.write_text(json.dumps(routes))
+            self.assertNotEqual(0, subprocess.run(command, cwd=workspace, capture_output=True).returncode)
+
+    def test_prior_receipt_cannot_replace_a_predeclared_result(self):
+        p, t = fixture()
+        replace_payload(p, t, {'result_candidate': 'f' * 40, 'expected_head': 'f' * 40})
+        prior = copy.deepcopy(p['effective'])
+        second = copy.deepcopy(p['amendments'][0])
+        second['url'] += '-2'
+        p['amendments'].append(second)
+        replace_payload(p, t, {'sequence': 2, 'previous': prior,
+            'old_base': 'b' * 40, 'new_base': 'd' * 40, 'candidate': 'e' * 40,
+            'expected_head': 'e' * 40, 'result_candidate': None}, 1)
+        t['base'], t['head'] = 'd' * 40, 'e' * 40
+        t['prior_results'] = {prior['url']: {'effective': prior, 'base': 'b' * 40,
+            'candidate': 'e' * 40, 'starting_candidate': 'c' * 40,
+            'pr': t['pr'], 'owner': t['owner']}}
+        self.assertTrue(validate_effective_contract(p, t))
+
+    def test_source_identity_cannot_extend_v1_semantics(self):
+        p, t = fixture()
+        source = dict(t['source'], permission='new')
+        replace_payload(p, t, {'source': source})
+        t['source'] = source
         self.assertTrue(validate_effective_contract(p, t))
 
 

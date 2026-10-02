@@ -8,10 +8,12 @@
   "expected_skills": [
     "to-plan"
   ],
-  "task_mode": "review",
+  "task_mode": "edit",
   "kind": "negative",
   "fixture": "workflow",
-  "allowed_write_paths": [],
+  "allowed_write_paths": [
+    ".scratch/assessment.json"
+  ],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
   ],
@@ -45,6 +47,10 @@
     {
       "id": "evidence-limits",
       "text": "Separates pending integration result from exact starting candidate and readiness; preserves traceable valid full-candidate review and does not claim model execution, live provider proof or consumer adoption from offline snapshots."
+    },
+    {
+      "id": "route-reasons",
+      "text": "Explains all six scenario assessments with evidence needed to release blockers; the route JSON is only a deterministic classification check, while preservation, authority and reasoning are assessed by this rubric."
     }
   ],
   "provenance": {
