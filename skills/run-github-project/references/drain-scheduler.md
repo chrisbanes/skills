@@ -4,13 +4,14 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 
 ## Slot Model
 
-1. Default to two slots. Accept any positive user-specified limit and impose no
-   skill-defined maximum. Treat the limit as both the maximum number of
-   occupied implementation slots and the maximum number of concurrently active
-   ticket agents. A preserved parked claim is not an occupied slot.
-   Define active-agent capacity as the environment-reported number of
-   non-controller agents that can run simultaneously. Running ticket agents,
-   the planner, and descendants consume it; idle persistent contexts do not.
+1. Default to two implementation slots; accept any positive user limit without
+   a skill-defined maximum. Compute the effective slot limit from the strictest
+   applicable repository and invocation limits. Separately compute active-agent
+   capacity from the strictest runtime, repository and invocation concurrency
+   limits. Running ticket agents, planners and descendants consume active-agent
+   capacity; idle contexts do not. Parked claims consume neither. Pass the
+   effective slot limit to the ranker, not the currently free agent count.
+   Never turn a ranked candidate or idle slot into an agent-capacity grant.
 2. Give each occupied slot one ticket agent, issue, authority lease, warm
    worktree, branch, PR, verified SHA, remote-wait deadline, and fix-round count.
    Start unrelated ticket agents concurrently by default when agent capacity
@@ -31,7 +32,9 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    handoff claims but never consumes one of the configured implementation slots.
    Follow [Todo Lane](todo-lane.md) for its worktree, agent, authority,
    handoff, and blocker rules. Do not reserve agent capacity for Todo;
-   start it only from currently spare capacity, then never preempt it.
+   start it only from currently spare capacity. For actionable delivery repair,
+   use the [cooperative planner checkpoint](todo-lane.md#yield-a-planner-for-delivery)
+   rather than waiting for speculative planning to finish.
 7. When an implementation slot requeues for contract-preserving planning,
    release the slot but park its assignment, branch, worktree, PR, dirty work
    and idle ticket context on the planning claim. Restore that same ownership
@@ -84,28 +87,56 @@ persistent ticket agent and helper.
 
 ### Conflict Admission Gate
 
-Before starting agents concurrently, delay a candidate when it has any of:
+Before concurrent admission, inspect native dependencies and the approved
+plans' task graph, exact paths/seams, resource use and integration boundaries.
+For planned or discovered overlap, the later-claimed slot is the younger one:
 
-- an explicit dependency declared in repository metadata or either approved
-  plan, including a `blocked by` or parent-child relationship to an occupied
-  ticket;
-- a declared exclusive resource shared with an occupied ticket; or
-- an exact overlapping path or seam stated in both approved implementation
-  plans.
+1. Delay the whole candidate for a native blocker/open descendant, an explicit
+   approved-plan prerequisite on occupied work, an inseparable shared seam, or
+   uncertain independence. Leave it unclaimed and consider the next candidate.
+   Never infer conflicts or native blockers from title similarity alone.
+2. For a concrete shared path/resource, admit only when approved plans prove
+   independently testable slices that neither touch nor depend on that boundary.
+   Record those task IDs, permitted paths/resources and the stop boundary in
+   both owners' records before dispatch. Without that proof, delay the ticket.
+3. Let those safe slices proceed, but serialize the actual shared edit/resource
+   operation under the named-resource grant below. A file lock covers the whole
+   repository identity and canonical repository-relative path across worktrees,
+   not guessed disjoint
+   line ranges. Repository-required mutation ownership remains stricter.
+4. At the shared integration boundary, checkpoint and pause the younger claim,
+   revoke merge eligibility and apply the older-first base/review procedure
+   below. Neither a free edit lock nor completed disjoint slice permits a
+   younger ticket to merge ahead of its unresolved integration boundary.
 
-Leave a delayed candidate unclaimed and consider the next ranked runnable
-candidate. Never infer a conflict from titles, briefs, predicted scope, or
-similarity alone.
+Do not claim a ticket just to wait when it has no safe runnable slice. Keep
+native dependencies at whole-ticket admission and qualification gates at their
+required operation boundaries; partial work never bypasses either.
 
 When running agents discover a concrete overlap that was absent from their
-plans, define the later-claimed slot as younger. Let its agent finish only the
+plans, let the younger agent finish only the
 current atomic operation, complete and verify its current vertical slice, and
 reach a clean focused commit checkpoint. A reconciled push of that commit is
 also valid. If the agent cannot reach a clean commit safely, preserve and block
 the younger slot; do not begin automated base repair from a dirty worktree.
 
 After that clean checkpoint, pause the younger slot without releasing its
-claim, and revoke its merge eligibility. Merge the older slot first, refresh
+claim, and revoke its merge eligibility. If the older integration is waiting on
+missing authority or a human decision, use the existing
+[verified preservation pause](authority-and-pauses.md#pause-one-ticket)
+for the younger ticket too: identify the older ticket and exact blocked
+integration, preserve its claim, owner, branch, worktree and checkpoint, and
+record verified completion of that older integration as the resume condition.
+Only after pause publication is reconciled, writers are quiescent and grants
+are released may its implementation slot and agent capacity be released for
+unrelated work. Unknown publication or ownership keeps that capacity blocked.
+Do not repeatedly reacquire a slot while the older integration remains paused.
+On recovery, satisfy that exact condition and revalidate the younger lease
+through the same pause/resume procedure; restore its same owner and artifacts
+in the next free slot before base repair. Authority for the older ticket alone
+does not satisfy the younger ticket's completion condition. While the older
+integration can proceed within this run, retain the younger occupied slot.
+Merge the older slot first, refresh
 the verified base, then resume the younger slot's owning ticket agent. Under
 its existing exclusive slot ownership, only that agent may update its branch
 and worktree to the new base using repository policy; the controller never
@@ -156,10 +187,12 @@ assignment, integration, acceptance, and same-owner repair; workers write only
 their task worktrees and branches and return commits to their ticket delivery
 lead. Count every active descendant against actual spare capacity. Task
 implementation and review descendants never mutate Project, issue, or PR
-state. An implementation helper yields before
-its occupied slot agent must resume. Never preempt a planning agent after
-planning starts; queue the implementation event until planning finishes or its
-bounded liveness recovery releases capacity.
+state. An implementation helper yields before its occupied slot agent must
+resume. Under scarce capacity, request a verified cooperative planner yield
+for actionable delivery repair. Do not interrupt an atomic operation, steal
+ownership, or dispatch into capacity that has not actually been released.
+Reconcile publication in flight first. With spare capacity, resume the delivery
+owner immediately without disturbing the planner.
 
 ## Scheduling
 
@@ -180,9 +213,10 @@ dispatching the next:
 4. Resume owning ticket agents for actionable review, CI, or base-repair events
    in oldest-event order.
 5. Resume paused local implementation slots in claim order.
-6. Finish a current contract-preserving replan, other plan, or verified
-   planning handoff without preemption. Choose preserved replan claims before
-   other Todo claims.
+6. Resume a verified yielded planner after higher-priority delivery work, or
+   finish a current replan/plan/handoff. Retain its owner, draft, used planning
+   time and attempt count. Choose preserved replan claims before other Todo
+   claims; never start a second planner while one retains the planning lane.
 7. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
    `Ready to implement` tickets one at a time, and launch unrelated slot agents
    until the in-flight or active-agent limit is reached.
@@ -214,14 +248,53 @@ from that snapshot before a new claim or capacity-dependent dispatch, and apply
 the same gate immediately before concluding that no runnable work remains.
 
 Do not run the gate merely to handle a targeted review, CI, or base-repair event
-for an occupied slot when no selection or finish decision follows. A successful
-complete post-mutation query satisfies the gate; reuse that snapshot until a
-later relevant mutation or event invalidates it. Never preempt a valid occupied
+for an occupied slot when no selection or finish decision follows. Refetch that
+ticket's affected PR/head/check/review and authority records; rehydrate only
+changed or unverified records. Repeated unchanged CI observations do not justify
+another complete board hydration. A successful complete post-mutation query
+satisfies the gate; reuse it until invalidated. Never preempt a valid occupied
 slot for newly higher-priority work.
+
+Record the complete snapshot's identity, verified base, observation time and
+completeness in the existing controller checkpoint. For each invalidation and
+full refresh record its triggering event and decision: selection, merge,
+capacity/eligibility change, recovery, incomplete/ambiguous read or final
+reconciliation. A scheduling boundary needs a current complete snapshot, not a
+fresh network round trip when the existing snapshot remains uninvalidated.
+Changed record fingerprints identify what to rehydrate; they never authorize
+reuse after an incomplete logical read. Discard partial/ambiguous results and
+reestablish the complete logical read before ranking, dispatch or finish.
+Immediately before each consequential write, still refetch its operation-specific
+authority and identities; snapshot reuse does not waive that check.
 
 Use [Todo Lane](todo-lane.md) for handoffs and bounded planner recovery.
 When several slots requeue, retain their original claim order ahead of new
-Ready and Todo work; never preempt an active agent.
+Ready and Todo work. Only the verified cooperative planner checkpoint may
+release an active planner for delivery; occupied ticket owners are not preempted.
+
+## Phase Timing And Stalls
+
+1. Persist observed planning, implementation, repair, review and CI intervals
+   in the existing run/ticket checkpoint: stable interval ID, ticket/owner,
+   phase, start, end or still-open state, source/plan/head and progress evidence.
+   Record capacity/resource waits separately with their cause and awaited owner
+   or grant. Checkpoint before yielding, handing off or compacting context.
+2. Resume the same interval IDs; never append duplicate starts after compaction.
+   Reconcile uncertain endpoints from evidence and report unknown time when
+   unavailable. Keep planning active-time budget separate from yielded/wait time.
+3. Report phase elapsed times and waits with their overlap, plus total run wall
+   time from observed start/end. Never sum overlapping phases or tickets into
+   wall time. For example, planning 00:00–00:10, implementation 00:05–00:15 and
+   a repair capacity wait 00:06–00:10 are 10, 10 and 4 minutes, within a
+   15-minute observed wall span. Do not invent a saving or attribute all waiting
+   to planning without the recorded cause.
+4. When a lifecycle cycle repeats without a delivered increment, compare its
+   source/plan/base/head, phase/wait and invalidation evidence with the previous
+   cycle. Identify the unchanged failure or renewed work, its cause and one
+   bounded next action through the existing repair/replan rules. Keep the same
+   owner and budgets. If no evidence-supported next action exists, preserve an
+   exact blocker; do not repeat a full plan/review loop, blanket retry, weaken
+   qualification or reset a budget merely to keep the run moving.
 
 ## Terminal Required-CI Parking
 
@@ -285,8 +358,10 @@ signal and its evidence or a reference to the explicit investigation authority,
 and captures the current PR head, checks, base, configuration, and merge-policy
 evidence. An ambiguous resume record leaves the claim parked. Before publishing
 that record, freshly revalidate the committed configuration digest and canonical
-live merge-policy fingerprint. Any mismatch or unknown read stops the drain and
-preserves the parked claim; it is never an autonomous resumption signal. After
+live merge-policy fingerprint. A committed display-name-only change may use
+[verified lease renewal](project-config.md#renew-presentation-only-configuration);
+every other mismatch or unknown read stops the drain and preserves the parked
+claim. Renewal alone is never a qualifying ticket-local resumption signal. After
 verification, return the claim to the next free slot ahead of new claims,
 reconstruct its owning agent if needed, and reset its repair-round count. A user
 prompt, controller wake, global drift, changed observation fingerprint without
@@ -341,9 +416,9 @@ within budget. A missing grant or material decision follows
 work from active capacity. A qualifying terminal required-CI failure follows
 [Terminal Required-CI Parking](#terminal-required-ci-parking); other terminal
 ticket blockers remain preserved in their slots. Stop the whole drain for
-changed configuration, lost permissions, invalid base state, merge-policy
-drift, correlated CI failure, or another integrity problem that affects every
-claim.
+semantic or unverified configuration drift, lost permissions, invalid base
+state, merge-policy drift, correlated CI failure, or another integrity problem
+that affects every claim.
 
 Treat an unexplained scarce-resource collision as slot-local on its first
 occurrence. Discover and add the narrow named lock before retrying. Pause new
@@ -373,6 +448,7 @@ return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and
 the Wayfinder frontier. If no
 runnable work remains but a parked implementation claim, blocked or timed-out
-slot, or incomplete eligible triage item remains, stop with a partial-drain
+slot, unknown/unavailable execution or qualification prerequisite, or incomplete
+eligible triage item remains, stop with a partial-drain
 report, preserve every affected worktree, branch, PR, assignment, and
 `In progress` Status, and never report success.

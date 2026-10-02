@@ -193,7 +193,7 @@ The Kotlin/Gradle benchmark contains 22 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-The workflows/writing benchmark contains 35 scored cases: direct, novel, and
+The workflows/writing benchmark contains 38 scored cases: direct, novel, and
 no-change coverage for each of its eight skills, plus additional workflow
 scenarios. The surrounding corpus also contains the two calibration-only
 missing-provider challenges described above.
