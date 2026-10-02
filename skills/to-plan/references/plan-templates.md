@@ -22,12 +22,7 @@ wiring and failure branches where they resolve ambiguity or protect correctness.
 **Publication mode:** Reviewed | Autonomous
 **Local state:** Clean | Unrelated changes present
 
-### Approved source contract
-
-<Concise confirmed goal, acceptance criteria, scope, constraints and material
-decisions. Include everything a fresh session needs; do not rely on chat history.>
-
-## Approach
+### Approach
 
 <Concise intended route.>
 
@@ -120,6 +115,11 @@ focused command>`; expect <specific successful result proving this slice>.
 
 **Planned against:** `<branch>` at `<full SHA>`
 **Local state:** Clean | Unrelated changes present
+
+## Approved source contract
+
+<Concise confirmed goal, acceptance criteria, scope, constraints and material
+decisions. Include everything a fresh session needs; do not rely on chat history.>
 
 ## Approach
 
