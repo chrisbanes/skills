@@ -29,7 +29,9 @@ Project run already owns that issue, return it to that controller.
 
 1. Resolve the named source, repository, approved contract, and any existing
    branch or PR from fresh state. On resume, reconcile the PR, exact head,
-   checks, feedback, and authority before acting.
+   checks, feedback, and authority before acting. For integration amendments,
+   use [Evidence and review](references/evidence-and-review.md) to verify the
+   installed planner contract and retained work before consuming any delta.
 2. For a GitHub issue missing `ready-for-agent`, use `triage` and wait for its
    approved outcome; do not change labels yourself. Local sources skip GitHub
    triage but need explicit stakeholder approval. Reuse a current `to-plan`
@@ -38,57 +40,46 @@ Project run already owns that issue, return it to that controller.
    source, acceptance criteria, code facts, dependencies, and tests. Resolve
    findings through `to-plan` and reapprove repaired conversation plans. Stop
    without a reviewed and approved plan.
-4. Reconcile existing implementation and acceptance evidence before dispatch.
-   Do not reassign accepted work or reimplement an existing candidate just to
-   satisfy worker routing; continue its review and delivery gates. Resolve
-   final-reviewer capability before any implementation, including the lead's
-   direct-edit exception, and worker capacity before new nontrivial
-   implementation or a worker-owned repair. Assign each new settled task to
-   one worker, including a single or tightly coupled sequential task; do not
-   split one item into artificial pieces. The lead may directly edit only a fully understood,
-   low-risk change when handoff clearly costs more than direct editing and no
-   useful concurrent work exists. Record that reason. The lead owns only that
-   initial direct edit and its repairs; this exception never transfers a
-   worker's repair or follow-up. A qualifying initial edit needs no worker.
-   Follow the bundled [implementation procedure](references/implementation-mode.md)
-   for all other implementation, including single, sequential, and concurrent
-   tasks; it owns checkout isolation, ready dispatch, capacity and priority,
-   serialization, task acceptance, integration, wait behavior, and same-owner
-   repair. Do not require a separate request for parallel work. While workers
-   run, advance useful independent coordination. If worker capacity is busy,
-   use the procedure's supported wait or idle behavior and verify available
-   capacity before dispatch; if the runtime lacks the required capability,
-   report the blocker rather than falling back to lead implementation.
-   Record the fixed base and preserve unrelated user work. For behavior
-   changes, require the separately installed `tdd` skill and approved test
-   seams before editing; obtain missing seam agreement and stop that behavior
-   work if `tdd` is unavailable. Documentation and other work without a
-   meaningful test seam use focused validation. Materialize the approved
-   source and plan in an owner-only system-temp file for review; recreate it on
-   resume.
-5. Have each implementation owner self-review its task, commit only task-owned
-   changes, and report required checks with the tested revision and results.
-   This includes the lead only when the recorded low-risk direct-edit
-   exception applies. Accept each delegated task once before integration under
-   the bundled implementation procedure; the delivery lead reviews the
-   integrated scope and records required checks at the tested revision. Require
-   one
-   fresh independent read-only reviewer for every delivery PR. Resolve that
-   capability before implementation; if
-   unavailable, report the blocker rather than waive review. Use an investigator
-   in review mode or equivalent, with no inherited implementation conversation.
-   Supply the approved source, plan, repository standards, fixed base, exact
-   candidate head, and validation evidence. Require requirements and standards
-   findings with evidence and a `ship`, `fix-first`, or `rethink` verdict.
-   No external review skill or issue-tracker setup is required. Reuse a current
-   final joined review from the bundled procedure when it covers these
-   inputs. Add reviewers only for distinct risks or substantial scope.
-   Return findings to the implementation owner. After repairs, rerun affected
-   checks and review the changed range plus interactions; broaden when earlier
-   evidence is invalid or affected scope cannot be bounded. Confirm combined
-   evidence covers the final clean head before pushing. Create and verify one
-   draft PR for a nonempty integrated diff, or reuse the verified PR on resume.
-   Use closing links only for real, verified GitHub issues.
+4. Reconcile implementation and acceptance evidence before dispatch; never
+   reassign accepted work or reimplement a current candidate just to satisfy
+   worker routing. Resolve final-reviewer capability before any implementation
+   and worker capability/capacity before new nontrivial work or a worker repair.
+   Assign each new settled task to a worker, including one task in sequential
+   work; do not split tasks artificially. The lead may directly edit only a
+   fully understood, low-risk change when handoff clearly costs more and no
+   useful concurrent work exists. Record that reason; the lead owns repairs to
+   this initial edit, never a worker's task. This exception needs no worker.
+   Otherwise follow the bundled [implementation procedure](references/implementation-mode.md)
+   for single, sequential and concurrent tasks. It owns worker capability,
+   isolation, dispatch, capacity, acceptance, integration, waiting and
+   same-owner repair. Dispatch proven independent work by default without a
+   separate request for parallelism; keep making useful independent progress
+   while workers run. For
+   behavior changes, require approved test seams and the separately installed
+   `tdd` skill before editing; stop if unavailable. Use focused validation when
+   there is no meaningful test seam. Follow [Evidence and review](references/evidence-and-review.md)
+   for evidence provenance, applicability, amendment reuse and reviewer packets.
+   Record the fixed base and preserve unrelated work.
+5. Each implementation owner self-reviews, commits only task-owned changes,
+   and reports required checks with provenance under Evidence and review; this
+   also applies to the lead's qualifying edit. Accept each delegated task once
+   before integration. Require one fresh independent read-only reviewer per
+   delivery PR, with capability resolved before implementation. If unavailable,
+   report a blocker; never waive review. Use an investigator in review mode or
+   equivalent without inherited implementation context. Give it the local
+   evidence reference's owner-only packet, including prior findings and
+   dispositions. Require evidence-backed requirements and standards findings
+   with a `ship`, `fix-first`, or `rethink` verdict. Honor explicitly invoked
+   provider contracts, scope, roles, capacity and output; report missing
+   coverage rather than narrowing or substituting. The default route needs no
+   external review skill or tracker. Reuse a current joined review from the
+   bundled procedure only when it covers the exact inputs; add reviewers only
+   for distinct risks or substantial scope. Return findings to the owner. After
+   repairs, rerun affected checks and review changed ranges and interactions;
+   broaden when evidence is invalid or scope cannot be bounded. Confirm combined
+   coverage of the final clean head before pushing. Create and verify one draft
+   PR for a nonempty integrated diff, or reuse the verified PR on resume. Use
+   closing links only for verified GitHub issues.
 6. Use `shepherd` for CI and reviewer feedback and PR operations. Keep code
    repairs with the original implementation owner; only repairs to the lead's
    permitted initial direct edit remain with the lead. Never move a worker's
@@ -102,7 +93,8 @@ Project run already owns that issue, return it to that controller.
 ## Finish gate
 
 Report `ready` only when the final head passes applicable checks and reviews
-with findings resolved; `merged` only after authorized merge readback;
+with findings resolved and evidence applicable to that clean head;
+`merged` only after authorized merge readback;
 `no-change` only when implementation and verification finish with an empty
 final diff; `pending` with exact outstanding gates; otherwise `blocked` with the
 needed decision or capability. Preserve the PR and source pointers on pending

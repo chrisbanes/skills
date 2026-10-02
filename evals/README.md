@@ -27,6 +27,13 @@ measures evaluation overhead, not skill efficiency. Wall-clock results are
 environment-sensitive, so compare runs only when model, reasoning, machine,
 corpus, and execution conditions are held constant.
 
+The delivery calibration cases cover validation provenance/invalidation,
+retained integration work, reviewer packets and strict selected-provider
+invocation, including unchanged-evidence and unsafe-shortcut counterexamples.
+Their deterministic validator checks immutable fixture integrity; semantic
+rubrics require a separately authorised model run and are not proven by corpus
+validation.
+
 ## Results
 
 **Baseline** is the positive-case pass rate with no skills available, restricted
@@ -205,7 +212,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 38 calibration-only cases, including
+The workflows/writing corpus contains 41 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
