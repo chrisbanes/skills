@@ -32,7 +32,9 @@ handoff or take over a Project claim.
    alone revalidates claims/leases and schedules continuation. Preserve Project
    repair budgets and replan rules.
 3. Apply `deliver-spec`'s documented low-risk lead-edit exception where it
-   qualifies. For all other supplied implementation, follow the bundled
+   qualifies. Apply [Evidence and review](evidence-and-review.md)'s
+   implementation and validation procedure to every path, including that
+   initial lead edit. For all other supplied implementation, follow the bundled
    [implementation procedure](implementation-mode.md), which delegates single,
    sequential and concurrent tasks to workers and owns their implementation
    gates. Keep the persistent ticket context as architecture, integration,
