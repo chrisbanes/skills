@@ -36,7 +36,7 @@
     },
     {
       "id": "provider-ownership",
-      "text": "Uses the same delegated implementation procedure as standalone delivery: persistent ticket agent owns integration, acceptance and non-merge PR delivery, original implementation workers own code repairs, and descendants never mutate Project, issue, PR or merge state."
+      "text": "Uses deliver-spec's bundled delegated implementation procedure without requiring the separate implement-with-subagents installation or an explicit orchestration request. Persistent ticket agent owns integration, acceptance and non-merge PR delivery, original implementation workers own code repairs, and descendants never mutate Project, issue, PR or merge state."
     },
     {
       "id": "review-coverage",

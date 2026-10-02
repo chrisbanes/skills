@@ -22,9 +22,12 @@ block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
 
 For ordinary implementation, require bundled `deliver-spec` and `shepherd`.
-Invoke `deliver-spec` in Project-handoff mode with the ticket owner implementing
-and repairing directly by default. Require `implement-with-subagents` only for
-requested orchestration or independently useful parallel implementation.
+Invoke `deliver-spec` in Project-handoff mode. It delegates settled
+implementation to workers through its bundled implementation procedure, with
+the documented low-risk initial lead-edit exception; repairs stay with the
+original implementation owner. The persistent ticket context remains the
+architecture, integration, acceptance, and non-merge PR delivery lead. No
+separate `implement-with-subagents` installation is required.
 Resolve one fresh independent read-only reviewer before implementation; give it
 the materialized canonical source, repository standards, and all bundled review
 contracts. No external review skill or tracker setup is required. If independent
