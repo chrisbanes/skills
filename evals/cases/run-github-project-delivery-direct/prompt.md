@@ -1,8 +1,8 @@
 Review the next steps for `drain --auto-merge` using only
 this supplied state. Do not run providers, agents, commands, or mutations.
 
-The binding and exclusive claim are verified. Bundled `deliver-spec` and
-`shepherd` are installed; the separate `implement-with-subagents` skill is not.
+The binding and exclusive claim are verified. The bundled spec-delivery and
+PR-monitoring workflows are installed; the separate orchestration skill is not.
 Issue #42 is ready-for-agent and
 In progress with a current approved `to-plan --auto` plan at digest `plan42`.
 The plan has already passed independent review against these exact inputs.
