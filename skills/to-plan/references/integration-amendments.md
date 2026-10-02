@@ -89,6 +89,13 @@ publication authority are separately authenticated metadata, never inferred from
 `classification`. Consumers must reject unknown version semantics rather than
 silently ignore them.
 
+`candidate` is the retained pre-integration starting SHA. `expected_head` is
+the PR head observed at publication: equal to `candidate` for pending integration,
+or to `result_candidate` when integration already exists with verified provenance.
+Both remain immutable. After authorized integration from a pending amendment,
+the separately verified result record binds the new current head; do not rewrite
+`expected_head` or mistake it for the latest observation.
+
 Do not predict a resulting SHA. A `pending` result authorizes the owner to
 integrate from the pinned retained candidate into the new base; it cannot
 support readiness. If integration already exists, pin its result and provenance.
@@ -175,7 +182,9 @@ versions or stale/ambiguous inputs block consumption rather than falling back
 to the full plan alone.
 
 - **`deliver-spec`:** Continue with the retained owner, work and PR from the exact
-  verified starting candidate. Integrate and renew affected checks/review; retain
+  verified starting candidate. If integration already exists, resume verification
+  at its pinned result head rather than replaying integration. Otherwise integrate
+  from the starting candidate. Renew affected checks/review; retain
   unaffected evidence only with provenance and an explicit applicability reason.
   Record the resulting exact SHA/base, effective digest, PR/owner and combined
   evidence coverage in a durable result record. Verify old/new candidate linkage

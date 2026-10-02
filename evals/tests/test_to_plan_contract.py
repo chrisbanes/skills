@@ -256,6 +256,30 @@ class ContractTest(unittest.TestCase):
             p['amendments'][0]['body'] += 'foreign edit'
             self.assertTrue(validate_effective_contract(p, t))
 
+    def test_preexisting_integration_pins_current_head_separately_from_start(self):
+        p, t = fixture()
+        replace_payload(p, t, {'expected_head': 'd' * 40, 'result_candidate': 'd' * 40})
+        result = {'candidate': 'd' * 40, 'base': 'b' * 40,
+                  'starting_candidate': 'c' * 40, 'effective': copy.deepcopy(p['effective']),
+                  'pr': t['pr'], 'owner': t['owner'],
+                  'checks': ['tests at d'], 'review_coverage': ['review at d']}
+        p['result'], t['result'], t['head'] = copy.deepcopy(result), result, 'd' * 40
+        self.assertEqual([], validate_effective_contract(p, t))
+        t['head'] = 'e' * 40
+        self.assertTrue(validate_effective_contract(p, t))
+        t['head'] = 'd' * 40
+        replace_payload(p, t, {'expected_head': 'c' * 40})
+        p['result']['effective'] = copy.deepcopy(p['effective'])
+        t['result'] = copy.deepcopy(p['result'])
+        self.assertTrue(validate_effective_contract(p, t), 'historical head is not the preexisting current head')
+
+    def test_mixed_amendment_versions_are_ambiguous_even_with_body_anchor(self):
+        p, t = fixture()
+        record = p['amendments'][0]
+        record['body'] += '\n<!-- to-plan:integration-amendment:v99 -->'
+        t['bodies'][record['url']] = digest(record['body'])
+        self.assertTrue(validate_effective_contract(p, t))
+
 
 if __name__ == '__main__':
     unittest.main()

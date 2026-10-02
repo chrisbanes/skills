@@ -74,7 +74,8 @@ def validate_effective_contract(packet, trusted):
         payload = None
         for sequence, record in enumerate(packet["amendments"], 1):
             fences = re.findall(r"```json\n(.*?)\n```", record["body"], re.S)
-            if len(fences) != 1 or record["body"].count("<!-- to-plan:integration-amendment:v1 -->") != 1:
+            markers = re.findall(r"<!--\s*to-plan:integration-amendment:([^>]*?)\s*-->", record["body"])
+            if len(fences) != 1 or markers != ["v1"]:
                 return ["ambiguous or unsupported amendment payload"]
             payload = json.loads(fences[0], object_pairs_hook=_unique_object)
             if not isinstance(payload, dict) or not _canonical_types(payload):
@@ -95,7 +96,8 @@ def validate_effective_contract(packet, trusted):
             if payload["old_base"] != base:
                 return ["base continuity mismatch"]
             base = payload["new_base"]
-            if payload["expected_head"] != payload["candidate"]:
+            publication_head = payload["result_candidate"] or payload["candidate"]
+            if payload["expected_head"] != publication_head:
                 return ["candidate/PR head mismatch"]
             if payload["classification"] != "unchanged-scope":
                 return ["material or unknown change is not an amendment"]
