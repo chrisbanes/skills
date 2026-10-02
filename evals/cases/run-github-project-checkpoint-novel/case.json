@@ -1,0 +1,53 @@
+{
+  "id": "run-github-project-checkpoint-novel",
+  "title": "Delivery repair interrupts speculative planning safely",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-checkpoint-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "checkpoint",
+      "text": "Prioritizes same-owner CI repair only after acknowledged quiescence and reconciled publication. Retains planner owner/draft/claim and resumes with 18 active minutes and unchanged attempts after 40 yielded minutes; ambiguous publication does not free capacity or invite duplicate publication."
+    },
+    {
+      "id": "capacity",
+      "text": "Uses four as the strict active-agent ceiling and four as slot limit, counts planner/descendants, can use two remaining active agents, and never treats ranked candidates as grants."
+    },
+    {
+      "id": "conflict",
+      "text": "Allows only plan-proven disjoint slices; serializes the canonical shared path/resource and older-first integration boundary, retains exclusive writers and renewed final-head review, and delays whole tickets for dependencies/inseparable or uncertain seams."
+    },
+    {
+      "id": "freshness",
+      "text": "Uses targeted fresh occupied-ticket reads for unchanged CI, rehydrates only changed/unverified records, records full-refresh/invalidation reasons, and requires complete valid state at merge/recovery/selection/finish or after partial reads without waiving fresh write authority."
+    },
+    {
+      "id": "timing",
+      "text": "Reports 10 planning, 10 implementation and 4 wait minutes with overlap within 15 wall minutes, persists interval identities, and diagnoses repeated cycles with evidence and one bounded next action rather than invented savings or reset budgets."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}
