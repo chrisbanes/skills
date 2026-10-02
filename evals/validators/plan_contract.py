@@ -61,8 +61,6 @@ def validate_effective_contract(packet, trusted):
         plan = packet["plan"]
         if type(plan["revision"]) is not int or plan["revision"] < 1 or not _sha(plan["digest"], 64):
             return ["invalid full-plan identity"]
-        if plan.get("supersedes_effective") != trusted["previous_epoch"]:
-            return ["previous amendment epoch not closed"]
         records = [plan, *packet["amendments"]]
         if len({r["url"] for r in records}) != len(records):
             return ["duplicate publication identity"]
@@ -77,6 +75,24 @@ def validate_effective_contract(packet, trusted):
             return ["stale full-plan identity"]
         if _digest(plan["body"]) != plan["digest"]:
             return ["full-plan digest mismatch"]
+        closure_lines = re.findall(r"^\*\*Epoch closure:\*\* (.+)$", plan["body"], re.M)
+        if len(closure_lines) > 1:
+            return ["ambiguous epoch closure"]
+        closure = json.loads(closure_lines[0], object_pairs_hook=_unique_object) if closure_lines else None
+        if trusted["previous_epoch"] is not None:
+            if not isinstance(closure, dict) or set(closure) != {"effective", "retained_work", "evidence"}:
+                return ["missing authenticated epoch closure"]
+            if closure["effective"] != trusted["previous_epoch"]:
+                return ["previous amendment epoch not closed"]
+            for key in ("retained_work", "evidence"):
+                values = closure[key]
+                if not isinstance(values, list) or not values or not all(isinstance(v, str) and v.strip() for v in values):
+                    return ["missing epoch work/evidence disposition"]
+        elif closure is not None:
+            return ["unexpected epoch closure"]
+        # A legacy packet projection is optional and never authenticates closure.
+        if "supersedes_effective" in plan and plan["supersedes_effective"] != trusted["previous_epoch"]:
+            return ["conflicting epoch closure projection"]
         previous = {"url": plan["url"], "digest": plan["digest"]}
         base = trusted["initial_base"]
         payload = None
@@ -126,12 +142,17 @@ def validate_effective_contract(packet, trusted):
                     return [f"missing concrete {key}"]
             if sequence > 1:
                 result = trusted.get("prior_results", {}).get(previous["url"])
-                if result != {
+                expected_result = {
                     "effective": previous, "base": payload["old_base"],
                     "candidate": payload["candidate"], "starting_candidate": prior_payload["candidate"],
                     "pr": prior_payload["pr"], "owner": prior_payload["owner"],
-                }:
+                }
+                if not isinstance(result, dict) or any(result.get(key) != value for key, value in expected_result.items()):
                     return ["missing or stale preceding integration result"]
+                for key in ("checks", "review_coverage"):
+                    values = result.get(key)
+                    if not isinstance(values, list) or not values or not all(isinstance(v, str) and v.strip() for v in values):
+                        return ["missing preceding candidate evidence"]
                 if prior_payload["result_candidate"] is not None and result["candidate"] != prior_payload["result_candidate"]:
                     return ["preceding result contradicts its amendment"]
             if payload["sequence"] != sequence or payload["previous"] != previous:

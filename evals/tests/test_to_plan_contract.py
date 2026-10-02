@@ -116,13 +116,14 @@ class ContractTest(unittest.TestCase):
         self.assertTrue(validate_effective_contract(packet, trusted), 'unexecuted predecessor')
         trusted['prior_results'] = {prior['url']: {'effective': prior, 'base': 'b' * 40,
                                                 'candidate': 'e' * 40, 'starting_candidate': 'c' * 40,
-                                                'pr': trusted['pr'], 'owner': trusted['owner']}}
+                                                'pr': trusted['pr'], 'owner': trusted['owner'],
+                                                'checks': ['tests at e'], 'review_coverage': ['review at e']}}
         incomplete = copy.deepcopy(trusted)
         for field in ['starting_candidate', 'pr', 'owner']:
             incomplete['prior_results'][prior['url']].pop(field)
         self.assertTrue(validate_effective_contract(packet, incomplete), 'unbound prior result')
         self.assertEqual([], validate_effective_contract(packet, trusted))
-        for mutation in ['gap', 'fork', 'missing', 'stale-tip', 'unrelated-result', 'unrelated-start', 'unrelated-owner', 'unrelated-pr']:
+        for mutation in ['gap', 'fork', 'missing', 'stale-tip', 'unrelated-result', 'unrelated-start', 'unrelated-owner', 'unrelated-pr', 'missing-checks', 'missing-review', 'empty-checks']:
             with self.subTest(mutation=mutation):
                 p, t = copy.deepcopy(packet), copy.deepcopy(trusted)
                 if mutation == 'gap':
@@ -137,6 +138,12 @@ class ContractTest(unittest.TestCase):
                     t['base'], t['head'] = 'b' * 40, 'c' * 40
                 elif mutation == 'unrelated-result':
                     t['prior_results'][prior['url']]['candidate'] = 'f' * 40
+                elif mutation in ['missing-checks', 'missing-review', 'empty-checks']:
+                    field = 'review_coverage' if mutation == 'missing-review' else 'checks'
+                    if mutation == 'empty-checks':
+                        t['prior_results'][prior['url']][field] = []
+                    else:
+                        t['prior_results'][prior['url']].pop(field)
                 else:
                     field = {'unrelated-start': 'starting_candidate', 'unrelated-owner': 'owner', 'unrelated-pr': 'pr'}[mutation]
                     t['prior_results'][prior['url']][field] = 'unrelated'
@@ -182,8 +189,26 @@ class ContractTest(unittest.TestCase):
         t['bodies'] = {p['plan']['url']: digest(p['plan']['body'])}
         t['initial_base'] = t['base']
         t['previous_epoch'] = copy.deepcopy(closed)
+        self.assertTrue(validate_effective_contract(p, t), 'packet-only closure is not authenticated')
+        closure = {'effective': closed, 'retained_work': ['Rework receipt implementation'],
+                   'evidence': ['Invalidate old checks; rerun acceptance suite']}
+        p['plan']['body'] += '\n**Epoch closure:** ' + canonical(closure)
+        p['plan']['digest'] = digest(p['plan']['body'])
+        p['effective'] = {k: p['plan'][k] for k in ['url', 'digest']}
+        t['plan'] = {k: p['plan'][k] for k in ['url', 'digest', 'revision']}
+        t['bodies'] = {p['plan']['url']: digest(p['plan']['body'])}
         self.assertEqual([], validate_effective_contract(p, t))
         self.assertEqual([], validate_effective_contract(copy.deepcopy(p), t))
+        for change in [{'effective': {'url': 'other', 'digest': '0' * 64}},
+                       {'retained_work': []}, {'evidence': []}]:
+            bad_p, bad_t = copy.deepcopy(p), copy.deepcopy(t)
+            bad_closure = dict(closure, **change)
+            bad_p['plan']['body'] = '**Epoch closure:** ' + canonical(bad_closure)
+            bad_p['plan']['digest'] = digest(bad_p['plan']['body'])
+            bad_p['effective'] = {k: bad_p['plan'][k] for k in ['url', 'digest']}
+            bad_t['plan'] = {k: bad_p['plan'][k] for k in ['url', 'digest', 'revision']}
+            bad_t['bodies'] = {bad_p['plan']['url']: digest(bad_p['plan']['body'])}
+            self.assertTrue(validate_effective_contract(bad_p, bad_t))
         p['plan']['supersedes_effective']['digest'] = '0' * 64
         self.assertTrue(validate_effective_contract(p, t))
 
@@ -294,26 +319,22 @@ class ContractTest(unittest.TestCase):
             replace_payload(p, t, {'unknown': value})
             self.assertTrue(validate_effective_contract(p, t))
 
-    def test_restraint_case_checks_decisions_not_fixture_heading(self):
+    def test_restraint_case_can_pass_grading_without_writes(self):
+        from evals.harness.cases import load_case
+        from evals.harness.grade import grade_subject
+        from evals.tests.test_grade import make_result
         root = Path(__file__).resolve().parents[2]
-        case = 'to-plan-integration-amendment-negative'
-        command = [sys.executable, str(root / 'evals/validators/text_case.py'), case]
+        case = load_case(root / 'evals/cases/to-plan-integration-amendment-negative/case.json', root)
         with tempfile.TemporaryDirectory() as directory:
             workspace = Path(directory)
             (workspace / 'state.md').write_text('Immutable evaluation state')
-            result = subprocess.run(command, cwd=workspace, capture_output=True)
-            self.assertNotEqual(0, result.returncode, 'fixture alone is insufficient')
-            (workspace / '.scratch').mkdir()
-            routes = {'foreign': 'blocked', 'non_overlap': 'screened-baseline',
-                      'identical': 'no-op', 'unknown': 'blocked',
-                      'material': 'stakeholder-replan', 'stale': 'blocked',
-                      'ambiguous_write': 'reconcile-before-retry'}
-            artifact = workspace / '.scratch/assessment.json'
-            artifact.write_text(json.dumps(routes))
-            self.assertEqual(0, subprocess.run(command, cwd=workspace, capture_output=True).returncode)
-            routes['material'] = 'amendment'
-            artifact.write_text(json.dumps(routes))
-            self.assertNotEqual(0, subprocess.run(command, cwd=workspace, capture_output=True).returncode)
+            result = make_result(workspace, output={'summary': 'Read-only assessment',
+                'skills_used': ['to-plan'], 'evidence': ['Scenario decisions are rubric-scored']})
+            grade = grade_subject(case, result)
+            self.assertTrue(grade.objective_pass, grade.objective_failures)
+            self.assertFalse(grade.forbidden_action_failure)
+            written = make_result(workspace, paths=('.scratch/assessment.json',))
+            self.assertFalse(grade_subject(case, written).objective_pass)
 
     def test_prior_receipt_cannot_replace_a_predeclared_result(self):
         p, t = fixture()
@@ -328,7 +349,8 @@ class ContractTest(unittest.TestCase):
         t['base'], t['head'] = 'd' * 40, 'e' * 40
         t['prior_results'] = {prior['url']: {'effective': prior, 'base': 'b' * 40,
             'candidate': 'e' * 40, 'starting_candidate': 'c' * 40,
-            'pr': t['pr'], 'owner': t['owner']}}
+            'pr': t['pr'], 'owner': t['owner'],
+            'checks': ['tests at e'], 'review_coverage': ['review at e']}}
         self.assertTrue(validate_effective_contract(p, t))
 
     def test_source_identity_cannot_extend_v1_semantics(self):

@@ -14,6 +14,8 @@ wiring and failure branches where they resolve ambiguity or protect correctness.
 **Revision:** <positive integer>
 **Supersedes:** <previous plan permalink or none>
 **Replan report:** <verified report permalink or none>
+**Epoch closure:** <null, or one-line JSON object with effective {url, digest},
+retained_work [dispositions], and evidence [dispositions] when closing amendments>
 
 ## Implementation plan
 

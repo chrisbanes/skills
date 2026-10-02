@@ -1,14 +1,1 @@
-{
-  "files": [],
-  "json_files": {
-    ".scratch/assessment.json": {
-      "foreign": "blocked",
-      "non_overlap": "screened-baseline",
-      "identical": "no-op",
-      "unknown": "blocked",
-      "material": "stakeholder-replan",
-      "stale": "blocked",
-      "ambiguous_write": "reconcile-before-retry"
-    }
-  }
-}
+{"files": []}

@@ -138,7 +138,12 @@ reconciliation, not an automatic retry or silently refreshed hash.
    traceable rather than being relabelled as fresh evidence.
 5. A full reviewed replan closes the prior amendment epoch. Its new plan revision
    must identify the preceding effective tip/digest and disposition of retained
-   work/evidence. Verify both histories before starting the new epoch at sequence
+   work/evidence in the authenticated semantic plan body. Use exactly one
+   `**Epoch closure:** <JSON>` line with `effective` (the prior tip's `url` and
+   `digest`), `retained_work` (nonempty disposition strings) and `evidence`
+   (nonempty disposition strings). Include this line in the plan's semantic
+   digest. Use `null` when no amendment epoch is closed; legacy plans without
+   amendments may omit it. Do not accept packet-only closure claims. Verify both histories before starting the new epoch at sequence
    1. Never carry old amendments into a new full plan implicitly, append to a
    closed epoch, or pick whichever comment is newest. Existing plans with no
    amendments keep their existing publication and no-op behavior.

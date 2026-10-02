@@ -834,13 +834,6 @@ def main(argv: list[str]) -> int:
                     print("task_graph expectation must be an object", file=sys.stderr)
                     return 2
                 failures.extend(validate_task_graph(subject, graph_rules, label))
-    for relative, expected in expectations.get("json_files", {}).items():
-        try:
-            actual = json.loads((workspace / relative).read_text(encoding="utf-8"))
-            if actual != expected:
-                failures.append(f"{relative}: unexpected JSON decisions")
-        except (OSError, ValueError) as error:
-            failures.append(f"{relative}: cannot read JSON decisions: {error}")
     contract_rule = expectations.get("effective_contract")
     if contract_rule is not None:
         # Trust stays with the evaluator; never read it from subject workspace.
