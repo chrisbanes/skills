@@ -1,6 +1,6 @@
-Review three independently approved delivery requests, each considered both
+Review four independently approved delivery requests, each considered both
 manually and under a verified Project handoff with the same current source,
-plan, reviews and test seams. Every integration checkout starts clean; editing
+plan, reviews and test seams. Except for D, each integration checkout starts clean; editing
 workers and final independent review capability are available. The Project
 controller retains board, claim, issue and merge authority. Use supplied
 evidence only.
@@ -15,6 +15,10 @@ work is available for the coordinator to advance while a worker handles it.
 C is a one-line code repair to an earlier task-owned implementation. The
 original resumable worker is retained. Its PR and exact current candidate head
 are known, and the coordinator could make the edit quickly.
+
+D is the same trivial edit as A, but the current checkout contains unrelated
+uncommitted changes, including an overlapping user edit. No verified clean task
+checkout is available. Handoff cost and lack of useful overlap are unchanged.
 
 For each, explain who edits, which workflow gates still apply, whether task
 splitting or an extra worker checkout is justified, and how unaffected evidence

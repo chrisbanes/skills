@@ -44,6 +44,10 @@ Project run already owns that issue, return it to that controller.
    reassign accepted work or reimplement a current candidate just to satisfy
    worker routing. Resolve final-reviewer capability before any implementation
    and worker capability/capacity before new nontrivial work or a worker repair.
+   Before either implementation path, record the fixed base and use a clean
+   task checkout. Stop if unrelated uncommitted changes are present. Reuse a
+   suitable clean checkout; create isolated worktrees only when concurrency or
+   repository isolation requires them.
    Assign each new settled task to a worker, including one task in sequential
    work; do not split tasks artificially. The lead may directly edit only a
    fully understood, low-risk change when handoff clearly costs more and no
@@ -59,7 +63,6 @@ Project run already owns that issue, return it to that controller.
    `tdd` skill before editing; stop if unavailable. Use focused validation when
    there is no meaningful test seam. Follow [Evidence and review](references/evidence-and-review.md)
    for evidence provenance, applicability, amendment reuse and reviewer packets.
-   Record the fixed base and preserve unrelated work.
 5. Each implementation owner self-reviews, commits only task-owned changes,
    and reports required checks with provenance under Evidence and review; this
    also applies to the lead's qualifying edit. Accept each delegated task once

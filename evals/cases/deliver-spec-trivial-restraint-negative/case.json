@@ -41,6 +41,10 @@
       "text": "Does not split A into artificial tasks, require a worker or extra worker checkout for its allowed direct edit, rerun unrelated valid checks, or waive required review and authority gates."
     },
     {
+      "id": "clean-checkout",
+      "text": "Stops D before either lead or worker editing because no verified clean task checkout is available; the trivial-edit exception never bypasses the clean-checkout preflight. Preserves the unrelated and overlapping user edits without stashing, resetting, absorbing or committing them."
+    },
+    {
       "id": "review-restraint",
       "text": "Does not actually start agents, execute commands, modify files or contact providers in this read-only assessment."
     }

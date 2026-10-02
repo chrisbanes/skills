@@ -237,7 +237,8 @@ inspection. They also assess supplied state read-only.
 Three delivery calibrations compare manual and Project delegation, safe fork/join
 execution under caller capacity, temporary capacity versus absent worker
 capability, and the trivial-edit exception versus useful overlap and retained
-repair ownership. They assess immutable state without live execution.
+repair ownership and the clean-checkout preflight. They assess immutable state
+without live execution.
 Deterministic coverage stages `deliver-spec` alone, follows its local procedure
 and handoff links, and checks that its bundled procedure matches the orchestration
 skill's copy.
