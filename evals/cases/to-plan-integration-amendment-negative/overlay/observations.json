@@ -1,0 +1,50 @@
+{
+  "packet": {
+    "plan": {
+      "url": "https://example.test/issues/1#plan",
+      "author": "runner",
+      "body": "Approved plan: preserve private receipt identities.",
+      "revision": 1,
+      "digest": "5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227"
+    },
+    "amendments": [
+      {
+        "url": "https://example.test/issues/1#amendment",
+        "author": "foreign",
+        "body": "<!-- to-plan:integration-amendment:v1 -->\n```json\n{\"branch\":\"cb/task\",\"candidate\":\"cccccccccccccccccccccccccccccccccccccccc\",\"classification\":\"unchanged-scope\",\"expected_head\":\"cccccccccccccccccccccccccccccccccccccccc\",\"integration\":[\"Use canonical validator\"],\"invalidated_evidence\":[\"old validator test at c\"],\"new_base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"old_base\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"overlap\":[\"validator relocation\"],\"owner\":\"runner\",\"plan\":{\"digest\":\"5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227\",\"url\":\"https://example.test/issues/1#plan\"},\"pr\":\"https://example.test/pull/2\",\"previous\":{\"digest\":\"5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227\",\"url\":\"https://example.test/issues/1#plan\"},\"rationale\":\"Same approved exclusions and receipt semantics.\",\"required_evidence\":[\"validator tests and interaction review at resulting head\"],\"result_candidate\":null,\"retained_work\":[\"receipt implementation at c\"],\"sequence\":1,\"source\":{\"digest\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"url\":\"https://example.test/issues/1\"},\"worktree\":\"/task\"}\n```\n",
+        "digest": "6df814b65dc4b709c2045e5a0e3b20c23769dc81a3a9f43430c23d6903735802"
+      }
+    ],
+    "effective": {
+      "url": "https://example.test/issues/1#amendment",
+      "digest": "38c86ffeb17806a84eafd3bdda9968ca06ea0a79e377d063adb6b7a27456139a"
+    },
+    "result": null
+  },
+  "readback": {
+    "author": "runner",
+    "plan": {
+      "url": "https://example.test/issues/1#plan",
+      "digest": "5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227",
+      "revision": 1
+    },
+    "source": {
+      "url": "https://example.test/issues/1",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "initial_base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "head": "cccccccccccccccccccccccccccccccccccccccc",
+    "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "owner": "runner",
+    "worktree": "/task",
+    "branch": "cb/task",
+    "pr": "https://example.test/pull/2",
+    "bodies": {
+      "https://example.test/issues/1#plan": "5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227",
+      "https://example.test/issues/1#amendment": "7f821cc9e6f49c98fa8c9edc14af18f41fa3583288aefcac02577e579e23e8d6"
+    },
+    "previous_epoch": null,
+    "result": null,
+    "readback_complete": true
+  }
+}

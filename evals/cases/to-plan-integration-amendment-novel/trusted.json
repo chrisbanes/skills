@@ -1,0 +1,26 @@
+{
+  "author": "runner",
+  "plan": {
+    "url": "https://example.test/issues/1#plan",
+    "digest": "5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227",
+    "revision": 1
+  },
+  "source": {
+    "url": "https://example.test/issues/1",
+    "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "initial_base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "head": "cccccccccccccccccccccccccccccccccccccccc",
+  "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "owner": "runner",
+  "worktree": "/task",
+  "branch": "cb/task",
+  "pr": "https://example.test/pull/2",
+  "bodies": {
+    "https://example.test/issues/1#plan": "5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227",
+    "https://example.test/issues/1#amendment": "75b1b7eff4864fd3fe47ab94d661154c786159df37b9fcc1ac4aa87dc79bfb6e"
+  },
+  "previous_epoch": null,
+  "result": null,
+  "readback_complete": true
+}

@@ -36,10 +36,11 @@ Run focused existing validation to prove proposed files, symbols, seams, and
 commands exist and the baseline is green. For unavailable credentials, hardware,
 or services, use repository configuration or recent trusted CI evidence and
 assign the omitted check to implementation; block without either source. Record
-all facts an executor needs: files, symbols, responsibilities, call sites,
-exemplars, commands, working directories, and created symbols. Trace enough
-control/data flow to decide ownership, wiring, branches, errors, and accepted
-edge cases; never invent repository facts.
+the concrete repository facts needed to execute: affected files and
+ownership/interfaces, useful entry symbols, test seams, commands and working
+directories. Trace control/data flow far enough to settle material decisions.
+Include call-site wiring, created symbols and error branches when they remove
+real ambiguity or protect a safety boundary; never invent repository facts.
 
 ## Resolve decisions and draft
 
@@ -80,10 +81,17 @@ blockers together. Do not reject or split a ready source merely because it is
 large.
 
 Use exactly one plan template. Every observable slice names prerequisites,
-existing/new files and symbols, ordered edits (interfaces, ownership, control or
-data flow, branches, errors, edge cases, and wiring), exact test seam/setup/
-inputs/assertions and red failure or strongest practical alternative, exact
-command plus working directory/setup/result, and observable green completion.
+affected files and ownership/interfaces, the intended increment, concrete test
+seams and acceptance evidence, exact command plus working directory/setup/result,
+and observable completion. Reference authoritative requirements by stable
+identity instead of copying the specification. For a known one-function change,
+a short edit description and exact acceptance check can be sufficient.
+Require ordered recipes, detailed symbol inventories, wiring, material branches,
+errors and failure evidence where uncertainty, safety or a necessary seam makes
+that precision useful. For receipt, privacy or concurrency work, identify the
+identities, transitions, boundaries and failure cases on which correctness
+actually depends. Brevity cannot hide an unresolved decision or replace a
+meaningful test. Do not add speculative discovery, proofs or a length cap.
 Each new slice must also have a stable unique task ID (such as `T1`) and an
 explicit `Depends on` list. Reserve the case-insensitive task ID `none` for the
 `Depends on: none` root marker; dependencies may name only declared task IDs.
@@ -99,28 +107,30 @@ Scale detail to risk; avoid full implementations and boilerplate. State a
 shared contract once in Guardrails. Use Approach for the route, Planning
 decisions for non-obvious choices, and Implementation context for current code
 facts; do not repeat those sections' shared constraints in each other or in
-Review focus. Slices still need their own exact files, inputs, assertions,
-commands, and results. Acceptance rows should name the behavior and point to
+Review focus. Each slice still needs concrete affected files, test inputs/actions
+and
+assertions, commands, and expected results; share setup by explicit reference. Acceptance rows
+should name the behavior and point to
 the slice's focused check instead of paraphrasing the full contract. Omit
 generic deviation and re-plan sections when only standard handoff rules apply;
 keep the concise standard diagnosis, repair, and stop limits in Guardrails so
 the published plan carries them. Include additional sections only for distinct
 task-specific conditions.
 
-Perform an executor-readiness review from the written plan alone. A fresh,
-lower-capability executor must locate and order every edit, distinguish existing
-from new symbols, create meaningful tests, wire consumers, and validate without
-broad rediscovery. Resolve gaps through discovery; put unresolvable ones in the
-blocker set.
+Perform an executor-readiness review from the written plan and its identified
+source alone. A fresh executor must locate and order the increments, understand
+ownership and interfaces, create meaningful tests and validate without reopening
+material decisions. Routine implementation choices within that contract remain
+with the executor; missing authority, behavior or architecture decisions do not.
+Resolve gaps through discovery; put unresolvable ones in the blocker set.
 
-As part of this review, trace every source requirement to an acceptance row and
-its implementing slice. Check that paths, existing and new symbol names,
-interfaces, call-site wiring, task dependencies, and validation commands agree
-across the plan. Replace vague instructions such as “add appropriate tests” or
-“run relevant checks” with concrete inputs, assertions, commands, working
-directories, and observable results. Remove placeholders and steps that do not
-advance an acceptance criterion. Scale the detail to the change's risk and keep
-the proof, failure, and source-authority gates above unchanged.
+Trace every source requirement to an acceptance row and implementing slice.
+Check paths, interfaces, task dependencies and validation commands agree across
+the plan; check exact symbols and wiring where the risk requires them. Replace
+“add appropriate tests” or “run relevant checks” with concrete inputs,
+assertions, commands and observable results. Remove placeholders and steps that
+do not advance acceptance. Keep the proof, failure and source-authority gates
+above unchanged.
 
 ## Manage, publish, and hand off
 
@@ -137,6 +147,12 @@ whether the active comment was created or reused, ending:
 ```text
 Implement <issue URL> using the approved implementation plan at <comment permalink>.
 ```
+
+For proven unchanged-scope overlapping base integration, use
+[integration amendments](integration-amendments.md) instead of the full-replan
+route below only when all its gates pass. Its exact effective-contract packet
+replaces the single-plan handoff; neither consumer may ignore its amendments.
+Unknown overlap still blocks pending evidence; material changes still replan.
 
 An implementation checkout may descend from planned SHA only for non-overlapping
 intervening changes. Within a fixed behavior, decisions, interfaces, seams, and

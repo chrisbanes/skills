@@ -24,7 +24,13 @@ Treat acceptance criteria and recorded upstream decisions as authoritative.
 Compatible comments may clarify them. Block on unresolved conflicts between
 authoritative sources.
 
-Find all comments containing either plan marker, including minimized comments:
+Find all full-plan and integration-amendment marker comments, including
+minimized comments. When amendments exist or are requested, apply
+[integration amendments](integration-amendments.md) as well: the full-plan leaf
+alone is not the effective contract. Full replans close the preceding amendment
+epoch with its exact effective tip/digest and retained-work disposition.
+
+The full-plan markers are:
 
 ```html
 <!-- to-plan:implementation-plan:v1 -->
@@ -38,7 +44,8 @@ unminimized leaf. Verify that the active GitHub identity authored every marker
 comment and can create the next revision. A fork, gap, duplicate, missing
 predecessor, foreign marker, or minimized active leaf is a blocker.
 
-When the active plan is already claimed, accept an autonomous replan only from
+For a claimed-plan integration amendment, use the retained-owner/controller
+request checks in that reference. For a full autonomous replan, accept only from
 a runner-owned comment containing:
 
 ```html
@@ -60,8 +67,8 @@ Require all of the following:
 
 - The issue is open and labelled `ready-for-agent`.
 - Every blocker is complete and its required outcome exists in the baseline.
-- No open implementation PR exists, except the exact runner-owned PR allowed by
-  a verified autonomous replan.
+- No open implementation PR exists, except the exact retained PR allowed by
+  a verified autonomous replan or integration amendment request.
 - The issue has explicit, complete acceptance criteria.
 - Every criterion maps to automated or precise manual verification.
 
@@ -115,6 +122,8 @@ verification, and return the leaf as a no-op. Otherwise:
    presentation methods without invalidating the verified new leaf.
 5. Delete only the exact draft after the active leaf is verified.
 
-Never edit an active semantic payload in place, split one revision across
+An amendment is a separate append-only component of one effective contract,
+not a split full-plan revision. Apply its publication and no-op gates separately.
+Never edit an active semantic payload in place, split one full-plan revision across
 locations, or perform broad `.scratch` cleanup. Preserve the draft whenever
 publication or active-leaf verification fails.

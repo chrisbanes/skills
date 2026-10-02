@@ -1,0 +1,56 @@
+{
+  "id": "to-plan-integration-amendment-direct",
+  "title": "Review a UI06-style bounded integration amendment",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-integration-amendment-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "proportionality",
+      "text": "Keeps the decision proportional, references settled requirements and work rather than reproducing a full recipe, but preserves concrete identities, affected interfaces, meaningful tests and failure evidence."
+    },
+    {
+      "id": "classification",
+      "text": "Distinguishes supported unchanged-scope integration from non-overlap/no-op, unknown preservation and material architecture/privacy/permission/qualification changes; unchanged issue text alone proves nothing."
+    },
+    {
+      "id": "lineage-authority",
+      "text": "Requires authenticated append-only complete lineage, trusted prior anchors, fresh source/base/candidate/PR identities, native readiness and independent review/approval; ambiguous writes are reconciled before retry and artifacts are preserved."
+    },
+    {
+      "id": "both-handoffs",
+      "text": "Delivery retains owner/work/PR and renews affected evidence with exact result provenance; controller verifies effective contract and existing leases without an unnecessary Todo/Ready reset. No expanded external grants or qualification waivers."
+    },
+    {
+      "id": "evidence-limits",
+      "text": "Separates pending integration result from exact starting candidate and readiness; preserves traceable valid full-candidate review and does not claim model execution, live provider proof or consumer adoption from offline snapshots."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
