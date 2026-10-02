@@ -127,7 +127,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(35, len(calibration))
+        self.assertEqual(38, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -137,6 +137,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "implement-with-subagents-missing-provider-challenge",
                 "run-github-project-missing-provider-challenge",
                 "to-plan-authorized-draft-direct",
+                "to-plan-integration-amendment-direct",
+                "to-plan-integration-amendment-novel",
+                "to-plan-integration-amendment-negative",
                 "to-plan-material-assumption-proof-calibration",
                 "to-plan-material-assumption-proof-novel",
                 "to-plan-specificity-calibration",

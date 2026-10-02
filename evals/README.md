@@ -205,7 +205,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 35 calibration-only cases, including
+The workflows/writing corpus contains 38 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -419,3 +419,10 @@ Append a decision to the run's JSONL audit ledger:
 python3 evals/run.py audit --output-dir .scratch/skill-evals/<run-id> \
   --id <case:arm:repetition> --decision accept --rationale "Evidence checked"
 ```
+
+Three additional `to-plan` calibration cases cover unchanged-scope integration
+amendments, receipt/concurrency-sensitive integration, and no-change/unsafe-route
+restraint. Offline artifact checks validate identity, digest and lineage against
+evaluator-owned anchors; they do not establish live publication, semantic review
+quality or consumer adoption. The case definitions are validated; no new model
+results are reported.

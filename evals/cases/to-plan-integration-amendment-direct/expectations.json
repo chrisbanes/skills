@@ -1,0 +1,13 @@
+{
+  "files": [
+    ".scratch/decision.md"
+  ],
+  "must_contain": [
+    "deliver-spec",
+    "run-github-project"
+  ],
+  "effective_contract": {
+    "artifact": ".scratch/contract.json",
+    "trusted": "trusted.json"
+  }
+}

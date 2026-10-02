@@ -1,0 +1,50 @@
+{
+  "packet": {
+    "plan": {
+      "url": "https://example.test/issues/1#plan",
+      "author": "runner",
+      "body": "Approved plan: preserve private receipt identities.",
+      "revision": 1,
+      "digest": "5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227"
+    },
+    "amendments": [
+      {
+        "url": "https://example.test/issues/1#amendment",
+        "author": "runner",
+        "body": "<!-- to-plan:integration-amendment:v1 -->\n```json\n{\"branch\":\"cb/task\",\"candidate\":\"cccccccccccccccccccccccccccccccccccccccc\",\"classification\":\"unchanged-scope\",\"expected_head\":\"cccccccccccccccccccccccccccccccccccccccc\",\"integration\":[\"Use shared decoder with identical schema and errors\",\"Retain duplicate-receipt rejection and the existing writer ownership boundary\"],\"invalidated_evidence\":[\"old validator test at c\"],\"new_base\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"old_base\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"overlap\":[\"canonical receipt decoder moved to a shared package\",\"parallel writers now use the existing receipt identity guard\"],\"owner\":\"runner\",\"plan\":{\"digest\":\"5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227\",\"url\":\"https://example.test/issues/1#plan\"},\"pr\":\"https://example.test/pull/2\",\"previous\":{\"digest\":\"5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227\",\"url\":\"https://example.test/issues/1#plan\"},\"rationale\":\"The accepted receipt identity, concurrency, schema, failure and permission contracts are unchanged. Relocation is proven; no new policy or grant is needed.\",\"required_evidence\":[\"Malformed and duplicate receipt tests at integrated head\",\"Concurrent writer exclusion and failure-path interaction review at integrated head\"],\"result_candidate\":null,\"retained_work\":[\"receipt implementation at c\"],\"sequence\":1,\"source\":{\"digest\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"url\":\"https://example.test/issues/1\"},\"worktree\":\"/task\"}\n```\n",
+        "digest": "8613d26948811e4d600cc413ab6eccb1753113056f5da503c8bdbe5cc94796ab"
+      }
+    ],
+    "effective": {
+      "url": "https://example.test/issues/1#amendment",
+      "digest": "03e73da2e103c024efe8ce839b843378dc5073dc8926dea31eb4b6d3d039d8e1"
+    },
+    "result": null
+  },
+  "readback": {
+    "author": "runner",
+    "plan": {
+      "url": "https://example.test/issues/1#plan",
+      "digest": "5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227",
+      "revision": 1
+    },
+    "source": {
+      "url": "https://example.test/issues/1",
+      "digest": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "initial_base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "head": "cccccccccccccccccccccccccccccccccccccccc",
+    "base": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "owner": "runner",
+    "worktree": "/task",
+    "branch": "cb/task",
+    "pr": "https://example.test/pull/2",
+    "bodies": {
+      "https://example.test/issues/1#plan": "5ed1860930ce136d0235267d9f5b45c2a92b3115ab8992fe163a2e61b7601227",
+      "https://example.test/issues/1#amendment": "75b1b7eff4864fd3fe47ab94d661154c786159df37b9fcc1ac4aa87dc79bfb6e"
+    },
+    "previous_epoch": null,
+    "result": null,
+    "readback_complete": true
+  }
+}

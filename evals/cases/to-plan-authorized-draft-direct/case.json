@@ -34,7 +34,7 @@
     },
     {
       "id": "executable-plan",
-      "text": "The generated plan identifies existing files and symbols, gives an ordered edit recipe for validator.py, and specifies the existing test setup, a path-with-spaces input, exact-output assertion, expected red failure, working directory, focused command, expected green result, and observable acceptance condition without implementing the change"
+      "text": "The generated plan identifies existing files and symbols, states the intended change and affected ownership in validator.py without requiring a detailed edit recipe for this known change, and specifies the existing test setup, a path-with-spaces input, exact-output assertion, expected red failure, working directory, focused command, expected green result, and observable acceptance condition without implementing the change"
     },
     {
       "id": "proportionality",
