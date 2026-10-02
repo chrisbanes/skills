@@ -121,7 +121,22 @@ also valid. If the agent cannot reach a clean commit safely, preserve and block
 the younger slot; do not begin automated base repair from a dirty worktree.
 
 After that clean checkpoint, pause the younger slot without releasing its
-claim, and revoke its merge eligibility. Merge the older slot first, refresh
+claim, and revoke its merge eligibility. If the older integration is waiting on
+missing authority or a human decision, use the existing
+[verified preservation pause](authority-and-pauses.md#pause-one-ticket)
+for the younger ticket too: identify the older ticket and exact blocked
+integration, preserve its claim, owner, branch, worktree and checkpoint, and
+record verified completion of that older integration as the resume condition.
+Only after pause publication is reconciled, writers are quiescent and grants
+are released may its implementation slot and agent capacity be released for
+unrelated work. Unknown publication or ownership keeps that capacity blocked.
+Do not repeatedly reacquire a slot while the older integration remains paused.
+On recovery, satisfy that exact condition and revalidate the younger lease
+through the same pause/resume procedure; restore its same owner and artifacts
+in the next free slot before base repair. Authority for the older ticket alone
+does not satisfy the younger ticket's completion condition. While the older
+integration can proceed within this run, retain the younger occupied slot.
+Merge the older slot first, refresh
 the verified base, then resume the younger slot's owning ticket agent. Under
 its existing exclusive slot ownership, only that agent may update its branch
 and worktree to the new base using repository policy; the controller never

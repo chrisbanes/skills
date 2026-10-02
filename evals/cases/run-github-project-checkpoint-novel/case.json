@@ -36,7 +36,7 @@
     },
     {
       "id": "conflict",
-      "text": "Allows only plan-proven disjoint slices; serializes the canonical shared path/resource and older-first integration boundary, retains exclusive writers and renewed final-head review, and delays whole tickets for dependencies/inseparable or uncertain seams."
+      "text": "Allows only plan-proven disjoint slices; serializes the canonical shared path/resource and older-first integration boundary, retains exclusive writers and renewed final-head review, and delays whole tickets for dependencies/inseparable or uncertain seams. When older integration is authority/decision-paused, uses verified preservation pause to release younger capacity only after reconciled publication and quiescence, preserves claim/owner/artifacts, and resumes in a free slot only after verified older integration and lease revalidation. Unknown publication retains blocked capacity; runnable older integration retains the occupied younger slot; a grant alone is not completion."
     },
     {
       "id": "freshness",

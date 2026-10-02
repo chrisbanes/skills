@@ -20,6 +20,11 @@ allowed. No missing permission may be inferred.
    no native dependency. Describe admission, the exact shared edit and later
    integration/merge boundary. Contrast a native blocked-by edge, an inseparable
    seam and uncertain independence; those variants have no safe partial admission.
+   The younger ticket then reaches a clean shared-boundary checkpoint, but the
+   older ticket cannot merge without human authority. Explain how unrelated
+   work can use the younger slot, what remains owned, and the exact resume
+   evidence. Contrast unknown pause publication and an older merge that can
+   proceed now. Does a new merge grant alone justify resuming the younger work?
 4. Three unchanged CI observations concern an occupied slot. A complete
    snapshot remains uninvalidated and no selection follows. Later a merge,
    a new selection after invalidation, an incomplete read and a finish decision
