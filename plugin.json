@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "chrisbanes-skills",
-  "version": "2026.9.30",
+  "version": "2026.10.2",
   "description": "Skills for Kotlin, Android, JVM, and Jetpack Compose development by Chris Banes.",
   "author": {
     "name": "Chris Banes",
