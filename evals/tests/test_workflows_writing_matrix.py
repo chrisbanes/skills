@@ -169,6 +169,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-authority-pause-novel",
                 "run-github-project-current-column-novel",
                 "run-github-project-auto-merge-restraint-negative",
+                "deliver-spec-evidence-direct",
+                "deliver-spec-integration-novel",
+                "deliver-spec-review-boundary-negative",
             },
             {case.id for case in calibration},
         )

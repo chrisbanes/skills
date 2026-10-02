@@ -28,7 +28,9 @@ Project run already owns that issue, return it to that controller.
 
 1. Resolve the named source, repository, approved contract, and any existing
    branch or PR from fresh state. On resume, reconcile the PR, exact head,
-   checks, feedback, and authority before acting.
+   checks, feedback, and authority before acting. For integration amendments,
+   use [Evidence and review](references/evidence-and-review.md) to verify the
+   installed planner contract and retained work before consuming any delta.
 2. For a GitHub issue missing `ready-for-agent`, use `triage` and wait for its
    approved outcome; do not change labels yourself. Local sources skip GitHub
    triage but need explicit stakeholder approval. Reuse a current `to-plan`
@@ -40,28 +42,33 @@ Project run already owns that issue, return it to that controller.
 4. Keep implementation with the delivery lead by default. Record the fixed
    base and use a clean task checkout, preserving unrelated user work. Implement
    approved slices in dependency order and validate their acceptance criteria.
+   Read [Evidence and review](references/evidence-and-review.md) before
+   implementation and apply its reuse and validation procedure.
    For behavior changes, require the separately installed `tdd` skill and
    approved test seams before editing; obtain missing seam agreement and stop
    that behavior work if `tdd` is unavailable. Documentation and other work
    without a meaningful test seam use focused validation. Materialize the
-   approved source and plan in an owner-only system-temp file for review;
-   recreate it on resume.
+   reviewer packet from [Evidence and review](references/evidence-and-review.md)
+   in an owner-only system-temp file; recreate it on resume.
    Use `implement-with-subagents` only for explicitly requested orchestration
    or independently useful parallel tasks. Honor its ownership, isolation,
    acceptance, integration, and repair gates when selected. Keep a single
    tightly coupled task with the delivery lead; do not require a child worker
    or extra worktree solely to separate implementation from coordination.
 5. Self-review the task scope, commit only task-owned changes, and run the
-   required checks with the tested revision and results recorded. Require one
+   required checks with the provenance and applicability recorded under
+   [Evidence and review](references/evidence-and-review.md). Require one
    fresh independent read-only reviewer for every delivery PR. Resolve that
    capability before implementation; if
    unavailable, report the blocker rather than waive review. Use an investigator
    in review mode or equivalent, with no inherited implementation conversation.
-   Supply the approved source, plan, repository standards, fixed base, exact
-   candidate head, and validation evidence. Require requirements and standards
+   Supply the self-contained reviewer packet, including prior findings,
+   dispositions and outstanding coverage. Require requirements and standards
    findings with evidence and a `ship`, `fix-first`, or `rethink` verdict.
-   No external review skill or issue-tracker setup is required. Reuse a current
-   final joined review from `implement-with-subagents` when it covers these
+   The default route requires no external review skill or issue-tracker setup.
+   Honor an explicitly invoked provider's actual contract under the reference;
+   report missing scope or capacity rather than narrowing its invocation. Reuse
+   a current final joined review from `implement-with-subagents` when it covers these
    inputs. Add reviewers only for distinct risks or substantial scope.
    Return findings to the implementation owner. After repairs, rerun affected
    checks and review the changed range plus interactions; broaden when earlier
@@ -80,7 +87,8 @@ Project run already owns that issue, return it to that controller.
 ## Finish gate
 
 Report `ready` only when the final head passes applicable checks and reviews
-with findings resolved; `merged` only after authorized merge readback;
+with findings resolved and evidence applicable to that clean head;
+`merged` only after authorized merge readback;
 `no-change` only when implementation and verification finish with an empty
 final diff; `pending` with exact outstanding gates; otherwise `blocked` with the
 needed decision or capability. Preserve the PR and source pointers on pending

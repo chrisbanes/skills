@@ -27,6 +27,13 @@ measures evaluation overhead, not skill efficiency. Wall-clock results are
 environment-sensitive, so compare runs only when model, reasoning, machine,
 corpus, and execution conditions are held constant.
 
+The delivery calibration cases cover validation provenance/invalidation,
+retained integration work, reviewer packets and strict selected-provider
+invocation, including unchanged-evidence and unsafe-shortcut counterexamples.
+Their deterministic validator checks immutable fixture integrity; semantic
+rubrics require a separately authorised model run and are not proven by corpus
+validation.
+
 ## Results
 
 **Baseline** is the positive-case pass rate with no skills available, restricted

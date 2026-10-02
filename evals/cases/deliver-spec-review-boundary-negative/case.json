@@ -1,0 +1,64 @@
+{
+  "id": "deliver-spec-review-boundary-negative",
+  "title": "Reject narrowed review and stale evidence without redundant work",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-review-boundary-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "unchanged-noop",
+      "text": "Retains A's valid current coverage without inventing an amendment, review, tracker setup or new approval solely for resume; recognises bundled independent review is valid when it is the authorised route"
+    },
+    {
+      "id": "invalid-amendment",
+      "text": "Rejects B's foreign/forked/ambiguous/stale amendment, preserves work/PR/owner and consumed budgets, reconciles before retry, and requires full reviewed replan plus source/stakeholder update for the changed privacy requirement"
+    },
+    {
+      "id": "qualification",
+      "text": "Does not renew an exhausted grant, claim readiness or use old ship/focused tests to qualify the changed candidate; reports exact authority and missing evidence gates"
+    },
+    {
+      "id": "code-review-contract",
+      "text": "Reports missing tracker setup and two-agent parallel capacity, requires the actual resolving nonempty three-dot scope and separate axes; does not credit a single repair-only review or ignore excluded interactions"
+    },
+    {
+      "id": "complexity-boundary",
+      "text": "Does not count ponytail's complexity-only ship as correctness or security acceptance"
+    },
+    {
+      "id": "simplify-contract",
+      "text": "Preserves review-and-simplify's explicit scope, required roles/capacity, review-only mode and main-only fixes; does not silently narrow the large pass or let reviewers edit"
+    },
+    {
+      "id": "default-not-substitute",
+      "text": "Distinguishes the available default bundled route from an explicitly mandated external review; reports the hard limitation and missing coverage instead of inventing a restricted invocation or silent substitution"
+    },
+    {
+      "id": "restraint",
+      "text": "Performs no actions or mutation and introduces no speculative framework, blanket retry or redundant gate for the unchanged candidate"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
