@@ -1,0 +1,53 @@
+{
+  "id": "run-github-project-recovery-negative",
+  "title": "Reject unsafe recovery while retaining valid no-change paths",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-recovery-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "renewal",
+      "text": "Permits only A after exact verified committed equivalence and acknowledged renewal; preserves historical marker payload/digest, predecessor provenance, owners/artifacts and unchanged grants. Does not treat renewal as a parked-CI recovery signal."
+    },
+    {
+      "id": "reject",
+      "text": "Stops semantic/unknown/uncommitted B\u2013D cases and reconciles ambiguous publication; same ID or runner-authored text alone is insufficient, and a still-active old-lease writer prevents renewal."
+    },
+    {
+      "id": "provider",
+      "text": "E detects missing provider capability and retains full-replan fallback; F uses provider-owned verified effective contract with the same owner, In-progress slot and affected final-head evidence, without defining a controller-owned amendment format."
+    },
+    {
+      "id": "materiality",
+      "text": "G cannot use amendment as an escape hatch: unknown or stale evidence blocks dependent work; material architecture requires full review/replan, changed authority requires stakeholder/source decision; grants and qualification remain intact."
+    },
+    {
+      "id": "restraint",
+      "text": "H preserves the screened non-overlapping/current-plan/no-op path, reuses only uninvalidated complete state with fresh write checks, and keeps next single-ticket without mutations or merge."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}
