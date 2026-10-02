@@ -182,6 +182,23 @@ def wayfinder_reconciliation(number: int, **overrides: object) -> dict:
     return result
 
 
+def configuration_renewal(number: int, **overrides: object) -> dict:
+    result = {
+        "commentId": f"IC_renewal_{number}",
+        "permalink": f"https://github.com/acme/repo/issues/{number}#issuecomment-renewal",
+        "author": "chris",
+        "markerCommentId": f"IC_wayfinder_reconciliation_{number}",
+        "markerPermalink": (
+            f"https://github.com/acme/repo/issues/{number}#issuecomment-reconcile"
+        ),
+        "markerPayloadDigest": f"sha256:marker-{number}",
+        "originalConfigurationDigest": "sha256:old-config",
+        "configurationDigest": "sha256:config",
+    }
+    result.update(overrides)
+    return result
+
+
 def pull_request(number: int, **overrides: object) -> dict:
     result = {
         "number": number,
@@ -677,6 +694,55 @@ class RankTicketsTest(unittest.TestCase):
             [3],
             [entry["ticket"]["number"] for entry in output["candidates"]],
         )
+
+    def test_accepts_more_than_three_claims_with_a_permitted_limit(self) -> None:
+        claims = [
+            ticket(number, projectStatus="In progress", assignees=["chris"])
+            for number in (1, 2, 3, 4)
+        ]
+
+        returncode, output = run_ranker(claims, "--max-claims", "4")
+
+        self.assertEqual(0, returncode)
+        self.assertEqual(4, output["claimLimit"])
+        self.assertEqual(
+            [1, 2, 3, 4],
+            [entry["ticket"]["number"] for entry in output["claims"]],
+        )
+
+    def test_larger_limit_still_counts_blocked_claims(self) -> None:
+        claims = [
+            ticket(number, projectStatus="In progress", assignees=["chris"])
+            for number in (1, 2, 3, 4, 5)
+        ]
+        claims[-1]["labels"] = []
+
+        returncode, output = run_ranker(claims, "--max-claims", "4")
+
+        self.assertEqual(2, returncode)
+        self.assertEqual("over-capacity-claims", output["reason"])
+        self.assertEqual(4, output["claimLimit"])
+        self.assertEqual([1, 2, 3, 4, 5], output["claimed"])
+
+    def test_claim_limit_must_be_positive(self) -> None:
+        for limit in ("0", "-1"):
+            with self.subTest(limit=limit):
+                returncode, output = run_ranker([], "--max-claims", limit)
+                self.assertEqual(2, returncode)
+                self.assertEqual("invalid-input", output["reason"])
+                self.assertEqual("max claims must be a positive integer", output["error"])
+
+    def test_noninteger_claim_limit_is_rejected_by_cli(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "--mode", "drain",
+             "--current-user", "chris", *DEFAULT_PROJECT_ARGUMENTS,
+             *DEFAULT_PRIORITY_ARGUMENTS, *DEFAULT_STATUS_ARGUMENTS,
+             "--max-claims", "1.5"],
+            input="[]", capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(2, result.returncode)
+        self.assertIn("--max-claims: invalid int value", result.stderr)
+        self.assertEqual("", result.stdout)
 
     def test_stops_when_claims_exceed_limit(self) -> None:
         first = ticket(4, projectStatus="In progress", assignees=["chris"])
@@ -2331,6 +2397,130 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual([], output["claims"])
         self.assertIn(
             "wayfinderReconciliation.disposition must be 'resolved' or 'out-of-scope'",
+            output["blockedPlanningClaims"][0]["reasons"][0],
+        )
+
+    def test_resumes_wayfinder_with_marker_bound_configuration_renewal(self) -> None:
+        interrupted = wayfinder_ticket(
+            334, assignees=["chris"], state="CLOSED", projectStatus="Done",
+            wayfinderReconciliation=wayfinder_reconciliation(
+                334, configurationDigest="sha256:old-config",
+                payloadDigest="sha256:marker-334",
+                configurationRenewal=configuration_renewal(334),
+            ),
+        )
+
+        returncode, output = run_ranker([interrupted], *DEFAULT_WAYFINDER_ARGUMENTS)
+
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["blockedPlanningClaims"])
+        self.assertEqual("resume-wayfinder-reconciliation", output["claims"][0]["action"])
+        marker = output["claims"][0]["ticket"]["wayfinderReconciliation"]
+        self.assertEqual("sha256:old-config", marker["configurationDigest"])
+        self.assertEqual(configuration_renewal(334), marker["configurationRenewal"])
+
+    def test_rejects_misbound_configuration_renewal(self) -> None:
+        for field in (
+            "author", "markerCommentId", "markerPermalink", "markerPayloadDigest",
+            "originalConfigurationDigest", "configurationDigest",
+        ):
+            with self.subTest(field=field):
+                marker = wayfinder_reconciliation(
+                    334, configurationDigest="sha256:old-config",
+                    payloadDigest="sha256:marker-334",
+                    configurationRenewal=configuration_renewal(334, **{field: "wrong"}),
+                )
+                interrupted = wayfinder_ticket(
+                    334, assignees=["chris"], wayfinderReconciliation=marker,
+                )
+                returncode, output = run_ranker(
+                    [interrupted], *DEFAULT_WAYFINDER_ARGUMENTS,
+                )
+                self.assertEqual(0, returncode)
+                self.assertEqual([], output["claims"])
+                self.assertEqual(334, output["blockedPlanningClaims"][0]["number"])
+                self.assertIn(
+                    f"configurationRenewal.{field} does not match",
+                    output["blockedPlanningClaims"][0]["reasons"][0],
+                )
+
+    def test_rejects_incomplete_configuration_renewal(self) -> None:
+        variants = [None, True, [], {}]
+        for field in configuration_renewal(334):
+            missing = configuration_renewal(334)
+            del missing[field]
+            variants.extend((missing, configuration_renewal(334, **{field: ""})))
+        for renewal in variants:
+            with self.subTest(renewal=renewal):
+                interrupted = wayfinder_ticket(
+                    334, assignees=["chris"],
+                    wayfinderReconciliation=wayfinder_reconciliation(
+                        334, payloadDigest="sha256:marker-334",
+                        configurationRenewal=renewal,
+                    ),
+                )
+                returncode, output = run_ranker(
+                    [interrupted], *DEFAULT_WAYFINDER_ARGUMENTS,
+                )
+                self.assertEqual(0, returncode)
+                self.assertEqual([], output["claims"])
+                self.assertEqual(334, output["blockedPlanningClaims"][0]["number"])
+
+    def test_configuration_renewal_requires_fresh_marker_payload_digest(self) -> None:
+        interrupted = wayfinder_ticket(
+            334, assignees=["chris"],
+            wayfinderReconciliation=wayfinder_reconciliation(
+                334, configurationDigest="sha256:old-config",
+                configurationRenewal=configuration_renewal(334),
+            ),
+        )
+        returncode, output = run_ranker([interrupted], *DEFAULT_WAYFINDER_ARGUMENTS)
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertIn(
+            "wayfinderReconciliation.payloadDigest",
+            output["blockedPlanningClaims"][0]["reasons"][0],
+        )
+
+    def test_latest_renewal_retains_original_marker_after_repeated_renames(self) -> None:
+        interrupted = wayfinder_ticket(
+            334, assignees=["chris"], state="CLOSED", projectStatus="Done",
+            wayfinderReconciliation=wayfinder_reconciliation(
+                334, configurationDigest="sha256:old-config",
+                payloadDigest="sha256:marker-334",
+                configurationRenewal=configuration_renewal(
+                    334, commentId="IC_second_renewal",
+                    permalink="https://github.com/acme/repo/issues/334#issuecomment-renewal-2",
+                    configurationDigest="sha256:second-renamed-config",
+                ),
+            ),
+        )
+        for _ in range(2):
+            returncode, output = run_ranker(
+                [interrupted], *DEFAULT_WAYFINDER_ARGUMENTS,
+                "--configuration-digest", "sha256:second-renamed-config",
+            )
+            self.assertEqual(0, returncode)
+            self.assertEqual([], output["blockedPlanningClaims"])
+            self.assertEqual("resume-wayfinder-reconciliation", output["claims"][0]["action"])
+            marker = output["claims"][0]["ticket"]["wayfinderReconciliation"]
+            self.assertEqual("sha256:old-config", marker["configurationDigest"])
+
+    def test_configuration_renewal_does_not_authorize_backlog_parent(self) -> None:
+        interrupted = wayfinder_ticket(
+            334, assignees=["chris"],
+            wayfinderReconciliation=wayfinder_reconciliation(
+                334, configurationDigest="sha256:old-config",
+                payloadDigest="sha256:marker-334",
+                configurationRenewal=configuration_renewal(334),
+            ),
+        )
+        interrupted["parentIssue"]["projectStatus"] = "Backlog"
+        returncode, output = run_ranker([interrupted], *DEFAULT_WAYFINDER_ARGUMENTS)
+        self.assertEqual(0, returncode)
+        self.assertEqual([], output["claims"])
+        self.assertIn(
+            "Wayfinder map parent is not in an authorized Project status",
             output["blockedPlanningClaims"][0]["reasons"][0],
         )
 
