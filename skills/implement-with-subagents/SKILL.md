@@ -82,18 +82,8 @@ integration, repairs, and final validation. Stop when a dependency, task-scoped
 commit, or capability gate cannot be satisfied; never implement an item in the
 controller.
 
-## Runtime mapping
-
-Select an implementation-capable owner and apply the implementation procedure's
-capability checks:
-
-| Runtime | Implementation owner |
-| --- | --- |
-| [Codex](https://learn.chatgpt.com/docs/agent-configuration/subagents) | `worker` |
-| [Claude Code](https://code.claude.com/docs/en/sub-agents) | `general-purpose` |
-| [OpenCode](https://opencode.ai/docs/agents) | `general` subagent; `build` is primary |
-| [Pi](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) | No built-in role; inspect its delegation extension and agent definitions. A bare or non-resumable Pi cannot own an item: stop and report it. |
-| Other runtimes | An exposed implementation-capable subagent that passes the checks |
+The implementation-mode procedure includes the runtime mapping and owns the
+capability checks, dispatch, and acceptance workflow.
 
 ## Finish gate
 

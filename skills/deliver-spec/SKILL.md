@@ -1,7 +1,7 @@
 ---
 name: deliver-spec
 description: Use when explicitly asked to deliver an approved GitHub or local spec through a reviewed pull request, or when a Project controller delegates one claimed implementation ticket.
-compatibility: "Implementation coordination uses implement-with-subagents. Behavior changes require tdd; triage is conditional. Never installs providers."
+compatibility: "Implementation coordination uses the bundled procedure. Behavior changes require the separately installed tdd skill; triage is conditional. Never installs providers."
 disable-model-invocation: true
 ---
 
@@ -50,13 +50,13 @@ Project run already owns that issue, return it to that controller.
    useful concurrent work exists. Record that reason. The lead owns only that
    initial direct edit and its repairs; this exception never transfers a
    worker's repair or follow-up. A qualifying initial edit needs no worker.
-   Follow the shared [`implement-with-subagents` procedure](../implement-with-subagents/SKILL.md)
+   Follow the bundled [implementation procedure](references/implementation-mode.md)
    for all other implementation, including single, sequential, and concurrent
    tasks; it owns checkout isolation, ready dispatch, capacity and priority,
    serialization, task acceptance, integration, wait behavior, and same-owner
    repair. Do not require a separate request for parallel work. While workers
    run, advance useful independent coordination. If worker capacity is busy,
-   use the caller's supported wait or idle behavior and verify available
+   use the procedure's supported wait or idle behavior and verify available
    capacity before dispatch; if the runtime lacks the required capability,
    report the blocker rather than falling back to lead implementation.
    Record the fixed base and preserve unrelated user work. For behavior
@@ -70,8 +70,9 @@ Project run already owns that issue, return it to that controller.
    changes, and report required checks with the tested revision and results.
    This includes the lead only when the recorded low-risk direct-edit
    exception applies. Accept each delegated task once before integration under
-   `implement-with-subagents`; the delivery lead reviews the integrated scope
-   and records required checks at the tested revision. Require one
+   the bundled implementation procedure; the delivery lead reviews the
+   integrated scope and records required checks at the tested revision. Require
+   one
    fresh independent read-only reviewer for every delivery PR. Resolve that
    capability before implementation; if
    unavailable, report the blocker rather than waive review. Use an investigator
@@ -80,7 +81,7 @@ Project run already owns that issue, return it to that controller.
    candidate head, and validation evidence. Require requirements and standards
    findings with evidence and a `ship`, `fix-first`, or `rethink` verdict.
    No external review skill or issue-tracker setup is required. Reuse a current
-   final joined review from `implement-with-subagents` when it covers these
+   final joined review from the bundled procedure when it covers these
    inputs. Add reviewers only for distinct risks or substantial scope.
    Return findings to the implementation owner. After repairs, rerun affected
    checks and review the changed range plus interactions; broaden when earlier

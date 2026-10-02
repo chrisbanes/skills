@@ -56,6 +56,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_subagent_handoff_reference_is_self_contained_for_each_consumer(self):
         shared = (REPO_ROOT / "references/subagent-selection.md").read_bytes()
         consumers = {
+            "deliver-spec": "references/implementation-mode.md",
             "implement-with-subagents": "references/implementation-mode.md",
             "run-github-project": "references/ticket-lifecycle.md",
             "gradle-run": "SKILL.md",
@@ -71,6 +72,39 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     "subagent-selection.md",
                     (directory / caller).read_text(encoding="utf-8"),
                 )
+
+    def test_deliver_spec_stages_its_complete_implementation_procedure_alone(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(case for case in report.cases if case.id == "deliver-spec-direct")
+        self.assertEqual(("deliver-spec",), case.target_skills)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = prepare_workspace(
+                case, REPO_ROOT, Path(temp_dir) / "fixture",
+                enabled_skills=case.target_skills,
+            )
+            installed = workspace / ".agents/skills"
+            self.assertFalse((installed / "implement-with-subagents").exists())
+            delivery = installed / "deliver-spec"
+            procedure = delivery / "references/implementation-mode.md"
+            self.assertEqual(
+                (REPO_ROOT / "skills/implement-with-subagents/references/implementation-mode.md").read_bytes(),
+                procedure.read_bytes(),
+            )
+            # Follow the mandatory local resource chain in the isolated installation.
+            for source, target in (
+                (delivery / "SKILL.md", "references/implementation-mode.md"),
+                (delivery / "references/project-handoff.md", "implementation-mode.md"),
+                (procedure, "subagent-selection.md"),
+            ):
+                with self.subTest(source=source.name):
+                    links = re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8"))
+                    self.assertIn(target, links)
+                    self.assertTrue((source.parent / target).is_file())
+            self.assertEqual(
+                (REPO_ROOT / "references/subagent-selection.md").read_bytes(),
+                (procedure.parent / "subagent-selection.md").read_bytes(),
+            )
+            self.assertIn("## Runtime mapping", procedure.read_text(encoding="utf-8"))
 
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
         entrypoint = (REPO_ROOT / "skills/run-github-project/SKILL.md").read_text(

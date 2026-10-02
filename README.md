@@ -125,6 +125,9 @@ Workflows that delegate agents share the [subagent selection and handoff
 reference](references/subagent-selection.md). Each workflow retains its own
 delegation trigger, authority, and acceptance rules. Each consuming skill also
 contains a copy of the reference for standalone installation.
+`deliver-spec` and `implement-with-subagents` also bundle synchronized copies of
+the implementation procedure, so spec delivery can delegate without installing
+the orchestration skill separately.
 
 ### Migration from pre-cluster skills
 

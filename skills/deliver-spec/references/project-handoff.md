@@ -26,10 +26,10 @@ handoff or take over a Project claim.
    unless current evidence covers those exact inputs. Return findings to the
    controller for `to-plan --auto` repair and a verified handoff; automatically
    review repaired inputs. Preserve Project repair budgets and replan rules.
-3. Follow `deliver-spec`'s shared implementation procedure with the supplied
-   tasks and materialized source, including its low-risk lead-edit exception;
-   it routes all other single, sequential, and concurrent implementation
-   through [`implement-with-subagents`](../../implement-with-subagents/SKILL.md).
+3. Follow the bundled [implementation procedure](implementation-mode.md) with
+   the supplied tasks and materialized source, including its low-risk lead-edit
+   exception. It delegates all other single, sequential, and concurrent
+   implementation to workers under the shared procedure.
    Keep the persistent ticket context as architecture, integration, acceptance,
    and non-merge PR delivery lead. Count every active descendant against actual
    spare Project capacity and preserve controller scheduling priority; serialize

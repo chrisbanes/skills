@@ -231,6 +231,9 @@ Three delivery calibrations compare manual and Project delegation, safe fork/joi
 execution under caller capacity, temporary capacity versus absent worker
 capability, and the trivial-edit exception versus useful overlap and retained
 repair ownership. They assess immutable state without live execution.
+Deterministic coverage stages `deliver-spec` alone, follows its local procedure
+and handoff links, and checks that its bundled procedure matches the orchestration
+skill's copy.
 Three Project-delivery calibrations cover automatic `deliver-spec` handoff,
 run-scoped `--auto-merge`, ticket-local authority pauses with continued board
 progress, durable resumption, and restraint for absent grants, read-only modes,
