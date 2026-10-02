@@ -1,0 +1,64 @@
+{
+  "id": "deliver-spec-evidence-direct",
+  "title": "Account for integrated validation and repair-review evidence",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-evidence-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "reuse",
+      "text": "Inspects the concrete prior findings and helper/consumer behavior before duplication; permits only matching reuse and keeps private metadata, destination identity, persistence and recovery differences explicit without proposing a generic framework"
+    },
+    {
+      "id": "provenance",
+      "text": "Records each command/contract, result and output pointer, tested revision/tree, base, scope and relevant runtime/configuration/dependency/fixture inputs; does not invent supplied command names or call C1 evidence a C2/C3 run"
+    },
+    {
+      "id": "development-vs-integrated",
+      "text": "Distinguishes 26 affected development tests from mandatory full integrated-candidate checks and preserves approved TDD seams"
+    },
+    {
+      "id": "invalidation",
+      "text": "Renews affected or unknown C2/C3 evidence, including recovery/privacy interaction and F2 impact; retains the proven unchanged spelling evidence only with compatibility rationale and original provenance"
+    },
+    {
+      "id": "review-packet",
+      "text": "Supplies original requirements/criteria, effective plan, standards, immutable base/candidate and prior candidate, exact resolvable comparison/commit context, validation evidence, stable F1 ID, repair commit/diff, disposition and prior versus outstanding coverage"
+    },
+    {
+      "id": "interaction-review",
+      "text": "Requires full-candidate first coverage and follow-up repair range plus interactions with the previous effective diff for every affected contract; catches or calls out the unverified privacy-panel interaction rather than relying on a recovery-only pass; broadens if impact cannot be bounded"
+    },
+    {
+      "id": "ci-repair",
+      "text": "Requires all locally available CI-equivalent checks and a passing full local suite on the code-related CI repair before a repair push, not just the focused F2 check"
+    },
+    {
+      "id": "acceptance",
+      "text": "Holds push/ready until applicable validation and combined independent coverage reach the final clean head with findings resolved; keeps repairs with the lead and grants no merge or remote mutation"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
