@@ -35,6 +35,18 @@ requirements, architecture, policy or authority. It is not a readiness receipt.
    retained PR through the normal no-open-implementation-PR gate. Competing
    PRs, foreign requests or uncertain ownership block. This route does not
    require a full-replan report or a Todo/Ready round trip.
+6. Before publication, verify the installed consumer's instructions and retained
+   owner's authenticated request explicitly support this amendment version:
+   enumerate and hydrate the entire chain, validate the effective digest, retain
+   its starting candidate, and renew affected result evidence. Standalone work
+   requires `deliver-spec` support; Project-owned work requires both
+   `run-github-project` and `deliver-spec` support. Record the inspected consumer
+   revisions and capability evidence with the publication preflight. A reference
+   to this format or a planner's claim is not consumer support. Missing, unknown
+   or full-plan-only support blocks amendment publication and handoff, including
+   `--auto`; preserve the local draft and retained work. Use the existing full
+   replan route if authorized, or wait for supported consumers. This change only
+   defines their contract; it does not install consumer support itself.
 
 ## Draft one bounded contract
 
@@ -158,7 +170,9 @@ reconciliation, not an automatic retry or silently refreshed hash.
    decision/replan route.
 2. Immediately refresh readiness, native blockers and outcomes, source, complete
    marker history, ownership, permissions, old/new base, candidate/PR/dirty work
-   and review/approval validity. Keep one publisher. A changed semantic input
+   and review/approval validity. Recheck the consumer capability gate above
+   against the installed revisions and current owner request. Keep one publisher.
+   A changed semantic input
    invalidates the draft approval/review; reconcile before proceeding.
 3. Publish one new comment, never edit an active semantic payload. Refetch all
    markers; verify author, exact body, payload/effective digests, unique chain,
@@ -213,8 +227,8 @@ to the full plan alone.
 ## Finish gate and evidence limits
 
 Hand off only one authenticated, reviewed, approved effective contract tied to
-fresh identities. Preserve all artifacts and report the exact missing decision
-or evidence on a blocker. Require new-head checks and combined independent review
+fresh identities and verified consumer capability. Preserve all artifacts and
+report the exact missing decision or evidence on a blocker. Require new-head checks and combined independent review
 coverage before delivery readiness; old SHA evidence is never current by default.
 
 The offline evaluation validator checks normalized identity/digest/lineage

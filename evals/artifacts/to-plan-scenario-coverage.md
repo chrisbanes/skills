@@ -32,7 +32,8 @@ deterministic local evidence from provider-dependent behavior.
 - `to-plan-integration-amendment-negative`: non-overlap/no-op restraint plus
   foreign, unknown, material, stale/forked and ambiguous-publication blockers.
   The objective grader checks no writes; the rubric scores the response routes
-  and their supporting evidence, with no claim of deterministic semantic grading.
+  and their supporting evidence, including the pre-publication consumer-capability
+  blocker, with no claim of deterministic semantic grading.
 - `test_to_plan_contract.py`: offline public-seam and CLI tests reject altered
   anchors, stale candidates, broken history, unsupported epochs and unverified
   result/readiness claims. Trusted expected anchors are evaluator-owned, outside

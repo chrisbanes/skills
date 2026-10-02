@@ -153,7 +153,10 @@ Implement <issue URL> using the approved implementation plan at <comment permali
 
 For proven unchanged-scope overlapping base integration, use
 [integration amendments](integration-amendments.md) instead of the full-replan
-route below only when all its gates pass. Its exact effective-contract packet
+route below only when all its gates pass, including verified installed-consumer
+support before amendment publication. Unknown or full-plan-only consumers block
+publication and handoff; preserve the draft or use the authorized full-replan
+route. Its exact effective-contract packet
 replaces the single-plan handoff; neither consumer may ignore its amendments.
 Unknown overlap still blocks pending evidence; material changes still replan.
 

@@ -47,6 +47,10 @@
     {
       "id": "evidence-limits",
       "text": "Separates pending integration result from exact starting candidate and readiness; preserves traceable valid full-candidate review and does not claim model execution, live provider proof or consumer adoption from offline snapshots."
+    },
+    {
+      "id": "consumer-capability",
+      "text": "Before live amendment publication, requires verified installed deliver-spec support and, for a Project claim, run-github-project support for complete chain hydration, effective digest and result evidence. Missing/unknown or full-plan-only support blocks publication and handoff even with approval or --auto. Offline artifact validity is not consumer adoption; preserve draft/work or use the authorized full-replan route."
     }
   ],
   "provenance": {

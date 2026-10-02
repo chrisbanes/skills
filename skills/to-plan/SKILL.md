@@ -49,7 +49,9 @@ For a retained GitHub plan with a routine base update, read
 [integration amendments](references/integration-amendments.md) after the shared
 workflow and GitHub contract. That route owns classification, append-only
 publication and effective-contract handoff; do not recreate the full plan when
-its bounded amendment gates pass. Conversation plans remain local and use their
+its bounded amendment gates pass. Verify installed delivery/controller support
+before publishing an amendment; unsupported consumers block that publication.
+Conversation plans remain local and use their
 existing replan route.
 
 ## Authority and blockers

@@ -103,7 +103,9 @@ issue body, labels, assignee, relationships, Project fields, status, or any
 non-plan comment.
 
 Compute a semantic payload digest without the marker, revision metadata, or
-superseded wrapper. If the active leaf already has the same payload and
+superseded wrapper. The complete `Epoch closure` line, including retained-work
+and evidence dispositions, is semantic payload: always include it in the digest,
+never discard it as revision metadata. If the active leaf already has the same payload and
 baseline, perform no write, delete only an exact matching temporary draft after
 verification, and return the leaf as a no-op. Otherwise:
 
