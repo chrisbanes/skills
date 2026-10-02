@@ -56,8 +56,10 @@ packet only when that contract requires it. For every ordinary implementation
 ticket, invoke `deliver-spec` with this verified packet under its
 [Project handoff procedure](../../deliver-spec/references/project-handoff.md).
 Keep the persistent ticket context as delivery lead and integration owner.
-Missing required capability blocks only that ticket. The ticket delivery lead
-implements directly by default; child implementation owners are optional.
+`deliver-spec` owns the implementation-worker and integration procedure;
+preserve its same-owner repair rule and fit all descendants within the
+controller's actual spare capacity. Missing required capability blocks only
+that ticket.
 Wayfinder, triage, and epic lanes keep their own procedures.
 
 ### Repair progress gate

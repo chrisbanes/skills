@@ -27,16 +27,27 @@
    behavior-preserving commits. Record shared-file, interface, and integration
    constraints. Stop on invalid or ambiguous graphs rather than choosing a
    new dependency for the plan owner.
-4. Keep the integration checkout stable and dispatch the ready frontier.
-   Reuse one worker checkout for sequential work. Concurrent items must be
-   independent, have adequate capacity, and each receive a distinct isolated
-   checkout based on the same current integrated `HEAD`; reuse a suitable idle
-   slot before creating another. Create only when concurrency or isolation
-   requires it and runtime and repository rules permit. This explicit workflow
-   invocation permits multiple implementation owners for safe independent
-   items despite a one-auxiliary default. Serialize unsafe overlap or
-   unavailable safe isolation or capacity. A dependent is ready only after
-   every prerequisite is integrated and its affected checks pass at that
+4. Keep the integration checkout stable and prepare the ready frontier.
+   Reconcile prior task acceptance and integration evidence first. Do not
+   reassign an accepted task or repeat implementation merely to satisfy worker
+   routing; resume integration, review, or delivery from the verified current
+   state. Resolve worker capacity before dispatching new implementation or a
+   required repair. Wait until step 5 confirms capability before dispatching.
+   Assign even one supplied item to one worker; reuse a suitable worker checkout
+   for sequential items rather than keeping implementation in the lead. For
+   multiple items, actively dispatch all plan-proven independent ready items
+   with disjoint write sets by default. Each concurrent writer needs a distinct
+   isolated checkout based on the same current integrated `HEAD`; reuse a
+   suitable idle slot before creating another. Create only when concurrency or
+   isolation requires it and runtime and repository rules permit. Count every
+   active descendant within actual caller, runtime, repository, and (when
+   applicable) Project capacity. Preserve explicit multi-worker authorization
+   constraints and caller-supplied scheduling priority, including priority
+   across ready Project tickets before adding extra within-ticket workers.
+   Serialize shared-file edits, dependencies, unavailable safe isolation, or
+   insufficient capacity. Wait for temporary capacity limits; do not fall back
+   to lead implementation when a worker is required. A dependent is ready only
+   when every prerequisite is integrated and its affected checks pass at that
    integrated head. Do not start it from a prerequisite's unintegrated branch.
    Give read-only helpers access to an existing checkout without allocating a
    worker slot, and never switch a checkout used by an active owner or process.
@@ -45,13 +56,15 @@
    Confirm it can edit, validate, commit, and resume the same owner session for
    repairs. Honour configured agents, models, and user selections. If a
    required capability is unavailable, stop rather than implementing in the
-   controller; wait for temporarily unavailable capacity. Retain each owner
-   handle. Give each owner a decision-complete packet with pointers to the
-   exact task, spec, approved test seams where applicable, repository
-   instructions, recorded base SHA, exact checkout path and task branch,
-   owned files, acceptance criteria, and focused validation. State that other
-   agents may be editing independently, and require preservation of unrelated
-   changes.
+   lead; wait for temporarily unavailable capacity. Use the caller's supported
+   wait or idle behavior for the coordinator while workers run, and verify
+   capacity again after resuming; do not assume a blocking wait releases the
+   caller's slot. Retain each owner handle. Give each owner a decision-complete
+   packet with pointers to the exact task, spec, approved test seams where
+   applicable, repository instructions, recorded base SHA, exact checkout path,
+   task branch, owned files, acceptance criteria, and focused validation.
+   State that other agents may be editing independently, and require preservation of unrelated
+   changes. Dispatch the ready frontier only after this capability check passes.
 6. Have each owner implement only its item. For behavior changes, invoke `tdd`
    directly at the approved test seams and follow its red-green loop. For
    documentation or configuration without a meaningful test seam, use focused
@@ -71,7 +84,9 @@
    an affected check when evidence is missing, failed, stale, or explicitly
    required fresh. An owner's assertion is not acceptance. Return incomplete
    work to the same owner for repair and repeat this check on its new commit.
-8. Integrate accepted task commits in dependency order. Before each attempt,
+8. While workers run, advance useful independent coordination work that does
+   not touch their owned files or invalidate their evidence. Integrate accepted
+   task commits in dependency order. Before each attempt,
    record the integration branch and exact pre-attempt SHA and verify its
    worktree is clean, including untracked files. If the Git operation conflicts
    before completion, abort that operation and verify the branch is again at

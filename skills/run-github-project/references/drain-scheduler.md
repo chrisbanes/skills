@@ -151,12 +151,11 @@ Reconcile any named resource grant before reconstructing or resuming a lost
 ticket agent.
 Descendant agents at any depth use only currently spare agent capacity.
 Discovery and review helpers are read-only at immutable SHAs and route findings
-to their owning ticket or planning agent. The ticket agent normally implements
-and repairs directly. For independently useful parallel tasks or explicitly
-requested orchestration, `deliver-spec` may dispatch isolated implementation
-owners through `implement-with-subagents`; they write only their
-own task worktrees and branches and return commits to their ticket delivery lead.
-Task implementation and review descendants never mutate Project, issue, or PR
+to their owning ticket or planning agent. `deliver-spec` owns implementation
+assignment, integration, acceptance, and same-owner repair; workers write only
+their task worktrees and branches and return commits to their ticket delivery
+lead. Count every active descendant against actual spare capacity. Task
+implementation and review descendants never mutate Project, issue, or PR
 state. An implementation helper yields before
 its occupied slot agent must resume. Never preempt a planning agent after
 planning starts; queue the implementation event until planning finishes or its

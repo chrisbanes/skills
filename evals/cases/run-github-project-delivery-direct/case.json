@@ -26,14 +26,17 @@
     }
   ],
   "rubric": [
-    {"id": "capacity", "text": "Does not block direct delivery for missing implementation-child capacity; one independent reviewer is sufficient and remains mandatory."},
+    {
+      "id": "capacity",
+      "text": "Continues missing final review coverage on the already implemented candidate without demanding an idle implementation worker or repeating implementation. If review finds a code repair, waits for spare descendant capacity and resumes its original implementation owner; counts reviewers and workers against the same caller-supplied capacity."
+    },
     {
       "id": "automatic-handoff",
       "text": "Keeps the ticket in deliver-spec Project-handoff mode under the existing run grant; reuses the current independently reviewed plan without another plan or test-seam approval gate."
     },
     {
       "id": "provider-ownership",
-      "text": "Keeps the persistent ticket agent as direct implementation, integration, repair, and non-merge PR owner by default; does not require implement-with-subagents or child-worker capacity when tasks are sequential, and never lets it mutate controller-owned Project or merge state."
+      "text": "Uses the same delegated implementation procedure as standalone delivery: persistent ticket agent owns integration, acceptance and non-merge PR delivery, original implementation workers own code repairs, and descendants never mutate Project, issue, PR or merge state."
     },
     {
       "id": "review-coverage",

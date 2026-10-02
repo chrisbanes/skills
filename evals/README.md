@@ -205,7 +205,8 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-Twenty-nine additional workflow cases are calibration-only. Select them
+The workflows/writing corpus contains 35 calibration-only cases, including
+the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
 unresolved decisions, proof-gated report publication, implementation-plan
@@ -226,6 +227,10 @@ live subagent execution.
 Three shared-handoff calibrations check bounded implementation ownership,
 capability-based PR evidence helper selection, and restraint for one-off PR
 inspection. They also assess supplied state read-only.
+Three delivery calibrations compare manual and Project delegation, safe fork/join
+execution under caller capacity, temporary capacity versus absent worker
+capability, and the trivial-edit exception versus useful overlap and retained
+repair ownership. They assess immutable state without live execution.
 Three Project-delivery calibrations cover automatic `deliver-spec` handoff,
 run-scoped `--auto-merge`, ticket-local authority pauses with continued board
 progress, durable resumption, and restraint for absent grants, read-only modes,

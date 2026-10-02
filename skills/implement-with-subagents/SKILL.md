@@ -1,22 +1,23 @@
 ---
 name: implement-with-subagents
-description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including dependency order, task-scoped acceptance, and repair ownership.
+description: Use when implementing supplied tickets or plan tasks through worker-owned bounded implementation and lead integration, or when reviewing that orchestration.
 compatibility: "Review mode has no external skill dependency. Implementation mode uses Matt Pocock's separately installed `tdd` for behavior changes and one fresh independent read-only reviewer for the final joined branch."
 disable-model-invocation: true
 ---
 
 # Implement with subagents
 
-Use this workflow for explicitly requested orchestration or independently useful
-parallel tasks. Ordinary single-task delivery stays with its delivery owner.
-Keep implementation ownership with one subagent per work item and reuse a
-bounded pool of worker checkouts. The controller validates the task graph,
-dispatches independent ready work in distinct checkouts, accepts each task once
-before integration, and integrates accepted commits in dependency order. After
-an ordinary integration, rerun affected checks and release dependents without
-a second lead sign-off. Retire eligible surplus checkouts, preserve task refs,
-and account for checkout dispositions at completion or interruption. Keep the
-controller out of task-owned code and return repairs to the relevant owner.
+Use this workflow whenever a delivery lead coordinates settled implementation
+tasks, including one task and sequential work. Assign one worker per supplied
+work item; do not split a single task into artificial pieces. Reuse a bounded
+pool of worker checkouts. The lead validates the task graph, dispatches the
+independent ready frontier with disjoint write sets by default, accepts each
+task once before integration, and integrates accepted commits in dependency
+order. After an ordinary integration, rerun affected checks and release
+dependents without a second lead sign-off. Retire eligible surplus checkouts,
+preserve task refs, and account for checkout dispositions at completion or
+interruption. Keep the lead out of task-owned code and return implementation
+repairs to the original worker.
 
 ## Select the mode
 

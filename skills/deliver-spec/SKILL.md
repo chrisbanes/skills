@@ -1,7 +1,7 @@
 ---
 name: deliver-spec
-description: Use when explicitly asked to deliver one approved GitHub or local spec through a reviewed pull request, or delegated one claimed implementation ticket by a running Project controller.
-compatibility: "Behavior changes require tdd; triage is conditional. Parallel implementation may use implement-with-subagents. Never installs providers."
+description: Use when explicitly asked to deliver an approved GitHub or local spec through a reviewed pull request, or when a Project controller delegates one claimed implementation ticket.
+compatibility: "Implementation coordination uses implement-with-subagents. Behavior changes require tdd; triage is conditional. Never installs providers."
 disable-model-invocation: true
 ---
 
@@ -9,9 +9,10 @@ disable-model-invocation: true
 
 ## Core principle
 
-Deliver one spec with a single implementation owner and independent review.
-Own implementation, repairs, PR identity, and final-head evidence; delegate
-independent subtasks only when useful.
+Deliver one spec through coordinated implementation owners and independent
+review. The delivery lead owns architecture, integration, task acceptance,
+repairs to lead-owned coordination work, non-merge PR delivery, and final-head
+evidence; workers own settled, bounded implementation tasks and their repairs.
 Manage approval in standalone mode; accept the controller's verified authority
 in Project mode. Never select work from a Project queue.
 
@@ -37,22 +38,40 @@ Project run already owns that issue, return it to that controller.
    source, acceptance criteria, code facts, dependencies, and tests. Resolve
    findings through `to-plan` and reapprove repaired conversation plans. Stop
    without a reviewed and approved plan.
-4. Keep implementation with the delivery lead by default. Record the fixed
-   base and use a clean task checkout, preserving unrelated user work. Implement
-   approved slices in dependency order and validate their acceptance criteria.
-   For behavior changes, require the separately installed `tdd` skill and
-   approved test seams before editing; obtain missing seam agreement and stop
-   that behavior work if `tdd` is unavailable. Documentation and other work
-   without a meaningful test seam use focused validation. Materialize the
-   approved source and plan in an owner-only system-temp file for review;
-   recreate it on resume.
-   Use `implement-with-subagents` only for explicitly requested orchestration
-   or independently useful parallel tasks. Honor its ownership, isolation,
-   acceptance, integration, and repair gates when selected. Keep a single
-   tightly coupled task with the delivery lead; do not require a child worker
-   or extra worktree solely to separate implementation from coordination.
-5. Self-review the task scope, commit only task-owned changes, and run the
-   required checks with the tested revision and results recorded. Require one
+4. Reconcile existing implementation and acceptance evidence before dispatch.
+   Do not reassign accepted work or reimplement an existing candidate just to
+   satisfy worker routing; continue its review and delivery gates. Resolve
+   final-reviewer capability before any implementation, including the lead's
+   direct-edit exception, and worker capacity before new nontrivial
+   implementation or a worker-owned repair. Assign each new settled task to
+   one worker, including a single or tightly coupled sequential task; do not
+   split one item into artificial pieces. The lead may directly edit only a fully understood,
+   low-risk change when handoff clearly costs more than direct editing and no
+   useful concurrent work exists. Record that reason. The lead owns only that
+   initial direct edit and its repairs; this exception never transfers a
+   worker's repair or follow-up. A qualifying initial edit needs no worker.
+   Follow the shared [`implement-with-subagents` procedure](../implement-with-subagents/SKILL.md)
+   for all other implementation, including single, sequential, and concurrent
+   tasks; it owns checkout isolation, ready dispatch, capacity and priority,
+   serialization, task acceptance, integration, wait behavior, and same-owner
+   repair. Do not require a separate request for parallel work. While workers
+   run, advance useful independent coordination. If worker capacity is busy,
+   use the caller's supported wait or idle behavior and verify available
+   capacity before dispatch; if the runtime lacks the required capability,
+   report the blocker rather than falling back to lead implementation.
+   Record the fixed base and preserve unrelated user work. For behavior
+   changes, require the separately installed `tdd` skill and approved test
+   seams before editing; obtain missing seam agreement and stop that behavior
+   work if `tdd` is unavailable. Documentation and other work without a
+   meaningful test seam use focused validation. Materialize the approved
+   source and plan in an owner-only system-temp file for review; recreate it on
+   resume.
+5. Have each implementation owner self-review its task, commit only task-owned
+   changes, and report required checks with the tested revision and results.
+   This includes the lead only when the recorded low-risk direct-edit
+   exception applies. Accept each delegated task once before integration under
+   `implement-with-subagents`; the delivery lead reviews the integrated scope
+   and records required checks at the tested revision. Require one
    fresh independent read-only reviewer for every delivery PR. Resolve that
    capability before implementation; if
    unavailable, report the blocker rather than waive review. Use an investigator
@@ -70,7 +89,9 @@ Project run already owns that issue, return it to that controller.
    draft PR for a nonempty integrated diff, or reuse the verified PR on resume.
    Use closing links only for real, verified GitHub issues.
 6. Use `shepherd` for CI and reviewer feedback and PR operations. Keep code
-   repairs with the delivery lead, or the original task owner when delegated.
+   repairs with the original implementation owner; only repairs to the lead's
+   permitted initial direct edit remain with the lead. Never move a worker's
+   repair to the lead.
    Apply the same TDD, validation, and independent review gates to repairs and
    recheck the final head after each push. Return scope or design changes for a
    decision. Merge only with explicit authority valid for this invocation.
