@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version as YYYY.M.D, YYYY.M.D.N, or YYYY.M.D.NN. Empty uses today's UTC date."
+        description: "Release version as YYYY.M.D, YYYY.M.D.N, or YYYY.M.D.NN. Empty chooses today's next unused UTC version."
         required: false
         type: string
       dry_run:
@@ -41,10 +41,14 @@ jobs:
         id: version
         env:
           INPUT_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
-          VERSION="$(python3 scripts/release.py resolve-version "$INPUT_VERSION")"
+          git fetch --tags origin
+          git tag --list > "$RUNNER_TEMP/release-versions.txt"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name' >> "$RUNNER_TEMP/release-versions.txt"
+          VERSION="$(python3 scripts/release.py resolve-version "$INPUT_VERSION" --existing-versions "$RUNNER_TEMP/release-versions.txt")"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Resolved release version: $VERSION"
 
@@ -54,8 +58,6 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-
-          git fetch --tags origin
 
           if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
             echo "Tag already exists: $VERSION" >&2
