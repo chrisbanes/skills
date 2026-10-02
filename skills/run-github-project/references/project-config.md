@@ -108,8 +108,10 @@ configured name through `--planning-status`; planning action names and
 authority. Never read transition history to prove authorization or a handoff.
 Preserve an existing binding's verified lane name, including `Planning`, until
 a human renames the live option and an authorized setup reconciles the same
-option ID. A display-name rename alone does not require moving items or running
-the Status-schema migration.
+option ID. Once that presentation-only edit is trusted and committed, execution
+may [renew affected leases](#renew-presentation-only-configuration) after proving
+equivalence; an unreconciled live rename still stops execution. A display-name
+rename alone does not require moving items or running the Status-schema migration.
 
 Treat the epic label as a work-shape declaration and the human-work label as a
 next-action role. Require both mappings even when the current Project has no
@@ -152,6 +154,59 @@ under [agent routing](agent-routing.md); no routing service is used.
 Legacy `Routing` and `TypeSafe judgment model` fields are obsolete: ignore them
 at dispatch and remove them during an authorized setup edit, preserving active
 binding leases under the setup procedure.
+
+## Renew Presentation-Only Configuration
+
+Execution may use this narrow exception when the trusted binding has already
+changed on the verified committed base. It never edits a binding, trusted
+instructions or the board. Use the same procedure at startup, before writes
+and for active, planning, paused, parked and Wayfinder recovery leases.
+
+1. Stop affected writers and new claims. Reconcile in-flight mutations and
+   resource ownership; do not renew while a writer can still use the old lease.
+   Retain every owner, assignment, draft, worktree, PR and historical record.
+2. Load the old and new committed binding and trusted-reference identities,
+   their digests, prior verified mappings and complete current live mappings.
+   Require stable repository, Project, field, option and label identities.
+   Permit only human-readable display-name changes attached to those same IDs.
+   Prove unchanged lane meaning, selection/filter, priority order, role meaning,
+   agent policy, base branch, authority, merge/closure/automation policy and
+   [live merge-policy fingerprint](#live-merge-policy-fingerprint). Compare the
+   entire binding, not just the renamed field; a same-ID rename alone is not
+   proof of unchanged meaning. Missing old evidence, an uncommitted replacement,
+   unknown equivalence, a changed ID or any semantic change stops the run.
+3. Freshly revalidate membership, current-column authority, exclusivity,
+   source/plan and any amendment, retained artifacts/heads and grants for each
+   affected lease. Screen base drift under the existing plan rules. A
+   presentation change does not revive Backlog work, pass qualification, alter
+   a bounded grant, reset a repair budget or supply new invocation authority.
+4. In the controller lane, publish one runner-authored issue record per affected
+   ticket with `<!-- run-github-project:configuration-renewal:v1 -->`. Record
+   old/new commits and configuration digests, stable IDs and old/new names,
+   complete comparison and policy evidence, lease/artifact identities and
+   predecessor renewal permalink/digest (or original lease for the root).
+   Bind every retained historical marker by comment ID, permalink and semantic
+   payload digest. Never edit that marker's original configuration digest.
+   Reconcile an ambiguous create before retrying; refetch and verify exact
+   author, body, payload digest and a single unforked, gap-free renewal lineage.
+5. Renew the controller's effective leases only after every affected record is
+   verified and each owner acknowledges the new lease before writing. Keep the
+   old and new evidence plus the verified renewal links in the checkpoint;
+   never silently replace history. Partial publication or acknowledgment keeps
+   affected writes stopped until reconciled. Do not republish verified records.
+6. On resume, reconstruct from original leases/markers and the complete verified
+   renewal lineage. Refetch current identities and authority, and require the
+   latest renewal's new digest to match the current committed binding. Retain
+   the original marker payload and digest even after repeated renames. A cache
+   or a renewal comment alone cannot prove equivalence or authorize execution.
+
+For Wayfinder, normalize only this verified result through the optional
+[configuration renewal binding](normalized-ticket.md#wayfinder-configuration-renewal).
+The ranker validates its marker/current-digest binding, not live semantics.
+Without verified renewal, every existing exact-digest mismatch remains a stop.
+An unchanged merge-policy fingerprint is mandatory; policy drift never uses
+this route. Keep invalid or incomplete renewal as an integrity blocker, not a
+parking or retry signal.
 
 ## Live Merge-Policy Fingerprint
 

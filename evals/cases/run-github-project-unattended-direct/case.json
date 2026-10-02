@@ -1,0 +1,49 @@
+{
+  "id": "run-github-project-unattended-direct",
+  "title": "Preflight qualification before unattended delivery",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-unattended-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "readiness",
+      "text": "Separates E runnable from A/B authority-blocked, C native-dependency plus authority-blocked, D unknown, and F known unavailable execution prerequisite. Does not invent qualification success for E or blocked work."
+    },
+    {
+      "id": "preserve",
+      "text": "Leaves unclaimed A/C/D unassigned, preserves claimed B/F and required qualification, applies verified authority pause only where appropriate, keeps native edges, and continues independent E."
+    },
+    {
+      "id": "authority",
+      "text": "Uses non-secret read-only evidence and fresh operation-specific checks without spending live turns, changing visibility/fixtures, extending grants or treating ranker eligibility as authority."
+    },
+    {
+      "id": "finish",
+      "text": "Retains exact resume conditions and reports unresolved unknown/unavailable prerequisites as partial work after complete finish reconciliation, not an empty success."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}
