@@ -42,6 +42,10 @@
     {
       "id": "no-side-effects",
       "text": "Leaves local and remote state unchanged."
+    },
+    {
+      "id": "scoped-model-selection",
+      "text": "Does not invent a delegated assignment merely to apply model selection, and does not downgrade the selected Sol/high lead. Keeps the one-off inspection read-only without helper dispatch or persistent monitoring."
     }
   ],
   "provenance": {
