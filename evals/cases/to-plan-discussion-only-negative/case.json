@@ -37,6 +37,10 @@
     {
       "id": "no-handoff-overreach",
       "text": "Does not create an executor-readiness checklist, implementation recipe, or repair budget when the user asked only to discuss the supplied plan."
+    },
+    {
+      "id": "proportional-validation",
+      "text": "Retains the meaningful behavioral test for the diagnostic change, while accepting Markdown lint and a scoped diff check for the documentation-only correction without inventing a test file, seam, or separate approval."
     }
   ],
   "provenance": {

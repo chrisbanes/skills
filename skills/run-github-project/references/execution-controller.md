@@ -131,8 +131,12 @@ competing PR, then record item, identity, configuration, and every plan
 lease as authority. Ambiguity after In progress is a preserved blocked slot.
 
 Revalidate membership, current status, exclusivity, configuration, label, and
-every lease before every material write, including push, review mutation, or
-merge. Foreign plan edits or unrelated eligibility drift revoke authority;
+every lease before external material writes, including push, review mutation, or
+merge, and on resume or observed authority changes. A verified handoff covers
+in-scope local edits, tests and repairs within the isolated checkout; do not
+require per-file or per-stage permission packets. Preserve concurrent-writer
+ownership and shared-resource locks independently of this authorization. Foreign
+plan edits or unrelated eligibility drift revoke authority;
 runner-owned verified replans enter controlled replanning. Ordinary body and
 non-plan comment edits do not revoke the lease.
 

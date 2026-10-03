@@ -50,8 +50,8 @@ install them, and the workflows never install them implicitly.
 | Consumer | Requirement | Provider | Source and install |
 |---|---|---|---|
 | `deliver-spec` GitHub readiness | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
-| `deliver-spec` and [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tasks | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
-| [`run-github-project`](skills/run-github-project/SKILL.md) behavioral implementation | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tasks | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
+| [`run-github-project`](skills/run-github-project/SKILL.md) explicit/repository-required test-first work | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | `run-github-project` Todo triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
 | `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-github-project/references/workflow-providers.md) |
 
@@ -113,24 +113,22 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
-- [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or verified Project-controller handoff through worker-owned implementation, lead integration and acceptance, independent plan and final-head review, and PR shepherding; validate applicable live-qualification harness paths offline (isolated production stores for persistent paths, fake runtimes for asynchronous paths), then reconcile failures under bounded approved allowances.
+- [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or verified Project-controller handoff through solo or justified delegated implementation, reusable scope approval and evidence, independent integrated-candidate review and focused repair review, and PR shepherding; validate applicable live-qualification harness paths offline (isolated production stores for persistent paths, fake runtimes for asynchronous paths), then reconcile failures under bounded approved allowances.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, reconcile changelogs and Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; the implementation owner diagnoses and fixes failures, with optional read-only investigation helpers.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — coordinate one or more worker-owned implementation tasks through dependency-aware dispatch, task acceptance, integration, and same-owner repair; dispatch independent ready work concurrently within actual capacity, reuse sequential worker slots, and support read-only orchestration review.
-- [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans and reviewed integration amendments with authenticated publication and explicit consumer handoffs.
+- [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans and authenticated integration amendments with authenticated publication and explicit consumer handoffs.
 - [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with current-column authorization, human-only Backlog promotion, and deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, preflight offline live-qualification harness evidence, preserve asynchronous or persistent failures in durable checkpoints, prioritize active delivery through safe planner checkpoints, and record ticket-local pauses while independent work continues.
-- [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
+- [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and repair CI failures with affected checks and required integrated-candidate validation.
 
 Workflows that delegate agents share the [subagent selection and handoff
 reference](references/subagent-selection.md). Each workflow retains its own
 delegation trigger, authority, and acceptance rules. Each consuming skill also
 contains a copy of the reference for standalone installation.
-`deliver-spec` and `implement-with-subagents` also bundle synchronized copies of
-the implementation procedure, so spec delivery can delegate without installing
-the orchestration skill separately.
+`deliver-spec` bundles its own solo-or-delegated implementation procedure;
+`implement-with-subagents` retains its explicitly delegated workflow.
 
-Edit `references/subagent-selection.md` or the canonical implementation procedure
-at `skills/implement-with-subagents/references/implementation-mode.md`, then run
+Edit `references/subagent-selection.md`, then run
 `npm run references:sync` and include the updated bundled copies in the change.
 Run `npm run build` to check that all copies are regular files matching their
 sources; it fails on drift without rewriting files.

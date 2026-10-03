@@ -9,3 +9,9 @@ message contains the same path surrounded by quotes, including paths with
 spaces. Update the existing test to assert that exact output and run its unit
 test suite. Re-plan only if the current diagnostic contract contradicts this
 specified output. All product decisions above are settled.
+
+Also assess a separate documentation-only plan: correct a misspelt heading in
+an existing Markdown guide, run the repository's Markdown lint and inspect the
+diff to confirm that only the heading changed. No runtime behavior changes and
+repository policy requires no behavioral test for this edit. Is that validation
+sufficient, or must the plan add a test file and seam? Do not edit either plan.

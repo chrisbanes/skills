@@ -12,7 +12,7 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-prior-confirmed-novel"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "reuse-confirmation", "text": "Uses the supplied prior confirmed contract without asking the same confirmation again"},
-    {"id": "executable-plan", "text": "The generated plan targets the existing missing_file_error symbol and test method, states the intended change and exact test input/assertion without requiring an exhaustive edit recipe, identifies expected red and green results, and gives the command working directory without implementing the change"},
+    {"id": "executable-plan", "text": "The generated plan targets the existing missing_file_error symbol and test method, states the intended change and exact test input/assertion without requiring an exhaustive edit recipe, identifies observable expected results and a useful test-sensitivity check without universally requiring test-first ordering, and gives the command working directory without implementing the change"},
     {"id": "bounded-handoff", "text": "The plan embeds the confirmed goal, acceptance criteria, scope, constraints and material decisions so a fresh executor needs no access to chat history; permits only bounded mechanical repair within the fixed contract, and stops for design changes or an exhausted repair budget"},
     {"id": "local-boundary", "text": "Creates only a marked local plan and leaves implementation and publication untouched"}
   ],

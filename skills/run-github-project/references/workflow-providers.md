@@ -2,7 +2,7 @@
 
 Never install a provider implicitly.
 
-## Required
+## Conditional providers
 
 | Skill | Source | Install |
 | --- | --- | --- |
@@ -11,27 +11,26 @@ Never install a provider implicitly.
 | `wayfinder` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill wayfinder` |
 | `research` | `mattpocock/skills` | `npx skills add mattpocock/skills --skill research` |
 
-Require `tdd` only before a behavioral code change. If it is unavailable,
-preserve that ticket's claim and block only its behavioral implementation;
-continue documentation, configuration, read-only review, triage, and unrelated
-tickets. Report its source and exact install command. Do not treat a
-documentation-only change as behavioral merely because it accompanies a PR.
+Use `tdd` only when explicitly requested or required by repository policy.
+Ordinary behavioral implementation uses owner-driven meaningful tests under
+`deliver-spec`; missing `tdd` does not block it. If invoked, identify its
+user-confirmed seam and red-before-green requirements rather than silently
+claiming they match the default delivery contract.
 
 `to-plan` is required only while processing `Todo`. If it is unavailable,
 block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
 
 For ordinary implementation, require bundled `deliver-spec` and `shepherd`.
-Invoke `deliver-spec` in Project-handoff mode. It delegates settled
-implementation to workers through its bundled implementation procedure, with
-the documented low-risk initial lead-edit exception; repairs stay with the
-original implementation owner. The persistent ticket context remains the
-architecture, integration, acceptance, and non-merge PR delivery lead. No
-separate `implement-with-subagents` installation is required.
-Resolve one fresh independent read-only reviewer before implementation; give it
-the materialized canonical source, repository standards, and all bundled review
-contracts. No external review skill or tracker setup is required. If independent
-review cannot run, block only that ticket without waiving review.
+Invoke `deliver-spec` in Project-handoff mode. The ticket lead may implement
+solo or delegate when independent work, isolation or specialist investigation
+justifies the overhead. Keep repairs with their implementation owner and retain
+architecture, integration and non-merge PR authority in the ticket context.
+No separate `implement-with-subagents` installation is required.
+Establish independent-review capability from runtime metadata without spawning a
+capability-only reviewer. Review the integrated candidate once, then affected
+repairs; reuse valid coverage. If review cannot run, block that ticket's delivery
+without waiving final review. No external review skill or tracker is required.
 
 `triage` is required only while processing an unblocked Todo
 `needs-triage` item. If it is unavailable, block only the triage lane, continue

@@ -36,7 +36,7 @@
     },
     {
       "id": "lineage-authority",
-      "text": "Requires authenticated append-only complete lineage, trusted prior anchors, fresh source/base/candidate/PR identities, native readiness and independent review/approval; ambiguous writes are reconciled before retry and artifacts are preserved."
+      "text": "Requires authenticated append-only complete lineage, trusted prior anchors, fresh source/base/candidate/PR identities, native readiness and applicable approval plus review disposition (early review only for a concrete pre-integration risk; otherwise deferred integrated review); ambiguous writes are reconciled before retry and artifacts are preserved."
     },
     {
       "id": "both-handoffs",

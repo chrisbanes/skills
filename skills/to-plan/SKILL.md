@@ -45,11 +45,12 @@ Before any work, read these references completely in order:
    otherwise.
 3. [Plan templates](references/plan-templates.md) before drafting.
 
-For a retained GitHub plan with a routine base update, read
-[integration amendments](references/integration-amendments.md) after the shared
-workflow and GitHub contract. That route owns classification, append-only
-publication and effective-contract handoff; do not recreate the full plan when
-its bounded amendment gates pass. Verify installed delivery/controller support
+For a retained GitHub plan, record routine compatible base updates and corrections
+under the shared workflow without replanning or publication. Read
+[integration amendments](references/integration-amendments.md) only for an
+existing amendment chain or a changed published integration decision needing
+durable consumption. That route owns append-only publication and handoff.
+Verify installed delivery/controller support
 before publishing an amendment; unsupported consumers block that publication.
 Conversation plans remain local and use their
 existing replan route.

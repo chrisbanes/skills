@@ -69,7 +69,7 @@ procedure](../../deliver-spec/references/qualification-failure.md). Preserve
 unknown execution state and stop only affected dependent dispatch while
 independent tickets continue.
 Keep the persistent ticket context as delivery lead and integration owner.
-`deliver-spec` owns the implementation-worker and integration procedure;
+`deliver-spec` owns solo or delegated implementation and integration;
 preserve its same-owner repair rule and fit all descendants within the
 controller's actual spare capacity. Return observed implementation, repair,
 review, and CI phase boundaries, plus capacity or resource waits, with the
@@ -129,7 +129,7 @@ Remote Waiting and terminal-CI parking,
 next shepherds directly through `deliver-spec`'s Project mode. For feedback,
 invoke `shepherd` for triage and PR actions. Keep code repairs with the ticket
 owner or original delegated implementation owners, integrating delegated commits
-in the same ticket worktree. Reapply TDD for behavior and repeat affected
+in the same ticket worktree. Apply owner-driven behavioral testing and repeat affected
 validation and review against the new final HEAD, reply inline where possible,
 and resolve only after reply
 and required fix. Address every comment unless explicitly

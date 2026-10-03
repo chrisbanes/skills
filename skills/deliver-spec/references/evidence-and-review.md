@@ -13,10 +13,15 @@ the selected mode retains its approval, authority and finish gates.
    shape does not justify a speculative framework or hiding consumer differences.
 2. Run affected checks while developing a slice. Run every required full check
    on meaningful integrated delivery candidates, including mandatory repository
-   and provider validation. After a code-related CI failure, `shepherd` requires
-   every locally available CI-equivalent check and a passing full local suite
-   before a repair push. Focused passes cannot replace those requirements.
-3. Record each check's command, result and output pointer, tested commit or
+   and provider validation. Repeat checks only when changes invalidate evidence,
+   impact cannot be bounded, or an explicit repository/provider rule requires it.
+   A controller handoff cannot escalate this into full checks per slice commit.
+3. Reuse one concise delivery record with requirements/source pointers, scope,
+   base and candidate identity, check results/log links, findings and blockers.
+   Do not create temporary packets or acceptance receipts for each transition.
+   Use Git identities for committed source; retain hashes for frozen datasets,
+   external inputs and authenticated plan payloads where identity matters.
+   Record each check's command, result and output pointer, tested commit or
    reproducible tree identity, fixed base, covered scope, and relevant dependency,
    fixture, configuration and runtime inputs. Identify uncommitted content when
    present: a commit SHA alone does not describe a dirty tree. Record review
@@ -39,11 +44,45 @@ the selected mode retains its approval, authority and finish gates.
    hold the operation. Evidence reuse never renews a grant or consumes fewer
    recorded repair attempts merely because the base changed.
 
+## Testing and corrections
+
+1. Let the implementation owner choose meaningful behavioral tests at established
+   public boundaries where appropriate. Honor explicit test-first requests and
+   repository testing policy; neither TDD nor separately approved seams is a
+   universal prerequisite. Do not revert useful implementation to reconstruct a
+   test-first history. Where useful, prove sensitivity with a bounded baseline
+   check or intentional fault, restore the candidate and report the actual order.
+2. If explicitly invoking the separately installed `tdd` skill, read its contract.
+   Its mandatory user-confirmed seams and red-before-green order conflict with
+   this workflow's default. Identify that exact conflict and follow the user's
+   direction; do not silently edit the provider or claim TDD was performed.
+3. Record routine implementation, fixture and mechanical plan corrections briefly
+   in the same record and continue when requirements, coverage, architecture and
+   authority are unchanged. Renew affected evidence without a plan-publication
+   cycle. Material design changes require replanning; changed outcomes, weakened
+   qualification, privacy policy, expanded permissions or exhausted budgets need
+   the appropriate authority decision. Uncertain impact requires investigation,
+   not automatic classification as a correction.
+4. Default to one independent review of the integrated candidate and focused
+   repair reviews. Reuse valid prior plan and implementation reviews. Require an
+   earlier review only for a named risk that must be settled before proceeding;
+   establish capability from runtime metadata, not a capability-only agent.
+
+## Experiments
+
+1. Plan the smallest credible harness that answers the approved research question.
+   Justify replay infrastructure, generic runners and elaborate schemas against
+   acceptance requirements; remove infrastructure without that purpose.
+2. Allow independent harness work while corpus review runs. Freeze labels and
+   their identity before experimental outputs are observed; review them early
+   when needed to protect that boundary. Preserve requested deliverables, private
+   data protections, execution budgets and applicable cancellation/recovery checks.
+
 ## Resume an integration amendment
 
 1. Read the installed [to-plan](../../to-plan/SKILL.md) contract before selecting
    this route. It owns amendment classification, format, authentication and
-   publication. If it does not support amendments, retain the normal reviewed
+   publication. If it does not support amendments, retain the normal
    full-replan path; report an unsupported amendment-only request as blocked.
    Do not invent an amendment format or treat a proposed provider change as an
    installed capability. Proven non-overlapping drift keeps the provider's
@@ -51,7 +90,7 @@ the selected mode retains its approval, authority and finish gates.
    amendment.
 2. Refresh and verify the provider's effective contract: original source,
    approved full plan, amendment lineage and trusted publication/readback
-   evidence, independent review and applicable approval. Check author and
+   evidence, applicable approval and any required early-review disposition. Check author and
    content identities against trusted anchors, not just self-consistent hashes.
    Require one unambiguous compatible chain and the exact retained candidate,
    old/new base, owner, worktree, branch/PR head and dirty-work inventory. Stop
@@ -62,7 +101,7 @@ the selected mode retains its approval, authority and finish gates.
 3. Verify unchanged requirements, acceptance, architecture and authority against
    the effective contract and actual overlap. Unknown overlap or unsupported
    preservation needs evidence before integration. Material changes need full
-   reviewed replanning; permission, privacy policy or qualification changes
+   replanning; permission, privacy policy or qualification changes
    also need the applicable stakeholder decision and authoritative source
    update. Unchanged issue text is not proof of unchanged impact. Keep native
    blockers, qualification, fresh authority and bounded grants independent of
@@ -80,10 +119,10 @@ the selected mode retains its approval, authority and finish gates.
    through the selected mode's handoff; do not recreate a lifecycle merely
    because a verified unchanged-scope amendment moved the base.
 
-## Prepare and use the reviewer packet
+## Review the integrated candidate
 
-1. Materialize a self-contained, owner-only system-temp packet; recreate it
-   from verified source/evidence records on resume. Include:
+1. Give the reviewer access to the existing concise record and resolving source
+   pointers, using private storage/access controls where needed. Include:
    - Original requirements and acceptance criteria, approved effective plan and
      any amendment, their identities/digests, and repository standards.
    - Immutable base, candidate commit/tree and previous reviewed candidate;
@@ -127,7 +166,7 @@ the selected mode retains its approval, authority and finish gates.
    gate decision separately. After repairs, renew affected validation
    and review, then confirm combined valid coverage of the final clean head
    before push. Passing focused checks or an old `ship` verdict cannot qualify
-   changed code. Preserve the packet's source/evidence pointers in the normal
+   changed code. Preserve the record's source/evidence pointers in the normal
    issue/PR handoff, including exact pending or blocked coverage.
 
 ## Finish gate

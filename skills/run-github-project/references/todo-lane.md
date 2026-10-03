@@ -152,14 +152,18 @@ current base:
 
 - accept non-overlapping committed drift after screening the changed files,
   symbols, seams, contracts, and validation;
-- for proven routine integration overlap, try the verified amendment route below;
-- when overlap is unknown or amendment requirements are not met, retain the
-  existing autonomous-replan or human-decision path as appropriate. Unknown
-  overlap is never classified as harmless.
+- continue proven compatible routine integration with a brief correction record
+  and affected evidence renewal; use amendments only for a changed published
+  integration decision requiring durable consumption or an existing chain;
+- investigate unknown overlap before classification. Material plan changes use
+  autonomous replanning or the applicable human decision; unknown impact is
+  never classified as harmless.
 
 ### Consume A Verified Integration Amendment
 
-Before a full requeue for routine base integration, inspect the installed
+For routine compatible base integration, retain the current plan and record the
+correction and affected evidence in place. For a changed published integration
+decision needing durable consumption, before a full requeue inspect the installed
 `to-plan` [GitHub contract](../../to-plan/references/github-mode.md) for explicit
 integration-amendment capability and its handoff. The baseline full-plan
 v1/v2 protocol alone does not supply it. Without that capability, preserve work
@@ -168,8 +172,9 @@ or infer support from an issue proposing it.
 
 1. Keep the delivery owner, claim, slot, branch, draft/worktree and PR; quiesce
    affected implementation writes at the exact retained candidate. Use the
-   provider's classification and independent review in the existing planning
-   lane and available capacity. The controller still owns shared publication
+   provider's classification and any risk-required early review in the existing
+   planning lane and available capacity; otherwise defer to integrated review.
+   The controller still owns shared publication
    and Project mutations. Do not move the ticket through Todo/Ready merely
    to obtain a supported amendment.
 2. Verify the provider-owned effective contract: original source and active
@@ -182,7 +187,7 @@ or infer support from an issue proposing it.
    block this route; material changes follow full replanning or a stakeholder
    decision under the existing classification contract.
 3. Reconcile publication already in flight before retrying. Freshly read back
-   one unambiguous effective contract and its independent review, then renew
+   one unambiguous effective contract and its review disposition, then renew
    the controller's plan lease with those exact identities while retaining the
    original marked plan. Keep Status and owner unchanged. Publication ambiguity
    stops dependent work; no local draft or old-SHA evidence can stand in for
@@ -191,8 +196,9 @@ or infer support from an issue proposing it.
    `deliver-spec`. It owns integration, affected verification/review and final
    exact-head evidence. Retain grant consumption and repair history; an amendment
    neither authorizes additional live turns nor resets a qualification gate.
-5. On recovery and before material writes, repeat effective-contract integrity,
-   current authority and artifact-head validation. Distinguish the amendment's
+5. On recovery, observed authority changes and before external material writes,
+   repeat effective-contract integrity, current authority and artifact-head
+   validation. Distinguish the amendment's
    retained starting candidate from later verified owner-produced integration
    heads through delivery evidence; an unexplained head change blocks. Pass
    only the original plan schema to the ranker and carry amendments alongside
@@ -207,8 +213,9 @@ at most two repair edit-and-validation cycles under that plan's budget. A wrong
 approved design decision, exhausted mechanical budget, changed accepted
 contract, or uncertain baseline overlap requires the packet below.
 
-An implementation defect within the accepted outcome, scope, acceptance
-criteria, and plan decisions is an ordinary in-scope repair, including
+A correction preserving requirements, coverage, architecture and authority is an
+ordinary in-scope repair. Record it briefly without a new plan publication or
+per-stage permission packet, including
 integration, CI, test, fixture, and documentation fixes. The owning agent
 records the cause and affected evidence, repairs in its existing slot, and
 repeats affected verification and review. The mechanical plan-mismatch budget
@@ -289,7 +296,8 @@ When the verified packet disposition is `human-required`:
    the newly accepted source contract. Give the controlled replanning procedure
    above an `autonomous-replan` packet referencing the decision and prior plan;
    that procedure publishes it once and retains artifacts and repair history.
-   Review the new plan automatically before implementation resumes.
+   Require early independent review only for a concrete risk that must be
+   resolved before continuation; otherwise review the integrated candidate.
 
 ### Abandon Partial Work And Return It To Backlog
 

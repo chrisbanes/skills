@@ -291,7 +291,9 @@ An integration amendment is not a synthetic implementation-plan revision or
 ranker input field. Keep the original marked plan in `implementationPlans`;
 the controller separately enforces the
 [effective-contract gate](todo-lane.md#consume-a-verified-integration-amendment)
-before dispatch, on recovery and before writes. Persist its verified lineage,
+before dispatch, on recovery, observed authority changes and before external
+material writes. The verified handoff covers in-scope local edits and tests.
+Persist its verified lineage,
 base/candidate identities and delivery evidence alongside the authority lease.
 Unverified or unsupported amendments cannot make an otherwise blocked plan
 usable, and a ranker selection cannot validate an amendment.
