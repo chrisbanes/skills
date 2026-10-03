@@ -32,3 +32,32 @@ class SyncReferencesTest(unittest.TestCase):
                 self.assertEqual(0, synchronize(root, check=False))
                 self.assertEqual(before, stale.stat().st_mtime_ns)
                 self.assertEqual(b"canonical\n", source.read_bytes())
+
+    def test_rejects_source_and_parent_symlinks_before_any_writes(self):
+        for linked_path in ("source.md", "sources", "copies"):
+            for check in (True, False):
+                with self.subTest(path=linked_path, check=check), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory) / "checkout"
+                    root.mkdir()
+                    outside = Path(directory) / "outside"
+                    outside.mkdir()
+                    (outside / "source.md").write_bytes(b"external source\n")
+                    (outside / "copy.md").write_bytes(b"external copy\n")
+                    (root / "local.md").write_bytes(b"canonical\n")
+                    (root / "first.md").write_bytes(b"unchanged\n")
+                    (root / linked_path).symlink_to(
+                        outside / "source.md" if linked_path == "source.md" else outside
+                    )
+                    source = "local.md" if linked_path == "copies" else (
+                        "source.md" if linked_path == "source.md" else "sources/source.md"
+                    )
+                    destination = "copies/copy.md" if linked_path == "copies" else "copy.md"
+                    with patch("scripts.sync_references.COPIES", {
+                        "local.md": ("first.md", destination),
+                        source: ("first.md", destination),
+                    }):
+                        self.assertEqual(1, synchronize(root, check=check))
+                    self.assertEqual(b"unchanged\n", (root / "first.md").read_bytes())
+                    self.assertEqual(b"external source\n", (outside / "source.md").read_bytes())
+                    self.assertEqual(b"external copy\n", (outside / "copy.md").read_bytes())
+                    self.assertFalse((root / "copy.md").exists())

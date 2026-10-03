@@ -20,6 +20,16 @@ COPIES = {
 
 
 def synchronize(root: Path, *, check: bool) -> int:
+    root = root.resolve()
+    # Validate every source and destination parent before reading or writing.
+    for source, destinations in COPIES.items():
+        paths = [root / source, *((root / item).parent for item in destinations)]
+        for path in paths:
+            if not path.resolve().is_relative_to(root) or any(
+                part.is_symlink() for part in (path, *path.parents) if part != root
+            ):
+                print(f"Refusing symlinked or outside-checkout reference path: {path}")
+                return 1
     stale = []
     for source, destinations in COPIES.items():
         content = (root / source).read_bytes()
