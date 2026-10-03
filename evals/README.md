@@ -30,14 +30,17 @@ corpus, and execution conditions are held constant.
 The delivery calibration cases cover validation provenance/invalidation,
 retained integration work, reviewer packets, strict selected-provider
 invocation, and asynchronous or persistent qualification. The qualification
-cases require an offline fake-runtime harness against isolated production-store
-instances before live qualification, cover missing actions, delayed or archived
-execution reconciliation, active execution assertions, persisted shutdown and
-recovery outcomes, no duplicate dispatch, bounded safe-stop handoff, unchanged
-allowances through routine repairs, consolidated material decisions, and
-restraint when work has no applicable live qualification. Their deterministic
-validator checks immutable fixture integrity; semantic rubrics require a
-separately authorised model run and are not proven by corpus validation.
+cases require an offline harness for applicable capabilities before live
+qualification, using isolated production-store instances for persistent paths
+and a fake runtime for asynchronous paths. They cover missing actions, delayed
+or archived execution reconciliation, active execution assertion failures,
+persisted shutdown and recovery outcomes, no duplicate dispatch, bounded
+safe-stop handoff, unchanged allowances through routine repairs, and
+capability-specific restraint for async-only and synchronous-persistent jobs.
+They also distinguish implementation approval from standalone and Project
+GitHub plan publication/readback gates. Their deterministic validator checks
+immutable fixture integrity; semantic rubrics require a separately authorised
+model run and are not proven by corpus validation.
 
 ## Results
 

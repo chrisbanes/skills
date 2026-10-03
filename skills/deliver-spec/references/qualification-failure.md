@@ -20,22 +20,30 @@ persistent write did not happen.
    permissions, host capability, invocation-specific authority, and remaining
    attempt or budget allowance. If any prerequisite or allowance is missing or
    unknown, withhold only dependent dispatch and record its resume condition.
-2. Before the first live qualification attempt, validate the harness offline;
-   reuse that evidence while its harness and inputs remain unchanged, and renew
-   it after an invalidating change. Use production store implementations in
-   isolated store instances with a fake runtime. Inject a missing required
-   delivery action and verify the harness detects it; do not turn that test
-   into a new exactly-once delivery guarantee. Exercise delayed responses,
-   archived conversations, assertion failure while execution is active, and
-   shutdown/recovery with persisted outcomes. Verify recovery does not dispatch
-   the same action again. Do not substitute an in-memory fake for the
-   production store implementation. If these checks are absent or fail,
-   withhold live qualification and repair the harness under its existing owner
-   and repair-progress gate.
-3. Before every live attempt, verify the retained conversation and execution
-   identities, current execution state, recovery data, resource access, and
-   remaining allowance. The offline fake runtime is not evidence of live
-   behavior: use only the actual runtime, external effects, and isolation
+2. Before the first live qualification attempt, validate only the harness paths
+   for capabilities present in the accepted source; reuse evidence while those
+   paths and inputs remain unchanged, and renew it after an invalidating change.
+   When qualification persists state, exercise the production store
+   implementation in an isolated store instance and verify persisted outcomes
+   across the applicable recovery path. When it runs asynchronously, use a fake
+   runtime where that runtime path exists to exercise delayed responses,
+   assertion failure while execution is active, and shutdown/recovery; detect
+   missing required actions when action delivery is part of the contract,
+   without creating a new exactly-once guarantee. Test archived conversation
+   handling only when the conversation lifecycle exists, and check that recovery
+   does not duplicate dispatch only when recovery can redispatch. Do not invent
+   a store, conversation, archive state, or execution handle when those
+   capabilities are absent. Do not replace a persistent production store with an
+   in-memory fake. If a required applicable check is absent or fails, withhold
+   live qualification and repair the harness under its existing owner and
+   repair-progress gate.
+3. Before every live attempt, verify conversation identity and archive state
+   only when the conversation lifecycle provides them; verify an execution
+   handle and current execution state for asynchronous work when the provider
+   supplies them; and verify recovery data only for state the operation
+   persists. In every case verify resource access, approved runtime/isolation,
+   and remaining allowance. Offline fake-runtime evidence is not evidence of
+   live behavior: use only the actual runtime, external effects, and isolation
    explicitly approved by the source. Do not inspect or mutate unrelated live
    data, or spend an attempt to discover whether access is available. Before
    dispatch, use the provider documentation or approved runbook to set a finite
@@ -45,33 +53,39 @@ persistent write did not happen.
    invent a universal timeout or request extra authority. Record the source,
    rationale, deadline/read budget, cadence, and attempt allowance before
    starting.
-4. For asynchronous work, retain the returned execution handle and observe it
-   only within the recorded reconciliation bound. Record each read and its
-   time. Stop when the execution is terminal or the deadline/read budget is
-   exhausted. Preserve existing acceptance, grant, dependency, and
-   repair-progress gates. Qualification evidence applies only to the operation
-   and inputs it actually covers; it does not renew a grant or reset a consumed
-   allowance.
+4. For asynchronous work, retain the provider-supported execution identity and
+   observation mechanism; use an execution handle only when the provider
+   supplies one. Observe it only within the recorded reconciliation bound.
+   Record each read and its time. Stop when the execution is terminal or the
+   deadline/read budget is exhausted. For synchronous work, reconcile only an
+   explicitly unknown result using the recorded bound; do not poll for an
+   execution handle. Preserve existing acceptance, grant, dependency, and
+   repair-progress gates.
+   Qualification evidence applies only to the operation and inputs it actually
+   covers; it does not renew a grant or reset a consumed allowance.
 5. If an assertion or operation fails, stop the affected and dependent
-   dispatch. Reconcile within the recorded bound: check whether the action
-   persisted, whether a delayed response or execution remains, whether the
-   conversation was archived, and what shutdown or recovery state is known. On
-   expiry, stop polling; do not silently reset the bound, retry, start a
-   conflicting action, or claim safe recovery while the prior outcome is
-   unknown. Continue independent work only when it cannot touch the unresolved
-   execution or state.
-6. Before shutdown or handback, save a durable checkpoint containing the
-   conversation and execution identities, last known execution state, exact
-   failed condition, persistence/recovery findings, remaining allowance, and
-   the reconciliation source, bound, reads used, expiry time, and next action.
-   If an execution may still be active after that bound, use only a documented
-   bounded stop or cancel operation when supported, then reconcile its result
-   and persisted effects under that operation's documented bound. Never
-   force-terminate an unresolved execution. If no safe stop exists or its
+   dispatch. Reconcile within the recorded bound: check persistence only when
+   the operation persists state; check delayed responses, active execution, or
+   execution handles only for asynchronous work; and check archive state only
+   when the conversation lifecycle supports it. On expiry, stop polling or
+   follow-up reads; do not silently reset the bound, retry, start a conflicting
+   action, or claim safe recovery while the prior outcome is unknown. Continue
+   independent work only when it cannot touch the unresolved execution or
+   state.
+6. Before shutdown or handback, save a durable checkpoint containing only the
+   identities and state that exist for this operation: conversation
+   identity/archive state for a conversation lifecycle; execution handle and
+   last known state for asynchronous work; persistence/recovery findings for
+   persistent state; plus the exact failed condition, remaining allowance, and
+   reconciliation source, bound, reads used, expiry time, and next action. If
+   an asynchronous execution may still be active after that bound, use only a
+   documented bounded stop or cancel operation when supported, then reconcile
+   its result and persisted effects under that operation's documented bound.
+   Never force-terminate an unresolved execution. If no safe stop exists or its
    result remains unknown, retain the runtime, handle, and checkpoint, preserve
    the ticket as blocked, and hand it back without releasing the active
-   execution or claiming safe recovery. Shut down only after terminality,
-   persisted outcomes, and recovery state are known and safe.
+   execution or claiming safe recovery. Shut down only after applicable
+   terminality, persistence, and recovery state are known and safe.
 7. Keep ordinary implementation, test, fixture, and CI repairs with their
    existing owner and repair-progress gate; they do not require renewed
    stakeholder approval when they preserve the accepted contract. A repair or
@@ -83,17 +97,27 @@ persistent write did not happen.
    accepted behavior, scope, acceptance, policy, risk, or approved live
    allowance into one decision request to the approver or Project controller.
    Stop the affected stage until that decision is recorded; do not implement
-   the changed contract under the old approval. A repair that restores an
-   acceptance condition already stated by the source remains a repair, and a
-   compatible test-environment fix does not itself require approval.
+   the changed contract under the old approval. A contract-preserving
+   implementation repair does not need renewed stakeholder approval. For a
+   local conversation-plan repair, retain the existing approval only when the
+   decision-complete source and its material choices are unchanged; revalidate
+   and independently review the repaired plan. A revised GitHub plan must pass
+   `to-plan`'s mode-specific approval, publication, and readback gates. Normal
+   mode's renewed-approval requirement applies; verified Project `--auto` may
+   satisfy that approval pause as `to-plan` defines, but does not waive
+   publication, readback, or stakeholder approval for a material contract
+   decision. A repair that restores an acceptance condition already stated by
+   the source remains a repair, and a compatible test-environment fix does not
+   itself require approval.
 
 ## Finish gate
 
-Report qualification complete only when every finite pass condition and
-required persistence/recovery observation has evidence tied to the exact
-attempt and inputs, all executions are terminal or otherwise safely accounted
-for, and the remaining delivery gates pass. Otherwise preserve the checkpoint
-and report the exact unresolved operation, consumed allowance, and next action.
+Report qualification complete only when every finite pass condition has
+evidence tied to the exact attempt and inputs, each applicable persistence,
+asynchronous-execution, and conversation-lifecycle condition is safely
+accounted for, and the remaining delivery gates pass. Otherwise preserve the
+checkpoint and report the exact unresolved operation, consumed allowance, and
+next action.
 
 This is workflow guidance only. It does not mean a runtime automatically
 enforces these checks or guarantees recovery.

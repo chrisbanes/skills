@@ -39,12 +39,14 @@ Project run already owns that issue, return it to that controller.
    Approval covers the accepted contract and only the live qualification
    allowances it explicitly records; do not infer extra attempts or authority.
 3. Before approval or execution, require independent plan review against the
-   source, acceptance criteria, code facts, dependencies, and tests. Return plan
-   findings through `to-plan` under its bounded repair procedure. A
-   contract-preserving repair may continue under the existing approval after
-   independent review; obtain stakeholder approval for a material change to
-   accepted behavior, scope, acceptance, policy, or risk. Stop without a
-   reviewed plan and the approval required for its effective contract.
+   source, acceptance criteria, code facts, dependencies, and tests. Route plan
+   findings through `to-plan` and review its repaired result. In-scope
+   implementation repairs and local conversation-plan repairs preserving
+   approved source decisions need no renewed approval. GitHub plan revisions
+   follow `to-plan`'s mode-specific approval, publication, and readback gates;
+   verified Project `--auto` may satisfy only its approval pause. Material
+   contract changes still need stakeholder approval in any mode. Stop without
+   an approved, reviewed effective plan.
 4. Reconcile implementation and acceptance evidence before dispatch; never
    reassign accepted work or reimplement a current candidate just to satisfy
    worker routing. Resolve final-reviewer capability before any implementation

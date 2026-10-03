@@ -1,0 +1,22 @@
+{
+  "id": "deliver-spec-github-plan-revision-approval-novel",
+  "title": "Keep implementation repair approval separate from GitHub plan publication",
+  "family": "workflow",
+  "target_skills": ["deliver-spec", "run-github-project"],
+  "expected_skills": ["deliver-spec", "run-github-project"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-github-plan-revision-approval-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "routine-repair", "text": "Keeps an implementation defect within the accepted outcome with its existing owner and repair gates; does not request new stakeholder approval just for that repair"},
+    {"id": "standalone-publication", "text": "For the standalone GitHub delivery, routes a revised plan through normal GitHub publication and readback; because files/tests change, obtains the renewed approval required by the planner before implementation continues"},
+    {"id": "project-auto", "text": "For the Project delivery, uses only the controller's verified invocation-scoped --auto authority to satisfy the planner's approval pause; still publishes and verifies the revised GitHub plan and returns its effective revision in the handoff"},
+    {"id": "material-decision", "text": "Recognizes that --auto does not approve a material change to accepted behavior, scope, acceptance, policy or risk; stops for a stakeholder decision in either mode"},
+    {"id": "preservation", "text": "Preserves owner, existing implementation approval, repair progress and live allowance; does not bypass publication gates or mutate GitHub in this read-only assessment"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

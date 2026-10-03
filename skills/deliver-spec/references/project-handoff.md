@@ -31,7 +31,12 @@ handoff or take over a Project claim.
    the plan against source, criteria, repository facts, dependencies, and tests
    unless current evidence covers those exact inputs. Return findings to the
    controller for `to-plan --auto` repair and a verified handoff; automatically
-   review repaired inputs. For a supplied integration amendment, apply
+   review repaired inputs. A verified `--auto` grant may satisfy `to-plan`'s
+   GitHub publication-approval pause, but route revised-plan publication and
+   readback through `to-plan` and require its verified handoff before resuming.
+   `--auto` does not authorize a material change to accepted behavior, scope,
+   acceptance, policy, or risk; return those decisions to the stakeholder. For
+   a supplied integration amendment, apply
    [Evidence and review](evidence-and-review.md) to the installed planner's
    verified effective contract and retained candidate. Preserve work, owner, PR
    and budgets; return unsupported or invalid handoffs to the controller. It
