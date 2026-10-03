@@ -1,6 +1,6 @@
 ---
 name: to-plan
-description: Use when one ready GitHub issue or an in-chat task needs an implementation plan, or a retained approved GitHub plan needs a reviewed unchanged-scope integration amendment.
+description: Use when one ready GitHub issue or an in-chat task needs an implementation plan, or a retained approved GitHub plan has an existing amendment chain or a changed published integration decision needing durable consumption.
 disable-model-invocation: true
 ---
 

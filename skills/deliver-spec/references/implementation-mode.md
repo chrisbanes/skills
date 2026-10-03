@@ -36,8 +36,10 @@
 6. Integrate accepted work in dependency order. Record the clean pre-attempt SHA.
    If a Git operation conflicts before completion, abort that operation and
    verify the exact SHA and clean state are restored; otherwise stop. Give the
-   original owner the conflict to repair from that base. After completed
-   integration, record the resulting SHA and renew only affected validation.
+   original owner the conflict to repair on a fresh unique branch from that base
+   in an idle isolated checkout, preserving the original task branch and commits.
+   After completed integration, record the resulting SHA and renew only affected
+   validation.
    Release dependents without a second acceptance ceremony.
 7. If completed integration fails checks, preserve the failed integrated `HEAD`,
    pause dependents and repair forward. Never reset or discard it. Investigate
