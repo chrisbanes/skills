@@ -1,7 +1,8 @@
 # Agent routing
 
 Read this reference only when the trusted Project configuration has an Agent
-Setup section. Profiles select execution capabilities; they grant no authority.
+Setup section. Profiles select execution capabilities, not model tiers; they
+grant no authority.
 
 1. Validate configured profiles against the runtime. Keep the user-selected
    lead model unchanged. Use `default-owner` for planners and ticket owners,
@@ -21,6 +22,9 @@ Setup section. Profiles select execution capabilities; they grant no authority.
    the first eligible profile. Wait for temporarily busy capacity rather than
    changing an existing owner. Do not use an external service to select agents.
 4. Give the selected agent a bounded brief under
-   [subagent selection](subagent-selection.md). Record the assignment, actual
+   [subagent selection](subagent-selection.md). Preserve explicit model pins;
+   resolve unspecified model and reasoning settings through the user's
+   selection policy for that bounded assignment before dispatch. Profile
+   selection alone does not resolve those settings. Record the assignment, actual
    runtime role, configured profile, and model and reasoning when exposed in
    the existing ownership record. Finish with the agent's evidence or blocker.

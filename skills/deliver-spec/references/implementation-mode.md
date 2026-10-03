@@ -53,6 +53,10 @@
    worker slot, and never switch a checkout used by an active owner or process.
 5. Select an implementation-capable subagent using the runtime mapping below
    and the shared [selection and handoff reference](subagent-selection.md).
+   Classify each settled worker task on its own merits under the user's model
+   and reasoning selection policy, rather than inheriting the delivery lead's
+   tier. Require workers to return newly discovered architectural or correctness
+   decisions to the lead while retaining ownership of their tasks and repairs.
    Confirm it can edit, validate, commit, and resume the same owner session for
    repairs. Honour configured agents, models, and user selections. If a
    required capability is unavailable, stop rather than implementing in the
