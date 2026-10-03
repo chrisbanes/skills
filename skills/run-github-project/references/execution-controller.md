@@ -23,8 +23,16 @@ dispatch all independent work that fits both, with delivery repair first.
 Before dispatch, use the complete eligible-column inventory to preflight likely
 runnable tickets and their required qualification. Repeat affected checks when
 their evidence changes; do not deeply hydrate unchanged blocked work.
+For asynchronous or persistent live qualification, carry forward the
+[deliver-spec live qualification and failure recovery procedure](../../deliver-spec/references/qualification-failure.md)
+through preflight and ticket handoff. It applies only when the accepted source
+requires that kind of live work; do not add it to unrelated tickets.
 
-1. Read the accepted source, plan and qualification requirements. Record each
+1. Read the accepted source, plan and qualification requirements. For live
+   asynchronous or persistent qualification, record the procedure's finite
+   pass conditions, accepted limitations, required offline harness evidence,
+   live evidence, execution and recovery state, and approved remaining
+   allowance. Record each
    required operation, external resource, credential/access availability,
    permission, host capability and bounded execution grant in the existing
    ticket evidence. Include non-secret evidence references, observation time,
@@ -40,12 +48,19 @@ their evidence changes; do not deeply hydrate unchanged blocked work.
    host is an execution prerequisite blocker with its exact resume condition;
    do not misreport it as a native dependency or missing user permission.
 4. Withhold dependent dispatch for absent fixture access, exhausted grants,
-   unknown prerequisites or unfulfilled qualification. Keep unclaimed work
+   unknown prerequisites, missing/failed offline harness evidence, or
+   unfulfilled qualification. Keep unclaimed work
    unassigned. For claimed missing-authority work use the verified
    [ticket pause](authority-and-pauses.md#pause-one-ticket); preserve other
    claimed blockers under the existing failure-isolation rules. Retain all
    native edges so blocked qualification never makes its dependants runnable.
-5. Continue independent runnable work. Revalidate access, capability, remaining
+5. On a live assertion or operation failure, stop affected dispatch, perform
+   bounded outcome and persistence reconciliation, then save the durable
+   execution/recovery checkpoint before safe shutdown or handoff. Preserve
+   unknown outcomes and consumed allowances; do not claim recovery while the
+   prior execution remains unresolved. Continue independent work only when it
+   cannot affect that execution or state.
+6. Continue independent runnable work. Revalidate access, capability, remaining
    grant and operation-specific authority immediately before the affected
    operation. Fresh ranker eligibility is necessary but cannot supply readiness,
    renew a grant, or satisfy a qualification gate.

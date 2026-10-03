@@ -28,11 +28,16 @@ environment-sensitive, so compare runs only when model, reasoning, machine,
 corpus, and execution conditions are held constant.
 
 The delivery calibration cases cover validation provenance/invalidation,
-retained integration work, reviewer packets and strict selected-provider
-invocation, including unchanged-evidence and unsafe-shortcut counterexamples.
-Their deterministic validator checks immutable fixture integrity; semantic
-rubrics require a separately authorised model run and are not proven by corpus
-validation.
+retained integration work, reviewer packets, strict selected-provider
+invocation, and asynchronous or persistent qualification. The qualification
+cases require an offline fake-runtime harness against isolated production-store
+instances before live qualification, cover missing actions, delayed or archived
+execution reconciliation, active execution assertions, persisted shutdown and
+recovery outcomes, no duplicate dispatch, bounded safe-stop handoff, unchanged
+allowances through routine repairs, consolidated material decisions, and
+restraint when work has no applicable live qualification. Their deterministic
+validator checks immutable fixture integrity; semantic rubrics require a
+separately authorised model run and are not proven by corpus validation.
 
 ## Results
 

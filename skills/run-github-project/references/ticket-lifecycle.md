@@ -61,6 +61,13 @@ evidence to the delivery owner; implementation and evidence renewal stay there.
 For every ordinary implementation
 ticket, invoke `deliver-spec` with this verified packet under its
 [Project handoff procedure](../../deliver-spec/references/project-handoff.md).
+When the accepted source requires asynchronous or persistent live
+qualification, include the finite qualification contract, offline harness
+result, exact execution and recovery checkpoint, remaining approved allowance,
+and any unresolved outcome in that packet; follow the [shared qualification failure
+procedure](../../deliver-spec/references/qualification-failure.md). Preserve
+unknown execution state and stop only affected dependent dispatch while
+independent tickets continue.
 Keep the persistent ticket context as delivery lead and integration owner.
 `deliver-spec` owns the implementation-worker and integration procedure;
 preserve its same-owner repair rule and fit all descendants within the

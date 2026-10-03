@@ -36,14 +36,24 @@ Project run already owns that issue, return it to that controller.
    approved outcome; do not change labels yourself. Local sources skip GitHub
    triage but need explicit stakeholder approval. Reuse a current `to-plan`
    plan, or invoke `to-plan` and honor its readiness and publication gates.
+   Approval covers the accepted contract and only the live qualification
+   allowances it explicitly records; do not infer extra attempts or authority.
 3. Before approval or execution, require independent plan review against the
-   source, acceptance criteria, code facts, dependencies, and tests. Resolve
-   findings through `to-plan` and reapprove repaired conversation plans. Stop
-   without a reviewed and approved plan.
+   source, acceptance criteria, code facts, dependencies, and tests. Return plan
+   findings through `to-plan` under its bounded repair procedure. A
+   contract-preserving repair may continue under the existing approval after
+   independent review; obtain stakeholder approval for a material change to
+   accepted behavior, scope, acceptance, policy, or risk. Stop without a
+   reviewed plan and the approval required for its effective contract.
 4. Reconcile implementation and acceptance evidence before dispatch; never
    reassign accepted work or reimplement a current candidate just to satisfy
    worker routing. Resolve final-reviewer capability before any implementation
    and worker capability/capacity before new nontrivial work or a worker repair.
+   When the accepted source requires asynchronous or persistent live
+   qualification, apply [Live qualification and failure recovery](references/qualification-failure.md)
+   before its first attempt and before each resume. This conditional procedure
+   does not add a qualification gate to work whose accepted source requires
+   only ordinary offline validation.
    Before either implementation path, record the fixed base and use a clean
    task checkout. Stop if unrelated uncommitted changes are present. Reuse a
    suitable clean checkout; create isolated worktrees only when concurrency or
@@ -88,8 +98,12 @@ Project run already owns that issue, return it to that controller.
    permitted initial direct edit remain with the lead. Never move a worker's
    repair to the lead.
    Apply the same TDD, validation, and independent review gates to repairs and
-   recheck the final head after each push. Return scope or design changes for a
-   decision. Merge only with explicit authority valid for this invocation.
+   recheck the final head after each push. Continue ordinary contract-preserving
+   repairs with their existing owner and progress gate; they do not require
+   renewed stakeholder approval. For a material change to accepted behavior,
+   scope, acceptance, policy, or risk, stop the affected stage and return one
+   consolidated decision packet to the stakeholder; do not proceed under the
+   prior approval. Merge only with explicit authority valid for this invocation.
    After about 30 minutes of pending gates, hand back the exact pending checks,
    feedback, PR, and head for later resume.
 

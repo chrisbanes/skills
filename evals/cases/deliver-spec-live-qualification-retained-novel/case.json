@@ -1,0 +1,22 @@
+{
+  "id": "deliver-spec-live-qualification-retained-novel",
+  "title": "Resume qualification with an archived conversation and delayed execution",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-live-qualification-retained-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "retained-identities", "text": "Reconciles the supplied conversation identity, archived status, execution handle and delayed response before any further attempt; treats absence from the active conversation list as insufficient evidence that execution ended"},
+    {"id": "bounded-recovery", "text": "Uses bounded observation to establish persistence, execution terminality and recovery state; preserves unknown outcome and does not claim safe shutdown when a delayed execution can still be active"},
+    {"id": "safe-stop", "text": "Because no safe stop/cancel operation is documented, preserves the active runtime, execution handle and ticket blocker for handoff after checkpointing; does not force-terminate or release the execution"},
+    {"id": "durable-handoff", "text": "Persists the exact execution/recovery checkpoint and next bounded action before handoff, preserves already-consumed allowances and prior work, and returns the unresolved qualification as a blocker for dependent dispatch"},
+    {"id": "scope", "text": "Continues only independent work proven not to touch the unresolved state and remains read-only in the supplied assessment"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}
