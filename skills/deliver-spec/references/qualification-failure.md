@@ -74,16 +74,19 @@ persistent write did not happen.
    state.
 6. Before shutdown or handback, save a durable checkpoint containing only the
    identities and state that exist for this operation: conversation
-   identity/archive state for a conversation lifecycle; execution handle and
-   last known state for asynchronous work; persistence/recovery findings for
-   persistent state; plus the exact failed condition, remaining allowance, and
-   reconciliation source, bound, reads used, expiry time, and next action. If
+   identity/archive state for a conversation lifecycle; provider-supported
+   execution identity/observation mechanism and last known state for
+   asynchronous work, with an execution handle only when supplied; persistence/
+   recovery findings for persistent state; plus the exact failed condition,
+   remaining allowance, reconciliation source, bound, reads used, expiry time,
+   and next action. If
    an asynchronous execution may still be active after that bound, use only a
    documented bounded stop or cancel operation when supported, then reconcile
    its result and persisted effects under that operation's documented bound.
    Never force-terminate an unresolved execution. If no safe stop exists or its
-   result remains unknown, retain the runtime, handle, and checkpoint, preserve
-   the ticket as blocked, and hand it back without releasing the active
+   result remains unknown, retain the runtime, any provider-supported
+   execution identity/observation mechanism or supplied handle, and checkpoint;
+   preserve the ticket as blocked and hand it back without releasing the active
    execution or claiming safe recovery. Shut down only after applicable
    terminality, persistence, and recovery state are known and safe.
 7. Keep ordinary implementation, test, fixture, and CI repairs with their
