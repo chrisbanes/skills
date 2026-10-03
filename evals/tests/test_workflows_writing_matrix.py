@@ -87,7 +87,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             delivery = installed / "deliver-spec"
             procedure = delivery / "references/implementation-mode.md"
             self.assertEqual(
-                (REPO_ROOT / "skills/implement-with-subagents/references/implementation-mode.md").read_bytes(),
+                (REPO_ROOT / "skills/deliver-spec/references/implementation-mode.md").read_bytes(),
                 procedure.read_bytes(),
             )
             # Follow the mandatory local resource chain in the isolated installation.
@@ -546,7 +546,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         rubric = " ".join(item["text"] for item in case.rubric)
         self.assertIn("exact check name", rubric)
         self.assertIn("single forced-skill entrypoint read", rubric)
-        self.assertIn("full local suite before one repair push", rubric)
+        self.assertIn("required integrated-candidate checks", rubric)
 
     def test_formatting_negative_supplies_the_text_and_preserves_the_noop(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

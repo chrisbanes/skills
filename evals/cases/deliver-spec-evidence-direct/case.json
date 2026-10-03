@@ -34,7 +34,7 @@
     },
     {
       "id": "development-vs-integrated",
-      "text": "Distinguishes 26 affected development tests from mandatory full integrated-candidate checks and preserves approved TDD seams"
+      "text": "Distinguishes affected development tests from required full checks on meaningful integrated candidates; no universal TDD or separately approved test seams and no full suite per slice commit."
     },
     {
       "id": "invalidation",
@@ -42,7 +42,7 @@
     },
     {
       "id": "review-packet",
-      "text": "Supplies original requirements/criteria, effective plan, standards, immutable base/candidate and prior candidate, exact resolvable comparison/commit context, validation evidence, stable F1 ID, repair commit/diff, disposition and prior versus outstanding coverage"
+      "text": "Reuses one concise record of source/requirements, scope, immutable base/candidate, dirty work, check/log pointers, findings, dispositions and blockers rather than mandatory temporary packets or receipts."
     },
     {
       "id": "interaction-review",
@@ -50,7 +50,7 @@
     },
     {
       "id": "ci-repair",
-      "text": "Requires all locally available CI-equivalent checks and a passing full local suite on the code-related CI repair before a repair push, not just the focused F2 check"
+      "text": "Renews affected CI-equivalent evidence and required integrated-candidate checks before push; reuses valid checks and repeats full checks only when invalidated or explicitly required."
     },
     {
       "id": "acceptance",

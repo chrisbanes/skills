@@ -2,9 +2,16 @@
 
 ## Core principle
 
-Retain settled work through a reviewed, append-only integration decision. An
+Retain settled work through an authenticated, append-only integration decision. An
 amendment changes how the existing approved outcome is integrated, never its
 requirements, architecture, policy or authority. It is not a readiness receipt.
+
+Use this protocol only for a changed published integration decision needing
+durable cross-session consumption, or to resume an existing amendment chain.
+Routine compatible base integration, implementation and fixture corrections use
+the existing delivery record and affected checks; they require no new amendment.
+Do not add hashes for committed source already identified by Git. The digests
+below protect mutable external plan comments and lineage, not each local step.
 
 ## Classify before drafting
 
@@ -24,7 +31,7 @@ requirements, architecture, policy or authority. It is not a readiness receipt.
    private-data exclusions, and refresh a control inventory only when these
    implement the same approved boundaries. A new privacy boundary is material.
 4. Block unknown overlap or unsupported preservation pending evidence. Material
-   requirement or architecture changes need a full reviewed replan; policy,
+   requirement or architecture changes need a full replan; policy,
    permission, qualification or authority changes also need the existing
    stakeholder decision and authoritative source update where required. Do not
    turn an exhausted grant into an integration detail.
@@ -69,7 +76,7 @@ material reasoning, not an implementation transcript.
 **Resulting candidate:** pending | <full SHA with integration provenance>
 **Owner / worktree / branch / PR:** <verified retained identities>
 **Publication authority:** <reviewed approval or existing autonomous grant>
-**Independent review:** <record identity, exact draft digest and coverage>
+**Independent review:** <existing coverage, required early-risk review, or deferred to integrated candidate with rationale>
 
 ### Integration decision
 
@@ -140,15 +147,17 @@ reconciliation, not an automatic retry or silently refreshed hash.
    its old base equals the preceding target base. Verify cumulative decisions
    remain compatible; a structurally valid chain cannot prove this judgment.
 4. Verify every author's authenticated identity and permission, the exact body,
-   metadata, payload/digests and independent review/approval against durable
-   trusted observations. A hash supplied by an edited comment is not its own
+   metadata, payload/digests, approval and review disposition against durable
+   trusted observations. Verify required early-review evidence when a concrete
+   pre-integration risk demands it; otherwise retain explicit deferred coverage.
+   A hash supplied by an edited comment is not its own
    trust anchor. Retain approved/read-back body digests and expected identities
    outside the proposed payload. Foreign or subsequently edited comments,
    missing anchors, forks, gaps, stale predecessors/candidates or ambiguous
-   reads block dependent work. Review applicability must cover these exact
+   reads block dependent work. Claimed review applicability must cover these exact
    inputs and affected interactions; unchanged full-candidate coverage remains
    traceable rather than being relabelled as fresh evidence.
-5. A full reviewed replan closes the prior amendment epoch. Its new plan revision
+5. A full replan closes the prior amendment epoch. Its new plan revision
    must identify the preceding effective tip/digest and disposition of retained
    work/evidence in the authenticated semantic plan body. Use exactly one
    `**Epoch closure:** <JSON>` line with `effective` (the prior tip's `url` and
@@ -162,9 +171,11 @@ reconciliation, not an automatic retry or silently refreshed hash.
 
 ## Review, publish and reconcile
 
-1. Independently review classification, integration, retained work and affected
-   requirements/interactions under the existing review contract. Resolve
-   findings and revalidate the exact draft before publication. Normal GitHub
+1. Validate classification, integration, retained work and affected interactions.
+   Require early independent review only for a concrete risk that must be resolved
+   before integration; otherwise record review as deferred to the integrated
+   candidate. Reuse applicable independent coverage, resolve findings and
+   revalidate the exact draft before publication. Normal GitHub
    mode needs publication approval; `--auto` uses only already-verified
    authority and cannot extend it. Material changes return to the appropriate
    decision/replan route.
@@ -226,7 +237,8 @@ to the full plan alone.
 
 ## Finish gate and evidence limits
 
-Hand off only one authenticated, reviewed, approved effective contract tied to
+Hand off only one authenticated, approved effective contract, with any required
+early review complete and deferred final coverage explicit, tied to
 fresh identities and verified consumer capability. Preserve all artifacts and
 report the exact missing decision or evidence on a blocker. Require new-head checks and combined independent review
 coverage before delivery readiness; old SHA evidence is never current by default.

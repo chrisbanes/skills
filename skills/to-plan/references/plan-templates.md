@@ -32,13 +32,14 @@ retained_work [dispositions], and evidence [dispositions] when closing amendment
 
 - <Behavior or contract that must remain unchanged.>
 - <Explicitly out-of-scope work.>
-- For mechanical mismatches within this fixed contract, allow one focused
-  diagnosis and at most two repair edit-and-validation cycles; normal test-first
-  cycles do not count. Stop for a design or contract change, overlapping baseline
-  change, or exhausted repair budget, and report the evidence and remaining decision.
-- A proven unchanged-scope integration amendment may release the overlapping-base
-  stop only after its classification, independent review, approval, publication
-  and consumer-verification gates pass; do not reset repair budgets or grants.
+- Continue routine implementation and fixture corrections within unchanged
+  requirements, coverage, architecture and authority; record the correction and
+  renew affected evidence. A factual plan mismatch allows one diagnosis and two
+  repair cycles; ordinary repairs do not consume that budget. Investigate unknown
+  overlap; stop for material design/contract changes or exhausted grants.
+- Reuse the existing delivery record and valid checks/reviews. Use an integration
+  amendment only for a changed published integration decision requiring durable
+  consumption; preserve repair budgets and grants.
 
 ### Planning decisions
 
@@ -71,9 +72,10 @@ concurrently.>
 proof and the proof task ID where applicable.>
 **Files and symbols:** <Name affected files and ownership/interfaces; identify
 entry symbols and new symbols where needed to locate or disambiguate the work.>
-**Test:** <Exact test file and seam, setup/fixture, concrete inputs/actions,
-assertions, and expected red failure; explain if an automated red test is
-impractical.>
+**Test:** <When behavioral tests apply, name the test file and seam,
+setup/fixture, inputs/actions, assertions and expected results. Follow repository
+policy and explicit test-first requests; include a sensitivity check when useful.
+Otherwise omit this field and specify focused validation below.>
 **Implementation:** <State the observable change and settled decisions. Give
 ordered edits, exact wiring and material branches/errors only where uncertainty,
 safety or a necessary seam requires that precision.>
@@ -131,10 +133,11 @@ decisions. Include everything a fresh session needs; do not rely on chat history
 
 - <Behavior or contract that must remain unchanged.>
 - <Explicitly out-of-scope work.>
-- For mechanical mismatches within this fixed contract, allow one focused
-  diagnosis and at most two repair edit-and-validation cycles; normal test-first
-  cycles do not count. Stop for a design or contract change, overlapping baseline
-  change, or exhausted repair budget, and report the evidence and remaining decision.
+- Continue routine implementation and fixture corrections within unchanged
+  requirements, coverage, architecture and authority; record the correction and
+  renew affected evidence. A factual plan mismatch allows one diagnosis and two
+  repair cycles; ordinary repairs do not consume that budget. Investigate unknown
+  overlap; stop for material design/contract changes or exhausted grants.
 
 ## Planning decisions
 
@@ -167,9 +170,10 @@ concurrently.>
 proof and the proof task ID where applicable.>
 **Files and symbols:** <Name affected files and ownership/interfaces; identify
 entry symbols and new symbols where needed to locate or disambiguate the work.>
-**Test:** <Exact test file and seam, setup/fixture, concrete inputs/actions,
-assertions, and expected red failure; explain if an automated red test is
-impractical.>
+**Test:** <When behavioral tests apply, name the test file and seam,
+setup/fixture, inputs/actions, assertions and expected results. Follow repository
+policy and explicit test-first requests; include a sensitivity check when useful.
+Otherwise omit this field and specify focused validation below.>
 **Implementation:** <State the observable change and settled decisions. Give
 ordered edits, exact wiring and material branches/errors only where uncertainty,
 safety or a necessary seam requires that precision.>

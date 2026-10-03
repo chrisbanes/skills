@@ -13,9 +13,6 @@ COPIES = {
             "gradle-run", "shepherd",
         )
     ),
-    "skills/implement-with-subagents/references/implementation-mode.md": (
-        "skills/deliver-spec/references/implementation-mode.md",
-    ),
 }
 
 

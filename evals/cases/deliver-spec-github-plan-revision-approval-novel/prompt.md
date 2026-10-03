@@ -4,7 +4,9 @@ and worker owner. First, the implementation owner finds and repairs a test
 helper defect that breaks an already stated acceptance check; the repair does
 not change behavior or plan decisions. Separately, repository evidence shows
 that the plan names the wrong production file and test seam, so the revised plan
-must change its file and test rows while preserving the accepted outcome.
+would change its file and test rows to equivalent existing boundaries while
+preserving requirements, coverage, architecture and authority. No published
+integration decision changes.
 
 In the standalone delivery, the GitHub plan is being handled in normal mode. In
 the Project delivery, the controller's current invocation has a verified

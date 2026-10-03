@@ -143,7 +143,9 @@ and worktree to the new base using repository policy; the controller never
 edits the agent-owned branch.
 
 The owning agent must revalidate the authority lease and approved plan, repeat
-full applicable verification and every review gate against the updated SHA,
+affected verification and review against the updated SHA, retaining demonstrably
+unaffected evidence. Repeat full checks only when invalidated, impact cannot be
+bounded or an explicit repository/provider requirement demands them. Then
 push the exact commit, and reconcile the remote result. Refetch the PR and
 require its head SHA to equal that pushed SHA before restoring merge
 eligibility or evaluating its new checks and reviews.

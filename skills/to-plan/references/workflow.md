@@ -81,8 +81,8 @@ blockers together. Do not reject or split a ready source merely because it is
 large.
 
 Use exactly one plan template. Every observable slice names prerequisites,
-affected files and ownership/interfaces, the intended increment, concrete test
-seams and acceptance evidence, exact command plus working directory/setup/result,
+affected files and ownership/interfaces, the intended increment, applicable tests
+or focused validation, acceptance evidence, exact command plus working directory/setup/result,
 and observable completion. Reference retrievable authoritative requirements by stable identity instead of
 copying the specification. Conversation plans must embed the approved source
 contract needed for a fresh session; a chat reference is not retrievable evidence. For a known one-function change,
@@ -102,21 +102,36 @@ ready tasks may safely run concurrently. Shared mutable files or a need for
 another task's unmerged changes make tasks non-independent even when the graph
 otherwise marks them ready. Treat older plans without dependency metadata as
 one sequential chain in listed order; new plans must include the metadata.
-Use test-first slices unless an automated red test is impractical and explain
-the exception. Do not leave exploration or design decisions to implementation.
+Let the owner choose meaningful behavioral tests under repository policy and
+explicit user requests; do not require TDD or separate seam approval by default.
+Do not revert useful code to recreate test-first history; use a bounded baseline
+check or intentional fault where useful and report the actual testing order.
+Do not leave material architecture or authority decisions to implementation.
 Scale detail to risk; avoid full implementations and boilerplate. State a
 shared contract once in Guardrails. Use Approach for the route, Planning
 decisions for non-obvious choices, and Implementation context for current code
 facts; do not repeat those sections' shared constraints in each other or in
-Review focus. Each slice still needs concrete affected files, test inputs/actions
-and
-assertions, commands, and expected results; share setup by explicit reference. Acceptance rows
-should name the behavior and point to
+Review focus. Each slice needs concrete affected files, validation commands and
+expected results. Specify test inputs/actions and assertions when behavioral tests
+apply; otherwise use focused validation without inventing a test seam. Share setup
+by explicit reference. Acceptance rows should name the outcome and point to
 the slice's focused check instead of paraphrasing the full contract. Omit
 generic deviation and re-plan sections when only standard handoff rules apply;
 keep the concise standard diagnosis, repair, and stop limits in Guardrails so
 the published plan carries them. Include additional sections only for distinct
 task-specific conditions.
+
+For experiments, choose the smallest credible harness answering the research
+question. Justify replay infrastructure, generic runners and elaborate schemas
+against requested acceptance. Preserve every requested deliverable and applicable
+privacy, budget and cancellation safeguard. Independent harness work may proceed
+while corpus review runs; freeze labels before observing experimental outputs.
+
+Default to independent review of the integrated delivery candidate, followed by
+focused repair reviews. Require earlier independent review only for a concrete
+risk that must be resolved first, such as the label-freeze boundary. Reuse valid
+plan reviews; executor-readiness below is the planner's own check, not a mandate
+to dispatch another reviewer or spawn one merely to establish capability.
 
 Perform an executor-readiness review from the written plan and its retrievable
 source. For conversation mode, review the plan alone: include the approved goal,
@@ -151,23 +166,26 @@ whether the active comment was created or reused, ending:
 Implement <issue URL> using the approved implementation plan at <comment permalink>.
 ```
 
-For proven unchanged-scope overlapping base integration, use
-[integration amendments](integration-amendments.md) instead of the full-replan
-route below only when all its gates pass, including verified installed-consumer
-support before amendment publication. Unknown or full-plan-only consumers block
-publication and handoff; preserve the draft or use the authorized full-replan
-route. Its exact effective-contract packet
-replaces the single-plan handoff; neither consumer may ignore its amendments.
-Unknown overlap still blocks pending evidence; material changes still replan.
+For an existing amendment chain or a changed published integration decision
+needing durable consumption, use [integration amendments](integration-amendments.md).
+Verify installed-consumer support before publication; unknown or full-plan-only
+consumers block that publication and handoff. Preserve the draft or use an
+authorized full replan. Neither consumer may ignore existing amendments.
+Routine compatible integration follows the continuation rule below.
 
-An implementation checkout may descend from planned SHA only for non-overlapping
-intervening changes. Within a fixed behavior, decisions, interfaces, seams, and
-validation contract, repair only a mechanical mismatch (renamed private helper,
-moved equivalent file, compile, or fixture error) after one focused diagnosis
-and at most two repair edit-and-validation cycles across unexpected mismatches.
-Normal test-first cycles do not consume this budget. Stop at a re-plan trigger,
-design/contract change, overlapping baseline change, or exhausted budget; report
-failure, attempted repair/validation, and remaining decision/upstream change.
-Replan from a clean planning worktree at verified base, except a verified runner
-replan may retain dirty implementation work separately. Never invoke `to-plan`
-from that implementation worktree.
+A verified handoff authorizes in-scope implementation, testing and repairs,
+without new per-file or per-stage approvals. Record routine implementation,
+fixture and mechanical plan corrections briefly in the existing delivery record
+when requirements, coverage, architecture and authority remain unchanged. Do not
+replan or republish merely to correct an equivalent path, fixture or test setup.
+Preserve explicit execution budgets; bounded plan-mismatch diagnosis allows one
+focused diagnosis and at most two repair cycles when a factual plan assumption
+is wrong. Ordinary implementation/fixture repairs do not consume that allowance.
+
+Screen baseline drift and retained work before continuation. Proven compatible
+integration preserving the contract can proceed with affected evidence renewal;
+unknown overlap requires investigation. Material architecture or requirements changes
+need replanning; changed authority, privacy or qualification requires the
+appropriate decision. Preserve work on a blocker. Replan from a clean planning
+checkout at verified base, keeping dirty implementation work separately; never
+invoke `to-plan` from that implementation checkout.

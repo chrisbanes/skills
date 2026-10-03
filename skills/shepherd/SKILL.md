@@ -10,8 +10,8 @@ disable-model-invocation: true
 
 Keep an authorized PR or MR moving with evidence, not noise: poll, act on new
 actionable items, batch each target's local fixes into one push, then resolve
-addressed threads. After a code-related CI failure, use full local verification
-as the repair loop and CI only as confirmation. Never merge without explicit
+addressed threads. Use affected local checks during repairs and required full
+checks on meaningful integrated candidates; use CI as confirmation. Never merge without explicit
 authority.
 
 Do not start persistent polling for a one-off inspection, no open targets, or an action requiring human judgment; report the state and stop.
@@ -39,17 +39,15 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    Escalate architectural or contradictory feedback, unfamiliar failures,
    non-obvious fixes, and out-of-scope conflicts. GitLab manual jobs are
    non-blocking unless instructed otherwise.
-6. Handle each target in its own head checkout and batch every known actionable
-   item. Until a code-related CI failure, validate proportionately. After one,
-   inspect its evidence and identify local equivalents from the actual workflow
-   and check configuration. If those are unavailable, say which checks and local
-   equivalents remain unknown and stop before a targeted code repair or any
-   claim of verification. Otherwise run every locally available CI-equivalent
-   check, fix all failures, and rerun the full local suite to a passing result
-   before one repair push. If any applicable local check still fails, hold the
-   push and continue the local repair loop.
-   Report exact checks unavailable locally instead of using CI as an iterative
-   test runner.
+6. Handle each target in its own head checkout and batch known actionable items.
+   Inspect failing logs and identify applicable local equivalents from actual
+   workflow/check configuration before repairing. If evidence is missing, obtain
+   it before guessing a fix; report checks unavailable on this host honestly.
+   Run focused checks during repair and required full checks on the meaningful
+   integrated candidate before pushing. Reuse valid evidence; repeat only checks
+   invalidated by changes, unknown impact, or explicit repository/provider rules.
+   Do not use CI as an iterative test runner or require full checks per slice
+   commit. Hold the push while applicable required checks fail or lack evidence.
    Reply after an addressed change or answer; resolve its thread only after the reply and required push succeed.
    Do not combine heads, push after every comment, resolve a local-only fix, or comment when nothing changed.
 7. Recheck CI after the verified repair push; return to step 6 on another
@@ -70,8 +68,9 @@ taken, checks actually run (say none when none ran), checks unavailable or
 unknown, and the next required human decision. When failure evidence is missing,
 request the exact check name and log, PR diff and head commit, and workflow/check
 configuration before proposing a targeted repair. Give the verification order:
-run the available CI-equivalent checks on the required host, fix their failures,
-rerun the full local suite, and push once only after those checks pass. Use CI
+run affected CI-equivalent checks on the required host, fix their failures,
+complete required integrated-candidate checks, and push once evidence covers the
+candidate. Use CI
 as confirmation. Do not claim any of those steps happened when only describing
 the plan. Escalate immediately for ambiguous platform/target selection, an
 unresolved conflict,

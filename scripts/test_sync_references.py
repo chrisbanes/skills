@@ -3,10 +3,19 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.sync_references import synchronize
+from scripts.sync_references import COPIES, synchronize
 
 
 class SyncReferencesTest(unittest.TestCase):
+    def test_delivery_procedure_is_not_overwritten_by_delegated_workflow(self):
+        destinations = {item for copies in COPIES.values() for item in copies}
+        self.assertNotIn(
+            "skills/deliver-spec/references/implementation-mode.md", destinations
+        )
+        self.assertIn(
+            "skills/deliver-spec/references/subagent-selection.md", destinations
+        )
+
     def test_check_detects_drift_without_writing_and_sync_repairs_it(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

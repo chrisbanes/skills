@@ -91,10 +91,13 @@ Reapply readiness and overlap checks. Retain baseline evidence only while
 rerun checkout identity and affected checks, and update the SHA only after they
 pass.
 
-Refresh incidental metadata without renewed approval. When decisions, slices,
-files, tests, commands, coverage, guardrails, deviations, or review focus
-change, update the draft while preserving compatible user edits. Normal mode
-requires approval again; `--auto` revalidates and continues.
+Refresh incidental metadata and routine equivalent file, fixture or command
+corrections under the existing scope and publication authority; preserve user
+edits and revalidate affected evidence. Require renewed approval only for a
+material change to the accepted outcome, coverage, architecture or authority.
+`--auto` revalidates within its existing grant, never expands it. For delivery
+corrections that need no published decision change, use the shared workflow's
+brief correction record instead of creating a new plan revision.
 
 ## Publish and verify
 

@@ -101,17 +101,12 @@ persistent write did not happen.
    allowance into one decision request to the approver or Project controller.
    Stop the affected stage until that decision is recorded; do not implement
    the changed contract under the old approval. A contract-preserving
-   implementation repair does not need renewed stakeholder approval. For a
-   local conversation-plan repair, retain the existing approval only when the
-   decision-complete source and its material choices are unchanged; revalidate
-   and independently review the repaired plan. A revised GitHub plan must pass
-   `to-plan`'s mode-specific approval, publication, and readback gates. Normal
-   mode's renewed-approval requirement applies; verified Project `--auto` may
-   satisfy that approval pause as `to-plan` defines, but does not waive
-   publication, readback, or stakeholder approval for a material contract
-   decision. A repair that restores an acceptance condition already stated by
-   the source remains a repair, and a compatible test-environment fix does not
-   itself require approval.
+   implementation repair does not need renewed stakeholder approval. Record
+   routine fixture and mechanical corrections in the existing delivery record;
+   renew affected checks and review without requiring revised-plan publication.
+   Material plan changes follow `to-plan`'s mode-specific publication/readback
+   contract and the appropriate stakeholder decision. A compatible environment
+   fix does not itself require approval or replenish attempts.
 
 ## Finish gate
 

@@ -26,23 +26,23 @@
   "rubric": [
     {
       "id": "common-procedure",
-      "text": "Uses the same delegated implementation, acceptance, integration and repair procedure for manual and Project delivery; caller context changes authority and capacity, not default implementation ownership."
+      "text": "Uses the same solo-or-delegated implementation procedure in manual and Project delivery; delegation is justified here by independent A/B work rather than universally required."
     },
     {
       "id": "ready-frontier",
-      "text": "For the manual invocation dispatches A and B concurrently in distinct clean worker checkouts with disjoint write sets without asking for a parallelism request. Serializes A/C writes; releases C only after A accepted integration and affected checks, and D only after all prerequisites pass at the integrated head."
+      "text": "May dispatch independent A/B in distinct clean checkouts when overhead is justified, or work solo. Serializes A/C writes, releases C only after A integration and affected checks, and D only after prerequisites pass at the integrated head."
     },
     {
       "id": "project-capacity",
-      "text": "Honors caller-supplied descendant capacity and across-ticket priority: does not take the spare slot reserved by the waiting ticket priority to add a second within-ticket worker, exceed capacity or redesign Project scheduling; waits or serializes within this ticket until capacity is granted."
+      "text": "If delegating, honors descendant capacity and across-ticket priority; does not take capacity reserved for another ticket, exceed limits or redesign scheduling. May implement solo or serialize while preserving ownership."
     },
     {
       "id": "useful-overlap",
-      "text": "Advances independent delivery preparation while workers implement and uses caller-supported wait or idle behavior when waiting, verifying actual capacity before resuming dispatch rather than inventing a release or assuming a blocking wait frees slots; does not perform task-owned implementation or duplicate worker validation."
+      "text": "If workers are chosen, advances independent delivery preparation without touching their owned implementation or duplicating valid checks. Uses supported waits and verifies actual capacity; a solo lead may perform the task implementation."
     },
     {
       "id": "ownership-and-evidence",
-      "text": "Keeps implementation and repairs with original workers, integrates task-scoped accepted commits in dependency order, reuses unaffected passing evidence, requires independent final joined-head review and lets only the authorized caller own Project mutations and merge."
+      "text": "Keeps each task and its repairs with its chosen lead or worker owner, coordinates concurrent writers, integrates delegated commits in dependency order, reuses unaffected evidence, requires independent final review and preserves caller-only Project and merge authority."
     }
   ],
   "provenance": {
