@@ -42,6 +42,10 @@
     {
       "id": "no-side-effects",
       "text": "Does not start monitoring or mutate state."
+    },
+    {
+      "id": "scoped-model-selection",
+      "text": "Separates provider capability from model selection; chooses Luna/low for the unpinned mechanical evidence task under the supplied policy, without inheriting the lead tier or treating reviewer as a tier. Preserves the alternative explicit Sol pin and resolves unspecified reasoning through the user policy."
     }
   ],
   "provenance": {

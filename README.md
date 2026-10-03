@@ -129,6 +129,12 @@ contains a copy of the reference for standalone installation.
 the implementation procedure, so spec delivery can delegate without installing
 the orchestration skill separately.
 
+Edit `references/subagent-selection.md` or the canonical implementation procedure
+at `skills/implement-with-subagents/references/implementation-mode.md`, then run
+`npm run references:sync` and include the updated bundled copies in the change.
+Run `npm run build` to check that all copies are regular files matching their
+sources; it fails on drift without rewriting files.
+
 ### Migration from pre-cluster skills
 
 This is a breaking taxonomy change. Replace the removed entrypoints as follows:
