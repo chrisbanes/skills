@@ -1,0 +1,22 @@
+{
+  "id": "deliver-spec-live-qualification-async-only-direct",
+  "title": "Apply async qualification recovery without inventing persistence",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-live-qualification-async-only-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "async-bound", "text": "Uses the provider-supported request identity and observation mechanism with the finite read bound for delayed/active execution reconciliation; does not invent a separate execution handle and stops at the bound without resetting it"},
+    {"id": "offline-async-tests", "text": "Uses an offline fake runtime to validate the existing async job path for delayed response, active assertion failure, safe recovery and duplicate-dispatch risk where applicable"},
+    {"id": "no-persistent-store", "text": "Does not require an isolated production database, persisted user-data recovery, or persistence assertions because this job has no persistent store"},
+    {"id": "no-conversation", "text": "Does not invent a conversation identity, archive state or archived-conversation test because this job has no conversation lifecycle"},
+    {"id": "scope", "text": "Retains the approved attempt limit and reports only the applicable async execution state; remains read-only in this assessment"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

@@ -1,0 +1,20 @@
+{
+  "id": "deliver-spec-live-qualification-no-change-negative",
+  "title": "Do not add live qualification to an offline documentation change",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-live-qualification-no-change-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "non-applicable", "text": "Recognizes that the approved documentation-only task uses local deterministic validation and has no asynchronous live action or persistent external store, so the conditional qualification procedure does not apply"},
+    {"id": "existing-path", "text": "Uses only the existing approved implementation, validation, reviewer and delivery gates; does not request a live allowance, create qualification records, or delay unrelated work"},
+    {"id": "no-change", "text": "Keeps the supplied workspace and external state unchanged in this analysis-only task and does not claim blanket qualification requirements"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

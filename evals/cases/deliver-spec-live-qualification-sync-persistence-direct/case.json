@@ -1,0 +1,22 @@
+{
+  "id": "deliver-spec-live-qualification-sync-persistence-direct",
+  "title": "Reconcile synchronous persistent qualification without async state",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-live-qualification-sync-persistence-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "persistent-store", "text": "Requires offline validation against an isolated instance of the production store implementation and checks persisted transaction outcomes across the approved recovery/readback path"},
+    {"id": "no-async", "text": "Treats the live operation as synchronous, uses only the documented bounded readback if the commit result is unknown, and does not poll, create an execution handle, or require active-execution assertions"},
+    {"id": "no-conversation", "text": "Does not invent a conversation identity, archive state or archived-conversation test because the contract has no conversation lifecycle"},
+    {"id": "runtime-restraint", "text": "Does not require a fake runtime when no runtime path exists, and does not replace persistent storage with an in-memory fake"},
+    {"id": "allowance", "text": "Preserves the single approved live attempt and existing authority/acceptance gates; makes no provider call in the read-only assessment"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}
