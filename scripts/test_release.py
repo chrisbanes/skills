@@ -3,6 +3,7 @@ import json
 import pathlib
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -35,6 +36,31 @@ class ReleaseScriptTest(unittest.TestCase):
 
     def test_resolve_version_canonicalizes_daily_release_number(self):
         self.assertEqual(self.release.resolve_version("2026.6.17.1"), "2026.6.17.01")
+
+    def test_automatic_version_uses_next_daily_number(self):
+        cases = [
+            ([], "2026.6.17"),
+            (["2026.6.17"], "2026.6.17.01"),
+            (["2026.6.17", "2026.6.17.01"], "2026.6.17.02"),
+            (["2026.6.17.1", "2026.6.17.09", "2026.6.17.09"], "2026.6.17.10"),
+            (["2026.6.16.99", "2026.6.18", "unrelated", "2026.6.17.001"], "2026.6.17"),
+            (["2026.6.17.98"], "2026.6.17.99"),
+        ]
+        with patch.object(self.release, "default_version", return_value="2026.6.17"):
+            for versions, expected in cases:
+                with self.subTest(versions=versions):
+                    self.assertEqual(self.release.resolve_version("", versions), expected)
+
+    def test_automatic_version_fails_when_daily_numbers_exhausted(self):
+        with patch.object(self.release, "default_version", return_value="2026.6.17"):
+            with self.assertRaisesRegex(ValueError, "exhausted"):
+                self.release.resolve_version("", ["2026.6.17.99"])
+
+    def test_explicit_version_remains_an_override(self):
+        self.assertEqual(
+            self.release.resolve_version("2026.6.17.1", ["2026.6.17.99"]),
+            "2026.6.17.01",
+        )
 
     def test_validate_version_rejects_out_of_range_daily_release_number(self):
         for version in ("2026.6.17.0", "2026.6.17.00", "2026.6.17.001", "2026.6.17.100"):
