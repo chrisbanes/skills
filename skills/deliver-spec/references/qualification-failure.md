@@ -37,31 +37,41 @@ persistent write did not happen.
    remaining allowance. The offline fake runtime is not evidence of live
    behavior: use only the actual runtime, external effects, and isolation
    explicitly approved by the source. Do not inspect or mutate unrelated live
-   data, or spend an attempt to discover whether access is available. Record
-   the attempt identity and its exact allowance before starting it.
-4. For asynchronous work, retain the returned execution handle and use bounded
-   observation to establish its terminal state. Preserve existing acceptance,
-   grant, dependency, and repair-progress gates. Qualification evidence applies
-   only to the operation and inputs it actually covers; it does not renew a
-   grant or reset a consumed allowance.
+   data, or spend an attempt to discover whether access is available. Before
+   dispatch, use the provider documentation or approved runbook to set a finite
+   reconciliation deadline or maximum status-read count within the existing
+   grant. If the source gives no bound, derive a routine, operation-specific
+   bound from documented response behavior and the available grant; do not
+   invent a universal timeout or request extra authority. Record the source,
+   rationale, deadline/read budget, cadence, and attempt allowance before
+   starting.
+4. For asynchronous work, retain the returned execution handle and observe it
+   only within the recorded reconciliation bound. Record each read and its
+   time. Stop when the execution is terminal or the deadline/read budget is
+   exhausted. Preserve existing acceptance, grant, dependency, and
+   repair-progress gates. Qualification evidence applies only to the operation
+   and inputs it actually covers; it does not renew a grant or reset a consumed
+   allowance.
 5. If an assertion or operation fails, stop the affected and dependent
-   dispatch. Reconcile the outcome within the existing bounded procedure: check
-   whether the action persisted, whether a delayed response or execution
-   remains, whether the conversation was archived, and what shutdown or recovery
-   state is known. Do not retry, start a conflicting action, or claim safe
-   recovery while the prior outcome is unknown. Continue independent work only
-   when it cannot touch the unresolved execution or state.
+   dispatch. Reconcile within the recorded bound: check whether the action
+   persisted, whether a delayed response or execution remains, whether the
+   conversation was archived, and what shutdown or recovery state is known. On
+   expiry, stop polling; do not silently reset the bound, retry, start a
+   conflicting action, or claim safe recovery while the prior outcome is
+   unknown. Continue independent work only when it cannot touch the unresolved
+   execution or state.
 6. Before shutdown or handback, save a durable checkpoint containing the
    conversation and execution identities, last known execution state, exact
    failed condition, persistence/recovery findings, remaining allowance, and
-   the next bounded reconciliation action. If an execution may still be active,
-   use only a documented bounded stop or cancel operation when supported, then
-   reconcile its result and persisted effects. Never force-terminate an
-   unresolved execution. If no safe stop exists or its result remains unknown,
-   retain the runtime, handle, and checkpoint, preserve the ticket as blocked,
-   and hand it back without releasing the active execution or claiming safe
-   recovery. Shut down only after terminality, persisted outcomes, and recovery
-   state are known and safe.
+   the reconciliation source, bound, reads used, expiry time, and next action.
+   If an execution may still be active after that bound, use only a documented
+   bounded stop or cancel operation when supported, then reconcile its result
+   and persisted effects under that operation's documented bound. Never
+   force-terminate an unresolved execution. If no safe stop exists or its
+   result remains unknown, retain the runtime, handle, and checkpoint, preserve
+   the ticket as blocked, and hand it back without releasing the active
+   execution or claiming safe recovery. Shut down only after terminality,
+   persisted outcomes, and recovery state are known and safe.
 7. Keep ordinary implementation, test, fixture, and CI repairs with their
    existing owner and repair-progress gate; they do not require renewed
    stakeholder approval when they preserve the accepted contract. A repair or
