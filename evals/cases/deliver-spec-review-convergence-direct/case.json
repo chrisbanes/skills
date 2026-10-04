@@ -1,0 +1,52 @@
+{
+  "id": "deliver-spec-review-convergence-direct",
+  "title": "Consolidate repeated external findings without resetting delivery",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-review-convergence-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "convergence",
+      "text": "Recognizes the two completed qualifying rounds and requests one fresh independent read-only audit of source retention, redaction, API projection and their consumers before another publication; no repeated audit for the same evidence."
+    },
+    {
+      "id": "classification",
+      "text": "Classifies original source clipping as missed behavior, redaction/API projection as related boundary failures, and newly rejected exactly-at-limit sources as a repair regression using the supplied diffs; does not assume every defect is a regression."
+    },
+    {
+      "id": "batch",
+      "text": "Returns one consolidated evidence-backed repair batch to W; repairs and tests the relevant raw/sanitized/projection boundaries before publication without a generic framework."
+    },
+    {
+      "id": "coverage",
+      "text": "Does not credit a bare ship or 859 passing tests as correctness coverage; requires important production paths and boundary cases examined, evidence and material uncertainty in the existing record."
+    },
+    {
+      "id": "preservation",
+      "text": "Keeps W, base/candidate, existing authority, one remaining attempt, capacity and required CI/final independent review; audit grants no extra repair or publication authority."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

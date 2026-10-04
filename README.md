@@ -58,7 +58,14 @@ install them, and the workflows never install them implicitly.
 
 Delivery and parallel implementation use one fresh independent read-only reviewer
 against the approved source and repository standards; no external review skill
-or issue-tracker setup is required.
+or issue-tracker setup is required. Reviews include the production paths and
+boundary cases examined and material uncertainty. The authoritative
+[behavioral review and repair procedure](references/behavioral-review.md) covers
+related boundary repairs, repeated external findings and browser diagnostics.
+`npm run references:sync` supplies identical local copies to its consumers;
+edit the authoritative source, not the copies. The same mechanism supplies
+[to-plan's boundary-validation rule](skills/to-plan/references/boundary-validation.md)
+to implementation consumers.
 
 Review mode in `implement-with-subagents`, and review or setup mode in
 `run-github-project`, do not require these external skills. See the
@@ -118,7 +125,7 @@ for its lane-specific fallback and blocking behavior.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, reconcile changelogs and Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; the implementation owner diagnoses and fixes failures, with optional read-only investigation helpers.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — coordinate one or more worker-owned implementation tasks through dependency-aware dispatch, task acceptance, integration, and same-owner repair; dispatch independent ready work concurrently within actual capacity, reuse sequential worker slots, and support read-only orchestration review.
-- [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans and authenticated integration amendments with authenticated publication and explicit consumer handoffs.
+- [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans with observable slices and consequential boundary validation before dependent work, plus authenticated integration amendments and explicit consumer handoffs; decide separate PRs by coherent deliverable boundaries.
 - [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with current-column authorization, human-only Backlog promotion, and deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, preflight offline live-qualification harness evidence, preserve asynchronous or persistent failures in durable checkpoints, prioritize active delivery through safe planner checkpoints, and record ticket-local pauses while independent work continues.
 - [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and repair CI failures with affected checks and required integrated-candidate validation.
 

@@ -1,0 +1,48 @@
+{
+  "id": "run-github-project-review-convergence-negative",
+  "title": "Retain valid coverage and do not count nonqualifying feedback",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-review-convergence-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "nonqualifying",
+      "text": "Does not trigger convergence for A: nits/repeated known finding are not a second substantive round and CI is separate; preserves applicable required-CI diagnosis/repair gates."
+    },
+    {
+      "id": "no-repeat",
+      "text": "Retains B's valid evidence and completed audit without repeating on resume or unchanged evidence; assesses new qualifying rounds only when they exist."
+    },
+    {
+      "id": "preservation",
+      "text": "Uses existing delivery record, W, grants, consumed budgets and capacity; no new receipt, extra agents, reset or weakened final review/CI/authority."
+    },
+    {
+      "id": "scope",
+      "text": "Does not introduce blanket related-case checklists, speculative abstractions or automatic separate PRs; publication remains conditional on controller's current exact-head gates."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

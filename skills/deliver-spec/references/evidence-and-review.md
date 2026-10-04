@@ -6,11 +6,10 @@ the selected mode retains its approval, authority and finish gates.
 
 ## Implementation and validation
 
-1. Before duplicating behavior implicated by concrete repeated findings, read
-   those findings and inspect existing helpers and their consumers. Reuse the
-   smallest matching behavior only where semantics align. Keep command-specific
-   identity, privacy, persistence and recovery requirements explicit; a repeated
-   shape does not justify a speculative framework or hiding consumer differences.
+1. Apply [Behavioral review and repair](behavioral-review.md) for demonstrated
+   boundary failures, review coverage accounts, external-review convergence and
+   browser failure diagnostics. It owns those rules; keep their evidence in the
+   delivery record below.
 2. Run affected checks while developing a slice. Run every required full check
    on meaningful integrated delivery candidates, including mandatory repository
    and provider validation. Repeat checks only when changes invalidate evidence,
@@ -134,14 +133,9 @@ the selected mode retains its approval, authority and finish gates.
    - Every prior finding with a stable ID, location, repair commit/diff or
      evidence-backed disposition, verification, and rationale for affected
      interactions. Keep new interaction findings separate from repaired ones.
-2. Request full-candidate coverage for the first review. For follow-ups supply
-   the repair range and its interactions with the previously reviewed effective
-   diff, requiring a result for every affected contract and a disposition for
-   every finding. Widen to the full candidate when requirements changed,
-   evidence is invalid or the affected scope cannot be bounded, or the selected
-   provider requires it. A repair comparison alone cannot establish coverage
-   of interactions it excludes. Retain applicable prior coverage rather than
-   rerunning already-covered contracts without an invalidation reason.
+2. Apply [Behavioral review and repair](behavioral-review.md) for first-review
+   and repair scope, coverage accounts and convergence. Retain evidence under
+   the implementation and validation procedure above.
 3. Read each explicitly invoked review skill's actual contract before assigning
    it. Honor its scope, roles, capacity, prerequisites and output requirements:
    - `code-review` currently requires a resolving nonempty three-dot diff from
@@ -159,8 +153,9 @@ the selected mode retains its approval, authority and finish gates.
    coverage. Do not suppress mandated work, credit an omitted contract or
    silently substitute another route. The bundled independent reviewer needs
    no external skill or tracker setup where it is the authorised route.
-4. Return findings to the implementation owner for repair or an evidence-based
-   disposition. The bundled independent route requires a `ship`, `fix-first`
+4. Require the [behavioral coverage account](behavioral-review.md) alongside
+   each verdict. Return findings to the implementation owner for repair or an
+   evidence-based disposition. The bundled independent route requires a `ship`, `fix-first`
    or `rethink` verdict with separate results for the required contracts. Keep
    explicitly invoked providers' required output intact and record the delivery
    gate decision separately. After repairs, renew affected validation

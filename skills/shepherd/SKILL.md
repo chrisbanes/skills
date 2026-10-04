@@ -23,6 +23,21 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 2. Establish targets and a handled-ID snapshot. Every external comment, review,
    or thread absent from that snapshot is new, including pre-session feedback.
    After each poll record feedback IDs, CI state, and this controller's comments.
+   Resolve reporting and repair ownership per target. Reuse a supplied delivery
+   record and retained implementation owner. For a standalone PR without a
+   delivery record, use its existing PR/reporting context and shepherd snapshot;
+   hydrate source scope, base/head, prior verdicts, findings and dispositions
+   from verified PR and repository evidence, marking missing evidence unknown.
+   When no retained workflow owner exists, the authorized controller may own
+   in-scope repairs after verifying the target checkout/head and absence of a
+   competing writer; record that fallback before code writes or an implementation
+   repair handoff. A read-only audit may inspect the verified frozen candidate
+   while ownership or writer state is unresolved; report those gaps as material
+   uncertainty, without granting write authority or clearing publication gates.
+   Do not infer an owner handle from commit authorship. Preserve recorded owners;
+   an unavailable owner, uncertain existing claim or unknown writer state holds
+   code writes until reconciled, with writers quiescent before any explicit
+   reassignment. This fallback supplies neither missing scope nor extra grants.
 3. Before repeated polling, use one lowest-cost capable read-only evidence
    helper when available. Select and brief it using the shared
    [selection and handoff reference](references/subagent-selection.md)
@@ -36,6 +51,10 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    update.
 5. Triage new evidence before remote mutation. Fix clear requests and narrow
    formatting, lint, compile, or test failures; answer clear questions in-thread.
+   Apply [Behavioral review and repair](references/behavioral-review.md) for
+   related boundary cases, the two-round convergence audit, review coverage and
+   browser failure evidence. Use the reporting context and repair owner resolved
+   in step 2; the authorized controller retains remote mutations.
    Escalate architectural or contradictory feedback, unfamiliar failures,
    non-obvious fixes, and out-of-scope conflicts. GitLab manual jobs are
    non-blocking unless instructed otherwise.

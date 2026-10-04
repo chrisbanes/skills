@@ -6,6 +6,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COPIES = {
+    "skills/to-plan/references/boundary-validation.md": tuple(
+        f"skills/{skill}/references/boundary-validation.md"
+        for skill in ("deliver-spec", "implement-with-subagents")
+    ),
+    "references/behavioral-review.md": tuple(
+        f"skills/{skill}/references/behavioral-review.md"
+        for skill in (
+            "deliver-spec", "implement-with-subagents", "run-github-project",
+            "shepherd",
+        )
+    ),
     "references/subagent-selection.md": tuple(
         f"skills/{skill}/references/subagent-selection.md"
         for skill in (

@@ -48,7 +48,9 @@
    insufficient capacity. Wait for temporary capacity limits; do not fall back
    to lead implementation when a worker is required. A dependent is ready only
    when every prerequisite is integrated and its affected checks pass at that
-   integrated head. Do not start it from a prerequisite's unintegrated branch.
+   integrated head, including planned boundary evidence under
+   [to-plan's boundary-validation rule](boundary-validation.md).
+   Do not start it from a prerequisite's unintegrated branch.
    Give read-only helpers access to an existing checkout without allocating a
    worker slot, and never switch a checkout used by an active owner or process.
 5. Select an implementation-capable subagent using the runtime mapping below
