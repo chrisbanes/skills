@@ -30,7 +30,7 @@
     },
     {
       "id": "retained-owner-restraint",
-      "text": "Preserves recorded owner D and holds code writes while D is unavailable and writer state unknown; reconciles ownership/quiescence before explicit reassignment and does not infer an owner handle from commit authorship or expand grants."
+      "text": "Allows the fresh independent read-only audit of the verified frozen candidate and scope while D is unavailable and writer state unknown; reports ownership gaps as uncertainty, preserves D and holds code writes pending reconciliation/quiescence and explicit reassignment. Does not infer an owner handle from authorship, grant writes or clear publication gates merely because the audit proceeds."
     },
     {
       "id": "audit",

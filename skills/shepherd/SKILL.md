@@ -30,7 +30,10 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    from verified PR and repository evidence, marking missing evidence unknown.
    When no retained workflow owner exists, the authorized controller may own
    in-scope repairs after verifying the target checkout/head and absence of a
-   competing writer; record that fallback before handing off an audit or repair.
+   competing writer; record that fallback before code writes or an implementation
+   repair handoff. A read-only audit may inspect the verified frozen candidate
+   while ownership or writer state is unresolved; report those gaps as material
+   uncertainty, without granting write authority or clearing publication gates.
    Do not infer an owner handle from commit authorship. Preserve recorded owners;
    an unavailable owner, uncertain existing claim or unknown writer state holds
    code writes until reconciled, with writers quiescent before any explicit

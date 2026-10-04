@@ -19,5 +19,7 @@ Explain the bounded diagnostic evidence and repair/review route. Do not invent
 test results or a data-loss diagnosis.
 
 Contrast this with another PR whose recorded delegated owner D is unavailable
-and whose writer state is unknown. A commit author's name is the only proposed
-replacement-owner evidence. Explain what must remain held without guessing.
+and whose writer state is unknown. Its frozen candidate and accepted scope are
+verified, but a commit author's name is the only proposed replacement-owner
+evidence. Explain which review can proceed and what must remain held without
+guessing.
