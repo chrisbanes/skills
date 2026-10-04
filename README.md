@@ -31,14 +31,15 @@ codex plugin marketplace add chrisbanes/skills --ref main
 codex plugin add chrisbanes-skills@chrisbanes-skills
 ```
 
-Or install as an OpenCode plugin:
+Or install as an OpenCode V2 plugin (2.0.22 or newer):
 
 ```json
 {
-  "plugin": ["chrisbanes-skills@git+https://github.com/chrisbanes/skills.git"]
+  "plugins": ["chrisbanes-skills@git+https://github.com/chrisbanes/skills.git"]
 }
 ```
 
+OpenCode V1 1.18.29 or newer uses `plugin` instead of `plugins`.
 See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### External skill providers
