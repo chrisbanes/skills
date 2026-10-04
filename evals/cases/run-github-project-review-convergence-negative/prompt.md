@@ -1,4 +1,5 @@
-Review these independent snapshots using only supplied facts. No commands,
+Review these delivery execution-acceptance snapshots under the applicable
+skill's `references/review-contracts.md`, using only supplied facts. No commands,
 agents, provider contact or mutations; applicable skill reads are allowed.
 
 A. An external round found one real defect, which W repaired. A later round was
