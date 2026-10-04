@@ -25,6 +25,14 @@
   ],
   "rubric": [
     {
+      "id": "standalone-context",
+      "text": "Uses the standalone PR/reporting context and shepherd snapshot as the record, hydrates round/scope/head evidence from supplied verified sources, and records authorized controller W as the repair fallback only after verified checkout/head and no competing writer; does not require a deliver-spec workflow."
+    },
+    {
+      "id": "retained-owner-restraint",
+      "text": "Preserves recorded owner D and holds code writes while D is unavailable and writer state unknown; reconciles ownership/quiescence before explicit reassignment and does not infer an owner handle from commit authorship or expand grants."
+    },
+    {
       "id": "audit",
       "text": "Triggers one fresh independent audit after R1/R2 covering retained selectors and pagination consumers; returns a consolidated batch to W and preserves gates and authority."
     },
