@@ -53,6 +53,46 @@ def plan_artifact(dependency: str = "none") -> str:
 
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
+    def test_delivery_rules_survive_individual_skill_installation(self):
+        behavioral = "references/behavioral-review.md"
+        boundary = "skills/to-plan/references/boundary-validation.md"
+        cases = {
+            "deliver-spec-review-convergence-direct": (
+                ("references/evidence-and-review.md", "behavioral-review.md", behavioral),
+                ("references/implementation-mode.md", "boundary-validation.md", boundary),
+            ),
+            "shepherd-boundary-diagnostics-novel": (
+                ("SKILL.md", "references/behavioral-review.md", behavioral),
+            ),
+            "run-github-project-review-convergence-negative": (
+                ("references/review-contracts.md", "behavioral-review.md", behavioral),
+            ),
+            "implement-with-subagents-direct": (
+                ("SKILL.md", "references/behavioral-review.md", behavioral),
+                ("references/implementation-mode.md", "boundary-validation.md", boundary),
+            ),
+            "to-plan-boundary-validation-direct": (
+                ("references/workflow.md", "boundary-validation.md", boundary),
+            ),
+        }
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        by_id = {case.id: case for case in report.cases}
+        for case_id, resources in cases.items():
+            case = by_id[case_id]
+            with self.subTest(case=case_id), tempfile.TemporaryDirectory() as directory:
+                workspace = prepare_workspace(
+                    case, REPO_ROOT, Path(directory) / "fixture",
+                    enabled_skills=case.target_skills,
+                )
+                skill = workspace / ".agents/skills" / case.target_skills[0]
+                for caller, reference, canonical in resources:
+                    source = skill / caller
+                    links = re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8"))
+                    self.assertIn(reference, links)
+                    target = source.parent / reference
+                    self.assertFalse(target.is_symlink())
+                    self.assertEqual((REPO_ROOT / canonical).read_bytes(), target.read_bytes())
+
     def test_subagent_handoff_reference_is_self_contained_for_each_consumer(self):
         shared = (REPO_ROOT / "references/subagent-selection.md").read_bytes()
         consumers = {
@@ -161,7 +201,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(50, len(calibration))
+        self.assertEqual(54, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -218,6 +258,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "deliver-spec-live-qualification-sync-persistence-direct",
                 "deliver-spec-github-plan-revision-approval-novel",
                 "run-github-project-live-qualification-preflight-direct",
+                "deliver-spec-review-convergence-direct",
+                "shepherd-boundary-diagnostics-novel",
+                "run-github-project-review-convergence-negative",
+                "to-plan-boundary-validation-direct",
             },
             {case.id for case in calibration},
         )

@@ -54,6 +54,10 @@ replanning on failure; dependent slices must name the proof task ID. Do not add 
 proof when existing evidence settles the assumption, and do not leave unresolved
 design choices as open-ended implementation exploration.
 
+Apply [Boundary validation](boundary-validation.md) when planning consequential
+persistence, privacy or asynchronous behavior. It owns validation timing and
+dependent-work gates; keep the observable slice fields below.
+
 Before slicing, make a brief file-responsibility map from the inspected code:
 record the existing files and symbols that own the behavior, tests, and wiring,
 then group edits into observable increments that can each receive a focused
@@ -68,6 +72,11 @@ rule or belong to the same feature. Combine them only when repository evidence
 shows a concrete dependency that makes an intermediate state untestable or
 unreviewable; name that dependency and the gated work explicitly. A common
 concept or nearby files alone do not establish coupling.
+
+Observable implementation slices do not prescribe separate PRs. Choose separate
+PRs during planning only when each has a coherent deliverable boundary and its
+own acceptance evidence; do not split publication automatically by slice or in
+response to a review count.
 
 Current Todo membership, a decision-complete current task, or a confirmed
 conversation source authorizes the smallest coherent contract-realizing design.

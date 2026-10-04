@@ -40,8 +40,11 @@ investigator in review mode (or an equivalent runtime role) with a
 self-contained brief: approved source, plan, repository standards, fixed base,
 and exact candidate head. Do not inherit the implementation conversation.
 Require findings with evidence and a `ship`, `fix-first`, or `rethink` verdict
-against both requirements and standards. No external review skill or tracker
-setup is required. If independent review cannot run, report the missing
+against both requirements and standards, with the coverage account under
+[Behavioral review and repair](references/behavioral-review.md). Apply that
+reference during implementation for related boundary repairs and browser failure
+diagnostics; PR feedback remains outside this workflow. No external review skill
+or tracker setup is required. If independent review cannot run, report the missing
 capability; never waive final review. Add reviewers only for distinct risks or
 substantial scope that justify separate assignments.
 

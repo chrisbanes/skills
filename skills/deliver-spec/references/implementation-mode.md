@@ -15,7 +15,9 @@
    acyclic graph; reserve `none` for the root marker. Treat legacy plans without
    dependency metadata as sequential. Keep an unsplit request in one item;
    do not manufacture slices or agents. Record shared-file/interface constraints.
-   A dependent starts only after prerequisite integration and affected checks.
+   A dependent starts only after prerequisite integration and affected checks,
+   including the planned boundary evidence under
+   [to-plan's boundary-validation rule](boundary-validation.md).
 4. When delegating, apply [subagent selection](subagent-selection.md) and the
    runtime mapping below. Confirm edit, validation, commit and resumable repair
    capability; retain the owner handle. Fit descendants within actual caller,

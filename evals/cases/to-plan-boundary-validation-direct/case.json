@@ -1,0 +1,52 @@
+{
+  "id": "to-plan-boundary-validation-direct",
+  "title": "Validate consequential boundaries before dependent UI slices",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-boundary-validation-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "earlier-boundaries",
+      "text": "Places meaningful persistence/restart, privacy/sanitized-size and async delayed/failure validation in the observable slices establishing those contracts, before dependent UI relies on them."
+    },
+    {
+      "id": "dependencies",
+      "text": "Requires boundary evidence as explicit UI prerequisites/dependencies; compilation or final-only testing is insufficient, while preserving observable slices and existing settled seams."
+    },
+    {
+      "id": "proportionality",
+      "text": "Reuses applicable trusted evidence and existing tests; no separate speculative proof for settled contracts and no new consequential-boundary gate for the one-string change."
+    },
+    {
+      "id": "publication",
+      "text": "Treats separate PRs as a planning decision requiring coherent deliverable boundaries and acceptance evidence, not automatic splitting by slices or review count."
+    },
+    {
+      "id": "restraint",
+      "text": "Provides a review assessment only and holds missing/failed prerequisite evidence under existing same-owner repair and authority rules."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

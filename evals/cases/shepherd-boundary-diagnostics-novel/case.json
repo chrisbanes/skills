@@ -1,0 +1,52 @@
+{
+  "id": "shepherd-boundary-diagnostics-novel",
+  "title": "Diagnose retained history refresh and repair neighboring cursors",
+  "family": "workflow",
+  "target_skills": [
+    "shepherd"
+  ],
+  "expected_skills": [
+    "shepherd"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "shepherd-boundary-diagnostics-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "audit",
+      "text": "Triggers one fresh independent audit after R1/R2 covering retained selectors and pagination consumers; returns a consolidated batch to W and preserves gates and authority."
+    },
+    {
+      "id": "neighbors",
+      "text": "Checks each stream's cursor/ordering and relevant old-result, zero-captured-items and long-omission cases under the demonstrated rule; does not demand exhaustive unrelated audit."
+    },
+    {
+      "id": "diagnostics",
+      "text": "Distinguishes pending refresh from settled success/failure or unknown; requires separate records, draft, focus and position expected/observed assertions and request/DOM evidence."
+    },
+    {
+      "id": "restraint",
+      "text": "Does not infer data loss, weaken assertions or treat a longer timeout as diagnosis; requires bounded settling evidence, affected checks, required integrated checks/CI and current independent coverage before publication."
+    },
+    {
+      "id": "coverage",
+      "text": "Includes examined production paths and boundary cases plus material uncertainty with verdict in the existing delivery record; reports unavailable evidence honestly."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

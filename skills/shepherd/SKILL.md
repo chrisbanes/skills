@@ -36,6 +36,10 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    update.
 5. Triage new evidence before remote mutation. Fix clear requests and narrow
    formatting, lint, compile, or test failures; answer clear questions in-thread.
+   Apply [Behavioral review and repair](references/behavioral-review.md) for
+   related boundary cases, the two-round convergence audit, review coverage and
+   browser failure evidence. Use the existing delivery record and original
+   implementation owner; the authorized controller retains remote mutations.
    Escalate architectural or contradictory feedback, unfamiliar failures,
    non-obvious fixes, and out-of-scope conflicts. GitLab manual jobs are
    non-blocking unless instructed otherwise.
