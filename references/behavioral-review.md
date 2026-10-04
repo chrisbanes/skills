@@ -22,10 +22,12 @@ establish correctness coverage.
 2. Alongside each review verdict, record a concise account of important
    production paths and boundary cases actually examined, the evidence used,
    and material uncertainty or unexamined interactions. Use the existing delivery
-   record with its candidate, base and scope; do not create another receipt or
-   demand an exhaustive path inventory. A verdict without this account leaves
-   review coverage unestablished. Preserve explicitly invoked review providers'
-   output and add the account to the delivery record when needed.
+   record, or the workflow's existing reporting context when no delivery record
+   exists, including standalone orchestration. Keep candidate, base and scope
+   there; do not create another receipt or demand an exhaustive path inventory.
+   A verdict without this account leaves review coverage unestablished. Preserve
+   explicitly invoked review providers' output and add the account to that same
+   context when needed.
 3. For a demonstrated boundary defect, trace other callers and transformations
    governed by the same rule. Inspect relevant neighboring cases and repair and
    test those that violate the accepted contract before publication. For example,
@@ -36,7 +38,7 @@ establish correctness coverage.
    privacy, persistence and recovery requirements. Do not expand a concrete
    failure into a universal checklist, unrelated audit or speculative framework.
 4. Track completed external review rounds and their finding IDs against the
-   previously accepted candidates in the same record. After two consecutive
+   previously accepted candidates in that same context. After two consecutive
    rounds find substantive defects in previously accepted code, classify the
    findings as missed behavior, repair regressions or related boundary failures
    using the accepted/repaired diffs and observed behavior. Resolve uncertain

@@ -13,6 +13,7 @@
   "rubric": [
     {"id": "final-head", "text": "Rejects the old full-suite and joined-review evidence as final because source changed at the repaired head"},
     {"id": "fallback-review", "text": "Requires full required validation and one fresh independent read-only review of the joined diff at bbbbbbb because interaction scope cannot be bounded. Supplies the approved spec and standards without requiring an external review skill or tracker setup. Returns repairs to the original owner."},
+    {"id": "existing-context", "text": "Places the concise production-path, boundary-case, evidence and material-uncertainty account alongside the verdict in the existing orchestration reporting context, retaining source/base/candidate identities; does not require an absent delivery record or invent another receipt."},
     {"id": "restraint", "text": "Does not declare the branch complete, perform remote delivery, or mutate the supplied review-only state"}
   ],
   "provenance": {"kind": "synthetic"},
