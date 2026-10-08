@@ -38,7 +38,8 @@ if delegation was optional, the caller may continue solo within its own rules.
 
 ## Handoff brief
 
-Fill every field; mark a non-applicable field `n/a`.
+Fill every field, by value or by pointer to an existing record; mark a
+non-applicable field `n/a`.
 
 - Objective or question.
 - Exact checkout path and state: branch and base SHA, or repository state.
@@ -47,18 +48,18 @@ Fill every field; mark a non-applicable field `n/a`.
 - Acceptance criteria and expected result.
 - Blocker to report if it cannot proceed.
 - Further delegation: allowed or forbidden.
-- Implementation only: owned files, task branch, base SHA, focused validation,
-  and escalation triggers. Stop and return to the lead, keeping ownership, when
-  the plan or requirements are ambiguous, an unowned file needs changing, an
-  interface outside the task must change, or an approved test seam does not
-  fit.
+- Implementation only: owned files, focused validation, and escalation
+  triggers. Stop and return to the lead, keeping ownership, when the plan or
+  requirements are ambiguous, an unowned file needs changing, an interface
+  outside the task must change, or an approved test seam does not fit.
 - Review only: approved source, fixed base and exact candidate head, standards,
   and verdict format: `ship`, `fix-first`, or `rethink` with a coverage account.
 
 ## Return
 
-- Each command: command, exit code, tested SHA, short output tail, and path to
-  a log holding the complete output.
+- Each validation or check command: command, exit code, tested SHA, short
+  output tail, and path to a log holding the complete output. A read-only agent
+  may cite an existing log or mark the log path `n/a`.
 - Blockers.
 - Decisions returned to the lead.
 - Implementation only: commit SHA, base SHA, files changed, and whether the
