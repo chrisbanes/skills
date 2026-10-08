@@ -30,9 +30,12 @@
    lead and task repairs with their original owner. If that owner is lost,
    reconcile and quiesce its writers before recording an explicit reassignment.
 5. Have each owner implement, run meaningful affected checks, self-review and
-   commit only owned changes. Record results and evidence pointers once. For
-   delegated work, inspect the complete task diff, commit range, clean state and
-   check evidence before integration; assertions alone are insufficient. Reuse
+   commit only owned changes. Record results and evidence pointers once;
+   delegated owners report in the [subagent selection](subagent-selection.md)
+   return format with each command's exit code, tested SHA, tail and log path.
+   For delegated work, inspect the complete task diff, commit range, clean state
+   and check evidence, including the complete log when acceptance needs it,
+   before integration; assertions alone are insufficient. Reuse
    compatible passing evidence. Return incomplete work to its owner. Solo work
    needs no separate task-acceptance receipt.
 6. Integrate accepted work in dependency order. Record the clean pre-attempt SHA.
@@ -55,15 +58,22 @@
 
 ## Runtime mapping
 
-Select an implementation-capable owner and apply the capability checks above:
+Select an implementation-capable owner and an independent read-only reviewer,
+and apply the capability checks above:
 
-| Runtime | Implementation owner |
-| --- | --- |
-| [Codex](https://learn.chatgpt.com/docs/agent-configuration/subagents) | `worker` |
-| [Claude Code](https://code.claude.com/docs/en/sub-agents) | `general-purpose` |
-| [OpenCode](https://opencode.ai/docs/agents) | `general` subagent; `build` is primary |
-| [Pi](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) | No built-in role; inspect its delegation extension and agent definitions. A bare or non-resumable Pi cannot own an item: stop and report it. |
-| Other runtimes | An exposed implementation-capable subagent that passes the checks |
+| Runtime | Implementation owner | Independent read-only reviewer |
+| --- | --- | --- |
+| [Codex](https://learn.chatgpt.com/docs/agent-configuration/subagents) | `worker` | An exposed read-only-capable subagent that passes the checks |
+| [Claude Code](https://code.claude.com/docs/en/sub-agents) | `general-purpose` | `general-purpose` with a read-only brief; the lead then verifies the reviewer's checkout is unchanged |
+| [OpenCode](https://opencode.ai/docs/agents) | `general` subagent; `build` is primary | An exposed read-only-capable subagent that passes the checks |
+| [Pi](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) | No built-in role; inspect its delegation extension and agent definitions. A bare or non-resumable Pi cannot own an item: stop and report it. | No built-in role; an exposed read-only-capable subagent that passes the checks |
+| Other runtimes | An exposed implementation-capable subagent that passes the checks | An exposed read-only-capable subagent that passes the checks |
+
+For Claude Code worker checkouts, the lead creates each run-owned plain Git
+worktree with `git worktree add -b <task-branch> <path> <integrated-sha>`,
+verifies its branch and SHA, and passes the absolute path in the brief. Never
+use `Agent(isolation: "worktree")`; it bases on the default branch, not the
+integrated `HEAD`.
 
 ## Worker checkout lifecycle
 
