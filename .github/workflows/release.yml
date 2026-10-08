@@ -24,6 +24,8 @@ concurrency:
 
 jobs:
   check:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ steps.changes.outputs.skip }}
