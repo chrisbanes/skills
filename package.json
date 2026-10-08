@@ -1,16 +1,21 @@
 {
   "name": "chrisbanes-skills",
-  "version": "2026.10.2",
+  "version": "2026.10.3",
   "description": "Skills for Kotlin, Android, JVM, and Jetpack Compose development by Chris Banes.",
   "type": "module",
   "main": ".opencode/plugins/chrisbanes-skills.js",
   "repository": "https://github.com/chrisbanes/skills",
   "license": "Apache-2.0",
   "scripts": {
+    "build": "python3 scripts/sync_references.py --check",
+    "references:sync": "python3 scripts/sync_references.py",
     "lint": "remark --frail skills/ README.md evals/README.md",
-    "test": "python3 -m unittest scripts/test_release.py skills/run-github-project/scripts/test_rank_tickets.py skills/gradle-run/scripts/test_gradle_run.py skills/release-kotlin-library/scripts/test_release.py && python3 -m unittest discover -s evals/tests -p 'test_*.py'",
+    "test": "node --test .opencode/tests/*.test.js && python3 -m unittest scripts/test_release.py scripts/test_sync_references.py skills/run-github-project/scripts/test_rank_tickets.py skills/gradle-run/scripts/test_gradle_run.py skills/release-kotlin-library/scripts/test_release.py && python3 -m unittest discover -s evals/tests -p 'test_*.py'",
     "evals:validate": "python3 evals/run.py validate",
     "evals:plan": "python3 evals/run.py plan --model gpt-6-luna --reasoning high --judge-model gpt-6-sol --judge-reasoning high"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1"
   },
   "devDependencies": {
     "remark": "^15.0.1",

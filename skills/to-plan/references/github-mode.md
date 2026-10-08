@@ -24,7 +24,13 @@ Treat acceptance criteria and recorded upstream decisions as authoritative.
 Compatible comments may clarify them. Block on unresolved conflicts between
 authoritative sources.
 
-Find all comments containing either plan marker, including minimized comments:
+Find all full-plan and integration-amendment marker comments, including
+minimized comments. When amendments exist or are requested, apply
+[integration amendments](integration-amendments.md) as well: the full-plan leaf
+alone is not the effective contract. Full replans close the preceding amendment
+epoch with its exact effective tip/digest and retained-work disposition.
+
+The full-plan markers are:
 
 ```html
 <!-- to-plan:implementation-plan:v1 -->
@@ -38,7 +44,8 @@ unminimized leaf. Verify that the active GitHub identity authored every marker
 comment and can create the next revision. A fork, gap, duplicate, missing
 predecessor, foreign marker, or minimized active leaf is a blocker.
 
-When the active plan is already claimed, accept an autonomous replan only from
+For a claimed-plan integration amendment, use the retained-owner/controller
+request checks in that reference. For a full autonomous replan, accept only from
 a runner-owned comment containing:
 
 ```html
@@ -60,8 +67,8 @@ Require all of the following:
 
 - The issue is open and labelled `ready-for-agent`.
 - Every blocker is complete and its required outcome exists in the baseline.
-- No open implementation PR exists, except the exact runner-owned PR allowed by
-  a verified autonomous replan.
+- No open implementation PR exists, except the exact retained PR allowed by
+  a verified autonomous replan or integration amendment request.
 - The issue has explicit, complete acceptance criteria.
 - Every criterion maps to automated or precise manual verification.
 
@@ -84,10 +91,13 @@ Reapply readiness and overlap checks. Retain baseline evidence only while
 rerun checkout identity and affected checks, and update the SHA only after they
 pass.
 
-Refresh incidental metadata without renewed approval. When decisions, slices,
-files, tests, commands, coverage, guardrails, deviations, or review focus
-change, update the draft while preserving compatible user edits. Normal mode
-requires approval again; `--auto` revalidates and continues.
+Refresh incidental metadata and routine equivalent file, fixture or command
+corrections under the existing scope and publication authority; preserve user
+edits and revalidate affected evidence. Require renewed approval only for a
+material change to the accepted outcome, coverage, architecture or authority.
+`--auto` revalidates within its existing grant, never expands it. For delivery
+corrections that need no published decision change, use the shared workflow's
+brief correction record instead of creating a new plan revision.
 
 ## Publish and verify
 
@@ -96,7 +106,9 @@ issue body, labels, assignee, relationships, Project fields, status, or any
 non-plan comment.
 
 Compute a semantic payload digest without the marker, revision metadata, or
-superseded wrapper. If the active leaf already has the same payload and
+superseded wrapper. The complete `Epoch closure` line, including retained-work
+and evidence dispositions, is semantic payload: always include it in the digest,
+never discard it as revision metadata. If the active leaf already has the same payload and
 baseline, perform no write, delete only an exact matching temporary draft after
 verification, and return the leaf as a no-op. Otherwise:
 
@@ -115,6 +127,8 @@ verification, and return the leaf as a no-op. Otherwise:
    presentation methods without invalidating the verified new leaf.
 5. Delete only the exact draft after the active leaf is verified.
 
-Never edit an active semantic payload in place, split one revision across
+An amendment is a separate append-only component of one effective contract,
+not a split full-plan revision. Apply its publication and no-op gates separately.
+Never edit an active semantic payload in place, split one full-plan revision across
 locations, or perform broad `.scratch` cleanup. Preserve the draft whenever
 publication or active-leaf verification fails.

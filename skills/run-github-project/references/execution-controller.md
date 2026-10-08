@@ -14,9 +14,60 @@ before ticket acceptance. Confirm GitHub identity, read/write and
 For `next`/`drain`, establish invocation authority through
 [run authority and ticket pauses](authority-and-pauses.md), checking grants at
 the affected operation. `drain` reads the [drain scheduler](drain-scheduler.md) before
-queue work, then uses its two default in-flight slots and
-agent concurrency (or any positive user limit), and runs occupied slots
-concurrently.
+queue work. Compute its implementation-slot limit and active-agent capacity
+separately under the strictest runtime, repository and invocation limits;
+dispatch all independent work that fits both, with delivery repair first.
+
+## Unattended readiness
+
+Before dispatch, use the complete eligible-column inventory to preflight likely
+runnable tickets and their required qualification. Repeat affected checks when
+their evidence changes; do not deeply hydrate unchanged blocked work.
+For asynchronous or persistent live qualification, carry forward the
+[deliver-spec live qualification and failure recovery procedure](../../deliver-spec/references/qualification-failure.md)
+through preflight and ticket handoff. It applies only when the accepted source
+requires that kind of live work; do not add it to unrelated tickets.
+
+1. Read the accepted source, plan and qualification requirements. For live
+   asynchronous or persistent qualification, record the procedure's finite
+   pass conditions, accepted limitations, required offline harness evidence,
+   live evidence, execution and recovery state, and approved remaining
+   allowance. Record each
+   required operation, external resource, credential/access availability,
+   permission, host capability and bounded execution grant in the existing
+   ticket evidence. Include non-secret evidence references, observation time,
+   remaining grant consumption and the condition that would unblock it.
+2. Verify prerequisites through existing receipts, resource metadata and
+   permitted read-only checks. Never spend a live turn, change fixture visibility,
+   mutate a fixture, expose a credential or execute qualification merely to
+   discover whether permission exists. An unavailable read is unknown evidence.
+3. Report runnable, native-dependency-blocked, authority-blocked and unknown
+   work separately, retaining every known overlapping blocker. Runnable means
+   the next required operation has evidenced prerequisites and authority; it
+   does not mean qualification already passed. A known unavailable resource or
+   host is an execution prerequisite blocker with its exact resume condition;
+   do not misreport it as a native dependency or missing user permission.
+4. Withhold dependent dispatch for absent fixture access, exhausted grants,
+   unknown prerequisites, missing/failed offline harness evidence, or
+   unfulfilled qualification. Keep unclaimed work
+   unassigned. For claimed missing-authority work use the verified
+   [ticket pause](authority-and-pauses.md#pause-one-ticket); preserve other
+   claimed blockers under the existing failure-isolation rules. Retain all
+   native edges so blocked qualification never makes its dependants runnable.
+5. On a live assertion or operation failure, stop affected dispatch, perform
+   bounded outcome and persistence reconciliation, then save the durable
+   execution/recovery checkpoint before safe shutdown or handoff. Preserve
+   unknown outcomes and consumed allowances; do not claim recovery while the
+   prior execution remains unresolved. Continue independent work only when it
+   cannot affect that execution or state.
+6. Continue independent runnable work. Revalidate access, capability, remaining
+   grant and operation-specific authority immediately before the affected
+   operation. Fresh ranker eligibility is necessary but cannot supply readiness,
+   renew a grant, or satisfy a qualification gate.
+
+Keep this inventory in the run checkpoint/frontier. A changed observation
+invalidates only its dependent readiness evidence unless it reveals a global
+access or configuration failure. Do not repeatedly probe unchanged blockers.
 
 ## Remote state and queue
 
@@ -35,6 +86,11 @@ labels/assignees/position/linked PR, recovery markers, and parking signals;
 apply trusted filters plus repository/open/non-draft/status/frontier rules. Never
 use named views implicitly or convert drafts. Preserve invalid claims as blocked
 slots; skip and report invalid unclaimed items.
+
+Use the scheduler's refresh-reason and changed-record evidence in `drain`;
+do not rehydrate an unchanged verified ticket merely because another ticket
+emitted a CI event. Full selection/recovery/finish reads and fresh write
+authority remain mandatory.
 
 Hydrate contenders with bounded batches: blockers/descendants, current Status,
 marker-owned plans/leases, PR identity, Wayfinder parent/type/AFK evidence, and
@@ -61,7 +117,8 @@ competitor.
 
 ## Claim and revalidate
 
-Before claim, verify committed configuration digest and refetch selected issue
+Before claim, verify unattended readiness for the selected operation, committed
+configuration digest and refetch selected issue
 and Project item. Require current Todo or later applicable column membership;
 that column supplies ticket authorization. Never promote or select Backlog,
 and never fetch transition history to prove permission.
@@ -74,7 +131,16 @@ competing PR, then record item, identity, configuration, and every plan
 lease as authority. Ambiguity after In progress is a preserved blocked slot.
 
 Revalidate membership, current status, exclusivity, configuration, label, and
-every lease before every material write, including push, review mutation, or
-merge. Foreign plan edits or unrelated eligibility drift revoke authority;
+every lease before external material writes, including push, review mutation, or
+merge, and on resume or observed authority changes. A verified handoff covers
+in-scope local edits, tests and repairs within the isolated checkout; do not
+require per-file or per-stage permission packets. Preserve concurrent-writer
+ownership and shared-resource locks independently of this authorization. Foreign
+plan edits or unrelated eligibility drift revoke authority;
 runner-owned verified replans enter controlled replanning. Ordinary body and
 non-plan comment edits do not revoke the lease.
+
+For an already committed display-name-only configuration change, apply
+[presentation-only renewal](project-config.md#renew-presentation-only-configuration)
+before using a new digest. Unknown or semantic drift still stops and preserves
+the run; no automatic setup repair is permitted.

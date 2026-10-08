@@ -31,14 +31,15 @@ codex plugin marketplace add chrisbanes/skills --ref main
 codex plugin add chrisbanes-skills@chrisbanes-skills
 ```
 
-Or install as an OpenCode plugin:
+Or install as an OpenCode V2 plugin (2.0.22 or newer):
 
 ```json
 {
-  "plugin": ["chrisbanes-skills@git+https://github.com/chrisbanes/skills.git"]
+  "plugins": ["chrisbanes-skills@git+https://github.com/chrisbanes/skills.git"]
 }
 ```
 
+OpenCode V1 1.18.29 or newer uses `plugin` instead of `plugins`.
 See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
 ### External skill providers
@@ -50,14 +51,21 @@ install them, and the workflows never install them implicitly.
 | Consumer | Requirement | Provider | Source and install |
 |---|---|---|---|
 | `deliver-spec` GitHub readiness | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
-| `deliver-spec` and [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tasks | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
-| [`run-github-project`](skills/run-github-project/SKILL.md) behavioral implementation | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tasks | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
+| [`run-github-project`](skills/run-github-project/SKILL.md) explicit/repository-required test-first work | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | `run-github-project` Todo triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
 | `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-github-project/references/workflow-providers.md) |
 
 Delivery and parallel implementation use one fresh independent read-only reviewer
 against the approved source and repository standards; no external review skill
-or issue-tracker setup is required.
+or issue-tracker setup is required. Reviews include the production paths and
+boundary cases examined and material uncertainty. The authoritative
+[behavioral review and repair procedure](references/behavioral-review.md) covers
+related boundary repairs, repeated external findings and browser diagnostics.
+`npm run references:sync` supplies identical local copies to its consumers;
+edit the authoritative source, not the copies. The same mechanism supplies
+[to-plan's boundary-validation rule](skills/to-plan/references/boundary-validation.md)
+to implementation consumers.
 
 Review mode in `implement-with-subagents`, and review or setup mode in
 `run-github-project`, do not require these external skills. See the
@@ -113,18 +121,25 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
-- [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or a verified Project-controller handoff through planning, direct implementation, independent plan and final-head review, and PR shepherding; delegate implementation only for requested orchestration or useful parallel tasks.
+- [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or verified Project-controller handoff through solo or justified delegated implementation, reusable scope approval and evidence, independent integrated-candidate review and focused repair review, and PR shepherding; validate applicable live-qualification harness paths offline (isolated production stores for persistent paths, fake runtimes for asynchronous paths), then reconcile failures under bounded approved allowances.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, reconcile changelogs and Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; the implementation owner diagnoses and fixes failures, with optional read-only investigation helpers.
-- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — use when orchestration is requested or parallel work is useful; dispatch independent ready work in isolated worktrees, use `tdd` directly at approved behavior seams, accept each task once before integration, and rerun affected checks without a second routine lead sign-off; preserve same-owner repair, final joined review, and read-only review mode while reusing sequential worker slots and accounting for safe retirement or retention.
-- [`to-plan`](skills/to-plan/SKILL.md) — turn one ready GitHub issue or an in-chat task into a repository-grounded, executor-ready recipe with stable task IDs, explicit acyclic dependencies, safe parallelism notes, concrete tests, and bounded repair rules.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with current-column authorization, human-only Backlog promotion, and deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, and record ticket-local pauses while the board continues.
-- [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and switch CI failures into a full local verification-and-repair cycle.
+- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — coordinate one or more worker-owned implementation tasks through dependency-aware dispatch, task acceptance, integration, and same-owner repair; dispatch independent ready work concurrently within actual capacity, reuse sequential worker slots, and support read-only orchestration review.
+- [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans with observable slices and consequential boundary validation before dependent work, plus authenticated integration amendments and explicit consumer handoffs; decide separate PRs by coherent deliverable boundaries.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with current-column authorization, human-only Backlog promotion, and deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, grant run-level merging with `drain --auto-merge`, preflight offline live-qualification harness evidence, preserve asynchronous or persistent failures in durable checkpoints, prioritize active delivery through safe planner checkpoints, and record ticket-local pauses while independent work continues.
+- [`shepherd`](skills/shepherd/SKILL.md) — autonomously poll open PRs and MRs, triage review comments, and repair CI failures with affected checks and required integrated-candidate validation.
 
 Workflows that delegate agents share the [subagent selection and handoff
 reference](references/subagent-selection.md). Each workflow retains its own
 delegation trigger, authority, and acceptance rules. Each consuming skill also
 contains a copy of the reference for standalone installation.
+`deliver-spec` bundles its own solo-or-delegated implementation procedure;
+`implement-with-subagents` retains its explicitly delegated workflow.
+
+Edit `references/subagent-selection.md`, then run
+`npm run references:sync` and include the updated bundled copies in the change.
+Run `npm run build` to check that all copies are regular files matching their
+sources; it fails on drift without rewriting files.
 
 ### Migration from pre-cluster skills
 

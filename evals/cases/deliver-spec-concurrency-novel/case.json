@@ -1,0 +1,52 @@
+{
+  "id": "deliver-spec-concurrency-novel",
+  "title": "Use one delivery procedure for manual and Project callers",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-concurrency-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "common-procedure",
+      "text": "Uses the same solo-or-delegated implementation procedure in manual and Project delivery; delegation is justified here by independent A/B work rather than universally required."
+    },
+    {
+      "id": "ready-frontier",
+      "text": "May dispatch independent A/B in distinct clean checkouts when overhead is justified, or work solo. Serializes A/C writes, releases C only after A integration and affected checks, and D only after prerequisites pass at the integrated head."
+    },
+    {
+      "id": "project-capacity",
+      "text": "If delegating, honors descendant capacity and across-ticket priority; does not take capacity reserved for another ticket, exceed limits or redesign scheduling. May implement solo or serialize while preserving ownership."
+    },
+    {
+      "id": "useful-overlap",
+      "text": "If workers are chosen, advances independent delivery preparation without touching their owned implementation or duplicating valid checks. Uses supported waits and verifies actual capacity; a solo lead may perform the task implementation."
+    },
+    {
+      "id": "ownership-and-evidence",
+      "text": "Keeps each task and its repairs with its chosen lead or worker owner, coordinates concurrent writers, integrates delegated commits in dependency order, reuses unaffected evidence, requires independent final review and preserves caller-only Project and merge authority."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

@@ -5,8 +5,10 @@ existing binding as a read-only precondition. Require the trusted reference and
 configuration pair to be committed on verified base; validate all required
 fields and IDs against complete live reads, and record the committed digest,
 default branch, and live merge-policy fingerprint. If any value is missing,
-unknown, or drifted, stop and preserve work. Do not enter the setup repair flow
-during execution.
+unknown, or drifted, stop and preserve work. The sole execution exception is
+an already trusted, committed display-name-only change passing
+[presentation-only renewal](project-config.md#renew-presentation-only-configuration).
+Do not enter the setup repair flow or edit a binding during execution.
 
 ## Review
 
@@ -89,7 +91,9 @@ validation. Pause new claims while the edit is pending; existing claims may
 continue on their unchanged binding.
 
 Changing the committed configuration digest while a ticket still holds an old
-lease would invalidate that lease. While old-digest claims exist, prepare the
+lease invalidates it unless execution has verified the narrow
+[presentation-only renewal](project-config.md#renew-presentation-only-configuration).
+Setup does not perform that renewal or assume it will succeed. While old-digest claims exist, prepare the
 edit only in an already separate configuration checkout. Keep the controller
 and ticket checkouts used to resume those claims clean and on the old committed
 binding. If no separate checkout is available, present the proposed patch

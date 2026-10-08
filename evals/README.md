@@ -27,6 +27,21 @@ measures evaluation overhead, not skill efficiency. Wall-clock results are
 environment-sensitive, so compare runs only when model, reasoning, machine,
 corpus, and execution conditions are held constant.
 
+The delivery calibration cases cover validation provenance/invalidation,
+retained integration work, reviewer packets, strict selected-provider
+invocation, and asynchronous or persistent qualification. The qualification
+cases require an offline harness for applicable capabilities before live
+qualification, using isolated production-store instances for persistent paths
+and a fake runtime for asynchronous paths. They cover missing actions, delayed
+or archived execution reconciliation, active execution assertion failures,
+persisted shutdown and recovery outcomes, no duplicate dispatch, bounded
+safe-stop handoff, unchanged allowances through routine repairs, and
+capability-specific restraint for async-only and synchronous-persistent jobs.
+They also distinguish implementation approval from standalone and Project
+GitHub plan publication/readback gates. Their deterministic validator checks
+immutable fixture integrity; semantic rubrics require a separately authorised
+model run and are not proven by corpus validation.
+
 ## Results
 
 **Baseline** is the positive-case pass rate with no skills available, restricted
@@ -193,7 +208,7 @@ The Kotlin/Gradle benchmark contains 22 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-The workflows/writing benchmark contains 35 scored cases: direct, novel, and
+The workflows/writing benchmark contains 38 scored cases: direct, novel, and
 no-change coverage for each of its eight skills, plus additional workflow
 scenarios. The surrounding corpus also contains the two calibration-only
 missing-provider challenges described above.
@@ -205,9 +220,13 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-Twenty-nine additional workflow cases are calibration-only. Select them
+The workflows/writing corpus contains 54 calibration-only cases, including
+the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
+two-round external-review convergence with same-owner consolidated repairs,
+related retention/pagination cases, review coverage and browser diagnostics,
+early consequential boundary validation and restraint on unchanged evidence,
 unresolved decisions, proof-gated report publication, implementation-plan
 specificity for complex work with a one-function counterexample, and verification
 evidence reuse versus missing, stale, failed, or explicitly required fresh
@@ -226,6 +245,14 @@ live subagent execution.
 Three shared-handoff calibrations check bounded implementation ownership,
 capability-based PR evidence helper selection, and restraint for one-off PR
 inspection. They also assess supplied state read-only.
+Three delivery calibrations compare manual and Project delegation, safe fork/join
+execution under caller capacity, temporary capacity versus absent worker
+capability, and the trivial-edit exception versus useful overlap and retained
+repair ownership and the clean-checkout preflight. They assess immutable state
+without live execution.
+Deterministic coverage stages `deliver-spec` alone, follows its local procedure
+and handoff links, and checks that its bundled procedure matches the orchestration
+skill's copy.
 Three Project-delivery calibrations cover automatic `deliver-spec` handoff,
 run-scoped `--auto-merge`, ticket-local authority pauses with continued board
 progress, durable resumption, and restraint for absent grants, read-only modes,
@@ -414,3 +441,10 @@ Append a decision to the run's JSONL audit ledger:
 python3 evals/run.py audit --output-dir .scratch/skill-evals/<run-id> \
   --id <case:arm:repetition> --decision accept --rationale "Evidence checked"
 ```
+
+Three additional `to-plan` calibration cases cover unchanged-scope integration
+amendments, receipt/concurrency-sensitive integration, and no-change/unsafe-route
+restraint. Offline artifact checks validate identity, digest and lineage against
+evaluator-owned anchors; they do not establish live publication, semantic review
+quality or consumer adoption. The case definitions are validated; no new model
+results are reported.

@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { load } from "js-yaml";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const skillsDir = path.resolve(__dirname, "../../skills");
@@ -63,3 +64,56 @@ export const ChrisBanesSkillsPlugin = async ({ client }) => {
     },
   };
 };
+
+const readSkills = () => {
+  const skills = [];
+  const entries = fs.readdirSync(skillsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .sort((left, right) => left.name.localeCompare(right.name));
+
+  for (const entry of entries) {
+    const skillPath = path.join(skillsDir, entry.name, "SKILL.md");
+    if (!fs.existsSync(skillPath)) continue;
+
+    const source = fs.readFileSync(skillPath, "utf8");
+    const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)([\s\S]*)$/);
+    const metadata = match && load(match[1]);
+    if (metadata?.name !== entry.name || typeof metadata?.description !== "string" || !metadata.description.trim()) {
+      throw new Error(`Invalid skill metadata: ${skillPath}`);
+    }
+
+    const autoinvoke = metadata.metadata?.["opencode/autoinvoke"];
+    skills.push({
+      id: entry.name,
+      name: metadata.name,
+      description: metadata.description,
+      autoinvoke: autoinvoke === undefined
+        ? metadata["disable-model-invocation"] !== true
+        : autoinvoke !== false && autoinvoke !== "false",
+      path: skillPath,
+      content: match[2],
+    });
+  }
+  return skills;
+};
+
+const setup = async (ctx) => {
+  if (!fs.existsSync(skillsDir)) {
+    console.warn(`[chrisbanes-skills] Skills directory not found: ${skillsDir}`);
+    return;
+  }
+
+  const skills = readSkills();
+  if (skills.length === 0) return;
+
+  await ctx.skill.transform((editor) => {
+    for (const skill of skills) editor.add(skill);
+  });
+
+  await ctx.session.hook("context", (event) => {
+    if (event.system.some((part) => part?.type === "text" && part.text?.includes(guidanceMarker))) return;
+    event.system.push({ type: "text", text: guidance });
+  });
+};
+
+export default { id: "chrisbanes-skills", server: ChrisBanesSkillsPlugin, setup };

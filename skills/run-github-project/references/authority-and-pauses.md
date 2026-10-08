@@ -31,6 +31,13 @@
    that holds up the board. A flag expresses user intent; it cannot supply
    missing GitHub access or override repository protection.
 
+The controller's [unattended preflight](execution-controller.md#unattended-readiness)
+discovers missing execution and qualification authority before dispatch. A
+preflight observation never grants permission or satisfies qualification. Keep
+unclaimed work unassigned, record its exact blocked operation and resume
+condition here, and continue independent work. Recheck bounded grant consumption
+before each affected operation; a pause or resume never resets it.
+
 ## Pause One Ticket
 
 Use this procedure when a specific operation needs authority absent from the
@@ -108,7 +115,11 @@ resume condition, or preserved evidence changes.
    comment claiming permission do not grant authority.
 4. Revalidate configuration, membership, exclusivity, source and plan leases,
    base, worktree ownership, current PR head, and every applicable check/review
-   before further writes. Follow controlled replanning for contract-preserving
+   before further writes. Use only verified
+   [presentation-only renewal](project-config.md#renew-presentation-only-configuration)
+   for a changed committed display-name digest; it does not satisfy the pause's
+   resume condition or renew invocation grants. Follow controlled replanning for
+   contract-preserving
    drift or a recorded stakeholder decision establishing a new accepted source
    contract; never infer that decision from the merge flag. Never reuse
    earlier-head evidence for changed code.

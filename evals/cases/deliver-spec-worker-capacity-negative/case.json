@@ -1,0 +1,48 @@
+{
+  "id": "deliver-spec-worker-capacity-negative",
+  "title": "Do not bypass required workers when capacity or capability is missing",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-worker-capacity-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "temporary-capacity",
+      "text": "Allows the capable lead to implement the tightly coupled task solo without waiting for worker capacity or over-allocation; preserves independent final review."
+    },
+    {
+      "id": "missing-capability",
+      "text": "Allows solo implementation when implementation subagents are unavailable; does not install providers, expand authority or spawn a capability-only reviewer."
+    },
+    {
+      "id": "single-task",
+      "text": "Keeps the nontrivial unsplit task as one coherent work item and reuses the checkout and approved scope without per-stage permission packets."
+    },
+    {
+      "id": "restraint",
+      "text": "Starts no worker or implementation and makes no commands or mutations during this supplied-state assessment; final independent review remains required."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

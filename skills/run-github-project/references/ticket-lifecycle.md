@@ -52,12 +52,31 @@ instructions and own
 worktree/branch/PR only; never controller mutations; treat plan as approved
 outcome, make evidence-backed in-scope adjustments under the
 [replan packet contract](todo-lane.md#replan-packet-contract), and return a
-packet only when that contract requires it. For every ordinary implementation
+packet only when that contract requires it. For a supported routine integration
+amendment, use the controller's
+[effective-contract gate](todo-lane.md#consume-a-verified-integration-amendment)
+and retain this delivery owner and slot without a Todo/Ready reset. Pass the
+verified source/plan/amendment lineage, retained starting candidate and affected
+evidence to the delivery owner; implementation and evidence renewal stay there.
+For every ordinary implementation
 ticket, invoke `deliver-spec` with this verified packet under its
 [Project handoff procedure](../../deliver-spec/references/project-handoff.md).
+When the accepted source requires asynchronous or persistent live
+qualification, include the finite qualification contract, offline harness
+result, exact execution and recovery checkpoint, remaining approved allowance,
+and any unresolved outcome in that packet; follow the [shared qualification failure
+procedure](../../deliver-spec/references/qualification-failure.md). Preserve
+unknown execution state and stop only affected dependent dispatch while
+independent tickets continue.
 Keep the persistent ticket context as delivery lead and integration owner.
-Missing required capability blocks only that ticket. The ticket delivery lead
-implements directly by default; child implementation owners are optional.
+`deliver-spec` owns solo or delegated implementation and integration;
+preserve its same-owner repair rule and fit all descendants within the
+controller's actual spare capacity. Return observed implementation, repair,
+review, and CI phase boundaries, plus capacity or resource waits, with the
+existing handoff evidence so the controller can persist
+[timings](drain-scheduler.md#phase-timing-and-stalls) across compaction. Retain
+interval identities on resume rather than restarting elapsed counters. Missing
+required capability blocks only that ticket.
 Wayfinder, triage, and epic lanes keep their own procedures.
 
 ### Repair progress gate
@@ -110,7 +129,7 @@ Remote Waiting and terminal-CI parking,
 next shepherds directly through `deliver-spec`'s Project mode. For feedback,
 invoke `shepherd` for triage and PR actions. Keep code repairs with the ticket
 owner or original delegated implementation owners, integrating delegated commits
-in the same ticket worktree. Reapply TDD for behavior and repeat affected
+in the same ticket worktree. Apply owner-driven behavioral testing and repeat affected
 validation and review against the new final HEAD, reply inline where possible,
 and resolve only after reply
 and required fix. Address every comment unless explicitly

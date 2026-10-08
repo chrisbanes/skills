@@ -7,6 +7,8 @@ disable-model-invocation: true
 
 # Run GitHub Project
 
+## Core principle
+
 Use `Backlog` → `Todo` → `Ready to implement` → `In progress` → `Done` as
 the default board lanes. `Todo` queues planning. Resolve lane names in this
 procedure and its references through the trusted binding's verified names and
@@ -17,6 +19,10 @@ claim, plan, triage, close epics, resume cleanup, or promote its items. Only
 humans move items out of Backlog. Continue automatic work only in Todo and
 later applicable columns, subject to ownership, dependencies, plan integrity,
 and the current run's operation-specific grants.
+
+A verified ticket handoff covers in-scope local implementation, tests and repairs.
+The ticket lead may work solo or delegate when justified; retain one independent
+integrated-candidate review and reuse valid evidence under `deliver-spec`.
 
 The Project is the live control plane. Apply these invariants throughout:
 
@@ -35,6 +41,11 @@ Preserve verified plan state through contract-preserving replans, return true
 human work to a decision pause, and in `drain` pair occupied slots with warm worktrees
 and persistent ticket agents. Park verified authority pauses and qualifying
 terminal required-CI claims outside capacity before refreshing the control plane.
+
+Before dispatch, apply the execution controller's
+[unattended readiness](references/execution-controller.md#unattended-readiness)
+pass. Preserve required qualification and bounded grants while independent
+runnable work continues.
 
 ## Select the mode
 
@@ -80,4 +91,10 @@ capacity, configuration digest, live-query and authority evidence, routing
 ledger, frontiers, parked/triage/reconciliation outcomes, and per-ticket
 selection, lease/plan, branch/commit/PR, verification/review, reconciled
 mutation/merge, and preserved or cleaned state available in a concise appendix
-when needed to audit a decision or resume work.
+when needed to audit a decision or resume work. Include changed unattended
+readiness blockers, complete-refresh/invalidation reasons, and observed
+planning/implementation/repair/review/CI intervals and capacity/resource waits
+under the [timing procedure](references/drain-scheduler.md#phase-timing-and-stalls).
+Distinguish overlapping phase durations, total wall time and unknown timing;
+link repeated-cycle diagnosis and the bounded next action without claiming
+unmeasured savings.

@@ -1,0 +1,21 @@
+{
+  "id": "deliver-spec-live-qualification-material-decision-novel",
+  "title": "Return a changed live allowance and acceptance condition for decision",
+  "family": "workflow",
+  "target_skills": ["deliver-spec", "run-github-project"],
+  "expected_skills": ["deliver-spec", "run-github-project"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-live-qualification-material-decision-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "materiality", "text": "Recognizes that raising the approved live-attempt cap and changing the required persistence outcome alter the approved contract and cannot be treated as a routine repair"},
+    {"id": "decision", "text": "Stops the affected qualification and dependent dispatch, then returns one consolidated decision packet to the stakeholder or Project controller with changed requirement/acceptance, current evidence, consumed allowance and exact proposed delta"},
+    {"id": "preservation", "text": "Preserves current owner, claim, work, execution/recovery checkpoint, existing acceptance and repair budgets while awaiting a recorded decision; does not silently spend extra attempts or implement the new contract"},
+    {"id": "authority", "text": "Does not independently change Project state or claim that the approved plan or skill text itself enforces this boundary"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

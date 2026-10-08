@@ -1,0 +1,64 @@
+{
+  "id": "deliver-spec-integration-novel",
+  "title": "Resume a retained export candidate through a verified amendment",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-integration-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "capability-and-trust",
+      "text": "Consumes the supported planner-owned effective contract only after fresh source/chain/trusted-readback/review/approval and retained-candidate checks; does not define or publish a competing amendment format"
+    },
+    {
+      "id": "continuity",
+      "text": "Preserves O1, W1, branch/PR 42, completed increments, dirty edit and two consumed attempts; permits only authorised integration from verified C1 while the resulting SHA is pending, never readiness on a pending result"
+    },
+    {
+      "id": "applicability",
+      "text": "Invalidates export/validator/privacy/inventory evidence for D2/R2 and changed fixture/filters, renews uncertain impact and all mandatory integrated checks; retains only demonstrably unaffected documentation evidence with original provenance and compatibility rationale"
+    },
+    {
+      "id": "review-handoff",
+      "text": "Carries original requirements, effective contract, old/new base and candidate identities, validation provenance, F7 repair/disposition and prior coverage into review; covers integration range and interactions under each affected contract and widens when unbounded"
+    },
+    {
+      "id": "result-binding",
+      "text": "Binds actual integration result commit/tree and base plus renewed checks/review to A1 and the effective contract, distinguishing prior from outstanding coverage in the controller handoff"
+    },
+    {
+      "id": "controller-authority",
+      "text": "Leaves claim/lease revalidation and scheduling to the controller, preserves native blockers/qualification/bounded grants, and neither restarts the lifecycle gratuitously nor expands authority"
+    },
+    {
+      "id": "stale-and-unsupported",
+      "text": "Stops dependent work and preserves artifacts on unexplained C9 pending reconciliation; for an unsupported planner retains the existing reviewed full-replan path or reports an amendment-only request blocked without inventing support"
+    },
+    {
+      "id": "restraint",
+      "text": "Makes no mutation, execution claim, ready/merge claim or blanket retry in this analysis-only state"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

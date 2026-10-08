@@ -94,6 +94,9 @@ jobs:
 
           python3 scripts/release.py validate-manifests "$VERSION"
 
+      - name: Check bundled references
+        run: npm run build
+
       - name: Lint skills
         run: npm run lint
 

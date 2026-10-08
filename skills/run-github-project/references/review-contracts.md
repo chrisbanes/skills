@@ -7,15 +7,10 @@ reuse current coverage instead of launching another review. Reviewers report
 findings; the implementation owner applies repairs. Use extra reviewers only
 for distinct risks, substantial scope, or an explicitly requested review skill.
 
-Review every contract once against the frozen candidate's full verified-base-to-
-`HEAD` diff and uncommitted changes. After a repair changes the reviewed
-candidate, whether committed or uncommitted, retain only review evidence that
-still applies. Review the changed range and its interaction
-with the previously reviewed effective diff for each affected contract; repeat
-full verification and review when prior evidence is invalid or that scope
-cannot be bounded. Record the reviewed heads, affected range, and disposition
-so the combined evidence covers the exact final `HEAD` and clean worktree
-before every push.
+Apply [Behavioral review and repair](behavioral-review.md) for candidate scope,
+affected repair reviews, evidence reuse, coverage accounts, related boundary
+repairs, external-review convergence and browser diagnostics.
+Keep the controller's existing owner, leases, grants, capacity and repair gates.
 
 ## Correctness And Standards
 

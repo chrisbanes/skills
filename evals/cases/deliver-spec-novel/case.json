@@ -2,19 +2,50 @@
   "id": "deliver-spec-novel",
   "title": "Resume a local-spec PR with a pending required check",
   "family": "workflow",
-  "target_skills": ["deliver-spec"],
-  "expected_skills": ["deliver-spec"],
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow",
   "forbid_all_commands": true,
   "allowed_write_paths": [],
-  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-novel"], "timeout_seconds": 30}],
-  "rubric": [
-    {"id": "local-source", "text": "Uses conversation-mode to-plan for the approved local source, reviews the resulting plan independently, and does not invent GitHub issue or ticket closing links"},
-    {"id": "resume", "text": "Reconciles the existing draft PR and exact head before continuing; does not create a duplicate PR or assume prior approval or gate state remains current"},
-    {"id": "review", "text": "Obtains one fresh independent read-only review against the approved source, repository standards, and exact current PR head without requiring external code-review or issue-tracker setup"},
-    {"id": "pending", "text": "After about 30 minutes with a required check still pending, hands back the PR head and exact pending gate rather than reporting ready or merged"}
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-novel"
+      ],
+      "timeout_seconds": 30
+    }
   ],
-  "provenance": {"kind": "synthetic"}
+  "rubric": [
+    {
+      "id": "local-source",
+      "text": "Uses conversation-mode to-plan for the approved local source; does not mandate early independent plan review without a concrete risk or invent GitHub issue links."
+    },
+    {
+      "id": "resume",
+      "text": "Reconciles the existing draft PR and exact head before continuing; does not create a duplicate PR or assume prior approval or gate state remains current"
+    },
+    {
+      "id": "review",
+      "text": "Obtains one fresh independent read-only review against the approved source, repository standards, and exact current PR head without requiring external code-review or issue-tracker setup"
+    },
+    {
+      "id": "pending",
+      "text": "After about 30 minutes with a required check still pending, hands back the PR head and exact pending gate rather than reporting ready or merged"
+    },
+    {
+      "id": "experiment-boundary",
+      "text": "Allows independent minimal harness work during corpus review, requires label review/freeze before observing study outputs, retains private data and spend boundaries and required results table, and rejects unneeded generic replay infrastructure."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
 }

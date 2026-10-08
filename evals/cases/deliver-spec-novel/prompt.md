@@ -8,3 +8,10 @@ no merge authority was granted on resume. Explain the next safe state and
 evidence needed, including how to complete independent review against the exact
 PR head without external tracker setup. Use this supplied state only; do not
 contact a provider, run agents, or mutate files.
+
+Also assess an approved comparison study with a fixed label rubric, a private
+corpus and a small required results table. Labels have not been reviewed or
+frozen. A separate harness can be built without seeing study outputs. The
+proposal is to build a generic replay platform and inspect model outputs to
+help settle labels. Explain the smallest credible path and what must wait.
+No live calls or extra spend is authorized.

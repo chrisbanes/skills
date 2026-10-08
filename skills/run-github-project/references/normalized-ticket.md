@@ -38,13 +38,22 @@ configuration; otherwise omit all five.
 Use configured Status and Priority display names, not option IDs; use IDs only
 for Project mutations. Preserve GitHub logins, rank an unset Priority last, and
 reject non-finite Project positions. Run `--help` if the installed script's
-interface is uncertain rather than guessing an option.
+interface is uncertain rather than guessing an option. `--max-claims` accepts
+any positive integer; pass the controller's effective implementation-slot
+limit. Agent capacity is a separate dispatch constraint. Blocked implementation
+claims still count toward this limit; planner/handoff claims do not.
 
 Provide every field below to `scripts/rank_tickets.py` from fresh, completely
 paginated GitHub and Project reads. Before dispatch ranking, the controller
 recovers [authority pauses](authority-and-pauses.md#recover-and-resume) and
 retains active verified pauses in its separate frontier, outside the ranker's
-active claims/candidates, as for parked CI claims. Keep every paused issue in
+active claims/candidates, as for parked CI claims. Apply the controller's
+[readiness preflight](execution-controller.md#unattended-readiness) before
+dispatch; the ranker does not inspect external access, host capabilities,
+qualification receipts or execution grants. Keep those observations in existing
+controller records, not invented CLI fields. Preserve unknown or unavailable
+prerequisites as dispatch blockers even when the ranker returns a candidate.
+Keep every paused issue in
 the complete dependency graph used to hydrate blockers and descendants; never
 erase a blocker to make a dependent runnable. Do not invent an authority flag
 or pause field for this ranker CLI. Use this shape for execution contenders:
@@ -155,12 +164,53 @@ exact recorded Project item node ID.
 The comment body retains the full planned-mutation list; the normalized form
 contains the identifiers and digests the ranker validates. The marker must be
 runner-authored, match the child Project item and direct map parent, match the
-`--configuration-digest` passed for this invocation, and remain assigned only
-to that runner. Such a claim returns
+`--configuration-digest` passed for this invocation (or carry the exact verified
+renewal below), and remain assigned only to that runner. Such a claim returns
 `resume-wayfinder-reconciliation` before new Wayfinder work.
 Use `resolved` only for a decision on the route and `out-of-scope` only for a
 scope disposition. The recorded plan must place their linked gists in
 `Decisions so far` and `Out of scope`, respectively.
+
+### Wayfinder Configuration Renewal
+
+Only after the controller verifies
+[presentation-only renewal](project-config.md#renew-presentation-only-configuration),
+include these optional fields inside `wayfinderReconciliation`:
+
+```json
+{
+  "payloadDigest": "sha256:original-marker-payload",
+  "configurationRenewal": {
+    "commentId": "IC_renewal",
+    "permalink": "https://github.com/owner/repository/issues/52#issuecomment-3",
+    "author": "octocat",
+    "markerCommentId": "IC_reconciliation",
+    "markerPermalink": "https://github.com/owner/repository/issues/52#issuecomment-2",
+    "markerPayloadDigest": "sha256:original-marker-payload",
+    "originalConfigurationDigest": "sha256:configuration",
+    "configurationDigest": "sha256:renewed-configuration"
+  }
+}
+```
+
+Keep the marker's original `configurationDigest` unchanged. Compute
+`payloadDigest` from its freshly read semantic payload, excluding only a
+presentation wrapper; retain every identity, configuration value and planned
+mutation. The normalized renewal binds that payload, comment ID and permalink
+to its original digest and the current CLI configuration digest. Require all
+fields nonempty and its author to be the authenticated runner. A supplied
+malformed, foreign, stale or mismatched renewal blocks recovery even when the
+marker already has the current digest; omit renewal entirely when unnecessary.
+Without renewal the original exact-digest rule is unchanged.
+
+The controller must verify the durable record and full unforked renewal lineage,
+committed semantic equivalence and live authority before normalization. For
+repeated renames, supply the latest verified original-marker-to-current binding
+only after verifying every intervening renewal and predecessor. The ranker
+checks normalized identity consistency; it does not authenticate comments,
+compare configuration semantics or grant access.
+
+## Other Ticket Shapes And Plan State
 
 Use the same canonical shape for Todo triage contenders, with `replanRequest`
 set to `null` and `implementationPlans` empty when absent. Their
@@ -236,6 +286,17 @@ permalink and payload digest invalidates that predecessor in every execution
 column until a later revision links the report. Todo may plan its replacement;
 Ready and In-progress work remain blocked. For compatibility, the ranker also accepts the former singular
 `implementationPlan` input as one v1 root.
+
+An integration amendment is not a synthetic implementation-plan revision or
+ranker input field. Keep the original marked plan in `implementationPlans`;
+the controller separately enforces the
+[effective-contract gate](todo-lane.md#consume-a-verified-integration-amendment)
+before dispatch, on recovery, observed authority changes and before external
+material writes. The verified handoff covers in-scope local edits and tests.
+Persist its verified lineage,
+base/candidate identities and delivery evidence alongside the authority lease.
+Unverified or unsupported amendments cannot make an otherwise blocked plan
+usable, and a ranker selection cannot validate an amendment.
 
 For an automatic requeue, normalize the verified report comment as:
 

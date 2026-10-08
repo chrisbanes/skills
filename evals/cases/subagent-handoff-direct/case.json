@@ -41,6 +41,10 @@
     {
       "id": "no-side-effects",
       "text": "Performs read-only review without dispatch or mutation."
+    },
+    {
+      "id": "scoped-model-selection",
+      "text": "Classifies settled T1 independently of the parent ticket, lead model and worker role; applies the supplied policy to select Luna/high after scoping, retains the lead tier and same-owner repairs, and returns new architectural or correctness decisions to the lead."
     }
   ],
   "provenance": {

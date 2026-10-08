@@ -143,7 +143,7 @@ def parse_args() -> argparse.Namespace:
         "--max-claims",
         type=int,
         default=1,
-        help="Maximum current-user claims allowed in this run, from 1 to 3.",
+        help="Positive implementation-claim limit established by the controller.",
     )
     return parser.parse_args()
 
@@ -993,7 +993,43 @@ def parse_wayfinder_reconciliation(
         raise InputError(
             f"ticket {number}: Wayfinder reconciliation Project item changed",
         )
-    if result["configurationDigest"] != configuration_digest:
+    if "configurationRenewal" in value:
+        # The controller verifies committed equivalence and publication first;
+        # this boundary only validates the normalized evidence's exact binding.
+        raw_renewal = value["configurationRenewal"]
+        if not isinstance(raw_renewal, dict):
+            raise InputError(
+                f"ticket {number}: configurationRenewal must be an object",
+            )
+        renewal = {
+            field: nonempty_string(
+                raw_renewal.get(field), f"configurationRenewal.{field}", number,
+            )
+            for field in (
+                "commentId", "permalink", "author", "markerCommentId",
+                "markerPermalink", "markerPayloadDigest",
+                "originalConfigurationDigest", "configurationDigest",
+            )
+        }
+        payload_digest = nonempty_string(
+            value.get("payloadDigest"), "wayfinderReconciliation.payloadDigest", number,
+        )
+        expected = {
+            "author": current_user,
+            "markerCommentId": result["commentId"],
+            "markerPermalink": result["permalink"],
+            "markerPayloadDigest": payload_digest,
+            "originalConfigurationDigest": result["configurationDigest"],
+            "configurationDigest": configuration_digest,
+        }
+        for field, expected_value in expected.items():
+            if renewal[field] != expected_value:
+                raise InputError(
+                    f"ticket {number}: configurationRenewal.{field} does not match",
+                )
+        result["payloadDigest"] = payload_digest
+        result["configurationRenewal"] = renewal
+    elif result["configurationDigest"] != configuration_digest:
         raise InputError(
             f"ticket {number}: Wayfinder reconciliation configuration changed",
         )
@@ -1193,8 +1229,8 @@ def main() -> int:
                 raise InputError(
                     "an explicit Wayfinder ticket requires Wayfinder configuration",
                 )
-        if not 1 <= args.max_claims <= 3:
-            raise InputError("max claims must be between 1 and 3")
+        if args.max_claims < 1:
+            raise InputError("max claims must be a positive integer")
 
         seen_numbers: set[int] = set()
         execution_analyses: list[dict[str, Any]] = []

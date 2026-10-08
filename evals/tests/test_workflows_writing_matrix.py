@@ -53,9 +53,50 @@ def plan_artifact(dependency: str = "none") -> str:
 
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
+    def test_delivery_rules_survive_individual_skill_installation(self):
+        behavioral = "references/behavioral-review.md"
+        boundary = "skills/to-plan/references/boundary-validation.md"
+        cases = {
+            "deliver-spec-review-convergence-direct": (
+                ("references/evidence-and-review.md", "behavioral-review.md", behavioral),
+                ("references/implementation-mode.md", "boundary-validation.md", boundary),
+            ),
+            "shepherd-boundary-diagnostics-novel": (
+                ("SKILL.md", "references/behavioral-review.md", behavioral),
+            ),
+            "run-github-project-review-convergence-negative": (
+                ("references/review-contracts.md", "behavioral-review.md", behavioral),
+            ),
+            "implement-with-subagents-direct": (
+                ("SKILL.md", "references/behavioral-review.md", behavioral),
+                ("references/implementation-mode.md", "boundary-validation.md", boundary),
+            ),
+            "to-plan-boundary-validation-direct": (
+                ("references/workflow.md", "boundary-validation.md", boundary),
+            ),
+        }
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        by_id = {case.id: case for case in report.cases}
+        for case_id, resources in cases.items():
+            case = by_id[case_id]
+            with self.subTest(case=case_id), tempfile.TemporaryDirectory() as directory:
+                workspace = prepare_workspace(
+                    case, REPO_ROOT, Path(directory) / "fixture",
+                    enabled_skills=case.target_skills,
+                )
+                skill = workspace / ".agents/skills" / case.target_skills[0]
+                for caller, reference, canonical in resources:
+                    source = skill / caller
+                    links = re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8"))
+                    self.assertIn(reference, links)
+                    target = source.parent / reference
+                    self.assertFalse(target.is_symlink())
+                    self.assertEqual((REPO_ROOT / canonical).read_bytes(), target.read_bytes())
+
     def test_subagent_handoff_reference_is_self_contained_for_each_consumer(self):
         shared = (REPO_ROOT / "references/subagent-selection.md").read_bytes()
         consumers = {
+            "deliver-spec": "references/implementation-mode.md",
             "implement-with-subagents": "references/implementation-mode.md",
             "run-github-project": "references/ticket-lifecycle.md",
             "gradle-run": "SKILL.md",
@@ -71,6 +112,39 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     "subagent-selection.md",
                     (directory / caller).read_text(encoding="utf-8"),
                 )
+
+    def test_deliver_spec_stages_its_complete_implementation_procedure_alone(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(case for case in report.cases if case.id == "deliver-spec-direct")
+        self.assertEqual(("deliver-spec",), case.target_skills)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = prepare_workspace(
+                case, REPO_ROOT, Path(temp_dir) / "fixture",
+                enabled_skills=case.target_skills,
+            )
+            installed = workspace / ".agents/skills"
+            self.assertFalse((installed / "implement-with-subagents").exists())
+            delivery = installed / "deliver-spec"
+            procedure = delivery / "references/implementation-mode.md"
+            self.assertEqual(
+                (REPO_ROOT / "skills/deliver-spec/references/implementation-mode.md").read_bytes(),
+                procedure.read_bytes(),
+            )
+            # Follow the mandatory local resource chain in the isolated installation.
+            for source, target in (
+                (delivery / "SKILL.md", "references/implementation-mode.md"),
+                (delivery / "references/project-handoff.md", "implementation-mode.md"),
+                (procedure, "subagent-selection.md"),
+            ):
+                with self.subTest(source=source.name):
+                    links = re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8"))
+                    self.assertIn(target, links)
+                    self.assertTrue((source.parent / target).is_file())
+            self.assertEqual(
+                (REPO_ROOT / "references/subagent-selection.md").read_bytes(),
+                (procedure.parent / "subagent-selection.md").read_bytes(),
+            )
+            self.assertIn("## Runtime mapping", procedure.read_text(encoding="utf-8"))
 
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
         entrypoint = (REPO_ROOT / "skills/run-github-project/SKILL.md").read_text(
@@ -126,17 +200,20 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
-        self.assertEqual(35, len(benchmark))
-        self.assertEqual(32, len(calibration))
+        self.assertEqual(38, len(benchmark))
+        self.assertEqual(54, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
-        self.assertEqual(35, len(filter_cases(report.cases, case_ids=None, skills=None)))
+        self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertEqual(
             {
                 "implement-with-subagents-missing-provider-challenge",
                 "run-github-project-missing-provider-challenge",
                 "to-plan-authorized-draft-direct",
+                "to-plan-integration-amendment-direct",
+                "to-plan-integration-amendment-novel",
+                "to-plan-integration-amendment-negative",
                 "to-plan-material-assumption-proof-calibration",
                 "to-plan-material-assumption-proof-novel",
                 "to-plan-specificity-calibration",
@@ -162,10 +239,29 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "subagent-handoff-direct",
                 "subagent-handoff-novel",
                 "subagent-handoff-negative",
+                "deliver-spec-concurrency-novel",
+                "deliver-spec-worker-capacity-negative",
+                "deliver-spec-trivial-restraint-negative",
                 "run-github-project-delivery-direct",
                 "run-github-project-authority-pause-novel",
                 "run-github-project-current-column-novel",
                 "run-github-project-auto-merge-restraint-negative",
+                "deliver-spec-evidence-direct",
+                "deliver-spec-integration-novel",
+                "deliver-spec-review-boundary-negative",
+                "deliver-spec-live-qualification-failure-direct",
+                "deliver-spec-live-qualification-retained-novel",
+                "deliver-spec-live-qualification-repair-direct",
+                "deliver-spec-live-qualification-material-decision-novel",
+                "deliver-spec-live-qualification-no-change-negative",
+                "deliver-spec-live-qualification-async-only-direct",
+                "deliver-spec-live-qualification-sync-persistence-direct",
+                "deliver-spec-github-plan-revision-approval-novel",
+                "run-github-project-live-qualification-preflight-direct",
+                "deliver-spec-review-convergence-direct",
+                "shepherd-boundary-diagnostics-novel",
+                "run-github-project-review-convergence-negative",
+                "to-plan-boundary-validation-direct",
             },
             {case.id for case in calibration},
         )
@@ -494,7 +590,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         rubric = " ".join(item["text"] for item in case.rubric)
         self.assertIn("exact check name", rubric)
         self.assertIn("single forced-skill entrypoint read", rubric)
-        self.assertIn("full local suite before one repair push", rubric)
+        self.assertIn("required integrated-candidate checks", rubric)
 
     def test_formatting_negative_supplies_the_text_and_preserves_the_noop(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

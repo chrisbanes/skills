@@ -12,10 +12,10 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-direct"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "plan-gate", "text": "Reuses the current approved to-plan task graph and its completed independent review without inventing another plan or test-seam approval gate"},
-    {"id": "direct-owner", "text": "Keeps the tightly coupled sequential slices and in-scope repairs with the delivery lead by default, requires no child worker or extra worktree just to separate implementation from coordination, and preserves approved TDD seams for behavior changes"},
+    {"id": "direct-owner", "text": "Treats solo lead implementation as normal for tightly coupled sequential slices; delegates only for justified independence or isolation. Preserves T1-before-T2 dependencies and explicit repository/user testing policy without requiring workers, separate seam approval or artificial slices."},
     {"id": "final-review", "text": "Requires one fresh independent read-only reviewer against the approved source, repository standards, exact clean candidate HEAD, and validation evidence; verifies the draft PR has that reviewed head, renews affected review after repairs, and has no dependency on external code-review or issue-tracker setup"},
     {"id": "empty-diff", "text": "Does not treat the initial empty diff as no-change; reports no-change only after implementation and verification finish with an empty final diff."},
-    {"id": "repair-routing", "text": "Uses shepherd for CI feedback and PR operations while code repairs remain with the delivery lead by default; renews affected checks and review at a repaired head before pushing"},
+    {"id": "repair-routing", "text": "Uses shepherd for CI feedback and PR operations while returning code repairs to their original implementation owner; renews affected checks and review at a repaired head before pushing, without lead takeover or redundant unaffected checks."},
     {"id": "authority", "text": "Does not merge without authority valid for this invocation, and makes no mutation or provider call in this analysis-only case"}
   ],
   "provenance": {"kind": "synthetic"}

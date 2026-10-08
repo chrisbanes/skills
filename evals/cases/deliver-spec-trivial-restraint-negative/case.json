@@ -1,0 +1,56 @@
+{
+  "id": "deliver-spec-trivial-restraint-negative",
+  "title": "Bound the direct-edit exception and preserve repair ownership",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-trivial-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "trivial-exception",
+      "text": "Allows solo lead implementation for A as a normal path in manual and Project modes; no exception justification or worker is required. Retains proportional validation and independent final review."
+    },
+    {
+      "id": "concurrent-benefit",
+      "text": "Considers delegation for B when independent work justifies its overhead; availability alone does not mandate a worker."
+    },
+    {
+      "id": "repair-continuity",
+      "text": "Keeps C with its original available owner and renews affected evidence; coordinates ownership before any necessary reassignment rather than concurrent writes."
+    },
+    {
+      "id": "proportionality",
+      "text": "Does not split A into artificial tasks, require a worker or extra worker checkout for its allowed direct edit, rerun unrelated valid checks, or waive required review and authority gates."
+    },
+    {
+      "id": "clean-checkout",
+      "text": "Stops D on overlapping user work until a suitable clean isolated checkout is available; never stashes, resets, absorbs or commits user changes."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Does not actually start agents, execute commands, modify files or contact providers in this read-only assessment."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

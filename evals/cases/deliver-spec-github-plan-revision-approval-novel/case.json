@@ -1,0 +1,22 @@
+{
+  "id": "deliver-spec-github-plan-revision-approval-novel",
+  "title": "Keep implementation repair approval separate from GitHub plan publication",
+  "family": "workflow",
+  "target_skills": ["deliver-spec", "run-github-project"],
+  "expected_skills": ["deliver-spec", "run-github-project"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-github-plan-revision-approval-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "routine-repair", "text": "Keeps an implementation defect within the accepted outcome with its existing owner and repair gates; does not request new stakeholder approval just for that repair"},
+    {"id": "standalone-publication", "text": "Records the equivalent file/test-seam correction briefly and continues under the existing approved outcome; no replan, republication or renewed approval merely because file/test rows differ."},
+    {"id": "project-auto", "text": "Continues the routine correction under the verified handoff without per-stage packets; --auto does not expand external permissions or bypass publication/readback if a material plan revision is actually required."},
+    {"id": "material-decision", "text": "Recognizes that --auto does not approve a material change to accepted behavior, scope, acceptance, policy or risk; stops for a stakeholder decision in either mode"},
+    {"id": "preservation", "text": "Preserves owner, valid reviews/checks, existing scope approval, repair progress and live allowance; no GitHub mutation in this read-only assessment."}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

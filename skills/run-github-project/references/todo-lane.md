@@ -5,7 +5,7 @@ into implementation.
 
 Configured Wayfinder children take the separate integration branch in
 [Wayfinder Todo Lane](wayfinder-lane.md). They share this lane's scheduling
-class and non-preemption rules, but never use the implementation-plan marker,
+class and safe-checkpoint rules, but never use the implementation-plan marker,
 Ready handoff, or implementation lifecycle below.
 
 ## Eligibility And Plan State
@@ -54,9 +54,10 @@ replan report determines when a replacement revision is needed.
 4. Follow [Route agents by task](ticket-lifecycle.md#route-agents-by-task)
    for bounded read-only discovery or an evidence-justified investigator, using
    only spare agent capacity. Stop at its durable decision boundary.
-5. Never preempt planning after it starts. Planning does not occupy an
-   implementation slot and does not reserve the controller lane during read-only
-   work.
+5. Planning does not occupy an implementation slot or reserve the controller
+   lane during read-only work. Honor a delivery-priority yield request through
+   [the checkpoint procedure](#yield-a-planner-for-delivery) before another
+   mutation; never force an unsafe interruption.
 6. At the publish boundary, wait for the controller lane. Let `to-plan` create
    a new v2 revision when the substantive plan changed, or return the identical
    active leaf as a no-op. Never edit a semantic plan payload in place.
@@ -86,9 +87,10 @@ requires them.
 Project schema mutations are never part of this procedure. Stop with the
 required configuration repair when an expected field or option is missing.
 
-Give each planning attempt a 30-minute deadline unless the user or repository
-sets another. Agent loss, crash, or timeout is a liveness failure, not
-preemption:
+Give each planning attempt a 30-minute active-time deadline unless the user or
+repository sets another. Pause only verified cooperative-yield time; preserve
+consumed time and attempt count across compaction. Agent loss, crash or exhausted
+active-time budget is a liveness failure, not intentional yielding:
 
 1. stop the failed planner when possible and release its agent capacity;
 2. refetch assignment, current Status, and the marker plan;
@@ -97,6 +99,41 @@ preemption:
    clean planning worktree;
 5. after three failed attempts, preserve the assignment, block that planning
    item, release the lane, and continue unrelated work.
+
+## Yield A Planner For Delivery
+
+Use this in `drain` when actionable delivery, CI repair or review feedback needs
+the planner's active-agent capacity. Keep the planning claim and owner.
+
+1. Request a cooperative checkpoint before the planner's next mutation. Let an
+   already-started atomic operation finish; reconcile any publication or Status
+   write already in flight before releasing capacity. An ambiguous outcome or
+   missing acknowledgment keeps affected capacity occupied.
+2. Persist the owner/context, worktree, draft path and digest, source/plan/base
+   identities, publication/handoff state, used active planning time, remaining
+   deadline and attempt count in the existing planning record. Verify the
+   retained draft against that digest. Quiesce descendants, reconcile/release
+   resource grants and confirm no writer remains. Only then mark it yielded
+   and free its actual active-agent capacity, not its planning-lane ownership.
+3. Resume the same delivery owner for the actionable event. Preserve the
+   planner's context and draft; no ownership transfer or duplicate planner.
+   Record the capacity wait and yielded interval under the scheduler's timing
+   procedure. Intentional yield consumes no failure attempt and never resets
+   time already used. Twelve minutes used then forty yielded leaves eighteen
+   active minutes of a thirty-minute budget, including across compaction.
+4. After higher-priority delivery work, refetch planning membership, exclusivity,
+   source/base, draft and published marker state. Reconcile any already-published
+   result and finish its existing handoff rather than republish. If inputs
+   changed, invalidate affected draft evidence before continuing under the
+   provider's rules. Resume the same planner with its remaining deadline.
+5. For a lost owner or missing checkpoint/timing evidence, stop affected writers
+   and reconcile before using the existing bounded liveness recovery. Never
+   treat an unknown process as quiescent or a stale draft as an approved plan.
+
+Wayfinder shares this capacity procedure only where its provider can checkpoint
+and prove quiescence; reconcile its map/issue publication too. If its active
+provider cannot yield safely, preserve capacity until its safe boundary and
+report the delivery wait; do not bypass its required research/session contracts.
 
 ## Resume And Re-plan
 
@@ -115,7 +152,57 @@ current base:
 
 - accept non-overlapping committed drift after screening the changed files,
   symbols, seams, contracts, and validation;
-- use the autonomous replan path when drift overlaps or overlap is uncertain.
+- continue proven compatible routine integration with a brief correction record
+  and affected evidence renewal; use amendments only for a changed published
+  integration decision requiring durable consumption or an existing chain;
+- investigate unknown overlap before classification. Material plan changes use
+  autonomous replanning or the applicable human decision; unknown impact is
+  never classified as harmless.
+
+### Consume A Verified Integration Amendment
+
+For routine compatible base integration, retain the current plan and record the
+correction and affected evidence in place. For a changed published integration
+decision needing durable consumption, before a full requeue inspect the installed
+`to-plan` [GitHub contract](../../to-plan/references/github-mode.md) for explicit
+integration-amendment capability and its handoff. The baseline full-plan
+v1/v2 protocol alone does not supply it. Without that capability, preserve work
+and use the existing full-replan path; do not invent an amendment wire format
+or infer support from an issue proposing it.
+
+1. Keep the delivery owner, claim, slot, branch, draft/worktree and PR; quiesce
+   affected implementation writes at the exact retained candidate. Use the
+   provider's classification and any risk-required early review in the existing
+   planning lane and available capacity; otherwise defer to integrated review.
+   The controller still owns shared publication
+   and Project mutations. Do not move the ticket through Todo/Ready merely
+   to obtain a supported amendment.
+2. Verify the provider-owned effective contract: original source and active
+   plan identities/digests, authenticated append-only amendment lineage,
+   predecessor continuity without forks/gaps/foreign edits, old/new base and
+   exact retained candidate/PR, concrete integration overlap, preserved work,
+   invalidated evidence and affected checks/review. Require evidence that
+   requirements, acceptance, architecture, qualification and authority remain
+   unchanged. Unknown overlap, unsupported preservation or stale artifacts
+   block this route; material changes follow full replanning or a stakeholder
+   decision under the existing classification contract.
+3. Reconcile publication already in flight before retrying. Freshly read back
+   one unambiguous effective contract and its review disposition, then renew
+   the controller's plan lease with those exact identities while retaining the
+   original marked plan. Keep Status and owner unchanged. Publication ambiguity
+   stops dependent work; no local draft or old-SHA evidence can stand in for
+   the verified effective contract.
+4. Hand the retained owner and artifacts plus verified effective contract to
+   `deliver-spec`. It owns integration, affected verification/review and final
+   exact-head evidence. Retain grant consumption and repair history; an amendment
+   neither authorizes additional live turns nor resets a qualification gate.
+5. On recovery, observed authority changes and before external material writes,
+   repeat effective-contract integrity, current authority and artifact-head
+   validation. Distinguish the amendment's
+   retained starting candidate from later verified owner-produced integration
+   heads through delivery evidence; an unexplained head change blocks. Pass
+   only the original plan schema to the ranker and carry amendments alongside
+   it in the lease/handoff. Ranker eligibility alone cannot clear this gate.
 
 ### Replan Packet Contract
 
@@ -126,8 +213,9 @@ at most two repair edit-and-validation cycles under that plan's budget. A wrong
 approved design decision, exhausted mechanical budget, changed accepted
 contract, or uncertain baseline overlap requires the packet below.
 
-An implementation defect within the accepted outcome, scope, acceptance
-criteria, and plan decisions is an ordinary in-scope repair, including
+A correction preserving requirements, coverage, architecture and authority is an
+ordinary in-scope repair. Record it briefly without a new plan publication or
+per-stage permission packet, including
 integration, CI, test, fixture, and documentation fixes. The owning agent
 records the cause and affected evidence, repairs in its existing slot, and
 repeats affected verification and review. The mechanical plan-mismatch budget
@@ -165,7 +253,9 @@ applying this rule.
 
 ### Re-plan A Contract-Preserving Inconsistency
 
-When the owning ticket agent returns an `autonomous-replan` packet:
+When the owning ticket agent returns an `autonomous-replan` packet, first
+classify whether the supported, verified integration-amendment route above
+applies. Otherwise use this full lifecycle:
 
 1. Enter the controller lane and revalidate the current authority lease,
    verified base, assignment, Status, plan leaf, branch, worktree and PR.
@@ -206,7 +296,8 @@ When the verified packet disposition is `human-required`:
    the newly accepted source contract. Give the controlled replanning procedure
    above an `autonomous-replan` packet referencing the decision and prior plan;
    that procedure publishes it once and retains artifacts and repair history.
-   Review the new plan automatically before implementation resumes.
+   Require early independent review only for a concrete risk that must be
+   resolved before continuation; otherwise review the integrated candidate.
 
 ### Abandon Partial Work And Return It To Backlog
 
@@ -259,7 +350,7 @@ Do not select another issue.
 
 In `drain`, follow the
 [Drain Scheduler](drain-scheduler.md#scheduling) for planner dispatch,
-active-agent capacity, and non-preemption.
+active-agent capacity, and cooperative planner checkpoints.
 
 An unclaimed Wayfinder prototype, grilling ticket, or HITL/ambiguous task is a
 normal Todo candidate in `next`, but process it only with fresh per-ticket

@@ -1,0 +1,23 @@
+{
+  "id": "deliver-spec-live-qualification-failure-direct",
+  "title": "Stop dependent dispatch after a persistent live qualification assertion",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-live-qualification-failure-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "conditional", "text": "Applies the live qualification procedure because the accepted plan requires asynchronous work and a persistent external store, without inventing a general gate for the offline unit suite"},
+    {"id": "offline-harness", "text": "Reuses still-applicable offline evidence from an isolated production-store instance plus fake runtime, distinguishing injected missing-action detection and no-duplicate recovery testing from any product-level exactly-once guarantee or the actual approved runtime used for live qualification"},
+    {"id": "required-actions", "text": "Compares observed execution actions with the approved finite action list, identifies the missing audit-event action separately from the failed receipt assertion, and does not claim an unobserved action completed"},
+    {"id": "stop-and-reconcile", "text": "Stops affected and dependent dispatch after the failed assertion, uses bounded reads to determine whether the write persisted and whether an execution remains active, and does not retry or start a conflicting action while the outcome is unknown"},
+    {"id": "checkpoint", "text": "Before shutdown or handback records conversation and execution identities, current state, failed condition, persistence/recovery findings, remaining allowance and next reconciliation action; uses only a documented bounded safe stop/cancel and verifies it, otherwise preserves the active runtime and returns blocked without forced termination or a safe-recovery claim"},
+    {"id": "authority-and-progress", "text": "Does not replenish the consumed live attempt or change approval, acceptance, owner, or repair-progress gates; continues only independent work that cannot affect the unresolved execution, and makes no mutation in this analysis-only task"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

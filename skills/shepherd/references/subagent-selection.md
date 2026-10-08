@@ -23,7 +23,13 @@ editing, remote mutation, or further delegation authority.
    blocker to report if it cannot proceed. State whether further delegation is
    allowed. A fresh independent audit needs a self-contained brief rather than
    inherited conversation context.
-4. Retain the agent handle when follow-up or repair may be needed. Inspect its
+4. After bounding the assignment, select model and reasoning together under
+   the user's subagent model-selection policy. Classify the actual delegated
+   work independently of the parent ticket, caller's model, or role name:
+   worker and independent reviewer describe responsibilities, not model tiers.
+   Preserve explicit configured selections and apply that policy to unspecified
+   settings before dispatch; do not duplicate its model table here.
+5. Retain the agent handle when follow-up or repair may be needed. Inspect its
    returned work and evidence under the calling workflow's acceptance rules;
    an agent's success report is not independent acceptance. Return failed work
    to the same owner when the calling workflow requires that continuity.

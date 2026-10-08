@@ -197,7 +197,11 @@ its recorded Project item even when archived, the child, the direct map parent e
 the complete live map graph. Require exactly one authoritative marker, its
 author and sole assignee to be the authenticated runner, its Project item and
 map identities to match, and its configuration digest to match the invocation's
-committed configuration.
+committed configuration. A different historical digest is usable only after
+[presentation-only renewal](project-config.md#renew-presentation-only-configuration)
+verifies committed equivalence, current authority and the exact immutable
+marker binding. Preserve its original digest and normalize the verified renewal
+under the [schema](normalized-ticket.md#wayfinder-configuration-renewal).
 Normalize it as `wayfinderReconciliation`; the ranker returns
 `resume-wayfinder-reconciliation` ahead of new Wayfinder work.
 

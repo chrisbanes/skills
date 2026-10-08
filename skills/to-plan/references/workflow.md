@@ -36,10 +36,11 @@ Run focused existing validation to prove proposed files, symbols, seams, and
 commands exist and the baseline is green. For unavailable credentials, hardware,
 or services, use repository configuration or recent trusted CI evidence and
 assign the omitted check to implementation; block without either source. Record
-all facts an executor needs: files, symbols, responsibilities, call sites,
-exemplars, commands, working directories, and created symbols. Trace enough
-control/data flow to decide ownership, wiring, branches, errors, and accepted
-edge cases; never invent repository facts.
+the concrete repository facts needed to execute: affected files and
+ownership/interfaces, useful entry symbols, test seams, commands and working
+directories. Trace control/data flow far enough to settle material decisions.
+Include call-site wiring, created symbols and error branches when they remove
+real ambiguity or protect a safety boundary; never invent repository facts.
 
 ## Resolve decisions and draft
 
@@ -52,6 +53,10 @@ the hypothesis, setup, observable pass/fail condition, and what stops or trigger
 replanning on failure; dependent slices must name the proof task ID. Do not add a
 proof when existing evidence settles the assumption, and do not leave unresolved
 design choices as open-ended implementation exploration.
+
+Apply [Boundary validation](boundary-validation.md) when planning consequential
+persistence, privacy or asynchronous behavior. It owns validation timing and
+dependent-work gates; keep the observable slice fields below.
 
 Before slicing, make a brief file-responsibility map from the inspected code:
 record the existing files and symbols that own the behavior, tests, and wiring,
@@ -68,6 +73,11 @@ shows a concrete dependency that makes an intermediate state untestable or
 unreviewable; name that dependency and the gated work explicitly. A common
 concept or nearby files alone do not establish coupling.
 
+Observable implementation slices do not prescribe separate PRs. Choose separate
+PRs during planning only when each has a coherent deliverable boundary and its
+own acceptance evidence; do not split publication automatically by slice or in
+response to a review count.
+
 Current Todo membership, a decision-complete current task, or a confirmed
 conversation source authorizes the smallest coherent contract-realizing design.
 Record non-obvious choices and evidence. Escalate only conflicting authority,
@@ -80,10 +90,18 @@ blockers together. Do not reject or split a ready source merely because it is
 large.
 
 Use exactly one plan template. Every observable slice names prerequisites,
-existing/new files and symbols, ordered edits (interfaces, ownership, control or
-data flow, branches, errors, edge cases, and wiring), exact test seam/setup/
-inputs/assertions and red failure or strongest practical alternative, exact
-command plus working directory/setup/result, and observable green completion.
+affected files and ownership/interfaces, the intended increment, applicable tests
+or focused validation, acceptance evidence, exact command plus working directory/setup/result,
+and observable completion. Reference retrievable authoritative requirements by stable identity instead of
+copying the specification. Conversation plans must embed the approved source
+contract needed for a fresh session; a chat reference is not retrievable evidence. For a known one-function change,
+a short edit description and exact acceptance check can be sufficient.
+Require ordered recipes, detailed symbol inventories, wiring, material branches,
+errors and failure evidence where uncertainty, safety or a necessary seam makes
+that precision useful. For receipt, privacy or concurrency work, identify the
+identities, transitions, boundaries and failure cases on which correctness
+actually depends. Brevity cannot hide an unresolved decision or replace a
+meaningful test. Do not add speculative discovery, proofs or a length cap.
 Each new slice must also have a stable unique task ID (such as `T1`) and an
 explicit `Depends on` list. Reserve the case-insensitive task ID `none` for the
 `Depends on: none` root marker; dependencies may name only declared task IDs.
@@ -93,34 +111,53 @@ ready tasks may safely run concurrently. Shared mutable files or a need for
 another task's unmerged changes make tasks non-independent even when the graph
 otherwise marks them ready. Treat older plans without dependency metadata as
 one sequential chain in listed order; new plans must include the metadata.
-Use test-first slices unless an automated red test is impractical and explain
-the exception. Do not leave exploration or design decisions to implementation.
+Let the owner choose meaningful behavioral tests under repository policy and
+explicit user requests; do not require TDD or separate seam approval by default.
+Do not revert useful code to recreate test-first history; use a bounded baseline
+check or intentional fault where useful and report the actual testing order.
+Do not leave material architecture or authority decisions to implementation.
 Scale detail to risk; avoid full implementations and boilerplate. State a
 shared contract once in Guardrails. Use Approach for the route, Planning
 decisions for non-obvious choices, and Implementation context for current code
 facts; do not repeat those sections' shared constraints in each other or in
-Review focus. Slices still need their own exact files, inputs, assertions,
-commands, and results. Acceptance rows should name the behavior and point to
+Review focus. Each slice needs concrete affected files, validation commands and
+expected results. Specify test inputs/actions and assertions when behavioral tests
+apply; otherwise use focused validation without inventing a test seam. Share setup
+by explicit reference. Acceptance rows should name the outcome and point to
 the slice's focused check instead of paraphrasing the full contract. Omit
 generic deviation and re-plan sections when only standard handoff rules apply;
 keep the concise standard diagnosis, repair, and stop limits in Guardrails so
 the published plan carries them. Include additional sections only for distinct
 task-specific conditions.
 
-Perform an executor-readiness review from the written plan alone. A fresh,
-lower-capability executor must locate and order every edit, distinguish existing
-from new symbols, create meaningful tests, wire consumers, and validate without
-broad rediscovery. Resolve gaps through discovery; put unresolvable ones in the
-blocker set.
+For experiments, choose the smallest credible harness answering the research
+question. Justify replay infrastructure, generic runners and elaborate schemas
+against requested acceptance. Preserve every requested deliverable and applicable
+privacy, budget and cancellation safeguard. Independent harness work may proceed
+while corpus review runs; freeze labels before observing experimental outputs.
 
-As part of this review, trace every source requirement to an acceptance row and
-its implementing slice. Check that paths, existing and new symbol names,
-interfaces, call-site wiring, task dependencies, and validation commands agree
-across the plan. Replace vague instructions such as “add appropriate tests” or
-“run relevant checks” with concrete inputs, assertions, commands, working
-directories, and observable results. Remove placeholders and steps that do not
-advance an acceptance criterion. Scale the detail to the change's risk and keep
-the proof, failure, and source-authority gates above unchanged.
+Default to independent review of the integrated delivery candidate, followed by
+focused repair reviews. Require earlier independent review only for a concrete
+risk that must be resolved first, such as the label-freeze boundary. Reuse valid
+plan reviews; executor-readiness below is the planner's own check, not a mandate
+to dispatch another reviewer or spawn one merely to establish capability.
+
+Perform an executor-readiness review from the written plan and its retrievable
+source. For conversation mode, review the plan alone: include the approved goal,
+acceptance criteria, scope, constraints and material decisions in the artifact,
+without relying on chat history. A fresh executor must locate and order the increments, understand
+ownership and interfaces, create meaningful tests and validate without reopening
+material decisions. Routine implementation choices within that contract remain
+with the executor; missing authority, behavior or architecture decisions do not.
+Resolve gaps through discovery; put unresolvable ones in the blocker set.
+
+Trace every source requirement to an acceptance row and implementing slice.
+Check paths, interfaces, task dependencies and validation commands agree across
+the plan; check exact symbols and wiring where the risk requires them. Replace
+“add appropriate tests” or “run relevant checks” with concrete inputs,
+assertions, commands and observable results. Remove placeholders and steps that
+do not advance acceptance. Keep the proof, failure and source-authority gates
+above unchanged.
 
 ## Manage, publish, and hand off
 
@@ -138,14 +175,26 @@ whether the active comment was created or reused, ending:
 Implement <issue URL> using the approved implementation plan at <comment permalink>.
 ```
 
-An implementation checkout may descend from planned SHA only for non-overlapping
-intervening changes. Within a fixed behavior, decisions, interfaces, seams, and
-validation contract, repair only a mechanical mismatch (renamed private helper,
-moved equivalent file, compile, or fixture error) after one focused diagnosis
-and at most two repair edit-and-validation cycles across unexpected mismatches.
-Normal test-first cycles do not consume this budget. Stop at a re-plan trigger,
-design/contract change, overlapping baseline change, or exhausted budget; report
-failure, attempted repair/validation, and remaining decision/upstream change.
-Replan from a clean planning worktree at verified base, except a verified runner
-replan may retain dirty implementation work separately. Never invoke `to-plan`
-from that implementation worktree.
+For an existing amendment chain or a changed published integration decision
+needing durable consumption, use [integration amendments](integration-amendments.md).
+Verify installed-consumer support before publication; unknown or full-plan-only
+consumers block that publication and handoff. Preserve the draft or use an
+authorized full replan. Neither consumer may ignore existing amendments.
+Routine compatible integration follows the continuation rule below.
+
+A verified handoff authorizes in-scope implementation, testing and repairs,
+without new per-file or per-stage approvals. Record routine implementation,
+fixture and mechanical plan corrections briefly in the existing delivery record
+when requirements, coverage, architecture and authority remain unchanged. Do not
+replan or republish merely to correct an equivalent path, fixture or test setup.
+Preserve explicit execution budgets; bounded plan-mismatch diagnosis allows one
+focused diagnosis and at most two repair cycles when a factual plan assumption
+is wrong. Ordinary implementation/fixture repairs do not consume that allowance.
+
+Screen baseline drift and retained work before continuation. Proven compatible
+integration preserving the contract can proceed with affected evidence renewal;
+unknown overlap requires investigation. Material architecture or requirements changes
+need replanning; changed authority, privacy or qualification requires the
+appropriate decision. Preserve work on a blocker. Replan from a clean planning
+checkout at verified base, keeping dirty implementation work separately; never
+invoke `to-plan` from that implementation checkout.

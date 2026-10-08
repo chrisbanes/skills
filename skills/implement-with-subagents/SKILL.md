@@ -1,22 +1,23 @@
 ---
 name: implement-with-subagents
-description: Use when implementing or reviewing the orchestration of supplied tickets or plan tasks through separate implementation subagents, including dependency order, task-scoped acceptance, and repair ownership.
+description: Use when implementing supplied tickets or plan tasks through worker-owned bounded implementation and lead integration, or when reviewing that orchestration.
 compatibility: "Review mode has no external skill dependency. Implementation mode uses Matt Pocock's separately installed `tdd` for behavior changes and one fresh independent read-only reviewer for the final joined branch."
 disable-model-invocation: true
 ---
 
 # Implement with subagents
 
-Use this workflow for explicitly requested orchestration or independently useful
-parallel tasks. Ordinary single-task delivery stays with its delivery owner.
-Keep implementation ownership with one subagent per work item and reuse a
-bounded pool of worker checkouts. The controller validates the task graph,
-dispatches independent ready work in distinct checkouts, accepts each task once
-before integration, and integrates accepted commits in dependency order. After
-an ordinary integration, rerun affected checks and release dependents without
-a second lead sign-off. Retire eligible surplus checkouts, preserve task refs,
-and account for checkout dispositions at completion or interruption. Keep the
-controller out of task-owned code and return repairs to the relevant owner.
+Use this workflow whenever a delivery lead coordinates settled implementation
+tasks, including one task and sequential work. Assign one worker per supplied
+work item; do not split a single task into artificial pieces. Reuse a bounded
+pool of worker checkouts. The lead validates the task graph, dispatches the
+independent ready frontier with disjoint write sets by default, accepts each
+task once before integration, and integrates accepted commits in dependency
+order. After an ordinary integration, rerun affected checks and release
+dependents without a second lead sign-off. Retire eligible surplus checkouts,
+preserve task refs, and account for checkout dispositions at completion or
+interruption. Keep the lead out of task-owned code and return implementation
+repairs to the original worker.
 
 ## Select the mode
 
@@ -39,8 +40,11 @@ investigator in review mode (or an equivalent runtime role) with a
 self-contained brief: approved source, plan, repository standards, fixed base,
 and exact candidate head. Do not inherit the implementation conversation.
 Require findings with evidence and a `ship`, `fix-first`, or `rethink` verdict
-against both requirements and standards. No external review skill or tracker
-setup is required. If independent review cannot run, report the missing
+against both requirements and standards, with the coverage account under
+[Behavioral review and repair](references/behavioral-review.md). Apply that
+reference during implementation for related boundary repairs and browser failure
+diagnostics; PR feedback remains outside this workflow. No external review skill
+or tracker setup is required. If independent review cannot run, report the missing
 capability; never waive final review. Add reviewers only for distinct risks or
 substantial scope that justify separate assignments.
 
@@ -81,18 +85,8 @@ integration, repairs, and final validation. Stop when a dependency, task-scoped
 commit, or capability gate cannot be satisfied; never implement an item in the
 controller.
 
-## Runtime mapping
-
-Select an implementation-capable owner and apply the implementation procedure's
-capability checks:
-
-| Runtime | Implementation owner |
-| --- | --- |
-| [Codex](https://learn.chatgpt.com/docs/agent-configuration/subagents) | `worker` |
-| [Claude Code](https://code.claude.com/docs/en/sub-agents) | `general-purpose` |
-| [OpenCode](https://opencode.ai/docs/agents) | `general` subagent; `build` is primary |
-| [Pi](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) | No built-in role; inspect its delegation extension and agent definitions. A bare or non-resumable Pi cannot own an item: stop and report it. |
-| Other runtimes | An exposed implementation-capable subagent that passes the checks |
+The implementation-mode procedure includes the runtime mapping and owns the
+capability checks, dispatch, and acceptance workflow.
 
 ## Finish gate
 
