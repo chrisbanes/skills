@@ -187,6 +187,10 @@ Automatic numbering checks existing tags and releases: the first release uses
 `.99`. Gaps are not reused. If all daily numbers are exhausted, the workflow
 fails and requires an explicit version or a release on another day.
 
+The same workflow also runs nightly (02:17 UTC). It releases only if `skills/`,
+the plugin manifests, `.opencode/`, `.agents/`, `plugin.json`, or `package.json`
+changed since the latest tag; otherwise it exits without a release.
+
 Before pushing, lint skills (frontmatter schema + markdown):
 
 ```
