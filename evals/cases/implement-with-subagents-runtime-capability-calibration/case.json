@@ -28,11 +28,11 @@
   "rubric": [
     {
       "id": "claude-mapping",
-      "text": "Selects the Claude Code general-purpose implementation subagent."
+      "text": "Selects a Claude Code agent that can edit, commit, and be resumed for repairs, and rejects one-shot Explore or Plan as an owner."
     },
     {
       "id": "opencode-mapping",
-      "text": "Selects the OpenCode general subagent and does not treat build as a subagent."
+      "text": "Selects an OpenCode subagent that can edit, commit, and be resumed, and does not treat the primary build agent as a delegable subagent."
     },
     {
       "id": "bare-pi",

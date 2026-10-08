@@ -144,7 +144,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 (REPO_ROOT / "references/subagent-selection.md").read_bytes(),
                 (procedure.parent / "subagent-selection.md").read_bytes(),
             )
-            self.assertIn("## Runtime mapping", procedure.read_text(encoding="utf-8"))
+            self.assertIn("## Runtime requirements", procedure.read_text(encoding="utf-8"))
 
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
         entrypoint = (REPO_ROOT / "skills/run-github-project/SKILL.md").read_text(

@@ -56,8 +56,8 @@ Project run already owns that issue, return it to that controller.
    before attempts and resumes; do not add it to ordinary offline work.
 5. Self-review the integrated candidate, run required checks, then use one
    independent read-only reviewer per delivery PR against requirements,
-   repository standards and the complete diff. Use an investigator in review
-   mode or equivalent without inherited implementation context. Reuse valid
+   repository standards and the complete diff. Use a fresh agent that makes no
+   writes and has no inherited implementation context. Reuse valid
    independent coverage; do not duplicate a plan or implementation review.
    Require evidence-backed findings and a `ship`, `fix-first`, or `rethink`
    verdict. Honor explicitly invoked provider contracts and report missing

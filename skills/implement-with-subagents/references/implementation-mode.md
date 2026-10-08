@@ -53,7 +53,7 @@
    Do not start it from a prerequisite's unintegrated branch.
    Give read-only helpers access to an existing checkout without allocating a
    worker slot, and never switch a checkout used by an active owner or process.
-5. Select an implementation-capable subagent using the runtime mapping below
+5. Select an implementation-capable subagent using the runtime requirements below
    and the shared [selection and handoff reference](subagent-selection.md).
    Classify each settled worker task on its own merits under the user's model
    and reasoning selection policy, rather than inheriting the delivery lead's
@@ -66,9 +66,8 @@
    wait or idle behavior for the coordinator while workers run, and verify
    capacity again after resuming; do not assume a blocking wait releases the
    caller's slot. Retain each owner handle. Give each owner a decision-complete
-   packet with pointers to the exact task, spec, approved test seams where
-   applicable, repository instructions, recorded base SHA, exact checkout path,
-   task branch, owned files, acceptance criteria, and focused validation.
+   implementation brief under the shared reference, pointing to the exact task,
+   spec, approved test seams where applicable, and repository instructions.
    State that other agents may be editing independently, and require preservation of unrelated
    changes. Dispatch the ready frontier only after this capability check passes.
 6. Have each owner implement only its item. For behavior changes, invoke `tdd`
@@ -76,15 +75,17 @@
    documentation or configuration without a meaningful test seam, use focused
    validation and record why TDD does not apply. Require focused checks, owner
    self-review against the task and repository standards, a task-scoped commit,
-   and a report containing the commit SHA, complete command results, tested
-   revision, relevant input and environment identity, and blockers. Run a
+   and a report in the [selection and handoff reference](subagent-selection.md)
+   return format, including each command's exit code, tested SHA, output tail,
+   and complete-log path, plus relevant input and environment identity. Run a
    broader check here only when the user or repository requires it. Do not
    invoke the separate `/implement` skill.
 7. Perform the lead's one task acceptance before integration. Independently
    inspect the complete commit range and diff from the recorded base for task
    scope and criteria. Verify the owner's branch advanced by a task-scoped
-   commit and its worktree is clean. Inspect complete check output, exit status,
-   tested revision, and relevant inputs and environment. Reuse passing evidence
+   commit and its worktree is clean. Inspect exit status, tested revision, and
+   relevant inputs and environment, and the complete log when acceptance needs
+   it; a tail alone is not complete output. Reuse passing evidence
    only when the environment remains unchanged and the tested revision is the
    branch `HEAD`, or an inspected descendant changed no relevant inputs. Repeat
    an affected check when evidence is missing, failed, stale, or explicitly
@@ -144,17 +145,31 @@
     clean, unrelated starting work is preserved, checkout accounting is
     complete, and the entrypoint's finish gate is met.
 
-## Runtime mapping
+## Runtime requirements
 
-Select an implementation-capable owner and apply the capability checks above:
+Choose agents by capability, not runtime role name:
 
-| Runtime | Implementation owner |
-| --- | --- |
-| [Codex](https://learn.chatgpt.com/docs/agent-configuration/subagents) | `worker` |
-| [Claude Code](https://code.claude.com/docs/en/sub-agents) | `general-purpose` |
-| [OpenCode](https://opencode.ai/docs/agents) | `general` subagent; `build` is primary |
-| [Pi](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) | No built-in role; inspect its delegation extension and agent definitions. A bare or non-resumable Pi cannot own an item: stop and report it. |
-| Other runtimes | An exposed implementation-capable subagent that passes the checks |
+- Implementation owner: can edit, run validation and commit in its assigned
+  checkout, and can be resumed in the same session for repairs.
+- Independent reviewer: starts without the implementation conversation and
+  makes no writes. When the runtime cannot enforce read-only access, verify
+  afterwards that the reviewer's checkout is unchanged.
+
+Runtime caveats:
+
+- [Claude Code](https://code.claude.com/docs/en/sub-agents): `Explore` and
+  `Plan` are one-shot and cannot own an item. The lead creates each run-owned
+  plain Git worktree with
+  `git worktree add -b <task-branch> <path> <integrated-sha>`, verifies its
+  branch and SHA, and passes the absolute path in the brief. Never use
+  `Agent(isolation: "worktree")`; it bases on the default branch, not the
+  integrated `HEAD`.
+- [OpenCode](https://opencode.ai/docs/agents): `build` is a primary agent, not
+  a delegable subagent.
+- [Pi](https://github.com/earendil-works/pi/tree/main/packages/coding-agent):
+  no built-in subagent; inspect its delegation extension and agent
+  definitions. A bare or non-resumable Pi cannot own an item: stop and report
+  it.
 
 ## Worker checkout lifecycle
 
