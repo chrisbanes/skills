@@ -1,6 +1,8 @@
 name: Release
 
 on:
+  schedule:
+    - cron: "17 2 * * *"
   workflow_dispatch:
     inputs:
       version:
@@ -21,7 +23,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.changes.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # Nightly runs release only when installable files changed since the latest tag.
+      - name: Check for installable changes
+        id: changes
+        run: |
+          set -euo pipefail
+
+          SKIP=false
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ]; then
+            LATEST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+            if [ -n "$LATEST_TAG" ] && git diff --quiet "$LATEST_TAG" HEAD -- \
+              skills .claude-plugin .codex-plugin .agents .opencode plugin.json package.json; then
+              SKIP=true
+              echo "No installable changes since $LATEST_TAG; skipping nightly release."
+            fi
+          fi
+          echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+
   release:
+    needs: check
+    if: ${{ needs.check.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
