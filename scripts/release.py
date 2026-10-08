@@ -10,6 +10,9 @@ import sys
 VERSION_PATTERN = re.compile(
     r"^[0-9]{4}\.([1-9]|1[0-2])\.([1-9]|[12][0-9]|3[01])(?:\.(0?[1-9]|[1-9][0-9]))?$"
 )
+EXISTING_VERSION_PATTERN = re.compile(
+    r"^[0-9]{4}\.(0?[1-9]|1[0-2])\.(0?[1-9]|[12][0-9]|3[01])(?:\.(0?[1-9]|[1-9][0-9]))?$"
+)
 PLUGIN_NAME = "chrisbanes-skills"
 OPENCODE_MAIN = ".opencode/plugins/chrisbanes-skills.js"
 AGENT_PLUGINS_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
@@ -50,10 +53,11 @@ def resolve_version(input_version, existing_versions=()):
     today = default_version()
     numbers = []
     for version in existing_versions:
-        try:
-            version = validate_version(version)
-        except ValueError:
+        if not EXISTING_VERSION_PATTERN.fullmatch(version):
             continue
+        parts = version.split(".")
+        parts[1:3] = [str(int(part)) for part in parts[1:3]]
+        version = validate_version(".".join(parts))
         if version == today:
             numbers.append(0)
         elif version.startswith(today + "."):

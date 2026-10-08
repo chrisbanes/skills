@@ -46,9 +46,13 @@ jobs:
           set -euo pipefail
 
           git fetch --tags origin
-          git tag --list > "$RUNNER_TEMP/release-versions.txt"
-          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name' >> "$RUNNER_TEMP/release-versions.txt"
-          VERSION="$(python3 scripts/release.py resolve-version "$INPUT_VERSION" --existing-versions "$RUNNER_TEMP/release-versions.txt")"
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$(python3 scripts/release.py resolve-version "$INPUT_VERSION")"
+          else
+            git tag --list > "$RUNNER_TEMP/release-versions.txt"
+            gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[].tag_name' >> "$RUNNER_TEMP/release-versions.txt"
+            VERSION="$(python3 scripts/release.py resolve-version --existing-versions "$RUNNER_TEMP/release-versions.txt")"
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Resolved release version: $VERSION"
 
