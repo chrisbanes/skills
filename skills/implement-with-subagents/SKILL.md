@@ -36,10 +36,9 @@ Documentation and other items without a meaningful test seam use focused
 validation instead. Never install a dependency implicitly.
 
 Resolve one independent read-only reviewer before delegation. Use a fresh
-investigator in review mode (or an equivalent runtime role) with a
-self-contained brief: approved source, plan, repository standards, fixed base,
-and exact candidate head. Do not inherit the implementation conversation.
-Require findings with evidence and a `ship`, `fix-first`, or `rethink` verdict
+agent that makes no writes and does not inherit the implementation
+conversation, with a self-contained brief: approved source, plan, repository standards, fixed base,
+and exact candidate head. Require findings with evidence and a `ship`, `fix-first`, or `rethink` verdict
 against both requirements and standards, with the coverage account under
 [Behavioral review and repair](references/behavioral-review.md). Apply that
 reference during implementation for related boundary repairs and browser failure
@@ -85,8 +84,8 @@ integration, repairs, and final validation. Stop when a dependency, task-scoped
 commit, or capability gate cannot be satisfied; never implement an item in the
 controller.
 
-The implementation-mode procedure includes the runtime mapping and owns the
-capability checks, dispatch, and acceptance workflow.
+The implementation-mode procedure includes the runtime requirements and owns
+the capability checks, dispatch, and acceptance workflow.
 
 ## Finish gate
 

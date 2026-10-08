@@ -53,7 +53,7 @@
    Do not start it from a prerequisite's unintegrated branch.
    Give read-only helpers access to an existing checkout without allocating a
    worker slot, and never switch a checkout used by an active owner or process.
-5. Select an implementation-capable subagent using the runtime mapping below
+5. Select an implementation-capable subagent using the runtime requirements below
    and the shared [selection and handoff reference](subagent-selection.md).
    Classify each settled worker task on its own merits under the user's model
    and reasoning selection policy, rather than inheriting the delivery lead's
@@ -145,24 +145,31 @@
     clean, unrelated starting work is preserved, checkout accounting is
     complete, and the entrypoint's finish gate is met.
 
-## Runtime mapping
+## Runtime requirements
 
-Select an implementation-capable owner and an independent read-only reviewer,
-and apply the capability checks above:
+Choose agents by capability, not runtime role name:
 
-| Runtime | Implementation owner | Independent read-only reviewer |
-| --- | --- | --- |
-| [Codex](https://learn.chatgpt.com/docs/agent-configuration/subagents) | `worker` | An exposed read-only-capable subagent that passes the checks |
-| [Claude Code](https://code.claude.com/docs/en/sub-agents) | `general-purpose` | `general-purpose` with a read-only brief; the lead then verifies the reviewer's checkout is unchanged |
-| [OpenCode](https://opencode.ai/docs/agents) | `general` subagent; `build` is primary | An exposed read-only-capable subagent that passes the checks |
-| [Pi](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) | No built-in role; inspect its delegation extension and agent definitions. A bare or non-resumable Pi cannot own an item: stop and report it. | No built-in role; an exposed read-only-capable subagent that passes the checks |
-| Other runtimes | An exposed implementation-capable subagent that passes the checks | An exposed read-only-capable subagent that passes the checks |
+- Implementation owner: can edit, run validation and commit in its assigned
+  checkout, and can be resumed in the same session for repairs.
+- Independent reviewer: starts without the implementation conversation and
+  makes no writes. When the runtime cannot enforce read-only access, verify
+  afterwards that the reviewer's checkout is unchanged.
 
-For Claude Code worker checkouts, the lead creates each run-owned plain Git
-worktree with `git worktree add -b <task-branch> <path> <integrated-sha>`,
-verifies its branch and SHA, and passes the absolute path in the brief. Never
-use `Agent(isolation: "worktree")`; it bases on the default branch, not the
-integrated `HEAD`.
+Runtime caveats:
+
+- [Claude Code](https://code.claude.com/docs/en/sub-agents): `Explore` and
+  `Plan` are one-shot and cannot own an item. The lead creates each run-owned
+  plain Git worktree with
+  `git worktree add -b <task-branch> <path> <integrated-sha>`, verifies its
+  branch and SHA, and passes the absolute path in the brief. Never use
+  `Agent(isolation: "worktree")`; it bases on the default branch, not the
+  integrated `HEAD`.
+- [OpenCode](https://opencode.ai/docs/agents): `build` is a primary agent, not
+  a delegable subagent.
+- [Pi](https://github.com/earendil-works/pi/tree/main/packages/coding-agent):
+  no built-in subagent; inspect its delegation extension and agent
+  definitions. A bare or non-resumable Pi cannot own an item: stop and report
+  it.
 
 ## Worker checkout lifecycle
 
