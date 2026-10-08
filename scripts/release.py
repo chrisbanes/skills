@@ -10,6 +10,9 @@ import sys
 VERSION_PATTERN = re.compile(
     r"^[0-9]{4}\.([1-9]|1[0-2])\.([1-9]|[12][0-9]|3[01])(?:\.(0?[1-9]|[1-9][0-9]))?$"
 )
+EXISTING_VERSION_PATTERN = re.compile(
+    r"^[0-9]{4}\.(0?[1-9]|1[0-2])\.(0?[1-9]|[12][0-9]|3[01])(?:\.(0?[1-9]|[1-9][0-9]))?$"
+)
 PLUGIN_NAME = "chrisbanes-skills"
 OPENCODE_MAIN = ".opencode/plugins/chrisbanes-skills.js"
 AGENT_PLUGINS_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
@@ -44,10 +47,27 @@ def default_version():
     return f"{today.year}.{today.month}.{today.day}"
 
 
-def resolve_version(input_version):
+def resolve_version(input_version, existing_versions=()):
     if input_version:
         return validate_version(input_version)
-    return default_version()
+    today = default_version()
+    numbers = []
+    for version in existing_versions:
+        if not EXISTING_VERSION_PATTERN.fullmatch(version):
+            continue
+        parts = version.split(".")
+        parts[1:3] = [str(int(part)) for part in parts[1:3]]
+        version = validate_version(".".join(parts))
+        if version == today:
+            numbers.append(0)
+        elif version.startswith(today + "."):
+            numbers.append(int(version.split(".")[3]))
+    if not numbers:
+        return today
+    next_number = max(numbers) + 1
+    if next_number > 99:
+        raise ValueError("Today's release numbers are exhausted; use an explicit version or wait until tomorrow.")
+    return f"{today}.{next_number:02d}"
 
 
 def update_manifests(root, version):
@@ -141,6 +161,7 @@ def main(argv=None):
 
     resolve_parser = subparsers.add_parser("resolve-version")
     resolve_parser.add_argument("input_version", nargs="?", default="")
+    resolve_parser.add_argument("--existing-versions", type=pathlib.Path)
 
     update_parser = subparsers.add_parser("update-manifests")
     update_parser.add_argument("version")
@@ -153,7 +174,11 @@ def main(argv=None):
 
     try:
         if args.command == "resolve-version":
-            print(resolve_version(args.input_version))
+            existing_versions = (
+                args.existing_versions.read_text(encoding="utf-8").splitlines()
+                if args.existing_versions else ()
+            )
+            print(resolve_version(args.input_version, existing_versions))
         elif args.command == "update-manifests":
             update_manifests(root, args.version)
         elif args.command == "validate-manifests":

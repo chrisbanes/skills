@@ -179,9 +179,13 @@ version, so `2026.06.16` maps to `2026.6.16`. Only bump versions when publishing
 an installable release.
 
 To publish a release, run the **Release** workflow from GitHub Actions. Leave the
-version input empty to use today's UTC `YYYY.M.D` version, or provide a specific
+version input empty to choose today's next unused UTC version, or provide a specific
 CalVer value, optionally with a one- or two-digit daily release number. Use the
 dry-run option to validate without creating a commit, tag, or GitHub release.
+Automatic numbering checks existing tags and releases: the first release uses
+`YYYY.M.D`, then subsequent releases increment the highest daily suffix through
+`.99`. Gaps are not reused. If all daily numbers are exhausted, the workflow
+fails and requires an explicit version or a release on another day.
 
 Before pushing, lint skills (frontmatter schema + markdown):
 
