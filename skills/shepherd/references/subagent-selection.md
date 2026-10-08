@@ -67,7 +67,10 @@ non-applicable field `n/a`.
 - Review only: verdict, findings with evidence, and coverage account.
 
 The complete log, not the tail, is the evidence the caller inspects when
-acceptance needs it.
+acceptance needs it. When a governing skill or wrapper forbids reading raw
+output, such as `gradle-run`, report its bounded summary and run identifier
+instead of a log path; that summary is the evidence, and no one reopens the raw
+log.
 
 ## Claude Code
 
