@@ -1,0 +1,42 @@
+{
+  "id": "delegation-context-direct",
+  "title": "Reuse accessible plan and evidence references in a complete handoff",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-subagents",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "delegation-context-direct"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "accessible-references",
+      "text": "Uses the existing approved plan, repository instructions, exact worktree/base state, and current validation record by reference after confirming that this worker can retrieve them and that they describe the assigned revision."
+    },
+    {
+      "id": "complete-assignment",
+      "text": "Keeps objective, exact owned files, allowed and forbidden actions, acceptance criteria, expected result and returned evidence, focused check, blocker path, and no-further-delegation boundary decision-complete; includes task-specific scope or permission differences explicitly instead of assuming the references cover them."
+    },
+    {
+      "id": "review-self-contained",
+      "text": "If assigning an independent fresh review, gives it the approved source, fixed base and candidate head, applicable standard, and required verdict and coverage in its brief; supporting pointers do not rely on inherited conversation for these essentials."
+    },
+    {
+      "id": "proportionality-and-acceptance",
+      "text": "Avoids copying the full plan or evidence into the brief and retains lead inspection of the owner's commit and verification evidence before acceptance."
+    },
+    {
+      "id": "no-side-effects",
+      "text": "Reviews the proposed handoff without dispatching an agent, running commands, or changing files."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

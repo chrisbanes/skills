@@ -1,0 +1,42 @@
+{
+  "id": "delegation-context-novel",
+  "title": "Repair a stale or inaccessible handoff reference",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "delegation-context-novel"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "detect-reference-failure",
+      "text": "Does not treat the supplied plan pointer as usable: it targets a removed path, names an earlier base, and is unreadable by the recipient."
+    },
+    {
+      "id": "bounded-repair",
+      "text": "Finds a corrected recipient-accessible approved record and verifies its current base, or provides only the smallest necessary authoritative excerpt when no suitable record is accessible; reports the unresolved blocker if neither is possible."
+    },
+    {
+      "id": "preserve-contract",
+      "text": "Keeps objective, exact checkout and base, owned files, originating source, allowed and forbidden actions, acceptance criteria, expected result, validation, blocker, and no-further-delegation explicit or linked to verified accessible current records; does not let a pointer conceal missing scope or permissions."
+    },
+    {
+      "id": "fresh-review",
+      "text": "A fresh independent reviewer receives a self-contained brief with approved source, fixed base and candidate, standard, required verdict, and coverage, with supporting pointers only."
+    },
+    {
+      "id": "no-side-effects",
+      "text": "Explains the repair without dispatch, commands, provider contact, or file edits."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}
