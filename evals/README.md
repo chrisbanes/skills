@@ -220,7 +220,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 55 calibration-only cases, including
+The workflows/writing corpus contains 61 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -230,7 +230,9 @@ early consequential boundary validation and restraint on unchanged evidence,
 unresolved decisions, proof-gated report publication, implementation-plan
 specificity for complex work with a one-function counterexample, and verification
 evidence reuse versus missing, stale, failed, or explicitly required fresh
-evidence. The local-planning cases check the generated plan artifact. The scored orchestration
+evidence. Six additional cases cover accessible context-pointer handoffs and
+optional shared discovery, including bounded evidence reuse, capacity and
+restraint. The local-planning cases check the generated plan artifact. The scored orchestration
 triad exercises a ready fork/join, a serial dependency chain, and restraint for
 a cyclic or incomplete graph, unsafe shared-file overlap, and validation
 invalidated at an integrated head. Additional orchestration calibrations cover
