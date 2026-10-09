@@ -22,6 +22,19 @@
    runtime requirements below. Confirm edit, validation, commit and resumable repair
    capability; retain the owner handle. Fit descendants within actual caller,
    runtime and repository capacity and respect Project scheduling priority.
+   Before dispatch, check whether multiple owners need the same concrete
+   unresolved fact. Reuse adequate current evidence first; otherwise investigate
+   it once yourself or assign a bounded discovery helper only when useful and
+   permitted by capacity. Keep the helper's investigation and source access
+   read-only. Record the source and base identity, findings, limits and
+   unresolved questions in the existing delivery context or accessible scratch
+   notes. The helper may write notes only when its runtime permits writing and
+   the destination is explicitly authorized; otherwise record its returned
+   evidence yourself.
+   Give the reference only to relevant owners. Let unaffected ready work proceed
+   and hold only work that needs unresolved facts. Discovery does not make
+   decisions or edit source; those remain with their existing owners. Skip this
+   check when work is solo or the needed facts are already settled.
    Give each concurrent writer a distinct isolated checkout; serialize shared
    writes and dependencies. Never switch a checkout used by an owner or process.
    Reference the existing record for scope, acceptance, base, path, branch,

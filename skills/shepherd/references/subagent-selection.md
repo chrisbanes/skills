@@ -17,9 +17,18 @@ editing, remote mutation, or further delegation authority.
    reference does not pin a model or reasoning level. Confirm the chosen
    agent's actual read/write access, tools, isolation, capacity, and ability to
    persist or resume for the required work.
-3. Give the agent one bounded assignment using the handoff brief below. A fresh
-   independent audit needs a self-contained brief rather than inherited
-   conversation context.
+3. Give the agent one bounded assignment using the handoff brief below. Prefer
+   pointers to existing plans, instructions, checkout state, and evidence over
+   copying their contents when each recipient can retrieve the referenced
+   material. Keep task-specific scope and permission differences explicit in
+   the brief. Verify that every recipient can access each reference and that it
+   still describes the assigned state; replace an inaccessible or stale pointer
+   with a corrected reference or the smallest necessary excerpt. A pointer does
+   not supply missing scope, action authority, acceptance criteria, or source
+   authority. A fresh independent audit must still receive a self-contained
+   brief, including the approved source, fixed base and candidate, review
+   standard, and required verdict and coverage; pointers may provide supporting
+   context but cannot make those essentials depend on inherited conversation.
 4. After bounding the assignment, select model and reasoning together under
    the user's subagent model-selection policy. Classify the actual delegated
    work independently of the parent ticket, caller's model, or role name:
@@ -38,8 +47,9 @@ if delegation was optional, the caller may continue solo within its own rules.
 
 ## Handoff brief
 
-Fill every field, by value or by pointer to an existing record; mark a
-non-applicable field `n/a`.
+Fill every field, by value or by an accessible pointer to an existing record;
+mark a non-applicable field `n/a`. Do not create a new plan, packet, or other
+document solely to avoid a short inline detail when no suitable record exists.
 
 - Objective or question.
 - Exact checkout path and state: branch and base SHA, or repository state.

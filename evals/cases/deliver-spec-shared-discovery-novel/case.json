@@ -1,0 +1,46 @@
+{
+  "id": "deliver-spec-shared-discovery-novel",
+  "title": "Respect Project capacity while resolving shared facts",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "deliver-spec-shared-discovery-novel"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "shared-question-and-evidence",
+      "text": "Identifies that B and C need the same unresolved protocol fact, checks supplied current evidence before investigation, and records source/base identity, findings, limits and unresolved questions."
+    },
+    {
+      "id": "capacity-and-priority",
+      "text": "Does not allocate a helper slot ahead of the higher-priority ready Project ticket; the lead may investigate once if useful, otherwise the dependent work waits for the fact."
+    },
+    {
+      "id": "partial-progress",
+      "text": "Lets independent ready task A continue while holding only B and C, which require the unresolved fact."
+    },
+    {
+      "id": "notes-and-authority",
+      "text": "Uses the explicitly authorized scratch notes destination, shares its reference only with B and C, and keeps decisions and source edits with task owners; discovery grants no extra authority."
+    },
+    {
+      "id": "common-entrypoint-and-restraint",
+      "text": "Applies the same bundled implementation procedure under Project handoff and standalone delivery, without changing capacity rules, creating a mandatory helper or adding a workflow phase."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only review plan and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

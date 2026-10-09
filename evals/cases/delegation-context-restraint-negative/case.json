@@ -1,0 +1,42 @@
+{
+  "id": "delegation-context-restraint-negative",
+  "title": "Keep a tiny assignment inline without creating a handoff document",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "delegation-context-restraint-negative"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "proportional-inline-brief",
+      "text": "Keeps this tiny standalone assignment in a concise inline brief because there is no existing plan, task record, or evidence record worth pointing to."
+    },
+    {
+      "id": "no-document-overhead",
+      "text": "Does not require creating a new plan, packet, receipt, notes file, or other document solely to support the handoff."
+    },
+    {
+      "id": "complete-fields",
+      "text": "Still states the one-file objective and scope, exact checkout/base, allowed and forbidden actions, acceptance check, blocker path, and no-further-delegation boundary."
+    },
+    {
+      "id": "fresh-review-boundary",
+      "text": "If a fresh independent audit is actually assigned, supplies a self-contained review brief with its source, base/candidate, standard, verdict, and coverage; does not add a reviewer or review phase to this task."
+    },
+    {
+      "id": "no-side-effects",
+      "text": "Makes no dispatch or file changes."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}
