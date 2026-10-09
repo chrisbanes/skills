@@ -19,7 +19,11 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 ## Procedure
 
 1. Detect the platform with `git remote get-url origin`: use `gh` for GitHub and
-   `glab` for GitLab. If it is ambiguous or unavailable, stop and ask.
+   `glab` for GitLab. If it is ambiguous or unavailable, stop and ask. When the
+   host provides a PR monitor that wakes this session on PR events, such as
+   Claude desktop's `ccd_pr` tools, follow
+   [host-managed monitoring](references/provider-commands.md#host-managed-monitoring)
+   instead of polling.
 2. Establish targets and a handled-ID snapshot. Every external comment, review,
    or thread absent from that snapshot is new, including pre-session feedback.
    After each poll record feedback IDs, CI state, and this controller's comments.
@@ -44,11 +48,13 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    when available. Give it targets and the snapshot; require new feedback IDs,
    body, location, review state, non-manual CI state, failed jobs, and log references.
    It never mutates. Keep triage, repairs, replies, pushes, resolution, retries,
-   and merging with the authorized controller.
+   and merging with the authorized controller. Skip it under host-managed
+   monitoring.
 4. Poll with the platform CLI using [provider commands](references/provider-commands.md),
    then compare complete review, comment, and CI state with the snapshot. Inspect
    failed logs only when needed. Do not reprocess old feedback or post a status-only
-   update.
+   update. Under host-managed monitoring, read once per wake; never start a
+   timer, loop, or repeated poll.
 5. Triage new evidence before remote mutation. Fix clear requests and narrow
    formatting, lint, compile, or test failures; answer clear questions in-thread.
    Apply [Behavioral review and repair](references/behavioral-review.md) for
@@ -74,7 +80,7 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    changes; report a second failure. Poll pending checks every 2–5 minutes,
    active repair every 30–60 seconds, and after three or more unchanged cycles
    every 10+ minutes. Two unchanged cycles remain on the normal 2–5 minute
-   cadence.
+   cadence. Under host-managed monitoring, end the turn after the push instead.
 8. Merge only when requirements and CI are green, conflicts are absent, and the
    user granted explicit or standing merge authority. Do not infer authority from
    approval.
@@ -84,7 +90,8 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 Continue until the user stops monitoring, every target is merged or closed, or
 an escalation is needed. Report the target, current CI/review state, actions
 taken, checks actually run (say none when none ran), checks unavailable or
-unknown, and the next required human decision. When failure evidence is missing,
+unknown, and the next required human decision. Under host-managed monitoring,
+also name the events that monitor does not wake on. When failure evidence is missing,
 request the exact check name and log, PR diff and head commit, and workflow/check
 configuration before proposing a targeted repair. Give the verification order:
 run affected CI-equivalent checks on the required host, fix their failures,

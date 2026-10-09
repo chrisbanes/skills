@@ -201,7 +201,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(60, len(calibration))
+        self.assertEqual(61, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -242,6 +242,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "delegation-context-direct",
                 "delegation-context-novel",
                 "delegation-context-restraint-negative",
+                "shepherd-host-monitor-direct",
                 "deliver-spec-concurrency-novel",
                 "deliver-spec-shared-discovery-direct",
                 "deliver-spec-shared-discovery-novel",

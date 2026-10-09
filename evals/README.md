@@ -220,7 +220,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 54 calibration-only cases, including
+The workflows/writing corpus contains 55 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -245,6 +245,9 @@ live subagent execution.
 Three shared-handoff calibrations check bounded implementation ownership,
 capability-based PR evidence helper selection, and restraint for one-off PR
 inspection. They also assess supplied state read-only.
+One host-monitor calibration checks that `shepherd` handles a Claude desktop
+CI-monitor wake with one read and no self-scheduled polling, using supplied
+state without live execution.
 Three delivery calibrations compare manual and Project delegation, safe fork/join
 execution under caller capacity, temporary capacity versus absent worker
 capability, and the trivial-edit exception versus useful overlap and retained
