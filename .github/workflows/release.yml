@@ -163,12 +163,16 @@ jobs:
         if: ${{ !inputs.dry_run && steps.diff.outputs.has_changes == 'true' }}
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          # Admin PAT to bypass the main ruleset; scoped to this step so build and lint never see it.
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           set -euo pipefail
 
           git add plugin.json package.json .claude-plugin/plugin.json .codex-plugin/plugin.json
           git commit -m "Bump version to $VERSION"
-          git push origin HEAD:main
+          # Clear checkout's persisted GITHUB_TOKEN header so the push authenticates with RELEASE_TOKEN.
+          git -c http.https://github.com/.extraheader= push \
+            "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
 
       - name: Resolve release target
         if: ${{ !inputs.dry_run }}
