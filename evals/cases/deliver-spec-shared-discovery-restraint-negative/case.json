@@ -1,0 +1,38 @@
+{
+  "id": "deliver-spec-shared-discovery-restraint-negative",
+  "title": "Skip discovery when evidence is settled or work is solo",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "deliver-spec-shared-discovery-restraint-negative"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "reuse-settled-evidence",
+      "text": "Reuses the current source-backed finding that already answers the needed question and does not commission redundant discovery."
+    },
+    {
+      "id": "solo-restraint",
+      "text": "Allows the lead to complete the small independent solo task without a discovery helper, extra note or added workflow phase."
+    },
+    {
+      "id": "preserve-procedure",
+      "text": "Keeps normal proportional validation, ownership, integration and independent final-review gates intact, and creates no new permission or decision authority."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only review plan and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

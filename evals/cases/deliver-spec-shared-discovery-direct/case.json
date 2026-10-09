@@ -1,0 +1,42 @@
+{
+  "id": "deliver-spec-shared-discovery-direct",
+  "title": "Reuse bounded discovery for a shared unknown",
+  "family": "workflow",
+  "target_skills": ["deliver-spec"],
+  "expected_skills": ["deliver-spec"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "deliver-spec-shared-discovery-direct"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "reuse-before-discovery",
+      "text": "Checks the supplied current evidence first and reuses it only where it answers the concrete question; avoids repeating the already-settled compatibility finding."
+    },
+    {
+      "id": "single-bounded-investigation",
+      "text": "Identifies the unresolved behavior as common to owners B and C and investigates it once, using the lead or one justified bounded read-only helper rather than asking both owners to rediscover it."
+    },
+    {
+      "id": "evidence-and-notes",
+      "text": "Records source and base identity, findings, limits and remaining questions in the existing delivery context or accessible notes; the helper writes notes only when its runtime permits it and the destination is explicitly authorized, or the lead records returned evidence."
+    },
+    {
+      "id": "ownership-and-frontier",
+      "text": "Shares the evidence reference only with B and C, lets independent ready task A proceed, and keeps source edits and implementation decisions with their existing owners."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only review plan and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}
