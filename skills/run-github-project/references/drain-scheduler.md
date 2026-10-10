@@ -221,7 +221,8 @@ dispatching the next:
    claims; never start a second planner while one retains the planning lane.
 7. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
    `Ready to implement` tickets one at a time, and launch unrelated slot agents
-   until the in-flight or active-agent limit is reached.
+   until the in-flight or active-agent limit, less any
+   [watcher relay](#project-watcher) reservation, is reached.
 8. Start the next ranked `Todo` item with the default-owner capability only
    when the planning lane and active agent capacity are free after maximizing
    runnable implementation. An AFK Wayfinder research or task item uses this
@@ -313,7 +314,9 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    available subagent, briefed under [subagent selection](subagent-selection.md)
    to run that one `wait` command once and return its stdout verbatim, with no
    other action or further delegation, and wait with the host's agent-wait call
-   (`wait_agent`).
+   (`wait_agent`). The relay counts as one active agent: whenever a watcher is
+   required, reserve that capacity before Scheduling step 7 fills it. A relay
+   that still cannot launch is an `error` under step 6.
 5. Keep two clocks. The drain's no-progress deadline is the last productive
    wake plus 24 hours, or the drain start when there is none. A productive wake
    is any watcher report or agent notification that leads to a claim, merge, or
@@ -325,7 +328,9 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    handled without a finish-gate return, omit it and pass only the earliest
    pending PR deadline (24 hours from the relaunch when none) until a productive
    wake starts a fresh one.
-6. Read the one-line report; treat a non-zero exit or any other output as `error`.
+6. Read the one-line report; treat a non-zero exit or any other output as
+   `error`, except from a watcher this controller cancelled under step 3, whose
+   result is discarded as neither a report nor a failure.
    - `changed` naming only occupied-slot PRs: refetch only those tickets' PR,
      head, check, review, and authority records; run no Refresh Gate.
    - Any other `changed`, including a preserved PR of a paused or parked ticket:
