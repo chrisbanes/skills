@@ -346,16 +346,19 @@ class WatchProjectTests(unittest.TestCase):
             [{"kind": "pullRequest", "key": "7", "fields": ["mergeable"]}],
         )
 
-    def test_unknown_baseline_becoming_mergeable_is_silent(self):
+    def test_mergeable_after_unknown_baseline_is_reported(self):
         responses = [page([]), repository(prs={7: pull_request(mergeable="UNKNOWN")})]
         _, baseline = self.snapshot(responses, "--pr", "7")
-        merged = [page([]), repository(prs={7: pull_request()})]
-        conflicting = [page([]), repository(prs={7: pull_request(mergeable="CONFLICTING")})]
         _, report = self.wait(
-            baseline, [*merged, *conflicting], "--pr", "7", loop_from=2
+            baseline,
+            [page([]), repository(prs={7: pull_request()})],
+            "--pr",
+            "7",
         )
-        self.assertEqual(report["status"], "changed")
-        self.assertEqual(self.calls["calls"], 4)
+        self.assertEqual(
+            report["changes"],
+            [{"kind": "pullRequest", "key": "7", "fields": ["mergeable"]}],
+        )
 
     def test_hung_gh_is_bounded_by_the_deadline(self):
         _, baseline = self.snapshot([page([])])
@@ -387,6 +390,47 @@ class WatchProjectTests(unittest.TestCase):
         _, report = self.wait(baseline, responses, deadline=iso(1), interval="0")
         self.assertEqual(report, {"status": "deadline"})
         self.assertEqual(self.calls["calls"], 2)
+
+    def test_wait_stops_fetching_when_budget_resets_after_the_deadline(self):
+        _, baseline = self.snapshot([page([item("I1", "Todo")])])
+        exhausted = {"cost": 1, "remaining": 0, "resetAt": iso(3600)}
+        _, report = self.wait(
+            baseline,
+            [
+                page([item("I1", "Todo")], next_cursor="C1", rate=exhausted),
+                page([item("I1", "Done")]),
+            ],
+            deadline=iso(1),
+        )
+        self.assertEqual(report, {"status": "deadline"})
+        self.assertEqual(self.calls["calls"], 1)
+
+    def test_expired_budget_mid_cycle_continues_without_error(self):
+        _, baseline = self.snapshot([page([item("I1", "Todo")])])
+        exhausted = {"cost": 1, "remaining": 0, "resetAt": iso(-60)}
+        started = time.monotonic()
+        _, report = self.wait(
+            baseline,
+            [
+                page([item("I1", "Todo")], next_cursor="C1", rate=exhausted),
+                page([item("I2", "Todo")]),
+            ],
+        )
+        self.assertLess(time.monotonic() - started, 10)
+        self.assertEqual(report["status"], "changed")
+        self.assertEqual(self.calls["calls"], 2)
+
+    def test_snapshot_errors_instead_of_sleeping_for_the_budget(self):
+        exhausted = {"cost": 1, "remaining": 0, "resetAt": iso(3600)}
+        started = time.monotonic()
+        result = self.run_script(
+            ["snapshot", *COMMON],
+            [page([item("I1", "Todo")], next_cursor="C1", rate=exhausted), page([])],
+        )
+        self.assertLess(time.monotonic() - started, 10)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(json.loads(result.stdout)["status"], "error")
+        self.assertEqual(self.calls["calls"], 1)
 
     def test_baseline_that_is_not_a_fingerprint_is_an_error(self):
         for content in (

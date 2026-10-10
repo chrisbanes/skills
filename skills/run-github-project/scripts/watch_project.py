@@ -101,10 +101,31 @@ def graphql(query: str, deadline: datetime | None, **variables: str) -> dict[str
     return response["data"]
 
 
-def fetch(args: argparse.Namespace, deadline: datetime | None = None) -> dict[str, Any]:
+def await_budget(rate: dict[str, Any], deadline: datetime | None) -> bool:
+    """Sleep out an exhausted rate budget before the next request.
+
+    Returns False when the deadline arrives first. Without a deadline there is
+    nothing to cap the sleep, so fail instead.
+    """
+    if rate["remaining"] >= rate["cost"]:
+        return True
+    reset_in = (parse_time(rate["resetAt"]) - now()).total_seconds()
+    if reset_in <= 0:
+        return True
+    if deadline is None:
+        raise WatchError(f"rate limit exhausted until {rate['resetAt']}")
+    left = max(0.0, (deadline - now()).total_seconds())
+    time.sleep(min(reset_in, left))
+    return reset_in < left
+
+
+def fetch(
+    args: argparse.Namespace, deadline: datetime | None = None
+) -> dict[str, Any] | None:
     """Return raw responses: all Project item pages plus one repository query.
 
     `rate` aggregates the cycle: summed cost, lowest remaining, latest reset.
+    Returns None if the deadline arrives while waiting out the rate budget.
     """
     pages: list[dict[str, Any]] = []
     after = ""
@@ -112,6 +133,8 @@ def fetch(args: argparse.Namespace, deadline: datetime | None = None) -> dict[st
         variables = {"id": args.project_id, "status": args.status_field}
         if after:
             variables["after"] = after
+        if pages and not await_budget(pages[-1]["rateLimit"], deadline):
+            return None
         data = graphql(ITEMS_QUERY, deadline, **variables)
         pages.append(data)
         items = (data.get("node") or {}).get("items")
@@ -123,6 +146,8 @@ def fetch(args: argparse.Namespace, deadline: datetime | None = None) -> dict[st
     repo = None
     if args.pr or args.issue:
         owner, _, name = args.repository.partition("/")
+        if not await_budget(pages[-1]["rateLimit"], deadline):
+            return None
         repo = graphql(
             repository_query(args.pr, args.issue), deadline, owner=owner, name=name
         )
@@ -173,9 +198,7 @@ def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
 
 def recomputing(field: str, before: Any, after: Any) -> bool:
     """GitHub reports mergeable UNKNOWN while recomputing; that is not a change."""
-    return field == "mergeable" and (
-        after == "UNKNOWN" or (before == "UNKNOWN" and after == "MERGEABLE")
-    )
+    return field == "mergeable" and after == "UNKNOWN"
 
 
 def diff(baseline: dict[str, Any], current: dict[str, Any]) -> list[dict[str, Any]]:
@@ -242,6 +265,8 @@ def wait(args: argparse.Namespace) -> int:
     deadline = parse_time(args.deadline)
     while now() < deadline:
         responses = fetch(args, deadline)
+        if responses is None:
+            break
         current = fingerprint(responses)
         changes = diff(baseline, current)
         if changes:
