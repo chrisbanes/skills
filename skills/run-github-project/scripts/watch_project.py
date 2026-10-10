@@ -33,6 +33,7 @@ query($id: ID!, $status: String!, $after: String) {
               state
               issueDependenciesSummary { blockedBy totalBlockedBy }
               parent { id }
+              subIssuesSummary { completed total }
               assignees(first: 20) { nodes { login } }
               labels(first: 50) { nodes { name } }
             }
@@ -186,6 +187,8 @@ def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
                 "blocked_by": (content.get("issueDependenciesSummary") or {}).get("blockedBy"),
                 "total_blocked_by": (content.get("issueDependenciesSummary") or {}).get("totalBlockedBy"),
                 "parent": (content.get("parent") or {}).get("id"),
+                "sub_completed": (content.get("subIssuesSummary") or {}).get("completed"),
+                "sub_total": (content.get("subIssuesSummary") or {}).get("total"),
             }
     prs: dict[str, Any] = {}
     issues: dict[str, Any] = {}

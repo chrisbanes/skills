@@ -56,6 +56,8 @@ def item(
     total_blocked_by=None,
     parent=None,
     updated="2026-10-01T00:00:00Z",
+    sub_completed=None,
+    sub_total=None,
 ):
     content = {
         "state": state,
@@ -68,6 +70,8 @@ def item(
             "totalBlockedBy": total_blocked_by if total_blocked_by is not None else blocked_by,
         }
         content["parent"] = {"id": parent} if parent else None
+    if sub_total is not None:
+        content["subIssuesSummary"] = {"completed": sub_completed, "total": sub_total}
     return {
         "id": item_id,
         "updatedAt": updated,
@@ -239,7 +243,7 @@ class WatchProjectTests(unittest.TestCase):
     def test_item_without_dependency_fields_fingerprints_as_null(self):
         fingerprint, _ = self.snapshot([page([item("PR1", "Todo")])])
         record = fingerprint["item"]["PR1"]
-        for field in ("blocked_by", "total_blocked_by", "parent"):
+        for field in ("blocked_by", "total_blocked_by", "parent", "sub_completed", "sub_total"):
             self.assertIsNone(record[field])
 
     def test_item_updated_at_change_is_reported(self):
@@ -249,6 +253,26 @@ class WatchProjectTests(unittest.TestCase):
         )
         self.assertEqual(
             report["changes"], [{"kind": "item", "key": "I1", "fields": ["updated"]}]
+        )
+
+    def test_sub_issue_completed_change_is_reported(self):
+        before = item("I1", "Todo", sub_completed=1, sub_total=3)
+        after = item("I1", "Todo", sub_completed=2, sub_total=3)
+        _, baseline = self.snapshot([page([before])])
+        _, report = self.wait(baseline, [page([after])])
+        self.assertEqual(
+            report["changes"],
+            [{"kind": "item", "key": "I1", "fields": ["sub_completed"]}],
+        )
+
+    def test_sub_issue_total_change_is_reported(self):
+        before = item("I1", "Todo", sub_completed=1, sub_total=3)
+        after = item("I1", "Todo", sub_completed=1, sub_total=4)
+        _, baseline = self.snapshot([page([before])])
+        _, report = self.wait(baseline, [page([after])])
+        self.assertEqual(
+            report["changes"],
+            [{"kind": "item", "key": "I1", "fields": ["sub_total"]}],
         )
 
     def test_status_change_reports_changed_item_and_field(self):
