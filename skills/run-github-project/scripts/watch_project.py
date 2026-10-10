@@ -52,6 +52,7 @@ query($id: ID!, $status: String!, $after: String) {
 PR_FIELDS = """
   state
   headRefOid
+  baseRefOid
   mergeable
   reviewDecision
   reviews(last: 1) { nodes { id } }
@@ -195,6 +196,7 @@ def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
             prs[alias[2:]] = {
                 "state": record["state"],
                 "sha": record["headRefOid"],
+                "base": record["baseRefOid"],
                 "checks": rollup["state"] if rollup else None,
                 "review": record["reviewDecision"],
                 "review_id": (record["reviews"]["nodes"] or [{}])[-1].get("id"),

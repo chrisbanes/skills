@@ -99,8 +99,10 @@ def pull_request(
     state="OPEN",
     review_id=None,
     comment_id=None,
+    base="base1",
 ):
     return {
+        "baseRefOid": base,
         "reviews": {"nodes": [{"id": review_id}] if review_id else []},
         "comments": {"nodes": [{"id": comment_id}] if comment_id else []},
         "state": state,
@@ -127,7 +129,7 @@ def repository(*, prs=None, issues=None, rate=None):
 
 def iso(delta_seconds):
     moment = datetime.now(timezone.utc) + timedelta(seconds=delta_seconds)
-    return moment.strftime("%Y-%m-%dT%H:%M:%SZ")
+    return moment.isoformat()
 
 
 class WatchProjectTests(unittest.TestCase):
@@ -287,7 +289,7 @@ class WatchProjectTests(unittest.TestCase):
             [*unknown, *responses],
             "--pr",
             "7",
-            deadline=iso(2),
+            deadline=iso(3),
             interval="0.1",
             loop_from=len(unknown),
         )
@@ -301,6 +303,7 @@ class WatchProjectTests(unittest.TestCase):
         for field, changed in (
             ("state", pull_request(state="MERGED")),
             ("sha", pull_request(sha="new")),
+            ("base", pull_request(base="base2")),
             ("checks", pull_request(checks="FAILURE")),
             ("review", pull_request(review="CHANGES_REQUESTED")),
             ("mergeable", pull_request(mergeable="CONFLICTING")),
@@ -370,7 +373,7 @@ class WatchProjectTests(unittest.TestCase):
             ],
             "--issue",
             "9",
-            deadline=iso(1),
+            deadline=iso(3),
             interval="0.1",
             loop_from=0,
         )
@@ -411,7 +414,7 @@ class WatchProjectTests(unittest.TestCase):
                 page([item("I1", "Backlog")], rate=exhausted),
                 page([item("I1", "Todo")]),
             ],
-            deadline=iso(1),
+            deadline=iso(3),
             interval="0",
         )
         self.assertEqual(report, {"status": "deadline"})
@@ -455,7 +458,7 @@ class WatchProjectTests(unittest.TestCase):
         _, baseline = self.snapshot([page([])])
         started = time.monotonic()
         result, report = self.wait(
-            baseline, [{"__sleep__": 30}], deadline=iso(2), interval="0"
+            baseline, [{"__sleep__": 30}], deadline=iso(3), interval="0"
         )
         self.assertLess(time.monotonic() - started, 15)
         self.assertIn(report["status"], ("error", "deadline"))
@@ -478,7 +481,7 @@ class WatchProjectTests(unittest.TestCase):
             page([], rate={"cost": 1, "remaining": 1, "resetAt": iso(3600)}),
         ]
         _, baseline = self.snapshot(responses)
-        _, report = self.wait(baseline, responses, deadline=iso(1), interval="0")
+        _, report = self.wait(baseline, responses, deadline=iso(3), interval="0")
         self.assertEqual(report, {"status": "deadline"})
         self.assertEqual(self.calls["calls"], 2)
 
@@ -491,7 +494,7 @@ class WatchProjectTests(unittest.TestCase):
                 page([item("I1", "Todo")], next_cursor="C1", rate=exhausted),
                 page([item("I1", "Done")]),
             ],
-            deadline=iso(1),
+            deadline=iso(3),
         )
         self.assertEqual(report, {"status": "deadline"})
         self.assertEqual(self.calls["calls"], 1)
