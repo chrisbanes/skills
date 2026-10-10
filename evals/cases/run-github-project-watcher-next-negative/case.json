@@ -1,0 +1,50 @@
+{
+  "id": "run-github-project-watcher-next-negative",
+  "title": "Return waiting-for-human from next without starting a watcher",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-watcher-next-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "return",
+      "text": "Returns `waiting-for-human` immediately after the complete refresh shows only human-gated work, because `next` is one-shot and unchanged."
+    },
+    {
+      "id": "no-watcher",
+      "text": "Starts no watcher and does not stay alive to wait: no watch_project.py launch, no subagent relay, no polling, ScheduleWakeup, CronCreate, /loop, or sleep."
+    },
+    {
+      "id": "report",
+      "text": "Reports the human frontier (the decision pause and the missing-authority pause) and what a human must supply to resume."
+    },
+    {
+      "id": "no-mutations",
+      "text": "Performs no commands, provider calls, or edits in this supplied-state scenario."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

@@ -1,0 +1,50 @@
+{
+  "id": "run-github-project-watcher-direct",
+  "title": "Stay alive in drain and start the project watcher instead of returning",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-watcher-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "stay-alive",
+      "text": "With nothing runnable in `drain` and two human-action items remaining, the controller does not return `waiting-for-human` yet; it stays alive and waits until 24 hours pass without a productive wake (one that led to a claim, merge, or dispatched work)."
+    },
+    {
+      "id": "launch-watcher",
+      "text": "Starts one read-only watcher using a fresh baseline taken immediately before the complete refresh, the configured poll interval, and a deadline of the last productive wake (or drain start) plus 24 hours, rather than sleep-based polling, ScheduleWakeup, CronCreate, /loop, or the single-PR host monitor."
+    },
+    {
+      "id": "read-only",
+      "text": "Treats the watcher as strictly read-only and the wake as a hint rather than authority; no grant, claim, merge, or close is inferred from the wait itself, and run grants stay invocation-scoped."
+    },
+    {
+      "id": "no-mutations",
+      "text": "Performs no commands, provider calls, or edits and describes the launch rather than claiming a live watcher exists."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

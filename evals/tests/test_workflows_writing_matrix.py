@@ -201,7 +201,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(61, len(calibration))
+        self.assertEqual(65, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -269,6 +269,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "shepherd-boundary-diagnostics-novel",
                 "run-github-project-review-convergence-negative",
                 "to-plan-boundary-validation-direct",
+                "run-github-project-watcher-direct",
+                "run-github-project-watcher-wake-novel",
+                "run-github-project-watcher-next-negative",
+                "run-github-project-watcher-restraint-negative",
             },
             {case.id for case in calibration},
         )
