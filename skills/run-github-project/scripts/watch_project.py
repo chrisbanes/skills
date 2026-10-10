@@ -264,8 +264,12 @@ def parse_args() -> argparse.Namespace:
     common.add_argument("--pr", type=int, action="append", default=[])
     common.add_argument("--issue", type=int, action="append", default=[])
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser(
+    snapshot_command = commands.add_parser(
         "snapshot", parents=[common], help="print the current fingerprint as one JSON line"
+    )
+    snapshot_command.add_argument(
+        "--board-from",
+        help="keep item and issue sections from this prior baseline; only pullRequest is fresh",
     )
     wait_command = commands.add_parser(
         "wait", parents=[common], help="exit on the first difference from --baseline, or at --deadline"
@@ -276,11 +280,16 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def wait(args: argparse.Namespace) -> int:
-    with open(args.baseline) as handle:
+def load_baseline(path: str) -> dict[str, Any]:
+    with open(path) as handle:
         baseline = json.load(handle)
     if not isinstance(baseline, dict) or not all(isinstance(baseline.get(k), dict) for k in KINDS):
-        raise WatchError(f"{args.baseline} is not a snapshot fingerprint")
+        raise WatchError(f"{path} is not a snapshot fingerprint")
+    return baseline
+
+
+def wait(args: argparse.Namespace) -> int:
+    baseline = load_baseline(args.baseline)
     deadline = parse_time(args.deadline)
     while now() < deadline:
         responses = fetch(args, deadline)
@@ -304,7 +313,12 @@ def main() -> int:
     args = parse_args()
     try:
         if args.command == "snapshot":
-            report(fingerprint(fetch(args)))
+            prior = load_baseline(args.board_from) if args.board_from else None
+            current = fingerprint(fetch(args))
+            if prior:
+                # Board drift since `prior` must still differ on the next wait.
+                current = {**prior, "pullRequest": current["pullRequest"]}
+            report(current)
             return 0
         return wait(args)
     except (WatchError, OSError, ValueError, KeyError, TypeError) as error:

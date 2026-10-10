@@ -275,6 +275,39 @@ class WatchProjectTests(unittest.TestCase):
             [{"kind": "item", "key": "I1", "fields": ["sub_total"]}],
         )
 
+    def test_snapshot_board_from_keeps_prior_board_and_fresh_pull_requests(self):
+        _, prior = self.snapshot(
+            [page([item("I1", "Todo")]), repository(prs={7: pull_request()})],
+            "--pr",
+            "7",
+        )
+        fresh = [
+            page([item("I1", "Done")]),
+            repository(prs={7: pull_request(sha="new")}),
+        ]
+        result = self.run_script(
+            ["snapshot", *COMMON, "--pr", "7", "--board-from", str(prior)], fresh
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        merged = json.loads(result.stdout)
+        self.assertEqual(merged["item"]["I1"]["status"], "Todo")
+        self.assertEqual(merged["pullRequest"]["7"]["sha"], "new")
+        path = self.root / "merged.json"
+        path.write_text(result.stdout)
+        _, report = self.wait(path, fresh, "--pr", "7")
+        self.assertEqual(
+            report["changes"], [{"kind": "item", "key": "I1", "fields": ["status"]}]
+        )
+
+    def test_snapshot_board_from_rejects_a_bad_file(self):
+        bad = self.root / "bad.json"
+        bad.write_text(json.dumps({"status": "error", "message": "boom"}))
+        result = self.run_script(
+            ["snapshot", *COMMON, "--board-from", str(bad)], [page([])]
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(json.loads(result.stdout)["status"], "error")
+
     def test_status_change_reports_changed_item_and_field(self):
         _, baseline = self.snapshot([page([item("I1", "Backlog")])])
         result, report = self.wait(
