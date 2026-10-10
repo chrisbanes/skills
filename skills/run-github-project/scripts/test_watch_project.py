@@ -55,6 +55,7 @@ def item(
     blocked_by=None,
     total_blocked_by=None,
     parent=None,
+    updated="2026-10-01T00:00:00Z",
 ):
     content = {
         "state": state,
@@ -69,6 +70,7 @@ def item(
         content["parent"] = {"id": parent} if parent else None
     return {
         "id": item_id,
+        "updatedAt": updated,
         "fieldValueByName": {"name": status},
         "content": content,
     }
@@ -239,6 +241,15 @@ class WatchProjectTests(unittest.TestCase):
         record = fingerprint["item"]["PR1"]
         for field in ("blocked_by", "total_blocked_by", "parent"):
             self.assertIsNone(record[field])
+
+    def test_item_updated_at_change_is_reported(self):
+        _, baseline = self.snapshot([page([item("I1", "Todo")])])
+        _, report = self.wait(
+            baseline, [page([item("I1", "Todo", updated="2026-10-02T00:00:00Z")])]
+        )
+        self.assertEqual(
+            report["changes"], [{"kind": "item", "key": "I1", "fields": ["updated"]}]
+        )
 
     def test_status_change_reports_changed_item_and_field(self):
         _, baseline = self.snapshot([page([item("I1", "Backlog")])])

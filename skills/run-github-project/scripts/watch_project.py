@@ -24,6 +24,7 @@ query($id: ID!, $status: String!, $after: String) {
         pageInfo { hasNextPage endCursor }
         nodes {
           id
+          updatedAt
           fieldValueByName(name: $status) {
             ... on ProjectV2ItemFieldSingleSelectValue { name }
           }
@@ -176,6 +177,8 @@ def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
         for node in data["node"]["items"]["nodes"]:
             content = node.get("content") or {}
             items[node["id"]] = {
+                # Catches custom-field edits (e.g. Priority) the other fields miss.
+                "updated": node.get("updatedAt"),
                 "status": (node.get("fieldValueByName") or {}).get("name"),
                 "assignees": sorted(n["login"] for n in (content.get("assignees") or {}).get("nodes", [])),
                 "labels": sorted(n["name"] for n in (content.get("labels") or {}).get("nodes", [])),
