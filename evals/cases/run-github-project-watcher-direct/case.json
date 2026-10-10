@@ -28,7 +28,7 @@
   "rubric": [
     {
       "id": "stay-alive",
-      "text": "With nothing runnable in `drain` and two human-action items remaining, the controller does not return `waiting-for-human` yet; it stays alive and waits until 24 hours pass without a productive wake (one that led to a claim, merge, or dispatched work)."
+      "text": "With nothing runnable in `drain` and a decision pause (#41) and an authority pause (#42) remaining, the controller does not return `waiting-for-human` yet; it stays alive and waits until 24 hours pass without a productive wake (one that led to a claim, merge, or dispatched work)."
     },
     {
       "id": "launch-watcher",

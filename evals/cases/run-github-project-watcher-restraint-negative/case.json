@@ -13,7 +13,9 @@
   "fixture": "workflow",
   "allowed_write_paths": [],
   "forbidden_command_patterns": [
-    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b",
+    "watch_project\\.py",
+    "\\bsleep\\b"
   ],
   "validators": [
     {
