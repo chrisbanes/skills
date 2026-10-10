@@ -221,8 +221,8 @@ dispatching the next:
    claims; never start a second planner while one retains the planning lane.
 7. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
    `Ready to implement` tickets one at a time, and launch unrelated slot agents
-   until the in-flight or active-agent limit, less any
-   [watcher relay](#project-watcher) reservation, is reached.
+   until the in-flight or active-agent limit, less any watcher relay
+   reservation ([step 4](#project-watcher)), is reached.
 8. Start the next ranked `Todo` item with the default-owner capability only
    when the planning lane and active agent capacity are free after maximizing
    runnable implementation. An AFK Wayfinder research or task item uses this
@@ -315,8 +315,10 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    to run that one `wait` command once and return its stdout verbatim, with no
    other action or further delegation, and wait with the host's agent-wait call
    (`wait_agent`). The relay counts as one active agent: whenever a watcher is
-   required, reserve that capacity before Scheduling step 7 fills it. A relay
-   that still cannot launch is an `error` under step 6.
+   required and the active-agent limit exceeds one, reserve that capacity before
+   Scheduling step 7 fills it. At a limit of one, launch the relay only while no
+   ticket agent runs; that agent's completion notification wakes the controller.
+   A relay permitted to launch that cannot is an `error` under step 6.
 5. Keep two clocks. The drain's no-progress deadline is the last productive
    wake plus 24 hours, or the drain start when there is none. A productive wake
    is any watcher report or agent notification that leads to a claim, merge, or
