@@ -75,9 +75,17 @@ def page(items, *, next_cursor=None, rate=None):
 
 
 def pull_request(
-    sha="abc", mergeable="MERGEABLE", checks="SUCCESS", review="APPROVED", state="OPEN"
+    sha="abc",
+    mergeable="MERGEABLE",
+    checks="SUCCESS",
+    review="APPROVED",
+    state="OPEN",
+    review_id=None,
+    comment_id=None,
 ):
     return {
+        "reviews": {"nodes": [{"id": review_id}] if review_id else []},
+        "comments": {"nodes": [{"id": comment_id}] if comment_id else []},
         "state": state,
         "headRefOid": sha,
         "mergeable": mergeable,
@@ -254,6 +262,38 @@ class WatchProjectTests(unittest.TestCase):
                     report["changes"],
                     [{"kind": "pullRequest", "key": "7", "fields": [field]}],
                 )
+
+    def test_new_review_is_reported_when_decision_is_unchanged(self):
+        before = pull_request(review="CHANGES_REQUESTED", review_id="R1")
+        _, baseline = self.snapshot([page([]), repository(prs={7: before})], "--pr", "7")
+        after = pull_request(review="CHANGES_REQUESTED", review_id="R2")
+        _, report = self.wait(
+            baseline, [page([]), repository(prs={7: after})], "--pr", "7"
+        )
+        self.assertEqual(
+            report["changes"],
+            [{"kind": "pullRequest", "key": "7", "fields": ["review_id"]}],
+        )
+
+    def test_new_conversation_comment_is_reported(self):
+        before = pull_request(comment_id="C1")
+        _, baseline = self.snapshot([page([]), repository(prs={7: before})], "--pr", "7")
+        after = pull_request(comment_id="C2")
+        _, report = self.wait(
+            baseline, [page([]), repository(prs={7: after})], "--pr", "7"
+        )
+        self.assertEqual(
+            report["changes"],
+            [{"kind": "pullRequest", "key": "7", "fields": ["comment_id"]}],
+        )
+
+    def test_pull_request_without_reviews_or_comments_fingerprints_as_null(self):
+        fingerprint, _ = self.snapshot(
+            [page([]), repository(prs={7: pull_request()})], "--pr", "7"
+        )
+        record = fingerprint["pullRequest"]["7"]
+        self.assertIsNone(record["review_id"])
+        self.assertIsNone(record["comment_id"])
 
     def test_new_last_comment_on_watched_issue_is_reported(self):
         responses = [page([]), repository(issues={9: issue()})]

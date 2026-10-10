@@ -45,11 +45,15 @@ query($id: ID!, $status: String!, $after: String) {
   }
 }
 """
+# Inline review comments and thread replies are submitted as reviews, so the
+# latest review ID catches them; comments are PR conversation comments only.
 PR_FIELDS = """
   state
   headRefOid
   mergeable
   reviewDecision
+  reviews(last: 1) { nodes { id } }
+  comments(last: 1) { nodes { id } }
   commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
 """
 ISSUE_FIELDS = "comments(last: 1) { nodes { id updatedAt } }"
@@ -188,6 +192,8 @@ def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
                 "sha": record["headRefOid"],
                 "checks": rollup["state"] if rollup else None,
                 "review": record["reviewDecision"],
+                "review_id": (record["reviews"]["nodes"] or [{}])[-1].get("id"),
+                "comment_id": (record["comments"]["nodes"] or [{}])[-1].get("id"),
                 "mergeable": record["mergeable"],
             }
         else:
