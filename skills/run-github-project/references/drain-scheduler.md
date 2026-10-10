@@ -286,16 +286,18 @@ claim, merge, or close, replaces a complete Project query, or serves as a
 resumption signal for a [parked claim](#terminal-required-ci-parking). Waiting
 grants nothing; run grants stay invocation-scoped and lapse when the run returns.
 
-1. Run exactly one watcher whenever any slot is in remote wait or a human action
-   or authority/decision pause exists. With neither, start none, stop a running
-   one, and wait for agent notifications. Never poll, sleep, or use
+1. Run exactly one watcher whenever any slot is in remote wait or a human action,
+   authority/decision pause, Wayfinder human-frontier item, or assigned Wayfinder
+   HITL attention item exists. With none, start none, stop a running one, and
+   wait for agent notifications. Never poll, sleep, or use
    `ScheduleWakeup`, `CronCreate`, `/loop`, or the single-PR host monitor.
 2. Immediately before each complete Project query, and before the targeted
    refetch that answers a PR-only report, write a baseline:
    `snapshot --project-id <Node ID> --repository <owner/name> --status-field <Status field name> [--pr <N>]... [--issue <N>]... > <baseline file>`.
    Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
    paused, parked, or authority-paused ticket, and `--issue` for every parked
-   claim, paused ticket, and human-frontier issue. For the targeted refetch, add
+   claim, paused ticket, human-frontier issue, Wayfinder human-frontier item, and
+   assigned Wayfinder HITL attention item. For the targeted refetch, add
    `--board-from <reporting watcher's baseline file>` and write a new file, so
    board drift missed since that watcher's last poll still reports. A non-zero
    `snapshot` is an `error` under step 6: discard its output, launch no `wait`,
