@@ -292,15 +292,19 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
 2. Immediately before each complete Project query, and before the targeted
    refetch that answers a PR-only report, write a baseline:
    `snapshot --project-id <Node ID> --repository <owner/name> --status-field <Status field name> [--pr <N>]... [--issue <N>]... > <baseline file>`.
-   Pass `--pr` for every in-flight PR in remote wait and `--issue` for every
-   parked claim, paused ticket, and human-frontier issue. Taking the baseline
-   first can cost one redundant wake but cannot lose a change. A `snapshot` that
-   exits non-zero is an `error` report; discard its output.
-3. After that read completes, stop any running watcher through the host's
-   cancellation mechanism, never by process-name or command-line match. Then
-   launch `wait` with the same arguments plus `--baseline <file>` and
-   `--deadline <ISO-8601>` and, when the binding sets one, `--interval <seconds>`
-   from [Monitoring](project-config.md#monitoring-optional); the default is 120.
+   Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
+   paused, parked, or authority-paused ticket, and `--issue` for every parked
+   claim, paused ticket, and human-frontier issue. Taking the baseline first can
+   cost one redundant wake but cannot lose a change. If `snapshot` exits
+   non-zero, discard its output and launch no `wait`: count one consecutive
+   failure (step 6), pass the Refresh Gate, then retake the snapshot and repeat
+   the read it precedes, until a snapshot succeeds or the limit stops watching.
+3. After a read preceded by a successful `snapshot` completes, stop any running
+   watcher through the host's cancellation mechanism, never by process-name or
+   command-line match. Then launch `wait` with the same arguments plus
+   `--baseline <file>` and `--deadline <ISO-8601>` and, when the binding sets
+   one, `--interval <seconds>` from
+   [Monitoring](project-config.md#monitoring-optional); the default is 120.
    A PR or issue the read added to or dropped from those sets appears as `added`
    or `removed` in the first report; handle it like any other report.
 4. On a host that wakes the controller when a background command exits (Claude
@@ -319,12 +323,13 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
 6. Read the one-line report; treat a non-zero exit or any other output as `error`.
    - `changed` naming only occupied-slot PRs: refetch only those tickets' PR,
      head, check, review, and authority records; run no Refresh Gate.
-   - Any other `changed`: pass the Refresh Gate before any selection or claim.
+   - Any other `changed`, including a preserved PR of a paused or parked ticket:
+     pass the Refresh Gate before any selection or claim.
    - `error`: a wake, never "no change". Pass the Refresh Gate and count one
      consecutive failure; `changed` and `deadline` reset the count. After three,
-     stop watching. Once no local or controller action remains, return
-     `waiting-for-human` reporting monitoring unavailable and each preserved PR
-     in remote wait.
+     stop watching. Once no local or controller action remains, apply the
+     [finish gate](#failure-isolation-and-finish-gate)'s monitoring-unavailable
+     rule.
    - `deadline`: pass the Refresh Gate and take any newly runnable action;
      otherwise the [finish gate](#failure-isolation-and-finish-gate) now
      returns `waiting-for-human` if only human-gated work remains.
@@ -507,7 +512,10 @@ and/or assigned HITL attention remain,
 wait under the [Project Watcher](#project-watcher) instead of returning. Return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and
 the Wayfinder frontier only when the watcher reports its `deadline` or
-monitoring becomes unavailable after three consecutive failures. If no
+monitoring becomes unavailable after three consecutive failures. In the latter
+case, the `waiting-for-human` return, which names each preserved PR in remote
+wait, applies only when nothing but human-gated work and PRs in remote wait
+remains; any other blocker still produces the partial-drain report below. If no
 runnable work remains but a parked implementation claim, blocked or timed-out
 slot, unknown/unavailable execution or qualification prerequisite, or incomplete
 eligible triage item remains, stop with a partial-drain
