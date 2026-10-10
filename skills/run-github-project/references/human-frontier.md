@@ -67,11 +67,15 @@ ready epics serially and continue through newly unlocked work.
 ## Wait For Human Work
 
 Never assign role-labelled human work, move it to Todo, or close it.
-Observe its completion only through refreshed authoritative GitHub state.
+Observe its completion only through refreshed authoritative GitHub state; a
+watcher report prompts that refresh but is never the observation.
 
 Return `waiting-for-human` only when no controller, planning, implementation,
 monitoring, or non-deferred triage action remains and `humanActions` or verified
-authority/decision pauses are non-empty. This result is resumable and is
+authority/decision pauses are non-empty. In `drain`, waiting under the
+[Project Watcher](drain-scheduler.md#project-watcher) is a monitoring action:
+return only after its deadline passes or its monitoring becomes unavailable. In
+`next`, return at once and start no watcher. This result is resumable and is
 neither success nor partial drain.
 Report the complete frontier packet, parked dependency chain, and actions that
 would become available next.
@@ -89,4 +93,5 @@ Use the authoritative drain finish gate in
 including its partial-drain result for an eligible triage item that the triage
 provider cannot complete. Finish successfully only when that gate passes and no
 human action remains. Never call a human frontier a failure or successful empty
-drain.
+drain. In `drain`, that gate waits under the Project Watcher before returning
+`waiting-for-human`; `next` returns it at once.

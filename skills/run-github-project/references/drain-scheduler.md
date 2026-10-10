@@ -229,8 +229,9 @@ dispatching the next:
    research uses the required `research` subagent. Resume a marked Wayfinder
    reconciliation before new Todo work. Surface unassigned Wayfinder HITL
    frontier work and assigned HITL attention without dispatching either.
-9. Monitor all remote slots together only when no local or controller action
-   remains.
+9. Keep the [Project Watcher](#project-watcher) running for every remote slot
+   and human-gated item, even while other slots have agents working. When no
+   local or controller action remains, wait on it and on agent notifications.
 10. After the authoritative execution-clear predicate in
    [Todo Triage Lane](triage-lane.md#dispatch) is satisfied, process the next
    unblocked Todo `needs-triage` item through the triage tail lane.
@@ -274,13 +275,68 @@ When several slots requeue, retain their original claim order ahead of new
 Ready and Todo work. Only the verified cooperative planner checkpoint may
 release an active planner for delivery; occupied ticket owners are not preempted.
 
+### Project Watcher
+
+In `drain` only, wake the controller from a wait with the read-only
+`python3 <skill-dir>/scripts/watch_project.py`, which runs only `gh api graphql`
+queries; `next` never starts one. Its report is a hint to refresh, never
+authority: it never satisfies the [Refresh Gate](#refresh-gate), authorizes a
+claim, merge, or close, replaces a complete Project query, or serves as a
+resumption signal for a [parked claim](#terminal-required-ci-parking). Waiting
+grants nothing; run grants stay invocation-scoped and lapse when the run returns.
+
+1. Run exactly one watcher whenever any slot is in remote wait or a human action
+   or authority/decision pause exists. With neither, start none, stop a running
+   one, and wait for agent notifications. Never poll, sleep, or use
+   `ScheduleWakeup`, `CronCreate`, `/loop`, or the single-PR host monitor.
+2. Immediately before each complete Project query, and before the targeted
+   refetch that answers a PR-only report, write a baseline:
+   `snapshot --project-id <Node ID> --repository <owner/name> --status-field <Status field name> [--pr <N>]... [--issue <N>]... > <baseline file>`.
+   Pass `--pr` for every in-flight PR in remote wait and `--issue` for every
+   parked claim, paused ticket, and human-frontier issue. Taking the baseline
+   first can cost one redundant wake but cannot lose a change. A `snapshot` that
+   exits non-zero is an `error` report; discard its output.
+3. After that read completes, stop any running watcher through the host's
+   cancellation mechanism, never by process-name or command-line match. Then
+   launch `wait` with the same arguments plus `--baseline <file>` and
+   `--deadline <ISO-8601>` and, when the binding sets one, `--interval <seconds>`
+   from [Monitoring](project-config.md#monitoring-optional); the default is 120.
+   A PR or issue the read added to or dropped from those sets appears as `added`
+   or `removed` in the first report; handle it like any other report.
+4. On a host that wakes the controller when a background command exits (Claude
+   Code `run_in_background`), run the command directly and wait for its
+   completion notification. On any other host (Codex), launch the cheapest
+   available subagent, briefed under [subagent selection](subagent-selection.md)
+   to run that one `wait` command once and return its stdout verbatim, with no
+   other action or further delegation, and wait with the host's agent-wait call
+   (`wait_agent`).
+5. Set the deadline to the last productive wake plus 24 hours, or the drain start
+   when there is none; when a PR is in remote wait, use the latest such PR
+   deadline if it is later. A productive wake is any watcher report or agent
+   notification that leads to a claim, merge, or dispatched work, and it resets
+   the deadline. A wake whose refresh finds nothing eligible does not. Record the
+   last productive wake in the existing controller checkpoint.
+6. Read the one-line report; treat a non-zero exit or any other output as `error`.
+   - `changed` naming only occupied-slot PRs: refetch only those tickets' PR,
+     head, check, review, and authority records; run no Refresh Gate.
+   - Any other `changed`: pass the Refresh Gate before any selection or claim.
+   - `error`: a wake, never "no change". Pass the Refresh Gate and count one
+     consecutive failure; `changed` and `deadline` reset the count. After three,
+     stop watching. Once no local or controller action remains, return
+     `waiting-for-human` reporting monitoring unavailable and each preserved PR
+     in remote wait.
+   - `deadline`: pass the Refresh Gate and take any newly runnable action;
+     otherwise the [finish gate](#failure-isolation-and-finish-gate) now
+     returns `waiting-for-human` if only human-gated work remains.
+
 ## Phase Timing And Stalls
 
 1. Persist observed planning, implementation, repair, review and CI intervals
    in the existing run/ticket checkpoint: stable interval ID, ticket/owner,
    phase, start, end or still-open state, source/plan/head and progress evidence.
    Record capacity/resource waits separately with their cause and awaited owner
-   or grant. Checkpoint before yielding, handing off or compacting context.
+   or grant, and each [Project Watcher](#project-watcher) wait as a wait with
+   cause `watcher`. Checkpoint before yielding, handing off or compacting context.
 2. Resume the same interval IDs; never append duplicate starts after compaction.
    Reconcile uncertain endpoints from evidence and report unknown time when
    unavailable. Keep planning active-time budget separate from yielded/wait time.
@@ -382,7 +438,9 @@ After a reconciled push:
 1. Preserve the slot and verify it holds no named resource grant. Reconcile one
    before entering remote wait.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
-   capacity. Monitor all PRs without no-op comments or sequential polling.
+   capacity. Monitor all PRs together through the
+   [Project Watcher](#project-watcher), without no-op comments, sequential
+   polling, or the single-PR host monitor.
 3. Give that PR a 24-hour deadline from its latest push unless the user or
    repository specifies another duration.
 4. Reset only that PR's deadline after a fix push.
@@ -446,9 +504,10 @@ report any of them that blocks eligible work or retains interrupted artifacts.
 Dependency-parked Todo items retain their normal blocker reporting. If only human
 actions, verified authority/decision pauses, Wayfinder human-frontier items,
 and/or assigned HITL attention remain,
-return
+wait under the [Project Watcher](#project-watcher) instead of returning. Return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and
-the Wayfinder frontier. If no
+the Wayfinder frontier only when the watcher reports its `deadline` or
+monitoring becomes unavailable after three consecutive failures. If no
 runnable work remains but a parked implementation claim, blocked or timed-out
 slot, unknown/unavailable execution or qualification prerequisite, or incomplete
 eligible triage item remains, stop with a partial-drain

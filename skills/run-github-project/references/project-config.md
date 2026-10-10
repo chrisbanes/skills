@@ -75,6 +75,10 @@ this template over it. Follow the
 - Task label: `<wayfinder:task>`
 - Task label ID: `<LA_...>`
 
+## Monitoring (optional)
+
+- Poll interval seconds: `<120>`
+
 ## Priority
 
 - Field name: `<Priority>`
@@ -154,6 +158,13 @@ under [agent routing](agent-routing.md); no routing service is used.
 Legacy `Routing` and `TypeSafe judgment model` fields are obsolete: ignore them
 at dispatch and remove them during an authorized setup edit, preserving active
 binding leases under the setup procedure.
+
+Omit Monitoring to check every 120 seconds. When present, `Poll interval
+seconds` sets the `drain`
+[Project Watcher](drain-scheduler.md#project-watcher) interval and must be a
+positive number. It grants no authority. A mid-drain edit is ordinary
+configuration drift under the existing rules; presentation-only renewal does
+not cover it.
 
 ## Renew Presentation-Only Configuration
 
