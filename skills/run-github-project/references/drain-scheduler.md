@@ -295,9 +295,11 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    `snapshot --project-id <Node ID> --repository <owner/name> --status-field <Status field name> [--pr <N>]... [--issue <N>]... > <baseline file>`.
    Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
    paused, parked, or authority-paused ticket, and `--issue` for every parked
-   claim, paused ticket, and human-frontier issue. A non-zero `snapshot` is an
-   `error` under step 6: discard its output, launch no `wait`, and retake the
-   snapshot before repeating the read it precedes.
+   claim, paused ticket, and human-frontier issue. For the targeted refetch, add
+   `--board-from <reporting watcher's baseline file>` and write a new file, so
+   board drift missed since that watcher's last poll still reports. A non-zero
+   `snapshot` is an `error` under step 6: discard its output, launch no `wait`,
+   and retake the snapshot before repeating the read it precedes.
 3. After a read preceded by a successful `snapshot` completes, stop any running
    watcher through the host's cancellation mechanism, never by process-name or
    command-line match. Then launch `wait` with the same project, repository,
