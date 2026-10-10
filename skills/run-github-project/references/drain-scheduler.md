@@ -321,7 +321,10 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    nothing eligible does not. Record the last productive wake in the existing
    controller checkpoint. Pass `--deadline` as the earliest of that deadline and
    every pending PR remote-wait deadline; the latter resets only per
-   [Remote Waiting](#remote-waiting).
+   [Remote Waiting](#remote-waiting). Once the no-progress deadline has been
+   handled without a finish-gate return, omit it and pass only the earliest
+   pending PR deadline (24 hours from the relaunch when none) until a productive
+   wake starts a fresh one.
 6. Read the one-line report; treat a non-zero exit or any other output as `error`.
    - `changed` naming only occupied-slot PRs: refetch only those tickets' PR,
      head, check, review, and authority records; run no Refresh Gate.
@@ -337,7 +340,7 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
      newly runnable action. If the drain's no-progress deadline has passed, the
      [finish gate](#failure-isolation-and-finish-gate) now returns
      `waiting-for-human` if only human-gated work remains. Otherwise relaunch
-     the watcher under steps 2-3.
+     the watcher under steps 2-3 with that deadline omitted per step 5.
 
 ## Phase Timing And Stalls
 
