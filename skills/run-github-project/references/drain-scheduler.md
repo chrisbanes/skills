@@ -299,12 +299,14 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    snapshot before repeating the read it precedes.
 3. After a read preceded by a successful `snapshot` completes, stop any running
    watcher through the host's cancellation mechanism, never by process-name or
-   command-line match. Then launch `wait` with the same arguments plus
-   `--baseline <file>` and `--deadline <ISO-8601>` and, when the binding sets
-   one, `--interval <seconds>` from
-   [Monitoring](project-config.md#monitoring-optional); the default is 120.
-   A PR or issue the read added to or dropped from those sets appears as `added`
-   or `removed` in the first report; handle it like any other report.
+   command-line match. Then launch `wait` with the same project, repository,
+   and status-field arguments, `--pr` and `--issue` built from the completed
+   read's watch set, the pre-read `--baseline <file>`, `--deadline <ISO-8601>`,
+   and, when the binding sets one, `--interval <seconds>` from
+   [Monitoring](project-config.md#monitoring-optional); the default is 120. A PR
+   or issue the read added to or dropped from the set reports `added` or
+   `removed` on the first poll, at most one redundant wake; handle it like any
+   other report.
 4. On a host that wakes the controller when a background command exits (Claude
    Code `run_in_background`), run the command directly and wait for its
    completion notification. On any other host (Codex), launch the cheapest
@@ -312,12 +314,14 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    to run that one `wait` command once and return its stdout verbatim, with no
    other action or further delegation, and wait with the host's agent-wait call
    (`wait_agent`).
-5. Set the deadline to the last productive wake plus 24 hours, or the drain start
-   when there is none; when a PR is in remote wait, use the latest such PR
-   deadline if it is later. A productive wake is any watcher report or agent
-   notification that leads to a claim, merge, or dispatched work, and it resets
-   the deadline. A wake whose refresh finds nothing eligible does not. Record the
-   last productive wake in the existing controller checkpoint.
+5. Keep two clocks. The drain's no-progress deadline is the last productive
+   wake plus 24 hours, or the drain start when there is none. A productive wake
+   is any watcher report or agent notification that leads to a claim, merge, or
+   dispatched work, and it resets that deadline. A wake whose refresh finds
+   nothing eligible does not. Record the last productive wake in the existing
+   controller checkpoint. Pass `--deadline` as the earliest of that deadline and
+   every pending PR remote-wait deadline; the latter resets only per
+   [Remote Waiting](#remote-waiting).
 6. Read the one-line report; treat a non-zero exit or any other output as `error`.
    - `changed` naming only occupied-slot PRs: refetch only those tickets' PR,
      head, check, review, and authority records; run no Refresh Gate.
@@ -328,9 +332,12 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
      stop watching. Once no local or controller action remains, apply the
      [finish gate](#failure-isolation-and-finish-gate)'s monitoring-unavailable
      rule.
-   - `deadline`: pass the Refresh Gate and take any newly runnable action;
-     otherwise the [finish gate](#failure-isolation-and-finish-gate) now
-     returns `waiting-for-human` if only human-gated work remains.
+   - `deadline`: pass the Refresh Gate, apply [Remote Waiting](#remote-waiting)
+     timeout handling to any PR whose own deadline has passed, and take any
+     newly runnable action. If the drain's no-progress deadline has passed, the
+     [finish gate](#failure-isolation-and-finish-gate) now returns
+     `waiting-for-human` if only human-gated work remains. Otherwise relaunch
+     the watcher under steps 2-3.
 
 ## Phase Timing And Stalls
 
@@ -508,7 +515,7 @@ actions, verified authority/decision pauses, Wayfinder human-frontier items,
 and/or assigned HITL attention remain,
 wait under the [Project Watcher](#project-watcher) instead of returning. Return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and
-the Wayfinder frontier only when the watcher reports its `deadline` or
+the Wayfinder frontier only when the drain's no-progress deadline has passed or
 monitoring becomes unavailable after three consecutive failures. In the latter
 case, the `waiting-for-human` return, which names each preserved PR in remote
 wait, applies only when nothing but human-gated work and PRs in remote wait
