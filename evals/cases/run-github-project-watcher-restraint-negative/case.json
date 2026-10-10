@@ -1,0 +1,48 @@
+{
+  "id": "run-github-project-watcher-restraint-negative",
+  "title": "Wait for the agent notification in drain without a watcher",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-watcher-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "no-watcher",
+      "text": "Does not start a watcher: no PR is in remote wait and nothing is waiting on a human, so there is no remote or human-gated state to watch."
+    },
+    {
+      "id": "no-polling",
+      "text": "Does not poll, sleep, use ScheduleWakeup, CronCreate, or /loop, and does not run the single-PR host monitor."
+    },
+    {
+      "id": "wait-notification",
+      "text": "Waits for the due agent completion notification, then continues the normal drain scheduling and refresh rules."
+    },
+    {
+      "id": "no-mutations",
+      "text": "Performs no commands, provider calls, or edits in this supplied-state scenario."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

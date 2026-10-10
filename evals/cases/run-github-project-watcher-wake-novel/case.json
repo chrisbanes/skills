@@ -1,0 +1,48 @@
+{
+  "id": "run-github-project-watcher-wake-novel",
+  "title": "Treat a board-change wake as a hint and refresh before claiming",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-watcher-wake-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "changed-report",
+      "text": "Treats the watcher's changed report naming a Backlog-to-Todo item as a hint to refresh, not as evidence that #57 is ready or claimable."
+    },
+    {
+      "id": "refresh-gate",
+      "text": "Runs the full Refresh Gate with a complete Project query, and the claim, readiness, dependency, and authority checks, before any claim or dispatch; the watcher report never satisfies the Refresh Gate or authorizes a claim."
+    },
+    {
+      "id": "relaunch",
+      "text": "After the complete refresh, stops the prior watcher through the host's cancellation mechanism (not a process-name match) and relaunches one watcher with a fresh baseline taken before that refresh, keeping at most one watcher per drain."
+    },
+    {
+      "id": "productive-wake",
+      "text": "Resets the 24-hour deadline only if the wake leads to a claim, merge, or dispatched work; a wake that finds #57 ineligible does not reset it."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

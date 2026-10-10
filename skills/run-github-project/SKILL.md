@@ -54,7 +54,11 @@ runnable work continues.
   Neither mode dispatches Project work or requires execution dependencies.
 - `next`: default execution; process at most one selected issue.
 - `drain`: only on explicit drain/run-all/repeat/until-empty request; no
-  skill-defined ticket cap. A merge pause remains resumable work.
+  skill-defined ticket cap. A merge pause remains resumable work. While only
+  remote or human waits remain, it stays alive under the read-only
+  [Project Watcher](references/drain-scheduler.md#project-watcher), whose
+  report never replaces the Refresh Gate. `next` still returns `waiting-for-human`
+  without waiting.
 
 A named Wayfinder child remains `next`; it grants neither drain authority nor a
 claim bypass. Before any mode-specific action, read the matching mandatory lane:
