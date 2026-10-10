@@ -45,15 +45,32 @@ print(json.dumps(response))
 DEFAULT_RATE = {"cost": 1, "remaining": 4000, "resetAt": "2999-01-01T00:00:00Z"}
 
 
-def item(item_id, status, *, assignees=(), labels=(), state="OPEN"):
+def item(
+    item_id,
+    status,
+    *,
+    assignees=(),
+    labels=(),
+    state="OPEN",
+    blocked_by=None,
+    total_blocked_by=None,
+    parent=None,
+):
+    content = {
+        "state": state,
+        "assignees": {"nodes": [{"login": name} for name in assignees]},
+        "labels": {"nodes": [{"name": name} for name in labels]},
+    }
+    if blocked_by is not None:  # pull requests and drafts omit dependency fields
+        content["issueDependenciesSummary"] = {
+            "blockedBy": blocked_by,
+            "totalBlockedBy": total_blocked_by if total_blocked_by is not None else blocked_by,
+        }
+        content["parent"] = {"id": parent} if parent else None
     return {
         "id": item_id,
         "fieldValueByName": {"name": status},
-        "content": {
-            "state": state,
-            "assignees": {"nodes": [{"login": name} for name in assignees]},
-            "labels": {"nodes": [{"name": name} for name in labels]},
-        },
+        "content": content,
     }
 
 
@@ -186,6 +203,40 @@ class WatchProjectTests(unittest.TestCase):
         self.assertEqual(fingerprint["item"]["I2"]["labels"], ["a", "b"])
         self.assertEqual(len(self.calls["argv"]), 2)
         self.assertIn("after=C1", self.calls["argv"][1])
+
+    def test_blocker_count_drop_is_reported(self):
+        _, baseline = self.snapshot([page([item("I1", "Todo", blocked_by=1)])])
+        _, report = self.wait(
+            baseline, [page([item("I1", "Todo", blocked_by=0, total_blocked_by=1)])]
+        )
+        self.assertEqual(
+            report["changes"], [{"kind": "item", "key": "I1", "fields": ["blocked_by"]}]
+        )
+
+    def test_total_blocked_by_change_is_reported(self):
+        _, baseline = self.snapshot([page([item("I1", "Todo", blocked_by=1)])])
+        _, report = self.wait(
+            baseline, [page([item("I1", "Todo", blocked_by=1, total_blocked_by=2)])]
+        )
+        self.assertEqual(
+            report["changes"],
+            [{"kind": "item", "key": "I1", "fields": ["total_blocked_by"]}],
+        )
+
+    def test_parent_removal_is_reported(self):
+        _, baseline = self.snapshot(
+            [page([item("I1", "Todo", blocked_by=0, parent="P1")])]
+        )
+        _, report = self.wait(baseline, [page([item("I1", "Todo", blocked_by=0)])])
+        self.assertEqual(
+            report["changes"], [{"kind": "item", "key": "I1", "fields": ["parent"]}]
+        )
+
+    def test_item_without_dependency_fields_fingerprints_as_null(self):
+        fingerprint, _ = self.snapshot([page([item("PR1", "Todo")])])
+        record = fingerprint["item"]["PR1"]
+        for field in ("blocked_by", "total_blocked_by", "parent"):
+            self.assertIsNone(record[field])
 
     def test_status_change_reports_changed_item_and_field(self):
         _, baseline = self.snapshot([page([item("I1", "Backlog")])])
