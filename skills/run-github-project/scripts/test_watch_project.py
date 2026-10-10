@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -21,7 +22,7 @@ COMMON = (
     "Status",
 )
 FAKE_GH = f"""#!{sys.executable}
-import json, os, sys
+import json, os, sys, time
 path = os.environ["FAKE_GH_STATE"]
 with open(path) as handle:
     state = json.load(handle)
@@ -34,6 +35,8 @@ state["argv"].append(sys.argv[1:])
 with open(path, "w") as handle:
     json.dump(state, handle)
 response = state["responses"][index]
+if "__sleep__" in response:
+    time.sleep(response["__sleep__"])
 if "__exit__" in response:
     sys.stderr.write(response.get("stderr", ""))
     sys.exit(response["__exit__"])
@@ -72,8 +75,11 @@ def page(items, *, next_cursor=None, rate=None):
     }
 
 
-def pull_request(sha="abc", mergeable="MERGEABLE", checks="SUCCESS", review="APPROVED"):
+def pull_request(
+    sha="abc", mergeable="MERGEABLE", checks="SUCCESS", review="APPROVED", state="OPEN"
+):
     return {
+        "state": state,
         "headRefOid": sha,
         "mergeable": mergeable,
         "reviewDecision": review,
@@ -325,6 +331,90 @@ class WatchProjectTests(unittest.TestCase):
         _, report = self.wait(baseline, [page([])], deadline=iso(-5))
         self.assertEqual(report, {"status": "deadline"})
         self.assertEqual(self.calls["calls"], 0)
+
+    def test_conflicting_after_unknown_baseline_is_reported(self):
+        responses = [page([]), repository(prs={7: pull_request(mergeable="UNKNOWN")})]
+        _, baseline = self.snapshot(responses, "--pr", "7")
+        _, report = self.wait(
+            baseline,
+            [page([]), repository(prs={7: pull_request(mergeable="CONFLICTING")})],
+            "--pr",
+            "7",
+        )
+        self.assertEqual(
+            report["changes"],
+            [{"kind": "pullRequest", "key": "7", "fields": ["mergeable"]}],
+        )
+
+    def test_mergeable_after_unknown_baseline_is_adopted_silently(self):
+        responses = [page([]), repository(prs={7: pull_request(mergeable="UNKNOWN")})]
+        _, baseline = self.snapshot(responses, "--pr", "7")
+        merged = [page([]), repository(prs={7: pull_request()})]
+        conflicting = [page([]), repository(prs={7: pull_request(mergeable="CONFLICTING")})]
+        _, report = self.wait(
+            baseline, [*merged, *conflicting], "--pr", "7", loop_from=2
+        )
+        self.assertEqual(report["status"], "changed")
+        self.assertEqual(self.calls["calls"], 4)
+
+    def test_pull_request_state_change_is_reported(self):
+        responses = [page([]), repository(prs={7: pull_request()})]
+        _, baseline = self.snapshot(responses, "--pr", "7")
+        _, report = self.wait(
+            baseline,
+            [page([]), repository(prs={7: pull_request(state="MERGED")})],
+            "--pr",
+            "7",
+        )
+        self.assertEqual(
+            report["changes"],
+            [{"kind": "pullRequest", "key": "7", "fields": ["state"]}],
+        )
+
+    def test_hung_gh_is_bounded_by_the_deadline(self):
+        _, baseline = self.snapshot([page([])])
+        started = time.monotonic()
+        result, report = self.wait(
+            baseline, [{"__sleep__": 30}], deadline=iso(2), interval="0"
+        )
+        self.assertLess(time.monotonic() - started, 15)
+        self.assertIn(report["status"], ("error", "deadline"))
+        self.assertEqual(result.returncode, 1 if report["status"] == "error" else 0)
+
+    def test_unknown_status_becoming_todo_is_reported(self):
+        _, baseline = self.snapshot([page([item("I1", "UNKNOWN")])])
+        _, report = self.wait(baseline, [page([item("I1", "Todo")])])
+        self.assertEqual(
+            report["changes"], [{"kind": "item", "key": "I1", "fields": ["status"]}]
+        )
+
+    def test_rate_limit_sums_cost_across_the_cycle(self):
+        responses = [
+            page(
+                [item("I1", "Backlog")],
+                next_cursor="C1",
+                rate={"cost": 1, "remaining": 2, "resetAt": iso(3600)},
+            ),
+            page([], rate={"cost": 1, "remaining": 1, "resetAt": iso(3600)}),
+        ]
+        _, baseline = self.snapshot(responses)
+        _, report = self.wait(baseline, responses, deadline=iso(1), interval="0")
+        self.assertEqual(report, {"status": "deadline"})
+        self.assertEqual(self.calls["calls"], 2)
+
+    def test_baseline_that_is_not_a_fingerprint_is_an_error(self):
+        for content in (
+            json.dumps({"status": "error", "message": "boom"}),
+            json.dumps({"pullRequest": {}, "issue": {}}),
+            "not json",
+        ):
+            with self.subTest(content=content):
+                path = self.root / "bad.json"
+                path.write_text(content)
+                result, report = self.wait(path, [page([])])
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(report["status"], "error")
+                self.assertEqual(self.calls["calls"], 0)
 
     def test_queries_are_read_only(self):
         self.snapshot([page([]), repository()], "--pr", "7")

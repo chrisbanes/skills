@@ -47,6 +47,7 @@ query($id: ID!, $status: String!, $after: String) {
 }
 """
 PR_FIELDS = """
+  state
   headRefOid
   mergeable
   reviewDecision
@@ -69,12 +70,23 @@ def repository_query(prs: list[int], issues: list[int]) -> str:
     )
 
 
-def graphql(query: str, **variables: str) -> dict[str, Any]:
+def seconds_left(deadline: datetime | None) -> float:
+    """Subprocess timeout: at most 60s, never past the deadline."""
+    if deadline is None:
+        return 60.0
+    return max(1.0, min(60.0, (deadline - now()).total_seconds()))
+
+
+def graphql(query: str, deadline: datetime | None, **variables: str) -> dict[str, Any]:
     command = ["gh", "api", "graphql", "-f", f"query={query}"]
     for key, value in variables.items():
         command += ["-f", f"{key}={value}"]
     try:
-        result = subprocess.run(command, capture_output=True, text=True)
+        result = subprocess.run(
+            command, capture_output=True, text=True, timeout=seconds_left(deadline)
+        )
+    except subprocess.TimeoutExpired as error:
+        raise WatchError(f"gh timed out after {error.timeout:g}s") from error
     except OSError as error:
         raise WatchError(f"cannot run gh: {error}") from error
     if result.returncode != 0:
@@ -89,15 +101,18 @@ def graphql(query: str, **variables: str) -> dict[str, Any]:
     return response["data"]
 
 
-def fetch(args: argparse.Namespace) -> dict[str, Any]:
-    """Return raw responses: all Project item pages plus one repository query."""
+def fetch(args: argparse.Namespace, deadline: datetime | None = None) -> dict[str, Any]:
+    """Return raw responses: all Project item pages plus one repository query.
+
+    `rate` aggregates the cycle: summed cost, lowest remaining, latest reset.
+    """
     pages: list[dict[str, Any]] = []
     after = ""
     while True:
         variables = {"id": args.project_id, "status": args.status_field}
         if after:
             variables["after"] = after
-        data = graphql(ITEMS_QUERY, **variables)
+        data = graphql(ITEMS_QUERY, deadline, **variables)
         pages.append(data)
         items = (data.get("node") or {}).get("items")
         if items is None:
@@ -108,10 +123,18 @@ def fetch(args: argparse.Namespace) -> dict[str, Any]:
     repo = None
     if args.pr or args.issue:
         owner, _, name = args.repository.partition("/")
-        repo = graphql(repository_query(args.pr, args.issue), owner=owner, name=name)
+        repo = graphql(
+            repository_query(args.pr, args.issue), deadline, owner=owner, name=name
+        )
         if repo.get("repository") is None:
             raise WatchError(f"repository {args.repository} not found")
-    return {"pages": pages, "repository": repo}
+    limits = [r["rateLimit"] for r in (*pages, *([repo] if repo else []))]
+    rate = {
+        "cost": sum(r["cost"] for r in limits),
+        "remaining": min(r["remaining"] for r in limits),
+        "resetAt": max((r["resetAt"] for r in limits), key=parse_time),
+    }
+    return {"pages": pages, "repository": repo, "rate": rate}
 
 
 def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
@@ -136,6 +159,7 @@ def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
             commits = record["commits"]["nodes"]
             rollup = commits[0]["commit"]["statusCheckRollup"] if commits else None
             prs[alias[2:]] = {
+                "state": record["state"],
                 "sha": record["headRefOid"],
                 "checks": rollup["state"] if rollup else None,
                 "review": record["reviewDecision"],
@@ -145,6 +169,13 @@ def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
             comments = record["comments"]["nodes"]
             issues[alias[5:]] = {"comment": comments[-1] if comments else None}
     return {"item": items, "pullRequest": prs, "issue": issues}
+
+
+def recomputing(field: str, before: Any, after: Any) -> bool:
+    """GitHub reports mergeable UNKNOWN while recomputing; that is not a change."""
+    return field == "mergeable" and (
+        after == "UNKNOWN" or (before == "UNKNOWN" and after == "MERGEABLE")
+    )
 
 
 def diff(baseline: dict[str, Any], current: dict[str, Any]) -> list[dict[str, Any]]:
@@ -158,12 +189,11 @@ def diff(baseline: dict[str, Any], current: dict[str, Any]) -> list[dict[str, An
             elif key not in before:
                 fields = ["added"]
             else:
-                # UNKNOWN is GitHub recomputing, not a change.
                 fields = [
                     field
                     for field in sorted(after[key])
                     if before[key].get(field) != after[key][field]
-                    and "UNKNOWN" not in (before[key].get(field), after[key][field])
+                    and not recomputing(field, before[key].get(field), after[key][field])
                 ]
             if fields:
                 changes.append({"kind": kind, "key": key, "fields": fields})
@@ -213,9 +243,12 @@ def parse_args() -> argparse.Namespace:
 def wait(args: argparse.Namespace) -> int:
     with open(args.baseline) as handle:
         baseline = json.load(handle)
+    kinds = ("item", "pullRequest", "issue")
+    if not isinstance(baseline, dict) or not all(isinstance(baseline.get(k), dict) for k in kinds):
+        raise WatchError(f"{args.baseline} is not a snapshot fingerprint")
     deadline = parse_time(args.deadline)
     while now() < deadline:
-        responses = fetch(args)
+        responses = fetch(args, deadline)
         current = fingerprint(responses)
         changes = diff(baseline, current)
         if changes:
@@ -223,7 +256,7 @@ def wait(args: argparse.Namespace) -> int:
             return 0
         adopt_known_mergeability(baseline, current)
         pause = args.interval
-        rate = (responses["repository"] or responses["pages"][-1])["rateLimit"]
+        rate = responses["rate"]
         if rate["remaining"] < rate["cost"]:
             pause = max(pause, (parse_time(rate["resetAt"]) - now()).total_seconds())
         time.sleep(max(0.0, min(pause, (deadline - now()).total_seconds())))
