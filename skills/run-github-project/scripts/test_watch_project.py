@@ -50,7 +50,6 @@ def item(item_id, status, *, assignees=(), labels=(), state="OPEN"):
         "id": item_id,
         "fieldValueByName": {"name": status},
         "content": {
-            "__typename": "Issue",
             "state": state,
             "assignees": {"nodes": [{"login": name} for name in assignees]},
             "labels": {"nodes": [{"name": name} for name in labels]},
@@ -241,6 +240,7 @@ class WatchProjectTests(unittest.TestCase):
         responses = [page([]), repository(prs={7: pull_request()})]
         _, baseline = self.snapshot(responses, "--pr", "7")
         for field, changed in (
+            ("state", pull_request(state="MERGED")),
             ("sha", pull_request(sha="new")),
             ("checks", pull_request(checks="FAILURE")),
             ("review", pull_request(review="CHANGES_REQUESTED")),
@@ -346,7 +346,7 @@ class WatchProjectTests(unittest.TestCase):
             [{"kind": "pullRequest", "key": "7", "fields": ["mergeable"]}],
         )
 
-    def test_mergeable_after_unknown_baseline_is_adopted_silently(self):
+    def test_unknown_baseline_becoming_mergeable_is_silent(self):
         responses = [page([]), repository(prs={7: pull_request(mergeable="UNKNOWN")})]
         _, baseline = self.snapshot(responses, "--pr", "7")
         merged = [page([]), repository(prs={7: pull_request()})]
@@ -356,20 +356,6 @@ class WatchProjectTests(unittest.TestCase):
         )
         self.assertEqual(report["status"], "changed")
         self.assertEqual(self.calls["calls"], 4)
-
-    def test_pull_request_state_change_is_reported(self):
-        responses = [page([]), repository(prs={7: pull_request()})]
-        _, baseline = self.snapshot(responses, "--pr", "7")
-        _, report = self.wait(
-            baseline,
-            [page([]), repository(prs={7: pull_request(state="MERGED")})],
-            "--pr",
-            "7",
-        )
-        self.assertEqual(
-            report["changes"],
-            [{"kind": "pullRequest", "key": "7", "fields": ["state"]}],
-        )
 
     def test_hung_gh_is_bounded_by_the_deadline(self):
         _, baseline = self.snapshot([page([])])

@@ -11,12 +11,8 @@
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
+  "forbid_all_commands": true,
   "allowed_write_paths": [],
-  "forbidden_command_patterns": [
-    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b",
-    "watch_project\\.py",
-    "\\bsleep\\b"
-  ],
   "validators": [
     {
       "argv": [

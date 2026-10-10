@@ -294,11 +294,9 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    `snapshot --project-id <Node ID> --repository <owner/name> --status-field <Status field name> [--pr <N>]... [--issue <N>]... > <baseline file>`.
    Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
    paused, parked, or authority-paused ticket, and `--issue` for every parked
-   claim, paused ticket, and human-frontier issue. Taking the baseline first can
-   cost one redundant wake but cannot lose a change. If `snapshot` exits
-   non-zero, discard its output and launch no `wait`: count one consecutive
-   failure (step 6), pass the Refresh Gate, then retake the snapshot and repeat
-   the read it precedes, until a snapshot succeeds or the limit stops watching.
+   claim, paused ticket, and human-frontier issue. A non-zero `snapshot` is an
+   `error` under step 6: discard its output, launch no `wait`, and retake the
+   snapshot before repeating the read it precedes.
 3. After a read preceded by a successful `snapshot` completes, stop any running
    watcher through the host's cancellation mechanism, never by process-name or
    command-line match. Then launch `wait` with the same arguments plus
@@ -444,8 +442,7 @@ After a reconciled push:
    before entering remote wait.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
    capacity. Monitor all PRs together through the
-   [Project Watcher](#project-watcher), without no-op comments, sequential
-   polling, or the single-PR host monitor.
+   [Project Watcher](#project-watcher), without no-op comments.
 3. Give that PR a 24-hour deadline from its latest push unless the user or
    repository specifies another duration.
 4. Reset only that PR's deadline after a fix push.

@@ -28,7 +28,6 @@ query($id: ID!, $status: String!, $after: String) {
             ... on ProjectV2ItemFieldSingleSelectValue { name }
           }
           content {
-            __typename
             ... on Issue {
               state
               assignees(first: 20) { nodes { login } }
@@ -54,6 +53,7 @@ PR_FIELDS = """
   commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
 """
 ISSUE_FIELDS = "comments(last: 1) { nodes { id updatedAt } }"
+KINDS = ("item", "pullRequest", "issue")
 
 
 class WatchError(RuntimeError):
@@ -181,7 +181,7 @@ def recomputing(field: str, before: Any, after: Any) -> bool:
 def diff(baseline: dict[str, Any], current: dict[str, Any]) -> list[dict[str, Any]]:
     """List changed records by kind, key and field name (never values)."""
     changes = []
-    for kind in ("item", "pullRequest", "issue"):
+    for kind in KINDS:
         before, after = baseline.get(kind, {}), current.get(kind, {})
         for key in sorted(set(before) | set(after)):
             if key not in after:
@@ -200,13 +200,6 @@ def diff(baseline: dict[str, Any], current: dict[str, Any]) -> list[dict[str, An
     return changes
 
 
-def adopt_known_mergeability(baseline: dict[str, Any], current: dict[str, Any]) -> None:
-    for key, record in baseline.get("pullRequest", {}).items():
-        now = current.get("pullRequest", {}).get(key)
-        if now and record["mergeable"] == "UNKNOWN":
-            record["mergeable"] = now["mergeable"]
-
-
 def parse_time(value: str) -> datetime:
     moment = datetime.fromisoformat(value.replace("Z", "+00:00"))
     return moment if moment.tzinfo else moment.replace(tzinfo=timezone.utc)
@@ -222,29 +215,29 @@ def report(payload: dict[str, Any]) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--project-id", required=True, help="Project node ID (PVT_...)")
+    common.add_argument("--repository", required=True, help="owner/name")
+    common.add_argument("--status-field", required=True)
+    common.add_argument("--pr", type=int, action="append", default=[])
+    common.add_argument("--issue", type=int, action="append", default=[])
     commands = parser.add_subparsers(dest="command", required=True)
-    for name, help_text in (
-        ("snapshot", "print the current fingerprint as one JSON line"),
-        ("wait", "exit on the first difference from --baseline, or at --deadline"),
-    ):
-        command = commands.add_parser(name, help=help_text)
-        command.add_argument("--project-id", required=True, help="Project node ID (PVT_...)")
-        command.add_argument("--repository", required=True, help="owner/name")
-        command.add_argument("--status-field", required=True)
-        command.add_argument("--pr", type=int, action="append", default=[])
-        command.add_argument("--issue", type=int, action="append", default=[])
-        if name == "wait":
-            command.add_argument("--baseline", required=True, help="file written by snapshot")
-            command.add_argument("--deadline", required=True, help="ISO-8601 timestamp")
-            command.add_argument("--interval", type=float, default=120.0, help="seconds")
+    commands.add_parser(
+        "snapshot", parents=[common], help="print the current fingerprint as one JSON line"
+    )
+    wait_command = commands.add_parser(
+        "wait", parents=[common], help="exit on the first difference from --baseline, or at --deadline"
+    )
+    wait_command.add_argument("--baseline", required=True, help="file written by snapshot")
+    wait_command.add_argument("--deadline", required=True, help="ISO-8601 timestamp")
+    wait_command.add_argument("--interval", type=float, default=120.0, help="seconds")
     return parser.parse_args()
 
 
 def wait(args: argparse.Namespace) -> int:
     with open(args.baseline) as handle:
         baseline = json.load(handle)
-    kinds = ("item", "pullRequest", "issue")
-    if not isinstance(baseline, dict) or not all(isinstance(baseline.get(k), dict) for k in kinds):
+    if not isinstance(baseline, dict) or not all(isinstance(baseline.get(k), dict) for k in KINDS):
         raise WatchError(f"{args.baseline} is not a snapshot fingerprint")
     deadline = parse_time(args.deadline)
     while now() < deadline:
@@ -254,7 +247,6 @@ def wait(args: argparse.Namespace) -> int:
         if changes:
             report({"status": "changed", "changes": changes})
             return 0
-        adopt_known_mergeability(baseline, current)
         pause = args.interval
         rate = responses["rate"]
         if rate["remaining"] < rate["cost"]:
@@ -268,7 +260,7 @@ def main() -> int:
     args = parse_args()
     try:
         if args.command == "snapshot":
-            print(json.dumps(fingerprint(fetch(args)), sort_keys=True))
+            report(fingerprint(fetch(args)))
             return 0
         return wait(args)
     except (WatchError, OSError, ValueError, KeyError, TypeError) as error:
