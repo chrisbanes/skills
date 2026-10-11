@@ -151,6 +151,31 @@ class BlindedJudgeTest(unittest.TestCase):
         self.assertNotIn(".agents/skills/compose-state-and-effects/SKILL.md", packet["initial_state"])
         self.assertNotIn("secret skill instructions", json.dumps(packet))
 
+    def test_packet_omits_staged_claude_skill_snapshot(self):
+        workspace = self.root / "claude-workspace"
+        skill = workspace / ".claude/skills/compose-state-and-effects/SKILL.md"
+        skill.parent.mkdir(parents=True)
+        skill.write_text("secret skill instructions\n", encoding="utf-8")
+        (workspace / "Subject.kt").write_text("val initial = true\n", encoding="utf-8")
+        subprocess.run(["git", "init", "-q"], cwd=workspace, check=True)
+        subprocess.run(["git", "add", "."], cwd=workspace, check=True)
+        subprocess.run(
+            [
+                "git", "-c", "user.name=Test", "-c", "user.email=test@localhost",
+                "commit", "-qm", "baseline",
+            ],
+            cwd=workspace,
+            check=True,
+        )
+
+        packet = build_judge_packet(
+            make_case(self.root), make_result(workspace),
+            ObjectiveGrade(True, False, (), (), ()),
+        )
+
+        self.assertEqual(["Subject.kt"], list(packet["initial_state"]))
+        self.assertNotIn("secret skill instructions", json.dumps(packet))
+
     def test_gradle_workflow_packet_includes_bounded_redacted_execution_evidence(self):
         case = gradle_workflow_case(self.root)
         workflow = "a" * 32

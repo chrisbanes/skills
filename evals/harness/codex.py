@@ -506,6 +506,9 @@ class CodexRuntime:
     def validate_reasoning(self, value: str) -> None:
         """Codex accepts any reasoning effort string."""
 
+    def check_workspace(self, workspace: Path) -> None:
+        """Codex has no workspace location requirement."""
+
     def forced_target_preflight(self, case, repo_root, workspace, skill_paths):
         return forced_target_preflight(
             case,
@@ -551,6 +554,9 @@ class CodexRuntime:
             for command in command_records(events)
             if command.status == "completed" and isinstance(command.output, str)
         ]
+
+    def skill_evidence_bytes(self, relative, staged):
+        return staged
 
     def external_tool_attempts(self, events):
         return _item_type_sequences(events, "mcp", "web_search")

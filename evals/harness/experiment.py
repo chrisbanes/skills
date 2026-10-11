@@ -62,6 +62,7 @@ CODEX_VERSION_TIMEOUT_SECONDS = 10
 GRADLE_PREFLIGHT_TIMEOUT_SECONDS = 180
 JUDGE_PROTOCOL_SOURCES = (
     "cases.py",
+    "claude.py",
     "codex.py",
     "experiment.py",
     "grade.py",

@@ -48,7 +48,7 @@ def _initial_state(workspace: Path) -> dict[str, str]:
     ).stdout.splitlines()
     state: dict[str, str] = {}
     for path in paths:
-        if path.startswith((".agents/", ".eval/")):
+        if path.startswith((".agents/", ".claude/", ".eval/")):
             continue
         completed = subprocess.run(
             ["git", "show", f"HEAD:{path}"],

@@ -75,6 +75,10 @@ class Runtime(Protocol):
 
     def validate_reasoning(self, value: str) -> None: ...
 
+    def check_workspace(self, workspace: Path) -> None:
+        """Raise ValueError before staging when the workspace location is unsafe."""
+        ...
+
     def forced_target_preflight(
         self,
         case: EvalCase,
@@ -113,6 +117,10 @@ class Runtime(Protocol):
 
     def skill_texts(self, events: Events) -> list[tuple[object, str]]: ...
 
+    def skill_evidence_bytes(self, relative: Path, staged: bytes) -> bytes:
+        """Return the part of a staged skill file that `skill_texts` can show."""
+        ...
+
     def external_tool_attempts(self, events: Events) -> tuple[int, ...]:
         """Return the event sequence numbers of MCP or web tool attempts."""
         ...
@@ -144,6 +152,10 @@ def get_runtime(name: str) -> Runtime:
         from evals.harness.codex import CodexRuntime
 
         return CodexRuntime()
+    if name == "claude":
+        from evals.harness.claude import ClaudeRuntime
+
+        return ClaudeRuntime()
     raise ValueError(f"unknown runtime: {name}")
 
 
@@ -175,10 +187,11 @@ def captured_skill_file_evidence(
             staged = path.read_bytes()
         except OSError:
             staged = b""
+        needle = adapter.skill_evidence_bytes(relative, staged)
         matched = [
             {"id": event_id, "output_sha256": hashlib.sha256(output).hexdigest()}
             for event_id, output in outputs
-            if staged and staged in output
+            if needle and needle in output
         ]
         evidence.append({
             "path": path.relative_to(workspace).as_posix(),
@@ -404,12 +417,13 @@ def run_subject(
     workspace: Path,
     config: RunConfig,
     *,
-    runtime: str = "codex",
+    runtime: str | Runtime = "codex",
     executable: str | None = None,
     skill_paths: tuple[Path, ...] | None = None,
 ) -> SubjectResult:
-    adapter = get_runtime(runtime)
+    adapter = get_runtime(runtime) if isinstance(runtime, str) else runtime
     executable = executable or adapter.name
+    adapter.check_workspace(workspace)
     prepare_workspace(
         case,
         repo_root,

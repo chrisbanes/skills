@@ -88,8 +88,20 @@ def is_valid_forced_evidence(record: dict[str, Any]) -> bool:
     return forced_integrity_status(record) == "valid"
 
 
+def isolation_valid(record: dict[str, Any]) -> bool:
+    """A runtime isolation failure invalidates a run in every arm."""
+    manifest = record.get("forced_target_preflight")
+    return not (
+        isinstance(manifest, dict) and "isolation" in manifest and not manifest.get("valid")
+    )
+
+
 def is_behavioral_evidence(record: dict[str, Any], arm: str) -> bool:
-    return is_measured_in_arm(record, arm) and is_valid_forced_evidence(record)
+    return (
+        is_measured_in_arm(record, arm)
+        and is_valid_forced_evidence(record)
+        and isolation_valid(record)
+    )
 
 
 def _routing_metrics(records: list[dict[str, Any]]) -> tuple[float | None, float | None]:
