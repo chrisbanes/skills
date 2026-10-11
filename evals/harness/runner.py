@@ -15,6 +15,7 @@ from evals.harness.suites import PUBLIC_SKILLS
 
 
 ARMS = ("none", "forced", "automatic")
+FIXTURE_SKILL_DIR = ".agents/skills"
 _GRADLE_OUTPUT_DIRECTORIES = (".gradle", ".kotlin", "build")
 _GENERATED_SKILL_SUFFIXES = {".pyc", ".pyo"}
 
@@ -134,6 +135,14 @@ class Runtime(Protocol):
     def forced_target_observed(
         self, record: dict[str, Any], targets: list[dict[str, Any]]
     ) -> bool: ...
+
+    def judge_command_prompt(self, command: list[str]) -> str:
+        """Return the prompt argument of a command built by `build_judge_command`."""
+        ...
+
+    def judge_process_options(self) -> dict[str, Any]:
+        """Extra `subprocess.run` keyword arguments for the judge process."""
+        ...
 
     def build_judge_command(
         self,
@@ -318,7 +327,7 @@ def prepare_workspace(
     destination: Path,
     *,
     enabled_skills: tuple[str, ...] = (),
-    skill_dir: str = ".agents/skills",
+    skill_dir: str = FIXTURE_SKILL_DIR,
 ) -> Path:
     if destination.exists():
         raise FileExistsError(f"run workspace already exists: {destination}")
@@ -349,6 +358,12 @@ def prepare_workspace(
             destination / skill_dir / skill,
             ignore=_ignore_generated_skill_paths,
         )
+    if skill_dir != FIXTURE_SKILL_DIR:
+        # Fixtures ship their dependencies under .agents/skills; mirror them for this runtime.
+        for skill in case.constant_skills:
+            shutil.copytree(
+                destination / FIXTURE_SKILL_DIR / skill, destination / skill_dir / skill
+            )
     _run_git(destination, "init", "-q")
     exclude = destination / ".git" / "info" / "exclude"
     with exclude.open("a", encoding="utf-8") as output:

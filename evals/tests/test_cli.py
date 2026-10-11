@@ -4,8 +4,9 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from evals.run import main
+from evals.run import build_parser, main
 
 
 MODEL_ARGS = [
@@ -145,6 +146,120 @@ class EvaluationCliTest(unittest.TestCase):
         )
 
         self.assertEqual(2, status)
+
+    def test_runtimes_default_to_codex(self):
+        parser = build_parser()
+        run = parser.parse_args(["run", *MODEL_ARGS])
+        judge = parser.parse_args(
+            ["judge", "--output-dir", "x", "--judge-model", "m", "--judge-reasoning", "r"]
+        )
+
+        self.assertEqual(("codex", "codex"), (run.runtime, run.judge_runtime))
+        self.assertEqual(("codex", "claude"), (run.codex_executable, run.claude_executable))
+        self.assertEqual("codex", judge.judge_runtime)
+        self.assertEqual("claude", judge.claude_executable)
+        self.assertEqual("codex", parser.parse_args(["plan", *MODEL_ARGS]).runtime)
+
+    def test_claude_runtime_validates_reasoning_effort(self):
+        claude_args = ["--runtime", "claude", "--model", "claude-haiku-5-5",
+                       "--judge-model", "gpt-6-sol", "--judge-reasoning", "high"]
+        status, output = self.invoke(
+            "run", *claude_args, "--reasoning", "xhigh",
+            "--case", "compose-state-authoring-direct", "--repetitions", "1", "--json",
+        )
+        self.assertEqual(0, status)
+        self.assertFalse(json.loads(output)["execute"])
+
+        for command in ("plan", "run"):
+            with self.subTest(command), self.assertRaises(SystemExit) as raised:
+                with contextlib.redirect_stderr(io.StringIO()) as error:
+                    main([command, *claude_args, "--reasoning", "minimal"])
+            self.assertEqual(2, raised.exception.code)
+            self.assertIn("claude effort must be one of", error.getvalue())
+
+    def test_claude_judge_validates_reasoning_and_requires_an_explicit_model(self):
+        subject = ["--model", "gpt-6-luna", "--reasoning", "high"]
+        with self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()) as error:
+                main(["plan", *subject, "--judge-runtime", "claude", "--judge-reasoning", "high"])
+        self.assertIn("--judge-model", error.getvalue())
+
+        for command in (["plan", *subject], ["judge", "--output-dir", "x"]):
+            with self.subTest(command[0]), self.assertRaises(SystemExit):
+                with contextlib.redirect_stderr(io.StringIO()) as error:
+                    main([*command, "--judge-runtime", "claude",
+                          "--judge-model", "claude-haiku-5-5", "--judge-reasoning", "minimal"])
+            self.assertIn("claude effort must be one of", error.getvalue())
+
+    def test_plan_counts_do_not_depend_on_the_runtime(self):
+        args = ["--case", "compose-state-authoring-direct", "--repetitions", "2", "--json"]
+        _, codex = self.invoke("plan", *MODEL_ARGS, *args)
+        _, claude = self.invoke(
+            "plan", *MODEL_ARGS, "--runtime", "claude", "--judge-runtime", "claude", *args
+        )
+
+        for key in ("condition_count", "subject_calls", "judge_calls", "total_calls"):
+            self.assertEqual(json.loads(codex)[key], json.loads(claude)[key])
+
+    def test_run_passes_runtimes_and_executables_to_the_experiment(self):
+        with tempfile.TemporaryDirectory() as temp_dir, patch(
+            "evals.run.execute_experiment", return_value={"results": "r", "scorecard": "s"}
+        ) as execute:
+            status, _ = self.invoke(
+                "run", "--runtime", "claude", "--judge-runtime", "codex",
+                "--model", "claude-haiku-5-5", "--reasoning", "high",
+                "--judge-model", "gpt-6-sol", "--judge-reasoning", "high",
+                "--claude-executable", "my-claude", "--codex-executable", "my-codex",
+                "--case", "compose-state-authoring-direct", "--repetitions", "1",
+                "--subject-cost-per-call-usd", "0.1", "--judge-cost-per-call-usd", "0.1",
+                "--output-dir", temp_dir, "--execute",
+            )
+
+        self.assertEqual(0, status)
+        kwargs = execute.call_args.kwargs
+        self.assertEqual(("claude", "codex"), (kwargs["runtime"], kwargs["judge_runtime"]))
+        self.assertEqual(("my-codex", "my-claude"),
+                         (kwargs["codex_executable"], kwargs["claude_executable"]))
+
+    def test_claude_run_refuses_an_output_directory_inside_the_repository(self):
+        with patch("evals.run.execute_experiment") as execute:
+            status, _, error = self.invoke_with_error(
+                "run", "--runtime", "claude",
+                "--model", "claude-haiku-5-5", "--reasoning", "high",
+                "--judge-model", "gpt-6-sol", "--judge-reasoning", "high",
+                "--case", "compose-state-authoring-direct", "--repetitions", "1",
+                "--subject-cost-per-call-usd", "0.1", "--judge-cost-per-call-usd", "0.1",
+                "--execute",
+            )
+
+        self.assertEqual(2, status)
+        self.assertIn("--output-dir", error)
+        execute.assert_not_called()
+
+    def test_judge_passes_the_judge_runtime_to_rejudging(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            raw = Path(temp_dir) / "raw" / "case" / "automatic" / "1.json"
+            raw.parent.mkdir(parents=True)
+            raw.write_text(json.dumps({"payload": {
+                "id": "case:automatic:1", "case_id": "compose-state-authoring-direct",
+                "arm": "automatic", "suite": "compose", "codex_version": "codex-cli 1",
+                "skill_sha": "s", "skill_catalog_digest": "c",
+                "subject_model": {"model": "m", "reasoning": "r"},
+                "judge_model": {"model": "j", "reasoning": "r"},
+                "subject": {"final_output": {"skills_used": []}},
+            }}), encoding="utf-8")
+            with patch("evals.run.rejudge_packets", return_value={
+                "packet_count": 0, "judge_calls": 0
+            }) as rejudge:
+                status, _ = self.invoke(
+                    "judge", "--output-dir", temp_dir, "--judge-runtime", "claude",
+                    "--judge-model", "claude-haiku-5-5", "--judge-reasoning", "high",
+                    "--claude-executable", "my-claude",
+                )
+
+        self.assertEqual(0, status)
+        self.assertEqual("claude", rejudge.call_args.kwargs["judge_runtime"])
+        self.assertEqual("my-claude", rejudge.call_args.kwargs["claude_executable"])
 
     def test_model_and_reasoning_are_explicit_required_inputs(self):
         with self.assertRaises(SystemExit):

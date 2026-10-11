@@ -4,6 +4,7 @@ import shutil
 import tempfile
 import time
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from evals.harness.claude import ClaudeRuntime, discover_builtin_skills
@@ -108,11 +109,47 @@ class ClaudeRunnerTest(unittest.TestCase):
         self.assertNotIn("`cat`", prompt)
         self.assertIn("In the final `skills_used`, include each of these exact public", prompt)
 
+    def test_fixture_skill_dependencies_are_never_switched_off(self):
+        self.write_subject_schema()
+        case = replace(sample_case(self.root), constant_skills=("implement",))
+
+        command = ClaudeRuntime(builtin_skills=("implement", "simplify")).build_subject_command(
+            case, "none", self.root, self.root / "workspace", self.config,
+            executable="claude", skill_paths=None,
+        )
+
+        self.assertEqual(
+            {"simplify": "off"}, json.loads(option(command, "--settings"))["skillOverrides"]
+        )
+
     def test_validates_claude_effort_levels(self):
         for effort in ("low", "medium", "high", "xhigh", "max"):
             ClaudeRuntime().validate_reasoning(effort)
         with self.assertRaises(ValueError):
             ClaudeRuntime().validate_reasoning("minimal")
+
+    def test_stages_fixture_skill_dependencies_into_claude_only(self):
+        dependency = self.root / "evals/fixtures/compose-jvm/.agents/skills/implement"
+        (dependency / "references").mkdir(parents=True)
+        (dependency / "SKILL.md").write_text("---\nname: implement\n---\n", encoding="utf-8")
+        (dependency / "references" / "notes.md").write_text("notes\n", encoding="utf-8")
+        case = replace(sample_case(self.root), constant_skills=("implement",))
+
+        claude = prepare_workspace(
+            case, self.root, self.root / "claude-workspace",
+            enabled_skills=case.target_skills, skill_dir=ClaudeRuntime.skill_dir,
+        )
+        codex = prepare_workspace(
+            case, self.root, self.root / "codex-workspace",
+            enabled_skills=case.target_skills,
+        )
+
+        self.assertEqual(
+            "notes\n", (claude / ".claude/skills/implement/references/notes.md").read_text()
+        )
+        self.assertTrue((claude / ".agents/skills/implement/SKILL.md").is_file())
+        self.assertFalse((codex / ".claude").exists())
+        self.assertTrue((codex / ".agents/skills/implement/SKILL.md").is_file())
 
     def test_stages_skills_into_claude_skill_directory(self):
         case = sample_case(self.root)
@@ -378,7 +415,9 @@ class ClaudeForcedIntegrityTest(unittest.TestCase):
         lines[-1]["structured_output"]["skills_used"] = [TARGET]
         return lines
 
-    def run_forced(self, *lines, arm="forced", init_skills=(TARGET,), runtime="claude"):
+    def run_forced(
+        self, *lines, arm="forced", init_skills=(TARGET,), runtime="claude", case=None
+    ):
         (self.root / "skills" / TARGET / "SKILL.md").write_text(
             f"---\nname: {TARGET}\ndescription: Use when testing.\n---\n\n{BODY}",
             encoding="utf-8",
@@ -387,7 +426,7 @@ class ClaudeForcedIntegrityTest(unittest.TestCase):
             self.root / "claude", init_event(skills=list(init_skills)), *lines,
             then="exit 0",
         )
-        case = sample_case(self.root)
+        case = case or sample_case(self.root)
         result = run_subject(
             case, arm, self.root, self.root / "workspace", self.config,
             runtime=runtime, executable=str(fake),
@@ -452,6 +491,27 @@ class ClaudeForcedIntegrityTest(unittest.TestCase):
                 self.assertFalse(is_behavioral_evidence(record, arm))
                 if arm == "forced":
                     self.assertEqual("missing_target", forced_integrity_status(record))
+
+    def test_fixture_skill_dependencies_are_staged_for_claude_and_expected_in_init(self):
+        dependency = self.root / "evals/fixtures/compose-jvm/.agents/skills/implement"
+        dependency.mkdir(parents=True)
+        (dependency / "SKILL.md").write_text("---\nname: implement\n---\n", encoding="utf-8")
+        case = replace(sample_case(self.root), constant_skills=("implement",))
+
+        record = self.run_forced(
+            *self.forced_lines(), init_skills=(TARGET, "implement"), case=case
+        )
+
+        self.assertTrue((self.root / "workspace/.claude/skills/implement/SKILL.md").is_file())
+        self.assertTrue(record["forced_target_preflight"]["valid"])
+        self.assertEqual("valid", forced_integrity_status(record))
+
+        shutil.rmtree(self.root / "workspace")
+        record = self.run_forced(*self.forced_lines(), init_skills=(TARGET,), case=case)
+        self.assertEqual(
+            {"missing_skills": ["implement"]},
+            record["forced_target_preflight"]["isolation"]["problems"],
+        )
 
     def test_refuses_workspace_below_a_claude_md(self):
         for name in ("CLAUDE.md", "CLAUDE.local.md"):

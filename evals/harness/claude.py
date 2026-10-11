@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from evals.harness.cases import EvalCase
+from evals.harness.judge import judge_prompt
 from evals.harness.runner import (
     CommandRecord,
     Events,
@@ -63,6 +64,12 @@ _INPUT_TOKEN_FIELDS = (
     "input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"
 )
 _EXIT_CODE = re.compile(r"Exit code (\d+)")
+JUDGE_TOOLS = ("Read",)
+
+
+def _claude_env() -> dict[str, str]:
+    # An ancestor CLAUDE.md must not reach the model (finding A2).
+    return {**os.environ, "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1"}
 
 
 def parse_claude_stream(
@@ -214,7 +221,7 @@ class _Child:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            env={**os.environ, "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1"},
+            env=_claude_env(),
         )
         self.stdout: list[str] = []
         self.stderr: list[str] = []
@@ -625,7 +632,23 @@ class ClaudeRuntime:
             f"[{dependencies}]. Exclusions are exact names, not prefixes."
         )
 
+    def judge_command_prompt(self, command):
+        return command[2]
+
+    def judge_process_options(self):
+        return {"stdin": subprocess.DEVNULL, "env": _claude_env()}
+
     def build_judge_command(
         self, packet_path, repo_root, config, *, executable, skill_paths
     ):
-        raise NotImplementedError("the Claude judge command is not implemented yet")
+        """A read-only judge: the Read tool only, no slash commands or skills."""
+        settings = {"sandbox": SANDBOX, "autoMemoryEnabled": False}
+        return [
+            executable,
+            "-p",
+            judge_prompt(packet_path),
+            "--json-schema",
+            inline_schema(repo_root / "evals" / "schemas" / "judge-output.schema.json"),
+            *isolation_flags(config.model, config.reasoning, settings, JUDGE_TOOLS),
+            "--disable-slash-commands",
+        ]

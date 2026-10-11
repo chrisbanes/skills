@@ -10,7 +10,6 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from evals.harness.cases import CaseValidationError, validate_corpus
-from evals.harness.codex import ARMS, RunConfig
 from evals.harness.experiment import (
     default_output_dir,
     execute_experiment,
@@ -24,13 +23,20 @@ from evals.harness.experiment import (
 )
 from evals.harness.judge import JudgeConfig
 from evals.harness.report import append_audit_decision, write_reports
+from evals.harness.runner import ARMS, RunConfig, get_runtime
 from evals.harness.score import compute_scorecard
 from evals.harness.suites import SUITES
 
 
+RUNTIMES = ("codex", "claude")
+
+
 def _add_experiment_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--runtime", choices=RUNTIMES, default="codex")
     parser.add_argument("--model", required=True)
     parser.add_argument("--reasoning", required=True)
+    parser.add_argument("--judge-runtime", choices=RUNTIMES, default="codex")
+    # Required for every judge runtime: no judge model is assumed.
     parser.add_argument("--judge-model", required=True)
     parser.add_argument("--judge-reasoning", required=True)
     parser.add_argument("--case", action="append", dest="case_ids")
@@ -57,6 +63,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--execute", action="store_true")
     run.add_argument("--output-dir", type=Path)
     run.add_argument("--codex-executable", default="codex")
+    run.add_argument("--claude-executable", default="claude")
     report = subparsers.add_parser("report", help="rebuild reports from raw results")
     report.add_argument("--output-dir", type=Path, required=True)
     report.add_argument("--audit-seed", type=int, default=20260816)
@@ -72,9 +79,11 @@ def build_parser() -> argparse.ArgumentParser:
     rejudged_report.add_argument("--audit-seed", type=int, default=20260816)
     judge = subparsers.add_parser("judge", help="preview or rejudge persisted packets")
     judge.add_argument("--output-dir", type=Path, required=True)
+    judge.add_argument("--judge-runtime", choices=RUNTIMES, default="codex")
     judge.add_argument("--judge-model", required=True)
     judge.add_argument("--judge-reasoning", required=True)
     judge.add_argument("--codex-executable", default="codex")
+    judge.add_argument("--claude-executable", default="claude")
     judge.add_argument("--execute", action="store_true")
     judge.add_argument("--json", action="store_true")
     audit = subparsers.add_parser("audit", help="append a human audit decision")
@@ -105,8 +114,22 @@ def _print_plan(plan: dict[str, object], as_json: bool) -> None:
     print(plan["notice"])
 
 
+def _check_reasoning(
+    parser: argparse.ArgumentParser, flag: str, runtime: str, reasoning: str
+) -> None:
+    try:
+        get_runtime(runtime).validate_reasoning(reasoning)
+    except ValueError as error:
+        parser.error(f"{flag}: {error}")
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.command in {"plan", "run"}:
+        _check_reasoning(parser, "--reasoning", args.runtime, args.reasoning)
+    if args.command in {"plan", "run", "judge"}:
+        _check_reasoning(parser, "--judge-reasoning", args.judge_runtime, args.judge_reasoning)
     repo_root = Path(__file__).resolve().parents[1]
     if args.command == "validate":
         try:
@@ -165,6 +188,13 @@ def main(argv: list[str] | None = None) -> int:
         if not execute:
             return 0
         output_dir = (args.output_dir or default_output_dir(repo_root)).resolve()
+        if args.runtime == "claude":
+            # Fail before preflight rather than at the first workspace.
+            try:
+                get_runtime("claude").check_workspace(output_dir / "workspaces")
+            except ValueError as error:
+                print(error, file=sys.stderr)
+                return 2
         paths = execute_experiment(
             repo_root,
             cases,
@@ -174,6 +204,9 @@ def main(argv: list[str] | None = None) -> int:
             judge_config=JudgeConfig(args.judge_model, args.judge_reasoning),
             output_dir=output_dir,
             codex_executable=args.codex_executable,
+            claude_executable=args.claude_executable,
+            runtime=args.runtime,
+            judge_runtime=args.judge_runtime,
         )
         print(f"results: {paths['results']}")
         print(f"scorecard: {paths['scorecard']}")
@@ -254,6 +287,8 @@ def main(argv: list[str] | None = None) -> int:
                 JudgeConfig(args.judge_model, args.judge_reasoning),
                 execute=args.execute,
                 codex_executable=args.codex_executable,
+                claude_executable=args.claude_executable,
+                judge_runtime=args.judge_runtime,
                 records=records,
             )
         except (CaseValidationError, OSError, ValueError) as error:

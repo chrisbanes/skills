@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from evals.harness.cases import EvalCase
+from evals.harness.claude import ClaudeRuntime, discover_builtin_skills
 from evals.harness.codex import discover_skill_paths
 from evals.harness.grade import ObjectiveGrade, _event_invocations, grade_subject
 from evals.harness.judge import (
@@ -33,6 +34,7 @@ from evals.harness.runner import (
     captured_skill_file_evidence,
     get_runtime,
     is_generated_skill_path,
+    record_judge_runtime,
     record_runtime,
     reported_skill_names,
     run_subject,
@@ -371,9 +373,21 @@ def _codex_version(repo_root: Path, codex_executable: str) -> str:
 
 
 def preflight(
-    repo_root: Path, codex_executable: str, cases: Iterable[EvalCase]
-) -> tuple[str, str]:
-    codex_version = _codex_version(repo_root, codex_executable)
+    repo_root: Path,
+    codex_executable: str,
+    cases: Iterable[EvalCase],
+    *,
+    runtimes: Iterable[str] = ("codex",),
+    claude_executable: str = "claude",
+) -> tuple[dict[str, str], str]:
+    """Return each selected runtime's CLI version plus the skill commit."""
+    executables = {"codex": codex_executable, "claude": claude_executable}
+    selected = set(runtimes)
+    versions = {
+        name: get_runtime(name).version(executable, repo_root)
+        for name, executable in executables.items()
+        if name in selected
+    }
     skill_sha = _command_output(["git", "rev-parse", "HEAD"], cwd=repo_root)
     for fixture_name in sorted({case.fixture for case in cases}):
         fixture = repo_root / "evals" / "fixtures" / fixture_name
@@ -387,7 +401,7 @@ def preflight(
                     "Check the offline Gradle dependencies and inspect the fixture build output."
                 ),
             )
-    return codex_version, skill_sha
+    return versions, skill_sha
 
 
 def _judge_retryable(result: JudgeResult) -> bool:
@@ -444,7 +458,8 @@ def _result_payload(
     judge_attempts: list[JudgeResult],
     subject_retries: int,
     judge_retries: int,
-    codex_version: str,
+    versions: dict[str, str],
+    builtin_skills: tuple[str, ...] | None,
     skill_sha: str,
     case_digest: str,
     fingerprint: str,
@@ -470,11 +485,13 @@ def _result_payload(
         "repetition": repetition,
         "fingerprint": fingerprint,
         "case_digest": case_digest,
-        "codex_version": codex_version,
+        # Present whenever Codex runs the subject or the judge.
+        **({"codex_version": versions["codex"]} if "codex" in versions else {}),
         "runtime": subject.runtime,
-        "runtime_version": codex_version,
+        "runtime_version": versions[subject.runtime],
         "judge_runtime": judge.runtime,
-        "judge_runtime_version": codex_version,
+        "judge_runtime_version": versions[judge.runtime],
+        **({"builtin_skills": list(builtin_skills)} if builtin_skills is not None else {}),
         "skill_sha": skill_sha,
         "skill_catalog": [str(path) for path in skill_paths],
         "skill_sources": [str(path) for path in skill_sources],
@@ -546,12 +563,31 @@ def execute_experiment(
     judge_config: JudgeConfig,
     output_dir: Path,
     codex_executable: str = "codex",
+    claude_executable: str = "claude",
+    runtime: str = "codex",
+    judge_runtime: str = "codex",
     audit_seed: int = 20260816,
 ) -> dict[str, Path]:
     conditions = evaluation_conditions(repo_root, cases, arms)
     if not conditions:
         return write_reports(output_dir, [], compute_scorecard([]), seed=audit_seed)
-    codex_version, skill_sha = preflight(repo_root, codex_executable, cases)
+    executables = {"codex": codex_executable, "claude": claude_executable}
+    versions, skill_sha = preflight(
+        repo_root,
+        codex_executable,
+        cases,
+        runtimes=(runtime, judge_runtime),
+        claude_executable=claude_executable,
+    )
+    # Claude's bundled skills are discovered once; every unstaged one is switched off.
+    builtin_skills = (
+        discover_builtin_skills(claude_executable, run_config)
+        if runtime == "claude"
+        else None
+    )
+    subject_runtime = (
+        ClaudeRuntime(builtin_skills=builtin_skills) if runtime == "claude" else runtime
+    )
     skill_paths = discover_skill_paths(repo_root)
     skill_sources = _skill_source_paths(repo_root)
     skill_catalog_digest = _skill_catalog_digest(
@@ -565,13 +601,18 @@ def execute_experiment(
                 case_digest=_case_digest(case),
                 arm=arm,
                 skill_sha=skill_sha,
-                codex_version=codex_version,
+                codex_version=versions.get("codex"),
                 model=run_config.model,
                 reasoning=run_config.reasoning,
                 judge_model=judge_config.model,
                 judge_reasoning=judge_config.reasoning,
                 judge_protocol_digest=judge_protocol_digest,
                 skill_catalog_digest=skill_catalog_digest,
+                runtime=runtime,
+                runtime_version=versions[runtime],
+                judge_runtime=judge_runtime,
+                judge_runtime_version=versions[judge_runtime],
+                builtin_skills=builtin_skills,
             )
             result_path = output_dir / "raw" / case.id / arm / f"{repetition}.json"
             if result_path.is_file():
@@ -593,7 +634,8 @@ def execute_experiment(
                     repo_root,
                     workspace,
                     run_config,
-                    executable=codex_executable,
+                    runtime=subject_runtime,
+                    executable=executables[runtime],
                     skill_paths=skill_paths,
                 )
 
@@ -632,7 +674,8 @@ def execute_experiment(
                     packet_path,
                     repo_root,
                     judge_config,
-                    executable=codex_executable,
+                    runtime=judge_runtime,
+                    executable=executables[judge_runtime],
                     skill_paths=skill_paths,
                 )
                 judge_attempts.append(result)
@@ -655,7 +698,8 @@ def execute_experiment(
                 judge_attempts=judge_attempts,
                 subject_retries=subject_retries,
                 judge_retries=judge_retries,
-                codex_version=codex_version,
+                versions=versions,
+                builtin_skills=builtin_skills,
                 skill_sha=skill_sha,
                 case_digest=_case_digest(case),
                 fingerprint=fingerprint,
@@ -672,6 +716,29 @@ def execute_experiment(
     return write_reports(output_dir, records, compute_scorecard(records), seed=audit_seed)
 
 
+def _required_controls(payload: dict[str, Any]) -> list[str]:
+    uses_codex = "codex" in (record_runtime(payload), record_judge_runtime(payload))
+    return [
+        field
+        for field in RUN_CONTROL_FIELDS
+        if uses_codex or field != "codex_version"
+    ]
+
+
+def _run_controls(payload: dict[str, Any]) -> dict[str, Any]:
+    """The values that must match across records of one run."""
+    controls = {field: payload.get(field) for field in _required_controls(payload)}
+    controls["runtime"] = record_runtime(payload)
+    controls["judge_runtime"] = record_judge_runtime(payload)
+    # Codex versions are already covered by codex_version.
+    for role in ("runtime", "judge_runtime"):
+        if controls[role] != "codex":
+            controls[f"{role}_version"] = payload.get(f"{role}_version")
+    if controls["runtime"] == "claude":
+        controls["builtin_skills"] = payload.get("builtin_skills")
+    return controls
+
+
 def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     baseline_controls: dict[str, Any] | None = None
@@ -685,23 +752,23 @@ def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:
         payload = document["payload"]
         record_id = str(payload.get("id", path))
         payload.setdefault("suite", "compose")
+        controls = _run_controls(payload)
         missing_controls = [
-            field for field in RUN_CONTROL_FIELDS if field not in payload
+            field for field in _required_controls(payload) if field not in payload
         ]
         if missing_controls:
             raise ValueError(
                 f"raw record {record_id} is missing run controls: "
                 f"{', '.join(missing_controls)}"
             )
-        controls = {field: payload[field] for field in RUN_CONTROL_FIELDS}
         if baseline_controls is None:
             baseline_controls = controls
             baseline_id = record_id
         else:
             differing_controls = [
                 field
-                for field in RUN_CONTROL_FIELDS
-                if controls[field] != baseline_controls[field]
+                for field in {**baseline_controls, **controls}
+                if controls.get(field) != baseline_controls.get(field)
             ]
             if differing_controls:
                 raise ValueError(
@@ -838,27 +905,31 @@ def write_rejudged_reports(
         if packet_path is None:
             continue
         judge_model = payload.get("judge_model")
-        codex_version = payload.get("codex_version")
-        if not isinstance(judge_model, dict) or not isinstance(codex_version, str):
+        judge_runtime = payload.get("judge_runtime", "codex")
+        # Codex rejudgments carry codex_version; others carry their own runtime version.
+        version = payload.get(
+            "codex_version" if judge_runtime == "codex" else "judge_runtime_version"
+        )
+        if not isinstance(judge_model, dict) or not isinstance(version, str):
             raise ValueError(f"rejudgment lacks run controls: {result_path}")
         model = judge_model.get("model")
         reasoning = judge_model.get("reasoning")
         if not isinstance(model, str) or not isinstance(reasoning, str):
             raise ValueError(f"invalid rejudgment model: {result_path}")
-        prompt_digest = hashlib.sha256(
-            build_judge_command(
-                packet_path,
-                repo_root,
-                JudgeConfig(model, reasoning),
-                skill_paths=skill_paths,
-            )[-1].encode()
-        ).hexdigest()
         current_fingerprint = _rejudgment_fingerprint(
             packet_path,
             JudgeConfig(model, reasoning),
             skill_catalog_digest=skill_catalog_digest,
-            codex_version=codex_version,
-            judge_prompt_digest=prompt_digest,
+            codex_version=version if judge_runtime == "codex" else None,
+            judge_prompt_digest=_judge_prompt_digest(
+                packet_path,
+                repo_root,
+                JudgeConfig(model, reasoning),
+                judge_runtime,
+                skill_paths,
+            ),
+            judge_runtime=judge_runtime,
+            judge_runtime_version=version,
         )
         if fingerprint != current_fingerprint:
             continue
@@ -896,6 +967,9 @@ def write_rejudged_reports(
         record["original_judge"] = record["judge"]
         record["judge"] = judge
         record["judge_model"] = judgment.get("judge_model", record["judge_model"])
+        for key in ("judge_runtime", "judge_runtime_version"):
+            if key in judgment:
+                record[key] = judgment[key]
         record["judge_pass"] = judge_pass
         record["outcome_pass"] = bool(record.get("objective_pass")) and judge_pass
         record["rejudgment"] = {
@@ -920,6 +994,8 @@ def rejudge_packets(
     *,
     execute: bool,
     codex_executable: str = "codex",
+    claude_executable: str = "claude",
+    judge_runtime: str = "codex",
     records: Iterable[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     all_packets = sorted((output_dir / "judge-packets").glob("*.json"))
@@ -953,7 +1029,8 @@ def rejudge_packets(
     }
     if not execute:
         return plan
-    codex_version = _codex_version(repo_root, codex_executable)
+    executable = {"codex": codex_executable, "claude": claude_executable}[judge_runtime]
+    version = get_runtime(judge_runtime).version(executable, repo_root)
     skill_paths = discover_skill_paths(repo_root)
     skill_catalog_digest = _skill_catalog_digest(skill_paths)
     completed = 0
@@ -964,16 +1041,12 @@ def rejudge_packets(
             packet_path,
             judge_config,
             skill_catalog_digest=skill_catalog_digest,
-            codex_version=codex_version,
-            judge_prompt_digest=hashlib.sha256(
-                build_judge_command(
-                    packet_path,
-                    repo_root,
-                    judge_config,
-                    executable=codex_executable,
-                    skill_paths=skill_paths,
-                )[-1].encode()
-            ).hexdigest(),
+            codex_version=version if judge_runtime == "codex" else None,
+            judge_prompt_digest=_judge_prompt_digest(
+                packet_path, repo_root, judge_config, judge_runtime, skill_paths
+            ),
+            judge_runtime=judge_runtime,
+            judge_runtime_version=version,
         )
         result_path = _rejudgment_result_path(output_dir, packet_path, fingerprint)
         if result_path.is_file():
@@ -987,7 +1060,8 @@ def rejudge_packets(
                 packet_path,
                 repo_root,
                 judge_config,
-                executable=codex_executable,
+                runtime=judge_runtime,
+                executable=executable,
                 skill_paths=skill_paths,
             )
             judge_attempts.append(result)
@@ -1003,7 +1077,9 @@ def rejudge_packets(
             fingerprint,
             {
                 "candidate_id": packet.get("candidate_id"),
-                "codex_version": codex_version,
+                **({"codex_version": version} if judge_runtime == "codex" else {}),
+                "judge_runtime": judge_runtime,
+                "judge_runtime_version": version,
                 "judge_model": {
                     "model": judge_config.model,
                     "reasoning": judge_config.reasoning,
@@ -1026,13 +1102,33 @@ def rejudge_packets(
     return {**plan, "completed": completed}
 
 
+def _judge_prompt_digest(
+    packet_path: Path,
+    repo_root: Path,
+    judge_config: JudgeConfig,
+    judge_runtime: str,
+    skill_paths: tuple[Path, ...],
+) -> str:
+    command = build_judge_command(
+        packet_path,
+        repo_root,
+        judge_config,
+        runtime=judge_runtime,
+        skill_paths=skill_paths,
+    )
+    prompt = get_runtime(judge_runtime).judge_command_prompt(command)
+    return hashlib.sha256(prompt.encode()).hexdigest()
+
+
 def _rejudgment_fingerprint(
     packet_path: Path,
     judge_config: JudgeConfig,
     *,
     skill_catalog_digest: str,
-    codex_version: str,
+    codex_version: str | None,
     judge_prompt_digest: str,
+    judge_runtime: str = "codex",
+    judge_runtime_version: str | None = None,
 ) -> str:
     identity = {
         "packet_digest": hashlib.sha256(packet_path.read_bytes()).hexdigest(),
@@ -1041,6 +1137,9 @@ def _rejudgment_fingerprint(
         "codex_version": codex_version,
         "judge_prompt_digest": judge_prompt_digest,
     }
+    if judge_runtime != "codex":
+        identity["judge_runtime"] = judge_runtime
+        identity["judge_runtime_version"] = judge_runtime_version
     return hashlib.sha256(
         json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()

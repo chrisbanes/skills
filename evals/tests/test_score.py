@@ -359,6 +359,53 @@ class ScorecardTest(unittest.TestCase):
         self.assertEqual(1.0, score.routing_precision)
         self.assertEqual(1.0, score.routing_recall)
 
+    def test_routing_metrics_exclude_isolation_invalid_runs(self):
+        invalid = record(
+            "bad:automatic", "automatic", True,
+            expected=("kotlin-api-design",), reported=("compose-animations",),
+        )
+        invalid["reported_router"] = True
+        invalid["forced_target_preflight"] = {
+            "valid": False, "targets": [], "isolation": {"valid": False},
+        }
+        valid = record(
+            "good:automatic", "automatic", True,
+            expected=("kotlin-api-design",), reported=("kotlin-api-design",),
+        )
+
+        score = compute_scorecard([invalid, valid])
+
+        self.assertEqual(1.0, score.routing_precision)
+        self.assertEqual(1.0, score.routing_recall)
+        self.assertEqual(0.0, score.router_report_rate)
+        self.assertIsNone(compute_scorecard([invalid]).routing_precision)
+
+    def test_observed_routing_scores_skill_activations_apart_from_reports(self):
+        activated = record(
+            "one:automatic", "automatic", True,
+            expected=("kotlin-api-design",), reported=("kotlin-api-design",),
+        )
+        activated["observed_skills"] = ["kotlin-api-design", "compose-animations"]
+        missed = record(
+            "two:automatic", "automatic", True,
+            expected=("kotlin-api-design",), reported=("kotlin-api-design",),
+        )
+        missed["observed_skills"] = []
+        codex = record(
+            "three:automatic", "automatic", True,
+            expected=("kotlin-api-design",), reported=("compose-animations",),
+        )
+        codex["observed_skills"] = None
+
+        score = compute_scorecard([activated, missed, codex])
+
+        self.assertEqual(0.5, score.observed_routing_precision)
+        self.assertEqual(0.5, score.observed_routing_recall)
+        # Self-reported routing is unaffected by the diagnostic.
+        self.assertEqual(2 / 3, score.routing_precision)
+        self.assertEqual(2 / 3, score.routing_recall)
+        self.assertIsNone(compute_scorecard([codex]).observed_routing_precision)
+
     def test_applies_uplift_retention_routing_negative_and_safety_gates(self):
         records = []
         for index, outcomes in enumerate(((True, True, True), (False, True, True), (True, True, True), (False, False, False))):

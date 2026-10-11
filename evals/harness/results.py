@@ -30,6 +30,7 @@ def result_fingerprint(
     runtime_version: str | None = None,
     judge_runtime: str = "codex",
     judge_runtime_version: str | None = None,
+    builtin_skills: tuple[str, ...] | None = None,
 ) -> str:
     fields: dict[str, Any] = {
         "arm": arm,
@@ -56,6 +57,8 @@ def result_fingerprint(
         fields["judge_protocol_digest"] = judge_protocol_digest
     if skill_catalog_digest is not None:
         fields["skill_catalog_digest"] = skill_catalog_digest
+    if builtin_skills is not None:
+        fields["builtin_skills"] = sorted(builtin_skills)
     encoded = json.dumps(fields, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(encoded).hexdigest()
 

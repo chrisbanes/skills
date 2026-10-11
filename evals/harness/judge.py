@@ -208,6 +208,7 @@ def run_judge(
     skill_paths: tuple[Path, ...] | None = None,
 ) -> JudgeResult:
     started = time.monotonic()
+    adapter = get_runtime(runtime)
     with tempfile.TemporaryDirectory(prefix="skill-eval-judge-") as temp_dir:
         isolated_packet = Path(temp_dir) / packet_path.name
         shutil.copy2(packet_path, isolated_packet)
@@ -227,6 +228,7 @@ def run_judge(
                 capture_output=True,
                 timeout=config.timeout_seconds,
                 check=False,
+                **adapter.judge_process_options(),
             )
             returncode = completed.returncode
             stdout = completed.stdout
@@ -235,7 +237,7 @@ def run_judge(
             returncode = 124
             stdout = error.stdout if isinstance(error.stdout, str) else ""
             stderr = error.stderr if isinstance(error.stderr, str) else ""
-    events, output, usage = get_runtime(runtime).parse(stdout)
+    events, output, usage = adapter.parse(stdout)
     return JudgeResult(
         returncode=returncode,
         events=events,

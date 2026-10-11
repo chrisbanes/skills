@@ -1,7 +1,9 @@
 import hashlib
 import json
+import subprocess
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -18,13 +20,18 @@ from evals.harness.experiment import (
     _skill_catalog_digest,
     _skill_source_paths,
     _subject_result_from_record,
+    execute_experiment,
     load_raw_records,
     next_attempt_workspace,
+    preflight,
+    reconcile_automatic_eligibility,
+    regrade_records,
     rejudge_packets,
     write_rejudged_reports,
 )
 from evals.harness.judge import JudgeConfig, build_judge_command
-from evals.harness.runner import record_judge_runtime, record_runtime
+from evals.harness.cases import Validator
+from evals.harness.runner import RunConfig, record_judge_runtime, record_runtime
 from evals.harness.results import (
     FingerprintMismatch,
     load_result,
@@ -32,6 +39,9 @@ from evals.harness.results import (
     run_with_one_retry,
     write_result,
 )
+from evals.tests import test_codex_runner
+from evals.tests.test_claude_runner import BODY, TARGET, ClaudeForcedIntegrityTest, fixture_lines
+from evals.tests.test_codex_runner import sample_case
 
 
 class ResultLifecycleTest(unittest.TestCase):
@@ -597,6 +607,37 @@ class ResultLifecycleTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "different run controls: suite"):
             load_raw_records(self.root)
 
+    def test_loading_raw_records_rejects_mixed_runtimes_and_builtin_sets(self):
+        claude = {"runtime": "claude", "runtime_version": "2.1.296", "builtin_skills": ["a"]}
+        for override, differing in (
+            ({}, "runtime, runtime_version, builtin_skills"),
+            ({**claude, "runtime_version": "2.1.300"}, "runtime_version"),
+            ({**claude, "builtin_skills": ["a", "b"]}, "builtin_skills"),
+            ({**claude, "judge_runtime": "claude", "judge_runtime_version": "2.1.296"},
+             "codex_version, judge_runtime, judge_runtime_version"),
+        ):
+            with self.subTest(differing):
+                self.write_raw_record("first", "automatic", 1, **claude)
+                self.write_raw_record("second", "automatic", 1, **override)
+                with self.assertRaisesRegex(
+                    ValueError, f"different run controls: {differing}$"
+                ):
+                    load_raw_records(self.root)
+
+    def test_builtin_skills_change_the_fingerprint_only_when_given(self):
+        common = {
+            "case_digest": "case-sha", "arm": "none", "skill_sha": "skill-sha",
+            "codex_version": None, "model": "claude-haiku-5-5", "reasoning": "high",
+            "runtime": "claude", "runtime_version": "2.1.296",
+        }
+
+        base = result_fingerprint(**common)
+        first = result_fingerprint(**common, builtin_skills=("debug", "simplify"))
+
+        self.assertNotEqual(base, first)
+        self.assertEqual(first, result_fingerprint(**common, builtin_skills=("simplify", "debug")))
+        self.assertNotEqual(first, result_fingerprint(**common, builtin_skills=("debug",)))
+
     def test_loading_raw_records_rejects_malformed_payloads(self):
         path = self.root / "raw" / "case" / "automatic" / "1.json"
         path.parent.mkdir(parents=True)
@@ -698,6 +739,200 @@ class ResultLifecycleTest(unittest.TestCase):
         }
         self.assertEqual(
             workspace.resolve(), _subject_result_from_record(current, self.root).workspace
+        )
+
+
+FAKE_CLAUDE = """#!/bin/sh
+case "$*" in
+  "--version") echo version >> '{log}'; echo "2.1.296 (Claude Code)"; exit 0;;
+  *"Reply with OK."*) echo discovery >> '{log}';;
+  *"--tools Read --allowedTools"*) echo judge >> '{log}'; cat '{judge}'; exit 0;;
+  *) echo subject >> '{log}';;
+esac
+if [ -d .claude/skills ]; then
+  skills="[$(ls .claude/skills | sed 's/.*/"&"/' | paste -sd, -)]"
+else
+  skills='["debug","simplify"]'
+fi
+printf '{{"type":"system","subtype":"init","skills":%s,"mcp_servers":[]}}\\n' "$skills"
+cat '{subject}'
+"""
+FAKE_CODEX = """#!/bin/sh
+if [ "$1" = "--version" ]; then echo "codex-cli 1.2.3"; exit 0; fi
+printf '%s\\n' '{judgment}'
+"""
+JUDGMENT = {
+    "criteria": [
+        {"id": "c1", "pass": True, "evidence": "diff"},
+        {"id": "c2", "pass": True, "evidence": "diff"},
+    ],
+    "overall_pass": True,
+    "rationale": "ok",
+}
+
+
+class ClaudeExperimentTest(unittest.TestCase):
+    tearDown = test_codex_runner.CodexRunnerTest.tearDown
+
+    def setUp(self):
+        test_codex_runner.CodexRunnerTest.setUp(self)
+        (self.root / "evals" / "schemas" / "judge-output.schema.json").write_text(
+            "{}\n", encoding="utf-8"
+        )
+        subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "-c", "user.name=Test", "-c", "user.email=test@localhost",
+             "commit", "-qm", "baseline"],
+            cwd=self.root, check=True,
+        )
+        (self.root / "skills" / TARGET / "SKILL.md").write_text(
+            f"---\nname: {TARGET}\ndescription: Use when testing.\n---\n\n{BODY}",
+            encoding="utf-8",
+        )
+        subject = self.root / "subject.jsonl"
+        subject.write_text(
+            "".join(
+                json.dumps(line) + "\n"
+                for line in ClaudeForcedIntegrityTest.forced_lines(None)
+            ),
+            encoding="utf-8",
+        )
+        self.claude = self.root / "fake-claude"
+        self.claude.write_text(
+            FAKE_CLAUDE.format(
+                judge=Path(__file__).parent / "data" / "claude_stream_judge.jsonl",
+                subject=subject,
+                log=self.root / "claude.log",
+            ),
+            encoding="utf-8",
+        )
+        self.codex = self.root / "fake-codex"
+        self.codex.write_text(
+            FAKE_CODEX.format(judgment=json.dumps({
+                "type": "item.completed",
+                "item": {"type": "agent_message", "text": json.dumps(JUDGMENT)},
+            })),
+            encoding="utf-8",
+        )
+        for script in (self.claude, self.codex):
+            script.chmod(0o755)
+        self.case = replace(
+            sample_case(self.root),
+            validators=(Validator(("python3", "-c", "pass"), 30),),
+            rubric=({"id": "c1", "text": "One"}, {"id": "c2", "text": "Two"}),
+        )
+        self.output = self.root / "runs" / "out"
+
+    def run_experiment(self, judge_runtime, judge_model):
+        with patch("evals.harness.experiment.discover_skill_paths", return_value=()):
+            return execute_experiment(
+                self.root,
+                [self.case],
+                arms=["forced"],
+                repetitions=1,
+                run_config=RunConfig("claude-haiku-5-5", "high"),
+                judge_config=JudgeConfig(judge_model, "high"),
+                output_dir=self.output,
+                runtime="claude",
+                judge_runtime=judge_runtime,
+                codex_executable=str(self.codex),
+                claude_executable=str(self.claude),
+            )
+
+    def calls(self):
+        log = self.root / "claude.log"
+        return log.read_text().split() if log.is_file() else []
+
+    def raw_payload(self):
+        (path,) = (self.output / "raw").glob("*/*/*.json")
+        return json.loads(path.read_text(encoding="utf-8"))["payload"]
+
+    def test_claude_subject_with_codex_judge_records_both_runtimes(self):
+        paths = self.run_experiment("codex", "gpt-6-sol")
+
+        record = self.raw_payload()
+        self.assertEqual("claude", record["runtime"])
+        self.assertEqual("2.1.296 (Claude Code)", record["runtime_version"])
+        self.assertEqual("codex", record["judge_runtime"])
+        self.assertEqual("codex-cli 1.2.3", record["judge_runtime_version"])
+        self.assertEqual("codex-cli 1.2.3", record["codex_version"])
+        self.assertEqual(["debug", "simplify"], record["builtin_skills"])
+        self.assertEqual([TARGET], record["observed_skills"])
+        self.assertTrue(record["forced_target_preflight"]["valid"])
+        workspace = Path(record["subject"]["workspace"])
+        self.assertTrue(workspace.is_relative_to(self.output.resolve() / "workspaces"))
+        self.assertTrue((workspace / ".claude" / "skills" / TARGET / "SKILL.md").is_file())
+        command = record["subject"]["command"]
+        self.assertEqual(
+            {"debug": "off", "simplify": "off"},
+            json.loads(command[command.index("--settings") + 1])["skillOverrides"],
+        )
+        self.assertEqual(1, len(json.loads(paths["results"].read_text())))
+        self.assertEqual(["version", "discovery", "subject"], self.calls())
+
+    def test_claude_judge_without_codex_omits_the_codex_version(self):
+        self.run_experiment("claude", "claude-haiku-5-5")
+
+        record = self.raw_payload()
+        self.assertEqual("claude", record["judge_runtime"])
+        self.assertEqual("2.1.296 (Claude Code)", record["judge_runtime_version"])
+        self.assertNotIn("codex_version", record)
+        self.assertEqual(
+            {"c1", "c2"}, {item["id"] for item in record["judge"]["output"]["criteria"]}
+        )
+        self.assertTrue(record["judge_pass"])
+        # Claude-only records still load: codex_version is not a control for them.
+        self.assertEqual([record["id"]], [r["id"] for r in load_raw_records(self.output)])
+
+    def test_claude_records_round_trip_through_report_regrade_and_rejudge(self):
+        self.run_experiment("codex", "gpt-6-sol")
+        before = self.calls()
+        with patch("evals.harness.experiment.discover_skill_paths", return_value=()):
+            records = load_raw_records(self.output)
+            reconcile_automatic_eligibility(self.root, [self.case], records)
+            regraded = regrade_records(
+                self.root, [self.case], self.output, records, audit_seed=1
+            )
+            # Regrade reuses the recorded data: no discovery or model call.
+            self.assertEqual(before, self.calls())
+            plan = rejudge_packets(
+                self.root, self.output, JudgeConfig("claude-haiku-5-5", "high"),
+                execute=True, judge_runtime="claude", claude_executable=str(self.claude),
+            )
+            rejudged = write_rejudged_reports(
+                self.output, records, audit_seed=1, repo_root=self.root
+            )
+
+        self.assertEqual("claude", record_runtime(records[0]))
+        self.assertEqual("codex", record_judge_runtime(records[0]))
+        self.assertEqual(
+            [TARGET], json.loads(regraded["results"].read_text())[0]["observed_skills"]
+        )
+        self.assertEqual(1, plan["completed"])
+        (final,) = json.loads(rejudged["results"].read_text())
+        self.assertTrue(final["judge_pass"])
+        self.assertEqual("claude", final["judge_runtime"])
+        self.assertEqual("2.1.296 (Claude Code)", final["judge_runtime_version"])
+        self.assertEqual("codex", records[0]["judge_runtime"])
+        # Rejudging only checks the version and judges once; it never rediscovers.
+        self.assertEqual(["version", "judge"], self.calls()[len(before):])
+
+    def test_preflight_reports_each_selected_runtime_version(self):
+        with patch("evals.harness.experiment._command_output") as output:
+            output.side_effect = lambda command, **_: " ".join(command)
+            versions, skill_sha = preflight(
+                self.root, "codex-x", (), runtimes=("claude", "codex"),
+                claude_executable="claude-x",
+            )
+
+        self.assertEqual(
+            {"codex": "codex-x --version", "claude": "claude-x --version"}, versions
+        )
+        self.assertEqual("git rev-parse HEAD", skill_sha)
+        self.assertEqual(
+            [["codex-x", "--version"], ["claude-x", "--version"], ["git", "rev-parse", "HEAD"]],
+            [call.args[0] for call in output.call_args_list],
         )
 
 

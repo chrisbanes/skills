@@ -293,6 +293,15 @@ def render_scorecard(
             f"- Automatic retention: {_percent(score.automatic_retention)}",
             f"- Reported automatic routing precision: {_percent(score.routing_precision)}",
             f"- Reported automatic routing recall: {_percent(score.routing_recall)}",
+            *(
+                [
+                    "- Observed routing precision: "
+                    f"{_percent(score.observed_routing_precision)}",
+                    f"- Observed routing recall: {_percent(score.observed_routing_recall)}",
+                ]
+                if any(record.get("observed_skills") is not None for record in records)
+                else []
+            ),
             f"- Router reported in automatic arm: {_percent(score.router_report_rate)}",
             f"- Forbidden-action failures: {score.forbidden_action_failures}",
             "",
@@ -371,7 +380,13 @@ def render_scorecard(
             "",
             "Token counts are Codex input plus output tokens. Tool calls count completed "
             "command, file-change, MCP, web-search, and generic tool events. Wall-clock "
-            "time is environment-sensitive.",
+            "time is environment-sensitive."
+            + (
+                " Claude Code token counts also include cache creation and cache read "
+                "input tokens, and its tool calls exclude the structured-output call."
+                if any(record_runtime(record) != "codex" for record in records)
+                else ""
+            ),
             "",
             "## Evaluation diagnostics (non-gating)",
             "",

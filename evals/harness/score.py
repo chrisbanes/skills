@@ -41,6 +41,9 @@ class Scorecard:
     efficiency: dict[str, EfficiencyMetrics]
     skill_efficiency: dict[str, dict[str, EfficiencyMetrics]]
     gates: dict[str, bool]
+    # Diagnostic from observed Skill activations; None without any (Codex has none).
+    observed_routing_precision: float | None = None
+    observed_routing_recall: float | None = None
 
 
 def _rate(records: list[dict[str, Any]]) -> float | None:
@@ -104,7 +107,9 @@ def is_behavioral_evidence(record: dict[str, Any], arm: str) -> bool:
     )
 
 
-def _routing_metrics(records: list[dict[str, Any]]) -> tuple[float | None, float | None]:
+def _routing_metrics(
+    records: list[dict[str, Any]], key: str = "reported_skills"
+) -> tuple[float | None, float | None]:
     if not records:
         return None, None
     precision_true_positive = false_positive = 0
@@ -112,7 +117,7 @@ def _routing_metrics(records: list[dict[str, Any]]) -> tuple[float | None, float
     for record in records:
         expected = set(record.get("expected_skills", []))
         allowed = set(record.get("allowed_skills", expected)) | expected
-        reported = set(record.get("reported_skills", []))
+        reported = set(record.get(key, []))
         precision_true_positive += len(allowed & reported)
         false_positive += len(reported - allowed)
         recall_true_positive += len(expected & reported)
@@ -342,8 +347,13 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         for record in records
         if record.get("arm") == "automatic"
         and is_measured_in_arm(record, "automatic")
+        and isolation_valid(record)
     ]
     routing_precision, routing_recall = _routing_metrics(automatic_records)
+    observed_precision, observed_recall = _routing_metrics(
+        [r for r in automatic_records if r.get("observed_skills") is not None],
+        "observed_skills",
+    )
     router_report_rate = (
         sum(bool(record.get("reported_router")) for record in automatic_records)
         / len(automatic_records)
@@ -414,4 +424,6 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         efficiency=efficiency,
         skill_efficiency=skill_efficiency,
         gates=gates,
+        observed_routing_precision=observed_precision,
+        observed_routing_recall=observed_recall,
     )

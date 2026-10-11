@@ -6,13 +6,16 @@ from dataclasses import replace
 from pathlib import Path
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL
+from evals.harness.claude import ClaudeRuntime
 from evals.harness.grade import ObjectiveGrade, ValidatorResult
 from evals.harness.judge import (
     JudgeConfig,
     build_judge_command,
     build_judge_packet,
     judge_covers_rubric,
+    judge_output_valid,
     judge_passes_rubric,
+    judge_prompt,
     run_judge,
 )
 from evals.tests.test_grade import make_case, make_result
@@ -469,6 +472,93 @@ class BlindedJudgeTest(unittest.TestCase):
                 rubric,
             )
         )
+
+
+CLAUDE_JUDGE_STREAM = Path(__file__).parent / "data" / "claude_stream_judge.jsonl"
+
+
+class ClaudeJudgeTest(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp_dir.name)
+        (self.root / "evals" / "schemas").mkdir(parents=True)
+        (self.root / "evals" / "schemas" / "judge-output.schema.json").write_text(
+            json.dumps({"$schema": "https://json-schema.org/draft/2020-12/schema",
+                        "type": "object"}),
+            encoding="utf-8",
+        )
+        self.packet = self.root / "packet.json"
+        self.packet.write_text(
+            json.dumps({"task": "Review the subject", "task_mode": "review",
+                        "rubric": [{"id": "c1", "text": "One"}, {"id": "c2", "text": "Two"}]}),
+            encoding="utf-8",
+        )
+        self.config = JudgeConfig(model="claude-haiku-5-5", reasoning="high")
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def option(self, command, flag):
+        return command[command.index(flag) + 1]
+
+    def test_command_is_read_only_isolated_and_uses_the_codex_prompt(self):
+        command = build_judge_command(
+            self.packet, self.root, self.config, runtime="claude", executable="claude"
+        )
+
+        self.assertEqual(["claude", "-p", judge_prompt(self.packet)], command[:3])
+        self.assertEqual("Read", self.option(command, "--tools"))
+        self.assertEqual("Read", self.option(command, "--allowedTools"))
+        self.assertEqual("WebFetch,WebSearch", self.option(command, "--disallowedTools"))
+        for flag in ("--disable-slash-commands", "--strict-mcp-config",
+                     "--no-session-persistence", "--verbose"):
+            self.assertIn(flag, command)
+        self.assertEqual("project", self.option(command, "--setting-sources"))
+        self.assertEqual("dontAsk", self.option(command, "--permission-mode"))
+        self.assertEqual("claude-haiku-5-5", self.option(command, "--model"))
+        self.assertEqual("high", self.option(command, "--effort"))
+        # The inline schema must not carry the unsupported $schema key.
+        self.assertEqual({"type": "object"}, json.loads(self.option(command, "--json-schema")))
+        settings = json.loads(self.option(command, "--settings"))
+        self.assertTrue(settings["sandbox"]["enabled"])
+        self.assertFalse(settings["sandbox"]["allowUnsandboxedCommands"])
+        self.assertFalse(settings["autoMemoryEnabled"])
+        for tool in ("Edit", "Write", "Bash"):
+            self.assertNotIn(tool, self.option(command, "--tools"))
+            self.assertNotIn(tool, self.option(command, "--allowedTools"))
+
+    def test_parses_the_recorded_judge_stream_into_a_valid_judgment(self):
+        events, output, usage = ClaudeRuntime().parse(
+            CLAUDE_JUDGE_STREAM.read_text(encoding="utf-8")
+        )
+
+        self.assertTrue(judge_output_valid(output))
+        self.assertTrue(judge_passes_rubric(output, ({"id": "c1", "text": "One"},
+                                                     {"id": "c2", "text": "Two"})))
+        self.assertEqual(4 + 5557 + 5226, usage["input_tokens"])
+        self.assertEqual(1, ClaudeRuntime().tool_call_count(events))
+
+    def test_run_judge_starts_claude_with_claude_mds_disabled_and_no_stdin(self):
+        fake = self.root / "fake-claude"
+        record = self.root / "record.txt"
+        fake.write_text(
+            "#!/bin/sh\n"
+            f"printf '%s\\n' \"$CLAUDE_CODE_DISABLE_CLAUDE_MDS\" * > '{record}'\n"
+            f"if read -r line; then echo stdin-open >> '{record}'; fi\n"
+            f"cat '{CLAUDE_JUDGE_STREAM}'\n",
+            encoding="utf-8",
+        )
+        fake.chmod(0o755)
+
+        result = run_judge(
+            self.packet, self.root, self.config, runtime="claude", executable=str(fake)
+        )
+
+        self.assertEqual("claude", result.runtime)
+        self.assertEqual(0, result.returncode)
+        self.assertTrue(judge_output_valid(result.output))
+        # The judge sees only its isolated packet copy and has no stdin.
+        self.assertEqual("1\npacket.json\n", record.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

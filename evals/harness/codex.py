@@ -570,6 +570,12 @@ class CodexRuntime:
     def forced_target_observed(self, record, targets):
         return _observed_staged_target_read(record, targets)
 
+    def judge_command_prompt(self, command):
+        return command[-1]
+
+    def judge_process_options(self):
+        return {}
+
     def build_judge_command(
         self, packet_path, repo_root, config, *, executable, skill_paths
     ):
