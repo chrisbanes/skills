@@ -1,0 +1,44 @@
+{
+  "id": "deliver-spec-checkpoint-batch-direct",
+  "title": "Deliver spec checkpoint batch direct",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-checkpoint-batch-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "batch",
+      "text": "Collect the three routine findings at the coherent implementation checkpoint and return one consolidated repair batch to A; do not turn each observation into a follow-up/full-suite cycle or defer all feedback until final delivery."
+    },
+    {
+      "id": "ownership",
+      "text": "Retain both owners, keep architectural decisions/integration with the lead, review repaired behavior and interactions, and disposition every actionable finding."
+    },
+    {
+      "id": "validation",
+      "text": "Use meaningful affected tests and applicable build/type/lint checks during implementation/repair; mandatory full checks belong at meaningful integrated candidates or explicit rules; retain independent final review without adding an acceptance ceremony."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

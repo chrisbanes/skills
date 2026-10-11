@@ -70,8 +70,9 @@ unknown execution state and stop only affected dependent dispatch while
 independent tickets continue.
 Keep the persistent ticket context as delivery lead and integration owner.
 `deliver-spec` owns solo or delegated implementation and integration;
-preserve its same-owner repair rule and fit all descendants within the
-controller's actual spare capacity. Return observed implementation, repair,
+pass its [checkpoint feedback and validation rules](../../deliver-spec/references/evidence-and-review.md)
+through implementation and repair handoffs. Preserve its same-owner repair rule
+and fit all descendants within the controller's actual spare capacity. Return observed implementation, repair,
 review, and CI phase boundaries, plus capacity or resource waits, with the
 existing handoff evidence so the controller can persist
 [timings](drain-scheduler.md#phase-timing-and-stalls) across compaction. Retain
@@ -117,9 +118,11 @@ contract it explicitly covered at that head; run only missing contracts, not a
 duplicate correctness pass. Fix every actionable finding or give an evidence-based
 disposition except for explicitly very low priority findings. If a repair
 changes the reviewed candidate, rerun affected checks and review the changed
-range plus its interaction with the previously reviewed effective diff. Broaden to
-full verification and all review contracts when an earlier result is
-invalidated or the affected scope cannot be bounded. Before every push, verify
+range plus its interaction with the previously reviewed effective diff. Apply
+`deliver-spec`'s
+[evidence invalidation rule](../../deliver-spec/references/evidence-and-review.md#implementation-and-validation)
+to each affected check and review contract, including its broadening conditions.
+Before every push, verify
 that the combined evidence covers the exact final HEAD and that no actionable
 finding remains; never treat unchanged prior checks as proof for changed code.
 

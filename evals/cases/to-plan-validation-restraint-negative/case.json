@@ -1,0 +1,40 @@
+{
+  "id": "to-plan-validation-restraint-negative",
+  "title": "To plan validation restraint negative",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-validation-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "restraint",
+      "text": "Keep the plan unchanged: no rewrite, republication, new review, full rerun, acceptance receipt or invented permission stage merely to repeat sufficient existing guidance."
+    },
+    {
+      "id": "contract",
+      "text": "Preserve concrete validation, boundary prerequisites, independent final review, ownership, approved scope and existing authority; do not execute implementation or mutate the plan."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

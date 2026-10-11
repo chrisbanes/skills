@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Do not execute the workflow, run commands, contact providers, launch agents or change files.
+
+Read-only assessment of an executor-ready plan: slice checks are concrete, meaningful and affected; Final validation lists mandatory integrated-candidate checks and their actual repository triggers. Consequential boundary evidence gates dependent integration. Independent final review and focused repair interaction review are retained, along with existing owner continuity and valid evidence reuse. There is no command-per-commit rule, no new evidence and no changed inputs. Should the plan be rewritten or republished to add batching boilerplate, more reviews or acceptance receipts?

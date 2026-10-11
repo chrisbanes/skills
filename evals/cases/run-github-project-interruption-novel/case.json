@@ -1,0 +1,46 @@
+{
+  "id": "run-github-project-interruption-novel",
+  "title": "Run github project interruption novel",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-interruption-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "interrupt",
+      "text": "Interrupt A promptly for the demonstrated data-integrity and architectural misdirection; do not wait for a routine checkpoint or let invalid substantial work continue."
+    },
+    {
+      "id": "decision",
+      "text": "Answer B promptly if the decision is within the approved contract; otherwise route the needed material decision promptly and hold only dependent work. Batch routine wording findings at the next coherent checkpoint."
+    },
+    {
+      "id": "gates",
+      "text": "Keep repairs with existing owners, architecture/integration with the ticket lead and remote/controller mutations with their existing owner; do not expand scope, change model/capacity, invent permission stages or grant merge authority."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

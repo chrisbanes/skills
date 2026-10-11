@@ -220,11 +220,13 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 65 calibration-only cases, including
+The workflows/writing corpus contains 74 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
-two-round external-review convergence with same-owner consolidated repairs,
+checkpoint batching and justified interruptions, scoped repair evidence reuse,
+broad invalidation and explicit full-check requirements, plan validation placement
+and unchanged-plan restraint, two-round external-review convergence with same-owner consolidated repairs,
 related retention/pagination cases, review coverage and browser diagnostics,
 early consequential boundary validation and restraint on unchanged evidence,
 unresolved decisions, proof-gated report publication, implementation-plan

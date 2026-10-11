@@ -6,15 +6,17 @@ the selected mode retains its approval, authority and finish gates.
 
 ## Implementation and validation
 
-1. Apply [Behavioral review and repair](behavioral-review.md) for demonstrated
-   boundary failures, review coverage accounts, external-review convergence and
+1. Apply [Behavioral review and repair](behavioral-review.md) for implementation
+   checkpoints, batched findings, immediate interruptions, demonstrated boundary
+   failures, review coverage accounts, external-review convergence and
    browser failure diagnostics. It owns those rules; keep their evidence in the
    delivery record below.
-2. Run affected checks while developing a slice. Run every required full check
+2. Run meaningful affected tests and applicable build, type and lint checks
+   during implementation and bounded repairs. Run every required full check
    on meaningful integrated delivery candidates, including mandatory repository
    and provider validation. Repeat checks only when changes invalidate evidence,
    impact cannot be bounded, or an explicit repository/provider rule requires it.
-   A controller handoff cannot escalate this into full checks per slice commit.
+   A commit, handoff or acceptance step alone does not require a full rerun.
 3. Reuse one concise delivery record with requirements/source pointers, scope,
    base and candidate identity, check results/log links, findings and blockers.
    Do not create temporary packets or acceptance receipts for each transition.
@@ -32,7 +34,9 @@ the selected mode retains its approval, authority and finish gates.
    compare each evidence record's inputs and scope with the current candidate.
    Retain only demonstrably unaffected compatible evidence, recording why it
    still applies and which head it actually tested. Mark affected evidence
-   invalid and renew it; unknown impact also requires renewal. Do not relabel
+   invalid and renew it at the affected scope; broaden when impact cannot be
+   bounded or an explicit rule requires it. One invalidated check does not
+   automatically invalidate other checks or review contracts. Do not relabel
    an old result as a current-head run, or replace a mandatory full check with
    a collection of focused passes. Keep prior valid coverage distinct from
    outstanding checks and reviews.

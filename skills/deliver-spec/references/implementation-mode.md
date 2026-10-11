@@ -10,7 +10,7 @@
    investigation justifies it. Use runtime metadata to establish independent
    final-review capability; do not spawn a capability-only reviewer. Follow
    [Evidence and review](evidence-and-review.md) for owner-driven testing,
-   proportional checks and evidence reuse.
+   checkpoint feedback, proportional checks and evidence reuse.
 3. For supplied task graphs, verify unique IDs, declared dependencies and an
    acyclic graph; reserve `none` for the root marker. Treat legacy plans without
    dependency metadata as sequential. Keep an unsplit request in one item;
@@ -40,7 +40,11 @@
    Reference the existing record for scope, acceptance, base, path, branch,
    ownership and checks; no new permission packet is needed. Tell owners they
    are not alone and must preserve others' changes. Keep architecture with the
-   lead and task repairs with their original owner. If that owner is lost,
+   lead and task repairs with their original owner. Reuse that owner
+   context for closely related work when ownership and dependencies permit.
+   Include the [checkpoint feedback rules](behavioral-review.md#implementation-checkpoints)
+   and [validation cadence](evidence-and-review.md#implementation-and-validation)
+   in implementation and repair briefs. If that owner is lost,
    reconcile and quiesce its writers before recording an explicit reassignment.
 5. Have each owner implement, run meaningful affected checks, self-review and
    commit only owned changes. Record results and evidence pointers once;

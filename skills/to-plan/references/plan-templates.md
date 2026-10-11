@@ -5,6 +5,7 @@ scale its detail to uncertainty and risk: the fields below are a contract, not
 a demand for an exhaustive edit recipe. Reference source requirement identities
 and shared setup instead of repeating them. Add precise symbols, ordered edits,
 wiring and failure branches where they resolve ambiguity or protect correctness.
+Apply the [validation placement rule](workflow.md) to slice and final checks.
 
 ## GitHub plan comment
 
@@ -92,7 +93,8 @@ focused command>`; expect <specific successful result proving this slice>.
 ### Final validation
 
 - From `<working directory>`, after <setup or none>, run `<exact final
-  command>`; expect <specific successful result>.
+  command>` at <integrated delivery candidate or explicit repository/provider
+  trigger>; expect <specific successful result>.
 - <Evidence-based exception and execution-time check, when applicable.>
 
 ### Review focus
@@ -190,7 +192,8 @@ focused command>`; expect <specific successful result proving this slice>.
 ## Final validation
 
 - From `<working directory>`, after <setup or none>, run `<exact final
-  command>`; expect <specific successful result>.
+  command>` at <integrated delivery candidate or explicit repository/provider
+  trigger>; expect <specific successful result>.
 - <Evidence-based exception and execution-time check, when applicable.>
 
 ## Review focus

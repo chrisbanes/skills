@@ -201,7 +201,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(65, len(calibration))
+        self.assertEqual(74, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -254,6 +254,15 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-current-column-novel",
                 "run-github-project-auto-merge-restraint-negative",
                 "deliver-spec-evidence-direct",
+                "deliver-spec-checkpoint-batch-direct",
+                "run-github-project-interruption-novel",
+                "run-github-project-bounded-evidence-direct",
+                "deliver-spec-broad-invalidation-novel",
+                "run-github-project-mandatory-full-novel",
+                "deliver-spec-checkpoint-restraint-negative",
+                "to-plan-validation-placement-direct",
+                "to-plan-validation-trigger-novel",
+                "to-plan-validation-restraint-negative",
                 "deliver-spec-integration-novel",
                 "deliver-spec-review-boundary-negative",
                 "deliver-spec-live-qualification-failure-direct",
@@ -540,6 +549,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "to-plan-prior-confirmed-novel",
                 "to-plan-specificity-calibration",
                 "to-plan-unresolved-choice-negative",
+                "to-plan-validation-placement-direct",
+                "to-plan-validation-trigger-novel",
+                "to-plan-validation-restraint-negative",
             },
             {case.id for case, _ in conditions},
         )

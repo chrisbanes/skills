@@ -1,0 +1,42 @@
+{
+  "id": "run-github-project-mandatory-full-novel",
+  "title": "Run github project mandatory full novel",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-mandatory-full-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "mandatory",
+      "text": "Run the explicit fresh full suite on C2 and honor the invoked review provider complete-scope contract; compatible C1 evidence cannot substitute for those requirements."
+    },
+    {
+      "id": "reason",
+      "text": "Distinguish explicit rules from the handoff itself as the reason for rerunning; retain unrelated valid evidence, actual tested identities, owners, capacity and no-merge boundary."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

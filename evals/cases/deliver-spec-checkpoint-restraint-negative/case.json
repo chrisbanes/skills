@@ -1,0 +1,40 @@
+{
+  "id": "deliver-spec-checkpoint-restraint-negative",
+  "title": "Deliver spec checkpoint restraint negative",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-checkpoint-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "restraint",
+      "text": "Keep the existing behavior: release the dependent after the already-satisfied integration and affected-validation gates, without another acceptance ceremony, review, receipt, rerun or owner reset."
+    },
+    {
+      "id": "gates",
+      "text": "Preserve existing source scope and delivery/authorization gates, independent review and qualification; do not infer merge authority or abandon unresolved requirements."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

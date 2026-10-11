@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Do not execute the workflow, run commands, contact providers, launch agents or change files.
+
+Review this supplied plan for executor readiness; do not draft or implement. Approved scope has three observable packaging increments. Each names meaningful affected behavioral tests and build/type/lint commands. However every slice completion and every repair handoff also says to run the entire full suite and obtain a new independent acceptance pass. The repository requires full validation on the integrated delivery candidate, not on every slice, and no early risk requires independent review. Explain the focused correction to the plan without changing feature scope or required final coverage.

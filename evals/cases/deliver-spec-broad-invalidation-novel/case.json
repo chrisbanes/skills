@@ -1,0 +1,40 @@
+{
+  "id": "deliver-spec-broad-invalidation-novel",
+  "title": "Deliver spec broad invalidation novel",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-broad-invalidation-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "broaden",
+      "text": "Reject file-count-based reuse: impact cannot be bounded across runtime consumers, so broaden to full integrated verification and full-candidate coverage for potentially affected review contracts, without treating the loader test as sufficient."
+    },
+    {
+      "id": "ownership",
+      "text": "Keep repair ownership and lead architecture/integration; investigate impact and preserve exact prior identities, dispositions, qualification and delivery gates. Do not manufacture fresh evidence or bypass independent final review."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

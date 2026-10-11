@@ -24,8 +24,9 @@ handoff or take over a Project claim.
    required live prerequisite is unknown.
 2. Accept the verified handoff as authority for continuing in-scope implementation,
    tests and repairs in this checkout. Require no per-file or per-stage permission
-   packets. Follow [Evidence and review](evidence-and-review.md) for routine
-   corrections, conditional early review and evidence reuse. Material changes
+   packets. Follow [Evidence and review](evidence-and-review.md) for
+   checkpoint feedback, validation cadence, routine corrections, conditional
+   early review and evidence reuse. Material changes
    return to the controller for the appropriate decision; `--auto` cannot expand
    scope or grants. For a supplied integration amendment, verify its effective
    contract and retained candidate under that reference. Preserve owners, work,

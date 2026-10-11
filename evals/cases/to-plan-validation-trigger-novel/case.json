@@ -1,0 +1,40 @@
+{
+  "id": "to-plan-validation-trigger-novel",
+  "title": "To plan validation trigger novel",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-validation-trigger-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "explicit",
+      "text": "Preserve the explicit pre-consumer full-suite and early-review requirements at T1 with their triggers; do not postpone or replace them with focused tests or reused incompatible evidence."
+    },
+    {
+      "id": "dependencies",
+      "text": "Hold T2 until prerequisite integration and required boundary evidence pass; retain independent final coverage, scope, ownership, authority and qualification without introducing additional ceremonies."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

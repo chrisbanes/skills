@@ -1,0 +1,46 @@
+{
+  "id": "run-github-project-bounded-evidence-direct",
+  "title": "Run github project bounded evidence direct",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-bounded-evidence-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "scope",
+      "text": "Renew only affected checks and review coverage, retaining proven compatible full-check and unaffected review evidence from C1; do not rerun all checks/contracts solely because C2 or pre-push acceptance exists."
+    },
+    {
+      "id": "identity",
+      "text": "Preserve C1 as the actual tested/reviewed identity with compatibility rationale and C2 as the actual focused-run identity; bind combined coverage to C2 without claiming a fresh full run."
+    },
+    {
+      "id": "gates",
+      "text": "Keep original owner and all remote CI, claim, authority and delivery gates; do not claim ready/merge before outstanding gates are met. Review changed behavior and both caller interactions rather than reopening unrelated settled code."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

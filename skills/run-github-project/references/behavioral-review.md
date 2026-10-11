@@ -6,6 +6,23 @@ Review production behavior and repair demonstrated failures as a coherent batch.
 Test results support that review; passing tests or high test counts do not
 establish correctness coverage.
 
+## Implementation checkpoints
+
+1. While implementation is active, the lead may inspect ongoing work. Collect
+   routine evidence-backed findings until a coherent checkpoint, such as an
+   owned behavior being ready for integration or a repair batch being complete.
+   Send one consolidated repair batch, routing each part to its existing owner.
+   This is a feedback cadence, not an additional required review or acceptance
+   stage; keep architectural decisions and integration with the lead.
+2. Interrupt promptly for architectural misdirection, safety or data-integrity
+   problems, blocked dependencies, or discoveries that would invalidate
+   substantial ongoing work. Answer an owner's decision request promptly;
+   batching must not leave an owner blocked on the lead.
+3. After the batch, review changed behavior and its interactions under the
+   procedure below. Reopen settled areas only when new evidence or changed
+   inputs justify it. Disposition every actionable finding and retain required
+   independent final review.
+
 ## Procedure
 
 1. Request full-candidate coverage for the first independent review, from the
@@ -13,9 +30,11 @@ establish correctness coverage.
    For follow-ups, supply the repair range and its interactions with the
    previously reviewed effective diff; require a result for every affected
    contract and a disposition for every finding. Widen to the full candidate
-   when requirements changed, prior evidence is invalid, affected scope cannot
-   be bounded or an explicit provider requires it. Retain applicable prior
-   coverage, recording reviewed identities and covered scope; a repair-only
+   when changed requirements or invalid evidence have unbounded impact, affected
+   scope cannot be bounded or an explicit repository/provider rule requires it.
+   Invalidate coverage at the affected scope and contract; one invalid result
+   does not invalidate unrelated checks or review contracts. Retain applicable
+   prior coverage, recording reviewed identities and covered scope; a repair-only
    comparison cannot establish coverage of interactions it excludes. Combined
    validation and independent review must cover the final clean head before
    publication; do not relabel an old result as a current-head run.
