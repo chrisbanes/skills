@@ -8,10 +8,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from evals.harness.cases import validate_corpus
-from evals.harness.codex import (
+from evals.harness.codex import build_subject_command
+from evals.harness.runner import (
     RunConfig,
     automatically_invokable_public_skills,
-    build_subject_command,
     prepare_workspace,
 )
 from evals.harness.experiment import (

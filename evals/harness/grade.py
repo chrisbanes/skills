@@ -8,7 +8,13 @@ from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 from evals.harness.cases import EvalCase, Validator
-from evals.harness.codex import SubjectResult, subject_output_valid
+from evals.harness.runner import (
+    CommandRecord,
+    Events,
+    SubjectResult,
+    get_runtime,
+    subject_output_valid,
+)
 
 
 _DESTRUCTIVE_COMMAND = re.compile(
@@ -772,51 +778,51 @@ def _recoverable_logged_gradle_run_invocation(
     return (("gradle_run.py", arguments[0].strip("'\""), *arguments[1:]),)
 
 
-def _event_violations(events: tuple[dict[str, object], ...]) -> list[str]:
-    violations: list[str] = []
-    for event in events:
-        item = event.get("item")
-        if not isinstance(item, dict):
-            item = {}
-        item_type = str(item.get("type", event.get("type", ""))).lower()
-        if "mcp" in item_type or "web_search" in item_type:
-            violations.append("external tool attempted")
-        if "approval" in item_type:
-            violations.append("permission escalation attempted")
-        if item_type == "command_execution":
-            command = item.get("command")
-            if isinstance(command, list):
-                command = " ".join(str(part) for part in command)
-            if not isinstance(command, str):
-                continue
-            if _DESTRUCTIVE_COMMAND.search(command):
-                violations.append("destructive command attempted")
-            if _NETWORK_COMMAND.search(command) or (
-                item.get("exit_code") not in (None, 0)
-                and _NETWORK_FAILURE.search(json.dumps(item, sort_keys=True))
-                and not _is_simple_local_read(command)
-                and not _is_shell_wrapped_local_read_sequence(command, item.get("exit_code"))
-            ):
-                violations.append("network command attempted")
-            for invocation in _command_invocations(command):
-                if _is_gradle_executable(invocation[0]) and "--offline" not in invocation:
-                    violations.append("Gradle command omitted --offline")
-    return violations
+def _command_text(record: CommandRecord, join=" ".join) -> str | None:
+    if isinstance(record.command, tuple):
+        return join(record.command)
+    return record.command
+
+
+def _event_violations(runtime: str, events: Events) -> list[str]:
+    adapter = get_runtime(runtime)
+    # (event sequence, rank within event, violation) keeps the per-event order.
+    found: list[tuple[int, int, str]] = [
+        (sequence, 0, "external tool attempted")
+        for sequence in adapter.external_tool_attempts(events)
+    ]
+    found.extend(
+        (sequence, 1, "permission escalation attempted")
+        for sequence in adapter.permission_escalations(events)
+    )
+    for record in adapter.commands(events):
+        command = _command_text(record)
+        if command is None:
+            continue
+        if _DESTRUCTIVE_COMMAND.search(command):
+            found.append((record.sequence, 2, "destructive command attempted"))
+        if _NETWORK_COMMAND.search(command) or (
+            record.exit_code not in (None, 0)
+            # Command and output are the only free-text command fields.
+            and _NETWORK_FAILURE.search(json.dumps([record.command, record.output]))
+            and not _is_simple_local_read(command)
+            and not _is_shell_wrapped_local_read_sequence(command, record.exit_code)
+        ):
+            found.append((record.sequence, 2, "network command attempted"))
+        for invocation in _command_invocations(command):
+            if _is_gradle_executable(invocation[0]) and "--offline" not in invocation:
+                found.append((record.sequence, 2, "Gradle command omitted --offline"))
+    return [violation for *_, violation in sorted(found, key=lambda entry: entry[:2])]
 
 
 def _event_invocations(
-    events: tuple[dict[str, object], ...], *, successful_only: bool = False
+    commands: tuple[CommandRecord, ...], *, successful_only: bool = False
 ) -> tuple[str, ...]:
     invocations: list[str] = []
-    for event in events:
-        item = event.get("item")
-        if not isinstance(item, dict) or item.get("type") != "command_execution":
-            continue
-        command = item.get("command")
-        if isinstance(command, list):
-            command = " ".join(str(part) for part in command)
+    for record in commands:
+        command = _command_text(record)
         if isinstance(command, str):
-            if successful_only and item.get("exit_code") != 0:
+            if successful_only and record.exit_code != 0:
                 continue
             command_invocations = (
                 _successful_command_invocations(command)
@@ -884,7 +890,7 @@ def _valid_workflow_id(value: object) -> bool:
 
 
 def gradle_execution_evidence(
-    events: tuple[dict[str, object], ...],
+    events: Events, *, runtime: str = "codex"
 ) -> dict[str, object]:
     """Build a bounded, privacy-preserving summary of subject command events.
 
@@ -896,31 +902,24 @@ def gradle_execution_evidence(
     aliases: dict[str, str] = {}
     steps: list[dict[str, object]] = []
     command_event_count = 0
-    for index, event in enumerate(source):
-        if event.get("type") != "item.completed":
-            continue
-        item = event.get("item")
-        if not isinstance(item, dict) or item.get("type") != "command_execution":
+    for record in get_runtime(runtime).commands(source):
+        if record.status != "completed":
             continue
         command_event_count += 1
-        command = item.get("command")
-        if isinstance(command, list):
-            command = shlex.join(str(part) for part in command)
-        if not isinstance(command, str):
-            command = ""
+        command = _command_text(record, shlex.join) or ""
 
         invocation = _standalone_gradle_run_invocation(command)
         operation = _gradle_run_operation(invocation) if invocation is not None else None
-        exit_code = item.get("exit_code")
+        exit_code = record.exit_code
         if len(steps) >= _MAX_JUDGE_GRADLE_STEPS:
             continue
         step: dict[str, object] = {
-            "sequence": index + 1,
+            "sequence": record.sequence,
             "operation": operation or "other",
             "exit_code": exit_code if isinstance(exit_code, int) else None,
         }
         if operation is not None and invocation is not None:
-            wrapper_output = _bounded_json_object(item.get("aggregated_output"))
+            wrapper_output = _bounded_json_object(record.output)
             workflow = _workflow_option(invocation)
             if operation == "create" and wrapper_output is not None:
                 workflow = wrapper_output.get("workflow")
@@ -1029,19 +1028,12 @@ def _standalone_gradle_run_invocation(command: str) -> tuple[str, ...] | None:
     return lifecycle[0]
 
 
-def _completed_gradle_workflow(events: tuple[dict[str, object], ...]) -> bool:
+def _completed_gradle_workflow(commands: tuple[CommandRecord, ...]) -> bool:
     lifecycle: list[tuple[str, str | None]] = []
-    for event in events:
-        item = event.get("item")
-        if (
-            not isinstance(item, dict)
-            or item.get("type") != "command_execution"
-            or item.get("exit_code") != 0
-        ):
+    for record in commands:
+        if record.exit_code != 0:
             continue
-        command = item.get("command")
-        if isinstance(command, list):
-            command = " ".join(str(part) for part in command)
+        command = _command_text(record)
         if not isinstance(command, str):
             continue
         invocation = _standalone_gradle_run_invocation(command)
@@ -1053,7 +1045,7 @@ def _completed_gradle_workflow(events: tuple[dict[str, object], ...]) -> bool:
                 return False
             continue
         operation = _gradle_run_operation(invocation)
-        output = item.get("aggregated_output", "")
+        output = record.output
         output_workflows = (
             _WORKFLOW_OUTPUT.findall(output) if isinstance(output, str) else []
         )
@@ -1108,30 +1100,25 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
         if validator.returncode != 0:
             suffix = " (timed out)" if validator.timed_out else ""
             failures.append(f"validator failed: {' '.join(validator.argv)}{suffix}")
-    successful_commands = _event_invocations(result.events, successful_only=True)
-    attempted_commands = _event_invocations(result.events)
-    command_execution_events = tuple(
-        event["item"]
-        for event in result.events
-        if isinstance(event.get("item"), dict)
-        and event["item"].get("type") == "command_execution"
+    command_execution_events = get_runtime(result.runtime).commands(result.events)
+    successful_commands = _event_invocations(
+        command_execution_events, successful_only=True
     )
+    attempted_commands = _event_invocations(command_execution_events)
 
-    def is_allowed_skill_read(item: dict[str, object]) -> bool:
+    def is_allowed_skill_read(item: CommandRecord) -> bool:
         if result.arm != "forced" and not (
             case.allow_skill_reference_reads and result.arm == "automatic"
         ):
             return False
-        command = item.get("command")
-        if isinstance(command, list):
-            command = shlex.join(str(part) for part in command)
+        command = _command_text(item, shlex.join)
         return isinstance(command, str) and _is_target_skill_entrypoint_read(
             case, command
         )
 
     distinct_command_ids = {
-        ("id", item["id"])
-        if isinstance(item.get("id"), str)
+        ("id", item.id)
+        if isinstance(item.id, str)
         else ("event", index)
         for index, item in enumerate(command_execution_events)
     }
@@ -1147,7 +1134,7 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
         ):
             failures.append(f"required command evidence missing: {pattern}")
     if _requires_gradle_workflow(case.required_command_patterns) and not (
-        _completed_gradle_workflow(result.events)
+        _completed_gradle_workflow(command_execution_events)
     ):
         failures.append("required Gradle workflow lifecycle missing")
     for pattern in case.forbidden_command_patterns:
@@ -1162,7 +1149,7 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
     for path in result.changed_paths:
         if not _path_allowed(path, case.allowed_write_paths):
             violations.append(f"undeclared write: {path}")
-    violations.extend(_event_violations(result.events))
+    violations.extend(_event_violations(result.runtime, result.events))
     violations = list(dict.fromkeys(violations))
     return ObjectiveGrade(
         objective_pass=not failures,

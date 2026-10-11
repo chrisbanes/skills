@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from evals.harness.cases import EvalCase, Validator
-from evals.harness.codex import SubjectResult, subject_output_valid
+from evals.harness.runner import SubjectResult, subject_output_valid
 from evals.harness.grade import grade_subject
 
 

@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-from evals.harness.codex import completed_tool_call_count
+from evals.harness.runner import get_runtime, record_judge_runtime, record_runtime
 from evals.harness.score import Scorecard, is_behavioral_evidence
 from evals.harness.suites import SUITES
 
@@ -155,7 +155,10 @@ def _role_attempts(
 def _tool_event_count(records: Iterable[dict[str, Any]]) -> int | None:
     count = 0
     for record in records:
-        for role in ("subject", "judge"):
+        for role, runtime in (
+            ("subject", record_runtime(record)),
+            ("judge", record_judge_runtime(record)),
+        ):
             attempts = _role_attempts(record, role)
             if attempts is None:
                 return None
@@ -166,7 +169,7 @@ def _tool_event_count(records: Iterable[dict[str, Any]]) -> int | None:
                     continue
                 events = attempt.get("events", [])
                 if isinstance(events, list):
-                    count += completed_tool_call_count(events)
+                    count += get_runtime(runtime).tool_call_count(events)
     return count
 
 

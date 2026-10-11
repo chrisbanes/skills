@@ -11,21 +11,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from evals.harness.cases import EvalCase
-from evals.harness.codex import (
-    ARMS,
-    RunConfig,
-    SubjectResult,
-    _GRADLE_OUTPUT_DIRECTORIES,
-    automatically_invokable_public_skills,
-    captured_skill_file_evidence,
-    completed_turn_count,
-    completed_tool_call_count,
-    discover_skill_paths,
-    is_generated_skill_path,
-    reported_skill_names,
-    run_subject,
-    subject_output_valid,
-)
+from evals.harness.codex import discover_skill_paths
 from evals.harness.grade import ObjectiveGrade, _event_invocations, grade_subject
 from evals.harness.judge import (
     JudgeConfig,
@@ -38,6 +24,20 @@ from evals.harness.judge import (
     run_judge,
 )
 from evals.harness.report import write_reports
+from evals.harness.runner import (
+    ARMS,
+    RunConfig,
+    SubjectResult,
+    _GRADLE_OUTPUT_DIRECTORIES,
+    automatically_invokable_public_skills,
+    captured_skill_file_evidence,
+    get_runtime,
+    is_generated_skill_path,
+    record_runtime,
+    reported_skill_names,
+    run_subject,
+    subject_output_valid,
+)
 from evals.harness.results import (
     load_result,
     result_fingerprint,
@@ -60,7 +60,14 @@ RUN_CONTROL_FIELDS = (
 COMMAND_OUTPUT_TIMEOUT_SECONDS = 30
 CODEX_VERSION_TIMEOUT_SECONDS = 10
 GRADLE_PREFLIGHT_TIMEOUT_SECONDS = 180
-JUDGE_PROTOCOL_SOURCES = ("cases.py", "codex.py", "experiment.py", "grade.py", "judge.py")
+JUDGE_PROTOCOL_SOURCES = (
+    "cases.py",
+    "codex.py",
+    "experiment.py",
+    "grade.py",
+    "judge.py",
+    "runner.py",
+)
 
 
 def _judge_protocol_digest(harness_dir: Path) -> str:
@@ -113,18 +120,19 @@ def _apply_routing_expectations(
     subject = record.get("subject")
     events = subject.get("events", []) if isinstance(subject, dict) else []
     expected_skills, allowed_skills = _result_routing_expectations(
-        case, str(record.get("arm")), repo_root, events
+        case, str(record.get("arm")), repo_root, events, record_runtime(record)
     )
     record["expected_skills"] = list(expected_skills)
     record["allowed_skills"] = list(allowed_skills)
     record["automatic_eligible"] = _automatic_eligible(case, repo_root)
 
 
-def _gradle_was_executed(events: object) -> bool:
+def _gradle_was_executed(events: object, runtime: str) -> bool:
     if not isinstance(events, (list, tuple)):
         return False
     normalized_events = tuple(event for event in events if isinstance(event, dict))
-    for invocation in _event_invocations(normalized_events):
+    commands = get_runtime(runtime).commands(normalized_events)
+    for invocation in _event_invocations(commands):
         try:
             words = shlex.split(invocation)
         except ValueError:
@@ -156,10 +164,11 @@ def _result_routing_expectations(
     arm: str,
     repo_root: Path,
     events: object,
+    runtime: str,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     expected_skills, allowed_skills = _routing_expectations(case, arm, repo_root)
     if arm == "automatic" and "gradle-run" in allowed_skills:
-        if _gradle_was_executed(events):
+        if _gradle_was_executed(events, runtime):
             if "gradle-run" not in expected_skills:
                 expected_skills = (*expected_skills, "gradle-run")
         elif "gradle-run" not in expected_skills:
@@ -389,11 +398,12 @@ def _validator_payload(grade: ObjectiveGrade) -> list[dict[str, Any]]:
 
 
 def _attempt_payload(result: SubjectResult | JudgeResult) -> dict[str, Any]:
+    runtime = get_runtime(getattr(result, "runtime", "codex"))
     return {
         "returncode": result.returncode,
         "usage": result.usage,
-        "tool_calls": completed_tool_call_count(result.events),
-        "turns": completed_turn_count(result.events),
+        "tool_calls": runtime.tool_call_count(result.events),
+        "turns": runtime.turn_count(result.events),
         "elapsed_seconds": result.elapsed_seconds,
     }
 
@@ -446,7 +456,7 @@ def _result_payload(
 ) -> dict[str, Any]:
     reported = reported_skill_names(subject.final_output)
     expected_skills, allowed_skills = _result_routing_expectations(
-        case, arm, repo_root, subject.events
+        case, arm, repo_root, subject.events, subject.runtime
     )
     automatic_eligible = _automatic_eligible(case, repo_root)
     judge_pass = judge.returncode == 0 and judge_passes_rubric(
@@ -460,6 +470,10 @@ def _result_payload(
         "fingerprint": fingerprint,
         "case_digest": case_digest,
         "codex_version": codex_version,
+        "runtime": subject.runtime,
+        "runtime_version": codex_version,
+        "judge_runtime": judge.runtime,
+        "judge_runtime_version": codex_version,
         "skill_sha": skill_sha,
         "skill_catalog": [str(path) for path in skill_paths],
         "skill_sources": [str(path) for path in skill_sources],
@@ -482,6 +496,7 @@ def _result_payload(
         "automatic_eligible": automatic_eligible,
         "reported_skills": [skill for skill in reported if skill != ROUTER_SKILL],
         "reported_router": ROUTER_SKILL in reported,
+        "observed_skills": get_runtime(subject.runtime).observed_skills(subject.events),
         "objective_pass": grade.objective_pass,
         "judge_pass": judge_pass,
         "outcome_pass": grade.objective_pass and judge_pass,
@@ -491,6 +506,7 @@ def _result_payload(
         "validators": _validator_payload(grade),
         "subject": {
             "command": list(subject.command),
+            "workspace": str(subject.workspace.resolve()),
             "events": list(subject.events),
             "returncode": subject.returncode,
             "final_output": subject.final_output,
@@ -502,7 +518,9 @@ def _result_payload(
             "retries": subject_retries,
             "attempts": [_attempt_payload(attempt) for attempt in subject_attempts],
             "stdout_artifacts": subject_stdout_artifacts,
-            "captured_skill_files": captured_skill_file_evidence(subject.workspace, subject.events),
+            "captured_skill_files": captured_skill_file_evidence(
+                subject.workspace, subject.events, runtime=subject.runtime
+            ),
         },
         "judge": {
             "returncode": judge.returncode,
@@ -574,7 +592,7 @@ def execute_experiment(
                     repo_root,
                     workspace,
                     run_config,
-                    codex_executable=codex_executable,
+                    executable=codex_executable,
                     skill_paths=skill_paths,
                 )
 
@@ -613,7 +631,7 @@ def execute_experiment(
                     packet_path,
                     repo_root,
                     judge_config,
-                    codex_executable=codex_executable,
+                    executable=codex_executable,
                     skill_paths=skill_paths,
                 )
                 judge_attempts.append(result)
@@ -706,9 +724,14 @@ def _subject_result_from_record(
 ) -> SubjectResult:
     subject = record.get("subject", {})
     command = subject.get("command", [])
-    if not isinstance(command, list) or "-C" not in command:
+    recorded_workspace = subject.get("workspace")
+    if isinstance(recorded_workspace, str):
+        workspace = Path(recorded_workspace).resolve()
+    elif isinstance(command, list) and "-C" in command:
+        # Legacy Codex records carry the workspace only after `-C`.
+        workspace = Path(command[command.index("-C") + 1]).resolve()
+    else:
         raise ValueError(f"record has no subject workspace: {record.get('id')}")
-    workspace = Path(command[command.index("-C") + 1]).resolve()
     workspaces_root = (workspace_root / "workspaces").resolve()
     if not workspace.is_relative_to(workspaces_root):
         raise ValueError(f"subject workspace escapes run directory: {workspace}")
@@ -727,6 +750,7 @@ def _subject_result_from_record(
         stderr=str(subject.get("stderr", "")),
         elapsed_seconds=float(subject.get("elapsed_seconds", 0.0)),
         forced_target_preflight=subject.get("forced_target_preflight"),
+        runtime=record_runtime(record),
     )
 
 
@@ -945,7 +969,7 @@ def rejudge_packets(
                     packet_path,
                     repo_root,
                     judge_config,
-                    codex_executable=codex_executable,
+                    executable=codex_executable,
                     skill_paths=skill_paths,
                 )[-1].encode()
             ).hexdigest(),
@@ -962,7 +986,7 @@ def rejudge_packets(
                 packet_path,
                 repo_root,
                 judge_config,
-                codex_executable=codex_executable,
+                executable=codex_executable,
                 skill_paths=skill_paths,
             )
             judge_attempts.append(result)

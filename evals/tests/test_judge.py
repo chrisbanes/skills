@@ -370,7 +370,7 @@ class BlindedJudgeTest(unittest.TestCase):
             packet,
             self.root,
             JudgeConfig(model="gpt-5.6-sol", reasoning="high"),
-            codex_executable=str(fake),
+            executable=str(fake),
             skill_paths=(),
         )
 

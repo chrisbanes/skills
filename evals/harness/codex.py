@@ -1,22 +1,23 @@
 from __future__ import annotations
 
-import json
-import difflib
 import hashlib
-import shutil
+import json
+import shlex
 import subprocess
-import time
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from evals.harness.cases import EvalCase
-from evals.harness.suites import PUBLIC_SKILLS, ROUTER_SKILL
+from evals.harness.judge import judge_prompt
+from evals.harness.runner import (
+    ARMS,
+    CommandRecord,
+    Events,
+    RunConfig,
+    _enabled_skills,
+    _subject_prompt,
+)
 
-
-ARMS = ("none", "forced", "automatic")
-_GRADLE_OUTPUT_DIRECTORIES = (".gradle", ".kotlin", "build")
-_GENERATED_SKILL_SUFFIXES = {".pyc", ".pyo"}
 _TOOL_EVENT_TYPES = {
     "command_execution",
     "file_change",
@@ -24,31 +25,6 @@ _TOOL_EVENT_TYPES = {
     "tool_call",
     "web_search",
 }
-
-
-@dataclass(frozen=True)
-class RunConfig:
-    model: str
-    reasoning: str
-    timeout_seconds: int = 900
-
-
-@dataclass(frozen=True)
-class SubjectResult:
-    case_id: str
-    arm: str
-    command: tuple[str, ...]
-    workspace: Path
-    returncode: int
-    events: tuple[dict[str, Any], ...]
-    final_output: dict[str, Any]
-    usage: dict[str, int]
-    changed_paths: tuple[str, ...]
-    diff: str
-    stdout: str
-    stderr: str
-    elapsed_seconds: float
-    forced_target_preflight: dict[str, Any] | None = None
 
 
 def completed_tool_call_count(
@@ -68,78 +44,6 @@ def completed_turn_count(
     return sum(event.get("type") == "turn.completed" for event in events)
 
 
-def captured_skill_file_evidence(
-    workspace: Path, events: tuple[dict[str, Any], ...]
-) -> list[dict[str, Any]]:
-    """Observe byte-identical staged skill text in completed command output."""
-    root = workspace / ".agents" / "skills"
-    outputs = []
-    for event in events:
-        item = event.get("item")
-        if event.get("type") != "item.completed" or not isinstance(item, dict):
-            continue
-        if item.get("type") != "command_execution":
-            continue
-        output = item.get("aggregated_output")
-        if isinstance(output, str):
-            outputs.append((item.get("id"), output.encode("utf-8")))
-
-    evidence = []
-    for path in sorted(root.rglob("*.md")) if root.is_dir() else ():
-        relative = path.relative_to(root)
-        if path.name != "SKILL.md" and "references" not in relative.parts:
-            continue
-        try:
-            staged = path.read_bytes()
-        except OSError:
-            staged = b""
-        matched = [
-            {"id": event_id, "output_sha256": hashlib.sha256(output).hexdigest()}
-            for event_id, output in outputs
-            if staged and staged in output
-        ]
-        evidence.append({
-            "path": path.relative_to(workspace).as_posix(),
-            "staged_bytes": len(staged),
-            "staged_sha256": hashlib.sha256(staged).hexdigest() if staged else None,
-            "status": (
-                "complete" if matched else
-                "incomplete_or_absent" if outputs and staged else "unavailable"
-            ),
-            "matched_events": matched,
-        })
-    return evidence
-
-
-def canonical_skill_name(value: object) -> str | None:
-    if not isinstance(value, str):
-        return None
-    name = value.removeprefix("chrisbanes-skills:")
-    return name if name in PUBLIC_SKILLS else None
-
-
-def reported_skill_names(output: dict[str, Any]) -> list[str]:
-    values = output.get("skills_used", [])
-    if not isinstance(values, list):
-        return []
-    return [name for value in values if (name := canonical_skill_name(value))]
-
-
-def subject_output_valid(output: dict[str, Any]) -> bool:
-    skills = output.get("skills_used")
-    evidence = output.get("evidence")
-    canonical_skills = reported_skill_names(output)
-    return (
-        set(output) == {"summary", "skills_used", "evidence"}
-        and isinstance(output.get("summary"), str)
-        and isinstance(skills, list)
-        and len(canonical_skills) == len(skills)
-        and len(canonical_skills) == len(set(canonical_skills))
-        and isinstance(evidence, list)
-        and all(isinstance(item, str) for item in evidence)
-    )
-
-
 def discover_skill_paths(
     repo_root: Path, *, roots: tuple[Path, ...] | None = None
 ) -> tuple[Path, ...]:
@@ -156,53 +60,6 @@ def discover_skill_paths(
         if root.is_dir():
             candidates.update(path.resolve() for path in root.rglob("SKILL.md"))
     return tuple(sorted(candidates, key=str))
-
-
-def automatically_invokable_public_skills(repo_root: Path) -> tuple[str, ...]:
-    """Return public skills whose frontmatter and metadata permit invocation."""
-    implicitly_invokable = []
-    for skill in PUBLIC_SKILLS:
-        skill_dir = repo_root / "skills" / skill
-        metadata = skill_dir / "agents" / "openai.yaml"
-        frontmatter = (skill_dir / "SKILL.md").read_text(encoding="utf-8").partition(
-            "\n---\n"
-        )[0]
-        is_explicit_only = "disable-model-invocation: true" in frontmatter or (
-            metadata.is_file()
-            and "allow_implicit_invocation: false"
-            in metadata.read_text(encoding="utf-8")
-        )
-        if not is_explicit_only:
-            implicitly_invokable.append(skill)
-    return tuple(implicitly_invokable)
-
-
-def is_generated_skill_path(path: Path, skill_root: Path) -> bool:
-    relative = path.relative_to(skill_root)
-    return "__pycache__" in relative.parts or (
-        path.is_file() and path.suffix in _GENERATED_SKILL_SUFFIXES
-    )
-
-
-def _ignore_generated_skill_paths(directory: str, names: list[str]) -> list[str]:
-    root = Path(directory)
-    return [
-        name
-        for name in names
-        if is_generated_skill_path(root / name, root)
-    ]
-
-
-def _enabled_skills(
-    case: EvalCase, arm: str, repo_root: Path
-) -> tuple[str, ...]:
-    if arm == "none":
-        return ()
-    if arm == "forced":
-        return case.target_skills
-    if arm == "automatic":
-        return automatically_invokable_public_skills(repo_root)
-    raise ValueError(f"unknown arm: {arm}")
 
 
 def _workspace_skill_path(workspace: Path, skill: str) -> Path:
@@ -328,41 +185,6 @@ def _skill_config(
     return "skills.config=[" + ", ".join(entries) + "]"
 
 
-def _subject_prompt(case: EvalCase, arm: str) -> str:
-    prompt = case.prompt.rstrip()
-    prompt += (
-        "\n\nIf you run Gradle, use `--offline --no-scan`. In `skills_used`, report "
-        "only public repository skill entrypoints whose SKILL.md instructions you "
-        "actually read and followed during this run; otherwise return an empty list."
-    )
-    if case.constant_skills:
-        dependencies = ", ".join(case.constant_skills)
-        prompt += (
-            f" Evaluator-owned fixture dependencies to omit: {dependencies}. "
-            "Enabled public skills are not fixture dependencies."
-        )
-    else:
-        prompt += " This case has no evaluator-owned fixture dependencies."
-    if arm == "forced":
-        invocations = ", ".join(f"${skill}" for skill in case.target_skills)
-        paths = ", ".join(
-            f"`.agents/skills/{skill}/SKILL.md`" for skill in case.target_skills
-        )
-        targets = ", ".join(f"`{skill}`" for skill in case.target_skills)
-        dependencies = ", ".join(f"`{skill}`" for skill in case.constant_skills)
-        prompt += (
-            f"\n\nUse the following skill(s) explicitly: {invocations}. "
-            f"In a standalone command, use `cat` to print each of {paths} completely "
-            "before any repository inspection or other action. Do not combine "
-            "that read with other commands."
-            "\n\nIn the final `skills_used`, include each of these exact public "
-            f"targets whose entrypoint you read and followed: [{targets}]. "
-            "Omit only these exact evaluator-owned dependency names: "
-            f"[{dependencies}]. Exclusions are exact names, not prefixes."
-        )
-    return prompt + "\n"
-
-
 def build_subject_command(
     case: EvalCase,
     arm: str,
@@ -402,76 +224,8 @@ def build_subject_command(
         ),
     ]
     command.extend(["--sandbox", sandbox])
-    command.extend(["-C", str(workspace.resolve()), _subject_prompt(case, arm)])
+    command.extend(["-C", str(workspace.resolve()), _subject_prompt(case, arm, CodexRuntime())])
     return command
-
-
-def _run_git(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["git", *args],
-        cwd=workspace,
-        text=True,
-        capture_output=True,
-        check=True,
-    )
-
-
-def prepare_workspace(
-    case: EvalCase,
-    repo_root: Path,
-    destination: Path,
-    *,
-    enabled_skills: tuple[str, ...] = (),
-) -> Path:
-    if destination.exists():
-        raise FileExistsError(f"run workspace already exists: {destination}")
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    fixture = repo_root / "evals" / "fixtures" / case.fixture
-    shutil.copytree(
-        fixture,
-        destination,
-        ignore=shutil.ignore_patterns(*_GRADLE_OUTPUT_DIRECTORIES),
-    )
-    subject_gradlew = destination / "subject-gradlew"
-    if subject_gradlew.is_file():
-        shutil.copy2(destination / "gradlew", destination / "gradlew-real")
-        shutil.copy2(subject_gradlew, destination / "gradlew")
-        subject_gradlew.unlink()
-    overlay = case.directory / "overlay"
-    if overlay.is_dir():
-        shutil.copytree(overlay, destination, dirs_exist_ok=True)
-    schema_dir = destination / ".eval"
-    schema_dir.mkdir()
-    shutil.copy2(
-        repo_root / "evals" / "schemas" / "subject-output.schema.json",
-        schema_dir / "subject-output.schema.json",
-    )
-    for skill in enabled_skills:
-        shutil.copytree(
-            repo_root / "skills" / skill,
-            destination / ".agents" / "skills" / skill,
-            ignore=_ignore_generated_skill_paths,
-        )
-    _run_git(destination, "init", "-q")
-    exclude = destination / ".git" / "info" / "exclude"
-    with exclude.open("a", encoding="utf-8") as output:
-        output.write("\n# Evaluator-sanctioned Gradle outputs\n")
-        output.writelines(
-            f"{directory}/\n" for directory in _GRADLE_OUTPUT_DIRECTORIES
-        )
-        output.write(".eval/forced-target-preflight.json\n")
-    _run_git(destination, "add", ".")
-    _run_git(
-        destination,
-        "-c",
-        "user.name=Skill Evaluator",
-        "-c",
-        "user.email=skill-evaluator@localhost",
-        "commit",
-        "-qm",
-        "evaluation baseline",
-    )
-    return destination
 
 
 def parse_codex_jsonl(
@@ -509,106 +263,85 @@ def parse_codex_jsonl(
     return tuple(events), final_output, usage
 
 
-def _changed_paths(workspace: Path) -> tuple[str, ...]:
-    output = _run_git(workspace, "status", "--porcelain", "-z", "--untracked-files=all").stdout
-    paths: set[str] = set()
-    records = iter(output.split("\0"))
-    for record in records:
-        if not record:
-            continue
-        paths.add(record[3:])
-        # Porcelain -z puts the destination first, followed by the source.
-        if "R" in record[:2] or "C" in record[:2]:
-            next(records)
-    return tuple(sorted(paths))
 
 
-def _workspace_diff(workspace: Path) -> str:
-    diff = _run_git(workspace, "diff", "--no-ext-diff", "--binary", "HEAD").stdout
-    tracked = set(_run_git(workspace, "ls-files", "-z").stdout.split("\0"))
-    for path in _changed_paths(workspace):
-        if path in tracked:
-            continue
-        source = workspace / path
-        if not source.is_file():
-            continue
-        try:
-            lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
-        except UnicodeDecodeError:
-            diff += f"Binary file /dev/null and b/{path} differ\n"
-            continue
-        diff += "".join(
-            difflib.unified_diff(
-                [],
-                lines,
-                fromfile="/dev/null",
-                tofile=f"b/{path}",
-            )
-        )
-    return diff
+def _forced_instruction(case: EvalCase) -> str:
+    invocations = ", ".join(f"${skill}" for skill in case.target_skills)
+    paths = ", ".join(
+        f"`.agents/skills/{skill}/SKILL.md`" for skill in case.target_skills
+    )
+    targets = ", ".join(f"`{skill}`" for skill in case.target_skills)
+    dependencies = ", ".join(f"`{skill}`" for skill in case.constant_skills)
+    return (
+        f"\n\nUse the following skill(s) explicitly: {invocations}. "
+        f"In a standalone command, use `cat` to print each of {paths} completely "
+        "before any repository inspection or other action. Do not combine "
+        "that read with other commands."
+        "\n\nIn the final `skills_used`, include each of these exact public "
+        f"targets whose entrypoint you read and followed: [{targets}]. "
+        "Omit only these exact evaluator-owned dependency names: "
+        f"[{dependencies}]. Exclusions are exact names, not prefixes."
+    )
 
 
-def run_subject(
-    case: EvalCase,
-    arm: str,
+def _disabled_skill_config(skill_paths: tuple[Path, ...]) -> str:
+    entries = []
+    for skill_path in sorted(set(skill_paths), key=str):
+        path = json.dumps(str(skill_path.resolve()))
+        entries.append(f"{{ path = {path}, enabled = false }}")
+    return "skills.config=[" + ", ".join(entries) + "]"
+
+
+def build_judge_command(
+    packet_path: Path,
     repo_root: Path,
-    workspace: Path,
-    config: RunConfig,
+    config: Any,
     *,
     codex_executable: str = "codex",
     skill_paths: tuple[Path, ...] | None = None,
-) -> SubjectResult:
-    prepare_workspace(
-        case,
-        repo_root,
-        workspace,
-        enabled_skills=_enabled_skills(case, arm, repo_root),
-    )
-    resolved_skill_paths = discover_skill_paths(repo_root) if skill_paths is None else skill_paths
-    forced_preflight = (
-        forced_target_preflight(case, repo_root, workspace, resolved_skill_paths)
-        if arm == "forced"
-        else None
-    )
-    if forced_preflight is not None:
-        (workspace / ".eval" / "forced-target-preflight.json").write_text(
-            json.dumps(forced_preflight, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
-    command = build_subject_command(
-        case,
-        arm,
-        repo_root,
-        workspace,
-        config,
-        codex_executable=codex_executable,
-        skill_paths=resolved_skill_paths,
-    )
-    if forced_preflight is not None and not forced_preflight["valid"]:
-        return SubjectResult(
-            case_id=case.id,
-            arm=arm,
-            command=tuple(command),
-            workspace=workspace,
-            returncode=0,
-            events=(),
-            final_output={},
-            usage={},
-            changed_paths=(),
-            diff="",
-            stdout="",
-            stderr="forced target preflight failed before model execution",
-            elapsed_seconds=0.0,
-            forced_target_preflight=forced_preflight,
-        )
-    started = time.monotonic()
+) -> list[str]:
+    prompt = judge_prompt(packet_path)
+    return [
+        codex_executable,
+        "exec",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--ignore-rules",
+        "--skip-git-repo-check",
+        "--strict-config",
+        "--json",
+        "--output-schema",
+        str((repo_root / "evals" / "schemas" / "judge-output.schema.json").resolve()),
+        "--model",
+        config.model,
+        "-c",
+        f'model_reasoning_effort="{config.reasoning}"',
+        "-c",
+        "sandbox_workspace_write.network_access=false",
+        "-c",
+        'web_search="disabled"',
+        "-c",
+        _disabled_skill_config(
+            discover_skill_paths(repo_root) if skill_paths is None else skill_paths
+        ),
+        "--sandbox",
+        "read-only",
+        "-C",
+        str(packet_path.parent.resolve()),
+        prompt,
+    ]
+
+
+def execute_subject(
+    command: list[str], workspace: Path, timeout: int
+) -> tuple[int, str, str, None]:
     try:
         completed = subprocess.run(
             command,
             cwd=workspace,
             text=True,
             capture_output=True,
-            timeout=config.timeout_seconds,
+            timeout=timeout,
             check=False,
         )
         returncode = completed.returncode
@@ -618,23 +351,226 @@ def run_subject(
         returncode = 124
         stdout = error.stdout if isinstance(error.stdout, str) else ""
         stderr = error.stderr if isinstance(error.stderr, str) else ""
-        stderr += f"\nsubject timed out after {config.timeout_seconds}s"
-    elapsed = time.monotonic() - started
-    events, final_output, usage = parse_codex_jsonl(stdout)
-    diff = _workspace_diff(workspace)
-    return SubjectResult(
-        case_id=case.id,
-        arm=arm,
-        command=tuple(command),
-        workspace=workspace,
-        returncode=returncode,
-        events=events,
-        final_output=final_output,
-        usage=usage,
-        changed_paths=_changed_paths(workspace),
-        diff=diff,
-        stdout=stdout,
-        stderr=stderr,
-        elapsed_seconds=elapsed,
-        forced_target_preflight=forced_preflight,
-    )
+        stderr += f"\nsubject timed out after {timeout}s"
+    return returncode, stdout, stderr, None
+
+
+def command_records(events: Events) -> tuple[CommandRecord, ...]:
+    records = []
+    for sequence, event in enumerate(events, 1):
+        item = event.get("item")
+        if not isinstance(item, dict) or item.get("type") != "command_execution":
+            continue
+        command = item.get("command")
+        if isinstance(command, list):
+            command = tuple(str(part) for part in command)
+        elif not isinstance(command, str):
+            command = None
+        records.append(CommandRecord(
+            id=item.get("id"),
+            command=command,
+            exit_code=item.get("exit_code"),
+            output=item.get("aggregated_output"),
+            status="completed" if event.get("type") == "item.completed" else "in_progress",
+            sequence=sequence,
+        ))
+    return tuple(records)
+
+
+def _item_type_sequences(events: Events, *markers: str) -> tuple[int, ...]:
+    sequences = []
+    for sequence, event in enumerate(events, 1):
+        item = event.get("item")
+        if not isinstance(item, dict):
+            item = {}
+        item_type = str(item.get("type", event.get("type", ""))).lower()
+        if any(marker in item_type for marker in markers):
+            sequences.append(sequence)
+    return tuple(sequences)
+
+
+def _standalone_target_reads(command: str, targets: list[dict[str, Any]]) -> set[str] | None:
+    """Return the target paths printed by a standalone cat command."""
+    try:
+        words = shlex.split(command)
+        if (
+            len(words) == 3
+            and words[0] in ("sh", "bash", "zsh", "/bin/sh", "/bin/bash", "/bin/zsh")
+            and words[1] in ("-c", "-lc")
+        ):
+            words = shlex.split(words[2])
+    except ValueError:
+        return None
+    if not words:
+        return None
+    if words[0] not in ("cat", "/bin/cat", "/usr/bin/cat"):
+        return None
+    operands = words[2:] if len(words) > 1 and words[1] == "--" else words[1:]
+    if not operands:
+        return None
+    matched: set[str] = set()
+    for operand in operands:
+        target = next(
+            (target for target in targets if operand in (
+                target.get("staged_relative_path"), target.get("staged_path")
+            )), None,
+        )
+        if target is None:
+            return None
+        path = target.get("staged_relative_path")
+        if not isinstance(path, str) or path in matched:
+            return None
+        matched.add(path)
+    return matched
+
+
+def _observed_staged_target_read(record: dict[str, Any], targets: list[dict[str, Any]]) -> bool:
+    subject = record.get("subject", {})
+    if not isinstance(subject, dict):
+        return False
+    events = subject.get("events", [])
+    captures = subject.get("captured_skill_files", [])
+    if not isinstance(events, list) or not isinstance(captures, list):
+        return False
+    if not targets or not all(isinstance(target, dict) for target in targets):
+        return False
+    remaining = {target.get("staged_relative_path") for target in targets}
+    if (
+        None in remaining or len(remaining) != len(targets)
+        or any(not isinstance(path, str) or not path.endswith("/SKILL.md") for path in remaining)
+    ):
+        return False
+    active_id = None
+    for event in events:
+        if not isinstance(event, dict) or event.get("type") not in ("item.started", "item.completed"):
+            continue
+        item = event.get("item")
+        if not isinstance(item, dict) or item.get("type") in ("reasoning", "agent_message"):
+            continue
+        if item.get("type") != "command_execution" or item.get("id") is None:
+            return False
+        if event["type"] == "item.started":
+            if active_id is not None:
+                return False
+            active_id = item["id"]
+            continue
+        if active_id is not None and item["id"] != active_id:
+            return False
+        active_id = None
+        if (
+            item.get("status") != "completed"
+            or item.get("exit_code") != 0
+            or not isinstance(item.get("command"), str)
+        ):
+            return False
+        reads = _standalone_target_reads(item["command"], targets)
+        if reads is None or not reads <= remaining:
+            return False
+        for path in reads:
+            target = next(target for target in targets if target["staged_relative_path"] == path)
+            target_sha = target.get("staged_sha256")
+            capture = next(
+                (
+                    captured for captured in captures
+                    if isinstance(captured, dict) and captured.get("path") == path
+                    and captured.get("status") == "complete"
+                    and captured.get("staged_sha256") == target_sha
+                ), None,
+            )
+            if not isinstance(target_sha, str) or not target_sha or capture is None:
+                return False
+            matched_events = capture.get("matched_events")
+            if not isinstance(matched_events, list) or not any(
+                isinstance(match, dict) and match.get("id") == item["id"]
+                for match in matched_events
+            ):
+                return False
+        remaining -= reads
+        if not remaining:
+            return True
+    return False
+
+
+class CodexRuntime:
+    """`codex exec` adapter; every member keeps the pre-seam Codex behaviour."""
+
+    name = "codex"
+    skill_dir = ".agents/skills"
+
+    def version(self, executable: str, cwd: Path) -> str:
+        # experiment owns the bounded CLI call and its tested timeout guidance.
+        from evals.harness.experiment import _codex_version
+
+        return _codex_version(cwd, executable)
+
+    def validate_reasoning(self, value: str) -> None:
+        """Codex accepts any reasoning effort string."""
+
+    def forced_target_preflight(self, case, repo_root, workspace, skill_paths):
+        return forced_target_preflight(
+            case,
+            repo_root,
+            workspace,
+            discover_skill_paths(repo_root) if skill_paths is None else skill_paths,
+        )
+
+    def build_subject_command(
+        self, case, arm, repo_root, workspace, config, *, executable, skill_paths
+    ):
+        return build_subject_command(
+            case,
+            arm,
+            repo_root,
+            workspace,
+            config,
+            codex_executable=executable,
+            skill_paths=skill_paths,
+        )
+
+    def execute_subject(self, command, workspace, timeout):
+        return execute_subject(command, workspace, timeout)
+
+    def parse(self, stdout):
+        return parse_codex_jsonl(stdout)
+
+    def commands(self, events):
+        return command_records(events)
+
+    def tool_call_count(self, events):
+        return completed_tool_call_count(events)
+
+    def turn_count(self, events):
+        return completed_turn_count(events)
+
+    def observed_skills(self, events):
+        return None
+
+    def skill_texts(self, events):
+        return [
+            (command.id, command.output)
+            for command in command_records(events)
+            if command.status == "completed" and isinstance(command.output, str)
+        ]
+
+    def external_tool_attempts(self, events):
+        return _item_type_sequences(events, "mcp", "web_search")
+
+    def permission_escalations(self, events):
+        return _item_type_sequences(events, "approval")
+
+    def forced_instruction(self, case):
+        return _forced_instruction(case)
+
+    def forced_target_observed(self, record, targets):
+        return _observed_staged_target_read(record, targets)
+
+    def build_judge_command(
+        self, packet_path, repo_root, config, *, executable, skill_paths
+    ):
+        return build_judge_command(
+            packet_path,
+            repo_root,
+            config,
+            codex_executable=executable,
+            skill_paths=skill_paths,
+        )

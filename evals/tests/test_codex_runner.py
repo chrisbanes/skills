@@ -1,3 +1,4 @@
+import hashlib
 import json
 import subprocess
 import tempfile
@@ -7,17 +8,21 @@ from pathlib import Path
 
 from evals.harness.cases import COMPOSE_SKILLS, ROUTER_SKILL, EvalCase, Validator
 from evals.harness.codex import (
+    CodexRuntime,
+    build_subject_command,
+    completed_turn_count,
+    completed_tool_call_count,
+    discover_skill_paths,
+    forced_target_preflight,
+    parse_codex_jsonl,
+)
+from evals.harness.runner import (
+    CommandRecord,
     RunConfig,
     SubjectResult,
     _changed_paths,
     _workspace_diff,
-    build_subject_command,
-    completed_turn_count,
-    completed_tool_call_count,
     captured_skill_file_evidence,
-    discover_skill_paths,
-    forced_target_preflight,
-    parse_codex_jsonl,
     prepare_workspace,
     run_subject,
 )
@@ -390,7 +395,7 @@ class CodexRunnerTest(unittest.TestCase):
             self.root,
             self.root / "runs" / "preflight-stops",
             self.config,
-            codex_executable=str(fake),
+            executable=str(fake),
         )
 
         self.assertEqual(0, result.returncode)
@@ -485,7 +490,7 @@ class CodexRunnerTest(unittest.TestCase):
             self.root,
             self.root / "runs" / "subject",
             self.config,
-            codex_executable=str(fake),
+            executable=str(fake),
         )
 
         self.assertEqual(0, result.returncode)
@@ -550,7 +555,7 @@ class CodexRunnerTest(unittest.TestCase):
             self.root,
             self.root / "runs" / "untracked",
             self.config,
-            codex_executable=str(fake),
+            executable=str(fake),
         )
 
         self.assertEqual(
@@ -560,6 +565,67 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertIn("+new evidence", result.diff)
         self.assertIn("+++ b/.scratch/to-plan/task.md", result.diff)
         self.assertIn("+# Local plan", result.diff)
+
+    def test_codex_command_lines_and_prompts_are_byte_identical(self):
+        # Golden digests captured before the runtime seam; any change is a Codex break.
+        from evals.harness.judge import JudgeConfig, build_judge_command
+
+        catalog = discover_skill_paths(self.root, roots=(self.root / "skills",))
+        packet = self.root / "packet.json"
+        packet.write_text(
+            json.dumps({"task": "Review", "task_mode": "review", "rubric": []}),
+            encoding="utf-8",
+        )
+        commands = {
+            f"{mode}:{arm}": build_subject_command(
+                sample_case(self.root, task_mode=mode),
+                arm,
+                self.root,
+                self.root / "workspace",
+                self.config,
+                skill_paths=catalog,
+            )
+            for mode in ("edit", "review")
+            for arm in ("none", "forced", "automatic")
+        }
+        commands["judge"] = build_judge_command(
+            packet, self.root, JudgeConfig("gpt-5.6-sol", "high"), skill_paths=catalog
+        )
+        rendered = json.dumps(commands, sort_keys=True)
+        for root in (str(self.root.resolve()), str(self.root)):
+            rendered = rendered.replace(root, "<root>")
+
+        self.assertEqual(
+            "c82199737a3442412aa20d550b6e9ebfd01e85dc6207f370a63beac9469710aa",
+            hashlib.sha256(rendered.encode()).hexdigest(),
+        )
+
+    def test_codex_commands_view(self):
+        events = (
+            {"type": "item.started", "item": {"id": "a", "type": "command_execution", "command": "cat x"}},
+            {"type": "item.completed", "item": {
+                "id": "a", "type": "command_execution", "command": "cat x",
+                "exit_code": 0, "aggregated_output": "contents\n", "status": "completed",
+            }},
+            {"type": "item.completed", "item": {"type": "agent_message", "text": "hi"}},
+            {"type": "item.completed", "item": {
+                "id": "b", "type": "command_execution", "command": "ls missing",
+                "exit_code": 2, "aggregated_output": "No such file\n", "status": "failed",
+            }},
+        )
+
+        completed = [
+            command for command in CodexRuntime().commands(events)
+            if command.status == "completed"
+        ]
+
+        self.assertEqual(
+            [
+                CommandRecord("a", "cat x", 0, "contents\n", "completed", 2),
+                CommandRecord("b", "ls missing", 2, "No such file\n", "completed", 4),
+            ],
+            completed,
+        )
 
 
 if __name__ == "__main__":

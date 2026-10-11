@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from evals.harness.cases import EVALUATED_TOPICS, validate_corpus
-from evals.harness.codex import prepare_workspace
+from evals.harness.runner import prepare_workspace
 from evals.harness.grade import grade_subject
 from evals.harness.experiment import filter_cases, regrade_records
 from evals.tests.test_grade import make_result

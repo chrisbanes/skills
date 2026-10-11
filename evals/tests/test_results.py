@@ -17,12 +17,14 @@ from evals.harness.experiment import (
     _rejudgment_result_path,
     _skill_catalog_digest,
     _skill_source_paths,
+    _subject_result_from_record,
     load_raw_records,
     next_attempt_workspace,
     rejudge_packets,
     write_rejudged_reports,
 )
 from evals.harness.judge import JudgeConfig, build_judge_command
+from evals.harness.runner import record_judge_runtime, record_runtime
 from evals.harness.results import (
     FingerprintMismatch,
     load_result,
@@ -637,6 +639,66 @@ class ResultLifecycleTest(unittest.TestCase):
         self.assertIn(reference.resolve(), sources)
         self.assertNotIn(bytecode.resolve(), sources)
         self.assertNotIn(adjacent_bytecode.resolve(), sources)
+
+    def test_codex_fingerprint_unchanged(self):
+        # Golden digests computed at baseline, before the runtime fields existed.
+        fields = {
+            "case_digest": "c" * 64,
+            "arm": "forced",
+            "skill_sha": "abc123",
+            "codex_version": "codex-cli 1.2.3",
+            "model": "gpt-6-sol",
+            "reasoning": "high",
+            "judge_model": "gpt-6-sol",
+            "judge_reasoning": "high",
+            "judge_protocol_digest": "d" * 64,
+            "skill_catalog_digest": "e" * 64,
+        }
+
+        self.assertEqual(
+            "41f20e7d8e8b6828459d94fbc04500dd5a36d7765e297706f73fbbd43a2a7d30",
+            result_fingerprint(**fields),
+        )
+        self.assertEqual(
+            "83bc2c53dfc31d9a494e6a9deffd45db56789534296af1bbf09344027ab732e3",
+            result_fingerprint(
+                case_digest="c" * 64,
+                arm="none",
+                skill_sha="abc123",
+                codex_version="codex-cli 1.2.3",
+                model="gpt-6-sol",
+                reasoning="high",
+            ),
+        )
+        self.assertNotEqual(
+            result_fingerprint(**fields),
+            result_fingerprint(**fields, runtime="claude"),
+        )
+
+    def test_legacy_record_defaults(self):
+        workspace = self.root / "workspaces" / "case" / "none" / "1" / "attempt-1"
+        workspace.mkdir(parents=True)
+        legacy = {
+            "id": "case:none:1",
+            "case_id": "case",
+            "arm": "none",
+            "subject": {"command": ["codex", "exec", "-C", str(workspace), "prompt"]},
+        }
+
+        self.assertEqual("codex", record_runtime(legacy))
+        self.assertEqual("codex", record_judge_runtime(legacy))
+        result = _subject_result_from_record(legacy, self.root)
+        self.assertEqual(workspace.resolve(), result.workspace)
+        self.assertEqual("codex", result.runtime)
+
+        current = {
+            **legacy,
+            "runtime": "codex",
+            "subject": {"command": ["other"], "workspace": str(workspace)},
+        }
+        self.assertEqual(
+            workspace.resolve(), _subject_result_from_record(current, self.root).workspace
+        )
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from evals.harness.cases import validate_corpus
-from evals.harness.codex import prepare_workspace
+from evals.harness.runner import prepare_workspace
 from evals.harness.experiment import (
     CODEX_VERSION_TIMEOUT_SECONDS,
     COMMAND_OUTPUT_TIMEOUT_SECONDS,
