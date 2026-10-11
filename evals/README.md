@@ -272,6 +272,10 @@ use the existing `claude` login, not `--bare` or an API key.
   `Skill` tool before any other action. The run is valid only when every target
   has a successful `Skill` call before any other tool call and its staged body
   appears in the resulting skill message.
+  Explicit-only targets are staged with their `disable-model-invocation`
+  frontmatter line removed so the `Skill` tool can invoke them; the preflight
+  records this as `frontmatter_edit` and requires the rest of the file to stay
+  byte-identical to the source.
 - **Token counting.** Subject tokens are `input_tokens`,
   `cache_creation_input_tokens`, `cache_read_input_tokens`, and `output_tokens`
   summed, which matches Codex because its input already includes cached input.
