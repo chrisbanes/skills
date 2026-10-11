@@ -251,7 +251,8 @@ use the existing `claude` login, not `--bare` or an API key.
   lists the bundled built-in skills and is stopped before any model output.
   Every built-in that is not staged is set to `"off"` through `skillOverrides`.
   The built-in list is part of the result fingerprint and is stored in each
-  record as `builtin_skills`. The `none` arm adds `--disable-slash-commands`.
+  record as `builtin_skills`. A run that stages no skills adds
+  `--disable-slash-commands`.
 - **Init check.** Before model work, the `system/init` event must list exactly
   the staged skills, no MCP servers, and no auto-memory path. Auto memory is
   turned off with `autoMemoryEnabled: false`. On a mismatch the child process

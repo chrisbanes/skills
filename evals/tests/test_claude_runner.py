@@ -7,6 +7,7 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
+from evals.harness.cases import load_case
 from evals.harness.claude import ClaudeRuntime, discover_builtin_skills
 from evals.harness.grade import grade_subject
 from evals.harness.runner import (
@@ -121,6 +122,30 @@ class ClaudeRunnerTest(unittest.TestCase):
         self.assertEqual(
             {"simplify": "off"}, json.loads(option(command, "--settings"))["skillOverrides"]
         )
+
+    def test_none_arm_with_fixture_dependencies_keeps_slash_commands(self):
+        self.write_subject_schema()
+        runtime = ClaudeRuntime(builtin_skills=("simplify",))
+        plain = runtime.build_subject_command(
+            sample_case(self.root), "none", self.root, self.root / "workspace",
+            self.config, executable="claude", skill_paths=None,
+        )
+        with_dependency = runtime.build_subject_command(
+            replace(sample_case(self.root), constant_skills=("implement",)), "none",
+            self.root, self.root / "workspace", self.config,
+            executable="claude", skill_paths=None,
+        )
+        self.assertIn("--disable-slash-commands", plain)
+        self.assertNotIn("--disable-slash-commands", with_dependency)
+        self.assertEqual(
+            {"simplify": "off"},
+            json.loads(option(with_dependency, "--settings"))["skillOverrides"],
+        )
+
+    def test_judge_env_disables_claude_mds_and_background_tasks(self):
+        env = ClaudeRuntime().judge_process_options()["env"]
+        self.assertEqual("1", env["CLAUDE_CODE_DISABLE_CLAUDE_MDS"])
+        self.assertEqual("1", env["CLAUDE_CODE_DISABLE_BACKGROUND_TASKS"])
 
     def test_validates_claude_effort_levels(self):
         for effort in ("low", "medium", "high", "xhigh", "max"):
@@ -239,6 +264,32 @@ class ClaudeParseTest(unittest.TestCase):
         events = self.runtime.parse(fixture_stdout(lines))[0]
         self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
 
+    def test_observed_skills_exclude_failed_skill_calls(self):
+        lines = fixture_lines()
+        lines[1]["message"]["content"][0]["input"]["skill"] = "kotlin-api-design"
+        lines[2]["message"]["content"][0]["is_error"] = True
+        events = self.runtime.parse(fixture_stdout(lines))[0]
+        self.assertEqual([], self.runtime.observed_skills(events))
+
+    def test_backgrounded_bash_is_never_a_completed_command(self):
+        requested = fixture_lines()
+        requested[4]["message"]["content"][0]["input"]["run_in_background"] = True
+        reported = fixture_lines()
+        reported[5]["message"]["content"][0]["content"] = (
+            "Command running in background with ID: b1"
+        )
+        moved = fixture_lines()
+        moved[5]["message"]["content"][0]["content"] = (
+            "Command was moved to the background (ID: b2)"
+        )
+        for name, lines in (("input", requested), ("output", reported), ("moved", moved)):
+            with self.subTest(name):
+                command = self.runtime.commands(self.runtime.parse(fixture_stdout(lines))[0])[0]
+                self.assertEqual(
+                    ("cat note.txt", None, "in_progress"),
+                    (command.command, command.exit_code, command.status),
+                )
+
     def test_skill_texts_follow_successful_skill_results(self):
         self.assertEqual(
             [("toolu_02", "Base directory for this skill: /workspace/.claude/skills/"
@@ -310,20 +361,118 @@ class ClaudeSafetyTest(unittest.TestCase):
         self.assertIn("Gradle command omitted --offline", self.grade(lines))
 
 
+def tool_turn(tool_id, name, tool_input, *, content="ok", is_error=False):
+    """An assistant tool_use and its user tool_result, shaped like the fixture."""
+    use = json.loads(json.dumps(fixture_lines()[4]))
+    use["message"]["content"][0].update(id=tool_id, name=name, input=tool_input)
+    result = json.loads(json.dumps(fixture_lines()[5]))
+    result["message"]["content"][0].update(
+        tool_use_id=tool_id, content=content, is_error=is_error
+    )
+    return [use, result]
+
+
+class ClaudeFileToolGradeTest(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.workspace = Path(self.temp_dir.name)
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def grade(self, *turns, denials=(), arm="automatic", **case_fields):
+        lines = fixture_lines()
+        result_line = {**lines[-1], "permission_denials": list(denials)}
+        body = [line for turn in turns for line in turn]
+        events, output, usage = ClaudeRuntime().parse(
+            fixture_stdout([lines[0], *body, result_line])
+        )
+        output = {"summary": "done", "skills_used": [], "evidence": []}
+        case = replace(make_case(self.workspace, task_mode="review"), **case_fields)
+        return grade_subject(case, SubjectResult(
+            case_id="case", arm=arm, command=("claude",), workspace=self.workspace,
+            returncode=0, events=events, final_output=output, usage=usage,
+            changed_paths=(), diff="", stdout="", stderr="", elapsed_seconds=0.1,
+            runtime="claude",
+        ))
+
+    def test_flags_writes_outside_the_workspace(self):
+        outside = self.grade(
+            tool_turn("w1", "Write", {"file_path": "/etc/x", "content": "x"}),
+            denials=[{"tool_name": "Edit", "tool_use_id": "e1",
+                      "tool_input": {"file_path": "/Users/other/notes.md"}}],
+        )
+        self.assertIn("write outside workspace attempted", outside.violations)
+        self.assertTrue(outside.forbidden_action_failure)
+
+        denied_only = self.grade(denials=[{
+            "tool_name": "Edit", "tool_use_id": "e1",
+            "tool_input": {"file_path": f"{self.workspace}/../escape.md"},
+        }])
+        self.assertIn("write outside workspace attempted", denied_only.violations)
+
+        inside = self.grade(tool_turn(
+            "w2", "Write", {"file_path": str(self.workspace / "src/a.kt"), "content": "x"}
+        ))
+        self.assertNotIn("write outside workspace attempted", inside.violations)
+
+    def test_file_tools_count_as_commands_in_analysis_only_cases(self):
+        read = self.grade(
+            tool_turn("r1", "Read", {"file_path": str(self.workspace / "Subject.kt")}),
+            forbid_all_commands=True,
+        )
+        self.assertIn("command execution forbidden for this case", read.objective_failures)
+        self.assertIn("command executed despite analysis-only boundary", read.violations)
+
+        allowed = self.grade(
+            tool_turn("r2", "Read", {"file_path": str(
+                self.workspace / ".claude/skills/compose-state-and-effects/references/a.md"
+            )}),
+            tool_turn("r3", "Read", {"file_path": str(
+                self.workspace / ".claude/skills/compose-state-and-effects/SKILL.md"
+            )}),
+            forbid_all_commands=True, allow_skill_reference_reads=True,
+        )
+        self.assertNotIn("command execution forbidden for this case", allowed.objective_failures)
+
+        forced_cat = self.grade(
+            tool_turn("c1", "Bash", {
+                "command": "cat .claude/skills/compose-state-and-effects/SKILL.md"
+            }),
+            arm="forced", forbid_all_commands=True,
+        )
+        self.assertNotIn(
+            "command execution forbidden for this case", forced_cat.objective_failures
+        )
+
+        outside_skill = self.grade(
+            tool_turn("r4", "Read", {"file_path": str(
+                self.workspace / ".agents/skills/compose-state-and-effects/SKILL.md"
+            )}),
+            arm="forced", forbid_all_commands=True,
+        )
+        self.assertIn(
+            "command execution forbidden for this case", outside_skill.objective_failures
+        )
+
+
 def init_event(**fields):
     return {"type": "system", "subtype": "init", "skills": [], "mcp_servers": [], **fields}
 
 
 def write_fake_claude(path: Path, *lines, then="exec sleep 30"):
     """A stand-in `claude` that records pid, env and args, prints lines, then `then`."""
-    echoes = "".join(f"printf '%s\\n' '{json.dumps(line)}'\n" for line in lines)
+    Path(f"{path}.jsonl").write_text(
+        "".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8"
+    )
     path.write_text(
         "#!/bin/sh\n"
         f"echo $$ > '{path}.pid'\n"
-        f"printf '%s' \"$CLAUDE_CODE_DISABLE_CLAUDE_MDS\" > '{path}.env'\n"
+        f"printf '%s %s' \"$CLAUDE_CODE_DISABLE_CLAUDE_MDS\" "
+        f"\"$CLAUDE_CODE_DISABLE_BACKGROUND_TASKS\" > '{path}.env'\n"
         f"printf '%s\\n' \"$@\" > '{path}.args'\n"
         "echo '{\"type\": \"system\", \"subtype\": \"thinking_tokens\"}'\n"
-        f"{echoes}{then}\n",
+        f"cat '{path}.jsonl'\n{then}\n",
         encoding="utf-8",
     )
     path.chmod(0o755)
@@ -393,7 +542,7 @@ class ClaudeInitCheckTest(unittest.TestCase):
         )
         self.assertEqual(0, returncode)
         self.assertTrue(isolation["valid"])
-        self.assertEqual("1", (self.root / "claude.env").read_text())
+        self.assertEqual("1 1", (self.root / "claude.env").read_text())
         _, output, _ = ClaudeRuntime().parse(stdout)
         self.assertEqual(fixture_lines()[-1]["structured_output"], output)
 
@@ -527,6 +676,87 @@ class ClaudeForcedIntegrityTest(unittest.TestCase):
                     )
                 self.assertFalse((self.root / "outer" / "runs").exists())
                 marker.unlink()
+
+
+REPO = Path(__file__).resolve().parents[2]
+EXPLICIT_LINE = "disable-model-invocation: true\n"
+
+
+class ClaudeExplicitOnlyTargetTest(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp_dir.name)
+        self.case = load_case(REPO / "evals/cases/shepherd-direct/case.json", REPO)
+        self.source = (REPO / "skills/shepherd/SKILL.md").read_text(encoding="utf-8")
+        self.config = RunConfig(model="claude-haiku-5-5", reasoning="high")
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def run_shepherd(self, arm="forced"):
+        body = self.source.partition("\n---\n")[2].lstrip("\n")
+        lines = fixture_lines()[1:]
+        lines[0]["message"]["content"][0]["input"]["skill"] = "shepherd"
+        lines[2]["message"]["content"][0]["text"] = (
+            f"Base directory for this skill: /workspace/.claude/skills/shepherd\n\n{body}"
+        )
+        lines[-1]["structured_output"]["skills_used"] = ["shepherd"]
+        fake = write_fake_claude(
+            self.root / "claude",
+            init_event(skills=["shepherd"] if arm == "forced" else []),
+            *lines, then="exit 0",
+        )
+        return run_subject(
+            self.case, arm, REPO, self.root / "workspace", self.config,
+            runtime="claude", executable=str(fake),
+        )
+
+    def test_forced_stages_explicit_only_target_without_the_invocation_lock(self):
+        self.assertIn(EXPLICIT_LINE, self.source)
+        result = self.run_shepherd()
+        staged = (result.workspace / ".claude/skills/shepherd/SKILL.md").read_text()
+
+        self.assertEqual(self.source.replace(EXPLICIT_LINE, "", 1), staged)
+        self.assertEqual((), result.changed_paths)
+        target = result.forced_target_preflight["targets"][0]
+        self.assertEqual("valid", target["status"])
+        self.assertEqual("removed disable-model-invocation", target["frontmatter_edit"])
+        record = {
+            "arm": "forced",
+            "runtime": "claude",
+            "target_skills": ["shepherd"],
+            "reported_skills": reported_skill_names(result.final_output),
+            "forced_target_preflight": result.forced_target_preflight,
+            "subject": {
+                "events": list(result.events),
+                "captured_skill_files": captured_skill_file_evidence(
+                    result.workspace, result.events, runtime="claude"
+                ),
+            },
+        }
+        self.assertEqual("valid", forced_integrity_status(record))
+
+    def test_preflight_rejects_any_other_staged_change(self):
+        workspace = self.run_shepherd().workspace
+        staged = workspace / ".claude/skills/shepherd/SKILL.md"
+        edits = {
+            "body": staged.read_text() + "extra\n",
+            "frontmatter": staged.read_text().replace("name: shepherd", "name: shepherd2"),
+            "extra frontmatter line": self.source.replace(EXPLICIT_LINE, "", 1).replace(
+                "---\n", "---\nx: y\n", 1
+            ),
+        }
+        for name, text in edits.items():
+            with self.subTest(name):
+                staged.write_text(text, encoding="utf-8")
+                target = ClaudeRuntime().forced_target_preflight(
+                    self.case, REPO, workspace, None
+                )["targets"][0]
+                self.assertEqual("byte_mismatch", target["status"])
+
+    def test_none_arm_stages_nothing(self):
+        result = self.run_shepherd(arm="none")
+        self.assertFalse((result.workspace / ".claude/skills").exists())
 
 
 class BuiltinDiscoveryTest(unittest.TestCase):

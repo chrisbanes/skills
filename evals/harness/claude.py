@@ -21,6 +21,10 @@ Claude Code 2.1.296 findings (T1 probe, plus T3 init-only probes):
 - D3: init reports `memory_paths.auto` unless `autoMemoryEnabled: false` is
   passed through `--settings`; with it, init has no `memory_paths`
   (confirmed by two init-only probes).
+- The Skill tool refuses skills marked `disable-model-invocation: true`, so
+  forced runs stage those targets without that one frontmatter line.
+- Bash can background a command; `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`
+  turns that off, and any backgrounded call is recorded without an exit code.
 """
 
 from __future__ import annotations
@@ -64,12 +68,21 @@ _INPUT_TOKEN_FIELDS = (
     "input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"
 )
 _EXIT_CODE = re.compile(r"Exit code (\d+)")
+# Bash result text when a command keeps running after the tool call returns.
+_BACKGROUNDED = re.compile(
+    r"Command (?:running in background with ID|was moved to the background)"
+)
 JUDGE_TOOLS = ("Read",)
 
 
 def _claude_env() -> dict[str, str]:
     # An ancestor CLAUDE.md must not reach the model (finding A2).
-    return {**os.environ, "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1"}
+    # Background tasks would let a command outlive its recorded exit code.
+    return {
+        **os.environ,
+        "CLAUDE_CODE_DISABLE_CLAUDE_MDS": "1",
+        "CLAUDE_CODE_DISABLE_BACKGROUND_TASKS": "1",
+    }
 
 
 def parse_claude_stream(
@@ -164,24 +177,36 @@ def _bash_command(tool_input: object) -> str | None:
     return command if isinstance(command, str) else None
 
 
+def _backgrounded(tool_input: object, event: dict[str, Any], output: str | None) -> bool:
+    tool_result = event.get("tool_use_result")
+    return (
+        isinstance(tool_input, dict) and tool_input.get("run_in_background") is True
+        or isinstance(tool_result, dict) and bool(tool_result.get("backgroundTaskId"))
+        or bool(output and _BACKGROUNDED.search(output))
+    )
+
+
 def command_records(events: Events) -> tuple[CommandRecord, ...]:
-    pending: dict[object, tuple[int, str | None]] = {}
+    pending: dict[object, tuple[int, object]] = {}
     records = []
     for sequence, event in enumerate(events, 1):
         if event.get("type") == "assistant":
             for block in _blocks(event, "tool_use"):
                 if block.get("name") == "Bash":
-                    pending[block.get("id")] = (sequence, _bash_command(block.get("input")))
+                    pending[block.get("id")] = (sequence, block.get("input"))
         elif event.get("type") == "user":
             for block in _blocks(event, "tool_result"):
                 use = pending.pop(block.get("tool_use_id"), None)
                 if use is not None:
+                    output = _text(block.get("content"))
+                    # A backgrounded command has no exit code yet.
+                    running = _backgrounded(use[1], event, output)
                     records.append(CommandRecord(
                         id=block.get("tool_use_id"),
-                        command=use[1],
-                        exit_code=_exit_code(block),
-                        output=_text(block.get("content")),
-                        status="completed",
+                        command=_bash_command(use[1]),
+                        exit_code=None if running else _exit_code(block),
+                        output=output,
+                        status="in_progress" if running else "completed",
                         sequence=sequence,
                     ))
         for denial in _denials(event):
@@ -195,10 +220,57 @@ def command_records(events: Events) -> tuple[CommandRecord, ...]:
                     sequence=sequence,
                 ))
     records.extend(
-        CommandRecord(id=tool_id, command=command, exit_code=None, output=None,
-                      status="in_progress", sequence=sequence)
-        for tool_id, (sequence, command) in pending.items()
+        CommandRecord(id=tool_id, command=_bash_command(tool_input), exit_code=None,
+                      output=None, status="in_progress", sequence=sequence)
+        for tool_id, (sequence, tool_input) in pending.items()
     )
+    return tuple(sorted(records, key=lambda record: record.sequence))
+
+
+FILE_TOOLS = ("Read", "Grep", "Glob", "Edit", "Write", "NotebookEdit")
+
+
+def _file_tool_path(tool_input: object) -> str:
+    if not isinstance(tool_input, dict):
+        return ""
+    for key in ("file_path", "notebook_path", "path", "pattern"):
+        if isinstance(tool_input.get(key), str):
+            return tool_input[key]
+    return ""
+
+
+def file_tool_records(events: Events) -> tuple[CommandRecord, ...]:
+    """Every attempted file tool call, including permission denials."""
+    results = {
+        block.get("tool_use_id"): (sequence, block)
+        for sequence, event in enumerate(events, 1)
+        if event.get("type") == "user"
+        for block in _blocks(event, "tool_result")
+    }
+    records = []
+    for sequence, block in _tool_uses(events):
+        if block.get("name") not in FILE_TOOLS:
+            continue
+        sequence, result = results.get(block.get("id"), (sequence, None))
+        records.append(CommandRecord(
+            id=block.get("id"),
+            command=(block["name"], _file_tool_path(block.get("input"))),
+            exit_code=None if result is None else (1 if result.get("is_error") else 0),
+            output=None if result is None else _text(result.get("content")),
+            status="in_progress" if result is None else "completed",
+            sequence=sequence,
+        ))
+    for sequence, event in enumerate(events, 1):
+        for denial in _denials(event):
+            if denial.get("tool_name") in FILE_TOOLS:
+                records.append(CommandRecord(
+                    id=denial.get("tool_use_id"),
+                    command=(denial["tool_name"], _file_tool_path(denial.get("tool_input"))),
+                    exit_code=None,
+                    output=None,
+                    status="denied",
+                    sequence=sequence,
+                ))
     return tuple(sorted(records, key=lambda record: record.sequence))
 
 
@@ -299,6 +371,21 @@ def init_isolation(init: dict[str, Any] | None, expected_skills: list[str]) -> d
 
 def _sha256(path: Path) -> str | None:
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+_EXPLICIT_ONLY_LINE = b"disable-model-invocation: true"
+
+
+def _without_invocation_lock(text: bytes) -> bytes:
+    """Remove the one frontmatter line that makes the Skill tool refuse a skill."""
+    if not text.startswith(b"---\n"):
+        return text
+    frontmatter, marker, body = text[4:].partition(b"\n---\n")
+    lines = frontmatter.split(b"\n")
+    if not marker or lines.count(_EXPLICIT_ONLY_LINE) != 1:
+        return text
+    lines.remove(_EXPLICIT_ONLY_LINE)
+    return b"---\n" + b"\n".join(lines) + marker + body
 
 
 def _captured(captures: list[Any], target: dict[str, Any], tool_id: object) -> bool:
@@ -403,6 +490,11 @@ class ClaudeRuntime:
                         f"{workspace}; pass an --output-dir outside the repository"
                     )
 
+    def edit_staged_skill(self, arm: str, skill_md: Path) -> None:
+        # Claude refuses Skill calls to explicit-only skills; forced runs must invoke them.
+        if arm == "forced" and skill_md.is_file():
+            skill_md.write_bytes(_without_invocation_lock(skill_md.read_bytes()))
+
     def forced_target_preflight(self, case, repo_root, workspace, skill_paths):
         """Record whether each forced target is staged, identical and not shadowed."""
         targets = []
@@ -411,9 +503,11 @@ class ClaudeRuntime:
             relative = f"{self.skill_dir}/{skill}/SKILL.md"
             staged = (workspace / relative).resolve()
             source_sha, staged_sha = _sha256(source), _sha256(staged)
+            source_bytes = source.read_bytes() if source_sha is not None else b""
+            expected = _without_invocation_lock(source_bytes)
             if source_sha is None or staged_sha is None:
                 status = "missing_target"
-            elif source_sha != staged_sha:
+            elif hashlib.sha256(expected).hexdigest() != staged_sha:
                 status = "byte_mismatch"
             elif skill in self.builtin_skills:
                 # A built-in of the same name cannot be switched off separately.
@@ -431,6 +525,10 @@ class ClaudeRuntime:
                 "staged_sha256": staged_sha,
                 "exists": staged_sha is not None,
                 "status": status,
+                **(
+                    {"frontmatter_edit": "removed disable-model-invocation"}
+                    if expected != source_bytes else {}
+                ),
             })
         return {
             "valid": all(target["status"] == "valid" for target in targets),
@@ -472,7 +570,8 @@ class ClaudeRuntime:
             inline_schema(repo_root / "evals" / "schemas" / "subject-output.schema.json"),
             *isolation_flags(config.model, config.reasoning, settings, tools),
         ]
-        if arm == "none":
+        if not staged:
+            # With fixture dependencies staged, skillOverrides alone keeps built-ins off.
             command.append("--disable-slash-commands")
         return command
 
@@ -510,6 +609,9 @@ class ClaudeRuntime:
     def commands(self, events):
         return command_records(events)
 
+    def file_tool_actions(self, events):
+        return file_tool_records(events)
+
     def tool_call_count(self, events):
         names = _tool_names(events)
         return sum(
@@ -523,8 +625,17 @@ class ClaudeRuntime:
         return sum(event.get("type") == "result" for event in events)
 
     def observed_skills(self, events):
+        failed = {
+            block.get("tool_use_id")
+            for event in events
+            if event.get("type") == "user"
+            for block in _blocks(event, "tool_result")
+            if block.get("is_error") is True
+        }
         observed: list[str] = []
         for _, block in _tool_uses(events):
+            if block.get("id") in failed:
+                continue
             tool_input = block.get("input")
             name = canonical_skill_name(
                 tool_input.get("skill") if isinstance(tool_input, dict) else None

@@ -509,6 +509,9 @@ class CodexRuntime:
     def check_workspace(self, workspace: Path) -> None:
         """Codex has no workspace location requirement."""
 
+    def edit_staged_skill(self, arm: str, skill_md: Path) -> None:
+        """Codex stages skills byte-identical to their source."""
+
     def forced_target_preflight(self, case, repo_root, workspace, skill_paths):
         return forced_target_preflight(
             case,
@@ -538,6 +541,9 @@ class CodexRuntime:
 
     def commands(self, events):
         return command_records(events)
+
+    def file_tool_actions(self, events):
+        return ()
 
     def tool_call_count(self, events):
         return completed_tool_call_count(events)

@@ -8,7 +8,7 @@ import subprocess
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 
 from evals.harness.cases import EvalCase
 from evals.harness.suites import PUBLIC_SKILLS
@@ -80,6 +80,10 @@ class Runtime(Protocol):
         """Raise ValueError before staging when the workspace location is unsafe."""
         ...
 
+    def edit_staged_skill(self, arm: str, skill_md: Path) -> None:
+        """Adjust a freshly staged SKILL.md before the workspace baseline commit."""
+        ...
+
     def forced_target_preflight(
         self,
         case: EvalCase,
@@ -109,6 +113,10 @@ class Runtime(Protocol):
     ) -> tuple[tuple[dict[str, Any], ...], dict[str, Any], dict[str, int]]: ...
 
     def commands(self, events: Events) -> tuple[CommandRecord, ...]: ...
+
+    def file_tool_actions(self, events: Events) -> tuple[CommandRecord, ...]:
+        """Return non-shell file tool calls; `command` is `(tool name, path)`."""
+        ...
 
     def tool_call_count(self, events: Events) -> int: ...
 
@@ -328,6 +336,7 @@ def prepare_workspace(
     *,
     enabled_skills: tuple[str, ...] = (),
     skill_dir: str = FIXTURE_SKILL_DIR,
+    edit_skill: Callable[[Path], None] | None = None,
 ) -> Path:
     if destination.exists():
         raise FileExistsError(f"run workspace already exists: {destination}")
@@ -358,6 +367,8 @@ def prepare_workspace(
             destination / skill_dir / skill,
             ignore=_ignore_generated_skill_paths,
         )
+        if edit_skill is not None:
+            edit_skill(destination / skill_dir / skill / "SKILL.md")
     if skill_dir != FIXTURE_SKILL_DIR:
         # Fixtures ship their dependencies under .agents/skills; mirror them for this runtime.
         for skill in case.constant_skills:
@@ -445,6 +456,7 @@ def run_subject(
         workspace,
         enabled_skills=_enabled_skills(case, arm, repo_root),
         skill_dir=adapter.skill_dir,
+        edit_skill=lambda skill_md: adapter.edit_staged_skill(arm, skill_md),
     )
     forced_preflight = (
         adapter.forced_target_preflight(case, repo_root, workspace, skill_paths)

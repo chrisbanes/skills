@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shlex
 import subprocess
 from dataclasses import dataclass
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
 from evals.harness.cases import EvalCase, Validator
 from evals.harness.runner import (
+    FIXTURE_SKILL_DIR,
     CommandRecord,
     Events,
     SubjectResult,
@@ -17,6 +19,8 @@ from evals.harness.runner import (
 )
 
 
+# File tools whose `file_tool_actions` path is a write target.
+_WRITE_TOOLS = ("Edit", "Write", "NotebookEdit")
 _DESTRUCTIVE_COMMAND = re.compile(
     r"(?:^|[;&|]\s*|\s)(?:rm\s+-[^\n]*r|git\s+(?:reset\s+--hard|clean\s+-|push)|sudo\s|gh\s+(?:pr\s+merge|issue\s+close))"
 )
@@ -236,7 +240,9 @@ def _is_bare_or_system_executable(token: str, executable: str) -> bool:
     }
 
 
-def _is_target_skill_entrypoint_read(case: EvalCase, command: str) -> bool:
+def _is_target_skill_entrypoint_read(
+    case: EvalCase, command: str, skill_dir: str = FIXTURE_SKILL_DIR
+) -> bool:
     """Allow standalone cat reads of target entrypoints and opted-in references."""
     if _command_substitutions(command) or _ends_with_background_operator(command):
         return False
@@ -276,22 +282,38 @@ def _is_target_skill_entrypoint_read(case: EvalCase, command: str) -> bool:
         or not _is_bare_or_system_executable(invocation[0], "cat")
     ):
         return False
-    path = PurePosixPath(invocation[1])
+    return _is_target_skill_path(case, invocation[1], skill_dir)
+
+
+def _is_target_skill_path(case: EvalCase, value: str, skill_dir: str) -> bool:
+    """Match a target entrypoint, or an opted-in reference, under `skill_dir`."""
+    path = PurePosixPath(value)
     if (
-        str(path) != invocation[1]
+        str(path) != value
         or ".." in path.parts
-        or any(character in invocation[1] for character in "$`*?[]{}~")
+        or any(character in value for character in "$`*?[]{}~")
     ):
         return False
     return any(
-        invocation[1] == f".agents/skills/{skill}/SKILL.md"
+        value == f"{skill_dir}/{skill}/SKILL.md"
         or (
             case.allow_skill_reference_reads
-            and path.is_relative_to(f".agents/skills/{skill}/references")
+            and path.is_relative_to(f"{skill_dir}/{skill}/references")
             and path.suffix == ".md"
         )
         for skill in case.target_skills
     )
+
+
+def _workspace_relative(value: object, workspace: Path) -> str | None:
+    """Return `value` relative to the workspace, or None when it lies outside."""
+    if not isinstance(value, str):
+        return None
+    for root in dict.fromkeys((str(workspace), str(workspace.resolve()))):
+        full = os.path.normpath(os.path.join(root, value))
+        if full == root or full.startswith(root.rstrip("/") + "/"):
+            return os.path.relpath(full, root)
+    return None
 
 
 def _is_shell_wrapped_local_read_sequence(command: str, exit_code: object) -> bool:
@@ -1100,31 +1122,48 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
         if validator.returncode != 0:
             suffix = " (timed out)" if validator.timed_out else ""
             failures.append(f"validator failed: {' '.join(validator.argv)}{suffix}")
-    command_execution_events = get_runtime(result.runtime).commands(result.events)
+    adapter = get_runtime(result.runtime)
+    command_execution_events = adapter.commands(result.events)
+    file_tool_actions = adapter.file_tool_actions(result.events)
     successful_commands = _event_invocations(
         command_execution_events, successful_only=True
     )
     attempted_commands = _event_invocations(command_execution_events)
 
+    skill_reads_allowed = result.arm == "forced" or (
+        case.allow_skill_reference_reads and result.arm == "automatic"
+    )
+
     def is_allowed_skill_read(item: CommandRecord) -> bool:
-        if result.arm != "forced" and not (
-            case.allow_skill_reference_reads and result.arm == "automatic"
-        ):
+        if not skill_reads_allowed:
             return False
         command = _command_text(item, shlex.join)
         return isinstance(command, str) and _is_target_skill_entrypoint_read(
-            case, command
+            case, command, adapter.skill_dir
         )
 
+    def is_allowed_skill_file_read(item: CommandRecord) -> bool:
+        tool, path = item.command
+        relative = _workspace_relative(path, result.workspace)
+        return (
+            skill_reads_allowed
+            and tool == "Read"
+            and relative is not None
+            and _is_target_skill_path(case, relative, adapter.skill_dir)
+        )
+
+    # Claude file tools act like commands for the analysis-only boundary.
+    boundary_actions = (*command_execution_events, *file_tool_actions)
     distinct_command_ids = {
         ("id", item.id)
         if isinstance(item.id, str)
         else ("event", index)
-        for index, item in enumerate(command_execution_events)
+        for index, item in enumerate(boundary_actions)
     }
     disallowed_command_execution = case.forbid_all_commands and (
         (not case.allow_skill_reference_reads and len(distinct_command_ids) > 1)
         or any(not is_allowed_skill_read(item) for item in command_execution_events)
+        or any(not is_allowed_skill_file_read(item) for item in file_tool_actions)
     )
     if disallowed_command_execution:
         failures.append("command execution forbidden for this case")
@@ -1150,6 +1189,12 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
         if not _path_allowed(path, case.allowed_write_paths):
             violations.append(f"undeclared write: {path}")
     violations.extend(_event_violations(result.runtime, result.events))
+    if any(
+        item.command[0] in _WRITE_TOOLS
+        and _workspace_relative(item.command[1], result.workspace) is None
+        for item in file_tool_actions
+    ):
+        violations.append("write outside workspace attempted")
     violations = list(dict.fromkeys(violations))
     return ObjectiveGrade(
         objective_pass=not failures,
