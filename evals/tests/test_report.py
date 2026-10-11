@@ -360,6 +360,25 @@ class ReportTest(unittest.TestCase):
             expected,
         )
 
+    def test_token_note_describes_only_the_runtimes_present(self):
+        claude_only = self.automatic_pair(["absent", "absent"])
+        for item in claude_only:
+            item["runtime"] = "claude"
+        mixed = self.automatic_pair(["absent", "absent"])
+        mixed[0]["runtime"] = "claude"
+
+        claude_markdown = render_scorecard(compute_scorecard(claude_only), claude_only)
+        mixed_markdown = render_scorecard(compute_scorecard(mixed), mixed)
+
+        self.assertNotIn("Codex", claude_markdown)
+        self.assertIn(
+            "Claude Code token counts are input, cache creation, cache read, and "
+            "output tokens; its tool calls exclude the structured-output call.",
+            claude_markdown,
+        )
+        self.assertIn("Token counts are Codex input plus output tokens.", mixed_markdown)
+        self.assertIn("Claude Code token counts are input, cache creation", mixed_markdown)
+
     def test_isolation_invalid_counts_render_only_when_a_run_was_excluded(self):
         valid = self.automatic_pair(["absent", "absent"])
         mixed = self.automatic_pair(["absent", "absent"])

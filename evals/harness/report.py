@@ -386,18 +386,22 @@ def render_scorecard(
                 f"{_comparison(baseline.median_turns_per_run, automatic.median_turns_per_run, _count)} | "
                 f"{_comparison(baseline.median_elapsed_seconds_per_run, automatic.median_elapsed_seconds_per_run, _seconds)} |"
             )
+    runtimes = {record_runtime(record) for record in records} or {"codex"}
+    token_notes = []
+    if "codex" in runtimes:
+        token_notes.append(
+            "Token counts are Codex input plus output tokens. Tool calls count completed "
+            "command, file-change, MCP, web-search, and generic tool events."
+        )
+    if "claude" in runtimes:
+        token_notes.append(
+            "Claude Code token counts are input, cache creation, cache read, and "
+            "output tokens; its tool calls exclude the structured-output call."
+        )
     lines.extend(
         [
             "",
-            "Token counts are Codex input plus output tokens. Tool calls count completed "
-            "command, file-change, MCP, web-search, and generic tool events. Wall-clock "
-            "time is environment-sensitive."
-            + (
-                " Claude Code token counts also include cache creation and cache read "
-                "input tokens, and its tool calls exclude the structured-output call."
-                if any(record_runtime(record) != "codex" for record in records)
-                else ""
-            ),
+            " ".join([*token_notes, "Wall-clock time is environment-sensitive."]),
             "",
             "## Evaluation diagnostics (non-gating)",
             "",
