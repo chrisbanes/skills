@@ -323,6 +323,17 @@ def render_scorecard(
                 )
                 for category, record_ids in score.forced_integrity_categories.items()
             ],
+            *(
+                [
+                    "- Isolation-invalid runs (excluded from metrics): "
+                    + ", ".join(
+                        f"{arm} {count}"
+                        for arm, count in score.isolation_invalid_counts.items()
+                    )
+                ]
+                if any(score.isolation_invalid_counts.values())
+                else []
+            ),
             "",
             "## Efficiency (non-gating)",
             "",

@@ -360,6 +360,34 @@ class ReportTest(unittest.TestCase):
             expected,
         )
 
+    def test_isolation_invalid_counts_render_only_when_a_run_was_excluded(self):
+        valid = self.automatic_pair(["absent", "absent"])
+        mixed = self.automatic_pair(["absent", "absent"])
+        mixed[1]["forced_target_preflight"] = {
+            "valid": False, "targets": [], "isolation": {"valid": False},
+        }
+        none = record("three:none", "none", True)
+        none["suite"] = "compose"
+        none["forced_target_preflight"] = mixed[1]["forced_target_preflight"]
+        mixed.append(none)
+
+        baseline = render_scorecard(compute_scorecard(valid), valid)
+        markdown = render_scorecard(compute_scorecard(mixed), mixed)
+
+        # An all-valid set keeps the integrity section exactly as it was.
+        self.assertIn(
+            "## Evaluator integrity\n\n- Invalid forced evidence: 0\n- missing target: 0\n"
+            "- invocation failure: 0\n- reporting failure: 0\n\n## Efficiency (non-gating)\n",
+            baseline,
+        )
+        self.assertNotIn("Isolation-invalid", baseline)
+        self.assertIn(
+            "- reporting failure: 0\n"
+            "- Isolation-invalid runs (excluded from metrics): none 1, forced 0, automatic 1\n"
+            "\n## Efficiency (non-gating)\n",
+            markdown,
+        )
+
     def test_audit_decisions_append_without_overwriting_raw_judgments(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "audit-decisions.jsonl"

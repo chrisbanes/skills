@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from statistics import median
 from typing import Any, Callable, Iterable
 
@@ -44,6 +44,8 @@ class Scorecard:
     # Diagnostic from observed Skill activations; None without any (Codex has none).
     observed_routing_precision: float | None = None
     observed_routing_recall: float | None = None
+    # Isolation-invalid runs per arm: excluded from every metric above.
+    isolation_invalid_counts: dict[str, int] = field(default_factory=dict)
 
 
 def _rate(records: list[dict[str, Any]]) -> float | None:
@@ -426,4 +428,11 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         gates=gates,
         observed_routing_precision=observed_precision,
         observed_routing_recall=observed_recall,
+        isolation_invalid_counts={
+            arm: sum(
+                record.get("arm") == arm and not isolation_valid(record)
+                for record in records
+            )
+            for arm in arms
+        },
     )

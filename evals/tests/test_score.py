@@ -380,6 +380,28 @@ class ScorecardTest(unittest.TestCase):
         self.assertEqual(0.0, score.router_report_rate)
         self.assertIsNone(compute_scorecard([invalid]).routing_precision)
 
+    def test_counts_isolation_invalid_runs_per_arm(self):
+        def invalid(record_id, arm):
+            item = record(record_id, arm, True)
+            item["forced_target_preflight"] = {
+                "valid": False, "targets": [], "isolation": {"valid": False},
+            }
+            return item
+
+        score = compute_scorecard([
+            invalid("a:none", "none"),
+            invalid("b:none", "none"),
+            invalid("c:automatic", "automatic"),
+            record("d:none", "none", True),
+            record("e:automatic", "automatic", True),
+        ])
+
+        self.assertEqual({"none": 2, "forced": 0, "automatic": 1}, score.isolation_invalid_counts)
+        self.assertEqual(
+            {"none": 0, "forced": 0, "automatic": 0},
+            compute_scorecard([record("d:none", "none", True)]).isolation_invalid_counts,
+        )
+
     def test_observed_routing_scores_skill_activations_apart_from_reports(self):
         activated = record(
             "one:automatic", "automatic", True,
