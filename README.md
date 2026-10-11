@@ -253,7 +253,9 @@ with high reasoning, judged by
 [`gpt-6-sol`](https://developers.openai.com/api/docs/models/gpt-6-sol) with
 high reasoning. Results are model- and reasoning-specific; other configurations
 may perform differently. The human audit queue remains open. These are not merge
-or release gates. See
+or release gates. The subject and judge each run on Codex by default, or on
+Claude Code with `--runtime claude` and `--judge-runtime claude`; Claude runs need
+an `--output-dir` outside the repository. See
 [`evals/README.md`](evals/README.md) for evaluation setup and reproducibility.
 
 Skill-revision compatibility checks compare old and revised instructions within
@@ -299,7 +301,8 @@ percentage change. These subject-only measurements use the latest complete,
 same-run evidence available for each suite and include failed runs and negative
 controls. Baseline-to-automatic efficiency comparisons use only cases eligible
 for automatic activation. Multi-skill scenarios contribute to every targeted
-skill row. A turn is one completed Codex turn; time remains environment-sensitive.
+skill row. A turn is one completed top-level turn (a Codex `turn.completed` or a
+Claude Code `result`); time remains environment-sensitive.
 Run provenance and local scorecard paths are in the
 [GPT-6 improvement result record](evals/artifacts/2026-09-24-gpt6-improvement-results.md).
 
@@ -318,6 +321,52 @@ Run provenance and local scorecard paths are in the
 | [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 46.9k → 53.8k (+15%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 23.2s → 35.0s (+51%) |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 35.6k → 56.9k (+60%) | 2 → 4 (+100%) | 1 → 1 (+0%) | 23.2s → 22.1s (-5%) |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 70.2k → 88.3k (+26%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 42.1s → 43.9s (+4%) |
+
+### Claude Code
+
+Claude Code: `claude-haiku-5-5` with high effort, judged by
+[`gpt-6-sol`](https://developers.openai.com/api/docs/models/gpt-6-sol) with high
+reasoning. The metrics are defined as above, and `—` marks a cell with no
+recorded result.
+
+| Skill | Baseline | Automatic | Restraint |
+| --- | ---: | ---: | ---: |
+| [`compose-animations`](skills/compose-animations/SKILL.md) | — | — | — |
+| [`compose-component-design`](skills/compose-component-design/SKILL.md) | — | — | — |
+| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | — | — | — |
+| [`compose-performance`](skills/compose-performance/SKILL.md) | — | — | — |
+| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | — | — | — |
+| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | — | — | — |
+| [`gradle-run`](skills/gradle-run/SKILL.md) | — | — | — |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | — | — | — |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | — | — | — |
+| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | — | — | — |
+| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | — | — | — |
+| [`deliver-spec`](skills/deliver-spec/SKILL.md) | — | — | — |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | — | — |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | — |
+| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — |
+| [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | — |
+| [`shepherd`](skills/shepherd/SKILL.md) | — | — | — |
+| [`to-plan`](skills/to-plan/SKILL.md) | — | — | — |
+
+Per-run medians, baseline → automatic, for the same configuration:
+
+| Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
+| --- | ---: | ---: | ---: | ---: |
+| [`compose-animations`](skills/compose-animations/SKILL.md) | — | — | — | — |
+| [`compose-component-design`](skills/compose-component-design/SKILL.md) | — | — | — | — |
+| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | — | — | — | — |
+| [`compose-performance`](skills/compose-performance/SKILL.md) | — | — | — | — |
+| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | — | — | — | — |
+| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | — | — | — | — |
+| [`gradle-run`](skills/gradle-run/SKILL.md) | — | — | — | — |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | — | — | — | — |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | — | — | — | — |
+| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | — | — | — | — |
+| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | — | — | — | — |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | — | — | — |
+| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — | — |
 
 ## License
 

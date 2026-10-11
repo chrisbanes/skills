@@ -18,11 +18,12 @@ gate. CI validates only the harness, corpus, and deterministic formulas.
 
 Every scorecard includes non-gating, subject-only efficiency diagnostics by
 arm and by targeted skill. It reports total and median tokens, completed tool
-calls, completed Codex turns, and elapsed time per run, including any retry,
+calls, completed turns, and elapsed time per run, including any retry,
 plus total work across all runs per successful
 outcome. The latter charges failed runs to the successful outcomes instead of
-making a fast failure look efficient. Token counts are Codex input plus output
-tokens; judge usage is kept in separate evaluator diagnostics because it
+making a fast failure look efficient. Token counts are input plus output
+tokens, and Claude Code input includes cache creation and cache reads; judge
+usage is kept in separate evaluator diagnostics because it
 measures evaluation overhead, not skill efficiency. Wall-clock results are
 environment-sensitive, so compare runs only when model, reasoning, machine,
 corpus, and execution conditions are held constant.
@@ -100,7 +101,8 @@ percentage change. These subject-only measurements use the latest complete,
 same-run evidence available for each suite and include failed runs and negative
 controls. Baseline-to-automatic efficiency comparisons use only cases eligible
 for automatic activation. Multi-skill scenarios contribute to every targeted
-skill row. A turn is one completed Codex turn; time remains environment-sensitive.
+skill row. A turn is one completed top-level turn (a Codex `turn.completed` or a
+Claude Code `result`); time remains environment-sensitive.
 Run provenance and local scorecard paths are in the
 [GPT-6 improvement result record](artifacts/2026-09-24-gpt6-improvement-results.md).
 
@@ -119,6 +121,52 @@ Run provenance and local scorecard paths are in the
 | `android-benchmark-comparison` | 46.9k → 53.8k (+15%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 23.2s → 35.0s (+51%) |
 | `grounded-writing` | 35.6k → 56.9k (+60%) | 2 → 4 (+100%) | 1 → 1 (+0%) | 23.2s → 22.1s (-5%) |
 | `release-kotlin-library` | 70.2k → 88.3k (+26%) | 4 → 5 (+25%) | 1 → 1 (+0%) | 42.1s → 43.9s (+4%) |
+
+### Claude Code
+
+Claude Code: `claude-haiku-5-5` with high effort, judged by
+[`gpt-6-sol`](https://developers.openai.com/api/docs/models/gpt-6-sol) with high
+reasoning. The metrics are defined as above, and `—` marks a cell with no
+recorded result.
+
+| Skill | Baseline | Automatic | Restraint |
+| --- | ---: | ---: | ---: |
+| `compose-animations` | — | — | — |
+| `compose-component-design` | — | — | — |
+| `compose-focus-navigation` | — | — | — |
+| `compose-performance` | — | — | — |
+| `compose-state-and-effects` | — | — | — |
+| `compose-ui-testing-patterns` | — | — | — |
+| `gradle-run` | — | — | — |
+| `kotlin-api-design` | — | — | — |
+| `kotlin-concurrency-and-flow` | — | — | — |
+| `kotlin-control-flow` | — | — | — |
+| `android-benchmark-comparison` | — | — | — |
+| `deliver-spec` | — | — | — |
+| `grounded-writing` | — | — | — |
+| `implement-with-subagents` | — | — | — |
+| `release-kotlin-library` | — | — | — |
+| `run-github-project` | — | — | — |
+| `shepherd` | — | — | — |
+| `to-plan` | — | — | — |
+
+Per-run medians, baseline → automatic, for the same configuration:
+
+| Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
+| --- | ---: | ---: | ---: | ---: |
+| `compose-animations` | — | — | — | — |
+| `compose-component-design` | — | — | — | — |
+| `compose-focus-navigation` | — | — | — | — |
+| `compose-performance` | — | — | — | — |
+| `compose-state-and-effects` | — | — | — | — |
+| `compose-ui-testing-patterns` | — | — | — | — |
+| `gradle-run` | — | — | — | — |
+| `kotlin-api-design` | — | — | — | — |
+| `kotlin-concurrency-and-flow` | — | — | — | — |
+| `kotlin-control-flow` | — | — | — | — |
+| `android-benchmark-comparison` | — | — | — | — |
+| `grounded-writing` | — | — | — | — |
+| `release-kotlin-library` | — | — | — | — |
 
 ## Evaluation setup
 
@@ -144,15 +192,18 @@ blinded judge calls. The 22-case Kotlin/Gradle suite schedules 198 subject calls
 and 198 blinded judge calls. The 32-case workflows/writing suite schedules 219
 subject calls and 219 blinded judge calls.
 
-All subject and judge processes use `--ignore-user-config`, explicit
+Codex subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,
-output schemas, and pinned model/reasoning arguments. Review tasks are read-only.
+output schemas, and pinned model/reasoning arguments; Claude Code processes use
+the isolation described under Claude Code runs. Review tasks are read-only.
 Edit tasks are graded against a path allowlist. Workspaces and conversations are
 never reused across conditions.
 
-The harness disables every skill discovered in the user and plugin catalogs.
+For Codex, the harness disables every skill discovered in the user and plugin
+catalogs.
 For forced and automatic arms it copies only the enabled repository skills into
-the fresh workspace's project-local `.agents/skills` directory before committing
+the fresh workspace's project-local skill directory (`.agents/skills` for Codex,
+`.claude/skills` for Claude Code) before committing
 the fixture baseline. The subject output schema is staged beside the fixture so
 the baseline command does not disclose the source checkout or target skill
 names. These evaluator-owned files are excluded from the blinded judge packet.
@@ -164,6 +215,12 @@ and local skill identifiers are canonicalized to the same repository skill. They
 proof that the runtime loaded a particular `SKILL.md`; outcome differences and
 the human audit provide the behavioral evidence.
 
+Claude Code does record activations: each `Skill` tool call is stored as
+**observed routing** in the record's `observed_skills`. Reported routing stays
+the primary metric, and the scorecard adds observed precision and recall as a
+separate, non-gating diagnostic only when a record has observed activations.
+Codex records store `observed_skills` as `null`.
+
 Cases distinguish required routes from allowed overlaps. Recall measures the
 required `expected_skills`; precision accepts any reported skill in the case's
 `allowed_skills`, which must include every expected skill. This lets a case
@@ -174,6 +231,51 @@ A no-skill automatic control sets `automatic_no_skill_control: true`. It still
 runs in the automatic arm, while requiring and permitting no public skill, so
 unnecessary activation remains visible without becoming a routing false
 negative.
+
+### Claude Code runs
+
+Select the subject and judge runtimes independently with `--runtime` and
+`--judge-runtime` (`codex` or `claude`, default `codex`), and point at a
+specific binary with `--claude-executable`. `--reasoning` and
+`--judge-reasoning` are validated per runtime; Claude Code accepts `low`,
+`medium`, `high`, `xhigh`, and `max`. `--judge-model` is always required. Runs
+use the existing `claude` login, not `--bare` or an API key.
+
+- **Isolation flags.** Subjects run `claude -p` with stream-JSON output,
+  `--no-session-persistence`, `--setting-sources project`,
+  `--strict-mcp-config`, `--permission-mode dontAsk`, and pinned `--model` and
+  `--effort`. The output schema is passed inline with `--json-schema`.
+- **Skills.** Enabled repository skills, plus evaluator-owned fixture
+  dependencies mirrored from `.agents/skills`, are staged in
+  `.claude/skills`. Once per experiment, an init-only run in an empty workspace
+  lists the bundled built-in skills and is stopped before any model output.
+  Every built-in that is not staged is set to `"off"` through `skillOverrides`.
+  The built-in list is part of the result fingerprint and is stored in each
+  record as `builtin_skills`. The `none` arm adds `--disable-slash-commands`.
+- **Init check.** Before model work, the `system/init` event must list exactly
+  the staged skills, no MCP servers, and no auto-memory path. Auto memory is
+  turned off with `autoMemoryEnabled: false`. On a mismatch the child process
+  is stopped and the run is marked isolation-invalid, so it is excluded from
+  behavioral evidence and routing metrics in every arm.
+- **CLAUDE.md.** `CLAUDE_CODE_DISABLE_CLAUDE_MDS=1` is set for subject and judge
+  processes. The harness also refuses a workspace below any `CLAUDE.md` or
+  `CLAUDE.local.md` (other than `~/.claude`). The default output directory is
+  inside the repository, so Claude runs need an `--output-dir` outside it.
+- **Sandbox and tools.** Both task modes run with the bash sandbox enabled and
+  required, no unsandboxed commands, and an empty network allowlist.
+  `WebFetch` and `WebSearch` are disallowed. Review tasks get `Read`, `Grep`,
+  `Glob`, `Bash`, and `Skill`; edit tasks add `Edit` and `Write`. Denied
+  permission requests count as attempted commands and tools in the safety
+  checks. The judge gets `Read` only, with slash commands disabled and no stdin.
+- **Forced arm.** The prompt tells the model to invoke each target through the
+  `Skill` tool before any other action. The run is valid only when every target
+  has a successful `Skill` call before any other tool call and its staged body
+  appears in the resulting skill message.
+- **Token counting.** Subject tokens are `input_tokens`,
+  `cache_creation_input_tokens`, `cache_read_input_tokens`, and `output_tokens`
+  summed, which matches Codex because its input already includes cached input.
+  Tool calls are completed tool calls excluding the structured-output call, and
+  a turn is one `result` event.
 
 ### Corpus
 
@@ -311,6 +413,7 @@ The published results use:
 
 The Luna/high subject left measurable baseline headroom in all three suites.
 The Sol/high judge remained fixed across every arm.
+The Claude Code tables keep that judge and change only the subject.
 
 Keep the pair unchanged across all arms. Use a separate, explicitly named run
 for another model or reasoning effort; never combine fingerprints in one
@@ -366,12 +469,34 @@ python3 evals/run.py run \
 Use `--skill`, repeated `--case` or `--arm` filters, and `--output-dir` to bound
 a run. Use a fresh output directory for runs with these model settings because
 model settings are part of the result fingerprint. Raw results are atomic and
-fingerprinted by the case, arm, skill commit, Codex version, and both model
+fingerprinted by the case, arm, skill commit, runtime versions, and both model
 settings. Reusing the same output directory resumes matching results and rejects
 stale fingerprints.
 The fingerprint also covers the discovered external skill catalog and the exact
 repository skill contents staged into subject workspaces, excluding generated
-Python bytecode caches.
+Python bytecode caches. It includes the subject and judge runtime names and CLI
+versions, plus the built-in skill list for Claude Code.
+
+Run the same one-case smoke test with Claude Code as the subject. Claude runs
+need an `--output-dir` outside the repository (see Claude Code runs); the judge
+stays on Codex unless `--judge-runtime claude` is passed:
+
+```shell
+python3 evals/run.py run \
+  --runtime claude \
+  --suite kotlin-gradle \
+  --case kotlin-api-ownership-direct \
+  --arm none --arm forced --arm automatic \
+  --model claude-haiku-5-5 --reasoning high \
+  --judge-model gpt-6-sol --judge-reasoning high \
+  --subject-cost-per-call-usd <amount> \
+  --judge-cost-per-call-usd <amount> \
+  --repetitions 1 \
+  --output-dir ~/skill-evals/<run-id> --execute
+```
+
+The report, regrade, and rejudge commands below work the same on a Claude run's
+output directory. Pass `--judge-runtime claude` to rejudge with Claude Code.
 
 Rebuild reports from completed raw records without model calls:
 
@@ -419,7 +544,7 @@ unchanged.
 
 The outcome judge receives an opaque candidate ID, task, rubric, initial source,
 final diff, response, and validator evidence. It never receives the arm, skill selection,
-routing expectation, raw Codex configuration, or deterministic verdict.
+routing expectation, raw runtime configuration, or deterministic verdict.
 
 A task outcome passes only when all deterministic validators and required judge
 criteria pass. Safety remains an independent result. Each suite's advisory
@@ -434,8 +559,8 @@ scorecard applies these gates over the three repetitions:
 - forbidden-action failures are zero.
 
 Subject and judge tokens, tool calls, elapsed time, process failures, and retries
-are diagnostics, not gates. The scorecard also reports how often the router
-itself was declared in the automatic arm. Missing arms or case categories are
+are diagnostics, not gates, as is observed routing. The scorecard also reports
+how often the router itself was declared in the automatic arm. Missing arms or case categories are
 shown as `not met`; filtered smoke runs cannot pass gates they did not evaluate.
 
 ## Human audit
