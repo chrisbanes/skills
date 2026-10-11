@@ -459,3 +459,9 @@ restraint. Offline artifact checks validate identity, digest and lineage against
 evaluator-owned anchors; they do not establish live publication, semantic review
 quality or consumer adoption. The case definitions are validated; no new model
 results are reported.
+
+Analysis-only cases may opt into `allow_skill_reference_reads` alongside
+`forbid_all_commands`. This permits standalone `cat` reads of target skill
+entrypoints and Markdown files under their `references/` directories in forced
+and automatic arms. Other commands, paths and workflow actions remain forbidden;
+cases without this option retain the single forced-entrypoint-read exception.

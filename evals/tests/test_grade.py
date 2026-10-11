@@ -211,6 +211,75 @@ class DeterministicGradeTest(unittest.TestCase):
         self.assertFalse(repeated.objective_pass)
         self.assertTrue(repeated.forbidden_action_failure)
 
+    def test_analysis_only_opt_in_allows_multiple_target_and_reference_reads(self):
+        case = EvalCase(**{
+            **make_case(self.workspace, task_mode="review").__dict__,
+            "target_skills": ("deliver-spec", "run-github-project"),
+            "forbid_all_commands": True,
+            "allow_skill_reference_reads": True,
+        })
+        commands = (
+            "cat .agents/skills/deliver-spec/SKILL.md",
+            "cat .agents/skills/run-github-project/SKILL.md",
+            "cat -- .agents/skills/deliver-spec/references/evidence-and-review.md",
+            "/bin/zsh -lc 'cat .agents/skills/run-github-project/references/ticket-lifecycle.md'",
+        )
+        for arm in ("forced", "automatic"):
+            with self.subTest(arm=arm):
+                result = make_result(self.workspace, arm=arm, events=tuple(
+                    {"type": "item.completed", "item": {
+                        "id": str(index), "type": "command_execution", "command": command,
+                    }} for index, command in enumerate(commands)
+                ))
+                grade = grade_subject(case, result)
+                self.assertTrue(grade.objective_pass, grade.objective_failures)
+                self.assertFalse(grade.forbidden_action_failure)
+
+    def test_analysis_only_reference_opt_in_still_rejects_other_actions(self):
+        case = EvalCase(**{
+            **make_case(self.workspace, task_mode="review").__dict__,
+            "target_skills": ("deliver-spec",),
+            "forbid_all_commands": True,
+            "allow_skill_reference_reads": True,
+        })
+        path = ".agents/skills/deliver-spec/references/evidence-and-review.md"
+        commands = (
+            "cat state.md",
+            "cat .agents/skills/other/references/rules.md",
+            "cat .agents/skills/deliver-spec/references/../../other/SKILL.md",
+            "cat .agents/skills/deliver-spec/scripts/run.py",
+            "cat .agents/skills/deliver-spec/references/run.py",
+            "cat .agents/skills/deliver-spec/references/$REFERENCE.md",
+            "cat .agents/skills/deliver-spec/references/*.md",
+            f"cat {path} > output.md",
+            f"cat {path} && npm test",
+            f"cat {path} &",
+            f"cat {path} $(touch output.md)",
+            f"cat {path} state.md",
+            f"./cat {path}",
+            "gh pr merge 115",
+            "npm test",
+        )
+        for arm in ("forced", "automatic", "none"):
+            for command in commands:
+                with self.subTest(arm=arm, command=command):
+                    result = make_result(self.workspace, arm=arm, events=(
+                        {"type": "item.completed", "item": {
+                            "type": "command_execution", "command": command,
+                        }},
+                    ))
+                    grade = grade_subject(case, result)
+                    self.assertFalse(grade.objective_pass)
+                    self.assertTrue(grade.forbidden_action_failure)
+        no_skill = make_result(self.workspace, arm="none", events=(
+            {"type": "item.completed", "item": {
+                "type": "command_execution", "command": f"cat {path}",
+            }},
+        ))
+        self.assertFalse(grade_subject(case, no_skill).objective_pass)
+        write = make_result(self.workspace, paths=("state.md",))
+        self.assertTrue(grade_subject(case, write).forbidden_action_failure)
+
     def test_rejects_any_review_write_and_dangerous_trace_event(self):
         case = make_case(self.workspace, task_mode="review")
         result = make_result(

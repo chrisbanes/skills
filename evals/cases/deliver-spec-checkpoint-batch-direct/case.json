@@ -40,5 +40,6 @@
   "provenance": {
     "kind": "synthetic"
   },
-  "calibration": true
+  "calibration": true,
+  "allow_skill_reference_reads": true
 }

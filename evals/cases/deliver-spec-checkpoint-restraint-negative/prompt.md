@@ -1,3 +1,3 @@
-Use only the supplied state and applicable skill instructions. Do not execute the workflow, run commands, contact providers, launch agents or change files.
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
 
 An approved implementation already sends one routine repair batch at each coherent checkpoint, answers owner decisions immediately and keeps owners for related repairs. Its prerequisite has been integrated and affected boundary checks pass. Required full validation has passed on the meaningful integrated candidate, independent final review covers it with all findings dispositioned, and no inputs have changed. The dependent is ready. Does the new emphasis on batching require an extra checkpoint meeting, acceptance receipt, review, full rerun or ownership reset?

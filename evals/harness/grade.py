@@ -231,7 +231,7 @@ def _is_bare_or_system_executable(token: str, executable: str) -> bool:
 
 
 def _is_target_skill_entrypoint_read(case: EvalCase, command: str) -> bool:
-    """Allow only one standalone read of this case's target skill entrypoint."""
+    """Allow standalone cat reads of target entrypoints and opted-in references."""
     if _command_substitutions(command) or _ends_with_background_operator(command):
         return False
     segments, separators = _shell_parts(command)
@@ -270,8 +270,20 @@ def _is_target_skill_entrypoint_read(case: EvalCase, command: str) -> bool:
         or not _is_bare_or_system_executable(invocation[0], "cat")
     ):
         return False
+    path = PurePosixPath(invocation[1])
+    if (
+        str(path) != invocation[1]
+        or ".." in path.parts
+        or any(character in invocation[1] for character in "$`*?[]{}~")
+    ):
+        return False
     return any(
         invocation[1] == f".agents/skills/{skill}/SKILL.md"
+        or (
+            case.allow_skill_reference_reads
+            and path.is_relative_to(f".agents/skills/{skill}/references")
+            and path.suffix == ".md"
+        )
         for skill in case.target_skills
     )
 
@@ -1106,7 +1118,9 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
     )
 
     def is_allowed_skill_read(item: dict[str, object]) -> bool:
-        if result.arm != "forced":
+        if result.arm != "forced" and not (
+            case.allow_skill_reference_reads and result.arm == "automatic"
+        ):
             return False
         command = item.get("command")
         if isinstance(command, list):
@@ -1122,7 +1136,7 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
         for index, item in enumerate(command_execution_events)
     }
     disallowed_command_execution = case.forbid_all_commands and (
-        len(distinct_command_ids) > 1
+        (not case.allow_skill_reference_reads and len(distinct_command_ids) > 1)
         or any(not is_allowed_skill_read(item) for item in command_execution_events)
     )
     if disallowed_command_execution:

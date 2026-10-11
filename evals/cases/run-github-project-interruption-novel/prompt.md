@@ -1,3 +1,3 @@
-Use only the supplied state and applicable skill instructions. Do not execute the workflow, run commands, contact providers, launch agents or change files.
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
 
 A claimed ticket has a valid approved plan and a persistent delivery lead with two implementation owners. While A is midway through a slice, the lead confirms its packaging cleanup can delete user-owned files and its chosen architecture would require rewriting most of the remaining work. B is blocked awaiting the lead's decision about an approved shared interface. There are also two routine wording findings. The next routine checkpoint is much later. The Project controller has no merge grant. Decide how to handle feedback and decisions now.

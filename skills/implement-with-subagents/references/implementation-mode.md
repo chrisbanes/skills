@@ -137,8 +137,9 @@
     Return findings to the relevant original owners, accept their task-scoped
     repairs under step 7, and integrate them under steps 8-9. After any repair,
     rerun affected checks and renew review of the changed range and its
-    interactions. Repeat the full suite or full review when required or when
-    prior evidence is invalid or the affected scope cannot be bounded. Verify
+    interactions. Apply [Behavioral review and repair](behavioral-review.md) for
+    affected-scope renewal and broadening conditions; preserve the required
+    final integrated suite above. Verify
     that combined evidence covers the new final head. Apply the checkout lifecycle
     rules below at completion,
     blockers, and interruption. Finish only when the integration worktree is

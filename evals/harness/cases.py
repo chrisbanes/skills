@@ -57,6 +57,7 @@ class EvalCase:
     calibration: bool = False
     automatic_no_skill_control: bool = False
     forbid_all_commands: bool = False
+    allow_skill_reference_reads: bool = False
 
 
 @dataclass(frozen=True)
@@ -179,6 +180,12 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
     if not isinstance(forbid_all_commands, bool):
         raise CaseValidationError("forbid_all_commands must be a boolean")
 
+    allow_skill_reference_reads = data.get("allow_skill_reference_reads", False)
+    if not isinstance(allow_skill_reference_reads, bool):
+        raise CaseValidationError("allow_skill_reference_reads must be a boolean")
+    if allow_skill_reference_reads and not forbid_all_commands:
+        raise CaseValidationError("allow_skill_reference_reads requires forbid_all_commands")
+
     fixture = _require_string(data, "fixture")
     if not _safe_relative(fixture):
         raise CaseValidationError("fixture must be a safe relative path")
@@ -297,6 +304,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         allowed_skills=allowed_skills,
         automatic_no_skill_control=automatic_no_skill_control,
         forbid_all_commands=forbid_all_commands,
+        allow_skill_reference_reads=allow_skill_reference_reads,
     )
 
 

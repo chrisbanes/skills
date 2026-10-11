@@ -1,3 +1,3 @@
-Use only the supplied state and applicable skill instructions. Do not execute the workflow, run commands, contact providers, launch agents or change files.
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
 
 Assess executor readiness of a supplied plan, read-only. T1 establishes a consequential privacy boundary and T2 consumes it. The repository explicitly mandates the entire privacy compliance suite before any consumer starts, and a review provider explicitly requires early independent review of that boundary. The plan currently lists only a focused T1 test and postpones the mandatory suite and review to final delivery. Someone proposes using the new proportional-validation guidance to keep that schedule. What must change?

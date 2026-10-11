@@ -1,3 +1,3 @@
-Use only the supplied state and applicable skill instructions. Do not execute the workflow, run commands, contact providers, launch agents or change files.
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
 
 A narrow repair at C2 has meaningful affected tests and review of interactions. Unchanged checks from C1 are otherwise compatible. Trusted repository instructions explicitly require a fresh full test suite on the exact final commit before every push, and the explicitly invoked review provider requires its complete scope on each repaired candidate. A controller handoff is pending and there is no merge grant. Can evidence reuse satisfy the remaining push gate?

@@ -1,3 +1,3 @@
-Use only the supplied state and applicable skill instructions. Do not execute the workflow, run commands, contact providers, launch agents or change files.
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
 
 C1 has full-suite and independent review evidence. A repair at C2 changes the shared plugin loader, dependency resolution and runtime configuration used by every component. A focused loader test passes, but which consumers and review contracts are affected cannot be bounded with the available evidence. The owner suggests retaining every other C1 result because only one source file changed. Decide the next validation and review scope.
