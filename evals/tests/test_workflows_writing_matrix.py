@@ -485,7 +485,6 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "implement-with-subagents",
             "run-github-project",
             "shepherd",
-            "to-plan",
         )
         for skill in explicit_only:
             config = REPO_ROOT / "skills" / skill / "agents" / "openai.yaml"
@@ -527,6 +526,20 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "release-kotlin-library-direct",
                 "release-kotlin-library-novel",
                 "release-kotlin-library-negative",
+                "to-plan-authorized-draft-direct",
+                "to-plan-boundary-validation-direct",
+                "to-plan-direct",
+                "to-plan-discussion-only-negative",
+                "to-plan-integration-amendment-direct",
+                "to-plan-integration-amendment-negative",
+                "to-plan-integration-amendment-novel",
+                "to-plan-material-assumption-proof-calibration",
+                "to-plan-material-assumption-proof-novel",
+                "to-plan-negative",
+                "to-plan-novel",
+                "to-plan-prior-confirmed-novel",
+                "to-plan-specificity-calibration",
+                "to-plan-unresolved-choice-negative",
             },
             {case.id for case, _ in conditions},
         )
