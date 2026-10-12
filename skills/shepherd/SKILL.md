@@ -74,7 +74,8 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    then CI on the pushed head supplies that evidence before ready or merge. Reuse valid evidence; repeat only checks
    invalidated by changes, unknown impact, or explicit repository/provider rules.
    Do not use CI as an iterative test runner or require full checks per slice
-   commit. Hold the push while applicable required checks fail or lack evidence.
+   commit. Hold the push while checks required before push fail or lack evidence; a
+   CI-supplied full suite gates ready or merge instead.
    Reply after an addressed change or answer; resolve its thread only after the reply and required push succeed.
    Do not combine heads, push after every comment, resolve a local-only fix, or comment when nothing changed.
 7. Recheck CI after the verified repair push; return to step 6 on another
