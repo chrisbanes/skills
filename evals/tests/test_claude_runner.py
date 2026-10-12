@@ -78,7 +78,11 @@ class ClaudeRunnerTest(unittest.TestCase):
         self.assertEqual({"type": "object"}, json.loads(option(command, "--json-schema")))
         self.assertEqual(
             {
-                "sandbox": SANDBOX,
+                # Review Bash may read the workspace but never write it.
+                "sandbox": {
+                    **SANDBOX,
+                    "filesystem": {"denyWrite": [str(workspace.resolve())]},
+                },
                 "autoMemoryEnabled": False,
                 "skillOverrides": {"simplify": "off", "debug": "off"},
             },
@@ -99,6 +103,7 @@ class ClaudeRunnerTest(unittest.TestCase):
         self.assertEqual(
             "Read,Grep,Glob,Bash,Skill,Edit,Write", option(command, "--tools")
         )
+        self.assertEqual(SANDBOX, json.loads(option(command, "--settings"))["sandbox"])
         self.assertNotIn("--disable-slash-commands", command)
         # A staged target is never switched off, even when a built-in shares its name.
         self.assertEqual(

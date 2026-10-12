@@ -263,7 +263,8 @@ use the existing `claude` login, not `--bare` or an API key.
   `CLAUDE.local.md` (other than `~/.claude`). The default output directory is
   inside the repository, so Claude runs need an `--output-dir` outside it.
 - **Sandbox and tools.** Both task modes run with the bash sandbox enabled and
-  required, no unsandboxed commands, and an empty network allowlist.
+  required, no unsandboxed commands, and an empty network allowlist; review
+  tasks also deny sandboxed writes to the workspace.
   `WebFetch` and `WebSearch` are disallowed. Review tasks get `Read`, `Grep`,
   `Glob`, `Bash`, and `Skill`; edit tasks add `Edit` and `Write`. Denied
   permission requests count as attempted commands and tools in the safety

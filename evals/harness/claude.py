@@ -18,6 +18,10 @@ Claude Code 2.1.296 findings (T1 probe, plus T3 init-only probes):
 - A6: the bash sandbox works on macOS with `failIfUnavailable`; a blocked
   network call fails with `Exit code N` text and `is_error: true`.
 - `claude` must run with stdin at /dev/null.
+- Review sandbox: `sandbox.filesystem.denyWrite` set to the absolute resolved
+  workspace keeps Bash reads working while `echo x > new.txt` and
+  `echo y >> note.txt` fail with `operation not permitted` and leave the
+  workspace unchanged (one live haiku probe, 2.1.296).
 - D3: init reports `memory_paths.auto` unless `autoMemoryEnabled: false` is
   passed through `--settings`; with it, init has no `memory_paths`
   (confirmed by two init-only probes).
@@ -553,14 +557,19 @@ class ClaudeRuntime:
         skill_paths: tuple[Path, ...] | None,
     ) -> list[str]:
         staged = {*_enabled_skills(case, arm, repo_root), *case.constant_skills}
+        review = case.task_mode == "review"
         settings = {
-            "sandbox": SANDBOX,
+            # Review Bash may read the workspace but never write it, like Codex read-only.
+            "sandbox": (
+                {**SANDBOX, "filesystem": {"denyWrite": [str(workspace.resolve())]}}
+                if review else SANDBOX
+            ),
             "autoMemoryEnabled": False,
             "skillOverrides": {
                 skill: "off" for skill in self.builtin_skills if skill not in staged
             },
         }
-        tools = REVIEW_TOOLS if case.task_mode == "review" else EDIT_TOOLS
+        tools = REVIEW_TOOLS if review else EDIT_TOOLS
         # The prompt precedes the variadic tool options so they cannot swallow it.
         command = [
             executable,
