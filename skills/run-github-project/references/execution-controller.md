@@ -138,7 +138,7 @@ require per-file or per-stage permission packets. Preserve concurrent-writer
 ownership and shared-resource locks independently of this authorization. Foreign
 plan edits or unrelated eligibility drift revoke authority;
 runner-owned verified replans enter controlled replanning. Ordinary body and
-non-plan comment edits do not revoke the lease, except that a changed acceptance
+non-plan comment edits do not revoke the lease, except that a changed contract
 digest revokes a fast-path lease and sends the ticket to controlled replanning.
 
 For an already committed display-name-only configuration change, apply

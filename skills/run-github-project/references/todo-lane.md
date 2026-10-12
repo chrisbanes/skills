@@ -38,7 +38,7 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    `<!-- to-plan:implementation-plan:v2 -->` comment with revision one,
    `Supersedes: none`, `Replan report: none`, a `Fast path` heading, the
    planned branch and base SHA, the classification evidence, the issue
-   acceptance digest and the brief plan. Verify it as in step 7 below,
+   contract digest and the brief plan. Verify it as in step 7 below,
    reconciling an ambiguous create by exact revision and digest.
 4. In `next`, or when an implementation slot is free, move the item directly
    to `In progress` and verify the authority lease, including the acceptance
@@ -249,11 +249,11 @@ does not count these repairs. Apply the [repair progress gate](ticket-lifecycle.
 when attempts reproduce the same failure; required CI also follows the
 [terminal required-CI rule](drain-scheduler.md#terminal-required-ci-parking).
 
-For a fast-path revision, a failed fast-path condition or a changed acceptance
+For a fast-path revision, a failed fast-path condition or a changed contract
 digest also requires a packet. When the controller detects the digest change,
 it stops the ticket's writes and asks the owning ticket agent for the packet.
 Classify it under the rules below, taking the current `ready-for-agent` issue,
-including any edited acceptance criteria, as the accepted contract.
+including any edited contract text, as the accepted contract.
 
 When repository evidence invalidates the approved plan or the required
 adjustment exceeds its accepted contract, require the owning ticket agent to

@@ -36,7 +36,7 @@
     },
     {
       "id": "lease",
-      "text": "Treats #64's changed acceptance digest as revoking its fast-path lease and sends it to controlled replanning rather than continuing under the old contract."
+      "text": "Treats #64's changed contract digest as revoking its fast-path lease and sends it to controlled replanning rather than continuing under the old contract."
     },
     {
       "id": "review-restraint",

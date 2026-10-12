@@ -25,8 +25,10 @@ doubt, use the full path.
    check only; a small diff that fails conditions 1–6 does not qualify.
 
 Record the classification once in the delivery record: each condition's
-evidence, the acceptance digest (a digest of the source's normalized
-acceptance-criteria text), and a brief plan naming files, approach and checks.
+evidence, the contract digest (a digest of the source's normalized
+contract-bearing text: goal, scope, constraints and acceptance criteria), and
+a brief plan naming files, approach and checks. Before push and acceptance,
+recompute it; a change is a failed condition.
 
 ## Deliver
 
@@ -45,9 +47,10 @@ Stop writes as soon as any condition fails during implementation, review or PR
 feedback. Do not finish by flagging the growth in the PR. Preserve the branch,
 commits, PR and evidence, and record which condition failed and why.
 
-- Standalone: record the escalation (failed condition, branch, head and PR) in
-  the PR description, then invoke `to-plan` with the retained work as evidence
-  and honor its gates before continuing.
+- Standalone: record the escalation (failed condition, branch and head) in the
+  delivery record and, when a PR exists, in its description. Then invoke
+  `to-plan` with the retained work as evidence and honor its gates before
+  continuing.
 - Project: return a replan packet to the controller under its
   [replan packet contract](../../run-github-project/references/todo-lane.md#replan-packet-contract),
   citing the fast-path plan revision as the active plan.

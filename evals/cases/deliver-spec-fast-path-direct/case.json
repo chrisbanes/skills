@@ -26,7 +26,7 @@
   "rubric": [
     {
       "id": "fast-path",
-      "text": "Classifies #41 under the fast path with evidence for each condition and records the acceptance digest and a brief plan naming files, approach and checks."
+      "text": "Classifies #41 under the fast path with evidence for each condition and records the contract digest and a brief plan naming files, approach and checks."
     },
     {
       "id": "no-planning",
