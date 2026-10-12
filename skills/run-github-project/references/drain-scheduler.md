@@ -469,8 +469,9 @@ After a reconciled push:
    entering remote wait, then release its slot under the waiting cap in the
    [Slot Model](#slot-model). After restart, treat an `In progress` claim as
    waiting when its clean worktree matches its runner-pushed PR head, which
-   review gates before every push, and no actionable event is pending; no
-   marker is needed.
+   review gates before every push; no marker is needed. A pending actionable
+   event does not make it active: queue it for the next free slot ahead of
+   new claims.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
    capacity. Monitor all PRs together through the
    [Project Watcher](#project-watcher), without no-op comments.
