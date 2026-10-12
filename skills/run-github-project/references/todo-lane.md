@@ -41,7 +41,7 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    contract digest and the brief plan. Verify it as in step 7 below,
    reconciling an ambiguous create by exact revision and digest.
 4. In `next`, or when an implementation slot is free, move the item directly
-   to `In progress` and verify the authority lease, including the acceptance
+   to `In progress` and verify the authority lease, including the contract
    digest. Otherwise apply step 8 below and resume it as a verified Ready
    handoff.
 5. Hand off under deliver-spec's Project mode with the fast-path revision as

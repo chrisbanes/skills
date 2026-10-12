@@ -17,12 +17,12 @@ the selected mode retains its approval, authority and finish gates.
    and provider validation. Repeat checks only when changes invalidate evidence,
    impact cannot be bounded, or an explicit repository/provider rule requires it.
    A commit, handoff or acceptance step alone does not require a full rerun.
-   When the PR's required CI checks run the same full suite, do not duplicate
-   it locally: push the draft after affected checks and independent review, and
+   When the PR's required CI checks run the same full suite on the pushed
+   draft head, do not duplicate it locally: push the draft after affected checks and independent review, and
    use those CI results on that exact head as the full-suite evidence before
    ready or acceptance. Run the full suite locally when a repository or provider
-   rule requires it, or when CI cannot run part of it, such as device,
-   benchmark or credentialed checks.
+   rule requires it, when CI runs it only after the PR leaves draft, or when CI
+   cannot run part of it, such as device, benchmark or credentialed checks.
 3. Reuse one concise delivery record with requirements/source pointers, scope,
    base and candidate identity, check results/log links, findings and blockers.
    Do not create temporary packets or acceptance receipts for each transition.
