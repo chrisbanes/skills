@@ -499,8 +499,8 @@ After a merge:
 3. Update and rerun CI for another branch only when repository policy requires
    the latest base, a conflict appears, or the merge invalidates a tested
    assumption or planned seam. Never rebase every branch automatically.
-4. Snap the merged slot's clean worktree to the verified base and reuse it.
-5. Delete only that slot's merged local ticket branch.
+4. Snap the merged claim's clean worktree to the verified base and reuse it.
+5. Delete only that claim's merged local ticket branch.
 
 ## Failure Isolation And Finish Gate
 

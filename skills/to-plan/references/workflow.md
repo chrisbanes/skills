@@ -33,9 +33,10 @@ retained branch/PR, and dirty-work summary; never mutate its worktree or demand
 a WIP commit.
 
 Run focused existing validation to prove proposed files, symbols, seams, and
-commands exist. Prove the baseline is green from trusted required CI that
-passed on the exact base SHA; do not rerun full builds or suites locally for
-that purpose. Without such CI, run the needed baseline checks locally. Keep
+commands exist. Prove the baseline is green from trusted CI that passed on the
+exact base SHA and actually ran each needed baseline check; do not rerun those
+checks locally. Run locally any needed baseline check that such CI did not
+cover. Keep
 focused local checks for seam or command assumptions that CI cannot answer.
 For checks omitted because credentials, hardware or services are unavailable,
 use repository configuration or recent trusted CI evidence and assign the
