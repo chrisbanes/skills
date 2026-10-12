@@ -624,6 +624,20 @@ class ClaudeForcedIntegrityTest(unittest.TestCase):
         self.assertEqual(f".claude/skills/{TARGET}/SKILL.md", target["staged_relative_path"])
         self.assertEqual("valid", forced_integrity_status(record))
 
+    def test_other_skill_before_the_target_is_invocation_failure(self):
+        for other in ("implement", "kotlin-api-design"):
+            with self.subTest(other):
+                shutil.rmtree(self.root / "workspace", ignore_errors=True)
+                lines = self.forced_lines()
+                first = json.loads(json.dumps(lines[:3]))
+                first[0]["message"]["content"][0].update(id="toolu_other", input={"skill": other})
+                first[1]["message"]["content"][0]["tool_use_id"] = "toolu_other"
+                first[2]["message"]["content"][0]["text"] = (
+                    f"Base directory for this skill: /workspace/.claude/skills/{other}\n\nOther.\n"
+                )
+                record = self.run_forced(*first, *lines)
+                self.assertEqual("invocation_failure", forced_integrity_status(record))
+
     def test_runtime_instance_is_used_as_given(self):
         record = self.run_forced(
             *self.forced_lines(), runtime=ClaudeRuntime(builtin_skills=(TARGET,))

@@ -724,8 +724,11 @@ class ClaudeRuntime:
                         return False
                     tool_input = block.get("input")
                     skill = tool_input.get("skill") if isinstance(tool_input, dict) else None
-                    if isinstance(skill, str):
-                        skill_calls[block.get("id")] = canonical_skill_name(skill)
+                    name = canonical_skill_name(skill) if isinstance(skill, str) else None
+                    if name not in remaining:
+                        # Any other skill before the targets load breaks the forced order.
+                        return False
+                    skill_calls[block.get("id")] = name
             elif event.get("type") == "user":
                 for block in _blocks(event, "tool_result"):
                     tool_id = block.get("tool_use_id")
