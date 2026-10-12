@@ -8,7 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from evals.harness.cases import load_case
-from evals.harness.claude import ClaudeRuntime, discover_builtin_skills
+from evals.harness.claude import ClaudeRuntime, discover_builtin_skills, init_isolation
 from evals.harness.grade import grade_subject
 from evals.harness.runner import (
     RunConfig,
@@ -879,6 +879,33 @@ class BuiltinDiscoveryTest(unittest.TestCase):
         fake = write_fake_claude(self.root / "claude", then="exit 1")
         with self.assertRaisesRegex(RuntimeError, "init"):
             discover_builtin_skills(str(fake), self.config)
+
+    def test_rejects_non_string_skill_entries(self):
+        fake = write_fake_claude(self.root / "claude", init_event(skills=["simplify", 3]))
+        with self.assertRaisesRegex(RuntimeError, "init"):
+            discover_builtin_skills(str(fake), self.config)
+
+
+class InitShapeTest(unittest.TestCase):
+    def test_malformed_init_fields_are_isolation_invalid(self):
+        cases = {
+            "missing skills": ({"type": "system", "subtype": "init", "mcp_servers": []},
+                               ["skills"]),
+            "skills not a list": (init_event(skills="simplify"), ["skills"]),
+            "non-string skill": (init_event(skills=[{"name": "x"}]), ["skills"]),
+            "missing mcp_servers": ({"type": "system", "subtype": "init", "skills": []},
+                                    ["mcp_servers"]),
+            "mcp_servers not a list": (init_event(mcp_servers={}), ["mcp_servers"]),
+        }
+        for name, (init, fields) in cases.items():
+            with self.subTest(name):
+                # The none arm expects no skills, so an empty reading must not pass.
+                isolation = init_isolation(init, [])
+                self.assertFalse(isolation["valid"])
+                self.assertEqual(fields, isolation["problems"]["malformed_init"])
+
+    def test_well_formed_empty_init_is_valid_for_the_none_arm(self):
+        self.assertTrue(init_isolation(init_event(), [])["valid"])
 
 
 if __name__ == "__main__":

@@ -351,13 +351,23 @@ def init_isolation(init: dict[str, Any] | None, expected_skills: list[str]) -> d
     problems: dict[str, Any] = {}
     if init is None:
         problems["init"] = "no system/init event before model output"
-        init = {}
-    skills = init.get("skills") if isinstance(init.get("skills"), list) else []
-    mcp_servers = init.get("mcp_servers") if isinstance(init.get("mcp_servers"), list) else []
+        init = {"skills": [], "mcp_servers": []}
+    skills = init.get("skills")
+    mcp_servers = init.get("mcp_servers")
+    # An init whose shape changed confirms nothing, so it never passes as empty.
+    malformed = []
+    if not isinstance(skills, list) or not all(isinstance(skill, str) for skill in skills):
+        malformed.append("skills")
+        skills = []
+    if not isinstance(mcp_servers, list):
+        malformed.append("mcp_servers")
+        mcp_servers = []
+    if malformed:
+        problems["malformed_init"] = malformed
     memory_paths = init.get("memory_paths")
-    if unexpected := sorted(set(map(str, skills)) - set(expected_skills)):
+    if unexpected := sorted(set(skills) - set(expected_skills)):
         problems["unexpected_skills"] = unexpected
-    if missing := sorted(set(expected_skills) - set(map(str, skills))):
+    if missing := sorted(set(expected_skills) - set(skills)):
         problems["missing_skills"] = missing
     if mcp_servers:
         problems["mcp_servers"] = mcp_servers
