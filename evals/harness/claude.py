@@ -580,6 +580,19 @@ class ClaudeRuntime:
         expected = sorted(
             path.parent.name for path in (workspace / self.skill_dir).glob("*/SKILL.md")
         )
+        if collision := sorted(set(self.builtin_skills) & set(expected)):
+            # A built-in sharing a staged name could run instead of the staged copy.
+            problems = {"builtin_collision": collision}
+            isolation = {
+                "valid": False,
+                "expected_skills": expected,
+                "init_skills": [],
+                "problems": problems,
+            }
+            stderr = "claude init isolation check failed: " + json.dumps(
+                problems, sort_keys=True
+            )
+            return 1, "", stderr, isolation
         child = _Child(command, workspace)
         if child.init_settled.wait(timeout):
             isolation = init_isolation(child.init, expected)
@@ -625,16 +638,18 @@ class ClaudeRuntime:
         return sum(event.get("type") == "result" for event in events)
 
     def observed_skills(self, events):
-        failed = {
+        # Only a call with a non-error tool_result loaded its skill; a missing
+        # is_error means success.
+        completed = {
             block.get("tool_use_id")
             for event in events
             if event.get("type") == "user"
             for block in _blocks(event, "tool_result")
-            if block.get("is_error") is True
+            if block.get("is_error") is not True
         }
         observed: list[str] = []
         for _, block in _tool_uses(events):
-            if block.get("id") in failed:
+            if block.get("id") not in completed:
                 continue
             tool_input = block.get("input")
             name = canonical_skill_name(

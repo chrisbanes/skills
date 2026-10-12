@@ -12,6 +12,7 @@ from evals.harness.claude import ClaudeRuntime, discover_builtin_skills
 from evals.harness.grade import grade_subject
 from evals.harness.runner import (
     RunConfig,
+    _enabled_skills,
     SubjectResult,
     captured_skill_file_evidence,
     prepare_workspace,
@@ -263,6 +264,23 @@ class ClaudeParseTest(unittest.TestCase):
         lines.insert(2, router)
         events = self.runtime.parse(fixture_stdout(lines))[0]
         self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
+
+    def test_observed_skills_require_a_completed_skill_call(self):
+        def observed(lines):
+            return self.runtime.observed_skills(self.runtime.parse(fixture_stdout(lines))[0])
+
+        success = fixture_lines()
+        success[1]["message"]["content"][0]["input"]["skill"] = "kotlin-api-design"
+        self.assertEqual(["kotlin-api-design"], observed(success))
+
+        unanswered = [line for index, line in enumerate(success) if index != 2]
+        self.assertEqual([], observed(unanswered))
+
+        denied = [*unanswered[:-1], {**unanswered[-1], "permission_denials": [{
+            "tool_name": "Skill", "tool_use_id": "toolu_02",
+            "tool_input": {"skill": "kotlin-api-design"},
+        }]}]
+        self.assertEqual([], observed(denied))
 
     def test_observed_skills_exclude_failed_skill_calls(self):
         lines = fixture_lines()
@@ -757,6 +775,59 @@ class ClaudeExplicitOnlyTargetTest(unittest.TestCase):
     def test_none_arm_stages_nothing(self):
         result = self.run_shepherd(arm="none")
         self.assertFalse((result.workspace / ".claude/skills").exists())
+
+
+class BuiltinCollisionTest(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp_dir.name)
+        self.case = load_case(REPO / "evals/cases/grounded-writing-direct/case.json", REPO)
+        self.config = RunConfig(model="claude-haiku-5-5", reasoning="high")
+        self.runtime = ClaudeRuntime(builtin_skills=("grounded-writing",))
+        self.fake = write_fake_claude(self.root / "claude", init_event(), then="exit 0")
+
+    def tearDown(self):
+        self.temp_dir.cleanup()
+
+    def assert_not_invoked(self):
+        self.assertFalse((self.root / "claude.pid").exists())
+
+    def test_staged_builtin_name_fails_isolation_before_starting_claude(self):
+        for arm in ("forced", "automatic"):
+            with self.subTest(arm):
+                workspace = prepare_workspace(
+                    self.case, REPO, self.root / arm,
+                    enabled_skills=_enabled_skills(self.case, arm, REPO),
+                    skill_dir=ClaudeRuntime.skill_dir,
+                )
+                returncode, stdout, stderr, isolation = self.runtime.execute_subject(
+                    [str(self.fake), "-p"], workspace, 60
+                )
+                self.assertFalse(isolation["valid"])
+                self.assertEqual(
+                    ["grounded-writing"], isolation["problems"]["builtin_collision"]
+                )
+                self.assertIn("claude init isolation check failed", stderr)
+                self.assertNotEqual(0, returncode)
+                self.assert_not_invoked()
+
+    def test_run_subject_fails_closed_in_every_arm(self):
+        automatic = run_subject(
+            self.case, "automatic", REPO, self.root / "automatic", self.config,
+            runtime=self.runtime, executable=str(self.fake),
+        )
+        self.assertEqual(
+            ["grounded-writing"],
+            automatic.forced_target_preflight["isolation"]["problems"]["builtin_collision"],
+        )
+        forced = run_subject(
+            self.case, "forced", REPO, self.root / "forced", self.config,
+            runtime=self.runtime, executable=str(self.fake),
+        )
+        self.assertEqual(
+            "not_uniquely_enabled", forced.forced_target_preflight["targets"][0]["status"]
+        )
+        self.assert_not_invoked()
 
 
 class BuiltinDiscoveryTest(unittest.TestCase):
