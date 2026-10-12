@@ -188,13 +188,12 @@ def main(argv: list[str] | None = None) -> int:
         if not execute:
             return 0
         output_dir = (args.output_dir or default_output_dir(repo_root)).resolve()
-        if args.runtime == "claude":
-            # Fail before preflight rather than at the first workspace.
-            try:
-                get_runtime("claude").check_workspace(output_dir / "workspaces")
-            except ValueError as error:
-                print(error, file=sys.stderr)
-                return 2
+        # Fail before preflight rather than at the first workspace.
+        try:
+            get_runtime(args.runtime).check_workspace(output_dir / "workspaces")
+        except ValueError as error:
+            print(error, file=sys.stderr)
+            return 2
         paths = execute_experiment(
             repo_root,
             cases,

@@ -426,7 +426,7 @@ class ResultLifecycleTest(unittest.TestCase):
         }
 
         with patch("evals.harness.experiment.discover_skill_paths", return_value=()), \
-             patch("evals.harness.experiment.build_judge_command", return_value=["changed prompt"]):
+             patch("evals.harness.experiment.judge_prompt", return_value="changed prompt"):
             with self.assertRaisesRegex(ValueError, "missing current rejudgment"):
                 write_rejudged_reports(
                     self.root, [original], audit_seed=3, repo_root=self.root

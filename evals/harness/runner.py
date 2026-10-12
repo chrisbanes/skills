@@ -144,10 +144,6 @@ class Runtime(Protocol):
         self, record: dict[str, Any], targets: list[dict[str, Any]]
     ) -> bool: ...
 
-    def judge_command_prompt(self, command: list[str]) -> str:
-        """Return the prompt argument of a command built by `build_judge_command`."""
-        ...
-
     def judge_process_options(self) -> dict[str, Any]:
         """Extra `subprocess.run` keyword arguments for the judge process."""
         ...
@@ -317,6 +313,10 @@ def _subject_prompt(case: EvalCase, arm: str, runtime: Runtime) -> str:
     if arm == "forced":
         prompt += runtime.forced_instruction(case)
     return prompt + "\n"
+
+
+def _sha256(path: Path) -> str | None:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
 
 
 def _run_git(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:

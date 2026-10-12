@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import shlex
 import subprocess
@@ -15,6 +14,7 @@ from evals.harness.runner import (
     Events,
     RunConfig,
     _enabled_skills,
+    _sha256,
     _subject_prompt,
 )
 
@@ -109,10 +109,6 @@ def _configured_skill_entries(
         (path, path in enabled)
         for path in sorted(discovered | enabled, key=str)
     )
-
-
-def _sha256(path: Path) -> str | None:
-    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
 
 
 def forced_target_preflight(
@@ -575,9 +571,6 @@ class CodexRuntime:
 
     def forced_target_observed(self, record, targets):
         return _observed_staged_target_read(record, targets)
-
-    def judge_command_prompt(self, command):
-        return command[-1]
 
     def judge_process_options(self):
         return {}

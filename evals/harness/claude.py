@@ -51,6 +51,8 @@ from evals.harness.runner import (
     Events,
     RunConfig,
     _enabled_skills,
+    _run_git,
+    _sha256,
     _subject_prompt,
     canonical_skill_name,
 )
@@ -96,11 +98,7 @@ def parse_claude_stream(
     final_output: dict[str, Any] = {}
     usage: dict[str, int] = {}
     for line in stdout.splitlines():
-        try:
-            event = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if not isinstance(event, dict):
+        if not (event := _json_object(line)):
             continue
         events.append(event)
         if event.get("type") != "result":
@@ -373,10 +371,6 @@ def init_isolation(init: dict[str, Any] | None, expected_skills: list[str]) -> d
     }
 
 
-def _sha256(path: Path) -> str | None:
-    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
-
-
 _EXPLICIT_ONLY_LINE = b"disable-model-invocation: true"
 
 
@@ -440,7 +434,7 @@ def discover_builtin_skills(
     settings = {"sandbox": SANDBOX, "autoMemoryEnabled": False}
     with tempfile.TemporaryDirectory() as directory:
         workspace = Path(directory)
-        subprocess.run(["git", "init", "-q"], cwd=workspace, check=True, capture_output=True)
+        _run_git(workspace, "init", "-q")
         child = _Child(
             [
                 executable,
@@ -589,41 +583,32 @@ class ClaudeRuntime:
         expected = sorted(
             path.parent.name for path in (workspace / self.skill_dir).glob("*/SKILL.md")
         )
+        failure = "claude init isolation check failed: "
         if collision := sorted(set(self.builtin_skills) & set(expected)):
             # A built-in sharing a staged name could run instead of the staged copy.
-            problems = {"builtin_collision": collision}
             isolation = {
                 "valid": False,
                 "expected_skills": expected,
                 "init_skills": [],
-                "problems": problems,
+                "problems": {"builtin_collision": collision},
             }
-            stderr = "claude init isolation check failed: " + json.dumps(
-                problems, sort_keys=True
-            )
-            return 1, "", stderr, isolation
+            return 1, "", failure + json.dumps(isolation["problems"], sort_keys=True), isolation
         child = _Child(command, workspace)
-        if child.init_settled.wait(timeout):
-            isolation = init_isolation(child.init, expected)
-        else:
-            isolation = init_isolation(None, expected)
+        child.init_settled.wait(timeout)
+        isolation = init_isolation(child.init, expected)
         if not isolation["valid"]:
             child.stop()
             stdout, stderr = child.output()
-            stderr += "claude init isolation check failed: " + json.dumps(
-                isolation["problems"], sort_keys=True
-            )
+            stderr += failure + json.dumps(isolation["problems"], sort_keys=True)
             return child.process.returncode, stdout, stderr, isolation
+        note = ""
         try:
             returncode = child.process.wait(max(0.0, deadline - time.monotonic()))
-            timed_out = False
         except subprocess.TimeoutExpired:
             child.stop()
-            returncode, timed_out = 124, True
+            returncode, note = 124, f"\nsubject timed out after {timeout}s"
         stdout, stderr = child.output()
-        if timed_out:
-            stderr += f"\nsubject timed out after {timeout}s"
-        return returncode, stdout, stderr, isolation
+        return returncode, stdout, stderr + note, isolation
 
     def parse(self, stdout):
         return parse_claude_stream(stdout)
@@ -740,7 +725,7 @@ class ClaudeRuntime:
                     tool_input = block.get("input")
                     skill = tool_input.get("skill") if isinstance(tool_input, dict) else None
                     if isinstance(skill, str):
-                        skill_calls[block.get("id")] = skill.removeprefix("chrisbanes-skills:")
+                        skill_calls[block.get("id")] = canonical_skill_name(skill)
             elif event.get("type") == "user":
                 for block in _blocks(event, "tool_result"):
                     tool_id = block.get("tool_use_id")
@@ -766,9 +751,6 @@ class ClaudeRuntime:
             "Omit only these exact evaluator-owned dependency names: "
             f"[{dependencies}]. Exclusions are exact names, not prefixes."
         )
-
-    def judge_command_prompt(self, command):
-        return command[2]
 
     def judge_process_options(self):
         return {"stdin": subprocess.DEVNULL, "env": _claude_env()}

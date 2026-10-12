@@ -17,11 +17,11 @@ from evals.harness.grade import ObjectiveGrade, _event_invocations, grade_subjec
 from evals.harness.judge import (
     JudgeConfig,
     JudgeResult,
-    build_judge_command,
     build_judge_packet,
     judge_covers_rubric,
     judge_output_valid,
     judge_passes_rubric,
+    judge_prompt,
     run_judge,
 )
 from evals.harness.report import write_reports
@@ -936,13 +936,7 @@ def write_rejudged_reports(
             JudgeConfig(model, reasoning),
             skill_catalog_digest=skill_catalog_digest,
             codex_version=version if judge_runtime == "codex" else None,
-            judge_prompt_digest=_judge_prompt_digest(
-                packet_path,
-                repo_root,
-                JudgeConfig(model, reasoning),
-                judge_runtime,
-                skill_paths,
-            ),
+            judge_prompt_digest=_judge_prompt_digest(packet_path),
             judge_runtime=judge_runtime,
             judge_runtime_version=version,
         )
@@ -1057,9 +1051,7 @@ def rejudge_packets(
             judge_config,
             skill_catalog_digest=skill_catalog_digest,
             codex_version=version if judge_runtime == "codex" else None,
-            judge_prompt_digest=_judge_prompt_digest(
-                packet_path, repo_root, judge_config, judge_runtime, skill_paths
-            ),
+            judge_prompt_digest=_judge_prompt_digest(packet_path),
             judge_runtime=judge_runtime,
             judge_runtime_version=version,
         )
@@ -1117,22 +1109,8 @@ def rejudge_packets(
     return {**plan, "completed": completed}
 
 
-def _judge_prompt_digest(
-    packet_path: Path,
-    repo_root: Path,
-    judge_config: JudgeConfig,
-    judge_runtime: str,
-    skill_paths: tuple[Path, ...],
-) -> str:
-    command = build_judge_command(
-        packet_path,
-        repo_root,
-        judge_config,
-        runtime=judge_runtime,
-        skill_paths=skill_paths,
-    )
-    prompt = get_runtime(judge_runtime).judge_command_prompt(command)
-    return hashlib.sha256(prompt.encode()).hexdigest()
+def _judge_prompt_digest(packet_path: Path) -> str:
+    return hashlib.sha256(judge_prompt(packet_path).encode()).hexdigest()
 
 
 def _rejudgment_fingerprint(
