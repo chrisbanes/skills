@@ -896,6 +896,8 @@ class InitShapeTest(unittest.TestCase):
             "missing mcp_servers": ({"type": "system", "subtype": "init", "skills": []},
                                     ["mcp_servers"]),
             "mcp_servers not a list": (init_event(mcp_servers={}), ["mcp_servers"]),
+            "memory_paths a string": (init_event(memory_paths="/m/"), ["memory_paths"]),
+            "memory_paths a list": (init_event(memory_paths=["/m/"]), ["memory_paths"]),
         }
         for name, (init, fields) in cases.items():
             with self.subTest(name):
@@ -906,6 +908,7 @@ class InitShapeTest(unittest.TestCase):
 
     def test_well_formed_empty_init_is_valid_for_the_none_arm(self):
         self.assertTrue(init_isolation(init_event(), [])["valid"])
+        self.assertTrue(init_isolation(init_event(memory_paths={}), [])["valid"])
 
 
 if __name__ == "__main__":

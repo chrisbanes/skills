@@ -362,9 +362,12 @@ def init_isolation(init: dict[str, Any] | None, expected_skills: list[str]) -> d
     if not isinstance(mcp_servers, list):
         malformed.append("mcp_servers")
         mcp_servers = []
+    memory_paths = init.get("memory_paths")
+    # Absent memory_paths means auto memory is off; any other non-dict is unreadable.
+    if memory_paths is not None and not isinstance(memory_paths, dict):
+        malformed.append("memory_paths")
     if malformed:
         problems["malformed_init"] = malformed
-    memory_paths = init.get("memory_paths")
     if unexpected := sorted(set(skills) - set(expected_skills)):
         problems["unexpected_skills"] = unexpected
     if missing := sorted(set(expected_skills) - set(skills)):
