@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+Planning issue #120 against base SHA B7. The base branch's required CI, including the full test suite, passed on exactly B7 and the run is trusted. The plan proposes extending `ReportFormatter` with a new test in `ReportFormatterTest`, and a local full build takes 40 minutes on a loaded machine. How should the planner prove the baseline is green and that its proposed seam exists?

@@ -1,0 +1,51 @@
+{
+  "id": "run-github-project-fast-path-novel",
+  "title": "Escalate a fast-path ticket whose contract grows",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-fast-path-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "stop",
+      "text": "Stops #63's writes, preserves branch, commits and evidence, and records the failed public-contract condition instead of finishing or only flagging it in a PR."
+    },
+    {
+      "id": "replan",
+      "text": "Returns a replan packet citing the fast-path revision; the controller uses controlled replanning so to-plan supersedes it with a full revision two and the retained work is evidence, not the planning baseline."
+    },
+    {
+      "id": "lease",
+      "text": "Treats #64's changed acceptance digest as revoking its fast-path lease and sends it to controlled replanning rather than continuing under the old contract."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

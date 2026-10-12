@@ -18,14 +18,20 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    permits.
 3. Keep every implementation claim `In progress` until merge reconciliation. Derive
    operational state from its slot, PR, checks, and reviews; require no extra
-   Project Status values.
-4. Reconstruct slots and parked claims after restart through
+   Project Status values. A claim in [Remote Waiting](#remote-waiting) keeps
+   its status, idle agent, warm worktree and PR but frees its slot. Cap waiting
+   claims at the effective slot limit unless the user sets another cap; when
+   the cap is full, the claim keeps its slot. Keep waiting claims outside the
+   ranker's normalized array and `--max-claims` count, as for parked claims.
+4. Reconstruct slots, waiting claims and parked claims after restart through
+   [Remote Waiting](#remote-waiting),
    [Terminal Required-CI Parking](#terminal-required-ci-parking) and
    [ticket authority pauses](authority-and-pauses.md), using GitHub
    claims and marker records plus verified skill-owned worktrees. Use local
    caches only as hints.
 5. Recover verified authority pauses outside capacity before ranking. Preserve
-   invalid current-user claims as blocked slots, resume every other valid
+   invalid current-user claims as blocked slots, classify waiting claims
+   (those beyond the waiting cap occupy slots), resume every other valid
    claim, then fill free slots. Stop for reconciliation when all active and
    blocked-slot claims together exceed the invocation's slot limit.
 6. Keep one separate planning lane. It preserves assignment and planning
@@ -208,7 +214,7 @@ dispatching the next:
 1. Exclude Backlog from automatic work and recovery. Reconcile eligible
    resumable authority pauses and park newly blocked operations
    through their controller procedure before selecting another ticket.
-2. Merge the oldest merge-ready slot, unless an explicit dependency requires a
+2. Merge the oldest merge-ready claim, unless an explicit dependency requires a
    different order. Admit or merge only one at a time.
 3. Reconcile the highest-ranked ready epic with issue-close authority, then
    refresh the complete Project graph before taking another action.
@@ -230,7 +236,7 @@ dispatching the next:
    research uses the required `research` subagent. Resume a marked Wayfinder
    reconciliation before new Todo work. Surface unassigned Wayfinder HITL
    frontier work and assigned HITL attention without dispatching either.
-9. Keep the [Project Watcher](#project-watcher) running for every remote slot
+9. Keep the [Project Watcher](#project-watcher) running for every remote claim
    and human-gated item, even while other slots have agents working. When no
    local or controller action remains, wait on it and on agent notifications.
 10. After the authoritative execution-clear predicate in
@@ -286,7 +292,7 @@ claim, merge, or close, replaces a complete Project query, or serves as a
 resumption signal for a [parked claim](#terminal-required-ci-parking). Waiting
 grants nothing; run grants stay invocation-scoped and lapse when the run returns.
 
-1. Run exactly one watcher whenever any slot is in remote wait or a human action,
+1. Run exactly one watcher whenever any claim is in remote wait or a human action,
    authority/decision pause, Wayfinder human-frontier item, or assigned Wayfinder
    HITL attention item exists. With none, start none, stop a running one, and
    wait for agent notifications. Never poll, sleep, or use
@@ -459,26 +465,31 @@ publishing another one. Ignore foreign, malformed, or mismatched markers.
 
 After a reconciled push:
 
-1. Preserve the slot and verify it holds no named resource grant. Reconcile one
-   before entering remote wait.
+1. Verify the claim holds no named resource grant, reconciling one before
+   entering remote wait, then release its slot under the waiting cap in the
+   [Slot Model](#slot-model). After restart, treat an `In progress` claim as
+   waiting when its clean worktree matches its runner-pushed PR head, which
+   review gates before every push, and no actionable event is pending; no
+   marker is needed.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
    capacity. Monitor all PRs together through the
    [Project Watcher](#project-watcher), without no-op comments.
 3. Give that PR a 24-hour deadline from its latest push unless the user or
    repository specifies another duration.
 4. Reset only that PR's deadline after a fix push.
-5. Return actionable events to the owning slot at the next checkpoint.
+5. Return an actionable event to its ticket agent at the next checkpoint,
+   restoring a released claim to the next free slot ahead of new claims.
 6. After three non-converging required-CI repair rounds, apply
    [Terminal Required-CI Parking](#terminal-required-ci-parking).
 
-Treat the first unexplained CI failure as slot-local. If the same failure
-appears in two slots or on the verified base, pause new claims and treat it as
+Treat the first unexplained CI failure as ticket-local. If the same failure
+appears on two claims or on the verified base, pause new claims and treat it as
 a global failure.
 
 ## Merge And Base Drift
 
 Serialize every merge and prefer the configured merge queue. Before merging,
-revalidate the slot against the latest base, authority lease, approvals,
+revalidate the claim against the latest base, authority lease, approvals,
 terminal-green CI, and mergeability.
 
 After a merge:

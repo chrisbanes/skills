@@ -1,0 +1,49 @@
+{
+  "id": "run-github-project-slot-release-direct",
+  "title": "Free a slot for a reviewed PR waiting on CI",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-slot-release-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "release",
+      "text": "Releases #70's implementation slot into Remote Waiting while keeping In progress, assignment, idle ticket agent, warm worktree and PR."
+    },
+    {
+      "id": "dispatch",
+      "text": "Starts #72 in the freed slot without waiting for #70's CI; #70 is counted against the waiting cap (default equal to the slot limit) and kept outside the ranker's `--max-claims` count."
+    },
+    {
+      "id": "return",
+      "text": "Restores #70 to the next free slot ahead of new claims when an actionable CI or review event arrives."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

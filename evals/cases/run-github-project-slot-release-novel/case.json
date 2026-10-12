@@ -1,0 +1,49 @@
+{
+  "id": "run-github-project-slot-release-novel",
+  "title": "Rebuild waiting claims after restart and route failures",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-slot-release-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "rebuild",
+      "text": "Treats #80 as waiting without a marker because its clean worktree matches the reviewed PR head; #81 and #82 occupy slots."
+    },
+    {
+      "id": "priority",
+      "text": "Returns #80 to the next free slot ahead of new claims rather than preempting an active slot or starting new work first."
+    },
+    {
+      "id": "global",
+      "text": "Treats the same failure on two claims as a global failure and pauses new claims instead of repairing it ticket-locally."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

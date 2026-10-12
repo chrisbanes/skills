@@ -1,0 +1,53 @@
+{
+  "id": "run-github-project-slot-release-restraint-negative",
+  "title": "Keep slots when waiting rules do not apply",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-slot-release-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "cap",
+      "text": "Keeps #91 in its slot because the waiting cap is full."
+    },
+    {
+      "id": "not-ready",
+      "text": "Keeps #92's slot because it has not reached a reviewed pushed head, and reconciles #93's named resource grant before it may release a slot."
+    },
+    {
+      "id": "next-mode",
+      "text": "Does not apply drain slot release to `next`; #94 continues under next's own shepherding."
+    },
+    {
+      "id": "no-overreach",
+      "text": "Does not change Project Status, create parking markers or discard worktrees to free capacity."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

@@ -1,0 +1,49 @@
+{
+  "id": "to-plan-ci-baseline-direct",
+  "title": "Prove a baseline from green CI",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-ci-baseline-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "ci",
+      "text": "Cites the trusted green required CI run on B7 as baseline evidence and does not run a local full build or suite for that purpose."
+    },
+    {
+      "id": "focused",
+      "text": "Still proves the proposed seam with a focused local check such as running or inspecting `ReportFormatterTest`."
+    },
+    {
+      "id": "record",
+      "text": "Records the CI run and focused check in the plan's evidence."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

@@ -11,7 +11,7 @@
   "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
   "validators": [{"argv": ["python3", "@validators/text_case.py", "shepherd-direct"], "timeout_seconds": 30}],
   "rubric": [
-    {"id": "full-verification", "text": "Inspects the failed lint evidence, uses focused local checks during repair and required full checks on the integrated candidate. Reuses still-valid evidence unless changes or explicit repository/provider requirements invalidate it."},
+    {"id": "full-verification", "text": "Inspects the failed lint evidence, uses focused local checks during repair and required full checks on the integrated candidate, locally or, where the PR's required CI runs the same suite and no rule requires a local run, from CI on the pushed head. Reuses still-valid evidence unless changes or explicit repository/provider requirements invalidate it."},
     {"id": "batching", "text": "Batches known actionable fixes into one reviewed repair push, with applicable required checks passing; does not force full-suite runs before each slice commit."},
     {"id": "ownership", "text": "The response preserves the existing branch and remote-mutation boundaries because this evaluation authorizes analysis only"}
   ],

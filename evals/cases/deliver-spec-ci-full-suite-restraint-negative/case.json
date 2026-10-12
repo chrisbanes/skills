@@ -1,0 +1,49 @@
+{
+  "id": "deliver-spec-ci-full-suite-restraint-negative",
+  "title": "Run local full checks CI cannot replace",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-ci-full-suite-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "rule",
+      "text": "Runs E's full suite locally before push because an explicit repository rule requires it, even though CI also runs it."
+    },
+    {
+      "id": "coverage",
+      "text": "Runs F's device tests locally (or reports the missing capability) because CI cannot supply that part, while CI may still supply the JVM part."
+    },
+    {
+      "id": "no-waiver",
+      "text": "Does not mark either PR ready without full-suite evidence covering the exact final head."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

@@ -18,11 +18,37 @@ Require both:
 Verify the active marked plan under the [normalized-ticket contract](normalized-ticket.md):
 runner authorship, revision chain, semantic payload digest, and configured base.
 Hydrate minimized predecessors; accept only the unique unminimized leaf. Plan
-missing or stale plans; preserve invalid chains and foreign markers as semantic
+missing or stale plans, or fast-path an item without any plan chain when it
+qualifies; preserve invalid chains and foreign markers as semantic
 blockers. Never fall back to an unmarked Agent Brief.
 Record the plan identities and metadata in the authority lease and screen base
 SHA drift before implementation. Column membership supplies authority; a verified
 replan report determines when a replacement revision is needed.
+
+## Fast-path a Todo item
+
+Use this instead of planning when an item has no plan chain and qualifies under
+deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
+
+1. Apply step 1 of [Plan a Todo item](#plan-a-todo-item) to claim the item.
+2. In the controller context, classify it from the issue and bounded read-only
+   inspection at the verified base. Start no planner or planning worktree.
+   When in doubt, plan it normally.
+3. In the controller lane, publish one runner-authored
+   `<!-- to-plan:implementation-plan:v2 -->` comment with revision one,
+   `Supersedes: none`, `Replan report: none`, a `Fast path` heading, the
+   planned branch and base SHA, the classification evidence, the issue
+   acceptance digest and the brief plan. Verify it as in step 7 below,
+   reconciling an ambiguous create by exact revision and digest.
+4. In `next`, or when an implementation slot is free, move the item directly
+   to `In progress` and verify the authority lease, including the acceptance
+   digest. Otherwise apply step 8 below and resume it as a verified Ready
+   handoff.
+5. Hand off under deliver-spec's Project mode with the fast-path revision as
+   the approved plan. It carries no plan-mismatch repair budget; a failed
+   condition returns a replan packet citing that revision, and
+   [controlled replanning](#re-plan-a-contract-preserving-inconsistency)
+   supersedes it with a full plan.
 
 ## Plan a Todo item
 
@@ -222,6 +248,12 @@ repeats affected verification and review. The mechanical plan-mismatch budget
 does not count these repairs. Apply the [repair progress gate](ticket-lifecycle.md#repair-progress-gate)
 when attempts reproduce the same failure; required CI also follows the
 [terminal required-CI rule](drain-scheduler.md#terminal-required-ci-parking).
+
+For a fast-path revision, a failed fast-path condition or a changed acceptance
+digest also requires a packet. When the controller detects the digest change,
+it stops the ticket's writes and asks the owning ticket agent for the packet.
+Classify it under the rules below, taking the current `ready-for-agent` issue,
+including any edited acceptance criteria, as the accepted contract.
 
 When repository evidence invalidates the approved plan or the required
 adjustment exceeds its accepted contract, require the owning ticket agent to

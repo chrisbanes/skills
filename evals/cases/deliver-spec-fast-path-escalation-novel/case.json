@@ -1,0 +1,49 @@
+{
+  "id": "deliver-spec-fast-path-escalation-novel",
+  "title": "Escalate a standalone fast path into planning",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-fast-path-escalation-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "stop",
+      "text": "Stops writes when the persistence condition fails and preserves the branch, H2, the PR and evidence rather than finishing or only flagging the growth in the PR."
+    },
+    {
+      "id": "record",
+      "text": "Records the escalation (failed condition, branch, head and PR) in the runner-authored PR description before invoking to-plan."
+    },
+    {
+      "id": "planning",
+      "text": "Invokes to-plan with the retained work as evidence; to-plan permits only that exact recorded PR and keeps its readiness, approval and publication gates."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

@@ -23,6 +23,7 @@ and the current run's operation-specific grants.
 A verified ticket handoff covers in-scope local implementation, tests and repairs.
 The ticket lead may work solo or delegate when justified; retain one independent
 integrated-candidate review and reuse valid evidence under `deliver-spec`.
+Todo items that qualify for its fast path skip the planner under the Todo lane.
 
 The Project is the live control plane. Apply these invariants throughout:
 

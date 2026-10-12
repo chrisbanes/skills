@@ -1,0 +1,55 @@
+{
+  "id": "run-github-project-fast-path-direct",
+  "title": "Fast-path a qualifying Todo item into implementation",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-fast-path-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "classify",
+      "text": "Claims #57 exclusively and classifies it in the controller context from the issue and bounded read-only inspection, starting no planner agent or planning worktree."
+    },
+    {
+      "id": "record",
+      "text": "Publishes and verifies one runner-authored revision-one `to-plan:implementation-plan:v2` comment headed `Fast path` with branch, base SHA, classification evidence, acceptance digest and brief plan."
+    },
+    {
+      "id": "board",
+      "text": "Moves #57 from Todo directly to In progress because a slot is free, skipping Ready, and records the lease including the acceptance digest; #58 keeps its normal plan."
+    },
+    {
+      "id": "handoff",
+      "text": "Hands off under deliver-spec Project mode with the fast-path revision as the approved plan, without a plan-mismatch repair budget, and keeps independent review."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

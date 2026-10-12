@@ -1,0 +1,49 @@
+{
+  "id": "deliver-spec-ci-full-suite-direct",
+  "title": "Use CI as full-suite evidence",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-ci-full-suite-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "push",
+      "text": "Pushes C1 as a draft PR after affected checks and independent review without running the full suite locally."
+    },
+    {
+      "id": "ready",
+      "text": "Marks the PR ready only after the required CI full suite passes on exactly C1 and records that CI result as the full-suite evidence."
+    },
+    {
+      "id": "record",
+      "text": "Records command, result, tested head and evidence pointers in the existing delivery record and does not merge."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

@@ -1,0 +1,49 @@
+{
+  "id": "deliver-spec-ci-full-suite-novel",
+  "title": "Do not reuse CI results from an earlier head",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-ci-full-suite-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "hold",
+      "text": "Keeps the PR draft until the required CI full suite passes on C2; C1's partial passes cannot stand in for the C2 full suite."
+    },
+    {
+      "id": "repair",
+      "text": "Keeps the repair with its original owner and uses affected checks and focused repair review before pushing C2 without a local full suite."
+    },
+    {
+      "id": "evidence",
+      "text": "Distinguishes checks actually run on C1 and C2 from required pending CI evidence."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

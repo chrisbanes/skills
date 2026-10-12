@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+Planning issue #122 at base B11 with trusted green required CI on B11. The plan assumes the `FakeClock` test fixture can advance time inside a coroutine test without real delays; no existing test exercises that. Separately, the issue's only active plan marker is a runner-authored revision one headed `Fast path` from run-github-project, cited by a verified replan request. What local work and publication does the planner need?

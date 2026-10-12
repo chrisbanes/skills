@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+A draft PR at C1 was pushed after affected checks and review; CI's required full suite then failed one test on C1. The original owner repaired it in C2, the affected test passes locally, and a focused repair review covering the change and its interactions returned `ship`. CI on C2 is still running. A colleague notes that every other test passed on C1. May the lead mark the PR ready now?

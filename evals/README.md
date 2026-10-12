@@ -328,7 +328,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 74 calibration-only cases, including
+The workflows/writing corpus contains 88 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -377,6 +377,14 @@ Four watcher calibrations cover the `drain` project watcher: staying alive and
 launching it at a human frontier, refreshing before acting on a board-change
 wake, `next` returning without one, and no watcher when only an agent
 notification is due. They use immutable synthetic state.
+Fourteen small-ticket calibrations cover the planning-free fast path in
+standalone and Project delivery with escalation, lease revocation and
+small-looking risky counterexamples; drain slot release for reviewed PRs
+waiting on CI, including restart, waiting-cap and global-failure restraint;
+CI-supplied full-suite evidence versus explicit local rules and checks CI
+cannot run; and `to-plan` baselines proven from green CI on the exact base SHA
+while keeping focused checks CI cannot answer. They use immutable synthetic
+state.
 
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
 to select one advisory scorecard. The default remains `compose` for command

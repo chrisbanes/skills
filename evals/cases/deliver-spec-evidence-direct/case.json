@@ -50,11 +50,11 @@
     },
     {
       "id": "ci-repair",
-      "text": "Renews affected CI-equivalent evidence and required integrated-candidate checks before push; reuses valid checks and repeats full checks only when invalidated or explicitly required."
+      "text": "Renews affected CI-equivalent evidence before push; takes required full-suite evidence from a local run or, where CI runs the same required suite, from CI on the pushed head before ready; reuses valid checks and repeats full checks only when invalidated or explicitly required."
     },
     {
       "id": "acceptance",
-      "text": "Holds push/ready until applicable validation and combined independent coverage reach the final clean head with findings resolved; keeps repairs with the lead and grants no merge or remote mutation"
+      "text": "Holds push until affected validation and combined independent coverage reach the final clean head with findings resolved, and ready until required full-suite evidence also covers that head; keeps repairs with the lead and grants no merge or remote mutation"
     }
   ],
   "provenance": {

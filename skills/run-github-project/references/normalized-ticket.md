@@ -41,7 +41,8 @@ reject non-finite Project positions. Run `--help` if the installed script's
 interface is uncertain rather than guessing an option. `--max-claims` accepts
 any positive integer; pass the controller's effective implementation-slot
 limit. Agent capacity is a separate dispatch constraint. Blocked implementation
-claims still count toward this limit; planner/handoff claims do not.
+claims still count toward this limit; planner/handoff claims and drain claims in
+[Remote Waiting](drain-scheduler.md#remote-waiting) do not.
 
 Provide every field below to `scripts/rank_tickets.py` from fresh, completely
 paginated GitHub and Project reads. Before dispatch ranking, the controller

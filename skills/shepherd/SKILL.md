@@ -69,7 +69,9 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    workflow/check configuration before repairing. If evidence is missing, obtain
    it before guessing a fix; report checks unavailable on this host honestly.
    Run focused checks during repair and required full checks on the meaningful
-   integrated candidate before pushing. Reuse valid evidence; repeat only checks
+   integrated candidate before pushing, except where the PR's required CI runs
+   the same full suite and no repository or provider rule requires a local run;
+   then CI on the pushed head supplies that evidence before ready or merge. Reuse valid evidence; repeat only checks
    invalidated by changes, unknown impact, or explicit repository/provider rules.
    Do not use CI as an iterative test runner or require full checks per slice
    commit. Hold the push while applicable required checks fail or lack evidence.

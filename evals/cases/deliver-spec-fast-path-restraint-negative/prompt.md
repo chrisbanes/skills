@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+Assess four approved `ready-for-agent` issues that each look like a two-line change. A fixes an intermittently failing test whose root cause is unknown. B adjusts spacing in a `.pen` design file and its matching Compose screen. C renames one public extension function in a single file. D fixes a typo in a docs paragraph and already has an active full plan revision. For each, decide whether the fast path applies and which gates remain.

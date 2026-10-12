@@ -1,0 +1,49 @@
+{
+  "id": "to-plan-ci-baseline-novel",
+  "title": "Fall back when CI does not cover the base",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-ci-baseline-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "exact",
+      "text": "Does not treat green CI on B8 or another repository as proof for B9 because the evidence must be on the exact base SHA."
+    },
+    {
+      "id": "fallback",
+      "text": "Runs the needed baseline checks locally before asserting the baseline is green."
+    },
+    {
+      "id": "scope",
+      "text": "Keeps local baseline work to what the plan needs rather than inventing extra checks."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

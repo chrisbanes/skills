@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+In `drain` with the default two implementation slots and no user waiting cap, slot 1 holds #70 and slot 2 holds #71. #70's integrated candidate passed affected checks and independent review; it was pushed and the PR head is reconciled. Its required CI will take about 25 minutes. It holds no named resource grant. Ready to implement has #72 with a verified plan, and agent capacity is available. What happens to #70's slot, its claim and agent, and to #72?

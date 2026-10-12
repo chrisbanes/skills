@@ -201,7 +201,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(74, len(calibration))
+        self.assertEqual(88, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -282,6 +282,20 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-watcher-wake-novel",
                 "run-github-project-watcher-next-negative",
                 "run-github-project-watcher-restraint-negative",
+                "deliver-spec-fast-path-direct",
+                "run-github-project-fast-path-direct",
+                "run-github-project-fast-path-novel",
+                "deliver-spec-fast-path-restraint-negative",
+                "deliver-spec-fast-path-escalation-novel",
+                "run-github-project-slot-release-direct",
+                "run-github-project-slot-release-novel",
+                "run-github-project-slot-release-restraint-negative",
+                "deliver-spec-ci-full-suite-direct",
+                "deliver-spec-ci-full-suite-novel",
+                "deliver-spec-ci-full-suite-restraint-negative",
+                "to-plan-ci-baseline-direct",
+                "to-plan-ci-baseline-novel",
+                "to-plan-ci-baseline-restraint-negative",
             },
             {case.id for case in calibration},
         )
@@ -552,6 +566,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "to-plan-validation-placement-direct",
                 "to-plan-validation-trigger-novel",
                 "to-plan-validation-restraint-negative",
+                "to-plan-ci-baseline-direct",
+                "to-plan-ci-baseline-novel",
+                "to-plan-ci-baseline-restraint-negative",
             },
             {case.id for case, _ in conditions},
         )

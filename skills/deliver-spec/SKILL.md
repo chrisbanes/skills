@@ -34,8 +34,10 @@ Project run already owns that issue, return it to that controller.
    installed planner contract and retained work before consuming any delta.
 2. For a GitHub issue missing `ready-for-agent`, use `triage` and wait for its
    approved outcome; do not change labels yourself. Local sources skip GitHub
-   triage but need explicit stakeholder approval. Reuse a current `to-plan`
-   plan, or invoke `to-plan` and honor its readiness and publication gates.
+   triage but need explicit stakeholder approval. When the source qualifies for
+   the [fast path](references/fast-path.md), apply it instead of planning.
+   Otherwise reuse a current `to-plan` plan, or invoke `to-plan` and honor its
+   readiness and publication gates.
    Approval covers the accepted contract and only the live qualification
    allowances it explicitly records; do not infer extra attempts or authority.
 3. Verify scope and boundaries once. A verified handoff authorizes continuing
@@ -64,7 +66,9 @@ Project run already owns that issue, return it to that controller.
    coverage. Return findings to the implementation owner, renew affected checks
    and review changed ranges and interactions. Broaden only when impact cannot
    be bounded or an explicit requirement demands it. Confirm combined coverage
-   of the final clean head before pushing. Create and verify one draft PR for
+   of the final clean head before pushing; when CI supplies the full suite
+   under [Evidence and review](references/evidence-and-review.md), mark the PR
+   ready only after it passes on that head. Create and verify one draft PR for
    a nonempty integrated diff, or reuse the existing PR. Use closing links only
    for verified GitHub issues.
 6. Use `shepherd` for CI, feedback and PR operations. Keep repairs with their

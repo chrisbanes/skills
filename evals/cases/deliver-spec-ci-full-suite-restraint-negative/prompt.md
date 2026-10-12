@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+Assess two deliveries. In E, trusted repository instructions require `./gradlew check` locally on the final commit before every push, and CI also runs it. In F, the required suite includes connected device tests that CI does not run; CI covers only JVM tests. Each has affected checks and an independent review complete. Which full-suite runs are needed before push or ready?

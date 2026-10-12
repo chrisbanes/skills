@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+A standalone delivery's integrated candidate C1 passes its affected unit tests locally and has an independent `ship` review. The repository's required PR checks run the same `./gradlew check` full suite that the lead would otherwise run locally, which takes 20 minutes. Repository instructions require nothing locally beyond affected checks. There is no merge grant. What is the push, ready and acceptance sequence?

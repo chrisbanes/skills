@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+In `drain` with two implementation slots, one slot is free. Todo item #57 is `ready-for-agent`, unclaimed and has no plan markers. It asks to correct a broken link in one README section; acceptance is that the link resolves to the existing docs page and the markdown lint passes. Separately, #58 has a valid active revision-two plan and is in Ready to implement. Describe how the controller handles #57: classification, the durable record, Project moves, authority lease and handoff.

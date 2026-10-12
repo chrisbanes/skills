@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+A `drain` restarts with two slots and the default waiting cap. Three current-user claims are In progress: #80's clean worktree matches its reviewed PR head and no event is pending; #81's worktree has uncommitted edits ahead of its PR; #82 has no PR. No parking markers exist. Shortly after, #80's required CI fails with a test failure while both slots are busy, and the same sanitized failure then appears on #83, another waiting PR. How are slots and these events handled?

@@ -1,0 +1,49 @@
+{
+  "id": "deliver-spec-fast-path-direct",
+  "title": "Deliver a qualifying small ticket without planning",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-fast-path-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "fast-path",
+      "text": "Classifies #41 under the fast path with evidence for each condition and records the acceptance digest and a brief plan naming files, approach and checks."
+    },
+    {
+      "id": "no-planning",
+      "text": "Does not invoke to-plan, publish a plan or wait for a plan-approval pause; the explicit request plus `ready-for-agent` approve the issue as the contract."
+    },
+    {
+      "id": "gates-kept",
+      "text": "Implements solo with affected checks and self-review, keeps one fresh independent final review, puts the plan and classification in the draft PR, and does not merge."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

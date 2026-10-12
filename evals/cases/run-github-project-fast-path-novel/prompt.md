@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+Ticket #63 was fast-pathed: its verified revision-one `Fast path` plan comment is the active leaf, it is In progress, and the ticket agent has two commits on its branch with no PR yet. While implementing, the agent finds that satisfying the acceptance criterion requires changing a public function signature used by two other modules. Separately, ticket #64 is also fast-pathed and In progress; a maintainer then edits #64's issue body, changing its acceptance criteria. What should happen to each ticket?

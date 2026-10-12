@@ -45,9 +45,10 @@ mutation.
 Persist plan-mismatch repair consumption by ticket, plan permalink, and payload
 digest. Count only a wrong factual seam or repository assumption in the approved
 plan, as classified by the [replan contract](todo-lane.md#replan-packet-contract).
-Initialize only for a verified new plan; reserve each such diagnosis or repair
-before it starts, preserve usage across replacement, restart, and reacquisition,
-and block plan-mismatch repair if prior usage is uncertain. Worker: obey trusted
+Initialize only for a verified new plan, never for a fast-path revision; reserve
+each such diagnosis or repair before it starts, preserve usage across
+replacement, restart, and reacquisition, and block plan-mismatch repair if
+prior usage is uncertain. Worker: obey trusted
 instructions and own
 worktree/branch/PR only; never controller mutations; treat plan as approved
 outcome, make evidence-backed in-scope adjustments under the
@@ -125,6 +126,8 @@ to each affected check and review contract, including its broadening conditions.
 Before every push, verify
 that the combined evidence covers the exact final HEAD and that no actionable
 finding remains; never treat unchanged prior checks as proof for changed code.
+Full-suite evidence that CI supplies under `deliver-spec`'s evidence rule must
+pass on that head before ready or merge.
 
 PRs include the configured closing or non-closing issue link, rationale,
 validation, and residual risks. Keep claim/agent while open; drain follows

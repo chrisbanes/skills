@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+An explicitly invoked standalone delivery fast-pathed `ready-for-agent` issue #44 (one known function, testable acceptance, no plan). A draft PR from the runner exists at head H2. Independent review then shows the fix must also change how a cached value is persisted between app launches. There is no merge grant. What happens to the work, the PR and planning, and which to-plan gates apply?

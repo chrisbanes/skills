@@ -1,0 +1,49 @@
+{
+  "id": "to-plan-ci-baseline-restraint-negative",
+  "title": "Keep checks CI cannot answer",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-ci-baseline-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "assumption",
+      "text": "Keeps a focused local check or bounded proof for the `FakeClock` assumption because green CI does not answer it, without rerunning the full suite."
+    },
+    {
+      "id": "supersede",
+      "text": "Treats the fast-path revision as a valid predecessor and supersedes it with a full revision-two plan."
+    },
+    {
+      "id": "authority",
+      "text": "Does not publish or mutate GitHub in this read-only assessment."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

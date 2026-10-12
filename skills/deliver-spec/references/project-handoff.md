@@ -38,6 +38,9 @@ handoff or take over a Project claim.
    independence, isolation or specialist investigation, fit descendants within
    actual spare Project capacity, and preserve controller scheduling priority.
    Reuse the existing delivery record for ownership and acceptance evidence.
+   For a handoff whose active plan is a controller fast-path revision, apply
+   the [fast path](fast-path.md) and return its escalation packet to the
+   controller as soon as a condition fails.
 4. Before any push, satisfy the Project's
    [review contracts](../../run-github-project/references/review-contracts.md).
    Give the single independent reviewer the
