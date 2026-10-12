@@ -979,6 +979,13 @@ def write_rejudged_reports(
         for key in ("judge_runtime", "judge_runtime_version"):
             if key in judgment:
                 record[key] = judgment[key]
+        # codex_version is present exactly when Codex runs the subject or the judge;
+        # a Codex subject keeps its own version.
+        if record_runtime(record) != "codex":
+            if "codex_version" in judgment:
+                record["codex_version"] = judgment["codex_version"]
+            elif record_judge_runtime(record) != "codex":
+                record.pop("codex_version", None)
         record["judge_pass"] = judge_pass
         record["outcome_pass"] = bool(record.get("objective_pass")) and judge_pass
         record["rejudgment"] = {

@@ -1,5 +1,6 @@
 import hashlib
 import json
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -14,6 +15,7 @@ from evals.harness.experiment import (
     _attempt_payload,
     _case_digest,
     _judge_packet_path,
+    _judge_prompt_digest,
     _judge_protocol_digest,
     _rejudgment_fingerprint,
     _rejudgment_result_path,
@@ -384,6 +386,106 @@ class ResultLifecycleTest(unittest.TestCase):
         self.assertEqual(1, rejudged[0]["original_judge"]["returncode"])
         self.assertFalse(original["judge_pass"])
         self.assertFalse(original["outcome_pass"])
+
+    def rejudge_record(self, record, *, judge_runtime, version):
+        """Rejudge `record` with a matching rejudgment and return the merged record."""
+        fingerprint = "a" * 64
+        packet_path = _judge_packet_path(self.root, "candidate", fingerprint, 1)
+        packet_path.parent.mkdir(parents=True, exist_ok=True)
+        packet_path.write_text(
+            json.dumps({"candidate_id": "candidate",
+                        "rubric": [{"id": "correct", "text": "Correct"}]}),
+            encoding="utf-8",
+        )
+        is_codex = judge_runtime == "codex"
+        config = JudgeConfig("gpt-5.6-sol", "high")
+        rejudgment_fingerprint = _rejudgment_fingerprint(
+            packet_path,
+            config,
+            skill_catalog_digest=_skill_catalog_digest(()),
+            codex_version=version if is_codex else None,
+            judge_prompt_digest=_judge_prompt_digest(packet_path),
+            judge_runtime=judge_runtime,
+            judge_runtime_version=version,
+        )
+        write_result(
+            _rejudgment_result_path(self.root, packet_path, rejudgment_fingerprint),
+            rejudgment_fingerprint,
+            {
+                "candidate_id": "candidate",
+                **({"codex_version": version} if is_codex else {}),
+                "judge_runtime": judge_runtime,
+                "judge_runtime_version": version,
+                "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
+                "judge": {
+                    "returncode": 0, "events": [], "usage": {}, "stderr": "",
+                    "elapsed_seconds": 1.0, "retries": 0,
+                    "output": {
+                        "criteria": [{"id": "correct", "pass": True, "evidence": "diff"}],
+                        "overall_pass": True,
+                        "rationale": "ok",
+                    },
+                },
+            },
+        )
+        original = {
+            "id": "case:none:1", "fingerprint": fingerprint, "repetition": 1,
+            "arm": "none", "kind": "direct", "expected_skills": [],
+            "reported_skills": [], "reported_router": False, "objective_pass": True,
+            "judge_pass": False, "outcome_pass": False,
+            "forbidden_action_failure": False,
+            "judge_model": {"model": "gpt-5.6-sol", "reasoning": "high"},
+            "judge": {"returncode": 1, "output": {}},
+            **record,
+        }
+        with patch("evals.harness.experiment.discover_skill_paths", return_value=()):
+            paths = write_rejudged_reports(
+                self.root, [original], audit_seed=3, repo_root=self.root
+            )
+        (rejudged,) = json.loads(paths["results"].read_text(encoding="utf-8"))
+        self.assertTrue(rejudged["judge_pass"])
+        return rejudged
+
+    def test_rejudged_codex_version_follows_the_runtimes_in_use(self):
+        claude = {"runtime": "claude", "runtime_version": "2.1.296"}
+        cases = {
+            # An all-Claude run judged by Codex gains the judge's Codex version.
+            "claude judged by codex": (
+                {**claude, "judge_runtime": "claude", "judge_runtime_version": "2.1.296"},
+                "codex", "codex-cli 2", "codex-cli 2",
+            ),
+            # Once Claude judges, a Claude subject has no Codex involvement left.
+            "claude rejudged by claude": (
+                {**claude, "judge_runtime": "codex", "judge_runtime_version": "codex-cli 1",
+                 "codex_version": "codex-cli 1"},
+                "claude", "2.1.300", None,
+            ),
+            "claude rejudged by a new codex": (
+                {**claude, "judge_runtime": "codex", "judge_runtime_version": "codex-cli 1",
+                 "codex_version": "codex-cli 1"},
+                "codex", "codex-cli 2", "codex-cli 2",
+            ),
+            # A Codex subject keeps its own version whoever judges.
+            "codex rejudged by claude": (
+                {"runtime": "codex", "judge_runtime": "codex",
+                 "codex_version": "codex-cli 1"},
+                "claude", "2.1.300", "codex-cli 1",
+            ),
+            # Legacy Codex/Codex records stay exactly as they were.
+            "legacy codex": (
+                {"codex_version": "codex-cli 1"}, "codex", "codex-cli 2", "codex-cli 1",
+            ),
+        }
+        for name, (record, judge_runtime, version, expected) in cases.items():
+            with self.subTest(name):
+                shutil.rmtree(self.root / "judge-packets", ignore_errors=True)
+                shutil.rmtree(self.root / "rejudgments", ignore_errors=True)
+                rejudged = self.rejudge_record(
+                    record, judge_runtime=judge_runtime, version=version
+                )
+                self.assertEqual(judge_runtime, rejudged["judge_runtime"])
+                self.assertEqual(expected, rejudged.get("codex_version"))
+                self.assertEqual(expected is None, "codex_version" not in rejudged)
 
     def test_rejudged_report_refuses_missing_judgments(self):
         fingerprint = "a" * 64
