@@ -716,7 +716,7 @@ def execute_experiment(
     return write_reports(output_dir, records, compute_scorecard(records), seed=audit_seed)
 
 
-def _required_controls(payload: dict[str, Any]) -> list[str]:
+def _base_controls(payload: dict[str, Any]) -> list[str]:
     uses_codex = "codex" in (record_runtime(payload), record_judge_runtime(payload))
     return [
         field
@@ -725,18 +725,33 @@ def _required_controls(payload: dict[str, Any]) -> list[str]:
     ]
 
 
+def _runtime_controls(payload: dict[str, Any]) -> list[str]:
+    """Controls a non-Codex runtime adds; Codex versions are in codex_version."""
+    return [
+        *(
+            f"{role}_version"
+            for role, runtime in (
+                ("runtime", record_runtime(payload)),
+                ("judge_runtime", record_judge_runtime(payload)),
+            )
+            if runtime != "codex"
+        ),
+        *(["builtin_skills"] if record_runtime(payload) == "claude" else []),
+    ]
+
+
+def _required_controls(payload: dict[str, Any]) -> list[str]:
+    return [*_base_controls(payload), *_runtime_controls(payload)]
+
+
 def _run_controls(payload: dict[str, Any]) -> dict[str, Any]:
     """The values that must match across records of one run."""
-    controls = {field: payload.get(field) for field in _required_controls(payload)}
-    controls["runtime"] = record_runtime(payload)
-    controls["judge_runtime"] = record_judge_runtime(payload)
-    # Codex versions are already covered by codex_version.
-    for role in ("runtime", "judge_runtime"):
-        if controls[role] != "codex":
-            controls[f"{role}_version"] = payload.get(f"{role}_version")
-    if controls["runtime"] == "claude":
-        controls["builtin_skills"] = payload.get("builtin_skills")
-    return controls
+    return {
+        **{field: payload.get(field) for field in _base_controls(payload)},
+        "runtime": record_runtime(payload),
+        "judge_runtime": record_judge_runtime(payload),
+        **{field: payload.get(field) for field in _runtime_controls(payload)},
+    }
 
 
 def load_raw_records(output_dir: Path) -> list[dict[str, Any]]:

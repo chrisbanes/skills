@@ -638,6 +638,42 @@ class ResultLifecycleTest(unittest.TestCase):
         self.assertEqual(first, result_fingerprint(**common, builtin_skills=("simplify", "debug")))
         self.assertNotEqual(first, result_fingerprint(**common, builtin_skills=("debug",)))
 
+    def test_loading_raw_records_requires_the_runtime_specific_controls(self):
+        claude = {
+            "runtime": "claude",
+            "runtime_version": "2.1.296",
+            "judge_runtime": "claude",
+            "judge_runtime_version": "2.1.296",
+            "builtin_skills": ["a"],
+        }
+        path = self.root / "raw" / "case" / "none" / "1.json"
+        self.write_raw_record("case", "none", 1, **claude)
+        self.assertEqual("claude", load_raw_records(self.root)[0]["runtime"])
+
+        for missing in ("runtime_version", "judge_runtime_version", "builtin_skills"):
+            with self.subTest(missing):
+                self.write_raw_record("case", "none", 1, **claude)
+                document = json.loads(path.read_text(encoding="utf-8"))
+                del document["payload"][missing]
+                path.write_text(json.dumps(document), encoding="utf-8")
+                with self.assertRaisesRegex(
+                    ValueError, f"missing run controls: {missing}$"
+                ):
+                    load_raw_records(self.root)
+
+    def test_loading_raw_records_leaves_codex_records_unchanged(self):
+        self.write_raw_record("case", "none", 1)
+        self.write_raw_record(
+            "other", "none", 1, runtime="codex", runtime_version="codex-cli 1",
+            judge_runtime="codex", judge_runtime_version="codex-cli 1",
+        )
+
+        records = load_raw_records(self.root)
+
+        self.assertEqual(["case:none:1", "other:none:1"], [r["id"] for r in records])
+        self.assertNotIn("runtime", records[0])
+        self.assertNotIn("builtin_skills", records[0])
+
     def test_loading_raw_records_rejects_malformed_payloads(self):
         path = self.root / "raw" / "case" / "automatic" / "1.json"
         path.parent.mkdir(parents=True)
