@@ -723,24 +723,24 @@ class ClaudeExplicitOnlyTargetTest(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.root = Path(self.temp_dir.name)
-        self.case = load_case(REPO / "evals/cases/shepherd-direct/case.json", REPO)
-        self.source = (REPO / "skills/shepherd/SKILL.md").read_text(encoding="utf-8")
+        self.case = load_case(REPO / "evals/cases/implement-with-subagents-direct/case.json", REPO)
+        self.source = (REPO / "skills/implement-with-subagents/SKILL.md").read_text(encoding="utf-8")
         self.config = RunConfig(model="claude-haiku-5-5", reasoning="high")
 
     def tearDown(self):
         self.temp_dir.cleanup()
 
-    def run_shepherd(self, arm="forced"):
+    def run_target(self, arm="forced"):
         body = self.source.partition("\n---\n")[2].lstrip("\n")
         lines = fixture_lines()[1:]
-        lines[0]["message"]["content"][0]["input"]["skill"] = "shepherd"
+        lines[0]["message"]["content"][0]["input"]["skill"] = "implement-with-subagents"
         lines[2]["message"]["content"][0]["text"] = (
-            f"Base directory for this skill: /workspace/.claude/skills/shepherd\n\n{body}"
+            f"Base directory for this skill: /workspace/.claude/skills/implement-with-subagents\n\n{body}"
         )
-        lines[-1]["structured_output"]["skills_used"] = ["shepherd"]
+        lines[-1]["structured_output"]["skills_used"] = ["implement-with-subagents"]
         fake = write_fake_claude(
             self.root / "claude",
-            init_event(skills=["shepherd"] if arm == "forced" else []),
+            init_event(skills=["implement-with-subagents"] if arm == "forced" else []),
             *lines, then="exit 0",
         )
         return run_subject(
@@ -750,8 +750,8 @@ class ClaudeExplicitOnlyTargetTest(unittest.TestCase):
 
     def test_forced_stages_explicit_only_target_without_the_invocation_lock(self):
         self.assertIn(EXPLICIT_LINE, self.source)
-        result = self.run_shepherd()
-        staged = (result.workspace / ".claude/skills/shepherd/SKILL.md").read_text()
+        result = self.run_target()
+        staged = (result.workspace / ".claude/skills/implement-with-subagents/SKILL.md").read_text()
 
         self.assertEqual(self.source.replace(EXPLICIT_LINE, "", 1), staged)
         self.assertEqual((), result.changed_paths)
@@ -761,7 +761,7 @@ class ClaudeExplicitOnlyTargetTest(unittest.TestCase):
         record = {
             "arm": "forced",
             "runtime": "claude",
-            "target_skills": ["shepherd"],
+            "target_skills": ["implement-with-subagents"],
             "reported_skills": reported_skill_names(result.final_output),
             "forced_target_preflight": result.forced_target_preflight,
             "subject": {
@@ -774,11 +774,11 @@ class ClaudeExplicitOnlyTargetTest(unittest.TestCase):
         self.assertEqual("valid", forced_integrity_status(record))
 
     def test_preflight_rejects_any_other_staged_change(self):
-        workspace = self.run_shepherd().workspace
-        staged = workspace / ".claude/skills/shepherd/SKILL.md"
+        workspace = self.run_target().workspace
+        staged = workspace / ".claude/skills/implement-with-subagents/SKILL.md"
         edits = {
             "body": staged.read_text() + "extra\n",
-            "frontmatter": staged.read_text().replace("name: shepherd", "name: shepherd2"),
+            "frontmatter": staged.read_text().replace("name: implement-with-subagents", "name: implement-with-subagents2"),
             "extra frontmatter line": self.source.replace(EXPLICIT_LINE, "", 1).replace(
                 "---\n", "---\nx: y\n", 1
             ),
@@ -792,7 +792,7 @@ class ClaudeExplicitOnlyTargetTest(unittest.TestCase):
                 self.assertEqual("byte_mismatch", target["status"])
 
     def test_none_arm_stages_nothing(self):
-        result = self.run_shepherd(arm="none")
+        result = self.run_target(arm="none")
         self.assertFalse((result.workspace / ".claude/skills").exists())
 
 

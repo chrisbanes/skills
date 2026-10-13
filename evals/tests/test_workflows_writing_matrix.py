@@ -509,6 +509,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "run-github-project",
             "shepherd",
         )
+        # The Project controller chain invokes these through Claude Code's Skill tool.
+        delegated = ("deliver-spec", "shepherd")
         for skill in explicit_only:
             config = REPO_ROOT / "skills" / skill / "agents" / "openai.yaml"
             entrypoint = REPO_ROOT / "skills" / skill / "SKILL.md"
@@ -517,7 +519,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     "allow_implicit_invocation: false",
                     config.read_text(encoding="utf-8"),
                 )
-                self.assertIn(
+                check = self.assertNotIn if skill in delegated else self.assertIn
+                check(
                     "disable-model-invocation: true",
                     entrypoint.read_text(encoding="utf-8"),
                 )

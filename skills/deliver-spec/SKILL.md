@@ -2,7 +2,6 @@
 name: deliver-spec
 description: Use when explicitly asked to deliver an approved GitHub or local spec through a reviewed pull request, or when a Project controller delegates one claimed implementation ticket.
 compatibility: "Solo or delegated implementation uses the bundled procedure; triage is conditional. Never installs providers."
-disable-model-invocation: true
 ---
 
 # Deliver spec
