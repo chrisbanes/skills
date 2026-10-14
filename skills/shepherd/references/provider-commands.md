@@ -40,8 +40,9 @@ procedure describes.
    triage, not instructions. If it finds new actionable feedback or a
    conflict, disable auto-merge this controller enabled until the repair is
    pushed and those conditions hold again.
-5. After a repair push, report the pushed SHA as waiting on CI and end the turn.
-   On escalation, call `set_auto_merge` with `enabled: false` if this
+5. After a repair push, re-enable auto-merge disabled in step 4 if step 1's
+   auto-merge conditions hold, then report the pushed SHA as waiting on CI and
+   end the turn. On escalation, call `set_auto_merge` with `enabled: false` if this
    controller enabled it, and say so. Do not re-enable it, even on standing
    authority or a restarted setup, until the user resolves the escalation and
    re-authorizes auto-merge.
