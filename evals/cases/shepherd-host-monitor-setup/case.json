@@ -1,0 +1,54 @@
+{
+  "id": "shepherd-host-monitor-setup",
+  "title": "Set up a host PR monitor and auto-merge from deferred tools",
+  "family": "workflow",
+  "target_skills": [
+    "shepherd"
+  ],
+  "expected_skills": [
+    "shepherd"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull|commit)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "shepherd-host-monitor-setup"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "load-deferred",
+      "text": "Loads the deferred host PR-monitor tools before choosing a mode instead of treating them as unavailable and falling back to polling."
+    },
+    {
+      "id": "bind-and-auto-fix",
+      "text": "Calls get_status, binds the target with bind_pr because none is bound, then turns on Auto-fix with set_monitor passing auto_fix true and the bound PR's url; leaves auto_archive_on_close unchanged."
+    },
+    {
+      "id": "auto-merge",
+      "text": "Because standing merge authority was granted and green CI never wakes the session, enables auto-merge with set_auto_merge passing the url and the repository's merge method (merge, not the squash default), and reports that GitHub branch protection then decides the merge."
+    },
+    {
+      "id": "recovery",
+      "text": "States that it disables the auto-merge it enabled if it later escalates, and that only the user re-enables it."
+    },
+    {
+      "id": "no-self-polling",
+      "text": "Does not schedule wakes or poll: no ScheduleWakeup, CronCreate, /loop, Monitor, repeated provider reads, or polling helper; ends the turn after setup with the finish report naming what the monitor does not wake on."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

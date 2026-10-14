@@ -20,9 +20,11 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 1. Detect the platform with `git remote get-url origin`: use `gh` for GitHub and
    `glab` for GitLab. If it is ambiguous or unavailable, stop and ask. When the
    host provides a PR monitor that wakes this session on PR events, such as
-   Claude desktop's `ccd_pr` tools, follow
+   Claude desktop's `ccd_pr` tools, load those tools first if they are listed
+   but deferred, then follow
    [host-managed monitoring](references/provider-commands.md#host-managed-monitoring)
-   instead of polling.
+   instead of polling. Project controllers and their ticket agents keep the
+   Project waiting rules instead, because a session binds only one PR.
 2. Establish targets and a handled-ID snapshot. Every external comment, review,
    or thread absent from that snapshot is new, including pre-session feedback.
    After each poll record feedback IDs, CI state, and this controller's comments.
@@ -85,7 +87,9 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    cadence. Under host-managed monitoring, end the turn after the push instead.
 8. Merge only when requirements and CI are green, conflicts are absent, and the
    user granted explicit or standing merge authority. Do not infer authority from
-   approval.
+   approval. Under host-managed monitoring, green CI never wakes the session, so
+   enable host auto-merge instead, and disable auto-merge this controller
+   enabled when escalating.
 
 ## Finish or escalate
 
