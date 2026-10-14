@@ -36,11 +36,11 @@
     },
     {
       "id": "auto-merge",
-      "text": "Because standing merge authority was granted and green CI never wakes the session, enables auto-merge with set_auto_merge passing the url and the repository's merge method (merge, not the squash default), and reports that GitHub branch protection then decides the merge."
+      "text": "Because standing merge authority was granted, step 8's non-CI conditions hold, and green CI never wakes the session, enables auto-merge with set_auto_merge passing the url and the repository's merge method (merge, not the squash default), and reports that GitHub branch protection then decides the merge."
     },
     {
       "id": "recovery",
-      "text": "States that it disables the auto-merge it enabled if it later escalates, and that only the user re-enables it."
+      "text": "States that it disables the auto-merge it enabled when a later wake brings new actionable feedback or a conflict (until repaired) or when it escalates, and that only the user re-enables it after escalation."
     },
     {
       "id": "no-self-polling",

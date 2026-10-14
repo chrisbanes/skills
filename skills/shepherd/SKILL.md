@@ -88,8 +88,8 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 8. Merge only when requirements and CI are green, conflicts are absent, and the
    user granted explicit or standing merge authority. Do not infer authority from
    approval. Under host-managed monitoring, green CI never wakes the session, so
-   enable host auto-merge instead, and disable auto-merge this controller
-   enabled when escalating.
+   enable host auto-merge once the non-CI conditions hold instead, and disable
+   auto-merge this controller enabled when escalating.
 
 ## Finish or escalate
 
