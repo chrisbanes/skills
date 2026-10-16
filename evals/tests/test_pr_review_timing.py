@@ -8,7 +8,8 @@ import unittest
 from pathlib import Path
 
 from evals.harness.cases import validate_corpus
-from evals.harness.runner import prepare_workspace
+from evals.harness.grade import grade_subject
+from evals.harness.runner import SubjectResult, prepare_workspace
 from evals.validators.pr_review_decisions import validate_decisions
 
 
@@ -16,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CASES = (
     "deliver-spec-review-pending-ci-direct",
     "run-github-project-review-head-change-novel",
-    "shepherd-review-merge-gates-negative",
+    "shepherd-review-merge-gates-novel",
 )
 
 
@@ -27,6 +28,34 @@ def answers(case_id):
 
 
 class PrReviewTimingTest(unittest.TestCase):
+    def test_correct_decision_artifacts_pass_the_full_grader(self):
+        corpus = {case.id: case for case in validate_corpus(ROOT).cases}
+        for case_id in CASES:
+            case = corpus[case_id]
+            with self.subTest(case=case_id), tempfile.TemporaryDirectory() as directory:
+                workspace = prepare_workspace(
+                    case, ROOT, Path(directory) / "fixture",
+                    enabled_skills=case.target_skills,
+                )
+                relative = ".scratch/review-decisions.json"
+                artifact = workspace / relative
+                artifact.parent.mkdir()
+                artifact.write_text(json.dumps(answers(case_id)))
+                result = SubjectResult(
+                    case_id=case_id, arm="forced", command=("codex",),
+                    workspace=workspace, returncode=0, events=(),
+                    final_output={
+                        "summary": "Assessed supplied PR snapshots",
+                        "skills_used": list(case.target_skills),
+                        "evidence": [relative],
+                    },
+                    usage={}, changed_paths=(relative,), diff="", stdout="",
+                    stderr="", elapsed_seconds=0.1,
+                )
+                grade = grade_subject(case, result)
+                self.assertTrue(grade.objective_pass, grade.objective_failures)
+                self.assertFalse(grade.forbidden_action_failure, grade.violations)
+
     def test_each_standalone_skill_ships_and_routes_the_same_contract(self):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
         canonical = (ROOT / "references/pr-review-timing.md").read_bytes()
@@ -64,6 +93,7 @@ class PrReviewTimingTest(unittest.TestCase):
             ("draft-supported", "request_draft_review"),
             ("ready-required", "mark_ready_and_request_review"),
             ("capability-unknown", "mark_ready_and_request_review"),
+            ("draft-supported-ready-only-ci", "request_draft_review_then_mark_ready"),
         ):
             self.assertEqual(action, expected[snapshot]["review_action"])
             self.assertFalse(expected[snapshot]["delivery_ready"])
@@ -81,6 +111,20 @@ class PrReviewTimingTest(unittest.TestCase):
                         f"{snapshot}: incorrect {field}",
                         validate_decisions(actual, expected),
                     )
+        actual = copy.deepcopy(expected)
+        actual["draft-supported-ready-only-ci"]["review_action"] = "request_draft_review"
+        self.assertTrue(validate_decisions(actual, expected))
+
+    def test_standalone_repair_obtains_missing_independent_review(self):
+        expected = answers(CASES[2])
+        snapshot = expected["missing-independent-review"]
+        self.assertEqual("obtain_fresh_review", snapshot["independent_review_action"])
+        self.assertEqual("hold", snapshot["review_action"])
+        self.assertFalse(snapshot["delivery_ready"])
+        self.assertFalse(snapshot["merge_permitted"])
+        actual = copy.deepcopy(expected)
+        actual["missing-independent-review"]["independent_review_action"] = "none"
+        self.assertTrue(validate_decisions(actual, expected))
 
     def test_head_change_invalidates_affected_evidence_but_preserves_compatible_scope(self):
         expected = answers(CASES[1])

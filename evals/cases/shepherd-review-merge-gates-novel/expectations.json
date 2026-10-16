@@ -71,6 +71,16 @@
       "auto_merge": "off",
       "invalidated_evidence": [],
       "retained_evidence": []
+    },
+    "missing-independent-review": {
+      "head": "H1",
+      "review_action": "hold",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": [],
+      "independent_review_action": "obtain_fresh_review"
     }
   }
 }

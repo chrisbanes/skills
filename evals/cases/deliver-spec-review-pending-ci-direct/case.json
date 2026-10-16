@@ -30,7 +30,7 @@
   "rubric": [
     {
       "id": "concurrency",
-      "text": "Begins review while CI is pending: retains draft for proven support and permits earlier readiness for unsupported or unverified draft review."
+      "text": "Begins review while CI is pending: retains draft for proven support when CI runs there, requests supported draft review then promptly marks ready when CI is ready-only, and permits earlier readiness for unsupported or unverified draft review. Waits for neither review nor CI completion before readiness unless explicitly required."
     },
     {
       "id": "capability",

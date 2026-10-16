@@ -1,5 +1,5 @@
 {
-  "id": "shepherd-review-merge-gates-negative",
+  "id": "shepherd-review-merge-gates-novel",
   "title": "Refuse merge with failed CI and preserve explicit review sequencing",
   "family": "workflow",
   "target_skills": [
@@ -9,7 +9,7 @@
     "shepherd"
   ],
   "task_mode": "edit",
-  "kind": "negative",
+  "kind": "novel",
   "fixture": "workflow",
   "allowed_write_paths": [
     ".scratch/review-decisions.json"
@@ -22,7 +22,7 @@
       "argv": [
         "python3",
         "@validators/pr_review_decisions.py",
-        "shepherd-review-merge-gates-negative"
+        "shepherd-review-merge-gates-novel"
       ],
       "timeout_seconds": 30
     }
@@ -39,6 +39,10 @@
     {
       "id": "auto-merge",
       "text": "Keeps auto-merge off when enforcement is unverified or only CI is enforced across head changes while stale approvals/dispositions survive; allows authorized host auto-merge during pending CI only with verified protection of every gate's final-head applicability and completed non-CI gates. Wake-time disabling cannot substitute for host protection."
+    },
+    {
+      "id": "independent-review",
+      "text": "For standalone repair without prior review evidence, obtains one fresh independent read-only integrated-candidate review against source requirements, repository standards and the full diff, reuses only verified applicable coverage and reports a missing-capability blocker when review cannot run."
     }
   ],
   "provenance": {

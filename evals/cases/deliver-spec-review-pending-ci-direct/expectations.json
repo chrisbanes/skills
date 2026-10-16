@@ -35,6 +35,18 @@
         "local-H1",
         "independent-H1"
       ]
+    },
+    "draft-supported-ready-only-ci": {
+      "head": "H1",
+      "review_action": "request_draft_review_then_mark_ready",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": [
+        "local-H1",
+        "independent-H1"
+      ]
     }
   }
 }

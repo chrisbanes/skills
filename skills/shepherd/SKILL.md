@@ -73,9 +73,10 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    integrated candidate before pushing, except where the PR's required CI runs
    the same full suite and no repository or provider rule requires a local run;
    then CI on the pushed head supplies that evidence before delivery acceptance
-   or merge. Apply [PR review timing](references/pr-review-timing.md) after local
-   checks and independent review pass: prefer verified draft review while CI
-   runs, otherwise permit earlier PR readiness under the caller's authority.
+   or merge. Follow [PR review timing](references/pr-review-timing.md) to obtain
+   or reuse applicable independent review before push, then start external review
+   while CI runs. Prefer verified draft review; otherwise permit earlier PR
+   readiness under the caller's authority.
    Honor stricter explicit repository requirements. Reuse valid evidence; repeat only checks
    invalidated by changes, unknown impact, or explicit repository/provider rules.
    Do not use CI as an iterative test runner or require full checks per slice

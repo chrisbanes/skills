@@ -391,7 +391,10 @@ Three PR-review timing calibrations grade offline decision artifacts for draft
 review during pending CI, earlier readiness when draft support is absent or
 unknown, failed/unknown CI merge refusal, changed-head evidence invalidation,
 compatible evidence retention, stricter repository sequencing, and verified
-host auto-merge enforcement. Deterministic mutation tests reject delayed review,
+host auto-merge enforcement, ready-only CI with supported draft review, and
+missing independent-review evidence. Full-grader integration tests verify that
+correct decision artifacts pass without weakening unchanged-workspace controls.
+Deterministic mutation tests reject delayed review,
 premature acceptance/merge, stale evidence and unsupported auto-merge. These
 checks validate the decision grader and contract packaging; they do not prove
 live model behavior or provider capabilities.

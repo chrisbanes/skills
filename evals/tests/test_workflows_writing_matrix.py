@@ -293,7 +293,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-slot-release-restraint-negative",
                 "deliver-spec-review-pending-ci-direct",
                 "run-github-project-review-head-change-novel",
-                "shepherd-review-merge-gates-negative",
+                "shepherd-review-merge-gates-novel",
                 "deliver-spec-ci-full-suite-direct",
                 "deliver-spec-ci-full-suite-novel",
                 "deliver-spec-ci-full-suite-restraint-negative",
