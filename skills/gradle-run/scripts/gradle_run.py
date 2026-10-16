@@ -788,7 +788,7 @@ def finish_workflow(root: Path, workflow: str) -> int:
 
 
 def valid_stored_result(result: Any) -> bool:
-    if not isinstance(result, dict) or not isinstance(result.get("exit_status"), int):
+    if not isinstance(result, dict) or type(result.get("exit_status")) is not int:
         return False
     for key in ("excerpt", "failed_tasks", "warning_fingerprints", "failure_fingerprints"):
         values = result.get(key, [])
@@ -800,7 +800,8 @@ def valid_stored_result(result: Any) -> bool:
         elif not all(
             isinstance(value, dict)
             and isinstance(value.get("fingerprint"), str)
-            and isinstance(value.get("count"), int)
+            and type(value.get("count")) is int
+            and value["count"] > 0
             and isinstance(value.get("excerpt"), str)
             for value in values
         ):
@@ -822,24 +823,34 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
     latest = ledger["runs"][-1] if ledger["runs"] else None
     terminal = (
         isinstance(latest, dict)
-        and isinstance(latest.get("sequence"), int)
+        and type(latest.get("sequence")) is int
+        and latest["sequence"] > 0
+        and type(ledger.get("run_count")) is int
         and latest["sequence"] == ledger.get("run_count")
         and latest.get("state") in ("completed", "interrupted")
         and valid_stored_result(latest.get("result"))
-        and latest["result"]["exit_status"] == latest.get("exit_status")
+        and type(latest.get("exit_status")) is int
+        and latest["result"]["exit_status"] == latest["exit_status"]
         and (
-            latest["state"] != "interrupted"
-            or isinstance(latest["result"].get("interrupted_signal"), int)
+            (latest["state"] == "completed"
+             and latest["exit_status"] >= 0
+             and "interrupted_signal" not in latest
+             and "interrupted_signal" not in latest["result"])
+            or (latest["state"] == "interrupted"
+                and type(latest.get("interrupted_signal")) is int
+                and type(latest["result"].get("interrupted_signal")) is int
+                and latest["interrupted_signal"] == latest["result"]["interrupted_signal"] > 0
+                and latest["exit_status"] in (-latest["interrupted_signal"], 128 + latest["interrupted_signal"]))
         )
     )
     if terminal:
         snapshot["result"] = bounded_summary(latest["result"], MAX_SUMMARY_BYTES // 2)
-        snapshot["result_sequence"] = latest.get("sequence") if isinstance(latest.get("sequence"), int) else None
+        snapshot["result_sequence"] = latest["sequence"]
     run = active if active is not None else latest
     if isinstance(run, dict):
         snapshot["run"] = {
             key: shortened(redact(run[key]), 128) if isinstance(run.get(key), str)
-            else run.get(key) if isinstance(run.get(key), (int, float)) else None
+            else run.get(key) if type(run.get(key)) in (int, float) else None
             for key in (
                 "sequence", "wrapper_pid", "child_pid", "started_at", "cwd", "scope", "question", "command", "log"
             )
@@ -847,12 +858,12 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
     if active is not None:
         snapshot["reason"] = "active run is incomplete or its owner lock is not held"
         if busy and isinstance(active, dict) and all(
-            isinstance(active.get(key), int) and active[key] > 0
+            type(active.get(key)) is int and active[key] > 0
             for key in ("sequence", "wrapper_pid")
         ) and "child_pid" in active and (
             active["child_pid"] is None
-            or isinstance(active["child_pid"], int) and active["child_pid"] > 0
-        ) and isinstance(active.get("started_at"), (int, float)):
+            or type(active["child_pid"]) is int and active["child_pid"] > 0
+        ) and type(active.get("started_at")) in (int, float):
             try:
                 with WorkflowLock(directory / f"{active['sequence']:04d}.run.lock", read_only=True):
                     pass
@@ -863,7 +874,7 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
                 pass
     elif busy:
         snapshot["reason"] = "workflow is busy without an active run identity"
-    elif latest is None and ledger.get("run_count") == 0:
+    elif latest is None and type(ledger.get("run_count")) is int and ledger["run_count"] == 0:
         snapshot["state"] = "idle"
     elif terminal:
         snapshot["state"] = latest["state"]

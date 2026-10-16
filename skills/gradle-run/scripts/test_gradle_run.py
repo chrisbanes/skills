@@ -849,6 +849,14 @@ class GradleRunStatusTest(GradleRunTestCase):
                     self.assertEqual(status["state"], "running")
                     self.assertEqual(status["run"]["wrapper_pid"], process.pid)
                     self.assertIsNone(status["run"]["child_pid"])
+                    ledger_path = self.root / workflow / "ledger.json"
+                    original = ledger_path.read_text()
+                    for field in ("sequence", "wrapper_pid", "child_pid", "started_at"):
+                        ledger = json.loads(original)
+                        ledger["active_run"][field] = True
+                        ledger_path.write_text(json.dumps(ledger))
+                        self.assertEqual(self.status(workflow)["state"], "uncertain", field)
+                    ledger_path.write_text(original)
                 finally:
                     release.touch()
                     _stdout, stderr = process.communicate(timeout=5)
@@ -1024,6 +1032,97 @@ class GradleRunStatusTest(GradleRunTestCase):
                         self.assertEqual(self.status(workflow)["state"], "uncertain")
                         self.assertEqual(json.loads(path.read_text()), ledger)
 
+    def test_boolean_terminal_numbers_are_uncertain(self) -> None:
+        workflow = self.create_workflow()
+        self.assertEqual(self.run_gradle(workflow, "targeted", "Does validation pass?", "print('warning: sample')").returncode, 0)
+        path = self.root / workflow / "ledger.json"
+        original = path.read_text()
+        for field in ("result_exit", "entry_exit", "both_exits", "sequence", "run_count", "result_signal", "entry_signal", "both_signals", "warning_count"):
+            for value in (False, True):
+                with self.subTest(field=field, value=value):
+                    ledger = json.loads(original)
+                    entry = ledger["runs"][-1]
+                    if field in ("result_exit", "entry_exit", "both_exits"):
+                        entry["exit_status"] = entry["result"]["exit_status"] = int(value)
+                        if field != "entry_exit":
+                            entry["result"]["exit_status"] = value
+                        if field != "result_exit":
+                            entry["exit_status"] = value
+                    elif field == "sequence":
+                        entry["sequence"] = value
+                    elif field == "run_count":
+                        ledger["run_count"] = value
+                    elif field in ("result_signal", "entry_signal", "both_signals"):
+                        entry["state"] = "interrupted"
+                        entry["exit_status"] = entry["result"]["exit_status"] = 128 + int(value)
+                        entry["interrupted_signal"] = entry["result"]["interrupted_signal"] = int(value)
+                        if field != "entry_signal":
+                            entry["result"]["interrupted_signal"] = value
+                        if field != "result_signal":
+                            entry["interrupted_signal"] = value
+                    else:
+                        entry["result"]["warning_fingerprints"][0]["count"] = value
+                    path.write_text(json.dumps(ledger))
+                    self.assertEqual(self.status(workflow)["state"], "uncertain")
+                    self.assertEqual(json.loads(path.read_text()), ledger)
+
+    def test_contradictory_terminal_evidence_is_uncertain(self) -> None:
+        workflow = self.create_workflow()
+        self.assertEqual(self.run_gradle(workflow, "targeted", "Does validation pass?", "print('warning: sample')").returncode, 0)
+        path = self.root / workflow / "ledger.json"
+        original = path.read_text()
+        mutations = (
+            "completed_result_signal", "completed_entry_signal", "completed_negative_exit",
+            "interrupted_success", "interrupted_mismatched_signals", "interrupted_missing_entry_signal",
+            "zero_sequence", "negative_sequence", "zero_diagnostic_count", "negative_diagnostic_count",
+        )
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                ledger = json.loads(original)
+                entry = ledger["runs"][-1]
+                if mutation.startswith("interrupted_"):
+                    entry["state"] = "interrupted"
+                    entry["exit_status"] = entry["result"]["exit_status"] = 143
+                    entry["interrupted_signal"] = entry["result"]["interrupted_signal"] = 15
+                if mutation == "completed_result_signal":
+                    entry["result"]["interrupted_signal"] = True
+                elif mutation == "completed_entry_signal":
+                    entry["interrupted_signal"] = 15
+                elif mutation == "completed_negative_exit":
+                    entry["exit_status"] = entry["result"]["exit_status"] = -15
+                elif mutation == "interrupted_success":
+                    entry["exit_status"] = entry["result"]["exit_status"] = 0
+                elif mutation == "interrupted_mismatched_signals":
+                    entry["interrupted_signal"] = 2
+                elif mutation == "interrupted_missing_entry_signal":
+                    del entry["interrupted_signal"]
+                elif mutation in ("zero_sequence", "negative_sequence"):
+                    entry["sequence"] = ledger["run_count"] = 0 if mutation == "zero_sequence" else -1
+                else:
+                    entry["result"]["warning_fingerprints"][0]["count"] = 0 if mutation == "zero_diagnostic_count" else -1
+                path.write_text(json.dumps(ledger))
+                self.assertEqual(self.status(workflow)["state"], "uncertain")
+                self.assertEqual(json.loads(path.read_text()), ledger)
+
+    @unittest.skipUnless(os.name == "posix", "requires POSIX signals")
+    def test_child_signal_result_is_retrievable(self) -> None:
+        workflow = self.create_workflow()
+        result = self.run_gradle(workflow, "targeted", "Can a child signal be recovered?", "import os, signal; os.kill(os.getpid(), signal.SIGTERM)")
+        status = self.status(workflow)
+        self.assertEqual(status["state"], "interrupted")
+        self.assertEqual(status["result"], json.loads(result.stdout))
+        self.assertEqual(status["result"]["exit_status"], -signal.SIGTERM)
+        self.assertEqual(status["result"]["interrupted_signal"], signal.SIGTERM)
+
+    def test_failed_build_result_is_retrievable(self) -> None:
+        workflow = self.create_workflow()
+        result = self.run_gradle(workflow, "targeted", "Can a build failure be recovered?", "raise SystemExit(7)")
+        self.assertEqual(result.returncode, 7)
+        status = self.status(workflow)
+        self.assertEqual(status["state"], "completed")
+        self.assertEqual(status["result"], json.loads(result.stdout))
+        self.assertEqual(status["result"]["exit_status"], 7)
+
     def test_run_lock_pruning_tolerates_malformed_history(self) -> None:
         for prior_success in (False, True):
             with self.subTest(prior_success=prior_success):
@@ -1104,6 +1203,8 @@ class GradleRunStatusTest(GradleRunTestCase):
         path = self.root / workflow / "ledger.json"
         cases = ["{", "[]", json.dumps({"workflow": workflow, "runs": [], "active_run": {}}),
                  json.dumps({"workflow": workflow, "runs": [], "run_count": 1}),
+                 json.dumps({"workflow": workflow, "runs": [], "run_count": False}),
+                 json.dumps({"workflow": workflow, "runs": [], "run_count": True}),
                  json.dumps({"workflow": workflow, "runs": [{"sequence": 1, "exit_status": 0}]})]
         for content in cases:
             with self.subTest(content=content):
