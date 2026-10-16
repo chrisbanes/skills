@@ -126,6 +126,47 @@ class PrReviewTimingTest(unittest.TestCase):
         actual["missing-independent-review"]["independent_review_action"] = "none"
         self.assertTrue(validate_decisions(actual, expected))
 
+    def test_external_review_gates_follow_explicit_applicability(self):
+        expected = answers(CASES[2])
+        for name in (
+            "no-external-provider", "optional-review-pending",
+            "optional-provider-unavailable",
+        ):
+            snapshot = expected[name]
+            self.assertEqual("none", snapshot["review_action"])
+            self.assertTrue(snapshot["delivery_ready"])
+            self.assertTrue(snapshot["merge_permitted"])
+            actual = copy.deepcopy(expected)
+            actual[name]["delivery_ready"] = False
+            self.assertTrue(validate_decisions(actual, expected))
+        required = expected["required-provider-unavailable"]
+        self.assertEqual("hold", required["review_action"])
+        self.assertFalse(required["delivery_ready"])
+        self.assertFalse(required["merge_permitted"])
+        actual = copy.deepcopy(expected)
+        actual["required-provider-unavailable"]["merge_permitted"] = True
+        self.assertTrue(validate_decisions(actual, expected))
+        ci_only = expected["no-provider-ready-only-ci"]
+        self.assertEqual("mark_ready_for_ci", ci_only["review_action"])
+        self.assertFalse(ci_only["delivery_ready"])
+        self.assertFalse(ci_only["merge_permitted"])
+        for action in ("none", "mark_ready_and_request_review"):
+            actual = copy.deepcopy(expected)
+            actual["no-provider-ready-only-ci"]["review_action"] = action
+            self.assertTrue(validate_decisions(actual, expected))
+
+    def test_existing_pr_starts_review_without_a_repair_or_push(self):
+        expected = answers(CASES[2])
+        for name in ("unchanged-pr-needs-review", "host-setup-needs-review"):
+            snapshot = expected[name]
+            self.assertEqual("mark_ready_and_request_review", snapshot["review_action"])
+            self.assertFalse(snapshot["delivery_ready"])
+            self.assertFalse(snapshot["merge_permitted"])
+            for action in ("hold", "none"):
+                actual = copy.deepcopy(expected)
+                actual[name]["review_action"] = action
+                self.assertTrue(validate_decisions(actual, expected))
+
     def test_head_change_invalidates_affected_evidence_but_preserves_compatible_scope(self):
         expected = answers(CASES[1])
         self.assertTrue(expected["qualified-H1"]["merge_permitted"])

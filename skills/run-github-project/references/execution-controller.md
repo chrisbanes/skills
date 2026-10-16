@@ -92,6 +92,11 @@ do not rehydrate an unchanged verified ticket merely because another ticket
 emitted a CI event. Full selection/recovery/finish reads and fresh write
 authority remain mandatory.
 
+Keep remote monitoring with the scheduler's single
+[Project Watcher](drain-scheduler.md#project-watcher). An empty host wait timeout
+does not invalidate the snapshot or require a query, restart, or progress
+notification; consume delivered reports and completions before waiting again.
+
 Hydrate contenders with bounded batches: blockers/descendants, current Status,
 marker-owned plans/leases, PR identity, Wayfinder parent/type/AFK evidence, and
 parking and authority-pause metadata only as needed. Never serially fan out

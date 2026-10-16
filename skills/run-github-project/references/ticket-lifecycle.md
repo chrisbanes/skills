@@ -127,7 +127,7 @@ Before every push, verify
 that the combined evidence covers the exact final HEAD and that no actionable
 finding remains; never treat unchanged prior checks as proof for changed code.
 Apply [PR review timing](pr-review-timing.md) after local qualification: start
-external review while CI runs, preferring demonstrably supported draft review
+applicable external review while CI runs, preferring demonstrably supported draft review
 and otherwise permitting earlier PR readiness under existing ticket-agent PR
 authority. Preserve stricter explicit repository requirements. CI-supplied
 full-suite evidence must pass on the final head before delivery `ready` or

@@ -68,7 +68,7 @@ Project run already owns that issue, return it to that controller.
    be bounded or an explicit requirement demands it. Confirm combined coverage
    of the final clean head before pushing. Create and verify one draft PR for
    a nonempty integrated diff, or reuse the existing PR. Apply
-   [PR review timing](references/pr-review-timing.md): start external review
+   [PR review timing](references/pr-review-timing.md): start applicable external review
    while CI runs, using verified draft support or earlier PR readiness when
    permitted. Keep delivery `pending` until all final-head gates pass. Use
    closing links only for verified GitHub issues.
@@ -84,7 +84,7 @@ Project run already owns that issue, return it to that controller.
 
 ## Finish gate
 
-Report `ready` only when the final head passes applicable checks and reviews
+Report `ready` only when the final head passes required checks and reviews
 with findings resolved and evidence applicable to that clean head;
 `merged` only after authorized merge readback;
 `no-change` only when implementation and verification finish with an empty

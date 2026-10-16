@@ -81,6 +81,69 @@
       "invalidated_evidence": [],
       "retained_evidence": [],
       "independent_review_action": "obtain_fresh_review"
+    },
+    "no-external-provider": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": true,
+      "merge_permitted": true,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "optional-review-pending": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": true,
+      "merge_permitted": true,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "optional-provider-unavailable": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": true,
+      "merge_permitted": true,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "required-provider-unavailable": {
+      "head": "H1",
+      "review_action": "hold",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "unchanged-pr-needs-review": {
+      "head": "H1",
+      "review_action": "mark_ready_and_request_review",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "host-setup-needs-review": {
+      "head": "H1",
+      "review_action": "mark_ready_and_request_review",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "no-provider-ready-only-ci": {
+      "head": "H1",
+      "review_action": "mark_ready_for_ci",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
     }
   }
 }

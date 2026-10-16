@@ -334,7 +334,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 95 calibration-only cases, including
+The workflows/writing corpus contains 96 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -380,10 +380,11 @@ run-scoped `--auto-merge`, ticket-local authority pauses with continued board
 progress, durable resumption, and restraint for absent grants, read-only modes,
 and stale final-head review. They use immutable synthetic state and have no
 live-provider or model-run evidence.
-Four watcher calibrations cover the `drain` project watcher: staying alive and
+Five watcher calibrations cover the `drain` project watcher: staying alive and
 launching it at a human frontier, refreshing before acting on a board-change
-wake, `next` returning without one, and no watcher when only an agent
-notification is due. They use immutable synthetic state.
+wake, `next` returning without one, no watcher when only an agent notification
+is due, and retaining one watcher across unrelated reads and empty bounded
+host waits with prompt failure delivery. They use immutable synthetic state.
 Fourteen small-ticket calibrations cover the planning-free fast path in
 standalone and Project delivery with escalation, lease revocation and
 small-looking risky counterexamples; drain slot release for reviewed PRs
@@ -398,7 +399,9 @@ review during pending CI, earlier readiness when draft support is absent or
 unknown, failed/unknown CI merge refusal, changed-head evidence invalidation,
 compatible evidence retention, stricter repository sequencing, and verified
 host auto-merge enforcement, ready-only CI with supported draft review, and
-missing independent-review evidence. Full-grader integration tests verify that
+missing independent-review evidence, absent/optional/required external-review
+capabilities, and review initiation without a repair in polling and host setup.
+Full-grader integration tests verify that
 correct decision artifacts pass without weakening unchanged-workspace controls.
 Deterministic mutation tests reject delayed review,
 premature acceptance/merge, stale evidence and unsupported auto-merge. These

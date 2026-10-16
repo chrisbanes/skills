@@ -1,0 +1,52 @@
+{
+  "id": "run-github-project-watcher-unchanged-negative",
+  "title": "Retain one watcher across empty host wait timeouts",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-watcher-unchanged-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "retain-watcher",
+      "text": "Retains the same watcher command, relay, baseline, watch set, interval and deadline while inputs are unchanged, including across unrelated authoritative reads. Does not start another remote monitor or resume the idle remote-wait ticket agent to monitor CI."
+    },
+    {
+      "id": "empty-timeout",
+      "text": "Treats an empty host wait timeout as no event: no GitHub query, snapshot, agent-status probe, watcher restart, unchanged-state notification or clock reset. Continues runnable work, consumes pending notifications, and otherwise renews the host wait."
+    },
+    {
+      "id": "bounded-wait",
+      "text": "Chooses at most the supplied 60000 ms host wait limit, uses the longest permitted wait subject to nearer deadlines and higher-priority responsiveness rules, and relies on early notification delivery rather than delaying failures until a timer. Does not propose unbounded waits, scheduled wakeups or a second polling layer."
+    },
+    {
+      "id": "terminal-report",
+      "text": "Consumes the subsequently delivered changed report and promptly refetches only PR 42 head/check/review and authority records for the occupied-slot CI event. Preserves the Refresh Gate for any later selection, capacity or finish decision. An error or deadline would also require prompt handling, not suppression as unchanged state."
+    },
+    {
+      "id": "no-mutations",
+      "text": "Uses only supplied state and describes actions without executing commands, providers, agents or edits."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

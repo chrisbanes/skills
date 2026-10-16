@@ -43,6 +43,9 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    an unavailable owner, uncertain existing claim or unknown writer state holds
    code writes until reconciled, with writers quiescent before any explicit
    reassignment. This fallback supplies neither missing scope nor extra grants.
+   Reconcile applicable current-head review initiation under
+   [PR review timing](references/pr-review-timing.md) on acquisition and relevant
+   wakes, even without repairs; one-off inspections stay read-only.
 3. Before repeated polling, use one lowest-cost capable read-only evidence
    helper when available. Select and brief it using the shared
    [selection and handoff reference](references/subagent-selection.md)
@@ -73,12 +76,9 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    integrated candidate before pushing, except where the PR's required CI runs
    the same full suite and no repository or provider rule requires a local run;
    then CI on the pushed head supplies that evidence before delivery acceptance
-   or merge. Follow [PR review timing](references/pr-review-timing.md) to obtain
-   or reuse applicable independent review before push, then start external review
-   while CI runs. Prefer verified draft review; otherwise permit earlier PR
-   readiness under the caller's authority.
-   Honor stricter explicit repository requirements. Reuse valid evidence; repeat only checks
-   invalidated by changes, unknown impact, or explicit repository/provider rules.
+   or merge. Obtain or renew applicable independent review under PR review timing
+   before push. Preserve stricter repository/provider rules; renew affected checks
+   or broaden when impact is unknown. Reuse demonstrably compatible evidence.
    Do not use CI as an iterative test runner or require full checks per slice
    commit. Hold the push while checks required before push fail or lack evidence; a
    CI-supplied full suite gates acceptance or merge instead. Reassess evidence

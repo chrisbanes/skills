@@ -34,7 +34,7 @@
     },
     {
       "id": "relaunch",
-      "text": "After the complete refresh, stops the prior watcher through the host's cancellation mechanism (not a process-name match) and relaunches one watcher with a fresh baseline taken before that refresh, keeping at most one watcher per drain."
+      "text": "The reporting watcher has exited. After the complete refresh, launches exactly one replacement with a fresh baseline taken before that refresh. Uses host cancellation only for a still-running watcher whose inputs change; consumes completed reports and discards only confirmed cancellation results."
     },
     {
       "id": "productive-wake",

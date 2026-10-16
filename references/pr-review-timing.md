@@ -1,6 +1,6 @@
 # PR review timing
 
-Start external review of a locally qualified candidate while CI runs; accept or
+Start applicable external review of a locally qualified candidate while CI runs; accept or
 merge only with complete evidence applicable to the final head.
 
 1. Complete affected local checks, independent integrated-candidate review and
@@ -13,30 +13,41 @@ merge only with complete evidence applicable to the final head.
    against source requirements, repository standards and the full diff; include
    the behavioral coverage account. Return findings to the repair owner. Hold
    publication if required review cannot run and report the missing capability.
-2. Inspect the configured review provider's current documentation, repository
-   configuration or observed behavior for this repository. Prefer review on a
+2. Determine from trusted repository requirements and the caller which external
+   PR reviews are required, optional or not applicable, separately from local
+   independent review. Verify whether required CI starts on drafts or only after
+   readiness regardless of external review applicability. If no provider is
+   configured and none is required, record external review as not applicable
+   and skip external trigger discovery; continue CI and local independent
+   qualification. An explicitly required but unavailable
+   provider is a blocker, not absence of a requirement.
+   For applicable external review, inspect the provider's documentation,
+   repository configuration or observed behavior for this repository. Prefer review on a
    draft only when that evidence demonstrates both draft support and a usable
    trigger while CI is pending. Record the evidence and trigger; a provider name
-   or generic draft support alone proves neither. Also verify whether required
-   CI starts on drafts or only after readiness. Do not change external
+   or generic draft support alone proves neither. Do not change external
    settings to obtain support.
-3. Publish or reuse the verified PR head. Request draft review through the
-   verified route while CI runs. If draft review is unsupported or unverified,
+3. Publish or reuse the verified PR head. For applicable external review,
+   request draft review through the verified route while CI runs. If draft review is unsupported or unverified,
    permit marking the PR ready earlier and use the existing configured review
    trigger, within the caller's non-merge PR authority and explicit repository
-   requirements. When CI only starts after readiness, request supported draft
-   review first if available, then promptly mark ready to start CI on that same
-   head; wait for neither review nor CI completion before this transition unless
+   requirements. Independently, when CI only starts after readiness, request
+   applicable supported draft review first if available, then promptly mark
+   ready to start CI on that same head, even when no external review applies.
+   Wait for neither review nor CI completion before this transition unless
    an explicit repository rule requires it. Report unverified capabilities;
-   do not claim readiness started review without provider readback. Verify the requested review targets
-   the current head. If neither route can be established, report that review
-   blocker while independent CI work continues.
+   do not claim readiness started review without provider readback. Verify the
+   requested review targets the current head. If neither route can be established for required external
+   review, report that blocker while independent CI work continues. Report an
+   unavailable optional route without inventing an acceptance gate.
 4. Track PR draft/readiness, external review and CI separately. Marking a PR
    ready to trigger review is not delivery status `ready`, acceptance or merge
-   authority. Pending CI or reviews keep delivery `pending`; failed or unknown
-   required gates prohibit acceptance and merge. Required checks (including a
+   authority. Pending required CI or required reviews keep delivery `pending`;
+   failed or unknown required gates prohibit acceptance and merge. Required checks (including a
    CI-supplied full suite), reviews and finding dispositions must all pass and
-   apply to the final head before delivery `ready` or authorized merge.
+   apply to the final head before delivery `ready` or authorized merge. Optional
+   review that is pending or unavailable adds no gate; actionable findings
+   already received still require disposition under the selected workflow.
 5. After every head or base change, reassess checks, local and external reviews,
    approvals and finding dispositions against the new candidate. Invalidate
    affected evidence and renew checks and review of changed ranges and their
@@ -60,6 +71,6 @@ merge only with complete evidence applicable to the final head.
    After a head change, requalify affected evidence before re-enabling auto-merge
    this controller disabled.
 
-Finish with the exact head, actual review trigger/readback, CI and review gates,
-finding dispositions and any unknown capability. Readiness alone never closes a
-pending delivery.
+Finish with the exact head, review applicability and any trigger/readback,
+required CI/review gates, finding dispositions and any unknown capability.
+Readiness alone never closes a pending delivery.

@@ -43,6 +43,14 @@
     {
       "id": "independent-review",
       "text": "For standalone repair without prior review evidence, obtains one fresh independent read-only integrated-candidate review against source requirements, repository standards and the full diff, reuses only verified applicable coverage and reports a missing-capability blocker when review cannot run."
+    },
+    {
+      "id": "applicability",
+      "text": "Distinguishes absent external review with no applicable requirement from required unavailable review. Keeps local independent review mandatory. Optional pending/unavailable review adds no acceptance gate, while every actionable received finding still requires disposition."
+    },
+    {
+      "id": "acquisition",
+      "text": "Reconciles omitted applicable external-review initiation during target acquisition and host-managed setup even when the head is unchanged and no repair/push is needed. Uses permitted readiness while CI is pending; preserves one-off inspection restraint."
     }
   ],
   "provenance": {

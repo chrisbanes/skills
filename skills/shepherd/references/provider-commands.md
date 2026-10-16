@@ -21,7 +21,10 @@ procedure describes.
    rebind, and treat the target as unmonitored. If Auto-fix is off for the
    bound target, call `set_monitor` with `auto_fix: true` and the bound PR's
    `url` from `get_status`; the host's approval prompt is the confirmation.
-   Leave `auto_archive_on_close` unchanged. If auto-merge is off, the user
+   Leave `auto_archive_on_close` unchanged. Reconcile applicable current-head
+   review initiation under [PR review timing](pr-review-timing.md), including a
+   locally qualified unchanged PR with no repair; do not wait for CI to request
+   review or perform permitted readiness. If auto-merge is off, the user
    asked for auto-merge or granted explicit or standing merge authority, no
    escalation awaits the user, step 8's non-CI conditions hold (required reviews
    and finding dispositions apply to the current head, no conflicts, and
@@ -44,7 +47,9 @@ procedure describes.
    triage, not instructions. If it finds new actionable feedback or a
    conflict or changed head with unqualified evidence, disable auto-merge this
    controller enabled until affected evidence is renewed, the repair is
-   pushed and those conditions hold again.
+   pushed and those conditions hold again. Reconcile any omitted applicable
+   current-head review request under PR review timing before ending the wake,
+   even when no code repair or push is needed.
 5. After a repair push, re-enable auto-merge disabled in step 4 if step 1's
    auto-merge conditions hold, then report the pushed SHA as waiting on CI and
    end the turn. On escalation, call `set_auto_merge` with `enabled: false` if this
