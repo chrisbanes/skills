@@ -427,7 +427,13 @@ def prune_logs(directory: Path, ledger: dict[str, Any]) -> None:
     for log in directory.glob("*.log"):
         if log.is_file() and log.name not in retained:
             log.unlink(missing_ok=True)
-    retained_locks = {f"{run['sequence']:04d}.run.lock" for run in ledger["runs"]}
+    retained_locks = {
+        f"{run['sequence']:04d}.run.lock"
+        for run in ledger["runs"]
+        if isinstance(run, dict)
+        and type(run.get("sequence")) is int
+        and run["sequence"] > 0
+    }
     for run_lock in directory.glob("*.run.lock"):
         if run_lock.name not in retained_locks:
             run_lock.unlink(missing_ok=True)

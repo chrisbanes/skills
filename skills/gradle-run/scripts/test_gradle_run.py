@@ -1024,6 +1024,29 @@ class GradleRunStatusTest(GradleRunTestCase):
                         self.assertEqual(self.status(workflow)["state"], "uncertain")
                         self.assertEqual(json.loads(path.read_text()), ledger)
 
+    def test_run_lock_pruning_tolerates_malformed_history(self) -> None:
+        for prior_success in (False, True):
+            with self.subTest(prior_success=prior_success):
+                workflow = self.create_workflow()
+                if prior_success:
+                    self.assertEqual(self.run_gradle(workflow, "targeted", "Does the first run pass?", "print('ok')").returncode, 0)
+                path = self.root / workflow / "ledger.json"
+                ledger = json.loads(path.read_text())
+                malformed = [None, "not a run", {}, {"sequence": "bad"}, {"sequence": 1.5}, {"sequence": -1}, {"sequence": True}]
+                ledger["runs"] = malformed + ledger["runs"]
+                path.write_text(json.dumps(ledger))
+                self.assertEqual(self.status(workflow)["state"], "completed" if prior_success else "uncertain")
+                orphan = path.parent / "9999.run.lock"
+                orphan.write_bytes(b"\0")
+                result = self.run_gradle(workflow, "targeted", "Can valid work follow incomplete history?", "print('ok')")
+                self.assertEqual(result.returncode, 0, result.stderr)
+                status = self.status(workflow)
+                self.assertEqual(status["state"], "completed")
+                self.assertEqual(status["result"], json.loads(result.stdout))
+                self.assertEqual(status["result_sequence"], 2 if prior_success else 1)
+                self.assertFalse(orphan.exists())
+                self.assertTrue((path.parent / "0001.run.lock").is_file())
+
     def test_log_open_failure_is_the_latest_recoverable_result(self) -> None:
         for prior_success in (False, True):
             with self.subTest(prior_success=prior_success):
