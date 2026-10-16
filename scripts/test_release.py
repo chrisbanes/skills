@@ -39,6 +39,170 @@ class ReleaseScriptTest(unittest.TestCase):
             with self.subTest(version=version):
                 self.assertEqual(self.release.validate_version(version), expected)
 
+    def test_validate_version_rejects_impossible_calendar_dates(self):
+        versions = (
+            "2026.2.31", "2026.2.29", "2026.4.31", "0000.1.1", "1900.2.29",
+            "2026.2.31.1", "2026.2.31.01", "2026.2.31.99",
+            "2026.2.29.1", "2026.2.29.01", "2026.2.29.99",
+            "2026.4.31.1", "2026.4.31.01", "2026.4.31.99",
+            "0000.1.1.1", "0000.1.1.01", "0000.1.1.99",
+            "1900.2.29.1", "1900.2.29.01", "1900.2.29.99",
+        )
+        for version in versions:
+            with self.subTest(version=version):
+                with self.assertRaises(ValueError) as error:
+                    self.release.validate_version(version)
+                self.assertEqual(
+                    str(error.exception),
+                    f"Version must use a valid Gregorian calendar date: {version}",
+                )
+
+    def test_validate_version_accepts_calendar_boundaries(self):
+        expected_versions = {
+            "2000.2.29": "2000.2.29",
+            "2028.2.29": "2028.2.29",
+            "1900.2.28": "1900.2.28",
+            "2026.2.28": "2026.2.28",
+            "2026.4.30": "2026.4.30",
+            "2026.1.31": "2026.1.31",
+            "2028.2.29.1": "2028.2.29.01",
+            "2028.2.29.01": "2028.2.29.01",
+            "2028.2.29.99": "2028.2.29.99",
+        }
+        for version, expected in expected_versions.items():
+            with self.subTest(version=version):
+                self.assertEqual(self.release.validate_version(version), expected)
+
+    def test_validate_version_preserves_format_diagnostic(self):
+        versions = (
+            "2026-2-28", "2026/2/28", "026.2.28", "02026.2.28",
+            "2026.0.1", "2026.13.1", "2026.1.0", "2026.1.32",
+            "2026.02.28", "2026.2.08", "2026.02.08",
+            "2028.2.29.0", "2028.2.29.00", "2028.2.29.001", "2028.2.29.100",
+            "2026.02.31", "2026.2.28.1.1", "v2026.2.28", "2026.2.28\n",
+        )
+        for version in versions:
+            with self.subTest(version=version):
+                with self.assertRaises(ValueError) as error:
+                    self.release.validate_version(version)
+                self.assertEqual(
+                    str(error.exception),
+                    "Version must use CalVer YYYY.M.D, YYYY.M.D.N, or YYYY.M.D.NN without "
+                    f"zero-padded month/day: {version}",
+                )
+
+    def test_automatic_version_rejects_invalid_historical_calendar_dates(self):
+        cases = (
+            ("2026.2.31", "2026.2.31"),
+            ("2026.02.31", "2026.2.31"),
+            ("2026.2.29", "2026.2.29"),
+            ("2026.02.29.1", "2026.2.29.1"),
+            ("2026.4.31", "2026.4.31"),
+            ("2026.04.31.99", "2026.4.31.99"),
+            ("0000.1.1", "0000.1.1"),
+            ("0000.01.01.01", "0000.1.1.01"),
+            ("1900.2.29", "1900.2.29"),
+            ("1900.02.29", "1900.2.29"),
+        )
+        with patch.object(self.release, "default_version", return_value="2026.10.14"):
+            for version, normalized in cases:
+                with self.subTest(version=version):
+                    with self.assertRaises(ValueError) as error:
+                        self.release.resolve_version("", ["2026.10.14", version])
+                    self.assertEqual(
+                        str(error.exception),
+                        f"Version must use a valid Gregorian calendar date: {normalized}",
+                    )
+
+    def test_automatic_version_accepts_historical_leap_dates(self):
+        with patch.object(self.release, "default_version", return_value="2026.10.14"):
+            self.assertEqual(
+                self.release.resolve_version(
+                    "", ["2000.02.29", "2028.02.29.9", "2026.06.07.9"],
+                ),
+                "2026.10.14",
+            )
+
+    def test_explicit_version_overrides_invalid_calendar_inventory(self):
+        self.assertEqual(
+            self.release.resolve_version(
+                "2028.2.29.1",
+                ["2026.02.31", "0000.01.01", "1900.02.29", "2026.10.14.99"],
+            ),
+            "2028.2.29.01",
+        )
+
+    def test_cli_calendar_error_is_exact(self):
+        output = io.StringIO()
+        errors = io.StringIO()
+        with contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
+            result = self.release.main(["resolve-version", "2026.2.31.1"])
+        self.assertEqual(result, 1)
+        self.assertEqual(output.getvalue(), "")
+        self.assertEqual(
+            errors.getvalue(),
+            "Version must use a valid Gregorian calendar date: 2026.2.31.1\n",
+        )
+
+    def test_manifest_helpers_reject_invalid_calendar_before_filesystem_access(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp) / "absent"
+            for helper in (self.release.update_manifests, self.release.validate_manifests):
+                with self.subTest(helper=helper.__name__):
+                    with self.assertRaises(ValueError) as error:
+                        helper(root, "2026.2.31")
+                    self.assertEqual(
+                        str(error.exception),
+                        "Version must use a valid Gregorian calendar date: 2026.2.31",
+                    )
+                    self.assertFalse(root.exists())
+
+    def test_invalid_calendar_leaves_all_manifest_bytes_unchanged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self.write_valid_manifests(root)
+            before = {path: path.read_bytes() for path in root.rglob("*.json")}
+            for helper in (self.release.update_manifests, self.release.validate_manifests):
+                for version in ("2026.2.31", "2026.2.29", "2026.4.31", "0000.1.1", "1900.2.29"):
+                    with self.subTest(helper=helper.__name__, version=version):
+                        with self.assertRaises(ValueError) as error:
+                            helper(root, version)
+                        self.assertEqual(
+                            str(error.exception),
+                            f"Version must use a valid Gregorian calendar date: {version}",
+                        )
+                        self.assertEqual(
+                            {path: path.read_bytes() for path in root.rglob("*.json")}, before,
+                        )
+
+    def test_leap_day_update_and_validation_preserve_complete_manifests(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp)
+            self.write_valid_manifests(root, "2026.6.16")
+            expected = {
+                root / "plugin.json": (
+                    '{\n  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",\n'
+                    '  "name": "chrisbanes-skills",\n  "version": "2028.2.29.01"\n}\n'
+                ).encode(),
+                root / ".claude-plugin/plugin.json": (
+                    '{\n  "name": "chrisbanes-skills",\n  "version": "2028.2.29.01"\n}\n'
+                ).encode(),
+                root / ".codex-plugin/plugin.json": (
+                    '{\n  "name": "chrisbanes-skills",\n  "version": "2028.2.29.01",\n'
+                    '  "skills": "./skills/"\n}\n'
+                ).encode(),
+                root / "package.json": (
+                    '{\n  "name": "chrisbanes-skills",\n  "version": "2028.2.29.01",\n'
+                    '  "main": ".opencode/plugins/chrisbanes-skills.js"\n}\n'
+                ).encode(),
+                root / ".claude-plugin/marketplace.json": b'{\n  "name": "chrisbanes-skills"\n}\n',
+                root / ".agents/plugins/marketplace.json": b'{\n  "name": "chrisbanes-skills"\n}\n',
+            }
+            self.release.update_manifests(root, "2028.2.29.1")
+            self.assertEqual({path: path.read_bytes() for path in root.rglob("*.json")}, expected)
+            self.release.validate_manifests(root, "2028.2.29.1")
+            self.assertEqual({path: path.read_bytes() for path in root.rglob("*.json")}, expected)
+
     def test_resolve_version_canonicalizes_daily_release_number(self):
         self.assertEqual(self.release.resolve_version("2026.6.17.1"), "2026.6.17.01")
 
