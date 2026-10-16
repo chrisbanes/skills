@@ -842,7 +842,10 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
         snapshot["reason"] = "active run is incomplete or its owner lock is not held"
         if busy and isinstance(active, dict) and all(
             isinstance(active.get(key), int) and active[key] > 0
-            for key in ("sequence", "wrapper_pid", "child_pid")
+            for key in ("sequence", "wrapper_pid")
+        ) and "child_pid" in active and (
+            active["child_pid"] is None
+            or isinstance(active["child_pid"], int) and active["child_pid"] > 0
         ) and isinstance(active.get("started_at"), (int, float)):
             try:
                 with WorkflowLock(directory / f"{active['sequence']:04d}.run.lock", read_only=True):

@@ -808,6 +808,53 @@ class GradleRunStatusTest(GradleRunTestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.status(workflow)["state"], "completed")
 
+    def test_owned_startup_is_running_before_a_child_exists(self) -> None:
+        for startup in ("log", "launch"):
+            with self.subTest(startup=startup):
+                workflow = self.create_workflow()
+                ready = self.root.parent / f"startup-{startup}.ready"
+                release = self.root.parent / f"startup-{startup}.release"
+                driver = (
+                    "import sys, time\nfrom pathlib import Path\n"
+                    f"sys.path.insert(0, {str(SCRIPT.parent)!r})\n"
+                    "import gradle_run as wrapper\n"
+                    "def gate():\n"
+                    f"    Path({str(ready)!r}).touch()\n"
+                    "    deadline = time.monotonic() + 15\n"
+                    f"    while not Path({str(release)!r}).exists() and time.monotonic() < deadline: time.sleep(0.01)\n"
+                    + ("original_open = Path.open\n"
+                       "def open_log(path, *args, **kwargs):\n"
+                       "    if path.name == '0001.log': gate()\n"
+                       "    return original_open(path, *args, **kwargs)\n"
+                       "Path.open = open_log\n" if startup == "log" else
+                       "original_launch = wrapper.subprocess.Popen\n"
+                       "def launch(*args, **kwargs):\n"
+                       "    gate()\n"
+                       "    return original_launch(*args, **kwargs)\n"
+                       "wrapper.subprocess.Popen = launch\n")
+                    + "raise SystemExit(wrapper.main())\n"
+                )
+                process = subprocess.Popen(
+                    [sys.executable, "-c", driver, "--root", str(self.root), "run", "--workflow", workflow,
+                     "--scope", "targeted", "--question", "Is startup owned before launch?", "--", str(self.gradle),
+                     "--", sys.executable, "-c", "print('ok')"],
+                    text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                )
+                try:
+                    deadline = time.monotonic() + 5
+                    while not ready.exists() and time.monotonic() < deadline:
+                        time.sleep(0.01)
+                    self.assertTrue(ready.exists(), "startup did not reach the gate")
+                    status = self.status(workflow)
+                    self.assertEqual(status["state"], "running")
+                    self.assertEqual(status["run"]["wrapper_pid"], process.pid)
+                    self.assertIsNone(status["run"]["child_pid"])
+                finally:
+                    release.touch()
+                    _stdout, stderr = process.communicate(timeout=5)
+                self.assertEqual(process.returncode, 0, stderr)
+                self.assertEqual(self.status(workflow)["state"], "completed")
+
     def test_unrecorded_wrapper_failure_is_uncertain(self) -> None:
         workflow = self.create_workflow()
         driver = (
