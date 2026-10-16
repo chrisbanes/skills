@@ -54,8 +54,11 @@ handoff or take over a Project claim.
 5. Reuse the supplied branch and verified PR. After review, push and reconcile
    the exact head; create one draft PR only for a nonempty integrated diff.
    Use `Fixes #<ticket>` for `closing-keyword`, or a non-closing issue link for
-   `close-after-merge`. Mark ready and verify that state when applicable checks
-   and reviews cover the final head. For an empty diff, return `no-change` and
+   `close-after-merge`. Apply [PR review timing](pr-review-timing.md) to start
+   external review while CI runs, preferring verified draft review and otherwise
+   permitting earlier PR readiness. Verify that state separately from delivery
+   `ready`, which still requires all checks, reviews and finding dispositions
+   applicable to the final head. For an empty diff, return `no-change` and
    verification evidence for controller reconciliation.
 6. Use `shepherd` for feedback and PR operations, with code repairs through
    the implementation owner, coordinating any necessary reassignment only after

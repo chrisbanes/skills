@@ -201,7 +201,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(89, len(calibration))
+        self.assertEqual(92, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -291,6 +291,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-slot-release-direct",
                 "run-github-project-slot-release-novel",
                 "run-github-project-slot-release-restraint-negative",
+                "deliver-spec-review-pending-ci-direct",
+                "run-github-project-review-head-change-novel",
+                "shepherd-review-merge-gates-negative",
                 "deliver-spec-ci-full-suite-direct",
                 "deliver-spec-ci-full-suite-novel",
                 "deliver-spec-ci-full-suite-restraint-negative",

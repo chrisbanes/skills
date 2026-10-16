@@ -84,6 +84,10 @@ never mutate another slot or the controller-owned Project state.
 For each ticket pass, continue through implementation, verification, review
 coverage under the [review evidence rule](review-contracts.md), a focused
 commit, and a reconciled push plus PR creation or update.
+Apply [PR review timing](pr-review-timing.md) to request external review before
+yielding, while CI runs; record the trigger/readback or exact capability or
+repository gate that prevents it. Do not idle a locally qualified PR merely
+waiting for CI before starting an otherwise permitted review.
 Then yield durable evidence to the controller and idle that persistent context.
 Resume the same agent for actionable feedback or base repair.
 
@@ -463,13 +467,15 @@ publishing another one. Ignore foreign, malformed, or mismatched markers.
 
 ## Remote Waiting
 
-After a reconciled push:
+After a reconciled push and the PR review timing step above:
 
 1. Verify the claim holds no named resource grant, reconciling one before
    entering remote wait, then release its slot under the waiting cap in the
    [Slot Model](#slot-model). After restart, treat an `In progress` claim as
    waiting when its clean worktree matches its runner-pushed PR head, which
-   review gates before every push; no marker is needed. A pending actionable
+   passed local review gates before push; no marker is needed. Reconcile the
+   external-review request independently of CI and resume the owner if that
+   permitted request was omitted. A pending actionable
    event does not make it active: queue it for the next free slot ahead of
    new claims.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
@@ -490,8 +496,9 @@ a global failure.
 ## Merge And Base Drift
 
 Serialize every merge and prefer the configured merge queue. Before merging,
-revalidate the claim against the latest base, authority lease, approvals,
-terminal-green CI, and mergeability.
+refresh the exact head and revalidate the claim against the latest base,
+authority lease, all required checks and reviews, finding dispositions and
+their final-head applicability, terminal-green CI, and mergeability.
 
 After a merge:
 

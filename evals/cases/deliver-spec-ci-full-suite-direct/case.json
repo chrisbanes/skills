@@ -30,7 +30,7 @@
     },
     {
       "id": "ready",
-      "text": "Marks the PR ready only after the required CI full suite passes on exactly C1 and records that CI result as the full-suite evidence."
+      "text": "Starts external review while CI runs, preferring verified draft support and otherwise permitting earlier PR readiness; distinguishes PR readiness from delivery acceptance, which still waits for full-suite CI and all required reviews/dispositions on C1."
     },
     {
       "id": "record",

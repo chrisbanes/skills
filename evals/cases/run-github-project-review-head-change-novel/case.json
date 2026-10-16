@@ -1,0 +1,48 @@
+{
+  "id": "run-github-project-review-head-change-novel",
+  "title": "Requalify changed heads without serializing external review and CI",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-github-project-review-head-change-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "invalidation",
+      "text": "Refuses stale H1 acceptance after head refresh; invalidates affected checks, independent/external reviews and dispositions without relabelling their provenance."
+    },
+    {
+      "id": "repair",
+      "text": "Keeps repairs with the original owner, renews affected checks and focused independent review including interactions, then starts external review without waiting for H2 CI."
+    },
+    {
+      "id": "restraint",
+      "text": "Retains demonstrably compatible documentation evidence with its original head; accepts only after all final-head gates and authority qualify."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

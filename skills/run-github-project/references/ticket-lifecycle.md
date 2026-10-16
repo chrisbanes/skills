@@ -126,8 +126,12 @@ to each affected check and review contract, including its broadening conditions.
 Before every push, verify
 that the combined evidence covers the exact final HEAD and that no actionable
 finding remains; never treat unchanged prior checks as proof for changed code.
-Full-suite evidence that CI supplies under `deliver-spec`'s evidence rule must
-pass on that head before ready or merge.
+Apply [PR review timing](pr-review-timing.md) after local qualification: start
+external review while CI runs, preferring demonstrably supported draft review
+and otherwise permitting earlier PR readiness under existing ticket-agent PR
+authority. Preserve stricter explicit repository requirements. CI-supplied
+full-suite evidence must pass on the final head before delivery `ready` or
+merge; PR readiness alone never qualifies controller acceptance.
 
 PRs include the configured closing or non-closing issue link, rationale,
 validation, and residual risks. Keep claim/agent while open; drain follows
@@ -144,8 +148,9 @@ a ticket-local decision pause. Silence is not approval:
 merge only with required reviews/checks terminal-green, mergeable PR, and
 recorded authority. Use scheduler/wait mechanisms, never long sleep.
 
-Before merge, revalidate authority, approvals, CI, mergeability, configuration,
-and merge authority. When a merge or associated closure grant is absent,
+Before merge, refresh the exact head and revalidate authority, required checks,
+reviews, finding dispositions, evidence applicability, mergeability and
+configuration. When a merge or associated closure grant is absent,
 apply the [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket).
 Follow configured merge/queue, serialize oldest ready slot
 unless dependency requires otherwise, and reconcile exact merge. Enforce closure

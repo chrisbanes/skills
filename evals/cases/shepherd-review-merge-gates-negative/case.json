@@ -1,0 +1,48 @@
+{
+  "id": "shepherd-review-merge-gates-negative",
+  "title": "Refuse merge with failed CI and preserve explicit review sequencing",
+  "family": "workflow",
+  "target_skills": [
+    "shepherd"
+  ],
+  "expected_skills": [
+    "shepherd"
+  ],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "shepherd-review-merge-gates-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "merge-refusal",
+      "text": "Required failed, unknown or pending checks, reviews and finding dispositions block acceptance and immediate merge despite authority or PR readiness."
+    },
+    {
+      "id": "stricter-repository",
+      "text": "Preserves the explicit CI-before-review/readiness requirement even when the provider supports drafts; changes no settings."
+    },
+    {
+      "id": "auto-merge",
+      "text": "Keeps auto-merge off when enforcement is unverified or only CI is enforced across head changes while stale approvals/dispositions survive; allows authorized host auto-merge during pending CI only with verified protection of every gate's final-head applicability and completed non-CI gates. Wake-time disabling cannot substitute for host protection."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

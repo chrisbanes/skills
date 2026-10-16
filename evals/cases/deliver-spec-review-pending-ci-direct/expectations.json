@@ -1,0 +1,40 @@
+{
+  "decisions": {
+    "draft-supported": {
+      "head": "H1",
+      "review_action": "request_draft_review",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": [
+        "local-H1",
+        "independent-H1"
+      ]
+    },
+    "ready-required": {
+      "head": "H1",
+      "review_action": "mark_ready_and_request_review",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": [
+        "local-H1",
+        "independent-H1"
+      ]
+    },
+    "capability-unknown": {
+      "head": "H1",
+      "review_action": "mark_ready_and_request_review",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": [
+        "local-H1",
+        "independent-H1"
+      ]
+    }
+  }
+}

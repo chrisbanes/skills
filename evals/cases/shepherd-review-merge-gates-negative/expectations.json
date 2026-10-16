@@ -1,0 +1,76 @@
+{
+  "decisions": {
+    "failed-ci": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "unknown-ci": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "pending-review": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "strict-repository": {
+      "head": "H1",
+      "review_action": "hold",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "unverified-enforcement": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "verified-enforcement": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "enable",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "all-green": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": true,
+      "merge_permitted": true,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "ci-only-enforcement": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    }
+  }
+}

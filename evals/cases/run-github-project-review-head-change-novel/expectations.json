@@ -1,0 +1,73 @@
+{
+  "decisions": {
+    "qualified-H1": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": true,
+      "merge_permitted": true,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": [
+        "local-H1",
+        "independent-H1",
+        "external-H1",
+        "ci-H1",
+        "doc-links-H1"
+      ]
+    },
+    "changed-H2": {
+      "head": "H2",
+      "review_action": "hold",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [
+        "local-H1",
+        "independent-H1",
+        "external-H1",
+        "ci-H1"
+      ],
+      "retained_evidence": [
+        "doc-links-H1"
+      ]
+    },
+    "locally-qualified-H2": {
+      "head": "H2",
+      "review_action": "mark_ready_and_request_review",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [
+        "local-H1",
+        "independent-H1",
+        "external-H1",
+        "ci-H1"
+      ],
+      "retained_evidence": [
+        "doc-links-H1",
+        "local-H2",
+        "independent-H2"
+      ]
+    },
+    "qualified-H2": {
+      "head": "H2",
+      "review_action": "none",
+      "delivery_ready": true,
+      "merge_permitted": true,
+      "auto_merge": "off",
+      "invalidated_evidence": [
+        "local-H1",
+        "independent-H1",
+        "external-H1",
+        "ci-H1"
+      ],
+      "retained_evidence": [
+        "doc-links-H1",
+        "local-H2",
+        "independent-H2",
+        "external-H2",
+        "ci-H2"
+      ]
+    }
+  }
+}

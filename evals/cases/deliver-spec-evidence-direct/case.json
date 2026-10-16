@@ -50,11 +50,11 @@
     },
     {
       "id": "ci-repair",
-      "text": "Renews affected CI-equivalent evidence before push; takes required full-suite evidence from a local run or, where CI runs the same required suite, from CI on the pushed head before ready; reuses valid checks and repeats full checks only when invalidated or explicitly required."
+      "text": "Renews affected CI-equivalent evidence before push; takes required full-suite evidence from a local run or CI on the pushed head before delivery acceptance/merge, allowing PR readiness for concurrent external review. Reuses valid checks and repeats full checks only when invalidated or explicitly required."
     },
     {
       "id": "acceptance",
-      "text": "Holds push until affected validation and combined independent coverage reach the final clean head with findings resolved, and ready until required full-suite evidence also covers that head; keeps repairs with the lead and grants no merge or remote mutation"
+      "text": "Holds push until affected validation and combined independent coverage reach the final clean head with findings resolved; holds delivery ready/merge until required CI and external review evidence also applies there. Earlier PR readiness may trigger review; repairs stay with the lead and no remote mutation or merge is granted."
     }
   ],
   "provenance": {

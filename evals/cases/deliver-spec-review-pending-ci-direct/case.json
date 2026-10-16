@@ -1,0 +1,48 @@
+{
+  "id": "deliver-spec-review-pending-ci-direct",
+  "title": "Start external review during pending CI",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-spec-review-pending-ci-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "concurrency",
+      "text": "Begins review while CI is pending: retains draft for proven support and permits earlier readiness for unsupported or unverified draft review."
+    },
+    {
+      "id": "capability",
+      "text": "Uses supplied repository-scoped evidence; records unknown draft support and requires review-start/current-head readback, without inferring success or changing settings."
+    },
+    {
+      "id": "acceptance",
+      "text": "Separates PR readiness from delivery ready and merge authority; pending CI and external review continue to block acceptance and merge."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

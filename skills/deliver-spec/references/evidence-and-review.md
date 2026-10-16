@@ -18,11 +18,13 @@ the selected mode retains its approval, authority and finish gates.
    impact cannot be bounded, or an explicit repository/provider rule requires it.
    A commit, handoff or acceptance step alone does not require a full rerun.
    When the PR's required CI checks run the same full suite on the pushed
-   draft head, do not duplicate it locally: push the draft after affected checks and independent review, and
-   use those CI results on that exact head as the full-suite evidence before
-   ready or acceptance. Run the full suite locally when a repository or provider
-   rule requires it, when CI runs it only after the PR leaves draft, or when CI
-   cannot run part of it, such as device, benchmark or credentialed checks.
+   head, do not duplicate it locally: push after affected checks and independent
+   review, and use CI results on that exact head before delivery acceptance or
+   merge. Apply [PR review timing](pr-review-timing.md) for concurrent external
+   review, verified draft support and earlier readiness, including when CI only
+   starts after leaving draft. Run the full suite locally when a repository or
+   provider rule requires it, or run checks CI cannot supply, such as device,
+   benchmark or credentialed checks.
 3. Reuse one concise delivery record with requirements/source pointers, scope,
    base and candidate identity, check results/log links, findings and blockers.
    Do not create temporary packets or acceptance receipts for each transition.
@@ -49,9 +51,11 @@ the selected mode retains its approval, authority and finish gates.
 5. Before push or acceptance, bind the combined evidence to the exact final
    clean head and recheck the selected mode's authority, native dependencies,
    qualification and CI requirements. Full-suite evidence supplied by CI binds
-   at ready or acceptance, not push. Failed/unknown required checks,
-   unresolved actionable findings, stale authority or insufficient coverage
-   hold the operation. Evidence reuse never renews a grant or consumes fewer
+   at delivery acceptance or merge, not push or PR readiness for review.
+   Failed/unknown pre-push checks, unresolved actionable findings, stale authority
+   or insufficient local review coverage hold push; missing required CI or
+   external review holds acceptance and merge under PR review timing. Evidence
+   reuse never renews a grant or consumes fewer
    recorded repair attempts merely because the base changed.
 
 ## Testing and corrections

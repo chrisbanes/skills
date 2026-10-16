@@ -36,7 +36,7 @@
     },
     {
       "id": "auto-merge",
-      "text": "Because standing merge authority was granted, step 8's non-CI conditions hold, and green CI never wakes the session, enables auto-merge with set_auto_merge passing the url and the repository's merge method (merge, not the squash default), and reports that GitHub branch protection then decides the merge."
+      "text": "With standing authority, all required non-CI gates passing on the current head and demonstrated host protection of every required gate across head changes with final-head applicability enforced at merge time, enables auto-merge with set_auto_merge using the bound URL and repository merge method (merge); names the verified gates that decide merge."
     },
     {
       "id": "recovery",

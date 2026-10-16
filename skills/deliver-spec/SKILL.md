@@ -55,7 +55,8 @@ Project run already owns that issue, return it to that controller.
    asynchronous or persistent live qualification, apply
    [Live qualification and failure recovery](references/qualification-failure.md)
    before attempts and resumes; do not add it to ordinary offline work.
-5. Self-review the integrated candidate, run required checks, then use one
+5. Self-review the integrated candidate, run affected local and required
+   pre-push checks, then use one
    independent read-only reviewer per delivery PR against requirements,
    repository standards and the complete diff. Use a fresh agent that makes no
    writes and has no inherited implementation context. Reuse valid
@@ -65,11 +66,12 @@ Project run already owns that issue, return it to that controller.
    coverage. Return findings to the implementation owner, renew affected checks
    and review changed ranges and interactions. Broaden only when impact cannot
    be bounded or an explicit requirement demands it. Confirm combined coverage
-   of the final clean head before pushing; when CI supplies the full suite
-   under [Evidence and review](references/evidence-and-review.md), mark the PR
-   ready only after it passes on that head. Create and verify one draft PR for
-   a nonempty integrated diff, or reuse the existing PR. Use closing links only
-   for verified GitHub issues.
+   of the final clean head before pushing. Create and verify one draft PR for
+   a nonempty integrated diff, or reuse the existing PR. Apply
+   [PR review timing](references/pr-review-timing.md): start external review
+   while CI runs, using verified draft support or earlier PR readiness when
+   permitted. Keep delivery `pending` until all final-head gates pass. Use
+   closing links only for verified GitHub issues.
 6. Use `shepherd` for CI, feedback and PR operations. Keep repairs with their
    implementation owner and apply the same proportional validation and focused
    repair review. Routine implementation or fixture corrections preserving

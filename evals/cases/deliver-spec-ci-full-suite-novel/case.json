@@ -26,7 +26,7 @@
   "rubric": [
     {
       "id": "hold",
-      "text": "Keeps the PR draft until the required CI full suite passes on C2; C1's partial passes cannot stand in for the C2 full suite."
+      "text": "Permits earlier PR readiness to trigger external review after local qualification when draft review is unsupported or unverified and repository rules permit it; requires full-suite CI on C2 and applicable reviews/dispositions before delivery ready or merge. C1 partial passes cannot qualify C2."
     },
     {
       "id": "repair",

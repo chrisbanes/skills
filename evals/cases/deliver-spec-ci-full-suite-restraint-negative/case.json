@@ -34,7 +34,7 @@
     },
     {
       "id": "no-waiver",
-      "text": "Does not mark either PR ready without full-suite evidence covering the exact final head."
+      "text": "Preserves E local full-suite-before-push rule and F device-check evidence requirement. Separates PR readiness for concurrent review from delivery ready/merge, which require all full-suite evidence and applicable reviews on the final head."
     },
     {
       "id": "review-restraint",
