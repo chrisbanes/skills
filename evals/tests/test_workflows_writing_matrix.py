@@ -74,6 +74,15 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "to-plan-boundary-validation-direct": (
                 ("references/workflow.md", "boundary-validation.md", boundary),
             ),
+            "deliver-spec-fixture-calibration-direct": (
+                ("references/evidence-and-review.md", "behavioral-review.md", behavioral),
+            ),
+            "shepherd-rendering-consumers-novel": (
+                ("SKILL.md", "references/behavioral-review.md", behavioral),
+            ),
+            "to-plan-fixture-calibration-novel": (
+                ("SKILL.md", "references/workflow.md", "skills/to-plan/references/workflow.md"),
+            ),
         }
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         by_id = {case.id: case for case in report.cases}
@@ -92,6 +101,52 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     target = source.parent / reference
                     self.assertFalse(target.is_symlink())
                     self.assertEqual((REPO_ROOT / canonical).read_bytes(), target.read_bytes())
+
+    def test_affected_validation_cases_preserve_decisive_facts_and_read_only_scope(self):
+        case_ids = (
+            "deliver-spec-shared-structure-direct",
+            "deliver-spec-fixture-calibration-direct",
+            "to-plan-fixture-calibration-novel",
+            "shepherd-rendering-consumers-novel",
+            "deliver-spec-fixture-restraint-negative",
+            "to-plan-fixture-restraint-negative",
+        )
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        cases = {case.id: case for case in report.cases}
+        self.assertEqual({"direct", "novel", "negative"}, {cases[key].kind for key in case_ids})
+        for case_id in case_ids:
+            case = cases[case_id]
+            with self.subTest(case=case_id), tempfile.TemporaryDirectory() as directory:
+                self.assertTrue(case.calibration)
+                self.assertTrue(case.forbid_all_commands)
+                self.assertEqual("review", case.task_mode)
+                self.assertEqual((), case.allowed_write_paths)
+                workspace = prepare_workspace(
+                    case, REPO_ROOT, Path(directory) / "fixture",
+                    enabled_skills=case.target_skills,
+                )
+                state_file = workspace / "state.md"
+                original = state_file.read_text(encoding="utf-8")
+                # Command-free cases must expose every decisive fact in the prompt.
+                self.assertIn(original, case.prompt)
+                argv = [sys.executable, str(REPO_ROOT / "evals/validators/text_case.py"), case_id]
+
+                def validate():
+                    return subprocess.run(argv, cwd=workspace, capture_output=True, text=True)
+
+                valid = validate()
+                self.assertEqual(0, valid.returncode, valid.stderr)
+                # Missing acceptance, evidence or uncertainty changes the decision.
+                # Ensure every supplied scenario fact is protected by the validator.
+                facts = json.loads((case.directory / "expectations.json").read_text())["must_contain"]
+                for fact in facts:
+                    with self.subTest(missing=fact):
+                        state_file.write_text(original.replace(fact, "", 1), encoding="utf-8")
+                        invalid = validate()
+                        self.assertEqual(1, invalid.returncode)
+                        self.assertIn("missing required evidence", invalid.stderr)
+                state_file.write_text(original, encoding="utf-8")
+                self.assertEqual(0, validate().returncode)
 
     def test_subagent_handoff_reference_is_self_contained_for_each_consumer(self):
         shared = (REPO_ROOT / "references/subagent-selection.md").read_bytes()
@@ -201,7 +256,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(96, len(calibration))
+        self.assertEqual(102, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -301,6 +356,12 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "to-plan-ci-baseline-direct",
                 "to-plan-ci-baseline-novel",
                 "to-plan-ci-baseline-restraint-negative",
+                "deliver-spec-shared-structure-direct",
+                "deliver-spec-fixture-calibration-direct",
+                "to-plan-fixture-calibration-novel",
+                "shepherd-rendering-consumers-novel",
+                "deliver-spec-fixture-restraint-negative",
+                "to-plan-fixture-restraint-negative",
                 "run-github-project-preparation-direct",
                 "deliver-spec-behavioral-dependency-novel",
                 "run-github-project-shared-seam-negative",
@@ -580,6 +641,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "to-plan-ci-baseline-direct",
                 "to-plan-ci-baseline-novel",
                 "to-plan-ci-baseline-restraint-negative",
+                "to-plan-fixture-calibration-novel",
+                "to-plan-fixture-restraint-negative",
                 "run-github-project-preparation-direct",
                 "deliver-spec-behavioral-dependency-novel",
                 "run-github-project-shared-seam-negative",

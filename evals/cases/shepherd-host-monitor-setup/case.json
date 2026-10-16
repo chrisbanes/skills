@@ -36,7 +36,7 @@
     },
     {
       "id": "auto-merge",
-      "text": "With standing authority, all required non-CI gates passing on the current head and demonstrated host protection of every required gate across head changes with final-head applicability enforced at merge time, enables auto-merge with set_auto_merge using the bound URL and repository merge method (merge); names the verified gates that decide merge."
+      "text": "With standing authority, current-head local qualification and finding dispositions, no conflicts, demonstrated enforcement of every pending required remote gate and protection of all final-head applicability across head changes, enables auto-merge using the bound URL and repository merge method (merge). Required remote approvals may remain pending when host-enforced because they do not wake the session."
     },
     {
       "id": "recovery",

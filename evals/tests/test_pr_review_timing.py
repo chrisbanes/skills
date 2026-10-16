@@ -167,6 +167,26 @@ class PrReviewTimingTest(unittest.TestCase):
                 actual[name]["review_action"] = action
                 self.assertTrue(validate_decisions(actual, expected))
 
+    def test_host_silent_approvals_require_guarded_auto_merge(self):
+        expected = answers(CASES[2])
+        for name in (
+            "host-pending-review-enforced", "host-ci-and-review-pending-enforced",
+        ):
+            snapshot = expected[name]
+            self.assertEqual("enable", snapshot["auto_merge"])
+            self.assertFalse(snapshot["delivery_ready"])
+            self.assertFalse(snapshot["merge_permitted"])
+            actual = copy.deepcopy(expected)
+            actual[name]["auto_merge"] = "off"
+            self.assertTrue(validate_decisions(actual, expected))
+        for name in (
+            "host-pending-review-unenforced", "host-pending-review-with-finding",
+        ):
+            self.assertEqual("off", expected[name]["auto_merge"])
+            actual = copy.deepcopy(expected)
+            actual[name]["auto_merge"] = "enable"
+            self.assertTrue(validate_decisions(actual, expected))
+
     def test_head_change_invalidates_affected_evidence_but_preserves_compatible_scope(self):
         expected = answers(CASES[1])
         self.assertTrue(expected["qualified-H1"]["merge_permitted"])

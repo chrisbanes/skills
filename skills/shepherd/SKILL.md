@@ -96,8 +96,8 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    finding dispositions pass and apply to that head, conflicts are absent, and
    the user granted explicit or standing merge authority. Do not infer authority from
    approval. Under host-managed monitoring, green CI never wakes the session, so
-   enable host auto-merge once the non-CI conditions and PR review timing's
-   verified enforcement gate hold instead, and disable
+   use PR review timing's verified enforcement rule for pending remote gates,
+   and disable
    auto-merge this controller enabled when escalating.
 
 ## Finish or escalate

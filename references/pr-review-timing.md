@@ -59,14 +59,19 @@ merge only with complete evidence applicable to the final head.
    checks and independent review before a repair push, then let external review
    and CI proceed concurrently again.
 6. Refresh the exact PR head and every applicable gate immediately before merge,
-   under the selected workflow's authority and merge/queue rules. While CI is
-   pending, enable authorized host auto-merge only when all non-CI gates hold
-   and the host demonstrably protects every required gate across head changes:
+   under the selected workflow's authority and merge/queue rules. While required
+   remote CI or reviews are pending, permit authorized host auto-merge only when
+   local qualification, finding dispositions and authority apply to the current
+   head, conflicts are absent, and the host demonstrably blocks merging on every
+   pending required gate and protects every required gate across head changes:
    it must either suspend merging after any head change until all applicable
    gates are requalified, or enforce every required check, review and finding
    disposition's final-head applicability at merge time. CI enforcement alone
-   is insufficient, even when CI runs on every head. Wake-time disabling cannot
-   substitute for this host protection. Otherwise keep auto-merge disabled and
+   is insufficient, even when CI runs on every head. Only pending remote gates
+   may remain; failed or unknown required gates hold auto-merge enablement.
+   A required approval need not arrive before enablement when the host enforces
+   it: host-silent approval and CI completion can then finish the merge.
+   Wake-time disabling cannot substitute for this host protection. Otherwise keep auto-merge disabled and
    report the missing enforcement.
    After a head change, requalify affected evidence before re-enabling auto-merge
    this controller disabled.

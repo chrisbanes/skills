@@ -38,7 +38,7 @@
     },
     {
       "id": "auto-merge",
-      "text": "Keeps auto-merge off when enforcement is unverified or only CI is enforced across head changes while stale approvals/dispositions survive; allows authorized host auto-merge during pending CI only with verified protection of every gate's final-head applicability and completed non-CI gates. Wake-time disabling cannot substitute for host protection."
+      "text": "Keeps auto-merge off for failed/unknown gates, unresolved findings or unverified enforcement. Permits pending required CI and external approval only after local qualification/dispositions and with demonstrated enforcement of every pending gate and all final-head applicability across head changes; does not wait for host-silent approval to enable guarded auto-merge."
     },
     {
       "id": "independent-review",

@@ -144,6 +144,42 @@
       "auto_merge": "off",
       "invalidated_evidence": [],
       "retained_evidence": []
+    },
+    "host-pending-review-enforced": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "enable",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "host-ci-and-review-pending-enforced": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "enable",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "host-pending-review-unenforced": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
+    },
+    "host-pending-review-with-finding": {
+      "head": "H1",
+      "review_action": "none",
+      "delivery_ready": false,
+      "merge_permitted": false,
+      "auto_merge": "off",
+      "invalidated_evidence": [],
+      "retained_evidence": []
     }
   }
 }

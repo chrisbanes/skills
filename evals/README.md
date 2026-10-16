@@ -334,7 +334,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 96 calibration-only cases, including
+The workflows/writing corpus contains 102 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -407,6 +407,14 @@ Deterministic mutation tests reject delayed review,
 premature acceptance/merge, stale evidence and unsupported auto-merge. These
 checks validate the decision grader and contract packaging; they do not prove
 live model behavior or provider capabilities.
+
+Six affected-validation calibrations cover the Haze shared-field audit and
+unsettled optical-fixture regressions, an audio-fixture planning transfer case,
+rendering propagation through capture bounds and cache/invalidation consumers,
+and no-change controls for settled fixtures and plans. Deterministic checks
+validate supplied-state integrity and standalone reference packaging; semantic
+rubrics cover test selection, calibration sensitivity, preserved acceptance
+coverage and restraint. Corpus validation does not establish model behavior.
 
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
 to select one advisory scorecard. The default remains `compose` for command

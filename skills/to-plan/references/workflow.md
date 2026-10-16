@@ -26,6 +26,10 @@ failure.
 Inspect the smallest sufficient domain docs, ADRs, code, tests, configuration,
 and relevant history. Prefer established public seams and testing precedent;
 choose the highest practical seam and record a rationale where choices overlap.
+When changing a shared structure, trace existing consumers and structural-audit
+tests, including field inventories and comparison, serialization or cache
+projections where relevant. Carry affected existing checks into the slice's
+validation, even when their files need no edits.
 For non-trivial work use at most two justified, bounded read-only discovery
 agents; verify their evidence and retain decisions and mutations centrally.
 For an autonomous replan, preserve committed base, inspect only verified report,
@@ -58,6 +62,15 @@ the hypothesis, setup, observable pass/fail condition, and what stops or trigger
 replanning on failure; dependent slices must name the proof task ID. Do not add a
 proof when existing evidence settles the assumption, and do not leave unresolved
 design choices as open-ended implementation exploration.
+
+When a behavioral fixture's lifecycle, stimulus or measurement is unsettled,
+make one representative case sensitive to the intended fault before expanding
+it across channels, states or platforms. Plan that calibration as the bounded
+proof above when it gates substantial dependent work; otherwise keep it inside
+the owning slice. Specify the live subject, observed transition, discriminating
+measurement and baseline or intentional fault that must fail. Reuse settled
+fixture evidence when applicable; calibration orders the work without reducing
+acceptance coverage or requiring another review stage.
 
 Apply [Boundary validation](boundary-validation.md) when planning consequential
 persistence, privacy or asynchronous behavior. It owns validation timing and

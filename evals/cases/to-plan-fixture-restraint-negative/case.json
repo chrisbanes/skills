@@ -1,0 +1,41 @@
+{
+  "id": "to-plan-fixture-restraint-negative",
+  "title": "Avoid a redundant proof when an established fixture settles the assumption",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-fixture-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "no-change",
+      "text": "Return the current plan as unchanged; the applicable settled evidence removes the need for a separate proof, replacement plan, new dependency or additional audit stage."
+    },
+    {
+      "id": "coverage",
+      "text": "Keep the new renderer implementation and affected existing tests, full acceptance matrix, meaningful sensitivity and existing final-review gates; reuse is conditional on unchanged relevant fixture/runtime inputs, not a waiver of verification."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

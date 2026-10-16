@@ -61,11 +61,16 @@ against the approved source and repository standards; no external review skill
 or issue-tracker setup is required. Reviews include the production paths and
 boundary cases examined and material uncertainty. The authoritative
 [behavioral review and repair procedure](references/behavioral-review.md) covers
-related boundary repairs, repeated external findings and browser diagnostics.
+related boundary repairs, sensitive fixture calibration before expansion,
+rendering-consumer tracing, repeated external findings and browser diagnostics.
 `npm run references:sync` supplies identical local copies to its consumers;
 edit the authoritative source, not the copies. The same mechanism supplies
 [to-plan's boundary-validation rule](skills/to-plan/references/boundary-validation.md)
 to implementation consumers.
+
+Delivery and planning select affected existing tests through shared-structure
+consumers and structural audits. Unsettled fixtures establish one sensitive case
+before expanding the acceptance matrix; established fixtures reuse valid evidence.
 
 Review mode in `implement-with-subagents`, and review or setup mode in
 `run-github-project`, do not require these external skills. See the

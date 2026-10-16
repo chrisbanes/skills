@@ -26,16 +26,18 @@ procedure describes.
    locally qualified unchanged PR with no repair; do not wait for CI to request
    review or perform permitted readiness. If auto-merge is off, the user
    asked for auto-merge or granted explicit or standing merge authority, no
-   escalation awaits the user, step 8's non-CI conditions hold (required reviews
-   and finding dispositions apply to the current head, no conflicts, and
-   required pre-push checks passed), and the host demonstrably protects every
-   required gate's final-head applicability across head changes under
+   escalation awaits the user, local qualification and finding dispositions
+   apply to the current head, conflicts are absent, and the host demonstrably
+   blocks merging on all pending required CI/reviews and protects every required
+   gate's final-head applicability across head changes under
    [PR review timing](pr-review-timing.md),
    call `set_auto_merge` with `enabled: true`, the `url`, and the repository's
    allowed or conventional `merge_method` (squash when unclear). If enforcement
    is unverified, keep auto-merge disabled and report the gap; do not change
    branch protection or provider settings. Report which verified host gates
-   will decide the merge.
+   will decide the merge. Required remote approvals may remain pending when
+   those gates are enforced; do not wait for a host-silent approval before
+   enabling guarded auto-merge.
 2. A session binds one PR. Monitor only the bound PR. Report other targets,
    including GitLab MRs, as unmonitored and suggest one session per PR; do not
    poll them.

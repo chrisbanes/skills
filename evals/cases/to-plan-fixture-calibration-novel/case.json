@@ -1,0 +1,49 @@
+{
+  "id": "to-plan-fixture-calibration-novel",
+  "title": "Plan a sensitive audio fixture and its existing structural checks",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-fixture-calibration-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "discovery",
+      "text": "Inspect encodeProfile, gainCacheKey and ProfileWireFieldsTest and include affected existing field-completeness and consumer tests even though their files are outside the edit list."
+    },
+    {
+      "id": "proof",
+      "text": "Make T1 a bounded representative fixture proof: reacquire the live mixer after recreation, crossfade while active, measure the transient region separately per channel, pass intended behavior and fail suppressed-left limiting. Restore the candidate and hold expansion on failure."
+    },
+    {
+      "id": "dependencies",
+      "text": "Make T2 and T3 depend on the integrated passing T1 evidence; name hypothesis, setup, pass/fail and stop or replan action. Preserve full channel/state/backend coverage and sensitivity rather than replacing acceptance with the proof."
+    },
+    {
+      "id": "restraint",
+      "text": "Keep settled architecture, ownership, permissions and existing review stages; do not run the target proof, implementation, agents or provider actions during this read-only assessment."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

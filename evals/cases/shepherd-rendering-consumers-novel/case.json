@@ -1,0 +1,49 @@
+{
+  "id": "shepherd-rendering-consumers-novel",
+  "title": "Trace a demonstrated rendering change through bounds and cache projections",
+  "family": "workflow",
+  "target_skills": [
+    "shepherd"
+  ],
+  "expected_skills": [
+    "shepherd"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "shepherd-rendering-consumers-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "trace",
+      "text": "Trace shadowSpread through shader and fallback consumers, CaptureBounds padding, RetainedOutputKey and LightingKey; investigate actual consumed inputs instead of merely adding every field to every key."
+    },
+    {
+      "id": "both-directions",
+      "text": "Repair and test missing padding/propagation and stale output reuse, and remove unnecessary lighting invalidation when verified unused. Preserve evidence-backed dispositions for unchanged consumers and separate output freshness from lighting retention."
+    },
+    {
+      "id": "bounds",
+      "text": "Use boundary-sensitive uncropped output and independent cache/invalidation observations; a passing shader-only screenshot is insufficient for the supplied acceptance criteria."
+    },
+    {
+      "id": "gates",
+      "text": "Send one coherent repair batch to the retained owner, renew affected checks and interaction review, retain valid evidence and existing final-head CI/review/authority gates. Do not add an audit stage or broaden to unrelated rendering without a qualifying trigger."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

@@ -1,0 +1,49 @@
+{
+  "id": "deliver-spec-fixture-calibration-direct",
+  "title": "Calibrate one optical fixture before multiplying the matrix",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-fixture-calibration-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "one-case",
+      "text": "First establish one representative case using the current live delegate after recreation and observe the split while pressed; gate expansion on this calibrated case, without requiring a separate review stage."
+    },
+    {
+      "id": "measurement",
+      "text": "Use a sensitive edge-region measurement and separate assertions for independent channels; reject whole-member dilution and combined scores that let one channel mask another."
+    },
+    {
+      "id": "sensitivity",
+      "text": "Demonstrate a pass on intended behavior and failure for the suppressed-channel fault, then restore the candidate. Repair an insensitive fixture before replication; do not loosen thresholds to accept the fault."
+    },
+    {
+      "id": "coverage",
+      "text": "After calibration expand to all accepted channels, pressed/released states and platforms; preserve meaningful fault sensitivity, same-owner repairs and final validation/review. Do not reduce acceptance to the calibrated case or modify Haze."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}
