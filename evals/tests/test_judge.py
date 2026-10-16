@@ -266,6 +266,22 @@ class BlindedJudgeTest(unittest.TestCase):
         self.assertNotEqual(packet["candidate_id"], without_events["candidate_id"])
         self.assertEqual([], without_events["gradle_execution_evidence"]["steps"])
 
+    def test_gradle_status_is_read_only_execution_evidence(self):
+        workflow = "a" * 32
+        packet = build_judge_packet(
+            gradle_workflow_case(self.root),
+            make_result(self.root, events=(command_event(
+                f"python3 gradle_run.py status --workflow {workflow}",
+                json.dumps({"workflow": workflow, "state": "running", "run": {"command": "private"}}),
+            ),)),
+            ObjectiveGrade(True, False, (), (), ()),
+        )
+        step = packet["gradle_execution_evidence"]["steps"][0]
+        self.assertEqual("status", step["operation"])
+        self.assertEqual("workflow-1", step["workflow"])
+        self.assertNotIn("nested_gradle", step)
+        self.assertNotIn("private", json.dumps(step))
+
     def test_gradle_workflow_packet_keeps_failed_incomplete_steps_as_evidence(self):
         case = gradle_workflow_case(self.root)
         workflow = "b" * 32

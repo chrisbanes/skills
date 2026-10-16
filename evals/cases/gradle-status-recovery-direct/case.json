@@ -1,0 +1,46 @@
+{
+  "id": "gradle-status-recovery-direct",
+  "title": "Recover a lost Gradle tool session by workflow ID",
+  "family": "gradle",
+  "target_skills": [
+    "gradle-run"
+  ],
+  "expected_skills": [
+    "gradle-run"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "gradle_run\\.py (?:create|run|finish)",
+    "(?:^|\\s)(?:[^\\s]+/)?(?:gradle|gradlew[^\\s/]*)(?=$|\\s)"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "gradle-status-recovery-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "status-command",
+      "text": "Uses gradle_run.py status --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa as the standalone recovery command and retains the original workflow rather than creating or running another build."
+    },
+    {
+      "id": "bounded-result",
+      "text": "Explains run identity and the stored bounded result with result_sequence; while running, an available result can belong to the previous run. Does not suggest reading raw logs."
+    },
+    {
+      "id": "state-evidence",
+      "text": "Waits or polls status on running, checks exit_status for completed including failures, uses recorded signal evidence for interrupted, and reports uncertain without inferring completion from PID existence or absence."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

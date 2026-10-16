@@ -1,0 +1,46 @@
+{
+  "id": "gradle-status-uncertain-novel",
+  "title": "Distinguish an abandoned run from a completed failure",
+  "family": "gradle",
+  "target_skills": [
+    "gradle-run"
+  ],
+  "expected_skills": [
+    "gradle-run"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "gradle_run\\.py (?:create|run|finish)",
+    "(?:^|\\s)(?:[^\\s]+/)?(?:gradle|gradlew[^\\s/]*)(?=$|\\s)"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "gradle-status-uncertain-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "uncertain-owner",
+      "text": "Treats A as uncertain because it has no held owner lock or terminal record; neither a live/reused PID nor the previous successful result proves sequence 4 completed. Recommends ownership investigation without rerun or termination."
+    },
+    {
+      "id": "completed-failure",
+      "text": "Treats B as a completed failed invocation with a recorded exit status, independent of the current PID. Identifies cache access denial before Gradle, without claiming a source failure or successful validation."
+    },
+    {
+      "id": "narrow-config",
+      "text": "Recommends an explicit writable-root configuration scoped to the existing evidenced Gradle cache location, subject to user authorization; does not apply it or recommend disabling the sandbox or moving caches."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

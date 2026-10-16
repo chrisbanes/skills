@@ -738,6 +738,320 @@ class GradleRunProcessTest(GradleRunTestCase):
         self.assertLess(command.index("--no-scan"), separator)
 
 
+class GradleRunStatusTest(GradleRunTestCase):
+    def tearDown(self) -> None:
+        self.doCleanups()
+        super().tearDown()
+
+    def status(self, workflow: str) -> dict:
+        result = self.invoke("status", "--workflow", workflow)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertLessEqual(len(result.stdout.encode()), GRADLE_RUN.MAX_SUMMARY_BYTES)
+        return json.loads(result.stdout)
+
+    def test_completion_is_retrievable_without_session_or_log(self) -> None:
+        workflow = self.create_workflow()
+        self.assertEqual(self.status(workflow)["state"], "idle")
+        result = self.run_gradle(workflow, "targeted", "Does recovery work?", "print('BUILD SUCCESSFUL')")
+        expected = json.loads(result.stdout)
+        Path(expected["log"]).unlink()
+        before = {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in self.root.rglob("*") if p.is_file()}
+        status = self.status(workflow)
+        self.assertEqual(status["state"], "completed")
+        self.assertEqual(status["result"], expected)
+        self.assertEqual(status["result_sequence"], 1)
+        self.assertEqual(status["run"]["question"], "Does recovery work?")
+        self.assertIsInstance(status["run"]["wrapper_pid"], int)
+        self.assertIsInstance(status["run"]["child_pid"], int)
+        self.assertEqual(before, {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in self.root.rglob("*") if p.is_file()})
+        self.invoke("finish", "--workflow", workflow)
+        self.assertEqual(self.status(workflow)["state"], "finished")
+
+    def test_failed_build_is_completed_and_result_is_bounded_and_redacted(self) -> None:
+        workflow = self.create_workflow()
+        result = self.run_gradle(workflow, "targeted", "Does token=secret-canary-42 remain hidden?", "import sys; print('token=secret-canary-42'); print('x' * 200000); sys.exit(7)")
+        status = self.status(workflow)
+        self.assertEqual(status["state"], "completed")
+        self.assertEqual(status["result"]["exit_status"], 7)
+        self.assertEqual(status["result"], json.loads(result.stdout))
+        self.assertNotIn("secret-canary-42", json.dumps(status))
+
+    def test_identity_is_persisted_before_launch_and_before_wait(self) -> None:
+        workflow = self.create_workflow()
+        ledger = self.root / workflow / "ledger.json"
+        driver = (
+            "import json, os, sys\n"
+            f"sys.path.insert(0, {str(SCRIPT.parent)!r})\n"
+            "import gradle_run as wrapper\n"
+            "launch = wrapper.subprocess.Popen\n"
+            "wait = wrapper.wait_for_child\n"
+            "def checked_launch(*args, **kwargs):\n"
+            f"    active = json.load(open({str(ledger)!r}))['active_run']\n"
+            "    assert active['wrapper_pid'] == os.getpid()\n"
+            "    assert active['child_pid'] is None\n"
+            "    return launch(*args, **kwargs)\n"
+            "def checked_wait(child, sequence):\n"
+            f"    active = json.load(open({str(ledger)!r}))['active_run']\n"
+            "    assert active['child_pid'] == child.pid\n"
+            "    assert active['sequence'] == sequence\n"
+            "    return wait(child, sequence)\n"
+            "wrapper.subprocess.Popen = checked_launch\n"
+            "wrapper.wait_for_child = checked_wait\n"
+            "raise SystemExit(wrapper.main())\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", driver, "--root", str(self.root), "run", "--workflow", workflow,
+             "--scope", "targeted", "--question", "Is identity durable before waiting?", "--",
+             str(self.gradle), "--", sys.executable, "-c", "print('ok')"],
+            text=True, capture_output=True, timeout=10,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.status(workflow)["state"], "completed")
+
+    def test_unrecorded_wrapper_failure_is_uncertain(self) -> None:
+        workflow = self.create_workflow()
+        driver = (
+            "import sys\n"
+            f"sys.path.insert(0, {str(SCRIPT.parent)!r})\n"
+            "import gradle_run as wrapper\n"
+            "def fail_after_exit(child, sequence):\n"
+            "    child.wait()\n"
+            "    raise RuntimeError('simulated wrapper failure before recording result')\n"
+            "wrapper.wait_for_child = fail_after_exit\n"
+            "raise SystemExit(wrapper.main())\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", driver, "--root", str(self.root), "run", "--workflow", workflow,
+             "--scope", "targeted", "--question", "Can the result survive a wrapper failure?", "--",
+             str(self.gradle), "--", sys.executable, "-c", "print('ok')"],
+            text=True, capture_output=True, timeout=10,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        status = self.status(workflow)
+        self.assertEqual(status["state"], "uncertain")
+        self.assertIsNone(status["result"])
+
+    def start_gated_run(self, workflow: str) -> tuple[subprocess.Popen, Path]:
+        ready = self.root.parent / "status.ready"
+        release = self.root.parent / "status.release"
+        child = (
+            "from pathlib import Path; import time\n"
+            f"Path({str(ready)!r}).touch()\n"
+            "deadline = time.monotonic() + 15\n"
+            f"while not Path({str(release)!r}).exists() and time.monotonic() < deadline: time.sleep(0.01)\n"
+            "print('BUILD SUCCESSFUL')\n"
+        )
+        wrapper = subprocess.Popen(
+            [sys.executable, str(SCRIPT), "--root", str(self.root), "run", "--workflow", workflow,
+             "--scope", "targeted", "--question", "Does the gated run finish?", "--", str(self.gradle),
+             "--", sys.executable, "-c", child],
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        self.addCleanup(self.release_run, wrapper, release)
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            if ready.exists() and self.status(workflow)["state"] == "running":
+                return wrapper, release
+            time.sleep(0.01)
+        self.fail("active identity was not persisted")
+
+    @staticmethod
+    def release_run(wrapper: subprocess.Popen, release: Path) -> None:
+        if wrapper.poll() is None:
+            release.touch()
+        wrapper.communicate(timeout=20)
+
+    def test_concurrent_reads_return_active_identity_and_previous_result(self) -> None:
+        workflow = self.create_workflow()
+        previous = self.run_gradle(workflow, "targeted", "Does the first run pass?", "print('first result')")
+        wrapper, release = self.start_gated_run(workflow)
+        ledger = self.root / workflow / "ledger.json"
+        before = ledger.read_bytes()
+        readers = [subprocess.Popen(
+            [sys.executable, str(SCRIPT), "--root", str(self.root), "status", "--workflow", workflow],
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        ) for _ in range(8)]
+        for reader in readers:
+            stdout, stderr = reader.communicate(timeout=5)
+            self.assertEqual(reader.returncode, 0, stderr)
+            status = json.loads(stdout)
+            self.assertEqual(status["state"], "running")
+            self.assertEqual(status["run"]["wrapper_pid"], wrapper.pid)
+            self.assertGreater(status["run"]["child_pid"], 0)
+            self.assertEqual(status["run"]["sequence"], 2)
+            self.assertEqual(status["result_sequence"], 1)
+            self.assertEqual(status["result"], json.loads(previous.stdout))
+        self.assertEqual(ledger.read_bytes(), before)
+        self.assertIsNone(wrapper.poll())
+        release.touch()
+        wrapper.communicate(timeout=5)
+        self.assertEqual(self.status(workflow)["state"], "completed")
+        self.assertEqual(self.status(workflow)["result_sequence"], 2)
+
+    @unittest.skipUnless(os.name == "posix", "requires POSIX signals")
+    def test_interrupted_result_is_retrievable(self) -> None:
+        workflow = self.create_workflow()
+        wrapper, _release = self.start_gated_run(workflow)
+        wrapper.send_signal(signal.SIGTERM)
+        stdout, stderr = wrapper.communicate(timeout=10)
+        self.assertEqual(wrapper.returncode, 128 + signal.SIGTERM, stderr)
+        status = self.status(workflow)
+        self.assertEqual(status["state"], "interrupted")
+        self.assertEqual(status["result"], json.loads(stdout))
+        self.assertEqual(status["result"]["interrupted_signal"], signal.SIGTERM)
+
+    def test_stale_identity_is_uncertain_even_when_pid_exists(self) -> None:
+        workflow = self.create_workflow()
+        path = self.root / workflow / "ledger.json"
+        ledger = json.loads(path.read_text())
+        for pid in (os.getpid(), 999999999):
+            with self.subTest(pid=pid):
+                ledger["active_run"] = {"sequence": 1, "wrapper_pid": pid, "child_pid": pid, "started_at": 1.0}
+                path.write_text(json.dumps(ledger))
+                self.assertEqual(self.status(workflow)["state"], "uncertain")
+                attempted = self.run_gradle(workflow, "targeted", "May this duplicate a build?", "raise Exception('must not launch')")
+                self.assertEqual(attempted.returncode, 2)
+                self.assertEqual(self.invoke("finish", "--workflow", workflow).returncode, 2)
+                self.assertEqual(json.loads(path.read_text()), ledger)
+
+    def test_rejected_writer_cannot_make_a_stale_run_look_running(self) -> None:
+        for operation in ("run", "finish"):
+            with self.subTest(operation=operation):
+                workflow = self.create_workflow()
+                path = self.root / workflow / "ledger.json"
+                ledger = json.loads(path.read_text())
+                ledger["active_run"] = {
+                    "sequence": 1, "wrapper_pid": 999999999,
+                    "child_pid": 999999998, "started_at": 1.0,
+                }
+                path.write_text(json.dumps(ledger))
+                if operation == "finish":
+                    (path.parent / "0001.run.lock").write_bytes(b"\0")
+                ready = self.root.parent / f"{operation}.ready"
+                release = self.root.parent / f"{operation}.release"
+                driver = (
+                    "import argparse, sys, time\nfrom pathlib import Path\n"
+                    f"sys.path.insert(0, {str(SCRIPT.parent)!r})\n"
+                    "import gradle_run as wrapper\n"
+                    f"root = Path({str(self.root)!r})\n"
+                    f"with wrapper.WorkflowLock(wrapper.lock_path(root, {workflow!r})):\n"
+                    f"    Path({str(ready)!r}).touch()\n"
+                    "    deadline = time.monotonic() + 15\n"
+                    f"    while not Path({str(release)!r}).exists() and time.monotonic() < deadline: time.sleep(0.01)\n"
+                    "    try:\n"
+                    + (f"        wrapper.finish_locked(root, {workflow!r})\n" if operation == "finish" else
+                       f"        wrapper.run_locked(root, argparse.Namespace(workflow={workflow!r}))\n")
+                    + "    except ValueError as error:\n        print(error, file=sys.stderr)\n        sys.exit(2)\n"
+                )
+                holder = subprocess.Popen(
+                    [sys.executable, "-c", driver], text=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                )
+                try:
+                    deadline = time.monotonic() + 5
+                    while not ready.exists() and time.monotonic() < deadline:
+                        time.sleep(0.01)
+                    self.assertTrue(ready.exists(), "lock holder did not start")
+                    self.assertEqual(self.status(workflow)["state"], "uncertain")
+                    self.assertEqual(json.loads(path.read_text()), ledger)
+                finally:
+                    release.touch()
+                    _stdout, stderr = holder.communicate(timeout=5)
+                self.assertEqual(holder.returncode, 2, stderr)
+                self.assertIn("uncertain run", stderr)
+
+    def test_malformed_terminal_collections_are_uncertain(self) -> None:
+        workflow = self.create_workflow()
+        path = self.root / workflow / "ledger.json"
+        ledger = json.loads(path.read_text())
+        ledger["run_count"] = 1
+        for field in ("excerpt", "warning_fingerprints", "failure_fingerprints", "failed_tasks"):
+            for invalid in (None, "wrong collection", [None]):
+                with self.subTest(field=field, invalid=invalid):
+                    for excerpt in ("ok", "x" * 20000):
+                        result = {"exit_status": 0, "excerpt": [excerpt], field: invalid}
+                        ledger["runs"] = [{
+                            "sequence": 1, "state": "completed", "exit_status": 0, "result": result,
+                        }]
+                        path.write_text(json.dumps(ledger))
+                        self.assertEqual(self.status(workflow)["state"], "uncertain")
+                        self.assertEqual(json.loads(path.read_text()), ledger)
+
+    def test_log_open_failure_is_the_latest_recoverable_result(self) -> None:
+        for prior_success in (False, True):
+            with self.subTest(prior_success=prior_success):
+                workflow = self.create_workflow()
+                if prior_success:
+                    self.assertEqual(self.run_gradle(workflow, "targeted", "Does the first run pass?", "print('ok')").returncode, 0)
+                sequence = 2 if prior_success else 1
+                (self.root / workflow / f"{sequence:04d}.log").mkdir()
+                result = self.run_gradle(workflow, "targeted", "Can this log be opened?", "raise Exception('must not launch')")
+                self.assertEqual(result.returncode, 125, result.stderr)
+                status = self.status(workflow)
+                self.assertEqual(status["state"], "completed")
+                self.assertEqual(status["result_sequence"], sequence)
+                self.assertEqual(status["result"], json.loads(result.stdout))
+                self.assertIn("launch_error", status["result"])
+                self.assertEqual(status["result"]["exit_status"], 125)
+                self.assertIsNone(status["run"]["child_pid"])
+                self.assertEqual(self.run_gradle(workflow, "targeted", "Can the next run recover?", "print('ok')").returncode, 0)
+
+    @unittest.skipUnless(os.name == "posix", "requires POSIX signals")
+    def test_interruption_during_startup_failure_is_preserved(self) -> None:
+        for failure, signum in (("log", signal.SIGTERM), ("launch", signal.SIGINT)):
+            with self.subTest(failure=failure):
+                workflow = self.create_workflow()
+                driver = (
+                    "import signal, sys\nfrom pathlib import Path\n"
+                    f"sys.path.insert(0, {str(SCRIPT.parent)!r})\n"
+                    "import gradle_run as wrapper\n"
+                    "def fail(*args, **kwargs):\n"
+                    f"    signal.raise_signal({int(signum)})\n"
+                    "    raise PermissionError('simulated startup denial')\n"
+                    + ("original_open = Path.open\n"
+                       "def open_log(path, *args, **kwargs):\n"
+                       "    if path.name == '0001.log': return fail()\n"
+                       "    return original_open(path, *args, **kwargs)\n"
+                       "Path.open = open_log\n" if failure == "log" else
+                       "wrapper.subprocess.Popen = fail\n")
+                    + "raise SystemExit(wrapper.main())\n"
+                )
+                result = subprocess.run(
+                    [sys.executable, "-c", driver, "--root", str(self.root), "run", "--workflow", workflow,
+                     "--scope", "targeted", "--question", "Is a startup signal preserved?", "--", str(self.gradle)],
+                    text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(result.returncode, 128 + signum, result.stderr)
+                status = self.status(workflow)
+                self.assertEqual(status["state"], "interrupted")
+                self.assertEqual(status["result"], json.loads(result.stdout))
+                self.assertEqual(status["result"]["interrupted_signal"], signum)
+                self.assertIn("launch_error", status["result"])
+                self.assertIsNone(status["run"]["child_pid"])
+
+    def test_incomplete_state_is_uncertain_and_never_repaired(self) -> None:
+        workflow = self.create_workflow()
+        path = self.root / workflow / "ledger.json"
+        cases = ["{", "[]", json.dumps({"workflow": workflow, "runs": [], "active_run": {}}),
+                 json.dumps({"workflow": workflow, "runs": [], "run_count": 1}),
+                 json.dumps({"workflow": workflow, "runs": [{"sequence": 1, "exit_status": 0}]})]
+        for content in cases:
+            with self.subTest(content=content):
+                path.write_text(content)
+                self.assertEqual(self.status(workflow)["state"], "uncertain")
+                self.assertEqual(path.read_text(), content)
+        lock = self.root / f"{workflow}.lock"
+        lock.unlink()
+        self.assertEqual(self.status(workflow)["state"], "uncertain")
+        self.assertFalse(lock.exists())
+
+    def test_unknown_and_invalid_ids_do_not_create_files(self) -> None:
+        for workflow in ("a" * 32, "../escape"):
+            result = self.invoke("status", "--workflow", workflow)
+            self.assertEqual(result.returncode, 2)
+            self.assertFalse(self.root.exists())
+
+
 class GradleRunHeartbeatTest(unittest.TestCase):
     def test_wait_blocks_between_a_finite_number_of_heartbeats(self) -> None:
         child = mock.Mock()
@@ -1036,6 +1350,8 @@ class GradleRunWorkflowTest(GradleRunTestCase):
 
     def test_logs_are_pruned_with_evicted_ledger_runs(self) -> None:
         workflow = self.create_workflow()
+        collision = self.root / workflow / "0000.log"
+        collision.mkdir()
 
         with mock.patch.object(GRADLE_RUN, "MAX_LEDGER_RUNS", 2):
             for index in range(3):
@@ -1061,8 +1377,11 @@ class GradleRunWorkflowTest(GradleRunTestCase):
                 with mock.patch("sys.stdout", new=io.StringIO()):
                     self.assertEqual(GRADLE_RUN.run_command(self.root, arguments), 0)
 
-        logs = sorted(path.name for path in (self.root / workflow).glob("*.log"))
+        logs = sorted(path.name for path in (self.root / workflow).glob("*.log") if path.is_file())
         self.assertEqual(logs, ["0002.log", "0003.log"])
+        self.assertTrue(collision.is_dir())
+        locks = sorted(path.name for path in (self.root / workflow).glob("*.run.lock"))
+        self.assertEqual(locks, ["0002.run.lock", "0003.run.lock"])
         ledger = json.loads((self.root / workflow / "ledger.json").read_text())
         self.assertEqual([run["sequence"] for run in ledger["runs"]], [2, 3])
 

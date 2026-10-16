@@ -11,7 +11,7 @@ Treat complete Gradle output as a temporary, sensitive artifact. Every
 agent-initiated Gradle command runs through the compact-output wrapper; never
 stream, `tee`, paste, or reopen a full build log.
 
-Every `create`, `run`, and `finish` invocation is the entire shell command for
+Every `create`, `run`, `status`, and `finish` invocation is the entire shell command for
 that tool call. Prefixes, assignments, conditionals, pipes, command chains, and
 follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
 
@@ -36,9 +36,32 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    standalone `create` before any `run`. Use the wrapper exclusively; it
    supplies `--console=plain` and `--no-scan` unless console behavior was
    selected or the user authorized `--scan`. Add `--warning-mode all` only for
-   warning discovery or an explicit request. A `workflow is busy` result is an
-   ownership violation: wait for the owner or correct ownership; do not start
-   or finish concurrently.
+   warning discovery or an explicit request. If `run` or `finish` reports
+   `workflow is busy`, inspect status and wait for the owner; keep one execution
+   owner and avoid a duplicate build.
+
+   If a tool session disappears or the run's outcome is unknown, use the same
+   workflow ID (and the same global `--root` if one was supplied):
+
+   ```sh
+   python3 <skill-dir>/scripts/gradle_run.py status --workflow <id>
+   ```
+
+   Status is read-only and returns immediately with at most 16 KiB of JSON.
+   `run` identifies the active or latest run by sequence, wrapper/child PIDs,
+   start time, working directory, command and question. `result` is the latest
+   stored bounded terminal summary, identified by `result_sequence`; while a
+   new run is active it may describe the previous run. Status never opens logs.
+   Poll status on `running`; a held lock specific to that run supplies activity
+   evidence, while PIDs are identity only. Unrelated workflow lock contention
+   leaves an abandoned run `uncertain`. `completed` includes failed builds and launch
+   errors: check `result.exit_status`. `interrupted` requires a recorded signal.
+   `uncertain` covers abandoned active records, missing locks, incomplete/legacy
+   ledgers and transitions without sufficient evidence. Report that uncertainty
+   and investigate ownership; do not infer completion from a PID, rerun, clean
+   up or terminate processes to recover. A new workflow is `idle`; after
+   `finish` it is `finished` and its result has been removed. Unknown IDs fail
+   closed. Finish only after retrieving the needed result.
 4. For incidental validation, stay in the current agent and run the narrowest
    task that answers a non-empty verification question:
 
@@ -73,6 +96,10 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    On interruption, use the wrapper's recorded signal and bounded partial
    diagnostics; it owns process-group/process-tree cleanup and durable ledger
    updates. Only logs still represented by the bounded recent-run ledger remain.
+   If a bounded result reports cache access denied before Gradle starts, report
+   the exact path and recommend a narrowly scoped writable-cache configuration
+   for that existing location. Leave sandbox settings and cache locations
+   unchanged unless the user authorizes the configuration change.
 8. Finish after the last requested validation (targeted or broad) passes, or
    report unresolved fingerprints and why validation cannot continue. In the
    final response, quote each non-empty `--question` and give its bounded

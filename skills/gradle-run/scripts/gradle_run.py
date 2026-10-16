@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import errno
 from collections import deque
 from dataclasses import dataclass
 import hashlib
@@ -104,15 +105,21 @@ def lock_path(root: Path, workflow: str) -> Path:
     return directory.with_name(f"{workflow}.lock")
 
 
+class WorkflowBusy(ValueError):
+    pass
+
+
 class WorkflowLock:
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, *, read_only: bool = False) -> None:
         self.path = path
+        self.read_only = read_only
         self.file: Any | None = None
 
     def __enter__(self) -> None:
         try:
-            self.file = self.path.open("a+b")
-            if self.file.tell() == 0:
+            mode = ("rb" if os.name == "posix" else "r+b") if self.read_only else "a+b"
+            self.file = self.path.open(mode)
+            if not self.read_only and self.file.tell() == 0:
                 self.file.write(b"\0")
                 self.file.flush()
             self.file.seek(0)
@@ -125,11 +132,13 @@ class WorkflowLock:
             if os.name == "posix":
                 import fcntl
 
-                fcntl.flock(self.file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                mode = fcntl.LOCK_SH if self.read_only else fcntl.LOCK_EX
+                fcntl.flock(self.file.fileno(), mode | fcntl.LOCK_NB)
             elif os.name == "nt":
                 import msvcrt
 
-                msvcrt.locking(self.file.fileno(), msvcrt.LK_NBLCK, 1)
+                mode = msvcrt.LK_NBRLCK if self.read_only else msvcrt.LK_NBLCK
+                msvcrt.locking(self.file.fileno(), mode, 1)
             else:
                 raise ValueError("workflow locking is unsupported on this platform")
         except ValueError:
@@ -139,7 +148,9 @@ class WorkflowLock:
         except OSError as error:
             self.file.close()
             self.file = None
-            raise ValueError("workflow is busy") from error
+            if error.errno in (errno.EACCES, errno.EAGAIN):
+                raise WorkflowBusy("workflow is busy") from error
+            raise ValueError("workflow lock is unavailable") from error
 
     def __exit__(self, _exc_type: object, _exc: object, _traceback: object) -> None:
         if self.file is None:
@@ -185,7 +196,11 @@ def read_ledger(directory: Path) -> dict[str, Any]:
         ledger = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise ValueError("managed workflow ledger is unavailable") from error
-    if ledger.get("workflow") != directory.name or not isinstance(ledger.get("runs"), list):
+    if (
+        not isinstance(ledger, dict)
+        or ledger.get("workflow") != directory.name
+        or not isinstance(ledger.get("runs"), list)
+    ):
         raise ValueError("managed workflow ledger is invalid")
     return ledger
 
@@ -208,6 +223,8 @@ def create_workflow(root: Path) -> int:
             directory.mkdir(mode=0o700)
         except FileExistsError:
             continue
+        with WorkflowLock(lock_path(root, workflow)):
+            pass
         write_ledger(
             directory,
             {
@@ -408,8 +425,12 @@ def prune_logs(directory: Path, ledger: dict[str, Any]) -> None:
         if isinstance(run, dict) and isinstance(run.get("log"), str)
     }
     for log in directory.glob("*.log"):
-        if log.name not in retained:
+        if log.is_file() and log.name not in retained:
             log.unlink(missing_ok=True)
+    retained_locks = {f"{run['sequence']:04d}.run.lock" for run in ledger["runs"]}
+    for run_lock in directory.glob("*.run.lock"):
+        if run_lock.name not in retained_locks:
+            run_lock.unlink(missing_ok=True)
 
 
 def display_command(command: list[str]) -> str:
@@ -442,9 +463,10 @@ def effective_command(command: list[str]) -> list[str]:
     return effective
 
 
-def emit_summary(summary: dict[str, Any]) -> None:
+def bounded_summary(summary: dict[str, Any], max_bytes: int = MAX_SUMMARY_BYTES) -> dict[str, Any]:
+    summary = dict(summary)
     encoded = json.dumps(summary, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    payload_limit = MAX_SUMMARY_BYTES - 1
+    payload_limit = max_bytes - 1
     if len(encoded) > payload_limit:
         summary["excerpt"] = []
         summary["warning_fingerprints"] = summary.get("warning_fingerprints", [])[:2]
@@ -454,15 +476,22 @@ def emit_summary(summary: dict[str, Any]) -> None:
         summary["command"] = shortened(str(summary.get("command", "")), 256)
         encoded = json.dumps(summary, sort_keys=True, separators=(",", ":")).encode("utf-8")
     if len(encoded) > payload_limit:
-        summary = {
+        fallback = {
             "command": shortened(str(summary.get("command", "")), 128),
             "exit_status": summary.get("exit_status"),
             "failed_tasks": list(summary.get("failed_tasks", []))[:2],
             "log": shortened(str(summary.get("log", "")), 256),
             "summary_truncated": True,
         }
-        encoded = json.dumps(summary, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    print(encoded.decode("utf-8"))
+        for key in ("interrupted_signal", "launch_error"):
+            if key in summary:
+                fallback[key] = summary[key]
+        summary = fallback
+    return summary
+
+
+def emit_summary(summary: dict[str, Any]) -> None:
+    print(json.dumps(bounded_summary(summary), sort_keys=True, separators=(",", ":")))
 
 
 def emit_heartbeat(child: subprocess.Popen[bytes], sequence: int, delay: float) -> None:
@@ -583,6 +612,8 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
 def run_locked(root: Path, arguments: argparse.Namespace) -> int:
     directory = workflow_path(root, arguments.workflow)
     ledger = read_ledger(directory)
+    if ledger.get("active_run") is not None:
+        raise ValueError("workflow has an uncertain run; inspect status before recovery")
     command = list(arguments.command)
     if command[:1] == ["--"]:
         command = command[1:]
@@ -594,53 +625,72 @@ def run_locked(root: Path, arguments: argparse.Namespace) -> int:
     prior_failures = set(ledger.get("failure_fingerprints", {}))
     repeated_command = record_command(ledger, command)
     sequence = ledger.get("run_count", len(ledger["runs"])) + 1
-    log = directory / f"{sequence:04d}.log"
-    started = time.monotonic()
-    try:
-        output = log.open("wb")
-    except OSError as error:
-        emit_summary({"launch_error": str(error), "command": display_command(command)})
-        return 125
+    with WorkflowLock(directory / f"{sequence:04d}.run.lock"):
+        log = directory / f"{sequence:04d}.log"
+        started = time.monotonic()
+        output: Any | None = None
 
-    child: subprocess.Popen[bytes] | None = None
-    interruption: ProcessInterrupted | None = None
-    launch_error: OSError | None = None
-    exit_status = 125
-    cleanup_started = False
-    pending_signal: int | None = None
-    handled_signals = (signal.SIGINT, signal.SIGTERM)
-    previous_handlers = {
-        handled_signal: signal.getsignal(handled_signal)
-        for handled_signal in handled_signals
-    }
+        child: subprocess.Popen[bytes] | None = None
+        interruption: ProcessInterrupted | None = None
+        launch_error: OSError | None = None
+        exit_status = 125
+        cleanup_started = False
+        pending_signal: int | None = None
+        handled_signals = (signal.SIGINT, signal.SIGTERM)
+        previous_handlers = {
+            handled_signal: signal.getsignal(handled_signal)
+            for handled_signal in handled_signals
+        }
 
-    def interrupt_child(signum: int, _frame: Any) -> None:
-        nonlocal pending_signal
-        if cleanup_started:
-            return
-        if child is None:
-            pending_signal = pending_signal or signum
-            return
-        raise ProcessInterrupted(signum)
+        def interrupt_child(signum: int, _frame: Any) -> None:
+            nonlocal pending_signal
+            if cleanup_started:
+                return
+            if child is None:
+                pending_signal = pending_signal or signum
+                return
+            raise ProcessInterrupted(signum)
 
-    for handled_signal in handled_signals:
-        signal.signal(handled_signal, interrupt_child)
-    try:
-        with output:
+        for handled_signal in handled_signals:
+            signal.signal(handled_signal, interrupt_child)
+        try:
             try:
+                active_run = {
+                    "sequence": sequence,
+                    "wrapper_pid": os.getpid(),
+                    "child_pid": None,
+                    "started_at": time.time(),
+                    "cwd": shortened(os.getcwd(), 1024),
+                    "scope": arguments.scope,
+                    "question": shortened(redact(arguments.question), 1024),
+                    "command": display_command(command),
+                    "log": log.name,
+                }
+                ledger["active_run"] = active_run
+                write_ledger(directory, ledger)
                 try:
-                    child = subprocess.Popen(
-                        command,
-                        stdout=output,
-                        stderr=subprocess.STDOUT,
-                        **process_launch_options(os.name),
-                    )
-                    if pending_signal is not None:
-                        raise ProcessInterrupted(pending_signal)
+                    output = log.open("wb")
                 except OSError as error:
                     launch_error = error
                 else:
-                    exit_status = wait_for_child(child, sequence)
+                    with output:
+                        try:
+                            child = subprocess.Popen(
+                                command,
+                                stdout=output,
+                                stderr=subprocess.STDOUT,
+                                **process_launch_options(os.name),
+                            )
+                        except OSError as error:
+                            launch_error = error
+                        else:
+                            active_run["child_pid"] = child.pid
+                            write_ledger(directory, ledger)
+                            if pending_signal is not None:
+                                raise ProcessInterrupted(pending_signal)
+                            exit_status = wait_for_child(child, sequence)
+                if pending_signal is not None:
+                    raise ProcessInterrupted(pending_signal)
                 cleanup_started = True
             except ProcessInterrupted as error:
                 cleanup_started = True
@@ -653,90 +703,34 @@ def run_locked(root: Path, arguments: argparse.Namespace) -> int:
                     terminate_child(child, isolated_process_group=True)
                 raise
 
-        if launch_error is not None:
-            log.unlink(missing_ok=True)
-            emit_summary(
-                {"launch_error": str(launch_error), "command": display_command(command)}
+            elapsed = time.monotonic() - started
+            diagnostics = (
+                extract_diagnostics(log) if launch_error is None
+                else Diagnostics([], False, {}, 0, {}, 0, [])
             )
-            return 125
-
-        elapsed = time.monotonic() - started
-        diagnostics = extract_diagnostics(log)
-        warning_items = diagnostics.warning_fingerprints
-        failure_items = diagnostics.failure_fingerprints
-        repeated_primary_failure = bool(
-            failure_items and next(iter(failure_items)) in prior_failures
-        )
-        merge_fingerprints(
-            ledger,
-            "warning_fingerprints",
-            warning_items,
-            diagnostics.warning_fingerprints_truncated,
-        )
-        merge_fingerprints(
-            ledger,
-            "failure_fingerprints",
-            failure_items,
-            diagnostics.failure_fingerprints_truncated,
-        )
-        if interruption is not None:
-            exit_status = 128 + interruption.signum
-            append_run(
+            warning_items = diagnostics.warning_fingerprints
+            failure_items = diagnostics.failure_fingerprints
+            repeated_primary_failure = bool(
+                failure_items and next(iter(failure_items)) in prior_failures
+            )
+            merge_fingerprints(
                 ledger,
-                {
-                    "sequence": sequence,
-                    "scope": arguments.scope,
-                    "question": shortened(redact(arguments.question), 1024),
-                    "command": display_command(command),
-                    "elapsed_seconds": round(elapsed, 3),
-                    "exit_status": exit_status,
-                    "interrupted_signal": interruption.signum,
-                    "log": log.name,
-                    "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
-                    "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
-                },
+                "warning_fingerprints",
+                warning_items,
+                diagnostics.warning_fingerprints_truncated,
             )
-            write_ledger(directory, ledger)
-            prune_logs(directory, ledger)
-            emit_summary(
-                {
-                    "command": display_command(command),
-                    "elapsed_seconds": round(elapsed, 3),
-                    "exit_status": exit_status,
-                    "excerpt": diagnostics.excerpt,
-                    "failed_tasks": diagnostics.failed_tasks,
-                    "failed_tasks_truncated": diagnostics.failed_tasks_truncated,
-                    "failure_fingerprints": summary_fingerprints(failure_items),
-                    "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
-                    "interrupted_signal": interruption.signum,
-                    "log": str(log),
-                    "repeated_command": repeated_command,
-                    "repeated_primary_failure": repeated_primary_failure,
-                    "scope": arguments.scope,
-                    "warning_fingerprints": summary_fingerprints(warning_items),
-                    "warning_fingerprints_truncated": diagnostics.warning_fingerprints_truncated,
-                }
+            merge_fingerprints(
+                ledger,
+                "failure_fingerprints",
+                failure_items,
+                diagnostics.failure_fingerprints_truncated,
             )
-            return exit_status
-
-        append_run(
-            ledger,
-            {
-                "sequence": sequence,
-                "scope": arguments.scope,
-                "question": shortened(redact(arguments.question), 1024),
-                "command": display_command(command),
-                "elapsed_seconds": round(elapsed, 3),
-                "exit_status": exit_status,
-                "log": log.name,
-                "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
-                "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
-            },
-        )
-        write_ledger(directory, ledger)
-        prune_logs(directory, ledger)
-        emit_summary(
-            {
+            interrupted_signal = interruption.signum if interruption is not None else (
+                -exit_status if exit_status < 0 else None
+            )
+            if interruption is not None:
+                exit_status = 128 + interruption.signum
+            summary = {
                 "command": display_command(command),
                 "elapsed_seconds": round(elapsed, 3),
                 "exit_status": exit_status,
@@ -744,24 +738,151 @@ def run_locked(root: Path, arguments: argparse.Namespace) -> int:
                 "failed_tasks": diagnostics.failed_tasks,
                 "failed_tasks_truncated": diagnostics.failed_tasks_truncated,
                 "failure_fingerprints": summary_fingerprints(failure_items),
+                "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
                 "log": str(log),
                 "repeated_command": repeated_command,
                 "repeated_primary_failure": repeated_primary_failure,
                 "scope": arguments.scope,
                 "warning_fingerprints": summary_fingerprints(warning_items),
                 "warning_fingerprints_truncated": diagnostics.warning_fingerprints_truncated,
-                "failure_fingerprints_truncated": diagnostics.failure_fingerprints_truncated,
             }
-        )
-        return exit_status
-    finally:
-        for handled_signal, previous_handler in previous_handlers.items():
-            signal.signal(handled_signal, previous_handler)
+            if interrupted_signal is not None:
+                summary["interrupted_signal"] = interrupted_signal
+            if launch_error is not None:
+                summary["launch_error"] = shortened(redact(str(launch_error)), 1024)
+                if output is not None:
+                    log.unlink(missing_ok=True)
+            # Leave room for status identity within the same output bound.
+            summary = bounded_summary(summary, MAX_SUMMARY_BYTES // 2)
+            entry = {
+                **active_run,
+                "state": "interrupted" if interrupted_signal is not None else "completed",
+                "elapsed_seconds": round(elapsed, 3),
+                "exit_status": exit_status,
+                "failure_fingerprints": list(failure_items)[:MAX_DIAGNOSTICS],
+                "warning_fingerprints": list(warning_items)[:MAX_DIAGNOSTICS],
+                "result": summary,
+            }
+            if interrupted_signal is not None:
+                entry["interrupted_signal"] = interrupted_signal
+            append_run(ledger, entry)
+            ledger.pop("active_run", None)
+            write_ledger(directory, ledger)
+            prune_logs(directory, ledger)
+            emit_summary(summary)
+            return exit_status
+        finally:
+            for handled_signal, previous_handler in previous_handlers.items():
+                signal.signal(handled_signal, previous_handler)
 
 
 def finish_workflow(root: Path, workflow: str) -> int:
     with WorkflowLock(lock_path(root, workflow)):
         return finish_locked(root, workflow)
+
+
+def valid_stored_result(result: Any) -> bool:
+    if not isinstance(result, dict) or not isinstance(result.get("exit_status"), int):
+        return False
+    for key in ("excerpt", "failed_tasks", "warning_fingerprints", "failure_fingerprints"):
+        values = result.get(key, [])
+        if not isinstance(values, list):
+            return False
+        if key in ("excerpt", "failed_tasks"):
+            if not all(isinstance(value, str) for value in values):
+                return False
+        elif not all(
+            isinstance(value, dict)
+            and isinstance(value.get("fingerprint"), str)
+            and isinstance(value.get("count"), int)
+            and isinstance(value.get("excerpt"), str)
+            for value in values
+        ):
+            return False
+    # A stored result was already bounded before its atomic write.
+    return len(json.dumps(result, sort_keys=True, separators=(",", ":")).encode("utf-8")) < MAX_SUMMARY_BYTES // 2
+
+
+def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, Any]:
+    snapshot: dict[str, Any] = {
+        "workflow": workflow, "state": "uncertain", "run": None, "result": None
+    }
+    try:
+        ledger = read_ledger(directory)
+    except ValueError as error:
+        snapshot["reason"] = str(error)
+        return snapshot
+    active = ledger.get("active_run")
+    latest = ledger["runs"][-1] if ledger["runs"] else None
+    terminal = (
+        isinstance(latest, dict)
+        and isinstance(latest.get("sequence"), int)
+        and latest["sequence"] == ledger.get("run_count")
+        and latest.get("state") in ("completed", "interrupted")
+        and valid_stored_result(latest.get("result"))
+        and latest["result"]["exit_status"] == latest.get("exit_status")
+        and (
+            latest["state"] != "interrupted"
+            or isinstance(latest["result"].get("interrupted_signal"), int)
+        )
+    )
+    if terminal:
+        snapshot["result"] = bounded_summary(latest["result"], MAX_SUMMARY_BYTES // 2)
+        snapshot["result_sequence"] = latest.get("sequence") if isinstance(latest.get("sequence"), int) else None
+    run = active if active is not None else latest
+    if isinstance(run, dict):
+        snapshot["run"] = {
+            key: shortened(redact(run[key]), 128) if isinstance(run.get(key), str)
+            else run.get(key) if isinstance(run.get(key), (int, float)) else None
+            for key in (
+                "sequence", "wrapper_pid", "child_pid", "started_at", "cwd", "scope", "question", "command", "log"
+            )
+        }
+    if active is not None:
+        snapshot["reason"] = "active run is incomplete or its owner lock is not held"
+        if busy and isinstance(active, dict) and all(
+            isinstance(active.get(key), int) and active[key] > 0
+            for key in ("sequence", "wrapper_pid", "child_pid")
+        ) and isinstance(active.get("started_at"), (int, float)):
+            try:
+                with WorkflowLock(directory / f"{active['sequence']:04d}.run.lock", read_only=True):
+                    pass
+            except WorkflowBusy:
+                snapshot["state"] = "running"
+                snapshot.pop("reason")
+            except ValueError:
+                pass
+    elif busy:
+        snapshot["reason"] = "workflow is busy without an active run identity"
+    elif latest is None and ledger.get("run_count") == 0:
+        snapshot["state"] = "idle"
+    elif terminal:
+        snapshot["state"] = latest["state"]
+    else:
+        snapshot["reason"] = "latest run has no recorded terminal result"
+    return snapshot
+
+
+def status_workflow(root: Path, workflow: str) -> int:
+    directory = workflow_path(root, workflow)
+    if not directory.exists():
+        if not read_finished(finished_path(root, workflow), workflow):
+            raise ValueError("unknown workflow identifier")
+        emit_summary({"workflow": workflow, "state": "finished", "run": None, "result": None})
+        return 0
+    try:
+        with WorkflowLock(lock_path(root, workflow), read_only=True):
+            snapshot = status_snapshot(directory, workflow, busy=False)
+    except WorkflowBusy:
+        # Writers atomically replace the ledger; never wait on a running build.
+        snapshot = status_snapshot(directory, workflow, busy=True)
+    except ValueError:
+        snapshot = {
+            "workflow": workflow, "state": "uncertain", "reason": "workflow lock is unavailable",
+            "run": None, "result": None,
+        }
+    emit_summary(snapshot)
+    return 0
 
 
 def finish_locked(root: Path, workflow: str) -> int:
@@ -772,7 +893,8 @@ def finish_locked(root: Path, workflow: str) -> int:
             raise ValueError("unknown workflow identifier")
         print(json.dumps({"already_finished": True, "finished": workflow}, sort_keys=True))
         return 0
-    read_ledger(directory)
+    if read_ledger(directory).get("active_run") is not None:
+        raise ValueError("workflow has an uncertain run; refusing cleanup")
     write_finished(tombstone, workflow)
     try:
         shutil.rmtree(directory)
@@ -795,6 +917,8 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("command", nargs=argparse.REMAINDER)
     finish = commands.add_parser("finish")
     finish.add_argument("--workflow", required=True)
+    status = commands.add_parser("status")
+    status.add_argument("--workflow", required=True)
     return result
 
 
@@ -805,6 +929,8 @@ def main() -> int:
             return create_workflow(arguments.root)
         if arguments.operation == "run":
             return run_command(arguments.root, arguments)
+        if arguments.operation == "status":
+            return status_workflow(arguments.root, arguments.workflow)
         return finish_workflow(arguments.root, arguments.workflow)
     except ValueError as error:
         print(str(error), file=sys.stderr)

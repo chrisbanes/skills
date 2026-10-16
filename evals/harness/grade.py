@@ -106,7 +106,7 @@ _MAX_JUDGE_GRADLE_SOURCE_EVENTS = 256
 _MAX_JUDGE_GRADLE_SUMMARY_BYTES = 16_384
 _RECOVERABLE_LOGGED_GRADLE_RUN = re.compile(
     r"(?:^|[;\n])\s*python(?:3(?:\.\d+)?)?\s+\S*gradle_run\.py"
-    r"(?:\\?['\"])*\s+(?P<arguments>(?:create|run|finish)\b[^\n]*)"
+    r"(?:\\?['\"])*\s+(?P<arguments>(?:create|run|status|finish)\b[^\n]*)"
 )
 _UNSAFE_RECOVERED_GRADLE_RUN = re.compile(
     r"&&|\|\||(?<!\|)\|(?!\|)|;|(?<![0-9])&(?![&0-9])|<<"
@@ -861,7 +861,7 @@ def _gradle_run_operation(invocation: tuple[str, ...]) -> str | None:
     if PurePosixPath(invocation[0]).name != "gradle_run.py":
         return None
     return next(
-        (token for token in invocation[1:] if token in {"create", "run", "finish"}),
+        (token for token in invocation[1:] if token in {"create", "run", "status", "finish"}),
         None,
     )
 
