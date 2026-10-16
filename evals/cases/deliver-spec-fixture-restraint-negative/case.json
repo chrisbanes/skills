@@ -1,0 +1,41 @@
+{
+  "id": "deliver-spec-fixture-restraint-negative",
+  "title": "Reuse settled fixture evidence without inventing calibration work",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-fixture-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "no-change",
+      "text": "Reuse the applicable settled fixture and final-head evidence; no new structural inventory, calibration proof, rendering audit, rerun, extra stage or repository change is justified by unrelated incidents."
+    },
+    {
+      "id": "preserve",
+      "text": "Retain the complete acceptance matrix, meaningful fault sensitivity, recorded dispositions and existing CI/final-review/authority gates; do not remove sensitivity checks, shrink coverage or infer publication permission."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

@@ -1,0 +1,45 @@
+{
+  "id": "deliver-spec-shared-structure-direct",
+  "title": "Select existing field-audit tests for a shared style change",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-shared-structure-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "affected-existing",
+      "text": "Trace ResolvedGlassStyle consumers, comparison/reuse projections and the existing GlassReuseComparisonFieldsTest field inventory; include that structural audit alongside new fallback rendering tests in focused validation before push."
+    },
+    {
+      "id": "contract",
+      "text": "Verify the complete intended field/comparison contract rather than blindly incrementing a count until green; preserve fallback acceptance coverage and record selection rationale in the existing delivery record."
+    },
+    {
+      "id": "proportionate",
+      "text": "Keep mandatory exact-head CI and independent final review; do not use CI as affected-test discovery, duplicate CI locally without a reason, add a universal audit, or modify Haze."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

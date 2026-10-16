@@ -11,8 +11,14 @@ the selected mode retains its approval, authority and finish gates.
    failures, review coverage accounts, external-review convergence and
    browser failure diagnostics. It owns those rules; keep their evidence in the
    delivery record below.
-2. Run meaningful affected tests and applicable build, type and lint checks
-   during implementation and bounded repairs. Run every required full check
+2. Select affected tests from the changed contract and its existing consumers,
+   not only edited files or new tests. For shared structures, inspect field
+   inventories and projections such as comparison/reuse keys, serialization and
+   caches, and find existing structural-audit tests (for example, field-count or
+   completeness checks). Include the affected tests in focused validation and
+   record the selection rationale in the delivery record. Run meaningful
+   affected tests and applicable build, type and lint checks during implementation
+   and bounded repairs. Run every required full check
    on meaningful integrated delivery candidates, including mandatory repository
    and provider validation. Repeat checks only when changes invalidate evidence,
    impact cannot be bounded, or an explicit repository/provider rule requires it.

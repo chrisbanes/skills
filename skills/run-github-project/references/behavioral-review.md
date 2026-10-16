@@ -18,7 +18,19 @@ establish correctness coverage.
    problems, blocked dependencies, or discoveries that would invalidate
    substantial ongoing work. Answer an owner's decision request promptly;
    batching must not leave an owner blocked on the lead.
-3. After the batch, review changed behavior and its interactions under the
+3. When developing an unfamiliar or unsettled behavioral fixture, establish one
+   representative case before expanding across channels, states or platforms.
+   Reacquire the live subject after replacement or recreation; apply and observe
+   the stimulus during the state named by the contract. Choose a measurement
+   sensitive to the affected region and assert independent channels separately
+   when aggregation could mask failure. Demonstrate that the case passes the
+   intended behavior and fails a relevant baseline or bounded intentional fault,
+   then restore the candidate before expansion. If it cannot distinguish the
+   fault, correct the fixture first. Preserve the full acceptance matrix and
+   meaningful sensitivity checks; reuse applicable settled fixture evidence.
+   This is implementation ordering, not an extra review stage or a universal
+   requirement to recalibrate established tests.
+4. After the batch, review changed behavior and its interactions under the
    procedure below. Reopen settled areas only when new evidence or changed
    inputs justify it. Disposition every actionable finding and retain required
    independent final review.
@@ -47,11 +59,17 @@ establish correctness coverage.
    A verdict without this account leaves review coverage unestablished. Preserve
    explicitly invoked review providers' output and add the account to that same
    context when needed.
-3. For a demonstrated boundary defect, trace other callers and transformations
-   governed by the same rule. Inspect relevant neighboring cases and repair and
-   test those that violate the accepted contract before publication. For example,
+3. For a demonstrated boundary defect or rendering change, trace other callers
+   and transformations governed by the same rule. Inspect relevant neighboring
+   cases; repair and test violations of the accepted contract before publication.
+   For example,
    a source-size failure warrants checking transformations that can expand the
-   retained representation, not just the original input limit. Record inspected
+   retained representation, not just the original input limit. For a demonstrated
+   rendering change, follow the changed value through relevant renderers and
+   delegates, capture bounds/padding, and reuse/cache or invalidation projections
+   where they consume it. Check both missing propagation and unnecessary
+   invalidation against what each consumer actually uses; test affected behavior
+   and retain evidence for unchanged consumers. Record inspected
    cases and evidence for leaving any unchanged. Reuse the smallest existing
    behavior only where semantics align; retain consumer-specific identity,
    privacy, persistence and recovery requirements. Do not expand a concrete

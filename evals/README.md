@@ -328,7 +328,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 89 calibration-only cases, including
+The workflows/writing corpus contains 95 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -386,6 +386,14 @@ CI-supplied full-suite evidence versus explicit local rules and checks CI
 cannot run; and `to-plan` baselines proven from green CI on the exact base SHA
 while keeping focused checks CI cannot answer. They use immutable synthetic
 state.
+
+Six affected-validation calibrations cover the Haze shared-field audit and
+unsettled optical-fixture regressions, an audio-fixture planning transfer case,
+rendering propagation through capture bounds and cache/invalidation consumers,
+and no-change controls for settled fixtures and plans. Deterministic checks
+validate supplied-state integrity and standalone reference packaging; semantic
+rubrics cover test selection, calibration sensitivity, preserved acceptance
+coverage and restraint. Corpus validation does not establish model behavior.
 
 Use `--suite compose`, `--suite kotlin-gradle`, or `--suite workflows-writing`
 to select one advisory scorecard. The default remains `compose` for command
