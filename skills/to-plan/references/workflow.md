@@ -124,10 +124,29 @@ Each new slice must also have a stable unique task ID (such as `T1`) and an
 explicit `Depends on` list. Reserve the case-insensitive task ID `none` for the
 `Depends on: none` root marker; dependencies may name only declared task IDs.
 Validate that every target exists and the graph is acyclic before handoff.
-Record shared-file, interface, and integration constraints, and identify which
-ready tasks may safely run concurrently. Shared mutable files or a need for
-another task's unmerged changes make tasks non-independent even when the graph
-otherwise marks them ready. Treat older plans without dependency metadata as
+Record three distinct constraints when work overlaps:
+
+1. **Behavioral prerequisites:** name the behavior or proof result a slice
+   consumes and its prerequisite task ID; keep dependent implementation behind
+   integration and affected checks.
+2. **Shared-file mutation conflicts:** name the canonical paths, interfaces and
+   exclusive resources. Serialize their mutation even across worktrees; a
+   common file does not by itself gate preparation confined to other paths.
+3. **Final integration requirements:** name the required integrated baseline,
+   integration order and final checks. Keep those gates even when an earlier
+   slice can validate independently on the current committed base.
+
+Identify ready tasks safe to run concurrently. For any independent preparation,
+name its slice ownership, permitted paths/resources, focused check and explicit
+stop boundary before shared edits or dependent behavior. Assign an execution
+owner before dispatch. Admit only preparation whose independence is established
+by inspected code and tests; uncertain shared-seam overlap requires investigation
+or a hold. A need for another task's unmerged behavior makes that slice
+non-independent. Do not manufacture preparation where no useful independent
+check exists, weaken native ticket dependencies, or reinterpret an accepted
+all-work baseline prerequisite as final-only; use the authorized plan-change
+route for changed published ordering. These slice boundaries do not require
+stacked PRs. Treat older plans without dependency metadata as
 one sequential chain in listed order; new plans must include the metadata.
 Let the owner choose meaningful behavioral tests under repository policy and
 explicit user requests; do not require TDD or separate seam approval by default.

@@ -18,6 +18,13 @@
    A dependent starts only after prerequisite integration and affected checks,
    including the planned boundary evidence under
    [to-plan's boundary-validation rule](boundary-validation.md).
+   Distinguish behavioral prerequisites, shared-file mutation conflicts and
+   final integration requirements. Dispatch plan-proven independent preparation
+   on the current integrated base only with an explicit slice owner, permitted
+   paths/resources, focused checks and a stop before shared edits or dependent
+   behavior. Preserve native blockers, resource grants and final integrated
+   validation. Do not split an accepted task or relax its prerequisites to
+   create concurrency; route changed ordering through authorized planning.
 4. When delegating, apply [subagent selection](subagent-selection.md) and the
    runtime requirements below. Confirm edit, validation, commit and resumable repair
    capability; retain the owner handle. Fit descendants within actual caller,

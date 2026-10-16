@@ -61,9 +61,11 @@ retained_work [dispositions], and evidence [dispositions] when closing amendment
 
 ### Implementation slices
 
-**Task graph and parallelism:** <Confirm the graph is acyclic; list shared-file
-or integration constraints and identify sets of ready tasks safe to run
-concurrently.>
+**Task graph and parallelism:** <Confirm the graph is acyclic; distinguish
+behavioral prerequisites, shared-file mutation conflicts and final integration
+requirements. Identify ready concurrent tasks; for independent preparation,
+name slice ownership, permitted paths/resources, focused checks and a stop
+boundary before shared edits or dependent behavior.>
 
 #### 1. <Observable increment>
 
@@ -160,9 +162,11 @@ decisions. Include everything a fresh session needs; do not rely on chat history
 
 ## Implementation slices
 
-**Task graph and parallelism:** <Confirm the graph is acyclic; list shared-file
-or integration constraints and identify sets of ready tasks safe to run
-concurrently.>
+**Task graph and parallelism:** <Confirm the graph is acyclic; distinguish
+behavioral prerequisites, shared-file mutation conflicts and final integration
+requirements. Identify ready concurrent tasks; for independent preparation,
+name slice ownership, permitted paths/resources, focused checks and a stop
+boundary before shared edits or dependent behavior.>
 
 ### 1. <Observable increment>
 

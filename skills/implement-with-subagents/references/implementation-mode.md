@@ -27,6 +27,13 @@
    behavior-preserving commits. Record shared-file, interface, and integration
    constraints. Stop on invalid or ambiguous graphs rather than choosing a
    new dependency for the plan owner.
+   Distinguish behavioral prerequisites, shared-file mutation conflicts and
+   final integration requirements. Plan-proven independent preparation may run
+   on the current integrated base with an explicit slice owner, permitted
+   paths/resources, focused checks and a stop before shared edits or dependent
+   behavior. Preserve native blockers, resource grants and final integrated
+   validation; never split an accepted task or relax its prerequisites to
+   create concurrency. Route changed ordering through authorized planning.
 4. Keep the integration checkout stable and prepare the ready frontier.
    Reconcile prior task acceptance and integration evidence first. Do not
    reassign an accepted task or repeat implementation merely to satisfy worker
