@@ -201,7 +201,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(90, len(calibration))
+        self.assertEqual(93, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -298,6 +298,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "to-plan-ci-baseline-direct",
                 "to-plan-ci-baseline-novel",
                 "to-plan-ci-baseline-restraint-negative",
+                "run-github-project-preparation-direct",
+                "deliver-spec-behavioral-dependency-novel",
+                "run-github-project-shared-seam-negative",
             },
             {case.id for case in calibration},
         )
@@ -574,6 +577,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "to-plan-ci-baseline-direct",
                 "to-plan-ci-baseline-novel",
                 "to-plan-ci-baseline-restraint-negative",
+                "run-github-project-preparation-direct",
+                "deliver-spec-behavioral-dependency-novel",
+                "run-github-project-shared-seam-negative",
             },
             {case.id for case, _ in conditions},
         )
@@ -1407,6 +1413,88 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         )
 
         self.assertTrue(any("task ID 'none' is reserved" in failure for failure in failures))
+
+    def test_preparation_admission_decisions_and_unsafe_variants(self):
+        reports = {
+            "run-github-project-preparation-direct": {
+                "Preparation": "admit-F1",
+                "Owner": "fallback",
+                "Paths": "fixtures/fallback.json, tests/test_fallback_fixture.py",
+                "Check": "python3 -m unittest tests.test_fallback_fixture",
+                "Stop": "before-F2-and-render/Glass.kt",
+                "GPU1": "retained-by-optics",
+                "Qualification": "pending-integrated-head",
+                "Native-variant": "hold-whole-ticket",
+                "Plan": "preserve",
+            },
+            "deliver-spec-behavioral-dependency-novel": {
+                "E1": "hold",
+                "Evidence": "integrated-S1-and-affected-checks",
+                "Base": "current-integrated-head",
+                "Graph": "preserve-S1-to-E1",
+                "All-work-variant": "hold-for-authorized-plan-change",
+                "Qualification": "pending-integrated-head",
+            },
+            "run-github-project-shared-seam-negative": {
+                "Admission": "hold-whole-ticket",
+                "Independence": "unknown",
+                "Next-shared-edit": "stop",
+                "Ownership": "preserve-fallback-at-C0",
+                "Resume": "established-independence-or-authorized-plan-change",
+                "Qualification": "pending-integrated-head",
+            },
+        }
+        cases = {case.id: case for case in validate_corpus(REPO_ROOT, suite="workflows-writing").cases}
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        for case_id, fields in reports.items():
+            case = cases[case_id]
+            self.assertTrue(case.calibration)
+            self.assertEqual((".scratch/admission.md",), case.allowed_write_paths)
+            with tempfile.TemporaryDirectory() as directory:
+                workspace = Path(directory)
+                (workspace / "state.md").write_bytes(
+                    (REPO_ROOT / "evals/fixtures/workflow/state.md").read_bytes()
+                )
+                artifact = workspace / ".scratch/admission.md"
+                artifact.parent.mkdir()
+
+                def check(values):
+                    artifact.write_text(
+                        "\n".join(f"{key}: {value}" for key, value in values.items()) + "\n",
+                        encoding="utf-8",
+                    )
+                    return subprocess.run(
+                        [sys.executable, "-B", str(validator), case_id],
+                        cwd=workspace, text=True, capture_output=True, check=False,
+                    )
+
+                with self.subTest(case=case_id, variant="accepted"):
+                    result = check(fields)
+                    self.assertEqual(0, result.returncode, result.stderr)
+                # Reject missing boundaries/ownership and every changed admission gate.
+                for key in fields:
+                    with self.subTest(case=case_id, missing=key):
+                        result = check({name: value for name, value in fields.items() if name != key})
+                        self.assertEqual(1, result.returncode, result.stderr)
+                unsafe = {
+                    "Preparation": "hold", "Owner": "unassigned",
+                    "Paths": "render/Glass.kt", "Check": "final-only",
+                    "Stop": "after-shared-edit", "GPU1": "released",
+                    "Qualification": "complete", "Native-variant": "admit-F1",
+                    "Plan": "silently-reorder", "E1": "dispatch",
+                    "Evidence": "S1-branch-tests", "Base": "unmerged-S1-branch",
+                    "Graph": "remove-edge", "All-work-variant": "invent-preparation",
+                    "Admission": "admit-preparation", "Independence": "proven-by-worktree",
+                    "Next-shared-edit": "finish-slice", "Ownership": "transfer-to-controller",
+                    "Resume": "free-file-grant",
+                }
+                for key in fields:
+                    with self.subTest(case=case_id, changed=key):
+                        result = check({**fields, key: unsafe[key]})
+                        self.assertEqual(1, result.returncode, result.stderr)
+                    with self.subTest(case=case_id, contradictory=key):
+                        result = check({**fields, key: f"{fields[key]}\n{key}: {unsafe[key]}"})
+                        self.assertEqual(1, result.returncode, result.stderr)
 
     def test_plan_artifact_validator_rejects_cyclic_task_dependencies(self):
         validator = REPO_ROOT / "evals/validators/text_case.py"

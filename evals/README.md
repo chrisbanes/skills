@@ -43,6 +43,12 @@ GitHub plan publication/readback gates. Their deterministic validator checks
 immutable fixture integrity; semantic rubrics require a separately authorised
 model run and are not proven by corpus validation.
 
+The preparation-admission calibration cases additionally validate bounded
+decision artifacts for independent preparation, genuine behavioral dependencies
+and uncertain shared-seam overlap. Deterministic tests accept the expected
+decisions and reject widened scope or bypassed gates; they do not establish
+live model behavior or recoverable dependency-wait time.
+
 ## Results
 
 **Baseline** is the positive-case pass rate with no skills available, restricted
@@ -328,7 +334,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 90 calibration-only cases, including
+The workflows/writing corpus contains 93 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,

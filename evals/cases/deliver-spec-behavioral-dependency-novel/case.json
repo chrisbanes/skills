@@ -1,0 +1,44 @@
+{
+  "id": "deliver-spec-behavioral-dependency-novel",
+  "title": "deliver spec behavioral dependency novel",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec",
+    "implement-with-subagents",
+    "to-plan"
+  ],
+  "expected_skills": [
+    "deliver-spec",
+    "implement-with-subagents",
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/admission.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-behavioral-dependency-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "bounded-admission",
+      "text": "Holds E1 for integrated S1 plus affected boundary evidence despite disjoint paths, free capacity and passing branch tests. Preserves graph/ownership and final validation. Keeps the all-work baseline variant held until an authorized plan change; does not manufacture preparation or start from the unmerged prerequisite branch."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
