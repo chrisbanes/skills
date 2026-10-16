@@ -1,0 +1,31 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/admission.md",
+      "count": 1,
+      "must_match": [
+        "^E1: hold$",
+        "^Evidence: integrated\\-S1\\-and\\-affected\\-checks$",
+        "^Base: current\\-integrated\\-head$",
+        "^Graph: preserve\\-S1\\-to\\-E1$",
+        "^All\\-work\\-variant: hold\\-for\\-authorized\\-plan\\-change$",
+        "^Qualification: pending\\-integrated\\-head$"
+      ],
+      "must_not_match": [
+        "^E1: (?!hold$).*$",
+        "^Evidence: (?!integrated\\-S1\\-and\\-affected\\-checks$).*$",
+        "^Base: (?!current\\-integrated\\-head$).*$",
+        "^Graph: (?!preserve\\-S1\\-to\\-E1$).*$",
+        "^All\\-work\\-variant: (?!hold\\-for\\-authorized\\-plan\\-change$).*$",
+        "^Qualification: (?!pending\\-integrated\\-head$).*$"
+      ]
+    }
+  ]
+}

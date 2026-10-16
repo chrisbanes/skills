@@ -1,0 +1,42 @@
+{
+  "id": "run-github-project-preparation-direct",
+  "title": "run github project preparation direct",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "to-plan"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/admission.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-preparation-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "bounded-admission",
+      "text": "Admits only accepted-plan F1, records its owner/base/paths/check and stop in both ownership records before dispatch; keeps F2, whole-file grants, older-first integration, final qualification and native blocker variant gated. Does not infer recoverable wait time or create stacked PRs."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

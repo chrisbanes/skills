@@ -136,6 +136,12 @@ contains a copy of the reference for standalone installation.
 `deliver-spec` bundles its own solo-or-delegated implementation procedure;
 `implement-with-subagents` retains its explicitly delegated workflow.
 
+Planning and drain admission distinguish behavioral prerequisites, shared-file
+mutation conflicts and final integration requirements. Plan-proven independent
+preparation needs explicit slice ownership, permitted paths/resources, focused
+checks and a stop before shared edits; native blockers, accepted-plan ordering,
+resource grants and final integrated validation still apply.
+
 Edit `references/subagent-selection.md`, then run
 `npm run references:sync` and include the updated bundled copies in the change.
 Run `npm run build` to check that all copies are regular files matching their
