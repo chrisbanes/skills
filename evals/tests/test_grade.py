@@ -1,9 +1,12 @@
+from dataclasses import replace
+import json
 import shlex
 import tempfile
 import unittest
 from pathlib import Path
 
 from evals.harness.cases import EvalCase, Validator, load_case
+from evals.harness.claude import ClaudeRuntime
 from evals.harness.runner import SubjectResult, subject_output_valid
 from evals.harness.grade import grade_subject
 
@@ -103,32 +106,80 @@ class DeterministicGradeTest(unittest.TestCase):
         self.assertIn("command execution forbidden for this case", grade.objective_failures)
         self.assertIn("command executed despite analysis-only boundary", grade.violations)
 
-    def test_gradle_recovery_explanations_reject_command_execution(self):
+    def test_gradle_recovery_explanation_action_boundary(self):
         repo_root = Path(__file__).resolve().parents[2]
+        explanation = {
+            "summary": "Explain the supplied recovery evidence.",
+            "skills_used": ["gradle-run"], "evidence": ["supplied snapshot"],
+        }
+
+        def result_for(runtime, arm, actions):
+            events = []
+            for index, (name, inputs) in enumerate(actions):
+                tool_id = str(index)
+                if runtime == "codex":
+                    events.append({"type": "item.completed", "item": {
+                        "id": tool_id, "type": "command_execution",
+                        "command": inputs["command"], "exit_code": 0,
+                    }})
+                else:
+                    events.extend((
+                        {"type": "assistant", "message": {"content": [{
+                            "type": "tool_use", "id": tool_id, "name": name, "input": inputs,
+                        }]}},
+                        {"type": "user", "message": {"content": [{
+                            "type": "tool_result", "tool_use_id": tool_id,
+                            "content": "read", "is_error": False,
+                        }]}},
+                    ))
+                    if name == "Skill":
+                        events.append({"type": "user", "isSynthetic": True, "message": {"content": [{
+                            "type": "text", "text": "Base directory for this skill: "
+                            + str(self.workspace / ".claude/skills/gradle-run")
+                            + "\n\nRead-only recovery instructions.",
+                        }]}})
+            if runtime == "claude":
+                events, _output, _usage = ClaudeRuntime().parse("\n".join(json.dumps(event) for event in events))
+                if any(name == "Skill" for name, _inputs in actions):
+                    self.assertTrue(ClaudeRuntime().skill_texts(events))
+            return replace(make_result(self.workspace, arm=arm, output=explanation), runtime=runtime, events=tuple(events))
+
         for case_id in ("gradle-status-recovery-direct", "gradle-status-uncertain-novel"):
             case = load_case(repo_root / "evals/cases" / case_id / "case.json", repo_root)
-            case = EvalCase(**{
-                **case.__dict__,
-                "validators": (Validator(("python3", "-c", "pass"), 5),),
-            })
-            explanation = {
-                "summary": "Explain the supplied recovery evidence.",
-                "skills_used": ["gradle-run"], "evidence": ["supplied snapshot"],
-            }
-            self.assertTrue(grade_subject(case, make_result(self.workspace, output=explanation)).objective_pass)
-            for command in (
-                "python3 gradle_run.py status --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                "python3 -c 'print(1)'",
-            ):
-                with self.subTest(case=case_id, command=command):
-                    result = make_result(self.workspace, output=explanation, events=({
-                        "type": "item.completed",
-                        "item": {"type": "command_execution", "command": command},
-                    },))
-                    grade = grade_subject(case, result)
-                    self.assertFalse(grade.objective_pass)
-                    self.assertTrue(grade.forbidden_action_failure)
-                    self.assertIn("command execution forbidden for this case", grade.objective_failures)
+            # Isolate action grading from the cases' content validators.
+            case = replace(case, validators=(Validator(("python3", "-c", "pass"), 5),))
+            for runtime in ("codex", "claude"):
+                skill_dir = ".agents" if runtime == "codex" else ".claude"
+                entry = f"{skill_dir}/skills/gradle-run/SKILL.md"
+                reference = f"{skill_dir}/skills/gradle-run/references/subagent-selection.md"
+                read = ("Bash", {"command": f"cat {entry}"})
+                status = ("Bash", {"command": "python3 gradle_run.py status --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})
+                permitted = ((), (read,), (read, ("Bash", {"command": f"cat {reference}"})))
+                forbidden = tuple((("Bash", {"command": command}),) for command in (
+                    status[1]["command"], "./gradlew --offline --no-scan test", "python3 -c 'print(1)'",
+                    "cat state.md", f"cat {entry} && {status[1]['command']}",
+                    f"cat {entry} > output.md", f"cat {entry} $(python3 -c 'print(1)')",
+                    "cat .agents/skills/other/SKILL.md",
+                )) + ((read, status),)
+                if runtime == "claude":
+                    permitted += (
+                        (("Read", {"file_path": str(self.workspace / entry)}),),
+                        (("Read", {"file_path": str(self.workspace / reference)}),),
+                        (("Skill", {"skill": "gradle-run"}),),
+                    )
+                    forbidden += (
+                        (("Read", {"file_path": str(self.workspace / "state.md")}),),
+                        (("Edit", {"file_path": str(self.workspace / "state.md"), "old_string": "a", "new_string": "b"}),),
+                    )
+                for arm in ("automatic", "forced"):
+                    for expected, sequences in ((True, permitted), (False, forbidden)):
+                        for actions in sequences:
+                            with self.subTest(case=case_id, runtime=runtime, arm=arm, actions=actions):
+                                grade = grade_subject(case, result_for(runtime, arm, actions))
+                                self.assertEqual(grade.objective_pass, expected, grade.objective_failures)
+                                self.assertEqual(grade.forbidden_action_failure, not expected, grade.violations)
+                                if not expected:
+                                    self.assertIn("command execution forbidden for this case", grade.objective_failures)
 
     def test_analysis_only_case_allows_only_target_skill_entrypoint_read(self):
         case = EvalCase(

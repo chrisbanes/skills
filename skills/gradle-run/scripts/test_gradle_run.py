@@ -747,7 +747,9 @@ class GradleRunStatusTest(GradleRunTestCase):
         result = self.invoke("status", "--workflow", workflow)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertLessEqual(len(result.stdout.encode()), GRADLE_RUN.MAX_SUMMARY_BYTES)
-        return json.loads(result.stdout)
+        def reject_constant(value: str) -> None:
+            self.fail(f"status emitted a non-JSON number: {value}")
+        return json.loads(result.stdout, parse_constant=reject_constant)
 
     def test_completion_is_retrievable_without_session_or_log(self) -> None:
         workflow = self.create_workflow()
@@ -1129,6 +1131,33 @@ class GradleRunStatusTest(GradleRunTestCase):
         self.assertEqual(status["state"], "completed")
         self.assertEqual(status["result"], json.loads(result.stdout))
         self.assertEqual(status["result"]["exit_status"], 7)
+
+    def test_nonfinite_ledger_numbers_are_uncertain(self) -> None:
+        workflow = self.create_workflow()
+        self.assertEqual(self.run_gradle(workflow, "targeted", "Does recovery stay valid JSON?", "print('ok')").returncode, 0)
+        path = self.root / workflow / "ledger.json"
+        original = path.read_text()
+        for location in ("result", "identity", "nested", "active"):
+            for token in ("NaN", "Infinity", "-Infinity", "1e309", "-1e309"):
+                with self.subTest(location=location, token=token):
+                    ledger = json.loads(original)
+                    entry = ledger["runs"][-1]
+                    marker = "NONFINITE_NUMBER"
+                    if location == "result":
+                        entry["result"]["elapsed_seconds"] = marker
+                    elif location == "identity":
+                        entry["started_at"] = marker
+                    elif location == "nested":
+                        entry["result"]["details"] = {"samples": [marker]}
+                    else:
+                        ledger["active_run"] = {
+                            "sequence": 2, "wrapper_pid": os.getpid(),
+                            "child_pid": None, "started_at": marker,
+                        }
+                    path.write_text(json.dumps(ledger).replace(json.dumps(marker), token))
+                    before = path.read_bytes()
+                    self.assertEqual(self.status(workflow)["state"], "uncertain")
+                    self.assertEqual(path.read_bytes(), before)
 
     def test_run_lock_pruning_tolerates_malformed_history(self) -> None:
         for prior_success in (False, True):

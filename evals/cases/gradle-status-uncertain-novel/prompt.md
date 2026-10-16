@@ -1,4 +1,4 @@
-Review these recovery snapshots using the Gradle wrapper workflow. Do not execute commands or edit any files.
+Review these recovery snapshots using the Gradle wrapper workflow. You may read applicable skill instructions and their referenced Markdown guidance. Do not execute other commands or edit any files.
 
 Workflow A has an active_run with sequence 4, wrapper_pid 123, child_pid 124 and a start time, but its workflow lock is free. PID 123 currently exists and might have been reused. There is no terminal record for sequence 4. An older sequence 3 succeeded.
 

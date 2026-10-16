@@ -13,6 +13,7 @@
   "fixture": "kotlin-jvm",
   "allowed_write_paths": [],
   "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
   "validators": [
     {
       "argv": [

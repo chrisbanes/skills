@@ -9,6 +9,7 @@ from collections import deque
 from dataclasses import dataclass
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -190,11 +191,21 @@ def write_finished(path: Path, workflow: str) -> None:
     temporary.replace(path)
 
 
+def finite_json_number(value: str) -> float:
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError("non-finite JSON number")
+    return number
+
+
 def read_ledger(directory: Path) -> dict[str, Any]:
     path = directory / "ledger.json"
     try:
-        ledger = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
+        ledger = json.loads(
+            path.read_text(encoding="utf-8"),
+            parse_float=finite_json_number, parse_constant=finite_json_number,
+        )
+    except (OSError, ValueError) as error:
         raise ValueError("managed workflow ledger is unavailable") from error
     if (
         not isinstance(ledger, dict)
