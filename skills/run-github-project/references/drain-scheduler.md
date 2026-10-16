@@ -252,7 +252,8 @@ wait for either while any step above remains runnable.
 
 Require one successful complete Project query and verified-base refresh before
 new selection after a merge, parked or released slot, Todo or Ready
-handoff, epic closure, user prompt, controller resumption, or other event that
+handoff, epic closure, user prompt, controller resumption after interruption,
+or other event that
 can change capacity, dependencies, or eligibility. Rebuild and rank every class
 from that snapshot before a new claim or capacity-dependent dispatch, and apply
 the same gate immediately before concluding that no runnable work remains.
@@ -295,36 +296,64 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
 1. Run exactly one watcher whenever any claim is in remote wait or a human action,
    authority/decision pause, Wayfinder human-frontier item, or assigned Wayfinder
    HITL attention item exists. With none, start none, stop a running one, and
-   wait for agent notifications. Never poll, sleep, or use
+   wait for agent notifications. Do not add controller polling, sleeps,
    `ScheduleWakeup`, `CronCreate`, `/loop`, or the single-PR host monitor.
-2. Immediately before each complete Project query, and before the targeted
-   refetch that answers a PR-only report, write a baseline:
+   Retain the running watcher and its relay/session across unrelated agent
+   events and authoritative reads when its project, repository, status field,
+   PR/issue watch set, interval and deadline remain unchanged. Those events
+   alone require no new watcher snapshot or restart.
+2. When starting or replacing a watcher, write a baseline immediately before
+   the complete Project query or targeted refetch that will arm it:
    `snapshot --project-id <Node ID> --repository <owner/name> --status-field <Status field name> [--pr <N>]... [--issue <N>]... > <baseline file>`.
    Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
    paused, parked, or authority-paused ticket, and `--issue` for every parked
    claim, paused ticket, human-frontier issue, Wayfinder human-frontier item, and
    assigned Wayfinder HITL attention item. For the targeted refetch, add
    `--board-from <reporting watcher's baseline file>` and write a new file, so
-   board drift missed since that watcher's last poll still reports. A non-zero
-   `snapshot` is an `error` under step 6: discard its output, launch no `wait`,
-   and retake the snapshot before repeating the read it precedes.
-3. After a read preceded by a successful `snapshot` completes, stop any running
-   watcher through the host's cancellation mechanism, never by process-name or
-   command-line match. Then launch `wait` with the same project, repository,
-   and status-field arguments, `--pr` and `--issue` built from the completed
+   board and issue-comment drift missed since that watcher's last poll still
+   reports; this snapshot queries only PRs and retains the prior item and issue
+   sections. A non-zero `snapshot` is an `error` under step 6: discard its
+   output, launch no `wait`, and retake the snapshot before repeating the read
+   it precedes.
+3. After a read preceded by a successful `snapshot` completes, retain any
+   running watcher whose inputs remain valid. Otherwise, consume undelivered
+   completed reports under step 6 and cancel a superseded running command
+   through the host's cancellation mechanism, never a process-name or
+   command-line match. Confirm cancellation before launching a replacement;
+   discard only confirmed cancellation results. Launch `wait` with the same
+   project, repository and status-field arguments, `--pr` and `--issue` built from the completed
    read's watch set, the pre-read `--baseline <file>`, `--deadline <ISO-8601>`,
    and, when the binding sets one, `--interval <seconds>` from
    [Monitoring](project-config.md#monitoring-optional); the default is 120. A PR
    or issue the read added to or dropped from the set reports `added` or
    `removed` on the first poll, at most one redundant wake; handle it like any
-   other report.
-4. On a host that wakes the controller when a background command exits (Claude
-   Code `run_in_background`), run the command directly and wait for its
-   completion notification. On any other host (Codex), launch the cheapest
+   other report. If a read unexpectedly changes the inputs of a retained
+   watcher, establish its replacement through steps 2-3.
+4. Use a native background-command completion notification when the host
+   exposes one. Otherwise, launch the cheapest
    available subagent, briefed under [subagent selection](subagent-selection.md)
    to run that one `wait` command once and return its stdout verbatim, with no
-   other action or further delegation, and wait with the host's agent-wait call
-   (`wait_agent`). The relay counts as one active agent: whenever a watcher is
+   further delegation. After a command-tool yield, await that same command
+   session through the host's supported wait mechanism, respecting its limits;
+   do not launch another command or send unchanged-state progress messages.
+   Deliver `changed`, `error`, `deadline` or an unexpected command failure as
+   soon as it is available, preserving failure status. The controller consumes
+   delivered reports and ticket-agent completions before waiting again and
+   continues runnable work while monitoring runs.
+
+   When idle, wait with the host's agent-wait call (`wait_agent`). Use the
+   longest timeout allowed by its current schema and higher-priority
+   responsiveness rules; choose a shorter valid wait for a nearer controller
+   deadline. A wait returns early on a notification. Handle a due controller
+   deadline under step 6 even if its watcher report has not arrived. Otherwise,
+   an empty timeout is not a remote event: retain the same watcher, baseline
+   and clocks and wait again, without a
+   GitHub query, status probe, restart or unchanged-state notification. Only
+   the watcher owns periodic remote monitoring; ticket agents stay idle in
+   remote wait. Removing bounded controller-wait renewals requires a host
+   capability to suspend until completion; do not add another polling layer.
+
+   The relay counts as one active agent: whenever a watcher is
    required and the active-agent limit exceeds one, reserve that capacity before
    Scheduling step 7 fills it. At a limit of one, launch the relay only while no
    ticket agent runs; that agent's completion notification wakes the controller.
@@ -341,8 +370,8 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    pending PR deadline (24 hours from the relaunch when none) until a productive
    wake starts a fresh one.
 6. Read the one-line report; treat a non-zero exit or any other output as
-   `error`, except from a watcher this controller cancelled under step 3, whose
-   result is discarded as neither a report nor a failure.
+   `error`. A confirmed cancellation under step 3 is neither a report nor a
+   failure; an already completed report still requires handling.
    - `changed` naming only occupied-slot PRs: refetch only those tickets' PR,
      head, check, review, and authority records; run no Refresh Gate.
    - Any other `changed`, including a preserved PR of a paused or parked ticket:

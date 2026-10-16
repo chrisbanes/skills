@@ -286,9 +286,11 @@ class WatchProjectTests(unittest.TestCase):
             repository(prs={7: pull_request(sha="new")}),
         ]
         result = self.run_script(
-            ["snapshot", *COMMON, "--pr", "7", "--board-from", str(prior)], fresh
+            ["snapshot", *COMMON, "--pr", "7", "--board-from", str(prior)], [fresh[1]]
         )
         self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls["calls"], 1)
+        self.assertNotIn("ProjectV2", " ".join(self.calls["argv"][0]))
         merged = json.loads(result.stdout)
         self.assertEqual(merged["item"]["I1"]["status"], "Todo")
         self.assertEqual(merged["pullRequest"]["7"]["sha"], "new")
@@ -298,6 +300,39 @@ class WatchProjectTests(unittest.TestCase):
         self.assertEqual(
             report["changes"], [{"kind": "item", "key": "I1", "fields": ["status"]}]
         )
+
+    def test_snapshot_board_from_preserves_issue_drift_without_querying_it(self):
+        _, prior = self.snapshot(
+            [page([]), repository(prs={7: pull_request()}, issues={9: issue()})],
+            "--pr", "7", "--issue", "9",
+        )
+        result = self.run_script(
+            ["snapshot", *COMMON, "--pr", "7", "--issue", "9", "--board-from", str(prior)],
+            [repository(prs={7: pull_request(sha="new")})],
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls["calls"], 1)
+        self.assertNotIn("issue(number:", " ".join(self.calls["argv"][0]))
+        path = self.root / "merged.json"
+        path.write_text(result.stdout)
+        _, report = self.wait(
+            path,
+            [page([]), repository(prs={7: pull_request(sha="new")}, issues={9: issue("IC_2")})],
+            "--pr", "7", "--issue", "9",
+        )
+        self.assertEqual(
+            report["changes"], [{"kind": "issue", "key": "9", "fields": ["comment"]}]
+        )
+
+    def test_snapshot_board_from_without_prs_needs_no_queries(self):
+        before, prior = self.snapshot([page([]), repository(issues={9: issue()})], "--issue", "9")
+        result = self.run_script(
+            ["snapshot", *COMMON, "--issue", "9", "--board-from", str(prior)],
+            [{"__exit__": 1, "stderr": "must not query"}],
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), before)
+        self.assertEqual(self.calls["calls"], 0)
 
     def test_snapshot_board_from_rejects_a_bad_file(self):
         bad = self.root / "bad.json"
@@ -408,6 +443,42 @@ class WatchProjectTests(unittest.TestCase):
             report["changes"],
             [{"kind": "pullRequest", "key": "7", "fields": ["comment_id"]}],
         )
+
+    def test_unchanged_polls_are_silent_until_an_actionable_change(self):
+        quiet = [page([]), repository(prs={7: pull_request(checks="PENDING")})]
+        _, baseline = self.snapshot(quiet, "--pr", "7")
+        for field, changed in (
+            ("checks", pull_request(checks="FAILURE")),
+            ("checks", pull_request(checks="SUCCESS")),
+            ("review_id", pull_request(checks="PENDING", review_id="R2")),
+            ("comment_id", pull_request(checks="PENDING", comment_id="C2")),
+            ("state", pull_request(checks="PENDING", state="MERGED")),
+        ):
+            with self.subTest(field=field, changed=changed):
+                result, report = self.wait(
+                    baseline,
+                    quiet * 5 + [page([]), repository(prs={7: changed})],
+                    "--pr", "7",
+                )
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(
+                    report,
+                    {"status": "changed", "changes": [
+                        {"kind": "pullRequest", "key": "7", "fields": [field]}
+                    ]},
+                )
+                # One terminal line, on the first changed poll after five silent polls.
+                self.assertEqual(self.calls["calls"], 12)
+
+    def test_failure_after_unchanged_polls_reports_immediately(self):
+        quiet = [page([])]
+        _, baseline = self.snapshot(quiet)
+        result, report = self.wait(
+            baseline, quiet * 5 + [{"__exit__": 1, "stderr": "boom"}]
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(report["status"], "error")
+        self.assertEqual(self.calls["calls"], 6)
 
     def test_pull_request_without_reviews_or_comments_fingerprints_as_null(self):
         fingerprint, _ = self.snapshot(

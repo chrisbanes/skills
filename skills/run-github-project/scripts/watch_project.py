@@ -129,16 +129,17 @@ def await_budget(rate: dict[str, Any], deadline: datetime | None) -> bool:
 
 
 def fetch(
-    args: argparse.Namespace, deadline: datetime | None = None
+    args: argparse.Namespace, deadline: datetime | None = None, *, pr_only: bool = False
 ) -> dict[str, Any] | None:
     """Return raw responses: all Project item pages plus one repository query.
 
+    `pr_only` fetches just watched PRs for a board-preserving snapshot.
     `rate` aggregates the cycle: summed cost, lowest remaining, latest reset.
     Returns None if the deadline arrives while waiting out the rate budget.
     """
     pages: list[dict[str, Any]] = []
     after = ""
-    while True:
+    while not pr_only:
         variables = {"id": args.project_id, "status": args.status_field}
         if after:
             variables["after"] = after
@@ -153,12 +154,13 @@ def fetch(
             break
         after = items["pageInfo"]["endCursor"]
     repo = None
-    if args.pr or args.issue:
+    issues = [] if pr_only else args.issue
+    if args.pr or issues:
         owner, _, name = args.repository.partition("/")
-        if not await_budget(pages[-1]["rateLimit"], deadline):
+        if pages and not await_budget(pages[-1]["rateLimit"], deadline):
             return None
         repo = graphql(
-            repository_query(args.pr, args.issue), deadline, owner=owner, name=name
+            repository_query(args.pr, issues), deadline, owner=owner, name=name
         )
         if repo.get("repository") is None:
             raise WatchError(f"repository {args.repository} not found")
@@ -314,10 +316,12 @@ def main() -> int:
     try:
         if args.command == "snapshot":
             prior = load_baseline(args.board_from) if args.board_from else None
-            current = fingerprint(fetch(args))
-            if prior:
+            if prior is not None:
                 # Board drift since `prior` must still differ on the next wait.
-                current = {**prior, "pullRequest": current["pullRequest"]}
+                prs = fingerprint(fetch(args, pr_only=True))["pullRequest"] if args.pr else {}
+                current = {**prior, "pullRequest": prs}
+            else:
+                current = fingerprint(fetch(args))
             report(current)
             return 0
         return wait(args)
