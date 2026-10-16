@@ -1,0 +1,37 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/admission.md",
+      "count": 1,
+      "must_match": [
+        "^Preparation: admit\\-F1$",
+        "^Owner: fallback$",
+        "^Paths: fixtures/fallback\\.json,\\ tests/test_fallback_fixture\\.py$",
+        "^Check: python3\\ \\-m\\ unittest\\ tests\\.test_fallback_fixture$",
+        "^Stop: before\\-F2\\-and\\-render/Glass\\.kt$",
+        "^GPU1: retained\\-by\\-optics$",
+        "^Qualification: pending\\-integrated\\-head$",
+        "^Native\\-variant: hold\\-whole\\-ticket$",
+        "^Plan: preserve$"
+      ],
+      "must_not_match": [
+        "^Preparation: (?!admit\\-F1$).*$",
+        "^Owner: (?!fallback$).*$",
+        "^Paths: (?!fixtures/fallback\\.json,\\ tests/test_fallback_fixture\\.py$).*$",
+        "^Check: (?!python3\\ \\-m\\ unittest\\ tests\\.test_fallback_fixture$).*$",
+        "^Stop: (?!before\\-F2\\-and\\-render/Glass\\.kt$).*$",
+        "^GPU1: (?!retained\\-by\\-optics$).*$",
+        "^Qualification: (?!pending\\-integrated\\-head$).*$",
+        "^Native\\-variant: (?!hold\\-whole\\-ticket$).*$",
+        "^Plan: (?!preserve$).*$"
+      ]
+    }
+  ]
+}

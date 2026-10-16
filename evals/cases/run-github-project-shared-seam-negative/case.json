@@ -1,0 +1,42 @@
+{
+  "id": "run-github-project-shared-seam-negative",
+  "title": "run github project shared seam negative",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "to-plan"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/admission.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-shared-seam-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "bounded-admission",
+      "text": "Holds uncertain preparation; separate test paths, worktrees, line ranges and free grants do not prove independence. Uses bounded read-only seam investigation, preserves C0 and the original owner, stops before further shared edits, and retains applicable integration order, grants, lease and final validation on resume."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

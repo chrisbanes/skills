@@ -97,19 +97,29 @@ Before concurrent admission, inspect native dependencies and the approved
 plans' task graph, exact paths/seams, resource use and integration boundaries.
 For planned or discovered overlap, the later-claimed slot is the younger one:
 
-1. Delay the whole candidate for a native blocker/open descendant, an explicit
-   approved-plan prerequisite on occupied work, an inseparable shared seam, or
-   uncertain independence. Leave it unclaimed and consider the next candidate.
-   Never infer conflicts or native blockers from title similarity alone.
+1. Delay the whole candidate for a native blocker/open descendant. For an
+   approved-plan prerequisite, distinguish behavior needed to start a slice,
+   shared-file mutation, and the final integrated baseline. Gate only the
+   slices that need that behavior or boundary when the accepted plan explicitly
+   permits independent preparation. An all-work prerequisite, inseparable seam,
+   or uncertain independence still delays the whole candidate. Leave it
+   unclaimed and consider the next candidate. Never infer conflicts or native
+   blockers from title similarity alone, or silently weaken an accepted plan;
+   use the authorized planning/change route if its scope or ordering must change.
 2. For a concrete shared path/resource, admit only when approved plans prove
    independently testable slices that neither touch nor depend on that boundary.
-   Record those task IDs, permitted paths/resources and the stop boundary in
-   both owners' records before dispatch. Without that proof, delay the ticket.
+   Before dispatch, record the slice task IDs, explicit owner for each slice,
+   verified base, permitted paths/resources, independent focused checks, and a
+   stop boundary before shared edits or dependent behavior in both owners'
+   records. Without that proof, delay the ticket. A final integrated-baseline
+   requirement alone need not delay such preparation; preparation checks do not
+   satisfy final qualification.
 3. Let those safe slices proceed, but serialize the actual shared edit/resource
-   operation under the named-resource grant below. A file lock covers the whole
-   repository identity and canonical repository-relative path across worktrees,
-   not guessed disjoint
-   line ranges. Repository-required mutation ownership remains stricter.
+   operation under the named-resource grant below. Stop before that operation
+   until its plan prerequisites and resource grant are satisfied. A file lock
+   covers the whole repository identity and canonical repository-relative path
+   across worktrees, not guessed disjoint line ranges. Repository-required
+   mutation ownership remains stricter.
 4. At the shared integration boundary, checkpoint and pause the younger claim,
    revoke merge eligibility and apply the older-first base/review procedure
    below. Neither a free edit lock nor completed disjoint slice permits a
@@ -120,10 +130,11 @@ native dependencies at whole-ticket admission and qualification gates at their
 required operation boundaries; partial work never bypasses either.
 
 When running agents discover a concrete overlap that was absent from their
-plans, let the younger agent finish only the
-current atomic operation, complete and verify its current vertical slice, and
-reach a clean focused commit checkpoint. A reconciled push of that commit is
-also valid. If the agent cannot reach a clean commit safely, preserve and block
+plans, stop further shared edits. Let the younger agent finish only the
+current atomic operation, verify work within its safe owned scope, and
+reach a clean focused commit checkpoint without crossing the uncertain seam.
+A reconciled push of that commit is also valid. If the agent cannot reach a
+clean commit safely, preserve and block
 the younger slot; do not begin automated base repair from a dirty worktree.
 
 After that clean checkpoint, pause the younger slot without releasing its
