@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from evals.harness.cases import EvalCase, Validator
+from evals.harness.cases import EvalCase, Validator, load_case
 from evals.harness.runner import SubjectResult, subject_output_valid
 from evals.harness.grade import grade_subject
 
@@ -102,6 +102,33 @@ class DeterministicGradeTest(unittest.TestCase):
         self.assertTrue(grade.forbidden_action_failure)
         self.assertIn("command execution forbidden for this case", grade.objective_failures)
         self.assertIn("command executed despite analysis-only boundary", grade.violations)
+
+    def test_gradle_recovery_explanations_reject_command_execution(self):
+        repo_root = Path(__file__).resolve().parents[2]
+        for case_id in ("gradle-status-recovery-direct", "gradle-status-uncertain-novel"):
+            case = load_case(repo_root / "evals/cases" / case_id / "case.json", repo_root)
+            case = EvalCase(**{
+                **case.__dict__,
+                "validators": (Validator(("python3", "-c", "pass"), 5),),
+            })
+            explanation = {
+                "summary": "Explain the supplied recovery evidence.",
+                "skills_used": ["gradle-run"], "evidence": ["supplied snapshot"],
+            }
+            self.assertTrue(grade_subject(case, make_result(self.workspace, output=explanation)).objective_pass)
+            for command in (
+                "python3 gradle_run.py status --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "python3 -c 'print(1)'",
+            ):
+                with self.subTest(case=case_id, command=command):
+                    result = make_result(self.workspace, output=explanation, events=({
+                        "type": "item.completed",
+                        "item": {"type": "command_execution", "command": command},
+                    },))
+                    grade = grade_subject(case, result)
+                    self.assertFalse(grade.objective_pass)
+                    self.assertTrue(grade.forbidden_action_failure)
+                    self.assertIn("command execution forbidden for this case", grade.objective_failures)
 
     def test_analysis_only_case_allows_only_target_skill_entrypoint_read(self):
         case = EvalCase(

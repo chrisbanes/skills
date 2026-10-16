@@ -1074,6 +1074,7 @@ class GradleRunStatusTest(GradleRunTestCase):
         mutations = (
             "completed_result_signal", "completed_entry_signal", "completed_negative_exit",
             "interrupted_success", "interrupted_mismatched_signals", "interrupted_missing_entry_signal",
+            "interrupted_impossible_wrapped_signal", "interrupted_impossible_child_signal",
             "zero_sequence", "negative_sequence", "zero_diagnostic_count", "negative_diagnostic_count",
         )
         for mutation in mutations:
@@ -1096,6 +1097,12 @@ class GradleRunStatusTest(GradleRunTestCase):
                     entry["interrupted_signal"] = 2
                 elif mutation == "interrupted_missing_entry_signal":
                     del entry["interrupted_signal"]
+                elif mutation.startswith("interrupted_impossible_"):
+                    invalid_signal = max(signal.valid_signals()) + 1
+                    entry["interrupted_signal"] = entry["result"]["interrupted_signal"] = invalid_signal
+                    entry["exit_status"] = entry["result"]["exit_status"] = (
+                        -invalid_signal if mutation.endswith("child_signal") else 128 + invalid_signal
+                    )
                 elif mutation in ("zero_sequence", "negative_sequence"):
                     entry["sequence"] = ledger["run_count"] = 0 if mutation == "zero_sequence" else -1
                 else:

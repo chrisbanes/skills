@@ -840,6 +840,7 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
                 and type(latest.get("interrupted_signal")) is int
                 and type(latest["result"].get("interrupted_signal")) is int
                 and latest["interrupted_signal"] == latest["result"]["interrupted_signal"] > 0
+                and latest["interrupted_signal"] in signal.valid_signals()
                 and latest["exit_status"] in (-latest["interrupted_signal"], 128 + latest["interrupted_signal"]))
         )
     )

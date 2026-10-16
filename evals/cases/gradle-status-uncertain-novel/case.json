@@ -12,10 +12,7 @@
   "kind": "novel",
   "fixture": "kotlin-jvm",
   "allowed_write_paths": [],
-  "forbidden_command_patterns": [
-    "gradle_run\\.py (?:create|run|finish)",
-    "(?:^|\\s)(?:[^\\s]+/)?(?:gradle|gradlew[^\\s/]*)(?=$|\\s)"
-  ],
+  "forbid_all_commands": true,
   "validators": [
     {
       "argv": [
