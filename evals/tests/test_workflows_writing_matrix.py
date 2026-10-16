@@ -127,6 +127,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 )
                 state_file = workspace / "state.md"
                 original = state_file.read_text(encoding="utf-8")
+                # Command-free cases must expose every decisive fact in the prompt.
+                self.assertIn(original, case.prompt)
                 argv = [sys.executable, str(REPO_ROOT / "evals/validators/text_case.py"), case_id]
 
                 def validate():
