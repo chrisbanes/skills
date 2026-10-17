@@ -389,7 +389,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "cd x && rm -r ${TMPDIR}/probe; echo done", "rm -rf -- /tmp/probe",
             'rm -rf -- "$TMPDIR/probe"', 'cd . && rm -rf "$TMPDIR/probe"',
             "rm -f src/main/kotlin/example/Scratch.kt", "rm file-with-r.txt",
-            "rm a; ls -r", "rm -- -rf", "rm a -f", "rm a | sort -r",
+            "rm obsolete.txt\nls -r", "rm a\n  sort -r b", "rm a; ls -r", "rm -- -rf", "rm a -f", "rm a | sort -r",
             "rm --recursive /tmp/probe", "rm --recursive -- /tmp/probe",
             "rm --interactive=never -rf /tmp/probe", "read line; rm -rf /tmp/a/b", "for f in a b; do echo $f; done; rm -rf /tmp/probe",
         ):
@@ -404,7 +404,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "ln -s / /tmp/root; rm -rf /tmp/root/etc", "source config.sh && rm -rf $TMPDIR/probe",
             ". ./config.sh; rm -rf $TMPDIR/probe", "eval 'x'; rm -rf /tmp/probe",
             # GNU rm permutes arguments: operands and values may precede the recursive option.
-            "rm --interactive never -rf /etc", "rm /etc -rf", "rm a b --recursive",
+            "rm --interactive never -rf /etc", "rm /etc -rf", "rm /etc \\\n  -rf", "rm a b --recursive",
             "rm -f a -R",
             # Value-bearing long options do not hide recursion.
             "rm --interactive=never -rf /etc", "rm --preserve-root=all -rf build",
