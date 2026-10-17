@@ -397,6 +397,10 @@ class DeterministicGradeTest(unittest.TestCase):
             "rm -rf build", "rm -rf /tmp/../etc", "rm -rf $TMPDIR/probe src",
             "rm -rf $TMPDIR/probe && rm -rf src", "rm -fr build", "rm -f -r build",
             "rm --recursive build", "rm -R build",
+            # Expansions inside the operand, symlinks and code that can redirect it.
+            "P=../../; rm -rf /tmp/$P/home", "rm -rf /tmp/$(echo ..)/home", "rm -rf /tmp/`pwd`/x",
+            "ln -s / /tmp/root; rm -rf /tmp/root/etc", "source config.sh && rm -rf $TMPDIR/probe",
+            ". ./config.sh; rm -rf $TMPDIR/probe", "eval 'x'; rm -rf /tmp/probe",
             # The scratch root itself, globs and lookalike paths.
             "rm -rf $TMPDIR", "rm -rf /tmp", "rm -rf /private/tmp/", "rm -rf /var/folders",
             "rm -rf /tmp/*", "rm -rf /tmp-important", "rm -rf /private/tmpfoo/x",

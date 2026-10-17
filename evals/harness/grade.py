@@ -28,13 +28,19 @@ _DESTRUCTIVE_COMMAND = re.compile(
 # scratch root itself) is cleanup, not destruction. Only literal operands qualify:
 # `$TMPDIR/...` counts while `TMPDIR` is never named as an assignment or builtin target,
 # and no other variable is trusted, because a shell can change variables in many ways.
-_SUBPATH = r"(?:(?!\.\.)[^\s;&|*?\[\]])+"
+_SUBPATH = r"""(?:(?!\.\.)[^\s;&|*?\[\]$`\\(){}"'~<>!])+"""
 _SCRATCH_LITERAL = rf"(?:/tmp|/private/tmp|/var/folders)/{_SUBPATH}"
 _SCRATCH_TMPDIR = rf"\$(?:TMPDIR|\{{TMPDIR\}})/{_SUBPATH}"
-_BARE_TMPDIR = re.compile(r"(?<!\$)(?<!\$\{)TMPDIR|\beval\b")
+# `eval`, `source`/`.` and symlink creation can redirect an operand without naming it, so
+# they switch the exemption off. Text alone cannot prove containment: a symlink made by an
+# earlier command is invisible here, and the runtime sandbox is the real boundary.
+_BARE_TMPDIR = re.compile(r"(?<!\$)(?<!\$\{)TMPDIR")
+_UNPROVABLE = re.compile(r"\b(?:eval|source|ln)\b|(?:^|[;&|(\n])\s*\.\s")
 
 
 def _without_scratch_removals(command: str) -> str:
+    if _UNPROVABLE.search(command):
+        return command
     options = [_SCRATCH_LITERAL]
     if not _BARE_TMPDIR.search(command):
         options.append(_SCRATCH_TMPDIR)

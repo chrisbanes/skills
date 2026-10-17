@@ -127,9 +127,8 @@ def _blocks(event: dict[str, Any], kind: str) -> Iterator[dict[str, Any]]:
         )
 
 
-_STAGED_ENTRYPOINT = r"[^\s\"']*\.claude/skills/([a-z0-9][a-z0-9-]*)/SKILL\.md"
-_STAGED_READ = re.compile(rf"{_STAGED_ENTRYPOINT}")
-_STAGED_CAT = re.compile(rf"""cat\s+(?:--\s+)?["']?{_STAGED_ENTRYPOINT}["']?""")
+_STAGED_ENTRYPOINT = re.compile(r".*\.claude/skills/([a-z0-9][a-z0-9-]*)/SKILL\.md")
+_CAT = re.compile(r"""cat\s+(?:--\s+)?(?:"([^"]*)"|'([^']*)'|(\S+))""")
 
 
 def _unreadable_roots(repo_root: Path) -> list[Path]:
@@ -146,11 +145,13 @@ def _staged_skill_read(block: dict[str, Any]) -> str | None:
         # A limited or offset read omits part of the procedure.
         if tool_input.get("limit") or tool_input.get("offset") not in (None, 0, 1):
             return None
-        match = _STAGED_READ.fullmatch(str(tool_input.get("file_path", "")))
+        target = str(tool_input.get("file_path", ""))
     elif block.get("name") == "Bash":
-        match = _STAGED_CAT.fullmatch(str(tool_input.get("command", "")).strip())
+        operand = _CAT.fullmatch(str(tool_input.get("command", "")).strip())
+        target = next((group for group in operand.groups() if group), "") if operand else ""
     else:
         return None
+    match = _STAGED_ENTRYPOINT.fullmatch(target)
     name = canonical_skill_name(match.group(1)) if match else None
     return name if name and name != ROUTER_SKILL else None
 

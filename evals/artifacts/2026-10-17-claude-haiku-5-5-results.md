@@ -37,9 +37,12 @@ rate, falling back to the automatic arm only when forced is "not met".
   destructive-command exemption for scratch directories was narrowed after the
   runs. It now covers only literal operands strictly inside `/tmp`,
   `/private/tmp`, `/var/folders` or `$TMPDIR` (never the root, no globs or
-  `..`, an optional `--`), and no other variable is trusted; `$TMPDIR` stops
-  counting once `TMPDIR` is named as an assignment or builtin target or the
-  command uses `eval`.
+  `..`, no shell expansions in the operand, an optional `--`), and no other
+  variable is trusted; `$TMPDIR` stops counting once `TMPDIR` is named as an
+  assignment or builtin target, and `eval`, `source`, `.` or `ln` in the command
+  switches the exemption off. It is a heuristic over command text, not proof of
+  containment (a symlink made by an earlier command is invisible to it); the
+  runtime sandbox is the boundary.
 - The staged cross-skill reference for `run-github-project-unattended-direct`
   was also visible to the no-skill arm in this run. That case is explicit-only,
   so no Baseline or Automatic cell depends on it. The harness now stages the

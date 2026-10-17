@@ -327,6 +327,14 @@ class ClaudeParseTest(unittest.TestCase):
             events = self.runtime.parse(fixture_stdout(lines))[0]
             self.assertEqual([], self.runtime.observed_skills(events), command)
 
+        spaced = "/tmp/eval runs/workspaces/x/.claude/skills/kotlin-api-design/SKILL.md"
+        call["name"], call["input"] = "Read", {"file_path": spaced}
+        events = self.runtime.parse(fixture_stdout(lines))[0]
+        self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
+        call["name"], call["input"] = "Bash", {"command": f'cat "{spaced}"'}
+        events = self.runtime.parse(fixture_stdout(lines))[0]
+        self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
+
         call["name"] = "Read"
         for partial in ({"limit": 5}, {"offset": 40}):
             call["input"] = {
