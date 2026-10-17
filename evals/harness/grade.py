@@ -41,6 +41,13 @@ _SHELL_ASSIGNMENT = re.compile(
 _ASSIGNMENT_WORD = re.compile(rf"(\w+)={_VALUE}")
 
 
+# Constructs that can change a variable without a plain `name=value` statement.
+_VARIABLE_MUTATION = re.compile(
+    r"\+=|\(\(|(?:^|[\s;&|(])(?:printf\s+-v|read|eval|declare|typeset|local|readonly|unset|"
+    r"mapfile|readarray|getopts|let|source|for|while|until|select|\.)(?=\s)"
+)
+
+
 def _without_scratch_removals(command: str) -> str:
     assigned: dict[str, list[str]] = {}
     for statement in _SHELL_ASSIGNMENT.findall(command):
@@ -49,8 +56,10 @@ def _without_scratch_removals(command: str) -> str:
     mentioned: dict[str, int] = {}
     for name, _ in _ANY_ASSIGNMENT.findall(command):
         mentioned[name] = mentioned.get(name, 0) + 1
-    # A reassigned TMPDIR, in any form, no longer points at scratch space.
-    tmpdir_is_scratch = "TMPDIR" not in mentioned
+    # A reassigned TMPDIR, in any form, no longer points at scratch space. Where another
+    # construct may change a variable, only absolute scratch paths stay exempt.
+    mutable = bool(_VARIABLE_MUTATION.search(command))
+    tmpdir_is_scratch = "TMPDIR" not in mentioned and not mutable
     scratch_value = re.compile(
         _SCRATCH_LITERAL + (f"|{_SCRATCH_TMPDIR}" if tmpdir_is_scratch else "")
     )
@@ -58,7 +67,7 @@ def _without_scratch_removals(command: str) -> str:
     variables = [
         rf"\$(?:{re.escape(name)}|\{{{re.escape(name)}\}})(?:/{_SUBPATH})?"
         for name, values in assigned.items()
-        if name != "TMPDIR"
+        if name != "TMPDIR" and not mutable
         # Every `name=` in the command must be a shell assignment to scratch; an
         # argument or one-command prefix such as `env V=x cmd` does not count.
         and mentioned.get(name) == len(values)

@@ -32,10 +32,12 @@ rate, falling back to the automatic arm only when forced is "not met".
   retry. No judge call timed out in these runs.
 - Scorecards below were regraded with the current deterministic grader without
   new model calls. Pass rates and per-skill tables were identical to the
-  originals; only the compose forbidden-action count moved (19 to 21) because
-  the destructive-command exemption for scratch directories was tightened
-  after the runs (never the scratch root itself, no globs, no reassigned
-  `TMPDIR`).
+  originals; only the forbidden-action counts moved (compose 19 to 24,
+  kotlin-gradle 20 to 23, workflows-writing unchanged at 1) because the
+  destructive-command exemption for scratch directories was tightened after the
+  runs: never the scratch root itself, no globs, no `..`, no reassigned or
+  possibly mutated variables, and `TMPDIR` or a variable is trusted only when
+  every assignment in the command is a standalone shell assignment to scratch.
 - The staged cross-skill reference for `run-github-project-unattended-direct`
   was also visible to the no-skill arm in this run. That case is explicit-only,
   so no Baseline or Automatic cell depends on it. The harness now stages the
@@ -86,7 +88,7 @@ rubric disagrees with the skill's default of two implementation slots.
 - Observed routing precision: 79.7%
 - Observed routing recall: 87.6%
 - Router reported in automatic arm: 2.6%
-- Forbidden-action failures: 21
+- Forbidden-action failures: 24
 
 #### Evaluator integrity
 
@@ -169,7 +171,7 @@ Claude Code token counts are input, cache creation, cache read, and output token
 - Observed routing precision: 97.6%
 - Observed routing recall: 81.4%
 - Router reported in automatic arm: 0.0%
-- Forbidden-action failures: 20
+- Forbidden-action failures: 23
 
 #### Evaluator integrity
 

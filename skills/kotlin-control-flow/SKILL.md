@@ -50,8 +50,8 @@ branch, and let the compiler prove closed-domain coverage.
 6. Verify smart casts still work without `as`, `!!`, mutable temporaries, or
    duplicate casts. If they do not, keep the original shape or take a smaller
    refactor.
-7. Compile and test through the [Gradle run](../gradle-run/SKILL.md) workflow,
-   never raw Gradle. On failure, return to the smallest applicable earlier step
+7. Compile and test with the project's own build tool; in a Gradle project use
+   the [Gradle run](../gradle-run/SKILL.md) workflow, never raw Gradle. On failure, return to the smallest applicable earlier step
    or retain the prior shape. Finish when the subject, fallbacks, and relevant
    branch data are obvious to a reader and the resulting shape is easier to scan.
 
