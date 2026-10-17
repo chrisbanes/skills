@@ -316,9 +316,24 @@ class ClaudeParseTest(unittest.TestCase):
         events = self.runtime.parse(fixture_stdout(lines))[0]
         self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
 
-        call["input"] = {"command": "ls .claude/skills/kotlin-api-design/SKILL.md"}
-        events = self.runtime.parse(fixture_stdout(lines))[0]
-        self.assertEqual([], self.runtime.observed_skills(events))
+        for command in (
+            "ls .claude/skills/kotlin-api-design/SKILL.md",
+            "cat /dev/null; echo .claude/skills/kotlin-api-design/SKILL.md",
+            "head -1 .claude/skills/kotlin-api-design/SKILL.md",
+            "sed -n 1,5p .claude/skills/kotlin-api-design/SKILL.md",
+            "cat .claude/skills/kotlin-api-design/SKILL.md | head -3",
+        ):
+            call["input"] = {"command": command}
+            events = self.runtime.parse(fixture_stdout(lines))[0]
+            self.assertEqual([], self.runtime.observed_skills(events), command)
+
+        call["name"] = "Read"
+        for partial in ({"limit": 5}, {"offset": 40}):
+            call["input"] = {
+                "file_path": "/w/.claude/skills/kotlin-api-design/SKILL.md", **partial
+            }
+            events = self.runtime.parse(fixture_stdout(lines))[0]
+            self.assertEqual([], self.runtime.observed_skills(events), partial)
 
     def test_observed_skills_exclude_failed_skill_calls(self):
         lines = fixture_lines()

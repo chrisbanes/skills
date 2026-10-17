@@ -25,58 +25,22 @@ _DESTRUCTIVE_COMMAND = re.compile(
     r"(?:^|[;&|]\s*|\s)(?:rm\s+(?:-[a-zA-Z-]+\s+)*(?:-[a-zA-Z]*[rR][a-zA-Z]*|--recursive)(?=\s)|git\s+(?:reset\s+--hard|clean\s+-|push)|sudo\s|gh\s+(?:pr\s+merge|issue\s+close))"
 )
 # Recursive removal of a path strictly inside scratch space (no `..`, no globs, never the
-# scratch root itself) is cleanup, not destruction.
+# scratch root itself) is cleanup, not destruction. Only literal operands qualify:
+# `$TMPDIR/...` counts while `TMPDIR` is never named as an assignment or builtin target,
+# and no other variable is trusted, because a shell can change variables in many ways.
 _SUBPATH = r"(?:(?!\.\.)[^\s;&|*?\[\]])+"
 _SCRATCH_LITERAL = rf"(?:/tmp|/private/tmp|/var/folders)/{_SUBPATH}"
 _SCRATCH_TMPDIR = rf"\$(?:TMPDIR|\{{TMPDIR\}})/{_SUBPATH}"
-_WORD = r"""(?:"[^"]*"|'[^']*'|[^\s;&|]*)"""
-_VALUE = rf"({_WORD})"
-# Any `name=value` word, including arguments and one-command environment prefixes.
-_ANY_ASSIGNMENT = re.compile(rf"(?:^|[\s;&|])(\w+)={_VALUE}")
-# An assignment-only statement (one or more `name=value` words, with optional leading
-# whitespace and one leading `export`), which changes the shell's own variables.
-_SHELL_ASSIGNMENT = re.compile(
-    rf"(?:^|[;&|\n])\s*((?:export\s+)?(?:\w+={_WORD}[ \t]*)+)(?=$|[;&|\n])"
-)
-_ASSIGNMENT_WORD = re.compile(rf"(\w+)={_VALUE}")
-
-
-# Constructs that can change a variable without a plain `name=value` statement.
-_VARIABLE_MUTATION = re.compile(
-    r"\+=|\(\(|(?:^|[\s;&|(])(?:printf\s+-v|read|eval|declare|typeset|local|readonly|unset|"
-    r"mapfile|readarray|getopts|let|source|for|while|until|select|\.)(?=\s)"
-)
+_BARE_TMPDIR = re.compile(r"(?<!\$)(?<!\$\{)TMPDIR|\beval\b")
 
 
 def _without_scratch_removals(command: str) -> str:
-    assigned: dict[str, list[str]] = {}
-    for statement in _SHELL_ASSIGNMENT.findall(command):
-        for name, value in _ASSIGNMENT_WORD.findall(statement):
-            assigned.setdefault(name, []).append(value.strip("\"'"))
-    mentioned: dict[str, int] = {}
-    for name, _ in _ANY_ASSIGNMENT.findall(command):
-        mentioned[name] = mentioned.get(name, 0) + 1
-    # A reassigned TMPDIR, in any form, no longer points at scratch space. Where another
-    # construct may change a variable, only absolute scratch paths stay exempt.
-    mutable = bool(_VARIABLE_MUTATION.search(command))
-    tmpdir_is_scratch = "TMPDIR" not in mentioned and not mutable
-    scratch_value = re.compile(
-        _SCRATCH_LITERAL + (f"|{_SCRATCH_TMPDIR}" if tmpdir_is_scratch else "")
-    )
-    # A variable counts as scratch only if every assignment in the command is.
-    variables = [
-        rf"\$(?:{re.escape(name)}|\{{{re.escape(name)}\}})(?:/{_SUBPATH})?"
-        for name, values in assigned.items()
-        if name != "TMPDIR" and not mutable
-        # Every `name=` in the command must be a shell assignment to scratch; an
-        # argument or one-command prefix such as `env V=x cmd` does not count.
-        and mentioned.get(name) == len(values)
-        and all(scratch_value.fullmatch(value) for value in values)
-    ]
-    options = [_SCRATCH_LITERAL, *([_SCRATCH_TMPDIR] if tmpdir_is_scratch else []), *variables]
+    options = [_SCRATCH_LITERAL]
+    if not _BARE_TMPDIR.search(command):
+        options.append(_SCRATCH_TMPDIR)
     path = rf"""["']?(?:{"|".join(options)})["']?"""
     return re.sub(
-        rf"rm\s+(?:-[a-zA-Z]+\s+)+{path}(?:\s+{path})*(?=\s*(?:$|[;&|]))", "", command
+        rf"rm\s+(?:-[a-zA-Z]+\s+)+(?:--\s+)?{path}(?:\s+{path})*(?=\s*(?:$|[;&|]))", "", command
     )
 
 

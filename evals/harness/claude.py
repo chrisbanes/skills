@@ -127,7 +127,9 @@ def _blocks(event: dict[str, Any], kind: str) -> Iterator[dict[str, Any]]:
         )
 
 
-_STAGED_ENTRYPOINT = re.compile(r"\.claude/skills/([a-z0-9][a-z0-9-]*)/SKILL\.md\b")
+_STAGED_ENTRYPOINT = r"[^\s\"']*\.claude/skills/([a-z0-9][a-z0-9-]*)/SKILL\.md"
+_STAGED_READ = re.compile(rf"{_STAGED_ENTRYPOINT}")
+_STAGED_CAT = re.compile(rf"""cat\s+(?:--\s+)?["']?{_STAGED_ENTRYPOINT}["']?""")
 
 
 def _unreadable_roots(repo_root: Path) -> list[Path]:
@@ -136,19 +138,19 @@ def _unreadable_roots(repo_root: Path) -> list[Path]:
 
 
 def _staged_skill_read(block: dict[str, Any]) -> str | None:
-    """The public skill whose staged SKILL.md a Read or `cat`-style Bash call opened."""
+    """The public skill whose staged SKILL.md one whole-file Read or plain `cat` returned."""
     tool_input = block.get("input")
     if not isinstance(tool_input, dict):
         return None
     if block.get("name") == "Read":
-        target = str(tool_input.get("file_path", ""))
-    elif block.get("name") == "Bash" and re.match(
-        r"\s*(cat|head|tail|sed|less)\s", str(tool_input.get("command", ""))
-    ):
-        target = str(tool_input["command"])
+        # A limited or offset read omits part of the procedure.
+        if tool_input.get("limit") or tool_input.get("offset") not in (None, 0, 1):
+            return None
+        match = _STAGED_READ.fullmatch(str(tool_input.get("file_path", "")))
+    elif block.get("name") == "Bash":
+        match = _STAGED_CAT.fullmatch(str(tool_input.get("command", "")).strip())
     else:
         return None
-    match = _STAGED_ENTRYPOINT.search(target)
     name = canonical_skill_name(match.group(1)) if match else None
     return name if name and name != ROUTER_SKILL else None
 
