@@ -306,7 +306,7 @@ class ClaudeParseTest(unittest.TestCase):
         lines = fixture_lines()
         call = lines[1]["message"]["content"][0]
         call["name"] = "Read"
-        call["input"] = {"file_path": "/w/.claude/skills/kotlin-api-design/SKILL.md"}
+        call["input"] = {"file_path": "/workspace/.claude/skills/kotlin-api-design/SKILL.md"}
         events = self.runtime.parse(fixture_stdout(lines))[0]
         self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
 
@@ -327,6 +327,21 @@ class ClaudeParseTest(unittest.TestCase):
             events = self.runtime.parse(fixture_stdout(lines))[0]
             self.assertEqual([], self.runtime.observed_skills(events), command)
 
+        # Another attempt's or an unrelated copy of the entrypoint does not count.
+        for outside in (
+            "/workspace/../attempt-1/.claude/skills/kotlin-api-design/SKILL.md",
+            "/tmp/elsewhere/.claude/skills/kotlin-api-design/SKILL.md",
+            "../attempt-1/.claude/skills/kotlin-api-design/SKILL.md",
+        ):
+            for name, key, value in (
+                ("Read", "file_path", outside), ("Bash", "command", f"cat {outside}")
+            ):
+                call["name"], call["input"] = name, {key: value}
+                events = self.runtime.parse(fixture_stdout(lines))[0]
+                self.assertEqual([], self.runtime.observed_skills(events), (name, outside))
+
+        # A workspace path with spaces still counts.
+        lines[0]["cwd"] = "/tmp/eval runs/workspaces/x"
         spaced = "/tmp/eval runs/workspaces/x/.claude/skills/kotlin-api-design/SKILL.md"
         call["name"], call["input"] = "Read", {"file_path": spaced}
         events = self.runtime.parse(fixture_stdout(lines))[0]
@@ -334,11 +349,12 @@ class ClaudeParseTest(unittest.TestCase):
         call["name"], call["input"] = "Bash", {"command": f'cat "{spaced}"'}
         events = self.runtime.parse(fixture_stdout(lines))[0]
         self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
+        lines[0]["cwd"] = "/workspace"
 
         call["name"] = "Read"
         for partial in ({"limit": 5}, {"offset": 40}):
             call["input"] = {
-                "file_path": "/w/.claude/skills/kotlin-api-design/SKILL.md", **partial
+                "file_path": "/workspace/.claude/skills/kotlin-api-design/SKILL.md", **partial
             }
             events = self.runtime.parse(fixture_stdout(lines))[0]
             self.assertEqual([], self.runtime.observed_skills(events), partial)

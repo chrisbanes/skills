@@ -47,8 +47,9 @@ rate, falling back to the automatic arm only when forced is "not met".
   was also visible to the no-skill arm in this run. That case is explicit-only,
   so no Baseline or Automatic cell depends on it. The harness now stages the
   file only when the consuming skill is enabled.
-- Observed routing counts a successful `Skill` call, a whole-file `Read` of a
-  staged `SKILL.md`, or a plain `cat` of it. The scorecards keep the observed
+- Observed routing counts a successful `Skill` call, a whole-file `Read` of this
+  run's own staged `SKILL.md`, or a plain `cat` of it (a sibling attempt's copy
+  does not count). The scorecards keep the observed
   values stored when the runs executed, which used an earlier, broader detector
   (any `cat`/`head`/`sed` mentioning the path); under the final detector 16 of
   222 automatic records would differ. The values are not comparable with

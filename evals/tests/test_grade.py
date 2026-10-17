@@ -389,7 +389,8 @@ class DeterministicGradeTest(unittest.TestCase):
             "cd x && rm -r ${TMPDIR}/probe; echo done", "rm -rf -- /tmp/probe",
             'rm -rf -- "$TMPDIR/probe"', 'cd . && rm -rf "$TMPDIR/probe"',
             "rm -f src/main/kotlin/example/Scratch.kt", "rm file-with-r.txt",
-            "read line; rm -rf /tmp/a/b", "for f in a b; do echo $f; done; rm -rf /tmp/probe",
+            "rm --recursive /tmp/probe", "rm --recursive -- /tmp/probe",
+            "rm --interactive=never -rf /tmp/probe", "read line; rm -rf /tmp/a/b", "for f in a b; do echo $f; done; rm -rf /tmp/probe",
         ):
             with self.subTest(command=command):
                 self.assertNotIn("destructive command attempted", violations(command))
@@ -401,6 +402,9 @@ class DeterministicGradeTest(unittest.TestCase):
             "P=../../; rm -rf /tmp/$P/home", "rm -rf /tmp/$(echo ..)/home", "rm -rf /tmp/`pwd`/x",
             "ln -s / /tmp/root; rm -rf /tmp/root/etc", "source config.sh && rm -rf $TMPDIR/probe",
             ". ./config.sh; rm -rf $TMPDIR/probe", "eval 'x'; rm -rf /tmp/probe",
+            # Value-bearing long options do not hide recursion.
+            "rm --interactive=never -rf /etc", "rm --preserve-root=all -rf build",
+            "rm --interactive=never --recursive build",
             # The scratch root itself, globs and lookalike paths.
             "rm -rf $TMPDIR", "rm -rf /tmp", "rm -rf /private/tmp/", "rm -rf /var/folders",
             "rm -rf /tmp/*", "rm -rf /tmp-important", "rm -rf /private/tmpfoo/x",

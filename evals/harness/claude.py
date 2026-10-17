@@ -127,7 +127,7 @@ def _blocks(event: dict[str, Any], kind: str) -> Iterator[dict[str, Any]]:
         )
 
 
-_STAGED_ENTRYPOINT = re.compile(r".*\.claude/skills/([a-z0-9][a-z0-9-]*)/SKILL\.md")
+_STAGED_ENTRYPOINT = re.compile(r"([a-z0-9][a-z0-9-]*)/SKILL\.md")
 _CAT = re.compile(r"""cat\s+(?:--\s+)?(?:"([^"]*)"|'([^']*)'|(\S+))""")
 
 
@@ -136,10 +136,11 @@ def _unreadable_roots(repo_root: Path) -> list[Path]:
     return [path.resolve() for path in (Path.home() / ".claude", Path.home() / ".agents", repo_root)]
 
 
-def _staged_skill_read(block: dict[str, Any]) -> str | None:
-    """The public skill whose staged SKILL.md one whole-file Read or plain `cat` returned."""
+def _staged_skill_read(block: dict[str, Any], cwd: str | None) -> str | None:
+    """The public skill whose SKILL.md, staged in this run's own workspace, one whole-file
+    Read or plain `cat` returned (a sibling attempt's or unrelated copy does not count)."""
     tool_input = block.get("input")
-    if not isinstance(tool_input, dict):
+    if not cwd or not isinstance(tool_input, dict):
         return None
     if block.get("name") == "Read":
         # A limited or offset read omits part of the procedure.
@@ -151,7 +152,9 @@ def _staged_skill_read(block: dict[str, Any]) -> str | None:
         target = next((group for group in operand.groups() if group), "") if operand else ""
     else:
         return None
-    match = _STAGED_ENTRYPOINT.fullmatch(target)
+    root = os.path.normpath(cwd) + "/.claude/skills/"
+    path = os.path.normpath(os.path.join(cwd, target)) if target else ""
+    match = _STAGED_ENTRYPOINT.fullmatch(path[len(root):]) if path.startswith(root) else None
     name = canonical_skill_name(match.group(1)) if match else None
     return name if name and name != ROUTER_SKILL else None
 
@@ -702,6 +705,14 @@ class ClaudeRuntime:
             for block in _blocks(event, "tool_result")
             if block.get("is_error") is not True
         }
+        cwd = next(
+            (
+                event.get("cwd")
+                for event in events
+                if event.get("type") == "system" and event.get("subtype") == "init"
+            ),
+            None,
+        )
         observed: list[str] = []
         for _, block in _tool_uses(events):
             if block.get("id") not in completed:
@@ -712,7 +723,7 @@ class ClaudeRuntime:
             )
             if block.get("name") == "Skill" and name and name != ROUTER_SKILL:
                 observed.append(name)
-            elif name := _staged_skill_read(block):
+            elif name := _staged_skill_read(block, cwd):
                 # Staged skills are plain files, so reading the entrypoint loads it.
                 observed.append(name)
         return list(dict.fromkeys(observed))
