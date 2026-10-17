@@ -34,9 +34,9 @@ _VALUE = rf"({_WORD})"
 # Any `name=value` word, including arguments and one-command environment prefixes.
 _ANY_ASSIGNMENT = re.compile(rf"(?:^|[\s;&|])(\w+)={_VALUE}")
 # An assignment-only statement (one or more `name=value` words, with optional leading
-# whitespace and `export`), which changes the shell's own variables.
+# whitespace and one leading `export`), which changes the shell's own variables.
 _SHELL_ASSIGNMENT = re.compile(
-    rf"(?:^|[;&|\n])\s*((?:(?:export\s+)?\w+={_WORD}[ \t]*)+)(?=$|[;&|\n])"
+    rf"(?:^|[;&|\n])\s*((?:export\s+)?(?:\w+={_WORD}[ \t]*)+)(?=$|[;&|\n])"
 )
 _ASSIGNMENT_WORD = re.compile(rf"(\w+)={_VALUE}")
 

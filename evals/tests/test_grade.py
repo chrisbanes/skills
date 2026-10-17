@@ -391,7 +391,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "rm -f src/main/kotlin/example/Scratch.kt", "rm file-with-r.txt",
             "export V=$TMPDIR/a; rm -rf $V", "V=/tmp/a && rm -rf $V",
             'V=/tmp/a W=/tmp/b; rm -rf "$V" "$W"', "  V=$TMPDIR/a; rm -rf $V",
-            "read line; rm -rf /tmp/a/b", "for f in a b; do echo $f; done; rm -rf /tmp/probe",
+            "export V=/tmp/a W=/tmp/b; rm -rf $V $W", "read line; rm -rf /tmp/a/b", "for f in a b; do echo $f; done; rm -rf /tmp/probe",
             "cd x\n  V=$TMPDIR/a W=$TMPDIR/b\nrm -rf $V $W",
             "S=$TMPDIR/a\nrm -rf $S",
         ):
@@ -411,6 +411,8 @@ class DeterministicGradeTest(unittest.TestCase):
             "V=/tmp/a; unset V; rm -rf $V", "V=/tmp/a; V+=/..; rm -rf $V",
             "V=/tmp/a; eval 'V=/'; rm -rf $V", "printf -v TMPDIR /; rm -rf $TMPDIR/x",
             "for V in /; do rm -rf $V; done",
+            'HOME=/tmp/probe export W=/tmp/b; rm -rf "$HOME"',
+            "V=/tmp/a export W=/tmp/b; rm -rf $V",
             "echo V=$TMPDIR/a; rm -rf $V", "V=$TMPDIR/a env V=/ true; rm -rf $V",
         ):
             with self.subTest(command=command):
