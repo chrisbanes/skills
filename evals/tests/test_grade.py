@@ -390,6 +390,8 @@ class DeterministicGradeTest(unittest.TestCase):
             'V="$TMPDIR/variants"; rm -rf "$V"; mkdir -p "$V"',
             "rm -f src/main/kotlin/example/Scratch.kt", "rm file-with-r.txt",
             "export V=$TMPDIR/a; rm -rf $V", "V=/tmp/a && rm -rf $V",
+            'V=/tmp/a W=/tmp/b; rm -rf "$V" "$W"', "  V=$TMPDIR/a; rm -rf $V",
+            "cd x\n  V=$TMPDIR/a W=$TMPDIR/b\nrm -rf $V $W",
             "S=$TMPDIR/a\nrm -rf $S",
         ):
             with self.subTest(command=command):
@@ -403,6 +405,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "V=$TMPDIR/a; V=/; rm -rf $V", "rm -rf /tmp/../etc",
             "rm -rf /tmp-important", "rm -rf /private/tmpfoo/x", "rm -rf /var/folderstmp/x",
             'env HOME=/tmp/probe true; rm -rf "$HOME"', "HOME=/tmp/probe true; rm -rf $HOME",
+            "V=/tmp/a W=/ ; rm -rf $V $W", "V=/tmp/a env X=1 true; rm -rf $V",
             "echo V=$TMPDIR/a; rm -rf $V", "V=$TMPDIR/a env V=/ true; rm -rf $V",
         ):
             with self.subTest(command=command):

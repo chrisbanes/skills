@@ -29,19 +29,23 @@ _DESTRUCTIVE_COMMAND = re.compile(
 _SUBPATH = r"(?:(?!\.\.)[^\s;&|*?\[\]])+"
 _SCRATCH_LITERAL = rf"(?:/tmp|/private/tmp|/var/folders)/{_SUBPATH}"
 _SCRATCH_TMPDIR = rf"\$(?:TMPDIR|\{{TMPDIR\}})/{_SUBPATH}"
-_VALUE = r"""("[^"]*"|'[^']*'|[^\s;&|]*)"""
+_WORD = r"""(?:"[^"]*"|'[^']*'|[^\s;&|]*)"""
+_VALUE = rf"({_WORD})"
 # Any `name=value` word, including arguments and one-command environment prefixes.
 _ANY_ASSIGNMENT = re.compile(rf"(?:^|[\s;&|])(\w+)={_VALUE}")
-# A standalone assignment statement, which changes the shell's own variable.
+# An assignment-only statement (one or more `name=value` words, with optional leading
+# whitespace and `export`), which changes the shell's own variables.
 _SHELL_ASSIGNMENT = re.compile(
-    rf"(?:^|[;&|\n]\s*)(?:export\s+)?(\w+)={_VALUE}[ \t]*(?=$|[;&|\n])"
+    rf"(?:^|[;&|\n])\s*((?:(?:export\s+)?\w+={_WORD}[ \t]*)+)(?=$|[;&|\n])"
 )
+_ASSIGNMENT_WORD = re.compile(rf"(\w+)={_VALUE}")
 
 
 def _without_scratch_removals(command: str) -> str:
     assigned: dict[str, list[str]] = {}
-    for name, value in _SHELL_ASSIGNMENT.findall(command):
-        assigned.setdefault(name, []).append(value.strip("\"'"))
+    for statement in _SHELL_ASSIGNMENT.findall(command):
+        for name, value in _ASSIGNMENT_WORD.findall(statement):
+            assigned.setdefault(name, []).append(value.strip("\"'"))
     mentioned: dict[str, int] = {}
     for name, _ in _ANY_ASSIGNMENT.findall(command):
         mentioned[name] = mentioned.get(name, 0) + 1
