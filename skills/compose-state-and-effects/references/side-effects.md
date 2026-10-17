@@ -23,6 +23,8 @@ Composable bodies render; external work belongs to the smallest effect whose lif
 | Turn snapshot reads into a Flow | `snapshotFlow { ... }` in `LaunchedEffect` |
 
 ```kotlin
+import androidx.compose.runtime.getValue // required by `by`; add setValue for `var`
+
 val latestOnTimeout by rememberUpdatedState(onTimeout)
 LaunchedEffect(Unit) {
     delay(1_000)

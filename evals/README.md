@@ -131,48 +131,48 @@ Run provenance and local scorecard paths are in the
 ### Claude Code
 
 Claude Code: `claude-haiku-5-5` with high effort, judged by
-[`gpt-6-sol`](https://developers.openai.com/api/docs/models/gpt-6-sol) with high
+[`gpt-6.1-sol`](https://developers.openai.com/api/docs/models/gpt-6.1-sol) with high
 reasoning. The metrics are defined as above, and `—` marks a cell with no
 recorded result.
 
 | Skill | Baseline | Automatic | Restraint |
 | --- | ---: | ---: | ---: |
-| `compose-animations` | — | — | — |
-| `compose-component-design` | — | — | — |
-| `compose-focus-navigation` | — | — | — |
-| `compose-performance` | — | — | — |
-| `compose-state-and-effects` | — | — | — |
-| `compose-ui-testing-patterns` | — | — | — |
-| `gradle-run` | — | — | — |
-| `kotlin-api-design` | — | — | — |
-| `kotlin-concurrency-and-flow` | — | — | — |
-| `kotlin-control-flow` | — | — | — |
-| `android-benchmark-comparison` | — | — | — |
-| `deliver-spec` | — | — | — |
-| `grounded-writing` | — | — | — |
-| `implement-with-subagents` | — | — | — |
-| `release-kotlin-library` | — | — | — |
-| `run-github-project` | — | — | — |
-| `shepherd` | — | — | — |
-| `to-plan` | — | — | — |
+| `compose-animations` | 66.7% | 91.7% | 100.0% |
+| `compose-component-design` | 73.3% | 100.0% | 100.0% |
+| `compose-focus-navigation` | 88.9% | 88.9% | 100.0% |
+| `compose-performance` | 91.7% | 100.0% | 100.0% |
+| `compose-state-and-effects` | 79.2% | 83.3% | 100.0% |
+| `compose-ui-testing-patterns` | 55.6% | 77.8% | 100.0% |
+| `gradle-run` | 16.7% | 83.3% | 100.0% |
+| `kotlin-api-design` | 83.3% | 100.0% | 100.0% |
+| `kotlin-concurrency-and-flow` | 72.2% | 100.0% | 100.0% |
+| `kotlin-control-flow` | 61.1% | 100.0% | 100.0% |
+| `android-benchmark-comparison` | 33.3% | 100.0% | 100.0% |
+| `deliver-spec` | — | — | 100.0% |
+| `grounded-writing` | 0.0% | 83.3% | 100.0% |
+| `implement-with-subagents` | — | — | 66.7% |
+| `release-kotlin-library` | 0.0% | 100.0% | 66.7% |
+| `run-github-project` | — | — | 100.0% |
+| `shepherd` | — | — | 100.0% |
+| `to-plan` | 0.0% | 100.0% | 100.0% |
 
 Per-run medians, baseline → automatic, for the same configuration:
 
 | Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
 | --- | ---: | ---: | ---: | ---: |
-| `compose-animations` | — | — | — | — |
-| `compose-component-design` | — | — | — | — |
-| `compose-focus-navigation` | — | — | — | — |
-| `compose-performance` | — | — | — | — |
-| `compose-state-and-effects` | — | — | — | — |
-| `compose-ui-testing-patterns` | — | — | — | — |
-| `gradle-run` | — | — | — | — |
-| `kotlin-api-design` | — | — | — | — |
-| `kotlin-concurrency-and-flow` | — | — | — | — |
-| `kotlin-control-flow` | — | — | — | — |
-| `android-benchmark-comparison` | — | — | — | — |
-| `grounded-writing` | — | — | — | — |
-| `release-kotlin-library` | — | — | — | — |
+| `compose-animations` | 58.1k → 105.9k (+82%) | 6 → 9 (+50%) | 1 → 1 (+0%) | 46.2s → 54.0s (+17%) |
+| `compose-component-design` | 73.0k → 71.4k (-2%) | 8 → 7 (-12%) | 1 → 1 (+0%) | 37.9s → 34.5s (-9%) |
+| `compose-focus-navigation` | 75.3k → 121.2k (+61%) | 8 → 8.5 (+6%) | 1 → 1 (+0%) | 43.2s → 54.5s (+26%) |
+| `compose-performance` | 69.7k → 101.8k (+46%) | 8 → 8 (+0%) | 1 → 1 (+0%) | 39.5s → 48.5s (+23%) |
+| `compose-state-and-effects` | 72.2k → 101.8k (+41%) | 8 → 10 (+25%) | 1 → 1 (+0%) | 36.0s → 51.4s (+43%) |
+| `compose-ui-testing-patterns` | 65.1k → 105.1k (+61%) | 8.5 → 9 (+6%) | 1 → 1 (+0%) | 43.2s → 45.8s (+6%) |
+| `gradle-run` | 60.4k → 64.8k (+7%) | 6 → 4 (-33%) | 1 → 1 (+0%) | 34.2s → 29.8s (-13%) |
+| `kotlin-api-design` | 56.4k → 119.7k (+112%) | 7 → 10 (+43%) | 1 → 1 (+0%) | 36.5s → 53.4s (+46%) |
+| `kotlin-concurrency-and-flow` | 109.5k → 112.5k (+3%) | 9 → 9 (+0%) | 1 → 1 (+0%) | 43.4s → 46.8s (+8%) |
+| `kotlin-control-flow` | 124.5k → 119.7k (-4%) | 8 → 9 (+12%) | 1 → 1 (+0%) | 41.4s → 47.8s (+15%) |
+| `android-benchmark-comparison` | 35.7k → 45.1k (+26%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 27.4s → 18.8s (-31%) |
+| `grounded-writing` | 44.2k → 74.6k (+69%) | 3 → 5 (+67%) | 1 → 1 (+0%) | 17.6s → 31.6s (+79%) |
+| `release-kotlin-library` | 51.4k → 76.3k (+49%) | 4 → 4 (+0%) | 1 → 1 (+0%) | 36.0s → 53.7s (+49%) |
 
 ## Evaluation setup
 

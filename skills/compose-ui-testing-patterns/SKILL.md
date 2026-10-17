@@ -141,7 +141,8 @@ Keep screenshot state deterministic:
   check recording independently; a passing comparison does not prove that
   recording wrote the artifact. If the artifact or baseline diff is
   unavailable, report that gap rather than claiming recording succeeded. Keep
-  tool-specific commands in the repository runbook.
+  tool-specific commands in the repository runbook. In a findings-only review,
+  state what evidence is missing; do not add remediation or rerun steps.
 
 ## Fake images and platform services
 

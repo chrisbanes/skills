@@ -102,6 +102,21 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     self.assertFalse(target.is_symlink())
                     self.assertEqual((REPO_ROOT / canonical).read_bytes(), target.read_bytes())
 
+    def test_staged_skill_files_are_copied_without_a_skill_entrypoint(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        case = next(c for c in report.cases if c.id == "run-github-project-unattended-direct")
+        reference = "deliver-spec/references/qualification-failure.md"
+        self.assertEqual((reference,), case.staged_skill_files)
+        for skill_dir in (".agents/skills", ".claude/skills"):
+            with self.subTest(skill_dir=skill_dir), tempfile.TemporaryDirectory() as directory:
+                workspace = prepare_workspace(
+                    case, REPO_ROOT, Path(directory) / "fixture",
+                    enabled_skills=case.target_skills, skill_dir=skill_dir,
+                )
+                staged = workspace / skill_dir / reference
+                self.assertEqual((REPO_ROOT / "skills" / reference).read_bytes(), staged.read_bytes())
+                self.assertFalse((workspace / skill_dir / "deliver-spec" / "SKILL.md").exists())
+
     def test_affected_validation_cases_preserve_decisive_facts_and_read_only_scope(self):
         case_ids = (
             "deliver-spec-shared-structure-direct",

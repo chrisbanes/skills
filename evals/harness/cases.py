@@ -58,6 +58,7 @@ class EvalCase:
     automatic_no_skill_control: bool = False
     forbid_all_commands: bool = False
     allow_skill_reference_reads: bool = False
+    staged_skill_files: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -217,6 +218,20 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
             "constant_skills must exactly declare fixture .agents/skills dependencies"
         )
 
+    # Reference files of other skills that the target skill links to; staged as plain
+    # files (no SKILL.md) so a dangling link is not mistaken for a missing prerequisite.
+    staged_skill_files = (
+        _require_string_list(data, "staged_skill_files") if "staged_skill_files" in data else ()
+    )
+    for staged in staged_skill_files:
+        if (
+            not _safe_relative(staged)
+            or staged.count("/") < 2
+            or staged.endswith("SKILL.md")
+            or not (repo_root / "skills" / staged).is_file()
+        ):
+            raise CaseValidationError(f"invalid staged_skill_files entry: {staged}")
+
     allowed_write_paths = _require_string_list(data, "allowed_write_paths")
     if task_mode == "review" and allowed_write_paths:
         raise CaseValidationError("review cases cannot declare writable paths")
@@ -296,6 +311,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
         rubric=tuple(rubric),
         provenance=_validate_provenance(data.get("provenance")),
         calibration=calibration,
+        staged_skill_files=staged_skill_files,
         prompt=prompt,
         directory=manifest_path.parent,
         constant_skills=constant_skills,

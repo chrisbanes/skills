@@ -9,97 +9,75 @@ disable-model-invocation: true
 
 ## Core principle
 
-Use `Backlog` → `Todo` → `Ready to implement` → `In progress` → `Done` as
-the default board lanes. `Todo` queues planning. Resolve lane names in this
-procedure and its references through the trusted binding's verified names and
-option IDs; preserve existing configured names. Current column membership
-supplies ticket authorization; never inspect column transition history for
-permission, plan freshness, or a Ready handoff. Backlog is read-only: never
-claim, plan, triage, close epics, resume cleanup, or promote its items. Only
-humans move items out of Backlog. Continue automatic work only in Todo and
-later applicable columns, subject to ownership, dependencies, plan integrity,
-and the current run's operation-specific grants.
+The Project is the live control plane: fresh board state and this run's
+operation-specific grants decide every claim, write and finish.
+Default lanes are `Backlog` → `Todo` → `Ready to implement` → `In progress` →
+`Done`; resolve them through the trusted binding's verified names and option IDs.
 
-A verified ticket handoff covers in-scope local implementation, tests and repairs.
-The ticket lead may work solo or delegate when justified; retain one independent
-integrated-candidate review and reuse valid evidence under `deliver-spec`.
-Todo items that qualify for its fast path skip the planner under the Todo lane.
+## Invariants
 
-The Project is the live control plane. Apply these invariants throughout:
+1. **Column authority:** current column membership authorizes a ticket, never transition history. Backlog is read-only: never claim, plan, triage, close epics, resume cleanup or promote there; only humans move items out. Automatic work starts at Todo.
+2. **Live authority:** claims, selection, merge, recovery and finish need complete fresh state; caches and partial reads are hints; rehydrate only changed or unverified records. Recheck operation-specific authority right before each claim, write or merge, even when reusing a snapshot; ranker eligibility grants nothing.
+3. **Controller ownership:** only the controller claims, assigns, mutates shared Project state, merges, closes issues and reconciles; a ticket agent owns only its worktree, branch and non-merge PR changes.
+4. **Unknown outcomes:** reconcile an unknown or failed mutation or publication before retrying, freeing capacity or reporting success.
+5. **Preservation:** keep blocked, dependency-gated and human work in its frontier with owner, claim, slot, draft, artifacts, grants and budgets; never change state to empty the queue.
+6. **Retained owner:** feedback, repairs and amendments keep the existing owner, claim and slot without a Todo/Ready reset; earlier-head evidence never proves changed code, so renew affected checks and reviews at the final head.
+7. **No invented gates:** never infer a permission, capacity limit, provider or prerequisite the supplied state lacks; independent runnable work continues while others wait.
+8. **Supplied state:** decide review, setup or analysis from supplied complete state and report the result it supports without another read; judge the described environment, not providers missing from this workspace. A validated proposed diff is `configuration-ready-to-commit`, not conditional on a commit. Agent selection never calls a routing service; ignore legacy routing fields without editing them.
+9. **No escape hatch:** renewal or amendment never resumes parked CI, grants live turns or resets qualification. Unknown or stale evidence blocks dependants; material architecture changes need full replan and review; changed authority or qualification needs a stakeholder or source decision.
 
-1. **Live authority:** claims, selection, and finish decisions require complete,
-   fresh GitHub and Project state; cache and partial reads are hints only.
-2. **Controller ownership:** only the controller claims, assigns, mutates shared
-   Project state, merges, closes issues, and reconciles. A ticket agent owns its
-   worktree, branch, and non-merge PR mutations only.
-3. **Unknown outcomes:** reconcile a failed or timed-out remote mutation before
-   retrying or reporting success.
-4. **Preservation:** retain blocked, dependency-gated, and role-labelled human work in
-   its authoritative frontier or partial-drain report; never change state merely
-   to make the queue appear empty.
-
-Preserve verified plan state through contract-preserving replans, return true
-human work to a decision pause, and in `drain` pair occupied slots with warm worktrees
-and persistent ticket agents. Park verified authority pauses and qualifying
-terminal required-CI claims outside capacity before refreshing the control plane.
-
-Before dispatch, apply the execution controller's
-[unattended readiness](references/execution-controller.md#unattended-readiness)
-pass. Preserve required qualification and bounded grants while independent
-runnable work continues.
+A verified handoff covers in-scope implementation, tests and repairs under
+`deliver-spec`, with one independent integrated-candidate review. Replans keep
+verified plan state; true human work returns to a decision pause. `drain` parks
+verified authority pauses and qualifying terminal required-CI claims outside
+capacity before refreshing; in `next`, a required-CI stall keeps its slot. A
+wrong plan seam still failing after one diagnosis and two repairs needs the
+replan packet; a repeated non-CI failure stays with its owner, who asks one
+capability-selected read-only evidence helper and resumes only on new direction,
+else reports the exact blocker.
 
 ## Select the mode
 
-- `review`: inspect or explain only; finish under the review contract.
-- `setup`: configure or validate the binding only; finish under the setup contract.
-  Neither mode dispatches Project work or requires execution dependencies.
-- `next`: default execution; process at most one selected issue.
-- `drain`: only on explicit drain/run-all/repeat/until-empty request; no
-  skill-defined ticket cap. A merge pause remains resumable work. While only
-  remote or human waits remain, it stays alive under the read-only
-  [Project Watcher](references/drain-scheduler.md#project-watcher), whose
-  report never replaces the Refresh Gate. `next` still returns `waiting-for-human`
-  without waiting.
+- `review`: inspect or explain only. `setup`: configure or validate the binding only. Neither dispatches work.
+- `next`: default; at most one selected issue; returns `waiting-for-human` without waiting. A named Wayfinder child stays `next`.
+- `drain`: only on explicit drain/run-all/until-empty request; no ticket cap. With only remote or human waits left it runs the read-only [Project Watcher](references/drain-scheduler.md#project-watcher), never replacing the Refresh Gate.
 
-A named Wayfinder child remains `next`; it grants neither drain authority nor a
-claim bypass. Before any mode-specific action, read the matching mandatory lane:
+`--auto-merge` grants merge authority for this invocation; otherwise deliver
+ready PRs and pause only merges.
+
+## Read before acting
 
 | Mode | Mandatory reference |
 | --- | --- |
 | `review` or `setup` | [Review and setup](references/review-and-setup.md) |
 | `next` or `drain` | [Review and setup](references/review-and-setup.md) for binding validation, then [execution controller](references/execution-controller.md) and [ticket lifecycle](references/ticket-lifecycle.md) |
 
-For execution, read [workflow providers](references/workflow-providers.md)
-before preconditions; it is authoritative on required, conditional, optional
-providers, sources, installation commands, and lane-specific fallback. Never
-install a provider implicitly. Read all providers and specialist contracts
-required by the execution-controller lane before their relevant action.
-Read [run authority and ticket pauses](references/authority-and-pauses.md).
-Use `next --auto-merge` or `drain --auto-merge` to grant merge authority for this
-invocation. Without it, deliver to ready PRs and pause only their merges while
-the board continues.
-When the trusted configuration enables agent profiles, read
-[agent routing](references/agent-routing.md) before assigning a planner, ticket
-agent, or helper.
-For `drain`, read [drain scheduler](references/drain-scheduler.md) completely
-before drain queue work. For `next` or `drain`, read
-[review contracts](references/review-contracts.md) completely before acceptance
-work.
+Execution also reads [workflow providers](references/workflow-providers.md)
+first (never install one implicitly), [authority and pauses](references/authority-and-pauses.md),
+and [review contracts](references/review-contracts.md) before acceptance work;
+`drain` reads [drain scheduler](references/drain-scheduler.md) completely before
+drain queue work. Read the matching section first, even for analysis:
+
+| Question involves | Read |
+| --- | --- |
+| Pre-dispatch readiness, qualification, live turns | [Unattended readiness](references/execution-controller.md#unattended-readiness) |
+| Capacity, shared paths, refresh, timing, CI parking | [Drain scheduler](references/drain-scheduler.md) |
+| Planner yield, amendment, replan | [Todo lane](references/todo-lane.md#yield-a-planner-for-delivery) |
+| Configuration change or renewal | [Project config](references/project-config.md#renew-presentation-only-configuration) |
+| Agent profiles or helper assignment | [Agent routing](references/agent-routing.md) |
+
+## Answer each item
+
+Per ticket or scenario, give its classification and safe next action, exact
+preserved state, exact resume evidence (never the blocked operation's own result), and checks
+repeated before execution.
+For a repeated cycle, compare the previous cycle's evidence and give one
+bounded next action or the exact blocker.
 
 ## Final report
 
-Use the selected lane's terminal state and report contract. Lead an execution
-report with the outcome, completed tickets, work still moving, exact blockers,
-and the user's next action, if any. Link to durable issue, PR, and checkpoint
-evidence instead of repeating unchanged queries or no-op events. Keep mode,
-capacity, configuration digest, live-query and authority evidence, routing
-ledger, frontiers, parked/triage/reconciliation outcomes, and per-ticket
-selection, lease/plan, branch/commit/PR, verification/review, reconciled
-mutation/merge, and preserved or cleaned state available in a concise appendix
-when needed to audit a decision or resume work. Include changed unattended
-readiness blockers, complete-refresh/invalidation reasons, and observed
-planning/implementation/repair/review/CI intervals and capacity/resource waits
-under the [timing procedure](references/drain-scheduler.md#phase-timing-and-stalls).
-Distinguish overlapping phase durations, total wall time and unknown timing;
-link repeated-cycle diagnosis and the bounded next action without claiming
-unmeasured savings.
+Use the lane's terminal state and report contract. Lead with the outcome,
+blockers with resume conditions, and the user's next action; unresolved
+prerequisites are partial work, not an empty drain. Keep audit detail in an
+appendix. Report intervals under the
+[timing procedure](references/drain-scheduler.md#phase-timing-and-stalls).

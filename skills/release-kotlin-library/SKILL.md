@@ -21,8 +21,9 @@ snapshots when the repository does not maintain them.
 
 1. Establish scope and inspect repository instructions, Git state, release
    history, version properties, publishing configuration and required checks.
-   Confirm published modules apply `com.vanniktech.maven.publish` directly or
-   via a convention plugin; declaration alone is insufficient. If absent
+   Confirm, from build files or supplied repository facts, that published
+   modules apply `com.vanniktech.maven.publish` directly or via a convention
+   plugin; declaration alone is insufficient. If absent
    or unverified, report it and stop before release mutations; do not install
    or migrate publishing plugins.
    Distinguish readiness review, preparation and explicit release authorization;
@@ -31,10 +32,8 @@ snapshots when the repository does not maintain them.
    [recovery answer form](references/recovery-output.md) before analysis. For
    changelog-related review, also read [the changelog procedure](references/changelog.md).
    For preparation or changelog-only work, read the
-   [preparation answer form](references/preparation-output.md) alone in a
-   standalone command before analysis. Check that the returned output contains
-   the complete form, from its heading through its final sentence; if not,
-   stop and recover that read before proceeding.
+   [preparation answer form](references/preparation-output.md) completely, in
+   its own call, before analysis.
    Keep reviews read-only, including credentials. Follow the existing local or
    CI publishing mechanism; do not migrate it. Read the
    [helper contract](references/helper.md) before configuring the bundled script.
@@ -70,11 +69,9 @@ snapshots when the repository does not maintain them.
    as one block without reordering them. Preserve their headings, anchors,
    dates and text, with blank lines around the enclosed Markdown. Leave older
    stable releases outside the block. If the renderer lacks collapsible HTML,
-   retain expanded entries. Before handing off, compare the actual stable
-   summary against every surviving row in the coverage ledger; confirm each
-   appears outside prerelease history and add any missing surviving change to
-   the stable summary. Compare the grouped history against the source to verify
-   its original entry order. Inspect the resulting commit. Bind validation to
+   retain expanded entries. Before handing off, recheck the actual stable
+   summary against every surviving ledger row and the grouped history against
+   the source order. Inspect the resulting commit. Bind validation to
    this state and invalidate it if relevant code changes. The helper must not
    publish during preparation.
 6. Present the prepared release for explicit user approval before publication:
@@ -109,8 +106,8 @@ snapshots when the repository does not maintain them.
 - **Preparation, including changelog-only:** Fill the selected preparation
   answer form. Show actual reviewable notes or diff, remaining checks, and the
   explicit later publication-approval gate; do not request approval now.
-- **Recovery/recovery review:** Fill the selected recovery answer form; check
-  every applicable disposition before replying.
+- **Recovery/recovery review:** Fill the selected recovery answer form as
+  numbered sections; check every applicable disposition before replying.
 - **Completed release:** Report release version, commit/tag, validation,
   artifact readback, next development commit, and conditional GitHub Release
   URL. Claim completion only when every applicable check passes.

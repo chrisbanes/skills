@@ -9,7 +9,7 @@ The parent owns placement; a reusable composable owns its invariant structure.
 1. For a composable that emits layout, declare `modifier: Modifier = Modifier` after required parameters and apply it to the root layout.
 2. Put the caller modifier first in the root chain, then append intrinsic identity modifiers. Push positioning, padding, and general size decisions to the caller.
 3. Build a modifier as one fluent expression. Keep one or two calls inline; format three or more calls one per line. Use `.then(if (condition) Modifier.x() else Modifier)` for a conditional segment.
-4. Hoist a condition outside a layout only when the layout has no other content or visible container role. Keep it inside when the container has semantics, layout arguments, siblings, or both `if` branches contribute content.
+4. When `if` branches emit different root layouts, apply `modifier` to each branch root and keep both layouts; a container switch is not a defect, so do not recommend a merged wrapper. Hoist a condition outside a layout only when the layout has no other content or visible container role. Keep it inside when the container has semantics, layout arguments, siblings, or both `if` branches contribute content.
 5. Use `decorateMeasureConstraints` only when a measurement must be consumed during measure; route phase ownership and the cross-row recipe to [Deferred reads](../../compose-performance/references/deferred-reads.md).
 6. Finish when callers can place the component, intrinsic structure remains local, and no refactor changes a container's visible or layout role.
 

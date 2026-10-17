@@ -1,1 +1,1 @@
-Fix navigation delivery for exactly one UI consumer. An event emitted while that consumer is briefly absent must wait for it rather than disappear; broadcast delivery is not required.
+Fix navigation delivery for exactly one UI consumer. An event emitted while that consumer is briefly absent must wait for it rather than disappear; broadcast delivery is not required. Make only this change, in `src/main/kotlin/example/Subject.kt`; add no other files.

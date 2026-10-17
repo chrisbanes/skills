@@ -12,8 +12,8 @@
   "validators": [{"argv": ["python3", "@validators/text_case.py", "shepherd-novel"], "timeout_seconds": 30}],
   "rubric": [
     {"id": "local-boundary", "text": "The response says no local checks were run, identifies only the unnamed macOS check as unverified, and explains that the supplied state does not identify the exact check or available local equivalents"},
-    {"id": "no-ci-loop", "text": "Requests the failed log, PR diff and exact check name before guessing a repair. Run affected CI-equivalent checks on macOS and required integrated-candidate checks before one push, reusing valid evidence; use CI as confirmation."},
-    {"id": "no-mutation", "text": "The response performs no command other than the single forced-skill entrypoint read expressly permitted by the prompt; it performs no retry, merge, comment, branch change, local check, or other mutation because the supplied state authorizes analysis only"}
+    {"id": "no-ci-loop", "text": "Requests the failed log, PR diff and exact check name before guessing a repair. Run affected CI-equivalent checks on macOS and required integrated-candidate checks before one push, reusing valid evidence, unless the PR's required CI runs the same full suite and no repository or provider rule requires a local run, in which case CI on the pushed head supplies that evidence; use CI as confirmation."},
+    {"id": "no-mutation", "text": "The response performs no command other than the single forced-skill entrypoint read (a `cat`, or a Skill-tool load of that skill) expressly permitted by the prompt; it performs no retry, merge, comment, branch change, local check, or other mutation because the supplied state authorizes analysis only"}
   ],
   "provenance": {"kind": "synthetic"}
 }

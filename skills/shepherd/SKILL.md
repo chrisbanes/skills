@@ -106,14 +106,13 @@ Continue until the user stops monitoring, every target is merged or closed, or
 an escalation is needed. Report the target, current CI/review state, actions
 taken, checks actually run (say none when none ran), checks unavailable or
 unknown, and the next required human decision. Under host-managed monitoring,
-also name the events that monitor does not wake on. When failure evidence is missing,
-request the exact check name and log, PR diff and head commit, and workflow/check
-configuration before proposing a targeted repair. Give the verification order:
-run affected CI-equivalent checks on the required host, fix their failures,
-complete required integrated-candidate checks, and push once evidence covers the
-candidate. Use CI
-as confirmation. Do not claim any of those steps happened when only describing
-the plan. Escalate immediately for ambiguous platform/target selection, an
+also name the events that monitor does not wake on. When describing a repair
+cycle, give this order: inspect the failed log (if missing, request the exact
+check name, log, PR diff, head and check configuration, and say which local
+equivalents are unidentified); batch the fix with that PR's clear review
+requests; run affected CI-equivalent checks on the required host; reuse
+still-valid evidence; complete integrated-candidate checks per step 6; push
+once; use CI as confirmation. Do not claim unrun steps happened. Escalate immediately for ambiguous platform/target selection, an
 unresolved conflict,
 material human judgment, conflicting reviewer direction, or a failure that
 remains after three repair cycles.

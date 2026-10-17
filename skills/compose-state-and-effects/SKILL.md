@@ -19,7 +19,10 @@ from app wiring and composition-owned runtime objects.
 
 1. Establish the requested scope and visible behavioral requirements. Treat an
    ownership change as a finding only when code or task evidence shows a
-   lifecycle, testability, business, or coordination need.
+   lifecycle, testability, business, or coordination need. In a focused
+   contract or correctness review, a missing provider, owner, or writer that
+   the code never needs is at most a noted risk; do not recommend ownership
+   changes for it.
 2. Inventory mutable UI state, app state, event streams, app dependencies, and
    imperative work in the affected screen or component.
 3. Place each state value at its lowest necessary owner: local UI state,

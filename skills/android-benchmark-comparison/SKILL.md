@@ -53,7 +53,8 @@ or choosing a default.
    or remaining uncertainty. When a reversal is unresolved, state the full
    sequence still needed: matching coverage, balanced or reversed order,
    measured-interval trace inspection, and restoration of any changed affinity
-   settings. Name *run order* explicitly in the recommendation: a "balanced
+   settings. If fixed-performance mode or an affinity command is cited, state
+   that neither proves CPU placement without trace verification. Name *run order* explicitly in the recommendation: a "balanced
    comparison" alone does not tell the team to balance or reverse run order.
    Label any earlier default choice provisional.
 

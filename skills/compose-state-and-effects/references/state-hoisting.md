@@ -9,7 +9,7 @@ Hoist state only as far as its logic needs it; screen wiring and plain rendering
 1. List the state, operations, app dependencies, event streams, and effects that need coordination.
 2. Choose the lowest owner from the table.
 3. Extract a plain state holder only when coordinated UI behavior is a concept; keep a lone boolean or trivial text field local.
-4. At a screen boundary, implement the three seams defined in the parent skill: small wiring owns app dependencies, durable data, and effects; composition or a plain UI state holder owns runtime UI objects; a plain composable receives immutable UI state and event callbacks.
+4. At a screen boundary, implement the three seams defined in the parent skill: small wiring owns app dependencies, durable data, and effects; composition or a plain UI state holder owns runtime UI objects; a plain composable receives immutable UI state and event callbacks. Do not make that content require runtime objects such as `LazyListState` or `FocusRequester`; it creates them or gives them remembered defaults so sample state alone renders it.
 5. Keep frame-clock operations such as scrolling or drawer animation in a composition-scoped coroutine, not `viewModelScope`.
 6. Save serializable values with `rememberSaveable`/a `Saver`, never runtime objects or callbacks.
 7. Finish by stating the concrete boundary for an ownership review, or make no change when the existing owner already matches the evidence.

@@ -23,7 +23,9 @@ policy choices that vary by use.
    valid modifier or slot finding.
 3. When root placement is part of the requested work or a broad component API
    design, accept and apply a caller modifier at the component root unless a
-   concrete API boundary makes another placement correct.
+   concrete API boundary makes another placement correct. With conditional
+   roots, apply it to every branch root rather than merging branches into one
+   wrapper.
 4. Represent caller-controlled, unconstrained visual regions with slots rather
    than proliferating primitive content parameters or Boolean shape flags.
    Keep semantic and design-system constraints as primitive parameters.

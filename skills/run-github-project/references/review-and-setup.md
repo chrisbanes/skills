@@ -84,10 +84,10 @@ binding and any agent profiles against the runtime and complete live reads. If
 it already matches the request, leave the files unchanged. If remote validation
 is unavailable, keep the scoped local edit and report precisely which live
 check remains unverified; do not report `configuration-valid`. Do not commit
-implicitly. Finish `configuration-ready-to-commit` only when validation passes
-and the diff is ready; once the configuration and trusted reference are
-committed on verified base, report `configuration-valid` only after fresh
-validation. Pause new claims while the edit is pending; existing claims may
+implicitly. Finish `configuration-ready-to-commit` when validation passes and
+the diff is ready; committing is the user's next action, not a condition of
+that result. Report `configuration-valid` only after the committed
+configuration and trusted reference on verified base pass fresh validation. Pause new claims while the edit is pending; existing claims may
 continue on their unchanged binding.
 
 Changing the committed configuration digest while a ticket still holds an old

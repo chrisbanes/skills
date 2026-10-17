@@ -1,6 +1,6 @@
 ---
 name: gradle-run
-description: Use when planning to execute Gradle through `gradle`, `./gradlew`, or a custom `gradlew*` wrapper script, or diagnosing a Gradle build, compact workflow ledger, repeated failure fingerprint, check, test, lint, warning, or failure even when no new Gradle run is appropriate.
+description: Use when planning to execute Gradle through `gradle`, `./gradlew`, or a custom `gradlew*` wrapper script, or diagnosing a Gradle build, recovering a workflow's status, compact workflow ledger, repeated failure fingerprint, check, test, lint, warning, or failure even when no new Gradle run is appropriate.
 ---
 
 # Gradle run
@@ -21,9 +21,11 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    source and inputs already answer the question. A focused task that validates
    another change is incidental; build/check/warning/failure work is a
    Gradle-centered workflow.
-2. Resolve this skill directory and confirm `python3` plus
-   `scripts/gradle_run.py`. If either is unavailable, stop and report that
-   prerequisite; never run Gradle directly as a fallback.
+2. Resolve this skill directory. If `python3` or `scripts/gradle_run.py` is
+   unavailable (a failing standalone `create` shows this), stop and report that
+   prerequisite; never run Gradle directly as a fallback. Invoke the project's
+   designated entrypoint (normally `./gradlew`) as provided; do not read its
+   source to second-guess it or substitute another launcher script.
 3. Create one workflow before its first command and retain its opaque ID:
 
    ```sh
@@ -31,8 +33,8 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    ```
 
    Run `create`, each `run`, and `finish` as standalone shell commands. Do not
-   combine one with `test`, variable setup, `git`, `rg`, `&&`, `;`, a pipe, or a
-   newline containing another command. If `create` fails, retry a fresh
+   combine one with `ls`, `test`, variable setup, `git`, `rg`, `&&`, `;`, a
+   pipe, or a newline containing another command. If `create` fails, retry a fresh
    standalone `create` before any `run`. Use the wrapper exclusively; it
    supplies `--console=plain` and `--no-scan` unless console behavior was
    selected or the user authorized `--scan`. Add `--warning-mode all` only for
@@ -72,9 +74,10 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
      ./gradlew :module:test
    ```
 
-   Do not substitute compilation for requested fixture tests. Read only the
-   bounded JSON summary; report both the managed wrapper and nested Gradle task,
-   the question, and its bounded answer.
+   Do not substitute compilation for requested fixture tests, or skip a
+   requested run because it may find no tests; run it and report that caveat.
+   Read only the bounded JSON summary; report both the managed wrapper and
+   nested Gradle task, the question, and its bounded answer.
 5. For Gradle-centered work, keep diagnosis, repository edits, and wrapper
    execution with the current implementation owner by default. Delegate a
    bounded read-only investigation only when it offers useful independent
@@ -97,9 +100,9 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    diagnostics; it owns process-group/process-tree cleanup and durable ledger
    updates. Only logs still represented by the bounded recent-run ledger remain.
    If a bounded result reports cache access denied before Gradle starts, report
-   the exact path and recommend a narrowly scoped writable-cache configuration
-   for that existing location. Leave sandbox settings and cache locations
-   unchanged unless the user authorizes the configuration change.
+   the exact path and recommend only an explicit writable-root entry for that
+   existing cache directory, for the user to authorize. Do not apply it, add a
+   rerun, disable the sandbox, or relocate caches.
 8. Finish after the last requested validation (targeted or broad) passes, or
    report unresolved fingerprints and why validation cannot continue. In the
    final response, quote each non-empty `--question` and give its bounded

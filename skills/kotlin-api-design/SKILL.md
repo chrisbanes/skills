@@ -16,7 +16,7 @@ platform independence.
 1. Name the domain concept, its owning type or module, and the callers that
    need to depend on it.
 2. Choose function ownership before adding an extension, factory, helper, or
-   service layer.
+   service layer. When rejecting one, name the owner callers should use instead.
 3. When reviewing a public mapping over a sealed result, name every
    caller-visible outcome. Flag a catch-all `else` that hides a subtype and
    recommend explicit subtype branches so the contract stays exhaustive and

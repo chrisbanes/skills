@@ -127,6 +127,27 @@ def _blocks(event: dict[str, Any], kind: str) -> Iterator[dict[str, Any]]:
         )
 
 
+_STAGED_ENTRYPOINT = re.compile(r"\.claude/skills/([a-z0-9][a-z0-9-]*)/SKILL\.md\b")
+
+
+def _staged_skill_read(block: dict[str, Any]) -> str | None:
+    """The public skill whose staged SKILL.md a Read or `cat`-style Bash call opened."""
+    tool_input = block.get("input")
+    if not isinstance(tool_input, dict):
+        return None
+    if block.get("name") == "Read":
+        target = str(tool_input.get("file_path", ""))
+    elif block.get("name") == "Bash" and re.match(
+        r"\s*(cat|head|tail|sed|less)\s", str(tool_input.get("command", ""))
+    ):
+        target = str(tool_input["command"])
+    else:
+        return None
+    match = _STAGED_ENTRYPOINT.search(target)
+    name = canonical_skill_name(match.group(1)) if match else None
+    return name if name and name != ROUTER_SKILL else None
+
+
 def _tool_uses(events: Events) -> Iterator[tuple[int, dict[str, Any]]]:
     for sequence, event in enumerate(events, 1):
         if event.get("type") == "assistant":
@@ -473,6 +494,13 @@ def discover_builtin_skills(
 class ClaudeRuntime:
     name = "claude"
     skill_dir = ".claude/skills"
+    # Claude writes its prose answer first, then a terse structured summary; the
+    # judge reads only the structured fields.
+    answer_instruction = (
+        " The evaluator reads only the final structured `summary` and `evidence`, "
+        "so put your complete answer there, including every recommendation, "
+        "command and caveat."
+    )
 
     def __init__(self, builtin_skills: tuple[str, ...] = ()):
         # Built-ins come from discover_builtin_skills; each unstaged one is switched off.
@@ -565,12 +593,20 @@ class ClaudeRuntime:
     ) -> list[str]:
         staged = {*_enabled_skills(case, arm, repo_root), *case.constant_skills}
         review = case.task_mode == "review"
-        settings = {
+        # Installed skill copies and the source checkout must stay unreadable, or an
+        # unstaged (or stale) copy of a skill could reach the subject.
+        hidden = [
+            str(path.resolve())
+            for path in (Path.home() / ".claude", Path.home() / ".agents", repo_root)
+        ]
+        filesystem = {"denyRead": hidden}
+        if review:
             # Review Bash may read the workspace but never write it, like Codex read-only.
-            "sandbox": (
-                {**SANDBOX, "filesystem": {"denyWrite": [str(workspace.resolve())]}}
-                if review else SANDBOX
-            ),
+            filesystem["denyWrite"] = [str(workspace.resolve())]
+        settings = {
+            "sandbox": {**SANDBOX, "filesystem": filesystem},
+            # A Read rule also covers Grep and Glob; `//` marks an absolute path.
+            "permissions": {"deny": [f"Read(/{path}/**)" for path in hidden]},
             "autoMemoryEnabled": False,
             "skillOverrides": {
                 skill: "off" for skill in self.builtin_skills if skill not in staged
@@ -663,6 +699,9 @@ class ClaudeRuntime:
                 tool_input.get("skill") if isinstance(tool_input, dict) else None
             )
             if block.get("name") == "Skill" and name and name != ROUTER_SKILL:
+                observed.append(name)
+            elif name := _staged_skill_read(block):
+                # Staged skills are plain files, so reading the entrypoint loads it.
                 observed.append(name)
         return list(dict.fromkeys(observed))
 
@@ -762,8 +801,10 @@ class ClaudeRuntime:
         return (
             f"\n\nInvoke each of the following skill(s) through the Skill tool: {skills}. "
             "Invoke every one of them before any repository inspection or other action."
+            " That Skill-tool load is the skill-entrypoint read any task text permits."
             "\n\nIn the final `skills_used`, include each of these exact public "
-            f"targets whose entrypoint you read and followed: [{skills}]. "
+            f"targets you invoked, even if you conclude its procedure does not "
+            f"apply to the task: [{skills}]. "
             "Omit only these exact evaluator-owned dependency names: "
             f"[{dependencies}]. Exclusions are exact names, not prefixes."
         )

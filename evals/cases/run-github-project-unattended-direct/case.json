@@ -11,6 +11,7 @@
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow",
+  "staged_skill_files": ["deliver-spec/references/qualification-failure.md"],
   "allowed_write_paths": [],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"

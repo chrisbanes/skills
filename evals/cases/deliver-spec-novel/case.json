@@ -12,6 +12,7 @@
   "kind": "novel",
   "fixture": "workflow",
   "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
   "allowed_write_paths": [],
   "validators": [
     {

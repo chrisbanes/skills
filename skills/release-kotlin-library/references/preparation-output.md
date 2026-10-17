@@ -1,7 +1,8 @@
 # Preparation answer form
 
-For preparation or changelog-only work, use three separate parts in ordinary
-prose or the existing `summary` and `evidence` fields. Give verified values or
+For preparation or changelog-only work, use three separate parts. When a
+structured response is required, put all three in full in `summary`; a recap
+there drops them. Give verified values or
 `pending`; never invent release state or claim publication. Keep this a
 preparation handoff, not a request for publication approval now.
 
@@ -24,7 +25,7 @@ preparation handoff, not a request for publication approval now.
    destination, publishing mechanism, and candidate-specific validation, with
    known values or `pending` for each. Do not replace the list with "full
    approval packet" or solicit publication approval during preparation.
-   When the repository identifies `com.vanniktech.maven.publish` through a
+   When repository files or supplied facts identify `com.vanniktech.maven.publish` through a
    convention plugin, name that as the verified publishing mechanism. Keep the
    local-versus-CI route, coordinates, and destination pending if they are not
    supplied; do not turn the known mechanism into a pending item. If the notes

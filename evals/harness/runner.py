@@ -310,6 +310,7 @@ def _subject_prompt(case: EvalCase, arm: str, runtime: Runtime) -> str:
         )
     else:
         prompt += " This case has no evaluator-owned fixture dependencies."
+    prompt += getattr(runtime, "answer_instruction", "")
     if arm == "forced":
         prompt += runtime.forced_instruction(case)
     return prompt + "\n"
@@ -369,6 +370,10 @@ def prepare_workspace(
         )
         if edit_skill is not None:
             edit_skill(destination / skill_dir / skill / "SKILL.md")
+    for staged in case.staged_skill_files:
+        target = destination / skill_dir / staged
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(repo_root / "skills" / staged, target)
     if skill_dir != FIXTURE_SKILL_DIR:
         # Fixtures ship their dependencies under .agents/skills; mirror them for this runtime.
         for skill in case.constant_skills:

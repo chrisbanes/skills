@@ -40,7 +40,9 @@ requires that kind of live work; do not add it to unrelated tickets.
 2. Verify prerequisites through existing receipts, resource metadata and
    permitted read-only checks. Never spend a live turn, change fixture visibility,
    mutate a fixture, expose a credential or execute qualification merely to
-   discover whether permission exists. An unavailable read is unknown evidence.
+   discover whether permission exists. An unavailable read is unknown evidence;
+   it resumes when a fresh read-only check establishes the prerequisite. A
+   missing qualification receipt is pending work, never a resume condition.
 3. Report runnable, native-dependency-blocked, authority-blocked and unknown
    work separately, retaining every known overlapping blocker. Runnable means
    the next required operation has evidenced prerequisites and authority; it
@@ -60,7 +62,8 @@ requires that kind of live work; do not add it to unrelated tickets.
    unknown outcomes and consumed allowances; do not claim recovery while the
    prior execution remains unresolved. Continue independent work only when it
    cannot affect that execution or state.
-6. Continue independent runnable work. Revalidate access, capability, remaining
+6. Continue independent runnable work; classify readiness independently of
+   slot capacity and never make it conditional on unstated limits. Revalidate access, capability, remaining
    grant and operation-specific authority immediately before the affected
    operation. Fresh ranker eligibility is necessary but cannot supply readiness,
    renew a grant, or satisfy a qualification gate.

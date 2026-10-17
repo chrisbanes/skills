@@ -177,7 +177,8 @@ Before the Ready or In-progress transition, compare the planned SHA with the
 current base:
 
 - accept non-overlapping committed drift after screening the changed files,
-  symbols, seams, contracts, and validation;
+  symbols, seams, contracts, and validation; it needs no correction record,
+  amendment or republication;
 - continue proven compatible routine integration with a brief correction record
   and affected evidence renewal; use amendments only for a changed published
   integration decision requiring durable consumption or an existing chain;

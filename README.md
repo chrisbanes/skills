@@ -336,48 +336,48 @@ Run provenance and local scorecard paths are in the
 ### Claude Code
 
 Claude Code: `claude-haiku-5-5` with high effort, judged by
-[`gpt-6-sol`](https://developers.openai.com/api/docs/models/gpt-6-sol) with high
+[`gpt-6.1-sol`](https://developers.openai.com/api/docs/models/gpt-6.1-sol) with high
 reasoning. The metrics are defined as above, and `—` marks a cell with no
 recorded result.
 
 | Skill | Baseline | Automatic | Restraint |
 | --- | ---: | ---: | ---: |
-| [`compose-animations`](skills/compose-animations/SKILL.md) | — | — | — |
-| [`compose-component-design`](skills/compose-component-design/SKILL.md) | — | — | — |
-| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | — | — | — |
-| [`compose-performance`](skills/compose-performance/SKILL.md) | — | — | — |
-| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | — | — | — |
-| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | — | — | — |
-| [`gradle-run`](skills/gradle-run/SKILL.md) | — | — | — |
-| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | — | — | — |
-| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | — | — | — |
-| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | — | — | — |
-| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | — | — | — |
-| [`deliver-spec`](skills/deliver-spec/SKILL.md) | — | — | — |
-| [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | — | — |
-| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | — |
-| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — |
-| [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | — |
-| [`shepherd`](skills/shepherd/SKILL.md) | — | — | — |
-| [`to-plan`](skills/to-plan/SKILL.md) | — | — | — |
+| [`compose-animations`](skills/compose-animations/SKILL.md) | 66.7% | 91.7% | 100.0% |
+| [`compose-component-design`](skills/compose-component-design/SKILL.md) | 73.3% | 100.0% | 100.0% |
+| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 88.9% | 88.9% | 100.0% |
+| [`compose-performance`](skills/compose-performance/SKILL.md) | 91.7% | 100.0% | 100.0% |
+| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 79.2% | 83.3% | 100.0% |
+| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 55.6% | 77.8% | 100.0% |
+| [`gradle-run`](skills/gradle-run/SKILL.md) | 16.7% | 83.3% | 100.0% |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 83.3% | 100.0% | 100.0% |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 72.2% | 100.0% | 100.0% |
+| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 61.1% | 100.0% | 100.0% |
+| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 33.3% | 100.0% | 100.0% |
+| [`deliver-spec`](skills/deliver-spec/SKILL.md) | — | — | 100.0% |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | 0.0% | 83.3% | 100.0% |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 66.7% |
+| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 0.0% | 100.0% | 66.7% |
+| [`run-github-project`](skills/run-github-project/SKILL.md) | — | — | 100.0% |
+| [`shepherd`](skills/shepherd/SKILL.md) | — | — | 100.0% |
+| [`to-plan`](skills/to-plan/SKILL.md) | 0.0% | 100.0% | 100.0% |
 
 Per-run medians, baseline → automatic, for the same configuration:
 
 | Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
 | --- | ---: | ---: | ---: | ---: |
-| [`compose-animations`](skills/compose-animations/SKILL.md) | — | — | — | — |
-| [`compose-component-design`](skills/compose-component-design/SKILL.md) | — | — | — | — |
-| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | — | — | — | — |
-| [`compose-performance`](skills/compose-performance/SKILL.md) | — | — | — | — |
-| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | — | — | — | — |
-| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | — | — | — | — |
-| [`gradle-run`](skills/gradle-run/SKILL.md) | — | — | — | — |
-| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | — | — | — | — |
-| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | — | — | — | — |
-| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | — | — | — | — |
-| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | — | — | — | — |
-| [`grounded-writing`](skills/grounded-writing/SKILL.md) | — | — | — | — |
-| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | — | — | — | — |
+| [`compose-animations`](skills/compose-animations/SKILL.md) | 58.1k → 105.9k (+82%) | 6 → 9 (+50%) | 1 → 1 (+0%) | 46.2s → 54.0s (+17%) |
+| [`compose-component-design`](skills/compose-component-design/SKILL.md) | 73.0k → 71.4k (-2%) | 8 → 7 (-12%) | 1 → 1 (+0%) | 37.9s → 34.5s (-9%) |
+| [`compose-focus-navigation`](skills/compose-focus-navigation/SKILL.md) | 75.3k → 121.2k (+61%) | 8 → 8.5 (+6%) | 1 → 1 (+0%) | 43.2s → 54.5s (+26%) |
+| [`compose-performance`](skills/compose-performance/SKILL.md) | 69.7k → 101.8k (+46%) | 8 → 8 (+0%) | 1 → 1 (+0%) | 39.5s → 48.5s (+23%) |
+| [`compose-state-and-effects`](skills/compose-state-and-effects/SKILL.md) | 72.2k → 101.8k (+41%) | 8 → 10 (+25%) | 1 → 1 (+0%) | 36.0s → 51.4s (+43%) |
+| [`compose-ui-testing-patterns`](skills/compose-ui-testing-patterns/SKILL.md) | 65.1k → 105.1k (+61%) | 8.5 → 9 (+6%) | 1 → 1 (+0%) | 43.2s → 45.8s (+6%) |
+| [`gradle-run`](skills/gradle-run/SKILL.md) | 60.4k → 64.8k (+7%) | 6 → 4 (-33%) | 1 → 1 (+0%) | 34.2s → 29.8s (-13%) |
+| [`kotlin-api-design`](skills/kotlin-api-design/SKILL.md) | 56.4k → 119.7k (+112%) | 7 → 10 (+43%) | 1 → 1 (+0%) | 36.5s → 53.4s (+46%) |
+| [`kotlin-concurrency-and-flow`](skills/kotlin-concurrency-and-flow/SKILL.md) | 109.5k → 112.5k (+3%) | 9 → 9 (+0%) | 1 → 1 (+0%) | 43.4s → 46.8s (+8%) |
+| [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 124.5k → 119.7k (-4%) | 8 → 9 (+12%) | 1 → 1 (+0%) | 41.4s → 47.8s (+15%) |
+| [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 35.7k → 45.1k (+26%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 27.4s → 18.8s (-31%) |
+| [`grounded-writing`](skills/grounded-writing/SKILL.md) | 44.2k → 74.6k (+69%) | 3 → 5 (+67%) | 1 → 1 (+0%) | 17.6s → 31.6s (+79%) |
+| [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 51.4k → 76.3k (+49%) | 4 → 4 (+0%) | 1 → 1 (+0%) | 36.0s → 53.7s (+49%) |
 
 ## License
 

@@ -21,14 +21,48 @@ repairs to the original worker.
 
 ## Select the mode
 
-- Use `review` only to assess supplied orchestration without running it.
+- Use `review` only to assess supplied orchestration without running it; it
+  has no external dependency.
 - Use `implement` only to execute supplied tickets or plan tasks. This mode
   does not invoke the separate `/implement` skill.
 
-## Check implementation prerequisites
+## Review procedure
 
-Review mode has no external dependency. For implementation, identify the
-behavior-changing items and their user-approved test seams before delegation.
+1. Inspect only permitted repository and orchestration state. Do not start an
+   agent, edit, commit, change branches, perform worktree lifecycle operations,
+   or contact a remote service.
+2. Assess the task graph, safe concurrency, implementation ownership,
+   task-scoped commits, owner self-review, focused validation, and controller
+   acceptance before integration. An owner's report alone does not satisfy
+   task acceptance. Separate worktrees do not make shared-file edits or work
+   depending on unintegrated code independent. Treat supplied readiness,
+   independence and capacity as authoritative: dispatch the whole ready
+   frontier concurrently. A prerequisite the state does not show missing,
+   including test seams, `tdd` and reviewer capability, is an execution-time
+   check, not a dispatch hold. Check reuse-first allocation,
+   distinct slots for active writers, and existing-checkout access for
+   read-only helpers.
+3. Release a dependent only after each prerequisite's task commit is
+   accepted, integrated without conflicts, and its affected checks rerun and
+   pass at that exact integrated head; a passing task branch is not enough. Do
+   not require a second discretionary lead acceptance after an ordinary merge;
+   inspect the joined diff when cross-file interactions, changed shared
+   interfaces, or merge resolutions can change meaning. Reuse a passing check
+   only when inspection shows its inputs and environment unchanged at the
+   integrated head. An accepted item is complete, not assignable
+   again.
+4. Report the next action, evidence, and any acceptance gap. Stop before
+   implementation. Check release eligibility, safe retirement, and checkout
+   dispositions without mutating them. For an invalid dependency graph, hold
+   dispatch and return the specific defects to the plan owner; do not invent or
+   remove tasks or dependencies. Name any affected check that must be rerun at
+   the integrated head, even when another blocker also prevents dispatch.
+
+## Implementation mode
+
+### Prerequisites
+
+Identify the behavior-changing items and their user-approved test seams before delegation.
 Their owners use the separately installed [`tdd`](https://github.com/mattpocock/skills)
 skill directly. If a behavior item has no approved seam, obtain agreement
 before dispatch; if `tdd` is unavailable, stop before dispatching that item.
@@ -47,46 +81,12 @@ or tracker setup is required. If independent review cannot run, report the missi
 capability; never waive final review. Add reviewers only for distinct risks or
 substantial scope that justify separate assignments.
 
-## Review procedure
-
-1. Inspect only permitted repository and orchestration state. Do not start an
-   agent, edit, commit, change branches, perform worktree lifecycle operations,
-   or contact a remote service.
-2. Assess the task graph, safe concurrency, implementation ownership,
-   task-scoped commits, owner self-review, focused validation, and controller
-   acceptance before integration. An owner's report alone does not satisfy
-   task acceptance. Separate worktrees do not make shared-file edits or work
-   depending on unintegrated code independent. Check reuse-first allocation,
-   distinct slots for active writers, and existing-checkout access for
-   read-only helpers.
-3. Check that each prerequisite is integrated and its affected validation
-   passes at that exact head before releasing a dependent. A passing task
-   branch is insufficient when integration changes relevant inputs. Do not
-   require a second discretionary lead acceptance after an ordinary merge;
-   inspect the joined diff when cross-file interactions, changed shared
-   interfaces, or merge resolutions can change meaning. Reuse passing checks
-   only when their inputs and
-   environment remain unchanged. An accepted item is complete, not assignable
-   again.
-4. Report the next action, evidence, and any acceptance gap. Stop before
-   implementation. Check release eligibility, safe retirement, and checkout
-   dispositions without mutating them. For an invalid dependency graph, hold
-   dispatch and return the specific defects to the plan owner; do not invent or
-   remove tasks or dependencies. Name any affected check that must be rerun at
-   the integrated head, even when another blocker also prevents dispatch.
-
-## Implementation mode
-
 Before delegation, read
 [the implementation-mode procedure](references/implementation-mode.md)
 completely. It owns preflight, dispatch, owner packets, task acceptance,
 integration, repairs, and final validation. Stop when a dependency, task-scoped
 commit, or capability gate cannot be satisfied; never implement an item in the
 controller.
-
-The implementation-mode procedure includes the runtime requirements and owns
-the capability checks, dispatch, and acceptance workflow.
-
 ## Finish gate
 
 In `review`, finish only with the non-mutating assessment, evidence, and any

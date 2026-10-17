@@ -26,6 +26,12 @@ from evals.tests.test_grade import make_case
 
 
 FIXTURE = Path(__file__).parent / "data" / "claude_stream_subject.jsonl"
+def hidden_paths(root):
+    """Installed skill copies and the source checkout are unreadable to subjects."""
+    home = Path.home()
+    return [str(path.resolve()) for path in (home / ".claude", home / ".agents", root)]
+
+
 SANDBOX = {
     "enabled": True,
     "failIfUnavailable": True,
@@ -81,7 +87,13 @@ class ClaudeRunnerTest(unittest.TestCase):
                 # Review Bash may read the workspace but never write it.
                 "sandbox": {
                     **SANDBOX,
-                    "filesystem": {"denyWrite": [str(workspace.resolve())]},
+                    "filesystem": {
+                        "denyRead": hidden_paths(self.root),
+                        "denyWrite": [str(workspace.resolve())],
+                    },
+                },
+                "permissions": {
+                    "deny": [f"Read(/{path}/**)" for path in hidden_paths(self.root)]
                 },
                 "autoMemoryEnabled": False,
                 "skillOverrides": {"simplify": "off", "debug": "off"},
@@ -103,7 +115,10 @@ class ClaudeRunnerTest(unittest.TestCase):
         self.assertEqual(
             "Read,Grep,Glob,Bash,Skill,Edit,Write", option(command, "--tools")
         )
-        self.assertEqual(SANDBOX, json.loads(option(command, "--settings"))["sandbox"])
+        self.assertEqual(
+            {**SANDBOX, "filesystem": {"denyRead": hidden_paths(self.root)}},
+            json.loads(option(command, "--settings"))["sandbox"],
+        )
         self.assertNotIn("--disable-slash-commands", command)
         # A staged target is never switched off, even when a built-in shares its name.
         self.assertEqual(
@@ -286,6 +301,24 @@ class ClaudeParseTest(unittest.TestCase):
             "tool_input": {"skill": "kotlin-api-design"},
         }]}]
         self.assertEqual([], observed(denied))
+
+    def test_observed_skills_count_reads_of_staged_entrypoints(self):
+        lines = fixture_lines()
+        call = lines[1]["message"]["content"][0]
+        call["name"] = "Read"
+        call["input"] = {"file_path": "/w/.claude/skills/kotlin-api-design/SKILL.md"}
+        events = self.runtime.parse(fixture_stdout(lines))[0]
+        self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
+
+        call["name"], call["input"] = "Bash", {
+            "command": "cat .claude/skills/kotlin-api-design/SKILL.md"
+        }
+        events = self.runtime.parse(fixture_stdout(lines))[0]
+        self.assertEqual(["kotlin-api-design"], self.runtime.observed_skills(events))
+
+        call["input"] = {"command": "ls .claude/skills/kotlin-api-design/SKILL.md"}
+        events = self.runtime.parse(fixture_stdout(lines))[0]
+        self.assertEqual([], self.runtime.observed_skills(events))
 
     def test_observed_skills_exclude_failed_skill_calls(self):
         lines = fixture_lines()
