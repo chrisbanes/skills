@@ -15,6 +15,9 @@ axis begins.
 
 1. Reproduce one concrete transition and capture the observable evidence:
    recomposition counts, compiler reports, profiler data, or a clear trace.
+   Build only through [Gradle run](../gradle-run/SKILL.md). If no build can
+   run, reason from the declared types; do not unpack toolchain jars or work
+   around the sandbox.
 2. Classify the primary axis: parameter stability and skipping, State read
    phase, or snapshot state written back into an earlier phase.
 3. Check for a false lead: a real data change, a correctness defect, or an

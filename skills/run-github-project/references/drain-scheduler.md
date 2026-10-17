@@ -285,8 +285,8 @@ Record the complete snapshot's identity, verified base, observation time and
 completeness in the existing controller checkpoint. For each invalidation and
 full refresh record its triggering event and decision: selection, merge,
 capacity/eligibility change, recovery, incomplete/ambiguous read or final
-reconciliation. A scheduling boundary needs a current complete snapshot, not a
-fresh network round trip when the existing snapshot remains uninvalidated.
+reconciliation. Each merge, recovery, selection or finish decision needs a
+current complete snapshot, not a fresh network round trip when the existing snapshot remains uninvalidated.
 Changed record fingerprints identify what to rehydrate; they never authorize
 reuse after an incomplete logical read. Discard partial/ambiguous results and
 reestablish the complete logical read before ranking, dispatch or finish.

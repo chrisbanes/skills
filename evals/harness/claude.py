@@ -132,8 +132,16 @@ _CAT = re.compile(r"""cat\s+(?:--\s+)?(?:"([^"]*)"|'([^']*)'|(\S+))""")
 
 
 def _unreadable_roots(repo_root: Path) -> list[Path]:
-    """Installed skill copies and the source checkout, which subjects must not read."""
-    return [path.resolve() for path in (Path.home() / ".claude", Path.home() / ".agents", repo_root)]
+    """Installed skill copies and every checkout of the source repository, which subjects
+    must not read (another checkout may hold different or stale skills)."""
+    roots = [Path.home() / ".claude", Path.home() / ".agents", repo_root]
+    common = subprocess.run(
+        ["git", "-C", str(repo_root), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+        capture_output=True, text=True,
+    )
+    if common.returncode == 0 and common.stdout.strip():
+        roots.append(Path(common.stdout.strip()).parent)
+    return list(dict.fromkeys(path.resolve() for path in roots))
 
 
 def _staged_skill_read(block: dict[str, Any], cwd: str | None) -> str | None:

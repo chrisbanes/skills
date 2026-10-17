@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import subprocess
 import tempfile
 import time
 import unittest
@@ -8,7 +9,9 @@ from dataclasses import replace
 from pathlib import Path
 
 from evals.harness.cases import load_case
-from evals.harness.claude import ClaudeRuntime, discover_builtin_skills, init_isolation
+from evals.harness.claude import (
+    ClaudeRuntime, _unreadable_roots, discover_builtin_skills, init_isolation,
+)
 from evals.harness.grade import grade_subject
 from evals.harness.runner import (
     RunConfig,
@@ -785,6 +788,17 @@ class ClaudeForcedIntegrityTest(unittest.TestCase):
                     )
                 self.assertFalse((self.root / "outer" / "runs").exists())
                 marker.unlink()
+
+    def test_every_checkout_of_the_repository_is_unreadable(self):
+        primary = (self.root / "primary").resolve()
+        worktree = (self.root / "wt").resolve()
+        git = ["git", "-c", "user.name=t", "-c", "user.email=t@t"]
+        subprocess.run([*git, "init", "-q", str(primary)], check=True)
+        subprocess.run([*git, "-C", str(primary), "commit", "-q", "--allow-empty", "-m", "x"], check=True)
+        subprocess.run([*git, "-C", str(primary), "worktree", "add", "-q", str(worktree)], check=True)
+        roots = _unreadable_roots(worktree)
+        self.assertIn(worktree, roots)
+        self.assertIn(primary, roots)
 
     def test_refuses_workspace_inside_unreadable_roots(self):
         for root in (REPO, Path.home() / ".claude", Path.home() / ".agents"):

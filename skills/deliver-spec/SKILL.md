@@ -71,10 +71,10 @@ Project run already owns that issue, return it to that controller.
    coverage. Return findings to the implementation owner; at the repaired head,
    renew affected checks and review changed ranges and interactions. Broaden only when impact cannot
    be bounded or an explicit requirement demands it. Confirm combined coverage
-   of the final clean head before pushing. Create one draft PR for a nonempty
-   integrated diff, or reuse the existing PR, and verify its head is the
-   reviewed head. A starting empty diff is not `no-change`; `no-change` stays
-   possible if finished, verified work leaves the final diff empty. Apply
+   of the final clean head before pushing. If finished, verified work leaves
+   the final diff empty, report `no-change`; a starting empty diff is not
+   `no-change`. Otherwise create one draft PR, or reuse the existing PR, and
+   verify its head is the reviewed head. Apply
    [PR review timing](references/pr-review-timing.md): start applicable external review
    while CI runs, using verified draft support or earlier PR readiness when
    permitted. Keep delivery `pending` until all final-head gates pass. Use

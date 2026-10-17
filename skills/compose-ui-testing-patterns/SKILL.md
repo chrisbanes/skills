@@ -92,7 +92,7 @@ For plain captured callback values, a direct assertion after the action is usual
 
 For layout, branch, and callback behavior, render controlled state with `setContent` instead of constructing the production app graph. Production DI, repositories, lifecycle observers, and background effects add asynchronous work that is irrelevant to a plain UI contract and can make the test flaky.
 
-Do not use `Thread.sleep` to wait for Compose. Drive the UI to a known state, then use semantic assertions and Compose synchronization (`waitForIdle`, `runOnIdle`, or a bounded `waitUntil` for a real asynchronous condition). Reserve full-app integration for behavior that actually depends on navigation, lifecycle, DI, or platform wiring.
+Do not use `Thread.sleep` to wait for Compose. Drive the UI to a known state, then use semantic assertions and Compose synchronization (`waitForIdle`, `runOnIdle`, or a bounded `waitUntil` for a real asynchronous condition). If you set `mainClock.autoAdvance = false`, advance the clock (`mainClock.advanceTimeBy`) before each assertion; otherwise leave auto-advance on. Reserve full-app integration for behavior that actually depends on navigation, lifecycle, DI, or platform wiring.
 
 ## Interaction state with MutableInteractionSource
 

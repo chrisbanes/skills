@@ -74,7 +74,7 @@ needs that helper after a repeated non-CI failure. If the runtime has no
 eligible read-only evidence role, disclose during setup that such a stall will
 remain an exact ticket-local blocker; never invent a helper. Add other helper
 profiles only when requested or needed for a specified capability. Remove obsolete
-`Routing` and `TypeSafe judgment model` fields during an authorized setup edit
+`Routing` and `TypeSafe judgment model` fields shown in the binding during an authorized setup edit
 subject to the active-lease rules below; do not migrate live bindings during
 execution. Resolve missing choices without duplicating a profile or replacing
 a user pin.
@@ -117,8 +117,9 @@ recheck them before every claim and merge and stop/preserve work on drift or
 unknown state.
 
 Treat a legacy `Execution approver logins` entry as obsolete configuration.
-Remove it during an otherwise authorized setup edit when no old-digest claim
-depends on the binding; otherwise report the deferred cleanup. Its presence or
+Remove one shown in the binding during an otherwise authorized setup edit when no old-digest claim
+depends on the binding; otherwise report the deferred cleanup. Never propose
+conditional removal of fields the binding does not show. Its presence or
 contents never gate Todo eligibility.
 
 Setup uses the read-only pagination, retry, and incomplete-read rules from

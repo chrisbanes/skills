@@ -53,9 +53,9 @@ repairs to the original worker.
    again.
 4. Report the next action, evidence, and any acceptance gap. Stop before
    implementation. Check release eligibility, safe retirement, and checkout
-   dispositions without mutating them. For an invalid dependency graph, hold
-   dispatch and return the specific defects to the plan owner; do not invent or
-   remove tasks or dependencies. Name any affected check that must be rerun at
+   dispositions without mutating them. For an invalid dependency graph or unsafe
+   overlap, hold dispatch and return the specific defects to the plan owner; do
+   not invent ordering or remove tasks or dependencies. Name any affected check that must be rerun at
    the integrated head, even when another blocker also prevents dispatch.
 
 ## Implementation mode

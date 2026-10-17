@@ -21,7 +21,8 @@ snapshots when the repository does not maintain them.
 
 1. Establish scope and inspect repository instructions, Git state, release
    history, version properties, publishing configuration and required checks.
-   Confirm, from build files or supplied repository facts, that published
+   If the user limits review to supplied state, run no commands and mark
+   unsupplied state unknown. Confirm, from build files or supplied repository facts, that published
    modules apply `com.vanniktech.maven.publish` directly or via a convention
    plugin; declaration alone is insufficient. If absent
    or unverified, report it and stop before release mutations; do not install

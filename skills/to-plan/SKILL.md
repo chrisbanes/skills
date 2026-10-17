@@ -68,9 +68,9 @@ resolution, and required upstream change.
 
 When a material user decision blocks the next step, put its direct, answerable
 question in the response; do not merely narrate “I asked” or name the missing
-decision. For an incomplete conversation source, ask one such question for the
-next material decision and keep drafting blocked. In the same response, state
-that after the answer completes the contract, you will present a concise
+decision. For an incomplete conversation source, ask one question about one
+decision, the next material one, and keep drafting blocked. In the same
+response, state that once later answers complete the contract, you will present a concise
 self-contained summary of the goal, acceptance criteria, scope, constraints,
 and decisions and ask the user to confirm it before drafting. Do not treat an
 unresolved or partially confirmed interview as approval.

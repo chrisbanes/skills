@@ -59,9 +59,10 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    leaves an abandoned run `uncertain`. `completed` includes failed builds and launch
    errors: check `result.exit_status`. `interrupted` requires a recorded signal.
    `uncertain` covers abandoned active records, missing locks, incomplete/legacy
-   ledgers and transitions without sufficient evidence. Report that uncertainty
-   and investigate ownership; do not infer completion from a PID, rerun, clean
-   up or terminate processes to recover. A new workflow is `idle`; after
+   ledgers and transitions without sufficient evidence. Report that uncertainty;
+   the next action is an ownership investigation, not completion inferred from
+   a PID, a rerun (even conditional or later), cleanup, `finish`, or process
+   termination. A new workflow is `idle`; after
    `finish` it is `finished` and its result has been removed. Unknown IDs fail
    closed. Finish only after retrieving the needed result.
 4. For incidental validation, stay in the current agent and run the narrowest
@@ -101,8 +102,9 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    updates. Only logs still represented by the bounded recent-run ledger remain.
    If a bounded result reports cache access denied before Gradle starts, report
    the exact path and recommend only an explicit writable-root entry for that
-   existing cache directory, for the user to authorize. Do not apply it, add a
-   rerun, disable the sandbox, or relocate caches.
+   existing cache directory, for the user to authorize. Stop there: do not
+   apply it, plan a follow-up rerun, `finish`, or new workflow, disable the
+   sandbox, or relocate caches.
 8. Finish after the last requested validation (targeted or broad) passes, or
    report unresolved fingerprints and why validation cannot continue. In the
    final response, quote each non-empty `--question` and give its bounded

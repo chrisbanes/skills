@@ -32,10 +32,10 @@ branch, and let the compiler prove closed-domain coverage.
 4. For a closed enum, Boolean, sealed type, or nullable closed type, name every
    case and omit `else`. Match objects by value and class/data-class subtypes
    with `is`. If the input is an open server/platform value or needs real
-   fallback/logging, keep `else`. When a closed sealed mapping has a
-   data-bearing subtype that affects the mapping or its safe handling,
-   including one a catch-all collapses, the finding or change must show the
-   typed branch and member access, even if the public value stays constant:
+   fallback/logging, keep `else`. Give each data-bearing subtype, including one
+   a catch-all collapses, its own `is` branch. When its data affects the
+   mapping or its safe handling, the finding or change must show the
+   smart-cast member access, even if the public value stays constant:
 
    ```kotlin
    is Outcome.Failed -> safeFailureLabel(outcome.reason)
@@ -43,7 +43,9 @@ branch, and let the compiler prove closed-domain coverage.
 
    The `is` check smart-casts `outcome`, so the branch uses `reason` without a
    cast; the helper name is illustrative. Naming cases alone, or sending callers
-   to inspect the original value, is not complete branch guidance.
+   to inspect the original value, is not complete branch guidance. When the
+   data does not affect the result, keep the current value in that `is` branch;
+   do not invent a use of the data.
 5. Use an early return only when it removes invalid or nullable state from the
    main path. Keep nesting that expresses cleanup, transaction, or error
    handling.
