@@ -24,15 +24,31 @@ _WRITE_TOOLS = ("Edit", "Write", "NotebookEdit")
 _DESTRUCTIVE_COMMAND = re.compile(
     r"(?:^|[;&|]\s*|\s)(?:rm\s+(?:-[a-zA-Z-]+\s+)*(?:-[a-zA-Z]*[rR][a-zA-Z]*|--recursive)(?=\s)|git\s+(?:reset\s+--hard|clean\s+-|push)|sudo\s|gh\s+(?:pr\s+merge|issue\s+close))"
 )
-# Recursive removal confined to scratch space (no `..`) is cleanup, not destruction.
-_SCRATCH_ROOT = r"\$\{?TMPDIR\}?|/tmp|/private/tmp|/var/folders"
-_SCRATCH_ASSIGNMENT = re.compile(rf"""(?:^|[\s;&|])(\w+)=["']?(?:{_SCRATCH_ROOT})(?:(?!\.\.)[^\s;&|])*["']?""")
+# Recursive removal of a path strictly inside scratch space (no `..`, no globs, never the
+# scratch root itself) is cleanup, not destruction.
+_SUBPATH = r"(?:(?!\.\.)[^\s;&|*?\[\]])+"
+_SCRATCH_LITERAL = rf"(?:/tmp|/private/tmp|/var/folders)/{_SUBPATH}"
+_SCRATCH_TMPDIR = rf"\$(?:TMPDIR|\{{TMPDIR\}})/{_SUBPATH}"
+_ASSIGNMENT = re.compile(r"""(?:^|[\s;&|])(\w+)=("[^"]*"|'[^']*'|[^\s;&|]*)""")
 
 
 def _without_scratch_removals(command: str) -> str:
-    # A variable the same command set to a scratch path counts as scratch too.
-    roots = [_SCRATCH_ROOT, *(rf"\$\{{?{re.escape(n)}\}}?" for n in _SCRATCH_ASSIGNMENT.findall(command))]
-    path = rf"""["']?(?:{'|'.join(roots)})(?:(?!\.\.)[^\s;&|])*"""
+    assigned: dict[str, list[str]] = {}
+    for name, value in _ASSIGNMENT.findall(command):
+        assigned.setdefault(name, []).append(value.strip("\"'"))
+    # A reassigned TMPDIR no longer points at scratch space.
+    tmpdir_is_scratch = "TMPDIR" not in assigned
+    scratch_value = re.compile(
+        _SCRATCH_LITERAL + (f"|{_SCRATCH_TMPDIR}" if tmpdir_is_scratch else "")
+    )
+    # A variable counts as scratch only if every assignment in the command is.
+    variables = [
+        rf"\$(?:{re.escape(name)}|\{{{re.escape(name)}\}})(?:/{_SUBPATH})?"
+        for name, values in assigned.items()
+        if name != "TMPDIR" and all(scratch_value.fullmatch(value) for value in values)
+    ]
+    options = [_SCRATCH_LITERAL, *([_SCRATCH_TMPDIR] if tmpdir_is_scratch else []), *variables]
+    path = rf"""["']?(?:{"|".join(options)})["']?"""
     return re.sub(
         rf"rm\s+(?:-[a-zA-Z]+\s+)+{path}(?:\s+{path})*(?=\s*(?:$|[;&|]))", "", command
     )

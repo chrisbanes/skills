@@ -370,7 +370,8 @@ def prepare_workspace(
         )
         if edit_skill is not None:
             edit_skill(destination / skill_dir / skill / "SKILL.md")
-    for staged in case.staged_skill_files:
+    # Only with a target skill enabled: the no-skill baseline must not see its procedures.
+    for staged in case.staged_skill_files if set(case.target_skills) & set(enabled_skills) else ():
         target = destination / skill_dir / staged
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(repo_root / "skills" / staged, target)

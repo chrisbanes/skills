@@ -116,6 +116,11 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 staged = workspace / skill_dir / reference
                 self.assertEqual((REPO_ROOT / "skills" / reference).read_bytes(), staged.read_bytes())
                 self.assertFalse((workspace / skill_dir / "deliver-spec" / "SKILL.md").exists())
+        with tempfile.TemporaryDirectory() as directory:
+            baseline = prepare_workspace(
+                case, REPO_ROOT, Path(directory) / "fixture", enabled_skills=(),
+            )
+            self.assertFalse((baseline / ".agents/skills" / reference).exists())
 
     def test_affected_validation_cases_preserve_decisive_facts_and_read_only_scope(self):
         case_ids = (

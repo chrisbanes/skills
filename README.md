@@ -338,7 +338,8 @@ Run provenance and local scorecard paths are in the
 Claude Code: `claude-haiku-5-5` with high effort, judged by
 [`gpt-6.1-sol`](https://developers.openai.com/api/docs/models/gpt-6.1-sol) with high
 reasoning. The metrics are defined as above, and `—` marks a cell with no
-recorded result.
+recorded result. Run provenance and scorecards are in the
+[Claude Code result record](evals/artifacts/2026-10-17-claude-haiku-5-5-results.md).
 
 | Skill | Baseline | Automatic | Restraint |
 | --- | ---: | ---: | ---: |
