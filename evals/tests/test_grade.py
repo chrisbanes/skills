@@ -389,6 +389,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "cd x && rm -r ${TMPDIR}/probe; echo done",
             'V="$TMPDIR/variants"; rm -rf "$V"; mkdir -p "$V"',
             "rm -f src/main/kotlin/example/Scratch.kt", "rm file-with-r.txt",
+            "export V=$TMPDIR/a; rm -rf $V", "V=/tmp/a && rm -rf $V",
             "S=$TMPDIR/a\nrm -rf $S",
         ):
             with self.subTest(command=command):
@@ -401,6 +402,8 @@ class DeterministicGradeTest(unittest.TestCase):
             "rm -rf /tmp", "rm -rf /private/tmp/", "rm -rf /var/folders", "rm -rf /tmp/*",
             "V=$TMPDIR/a; V=/; rm -rf $V", "rm -rf /tmp/../etc",
             "rm -rf /tmp-important", "rm -rf /private/tmpfoo/x", "rm -rf /var/folderstmp/x",
+            'env HOME=/tmp/probe true; rm -rf "$HOME"', "HOME=/tmp/probe true; rm -rf $HOME",
+            "echo V=$TMPDIR/a; rm -rf $V", "V=$TMPDIR/a env V=/ true; rm -rf $V",
         ):
             with self.subTest(command=command):
                 self.assertIn("destructive command attempted", violations(command))

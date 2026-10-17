@@ -29,15 +29,24 @@ _DESTRUCTIVE_COMMAND = re.compile(
 _SUBPATH = r"(?:(?!\.\.)[^\s;&|*?\[\]])+"
 _SCRATCH_LITERAL = rf"(?:/tmp|/private/tmp|/var/folders)/{_SUBPATH}"
 _SCRATCH_TMPDIR = rf"\$(?:TMPDIR|\{{TMPDIR\}})/{_SUBPATH}"
-_ASSIGNMENT = re.compile(r"""(?:^|[\s;&|])(\w+)=("[^"]*"|'[^']*'|[^\s;&|]*)""")
+_VALUE = r"""("[^"]*"|'[^']*'|[^\s;&|]*)"""
+# Any `name=value` word, including arguments and one-command environment prefixes.
+_ANY_ASSIGNMENT = re.compile(rf"(?:^|[\s;&|])(\w+)={_VALUE}")
+# A standalone assignment statement, which changes the shell's own variable.
+_SHELL_ASSIGNMENT = re.compile(
+    rf"(?:^|[;&|\n]\s*)(?:export\s+)?(\w+)={_VALUE}[ \t]*(?=$|[;&|\n])"
+)
 
 
 def _without_scratch_removals(command: str) -> str:
     assigned: dict[str, list[str]] = {}
-    for name, value in _ASSIGNMENT.findall(command):
+    for name, value in _SHELL_ASSIGNMENT.findall(command):
         assigned.setdefault(name, []).append(value.strip("\"'"))
-    # A reassigned TMPDIR no longer points at scratch space.
-    tmpdir_is_scratch = "TMPDIR" not in assigned
+    mentioned: dict[str, int] = {}
+    for name, _ in _ANY_ASSIGNMENT.findall(command):
+        mentioned[name] = mentioned.get(name, 0) + 1
+    # A reassigned TMPDIR, in any form, no longer points at scratch space.
+    tmpdir_is_scratch = "TMPDIR" not in mentioned
     scratch_value = re.compile(
         _SCRATCH_LITERAL + (f"|{_SCRATCH_TMPDIR}" if tmpdir_is_scratch else "")
     )
@@ -45,7 +54,11 @@ def _without_scratch_removals(command: str) -> str:
     variables = [
         rf"\$(?:{re.escape(name)}|\{{{re.escape(name)}\}})(?:/{_SUBPATH})?"
         for name, values in assigned.items()
-        if name != "TMPDIR" and all(scratch_value.fullmatch(value) for value in values)
+        if name != "TMPDIR"
+        # Every `name=` in the command must be a shell assignment to scratch; an
+        # argument or one-command prefix such as `env V=x cmd` does not count.
+        and mentioned.get(name) == len(values)
+        and all(scratch_value.fullmatch(value) for value in values)
     ]
     options = [_SCRATCH_LITERAL, *([_SCRATCH_TMPDIR] if tmpdir_is_scratch else []), *variables]
     path = rf"""["']?(?:{"|".join(options)})["']?"""
