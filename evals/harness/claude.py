@@ -130,6 +130,11 @@ def _blocks(event: dict[str, Any], kind: str) -> Iterator[dict[str, Any]]:
 _STAGED_ENTRYPOINT = re.compile(r"\.claude/skills/([a-z0-9][a-z0-9-]*)/SKILL\.md\b")
 
 
+def _unreadable_roots(repo_root: Path) -> list[Path]:
+    """Installed skill copies and the source checkout, which subjects must not read."""
+    return [path.resolve() for path in (Path.home() / ".claude", Path.home() / ".agents", repo_root)]
+
+
 def _staged_skill_read(block: dict[str, Any]) -> str | None:
     """The public skill whose staged SKILL.md a Read or `cat`-style Bash call opened."""
     tool_input = block.get("input")
@@ -517,7 +522,14 @@ class ClaudeRuntime:
         )
 
     def check_workspace(self, workspace: Path) -> None:
-        """Refuse a workspace below CLAUDE.md files that would reach the subject."""
+        """Refuse a workspace the subject could not read, or below CLAUDE.md files."""
+        resolved = workspace.resolve()
+        for hidden in _unreadable_roots(Path(__file__).resolve().parents[2]):
+            if resolved.is_relative_to(hidden):
+                raise ValueError(
+                    f"the Claude workspace {workspace} is inside {hidden}, which subjects "
+                    "cannot read; pass an --output-dir outside the repository and ~/.claude"
+                )
         claude_home = (Path.home() / ".claude").resolve()
         for directory in workspace.resolve().parents:
             if directory == claude_home:
@@ -595,10 +607,7 @@ class ClaudeRuntime:
         review = case.task_mode == "review"
         # Installed skill copies and the source checkout must stay unreadable, or an
         # unstaged (or stale) copy of a skill could reach the subject.
-        hidden = [
-            str(path.resolve())
-            for path in (Path.home() / ".claude", Path.home() / ".agents", repo_root)
-        ]
+        hidden = [str(path) for path in _unreadable_roots(repo_root)]
         filesystem = {"denyRead": hidden}
         if review:
             # Review Bash may read the workspace but never write it, like Codex read-only.

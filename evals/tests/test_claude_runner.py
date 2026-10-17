@@ -747,6 +747,11 @@ class ClaudeForcedIntegrityTest(unittest.TestCase):
                 self.assertFalse((self.root / "outer" / "runs").exists())
                 marker.unlink()
 
+    def test_refuses_workspace_inside_unreadable_roots(self):
+        for root in (REPO, Path.home() / ".claude", Path.home() / ".agents"):
+            with self.subTest(root=root), self.assertRaisesRegex(ValueError, "cannot read"):
+                ClaudeRuntime().check_workspace(root / "runs" / "workspace")
+
 
 REPO = Path(__file__).resolve().parents[2]
 EXPLICIT_LINE = "disable-model-invocation: true\n"
