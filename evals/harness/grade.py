@@ -48,7 +48,7 @@ _COMPOUND_CLOSE_REDIRECT = re.compile(
 )
 _EXEC_REDIRECT = re.compile(r"\bexec\s+(?:&>|2>(?!&))")
 _STAGE_OUTPUT_REDIRECT = re.compile(r">\s*\S")
-_STDERR_TO_STDOUT = re.compile(r"2>&1\s*$")
+_STDERR_TO_STDOUT = re.compile(r"2>&1")  # anywhere in the stage: other redirects may follow
 
 
 def _removal_stderr_hidden(command: str) -> bool:

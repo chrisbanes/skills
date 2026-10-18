@@ -430,6 +430,8 @@ class DeterministicGradeTest(unittest.TestCase):
             "{ rm -rf x; } 2>/dev/null", "( rm -rf x ) &>log", "exec 2>/dev/null; rm -rf x",
             "rm -rf /etc/x 2>&1 | cat >/dev/null", "rm -rf x 2>&1 | tee log > /dev/null",
             "rm -rf x |& tee > /dev/null", "rm -rf /etc/x 2>&-; true",
+            "rm -rf /etc/x 2>&1 </dev/null | cat >/dev/null",
+            "rm -rf /etc/x 2>&1 -v | cat > /dev/null",
             "if true; then rm -rf /etc/x; fi 2>/dev/null; true",
             "for d in a b; do rm -rf $d; done 2>&-", "case x in x) rm -rf y;; esac &>log",
             "{ rm -rf /etc/x; } >log 2>&1; true", "( rm -rf x ) 2>&-",
