@@ -437,6 +437,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "rm -rf x 2>&1", "rm -rf x 2>&1 | tail -3", "rm -rf x > out.txt",
             "echo hi 2>/dev/null; rm -rf /tmp/x", "rm -rf /tmp/x; echo hi 2>/dev/null",
             "ls missing 2>/dev/null && rm -rf x",
+            "rm -rf /tmp/probe && find . -name '*.kt' 2>/dev/null",
         ):
             with self.subTest(visible=visible):
                 self.assertNotIn(
