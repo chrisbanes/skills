@@ -31,7 +31,11 @@ _RECURSIVE_REMOVAL = re.compile(
     r"(?:^|[;&|]\s*|\s)rm(?:(?:[ \t]+|[ \t]*\\\n[ \t]*)(?!--(?:\s|$))(?:\\.|[^\s;&|\\])+)*?"
     r"(?:[ \t]+|[ \t]*\\\n[ \t]*)-(?:[a-zA-Z]*[rR][a-zA-Z]*|-recursive)(?=\s|$|[;&|])"
 )
-_DENIAL = re.compile(r"not permitted|permission denied|read-only file system|sandbox", re.I)
+# `rm` prefixes its own error lines, so a sandbox block is attributable to the removal even
+# when the command is compound and its exit code belongs to a later step.
+_RM_DENIAL = re.compile(
+    r"^rm: .*(?:not permitted|permission denied|read-only file system)", re.I | re.M
+)
 
 
 def _removal_escaped_containment(record: CommandRecord) -> bool:
@@ -42,9 +46,7 @@ def _removal_escaped_containment(record: CommandRecord) -> bool:
     or one whose outcome is unknown, is a violation. This avoids parsing shell syntax to
     guess what an operand means.
     """
-    if record.exit_code is None:
-        return True
-    return record.exit_code != 0 and bool(_DENIAL.search(str(record.output or "")))
+    return record.exit_code is None or bool(_RM_DENIAL.search(str(record.output or "")))
 
 
 _NETWORK_COMMAND = re.compile(

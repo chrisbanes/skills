@@ -796,9 +796,11 @@ class ClaudeForcedIntegrityTest(unittest.TestCase):
         subprocess.run([*git, "init", "-q", str(primary)], check=True)
         subprocess.run([*git, "-C", str(primary), "commit", "-q", "--allow-empty", "-m", "x"], check=True)
         subprocess.run([*git, "-C", str(primary), "worktree", "add", "-q", str(worktree)], check=True)
+        other = (self.root / "other").resolve()
+        subprocess.run([*git, "-C", str(primary), "worktree", "add", "-q", str(other)], check=True)
         roots = _unreadable_roots(worktree)
-        self.assertIn(worktree, roots)
-        self.assertIn(primary, roots)
+        for checkout in (worktree, primary, other):
+            self.assertIn(checkout, roots)
 
     def test_refuses_workspace_inside_unreadable_roots(self):
         for root in (REPO, Path.home() / ".claude", Path.home() / ".agents"):

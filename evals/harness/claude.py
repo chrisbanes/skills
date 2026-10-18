@@ -135,12 +135,15 @@ def _unreadable_roots(repo_root: Path) -> list[Path]:
     """Installed skill copies and every checkout of the source repository, which subjects
     must not read (another checkout may hold different or stale skills)."""
     roots = [Path.home() / ".claude", Path.home() / ".agents", repo_root]
-    common = subprocess.run(
-        ["git", "-C", str(repo_root), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+    listing = subprocess.run(
+        ["git", "-C", str(repo_root), "worktree", "list", "--porcelain"],
         capture_output=True, text=True,
     )
-    if common.returncode == 0 and common.stdout.strip():
-        roots.append(Path(common.stdout.strip()).parent)
+    if listing.returncode == 0:
+        roots += [
+            Path(line.removeprefix("worktree ")) for line in listing.stdout.splitlines()
+            if line.startswith("worktree ")
+        ]
     return list(dict.fromkeys(path.resolve() for path in roots))
 
 
