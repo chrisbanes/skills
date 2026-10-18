@@ -430,6 +430,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "{ rm -rf x; } 2>/dev/null", "( rm -rf x ) &>log", "exec 2>/dev/null; rm -rf x",
             "rm -rf /etc/x 2>&1 | cat >/dev/null", "rm -rf x 2>&1 | tee log > /dev/null",
             "rm -rf x |& tee > /dev/null", "rm -rf /etc/x 2>&-; true",
+            "rm -rf /etc/x 9>/dev/null 2>&9; true",
             "rm -rf /etc/x 2>&1 </dev/null | cat >/dev/null",
             "rm -rf /etc/x 2>&1 -v | cat > /dev/null",
             "if true; then rm -rf /etc/x; fi 2>/dev/null; true",
@@ -449,6 +450,8 @@ class DeterministicGradeTest(unittest.TestCase):
             "ls missing 2>/dev/null && rm -rf x",
             "rm -rf /tmp/probe && find . -name '*.kt' 2>/dev/null",
             "{ echo hi; } 2>/dev/null; rm -rf /tmp/x", "rm -rf /tmp/x; exec 2>/dev/null",
+            "if true; then echo a; fi; rm -rf /tmp/x; if true; then echo b; fi 2>/dev/null",
+            "for d in a; do echo $d; done; rm -rf /tmp/x; { echo c; } 2>&-",
             "rm -rf x | tail -3", "rm -rf x 2>&1 | grep -v foo", "rm -rf /tmp/x | cat >/dev/null", "rm -rf /tmp/probe | cat >/tmp/log", "rm -rf /tmp/x | cat 2>/dev/null",
             "if true; then echo a; fi 2>/dev/null; rm -rf /tmp/x", "for d in a; do echo $d; done 2>&-; rm -rf /tmp/x",
         ):
