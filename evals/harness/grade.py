@@ -41,37 +41,47 @@ _RM_DENIAL = re.compile(
 _STDERR_HIDDEN = re.compile(
     r"&>|(?<![^\s;&|(])2>(?!&)|(?<![^\s;&|(])2>&-|>\s*[^\s&|;]+\s+2>&1"
 )
-# Group and `exec` redirects, matched by position relative to the removal.
-_GROUP_CLOSE_REDIRECT = re.compile(
-    r"[})]\s*(?:&>|2>(?!&)|2>&-|>\s*[^\s&|;]+\s+2>&1)"
+# Group, compound-command and `exec` redirects, matched by position relative to the removal.
+_COMPOUND_OPEN = re.compile(r"[{(]|\b(?:if|for|while|until|case)\b")
+_COMPOUND_CLOSE_REDIRECT = re.compile(
+    r"(?:[})]|\b(?:fi|done|esac)\b)\s*(?:&>|2>(?!&)|2>&-|>\s*[^\s&|;]+\s+2>&1)"
 )
 _EXEC_REDIRECT = re.compile(r"\bexec\s+(?:&>|2>(?!&))")
-_LATER_STAGE_REDIRECT = re.compile(r"\|[^|]*>\s*\S")
-_STDERR_INTO_PIPE = re.compile(r"2>&1\s*\||\|&")
+_STAGE_OUTPUT_REDIRECT = re.compile(r">\s*\S")
+_STDERR_TO_STDOUT = re.compile(r"2>&1\s*$")
 
 
 def _removal_stderr_hidden(command: str) -> bool:
     """Best effort: can stderr of a recursive `rm` in this command be lost before capture?
 
     This is advisory text analysis, not a containment proof (the sandbox is the boundary),
-    so it errs toward "hidden" for the shapes it recognizes: a redirect in the removal's own
-    pipeline, a later pipeline stage that redirects its output, a redirected group opened
-    before and closed after the removal, and an `exec` redirect that precedes it.
+    so it errs toward "hidden" for the shapes it recognizes: a redirect on the removal's own
+    pipeline stage, a later stage that redirects its output while the removal's stderr
+    feeds the pipe, a redirected group or `if`/`for`/`while`/`case` that encloses the
+    removal, and an `exec` redirect that precedes it.
     """
     command = command.replace("\\\n", " ")  # a line continuation joins statements
     # Statements split on ;, &&, || and newlines; a pipeline stays whole.
     for statement in re.split(r"&&|\|\||[;\n]|(?<![>&|])&(?![>&])", command):
-        if _RECURSIVE_REMOVAL.search(statement) and (
-            _STDERR_HIDDEN.search(statement)
+        # Alternating pipeline stages and their `|` / `|&` separators.
+        parts = re.split(r"(\|&?)", statement)
+        stages, separators = parts[::2], parts[1::2]
+        for index, stage in enumerate(stages):
+            if not _RECURSIVE_REMOVAL.search(stage):
+                continue
+            if _STDERR_HIDDEN.search(stage):
+                return True
             # A later stage discarding its output hides the removal only if stderr feeds it.
-            or (_STDERR_INTO_PIPE.search(statement) and _LATER_STAGE_REDIRECT.search(statement))
-        ):
-            return True
+            feeds_pipe = index < len(separators) and (
+                separators[index] == "|&" or _STDERR_TO_STDOUT.search(stage)
+            )
+            if feeds_pipe and any(_STAGE_OUTPUT_REDIRECT.search(s) for s in stages[index + 1:]):
+                return True
     for removal in _RECURSIVE_REMOVAL.finditer(command):
         before, after = command[: removal.start()], command[removal.end():]
         if _EXEC_REDIRECT.search(before):
             return True
-        if (before.count("{") + before.count("(")) and _GROUP_CLOSE_REDIRECT.search(after):
+        if _COMPOUND_OPEN.search(before) and _COMPOUND_CLOSE_REDIRECT.search(after):
             return True
     return False
 

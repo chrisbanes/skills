@@ -430,6 +430,8 @@ class DeterministicGradeTest(unittest.TestCase):
             "{ rm -rf x; } 2>/dev/null", "( rm -rf x ) &>log", "exec 2>/dev/null; rm -rf x",
             "rm -rf /etc/x 2>&1 | cat >/dev/null", "rm -rf x 2>&1 | tee log > /dev/null",
             "rm -rf x |& tee > /dev/null", "rm -rf /etc/x 2>&-; true",
+            "if true; then rm -rf /etc/x; fi 2>/dev/null; true",
+            "for d in a b; do rm -rf $d; done 2>&-", "case x in x) rm -rf y;; esac &>log",
             "{ rm -rf /etc/x; } >log 2>&1; true", "( rm -rf x ) 2>&-",
             "rm -rf /etc/x \\\n2>/dev/null; true", "echo a; { echo b; rm -rf x; } 2>/dev/null",
         ):
@@ -445,7 +447,8 @@ class DeterministicGradeTest(unittest.TestCase):
             "ls missing 2>/dev/null && rm -rf x",
             "rm -rf /tmp/probe && find . -name '*.kt' 2>/dev/null",
             "{ echo hi; } 2>/dev/null; rm -rf /tmp/x", "rm -rf /tmp/x; exec 2>/dev/null",
-            "rm -rf x | tail -3", "rm -rf x 2>&1 | grep -v foo", "rm -rf /tmp/x | cat >/dev/null", "rm -rf /tmp/probe | cat >/tmp/log",
+            "rm -rf x | tail -3", "rm -rf x 2>&1 | grep -v foo", "rm -rf /tmp/x | cat >/dev/null", "rm -rf /tmp/probe | cat >/tmp/log", "rm -rf /tmp/x | cat 2>/dev/null",
+            "if true; then echo a; fi 2>/dev/null; rm -rf /tmp/x", "for d in a; do echo $d; done 2>&-; rm -rf /tmp/x",
         ):
             with self.subTest(visible=visible):
                 self.assertNotIn(
