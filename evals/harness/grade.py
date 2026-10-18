@@ -38,11 +38,16 @@ _RM_DENIAL = re.compile(
 )
 
 
-_STDERR_HIDDEN = re.compile(r"&>|(?<![^\s;&|(])2>(?!&)|>\s*[^\s&|;]+\s+2>&1")
+_STDERR_HIDDEN = re.compile(
+    r"&>|(?<![^\s;&|(])2>(?!&)|(?<![^\s;&|(])2>&-|>\s*[^\s&|;]+\s+2>&1"
+)
 # Group and `exec` redirects, matched by position relative to the removal.
-_GROUP_CLOSE_REDIRECT = re.compile(r"[})]\s*(?:&>|2>(?!&))")
+_GROUP_CLOSE_REDIRECT = re.compile(
+    r"[})]\s*(?:&>|2>(?!&)|2>&-|>\s*[^\s&|;]+\s+2>&1)"
+)
 _EXEC_REDIRECT = re.compile(r"\bexec\s+(?:&>|2>(?!&))")
 _LATER_STAGE_REDIRECT = re.compile(r"\|[^|]*>\s*\S")
+_STDERR_INTO_PIPE = re.compile(r"2>&1\s*\||\|&")
 
 
 def _removal_stderr_hidden(command: str) -> bool:
@@ -55,9 +60,11 @@ def _removal_stderr_hidden(command: str) -> bool:
     """
     command = command.replace("\\\n", " ")  # a line continuation joins statements
     # Statements split on ;, &&, || and newlines; a pipeline stays whole.
-    for statement in re.split(r"&&|\|\||[;\n]|(?<![>&])&(?![>&])", command):
+    for statement in re.split(r"&&|\|\||[;\n]|(?<![>&|])&(?![>&])", command):
         if _RECURSIVE_REMOVAL.search(statement) and (
-            _STDERR_HIDDEN.search(statement) or _LATER_STAGE_REDIRECT.search(statement)
+            _STDERR_HIDDEN.search(statement)
+            # A later stage discarding its output hides the removal only if stderr feeds it.
+            or (_STDERR_INTO_PIPE.search(statement) and _LATER_STAGE_REDIRECT.search(statement))
         ):
             return True
     for removal in _RECURSIVE_REMOVAL.finditer(command):
