@@ -42,28 +42,35 @@ _STDERR_HIDDEN = re.compile(
     r"&>|(?<![^\s;&|(])2>(?!&)|(?<![^\s;&|(])2>&(?:-|(?![12]\b)\w)|>\s*[^\s&|;]+\s+2>&1"
 )
 # Group, compound-command and `exec` redirects, matched by position relative to the removal.
+_STATEMENT_START = r"(?:(?<=^)|(?<=[;&|\n({])|(?<=\bthen\s)|(?<=\bdo\s)|(?<=\belse\s))[ \t]*"
 _CONSTRUCT_TOKEN = re.compile(
-    r"(?P<open>[{(]|\b(?:if|for|while|until|case)\b)|(?P<close>[})]|\b(?:fi|done|esac)\b)"
+    rf"(?P<open>[{{(]|{_STATEMENT_START}(?:if|for|while|until|case)\b)"
+    rf"|(?P<close>[}})]|{_STATEMENT_START}(?:fi|done|esac)\b)"
 )
+_QUOTED = re.compile(r""""[^"]*"|'[^']*'""")
 _CLOSER_FOR = {"{": "}", "(": ")", "if": "fi", "for": "done", "while": "done", "until": "done", "case": "esac"}
 _COMPOUND_CLOSE_REDIRECT = re.compile(r"\s*(?:&>|2>(?!&)|2>&-|>\s*[^\s&|;]+\s+2>&1)")
-_EXEC_REDIRECT = re.compile(r"\bexec\s+(?:&>|2>(?!&))")
-_STAGE_OUTPUT_REDIRECT = re.compile(r">\s*\S")
+_EXEC_REDIRECT = re.compile(
+    r"\bexec\b[^;&|\n]*?(?:&>|2>(?!&1)|2>&[^1\s]|>\s*[^\s&|;]+\s+2>&1)"
+)
+_STAGE_OUTPUT_REDIRECT = re.compile(r"(?<![2-9&])>\s*\S")  # stdout only, not `2>file`
 _STDERR_TO_STDOUT = re.compile(r"2>&1")  # anywhere in the stage: other redirects may follow
 
 
 def _enclosing_redirect_hides(command: str) -> bool:
     """Whether a construct that encloses a recursive rm is followed by a stderr-hiding redirect."""
     removals = [match.start() for match in _RECURSIVE_REMOVAL.finditer(command)]
+    # Words inside quotes are text, not shell syntax; blank them out, keeping positions.
+    masked = _QUOTED.sub(lambda match: " " * len(match.group()), command)
     stack: list[list] = []  # [expected closer, contains a removal]
     cursor = 0
-    for token in _CONSTRUCT_TOKEN.finditer(command):
+    for token in _CONSTRUCT_TOKEN.finditer(masked):
         for position in removals:
             if cursor <= position < token.start():
                 for entry in stack:
                     entry[1] = True
         cursor = token.start()
-        text = token.group()
+        text = token.group().strip()
         if token.group("open"):
             stack.append([_CLOSER_FOR[text], False])
         elif stack and stack[-1][0] == text:
