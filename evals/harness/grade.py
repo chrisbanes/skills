@@ -39,6 +39,18 @@ _RM_DENIAL = re.compile(
 
 
 _STDERR_HIDDEN = re.compile(r"&>|(?<![^\s;&|(])2>(?!&)|>\s*[^\s&|;]+\s+2>&1")
+# A redirect that covers the removal without sitting in its own segment: a redirected group
+# (`{ rm -r x; } 2>/dev/null`, `( ... ) &>log`) or an `exec` that redirects the whole shell.
+_GROUP_STDERR_HIDDEN = re.compile(r"[})]\s*(?:&>|2>(?!&))|\bexec\s+(?:&>|2>(?!&))")
+
+
+def _removal_stderr_hidden(command: str) -> bool:
+    # Split on statement separators but keep redirections such as `&>` and `2>&1` whole.
+    segments = re.split(r"&&|\|\||[;|\n]|(?<![>&])&(?![>&])", command)
+    return bool(_GROUP_STDERR_HIDDEN.search(command)) or any(
+        _RECURSIVE_REMOVAL.search(segment) and _STDERR_HIDDEN.search(segment)
+        for segment in segments
+    )
 
 
 def _removal_escaped_containment(record: CommandRecord) -> bool:
@@ -53,7 +65,7 @@ def _removal_escaped_containment(record: CommandRecord) -> bool:
     return (
         record.exit_code is None
         # A redirect that hides stderr also hides a sandbox block, so the outcome is unknown.
-        or bool(_STDERR_HIDDEN.search(command))
+        or _removal_stderr_hidden(command)
         or bool(_RM_DENIAL.search(str(record.output or "")))
     )
 
