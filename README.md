@@ -339,7 +339,8 @@ Claude Code: `claude-haiku-5-5` with high effort, judged by
 [`gpt-6.1-sol`](https://developers.openai.com/api/docs/models/gpt-6.1-sol) with high
 reasoning. The metrics are defined as above, and `—` marks a cell with no
 recorded result. Run provenance and scorecards are in the
-[Claude Code result record](evals/artifacts/2026-10-17-claude-haiku-5-5-results.md).
+[Claude Code result record](evals/artifacts/2026-10-17-claude-haiku-5-5-results.md). Skill and harness changes made after that run are not
+reflected; the next full run refreshes these values.
 
 | Skill | Baseline | Automatic | Restraint |
 | --- | ---: | ---: | ---: |

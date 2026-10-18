@@ -53,6 +53,14 @@ rate, falling back to the automatic arm only when forced is "not met".
   222 automatic records would differ. The values are not comparable with
   earlier Claude observations.
 
+## Later changes not measured here
+
+Skill edits to fourteen skills and two harness changes landed after this run: the
+destructive-command check is outcome-based, and subjects cannot read any other
+checkout of the repository. Targeted 3-repetition reruns by the workers who made
+the edits improved most of the cases they targeted, but no full-suite run covers
+the combined change.
+
 ## Known failures
 
 Gates not met: `forbidden_actions` in all three suites; `routing_precision`,
