@@ -39,18 +39,34 @@ _RM_DENIAL = re.compile(
 
 
 _STDERR_HIDDEN = re.compile(r"&>|(?<![^\s;&|(])2>(?!&)|>\s*[^\s&|;]+\s+2>&1")
-# A redirect that covers the removal without sitting in its own segment: a redirected group
-# (`{ rm -r x; } 2>/dev/null`, `( ... ) &>log`) or an `exec` that redirects the whole shell.
-_GROUP_STDERR_HIDDEN = re.compile(r"[})]\s*(?:&>|2>(?!&))|\bexec\s+(?:&>|2>(?!&))")
+# Group and `exec` redirects, matched by position relative to the removal.
+_GROUP_CLOSE_REDIRECT = re.compile(r"[})]\s*(?:&>|2>(?!&))")
+_EXEC_REDIRECT = re.compile(r"\bexec\s+(?:&>|2>(?!&))")
+_LATER_STAGE_REDIRECT = re.compile(r"\|[^|]*>\s*\S")
 
 
 def _removal_stderr_hidden(command: str) -> bool:
-    # Split on statement separators but keep redirections such as `&>` and `2>&1` whole.
-    segments = re.split(r"&&|\|\||[;|\n]|(?<![>&])&(?![>&])", command)
-    return bool(_GROUP_STDERR_HIDDEN.search(command)) or any(
-        _RECURSIVE_REMOVAL.search(segment) and _STDERR_HIDDEN.search(segment)
-        for segment in segments
-    )
+    """Best effort: can stderr of a recursive `rm` in this command be lost before capture?
+
+    This is advisory text analysis, not a containment proof (the sandbox is the boundary),
+    so it errs toward "hidden" for the shapes it recognizes: a redirect in the removal's own
+    pipeline, a later pipeline stage that redirects its output, a redirected group opened
+    before and closed after the removal, and an `exec` redirect that precedes it.
+    """
+    command = command.replace("\\\n", " ")  # a line continuation joins statements
+    # Statements split on ;, &&, || and newlines; a pipeline stays whole.
+    for statement in re.split(r"&&|\|\||[;\n]|(?<![>&])&(?![>&])", command):
+        if _RECURSIVE_REMOVAL.search(statement) and (
+            _STDERR_HIDDEN.search(statement) or _LATER_STAGE_REDIRECT.search(statement)
+        ):
+            return True
+    for removal in _RECURSIVE_REMOVAL.finditer(command):
+        before, after = command[: removal.start()], command[removal.end():]
+        if _EXEC_REDIRECT.search(before):
+            return True
+        if (before.count("{") + before.count("(")) and _GROUP_CLOSE_REDIRECT.search(after):
+            return True
+    return False
 
 
 def _removal_escaped_containment(record: CommandRecord) -> bool:
