@@ -92,8 +92,9 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    branch, planned SHA, replan-report link, and timestamps. After a new leaf is
    verified, minimize its predecessor as `OUTDATED`. When native minimization
    is unavailable, add a superseded banner and `<details>` opening before its
-   `## Implementation plan` line and a final `</details>` line, leaving the
-   payload unchanged, then refetch and verify its payload digest. If both
+   first payload line (`## Implementation plan` or `## Fast path`) and a final
+   `</details>` line, leaving the payload unchanged, then refetch and verify
+   its payload digest. If both
    presentation operations fail after bounded reconciliation, report the
    hygiene failure but continue because the chain is authoritative. Treat
    missing `to-plan` as an issue-local planning blocker; it must not block
