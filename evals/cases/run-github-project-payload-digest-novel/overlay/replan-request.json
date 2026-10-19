@@ -1,0 +1,8 @@
+{
+  "id": 1003,
+  "html_url": "https://github.com/acme/widget/issues/31#issuecomment-1003",
+  "user": {
+    "login": "widget-runner"
+  },
+  "body": "<!-- run-github-project:replan-request:v1 -->\n\n```json\n{\n  \"disposition\": \"autonomous-replan\",\n  \"previousPlanPermalink\": \"https://github.com/acme/widget/issues/31#issuecomment-1001\",\n  \"previousPlanDigest\": \"89df8f37baba51e5e05779123c66c6fcd5a7a16e802405eb90cdd78adc64e22d\",\n  \"baseSha\": \"4c1d9e0b7a2f5e6d8c3b1a0f9e8d7c6b5a4f3e2d\",\n  \"implementationHeadSha\": \"9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b\",\n  \"pullRequestUrl\": null\n}\n```\n"
+}

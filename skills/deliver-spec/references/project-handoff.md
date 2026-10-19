@@ -71,7 +71,9 @@ handoff or take over a Project claim.
    passes; resume the same context when actionable. Remote waiting consumes
    no active-agent capacity.
 7. Return `ready`, `pending`, `blocked`, or `no-change` with exact evidence.
-   The controller alone claims, assigns, changes labels/Project Status, records
+   `pending` names only remote or controller-owned gates; never return while a
+   reviewer or helper you launched is still running. The controller alone
+   claims, assigns, changes labels/Project Status, records
    [ticket pauses](../../run-github-project/references/authority-and-pauses.md),
    manages capacity, merges, closes issues, and reconciles terminal state.
    Return missing grants and material decisions to that controller even when

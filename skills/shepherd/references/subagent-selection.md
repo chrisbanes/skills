@@ -89,8 +89,13 @@ log.
   caller grants further delegation.
 - With no user model-selection policy, leave `model` unset so it is inherited;
   set effort only when the user asks.
-- Run workers in the background and wait for the completion notification; do
-  not poll or sleep.
+- A top-level session runs workers in the background and waits for the
+  completion notification; do not poll or sleep.
+- A subagent receives no completion notifications; they go to the top-level
+  session. When it launches an agent whose result it needs before returning,
+  such as a reviewer, evidence or discovery helper, or slice worker, it passes
+  `run_in_background: false` and puts independent launches in one message to
+  keep them parallel.
 - Before dispatching background writers, list the commit and validation
   commands they will run and have the user approve them. A worker denied
   permission anyway reports a blocker and does not seek a workaround.

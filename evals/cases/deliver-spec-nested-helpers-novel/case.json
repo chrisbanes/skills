@@ -1,0 +1,44 @@
+{
+  "id": "deliver-spec-nested-helpers-novel",
+  "title": "deliver spec nested helpers novel",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/launch.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-nested-helpers-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "parallel-foreground",
+      "text": "Launches both discovery helpers in one message with `run_in_background: false`, then both slice workers the same way, keeping concurrency without depending on completion notifications a subagent never receives."
+    },
+    {
+      "id": "ownership",
+      "text": "Inspects each worker's diff and evidence before integrating, retains worker handles for repairs, and returns only after integration and independent review; does not hand back with workers or helpers still running."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

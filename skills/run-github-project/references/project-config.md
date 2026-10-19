@@ -196,8 +196,8 @@ and for active, planning, paused, parked and Wayfinder recovery leases.
    old/new commits and configuration digests, stable IDs and old/new names,
    complete comparison and policy evidence, lease/artifact identities and
    predecessor renewal permalink/digest (or original lease for the root).
-   Bind every retained historical marker by comment ID, permalink and semantic
-   payload digest. Never edit that marker's original configuration digest.
+   Bind every retained historical marker by comment ID, permalink and
+   [payload digest](../../to-plan/references/github-mode.md#payload-digest). Never edit that marker's original configuration digest.
    Reconcile an ambiguous create before retrying; refetch and verify exact
    author, body, payload digest and a single unforked, gap-free renewal lineage.
 5. Renew the controller's effective leases only after every affected record is

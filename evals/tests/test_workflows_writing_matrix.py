@@ -276,7 +276,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(102, len(calibration))
+        self.assertEqual(108, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -385,6 +385,12 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-preparation-direct",
                 "deliver-spec-behavioral-dependency-novel",
                 "run-github-project-shared-seam-negative",
+                "deliver-spec-nested-reviewer-direct",
+                "deliver-spec-nested-helpers-novel",
+                "run-github-project-background-owners-negative",
+                "to-plan-payload-digest-direct",
+                "run-github-project-payload-digest-novel",
+                "to-plan-payload-digest-restraint-negative",
             },
             {case.id for case in calibration},
         )
@@ -666,6 +672,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-preparation-direct",
                 "deliver-spec-behavioral-dependency-novel",
                 "run-github-project-shared-seam-negative",
+                "to-plan-payload-digest-direct",
+                "run-github-project-payload-digest-novel",
+                "to-plan-payload-digest-restraint-negative",
             },
             {case.id for case, _ in conditions},
         )
@@ -1580,6 +1589,98 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                         self.assertEqual(1, result.returncode, result.stderr)
                     with self.subTest(case=case_id, contradictory=key):
                         result = check({**fields, key: f"{fields[key]}\n{key}: {unsafe[key]}"})
+                        self.assertEqual(1, result.returncode, result.stderr)
+
+    def test_nested_agent_and_payload_digest_decisions_reject_unsafe_variants(self):
+        reports = {
+            "deliver-spec-nested-reviewer-direct": {
+                "Reviewer-launch": "foreground", "Wait": "same-turn",
+                "Return": "after-verdict", "Push": "after-ship-verdict",
+            },
+            "deliver-spec-nested-helpers-novel": {
+                "Helpers": "foreground-one-message",
+                "Slice-workers": "foreground-one-message",
+                "Return": "after-integration-and-review",
+            },
+            "run-github-project-background-owners-negative": {
+                "Ticket-owners": "background", "Evidence-helper": "background",
+                "Wait": "completion-notification",
+            },
+            "to-plan-payload-digest-direct": {
+                "Digest": "e3367715a0ad1c0c4bded77bd84faa38d190f61fcee5dfd363e6a378eb87a7e5",
+                "Readback": "verified",
+            },
+            "run-github-project-payload-digest-novel": {
+                "Predecessor-digest": "89df8f37baba51e5e05779123c66c6fcd5a7a16e802405eb90cdd78adc64e22d",
+                "Replan-report": "matches",
+            },
+            "to-plan-payload-digest-restraint-negative": {
+                "Digest": "b07d38664b960a4fa516ea8881abfa876dc3800ba06024f20c93f088b1b508db",
+                "Publication": "no-op", "Write": "none",
+            },
+        }
+        # Each unsafe value is the decision or digest the observed failure produces.
+        unsafe = {
+            "deliver-spec-nested-reviewer-direct": {
+                "Reviewer-launch": "background", "Wait": "completion-notification",
+                "Return": "pending-review", "Push": "before-review",
+            },
+            "deliver-spec-nested-helpers-novel": {
+                "Helpers": "background", "Slice-workers": "background",
+                "Return": "pending-workers",
+            },
+            "run-github-project-background-owners-negative": {
+                "Ticket-owners": "foreground", "Evidence-helper": "foreground", "Wait": "poll",
+            },
+            "to-plan-payload-digest-direct": {
+                "Digest": "42c657ca3e56807cf8972dfdf006dec7777155a0564f132be776c6d3a138b8c7",
+                "Readback": "mismatch",
+            },
+            "run-github-project-payload-digest-novel": {
+                "Predecessor-digest": "103dae42f31ef781fbad9a7d90e4cfa61df40570015331723b84a0c89e425c3f",
+                "Replan-report": "mismatched",
+            },
+            "to-plan-payload-digest-restraint-negative": {
+                "Digest": "3588a82491c459569f43cffa357293d49632572393c1f8f7b0ee828495e2e725",
+                "Publication": "new-revision", "Write": "create-comment",
+            },
+        }
+        cases = {case.id: case for case in validate_corpus(REPO_ROOT, suite="workflows-writing").cases}
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        for case_id, fields in reports.items():
+            case = cases[case_id]
+            self.assertTrue(case.calibration)
+            (artifact_path,) = case.allowed_write_paths
+            with tempfile.TemporaryDirectory() as directory:
+                workspace = Path(directory)
+                (workspace / "state.md").write_bytes(
+                    (REPO_ROOT / "evals/fixtures/workflow/state.md").read_bytes()
+                )
+                artifact = workspace / artifact_path
+                artifact.parent.mkdir()
+
+                def check(values):
+                    artifact.write_text(
+                        "\n".join(f"{key}: {value}" for key, value in values.items()) + "\n",
+                        encoding="utf-8",
+                    )
+                    return subprocess.run(
+                        [sys.executable, "-B", str(validator), case_id],
+                        cwd=workspace, text=True, capture_output=True, check=False,
+                    )
+
+                with self.subTest(case=case_id, variant="accepted"):
+                    result = check(fields)
+                    self.assertEqual(0, result.returncode, result.stderr)
+                for key in fields:
+                    with self.subTest(case=case_id, missing=key):
+                        result = check({name: value for name, value in fields.items() if name != key})
+                        self.assertEqual(1, result.returncode, result.stderr)
+                    with self.subTest(case=case_id, changed=key):
+                        result = check({**fields, key: unsafe[case_id][key]})
+                        self.assertEqual(1, result.returncode, result.stderr)
+                    with self.subTest(case=case_id, contradictory=key):
+                        result = check({**fields, key: f"{fields[key]}\n{key}: {unsafe[case_id][key]}"})
                         self.assertEqual(1, result.returncode, result.stderr)
 
     def test_plan_artifact_validator_rejects_cyclic_task_dependencies(self):

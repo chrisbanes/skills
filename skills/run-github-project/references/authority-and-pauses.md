@@ -62,7 +62,7 @@ integrity blocker.
    completed work is preserved. Use nulls for absent artifacts. Keep secrets,
    local paths, and unsanitized logs out of the comment.
 3. Refetch the comment and live ticket/artifact state. Verify the authenticated
-   runner author, identifiers, payload digest, and existing authority lease
+   runner author, identifiers, [payload digest](../../to-plan/references/github-mode.md#payload-digest), and existing authority lease
    when claimed. Reconcile ambiguous publication before retrying. Update the
    ticket only when that record is verified; report a failed write precisely
    and continue other safe work rather than claiming the update succeeded.

@@ -1,7 +1,7 @@
 """Offline effective-contract checks; trusted inputs must be evaluator-owned.
 
 Records contain provider URL, author, exact body, and semantic digest. Full-plan
-bodies are already extracted semantic payloads under their approved convention;
+bodies are already extracted payloads under to-plan's payload digest rule;
 amendments contain one JSON fence. The caller authenticates that normalization.
 This does not establish live permissions, semantic compatibility or review quality.
 """

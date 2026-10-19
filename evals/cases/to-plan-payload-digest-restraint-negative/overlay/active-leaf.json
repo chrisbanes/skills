@@ -1,0 +1,8 @@
+{
+  "id": 1005,
+  "html_url": "https://github.com/acme/widget/issues/31#issuecomment-1005",
+  "user": {
+    "login": "widget-runner"
+  },
+  "body": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 3\n**Supersedes:** https://github.com/acme/widget/issues/31#issuecomment-1004\n**Replan report:** none\n\n## Implementation plan\n\n**Issue:** https://github.com/acme/widget/issues/31\n**Planned against:** `main` at `4c1d9e0b7a2f5e6d8c3b1a0f9e8d7c6b5a4f3e2d`\n**Publication mode:** Autonomous\n**Local state:** Clean\n**Epoch closure:** null\n\n### Approach\n\nValidate the cache key before writing.\n\n### Guardrails\n\n- Keep the on-disk format unchanged.\n"
+}

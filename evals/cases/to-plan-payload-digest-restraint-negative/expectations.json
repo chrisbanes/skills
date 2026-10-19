@@ -1,0 +1,25 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/digest.md",
+      "count": 1,
+      "must_match": [
+        "^Digest: b07d38664b960a4fa516ea8881abfa876dc3800ba06024f20c93f088b1b508db$",
+        "^Publication: no\\-op$",
+        "^Write: none$"
+      ],
+      "must_not_match": [
+        "^Digest: (?!b07d38664b960a4fa516ea8881abfa876dc3800ba06024f20c93f088b1b508db$).*$",
+        "^Publication: (?!no\\-op$).*$",
+        "^Write: (?!none$).*$"
+      ]
+    }
+  ]
+}

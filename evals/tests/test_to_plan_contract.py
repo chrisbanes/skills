@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import json
+import re
 import unittest
 import tempfile
 import subprocess
@@ -359,6 +360,72 @@ class ContractTest(unittest.TestCase):
         replace_payload(p, t, {'source': source})
         t['source'] = source
         self.assertTrue(validate_effective_contract(p, t))
+
+
+
+def payload_digest(body):
+    """Reference implementation of to-plan's payload digest rule."""
+    text = body.replace('\r\n', '\n')
+    if '<!-- to-plan:implementation-plan:' in text:
+        lines = text.split('\n')
+        lines = lines[lines.index('## Implementation plan'):]
+        while lines and lines[-1] == '':
+            lines.pop()
+        if lines and lines[-1] == '</details>':
+            lines.pop()
+        text = '\n'.join(lines)
+    return digest(text.rstrip('\n'))
+
+
+class PayloadDigestTest(unittest.TestCase):
+    root = Path(__file__).resolve().parents[2]
+
+    def test_github_mode_worked_example_reproduces(self):
+        guide = (self.root / 'skills/to-plan/references/github-mode.md').read_text(encoding='utf-8')
+        section = guide.split('### Payload digest', 1)[1].split('\n### ', 1)[0]
+        body, payload, expected = re.findall(r'`([^`\n]+)`', section.split('For example', 1)[1])[:3]
+        body = body.replace('\\r', '\r').replace('\\n', '\n')
+        self.assertEqual(payload.replace('\\n', '\n'), '## Implementation plan\n\nStep one.')
+        self.assertEqual(expected, payload_digest(body))
+
+    def test_tool_newline_and_presentation_variants_agree(self):
+        payload = '## Implementation plan\n\n**Epoch closure:** null\n\nStep one.'
+        body = '<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n\n' + payload + '\n'
+        wrapped = ('<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n\nSuperseded by x\n\n'
+                   '<details><summary>Superseded plan</summary>\n\n' + payload + '\n\n</details>\n')
+        variants = [body, body + '\n', body.rstrip('\n'), body.replace('\n', '\r\n'),
+                    wrapped, wrapped.replace('\n', '\r\n')]
+        self.assertEqual({digest(payload)}, {payload_digest(item) for item in variants})
+        self.assertNotEqual(digest(body), payload_digest(body))
+        self.assertNotEqual(payload_digest(body), payload_digest(body.replace('null', '{}')))
+
+    def test_runner_markers_keep_their_whole_body(self):
+        body = '<!-- run-github-project:authority-pause:v1 -->\n\nBlocked: merge.\n'
+        self.assertEqual(digest(body.rstrip('\n')), payload_digest(body + '\n'))
+
+    def test_eval_case_overlays_match_expected_digests(self):
+        cases = {
+            'to-plan-payload-digest-direct': ('readback.json', 'Digest'),
+            'run-github-project-payload-digest-novel': ('predecessor.json', 'Predecessor-digest'),
+            'to-plan-payload-digest-restraint-negative': ('active-leaf.json', 'Digest'),
+        }
+        for case_id, (name, field) in cases.items():
+            with self.subTest(case=case_id):
+                directory = self.root / 'evals/cases' / case_id
+                body = json.loads((directory / 'overlay' / name).read_text(encoding='utf-8'))['body']
+                rules = json.loads((directory / 'expectations.json').read_text(encoding='utf-8'))
+                patterns = rules['file_globs'][0]['must_match']
+                self.assertIn(f'^{re.escape(field)}: {payload_digest(body)}$', patterns)
+        novel = self.root / 'evals/cases/run-github-project-payload-digest-novel/overlay'
+        report = json.loads((novel / 'replan-request.json').read_text(encoding='utf-8'))['body']
+        recorded = json.loads(report.split('```json\n')[1].split('\n```')[0])['previousPlanDigest']
+        predecessor = json.loads((novel / 'predecessor.json').read_text(encoding='utf-8'))['body']
+        self.assertEqual(recorded, payload_digest(predecessor))
+        negative = self.root / 'evals/cases/to-plan-payload-digest-restraint-negative/overlay'
+        draft = (negative / '.scratch/plan-draft.md').read_text(encoding='utf-8')
+        leaf = json.loads((negative / 'active-leaf.json').read_text(encoding='utf-8'))['body']
+        self.assertEqual(payload_digest(leaf), payload_digest(draft))
+        self.assertNotEqual(digest(leaf), digest(draft))
 
 
 if __name__ == '__main__':

@@ -1,0 +1,46 @@
+{
+  "id": "run-github-project-payload-digest-novel",
+  "title": "run github project payload digest novel",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "to-plan"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/digest.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-payload-digest-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "presentation-invariance",
+      "text": "Removes the superseded banner and `<details>` wrapper, normalizes CRLF and trailing newlines, and finds the predecessor's payload digest unchanged, so the presentation edit does not invalidate history."
+    },
+    {
+      "id": "replan-binding",
+      "text": "Accepts the report as naming the exact predecessor permalink and digest, normalizes both into the ranker input with the same bare-hex digest form, and does not treat a raw-body or prefixed digest as a different plan."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

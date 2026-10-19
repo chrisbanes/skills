@@ -79,7 +79,7 @@ or pause field for this ranker CLI. Use this shape for execution contenders:
       "commentId": "IC_plan",
       "permalink": "https://github.com/owner/repository/issues/42#issuecomment-1",
       "author": "octocat",
-      "digest": "sha256:plan-payload",
+      "digest": "<plan payload digest>",
       "createdAt": "2026-07-28T09:00:00Z",
       "publishedAt": "2026-07-28T09:00:00Z",
       "updatedAt": "2026-07-28T09:00:00Z",
@@ -180,14 +180,14 @@ include these optional fields inside `wayfinderReconciliation`:
 
 ```json
 {
-  "payloadDigest": "sha256:original-marker-payload",
+  "payloadDigest": "<marker payload digest>",
   "configurationRenewal": {
     "commentId": "IC_renewal",
     "permalink": "https://github.com/owner/repository/issues/52#issuecomment-3",
     "author": "octocat",
     "markerCommentId": "IC_reconciliation",
     "markerPermalink": "https://github.com/owner/repository/issues/52#issuecomment-2",
-    "markerPayloadDigest": "sha256:original-marker-payload",
+    "markerPayloadDigest": "<marker payload digest>",
     "originalConfigurationDigest": "sha256:configuration",
     "configurationDigest": "sha256:renewed-configuration"
   }
@@ -195,9 +195,9 @@ include these optional fields inside `wayfinderReconciliation`:
 ```
 
 Keep the marker's original `configurationDigest` unchanged. Compute
-`payloadDigest` from its freshly read semantic payload, excluding only a
-presentation wrapper; retain every identity, configuration value and planned
-mutation. The normalized renewal binds that payload, comment ID and permalink
+`payloadDigest` from its freshly read marker body under the
+[payload digest](../../to-plan/references/github-mode.md#payload-digest) rule; retain every identity, configuration value and
+planned mutation. The normalized renewal binds that payload, comment ID and permalink
 to its original digest and the current CLI configuration digest. Require all
 fields nonempty and its author to be the authenticated runner. A supplied
 malformed, foreign, stale or mismatched renewal blocks recovery even when the
@@ -274,9 +274,10 @@ normalize it into `implementationPlans`. Require runner authorship. A v1
 comment is a revision-one root. A v2
 comment records its positive `revision`, predecessor permalink in
 `supersedes`, triggering report permalink in `replanRequest` when applicable,
-and payload publication time in `publishedAt`. Compute `digest` from the
-semantic plan payload, excluding any superseded banner or `<details>` wrapper,
-so presentation-only edits do not invalidate history.
+and payload publication time in `publishedAt`. Compute `digest` under the
+[payload digest](../../to-plan/references/github-mode.md#payload-digest) rule, which excludes the marker, revision
+metadata and any superseded wrapper, so presentation-only edits do not
+invalidate history.
 
 Require one root, contiguous revisions, one child per revision, and one
 unminimized leaf. The ranker returns that leaf as the synthesized
@@ -309,7 +310,7 @@ For an automatic requeue, normalize the verified report comment as:
   "createdAt": "2026-07-28T11:00:00Z",
   "disposition": "autonomous-replan",
   "previousPlanPermalink": "https://github.com/owner/repository/issues/42#issuecomment-1",
-  "previousPlanDigest": "sha256:plan-payload",
+  "previousPlanDigest": "<plan payload digest>",
   "baseSha": "0123456789abcdef",
   "implementationHeadSha": "fedcba9876543210",
   "pullRequestUrl": null

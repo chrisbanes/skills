@@ -1,0 +1,46 @@
+{
+  "id": "deliver-spec-nested-reviewer-direct",
+  "title": "deliver spec nested reviewer direct",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec",
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "deliver-spec",
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/launch.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-nested-reviewer-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "nested-wait",
+      "text": "Launches the reviewer with `run_in_background: false` because a subagent receives no completion notifications, waits for the verdict in the same turn, and does not hand back `pending` while its own reviewer runs; `pending` names only remote or controller-owned gates."
+    },
+    {
+      "id": "review-gate",
+      "text": "Pushes only after a `ship` verdict covers the exact clean head `e5f0`; routes any finding back to the owner for repair and renewed review, and leaves merge and Project state to the controller."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

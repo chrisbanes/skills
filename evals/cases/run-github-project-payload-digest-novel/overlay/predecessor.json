@@ -1,0 +1,8 @@
+{
+  "id": 1001,
+  "html_url": "https://github.com/acme/widget/issues/31#issuecomment-1001",
+  "user": {
+    "login": "widget-runner"
+  },
+  "body": "<!-- to-plan:implementation-plan:v2 -->\r\n\r\n**Revision:** 1\r\n**Supersedes:** none\r\n**Replan report:** none\r\n\r\nSuperseded by https://github.com/acme/widget/issues/31#issuecomment-1003\r\n\r\n<details><summary>Superseded plan</summary>\r\n\r\n## Implementation plan\r\n\r\n**Issue:** https://github.com/acme/widget/issues/31\r\n**Planned against:** `main` at `4c1d9e0b7a2f5e6d8c3b1a0f9e8d7c6b5a4f3e2d`\r\n**Publication mode:** Autonomous\r\n**Local state:** Clean\r\n**Epoch closure:** null\r\n\r\n### Approach\r\n\r\nValidate the cache key before writing.\r\n\r\n</details>\r\n"
+}

@@ -1,0 +1,44 @@
+{
+  "id": "to-plan-payload-digest-restraint-negative",
+  "title": "to plan payload digest restraint negative",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/digest.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-payload-digest-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "no-op",
+      "text": "Compares payload digests under to-plan's rule, finds the draft identical to the active leaf apart from revision metadata and trailing newlines, and returns the active leaf as a no-op with no new comment."
+    },
+    {
+      "id": "restraint",
+      "text": "Does not treat different revision headers or raw-body hashes as a semantic change and performs no GitHub write."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

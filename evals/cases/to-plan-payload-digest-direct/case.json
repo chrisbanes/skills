@@ -1,0 +1,44 @@
+{
+  "id": "to-plan-payload-digest-direct",
+  "title": "to plan payload digest direct",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/digest.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-payload-digest-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "digest-form",
+      "text": "Computes the digest under to-plan's payload digest rule: decoded API body, CRLF to LF, lines before `## Implementation plan` dropped, trailing newlines stripped, SHA-256 lowercase hex without prefix; does not hash the raw body or tool output with an added newline."
+    },
+    {
+      "id": "verification",
+      "text": "Treats the matching digest as verified publication and does not republish, edit or reconcile a comment that matches."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

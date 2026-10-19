@@ -109,10 +109,34 @@ Plan comments are the only GitHub state this skill may mutate. Never change the
 issue body, labels, assignee, relationships, Project fields, status, or any
 non-plan comment.
 
-Compute a semantic payload digest without the marker, revision metadata, or
-superseded wrapper. The complete `Epoch closure` line, including retained-work
-and evidence dispositions, is semantic payload: always include it in the digest,
-never discard it as revision metadata. If the active leaf already has the same payload and
+### Payload digest
+
+Every full-plan and runner-marker payload digest uses this one form, so any
+agent and any tool reproduces it:
+
+1. Start from the comment's `body` string as decoded from the API JSON.
+2. Replace each CRLF with LF.
+3. For a `to-plan:implementation-plan` comment, drop every line before the
+   first `## Implementation plan` line (the marker, revision metadata and any
+   superseded banner or `<details>` opening), and drop a final `</details>`
+   line. Every other marker comment keeps its whole body.
+4. Strip all trailing LF characters. This absorbs the newline that tools such
+   as `jq -r` add.
+5. Hash the UTF-8 bytes with SHA-256 and record lowercase hexadecimal with no
+   prefix.
+
+For example, the body
+`<!-- to-plan:implementation-plan:v2 -->\r\n\r\n**Revision:** 1\r\n\r\n## Implementation plan\r\n\r\nStep one.\r\n`
+has the payload `## Implementation plan\n\nStep one.` and the digest
+`bcce4e2c20ff2a6fa053e9560880d1491c6458c51ed25e4ad6aa0b847d6c4da7`.
+
+The complete `Epoch closure` line, including retained-work and evidence
+dispositions, is semantic payload: always include it in the digest, never
+discard it as revision metadata.
+
+### Publication
+
+If the active leaf already has the same payload and
 baseline, perform no write, delete only an exact matching temporary draft after
 verification, and return the leaf as a no-op. Otherwise:
 
@@ -126,8 +150,9 @@ verification, and return the leaf as a no-op. Otherwise:
 3. Require one root, no fork or gap, and the new comment as the unique
    unminimized leaf.
 4. Minimize the predecessor as `OUTDATED`. If unavailable, edit only that
-   runner-owned predecessor to add a superseded-by link and wrap its unchanged
-   payload in `<details>`, then verify its digest. Report failure of both
+   runner-owned predecessor to add a superseded-by link and `<details>` opening
+   before its `## Implementation plan` line and a final `</details>` line,
+   leaving the payload unchanged, then verify its digest. Report failure of both
    presentation methods without invalidating the verified new leaf.
 5. Delete only the exact draft after the active leaf is verified.
 

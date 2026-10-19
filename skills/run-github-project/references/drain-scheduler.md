@@ -453,8 +453,8 @@ releasing the slot:
    preserved assignment and `In progress` Status. Never include local paths,
    secrets, or unsanitized logs.
 2. Refetch the comment, assignment, Project Status, PR head, and checks. Require
-   the marker author to be the authenticated runner and compute a digest from
-   its immutable payload. Reconcile an ambiguous create before retrying. Keep
+   the marker author to be the authenticated runner and compute its
+   [payload digest](../../to-plan/references/github-mode.md#payload-digest). Reconcile an ambiguous create before retrying. Keep
    the slot occupied when the record cannot be verified.
 3. Preserve the verified record permalink and digest with the branch, worktree,
    PR, failed-check evidence, and repair history. Release every named resource,

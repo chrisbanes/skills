@@ -126,8 +126,8 @@ reconciliation, not an automatic retry or silently refreshed hash.
 
 1. Enumerate all full-plan and amendment marker comments, including minimized
    history. Apply GitHub mode's existing v1/v2 plan-chain checks. Pin the current
-   full-plan revision and semantic digest using its existing approved digest
-   convention; do not retroactively rehash or rewrite a legacy plan.
+   full-plan revision and its [payload digest](github-mode.md#payload-digest);
+   do not retroactively rehash or rewrite a legacy plan.
 2. Define the new amendment's canonical semantic payload as a JSON object with
    all fields in the template other than publication metadata, review record,
    and the two self-referential digests. Include source manifest, full-plan

@@ -337,7 +337,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 102 calibration-only cases, including
+The workflows/writing corpus contains 108 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -396,6 +396,13 @@ CI-supplied full-suite evidence versus explicit local rules and checks CI
 cannot run; and `to-plan` baselines proven from green CI on the exact base SHA
 while keeping focused checks CI cannot answer. They use immutable synthetic
 state.
+Three nested-agent calibrations check that a delegated owner waits for its
+own reviewer, helpers and slice workers before returning, keeps independent
+launches parallel, and that the top-level controller keeps background launches.
+Three payload-digest calibrations check readback verification, a wrapped CRLF
+predecessor bound to a replan report, and a no-op republish whose draft differs
+only in revision metadata and trailing newlines. They grade decision artifacts
+offline and do not prove live subagent execution.
 
 Three PR-review timing calibrations grade offline decision artifacts for draft
 review during pending CI, earlier readiness when draft support is absent or

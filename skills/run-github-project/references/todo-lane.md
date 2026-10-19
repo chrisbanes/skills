@@ -88,11 +88,12 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    a new v2 revision when the substantive plan changed, or return the identical
    active leaf as a no-op. Never edit a semantic plan payload in place.
 7. Refetch all marker comments and verify the unique active leaf, revision
-   chain, authenticated-runner author, payload digest, permalink, planned
+   chain, authenticated-runner author, [payload digest](../../to-plan/references/github-mode.md#payload-digest), permalink, planned
    branch, planned SHA, replan-report link, and timestamps. After a new leaf is
    verified, minimize its predecessor as `OUTDATED`. When native minimization
-   is unavailable, prepend a superseded banner and wrap the unchanged payload
-   in `<details>`, then refetch and verify its payload digest. If both
+   is unavailable, add a superseded banner and `<details>` opening before its
+   `## Implementation plan` line and a final `</details>` line, leaving the
+   payload unchanged, then refetch and verify its payload digest. If both
    presentation operations fail after bounded reconciliation, report the
    hygiene failure but continue because the chain is authoritative. Treat
    missing `to-plan` as an issue-local planning blocker; it must not block

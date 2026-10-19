@@ -1,0 +1,27 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/launch.md",
+      "count": 1,
+      "must_match": [
+        "^Reviewer\\-launch: foreground$",
+        "^Wait: same\\-turn$",
+        "^Return: after\\-verdict$",
+        "^Push: after\\-ship\\-verdict$"
+      ],
+      "must_not_match": [
+        "^Reviewer\\-launch: (?!foreground$).*$",
+        "^Wait: (?!same\\-turn$).*$",
+        "^Return: (?!after\\-verdict$).*$",
+        "^Push: (?!after\\-ship\\-verdict$).*$"
+      ]
+    }
+  ]
+}

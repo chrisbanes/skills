@@ -1,0 +1,46 @@
+{
+  "id": "run-github-project-background-owners-negative",
+  "title": "run github project background owners negative",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "run-github-project",
+    "deliver-spec"
+  ],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/launch.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-background-owners-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "top-level-background",
+      "text": "Keeps background launches for the top-level controller, which receives completion notifications, continues runnable work, and adds no polling, sleeps or scheduled wakeups; does not over-apply the subagent foreground rule."
+    },
+    {
+      "id": "repair-gate",
+      "text": "Gives the evidence helper one bounded question at the immutable failing head, passes its result to #90's original owner, and resumes repair only with a concrete new direction."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

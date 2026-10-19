@@ -1,0 +1,25 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/launch.md",
+      "count": 1,
+      "must_match": [
+        "^Ticket\\-owners: background$",
+        "^Evidence\\-helper: background$",
+        "^Wait: completion\\-notification$"
+      ],
+      "must_not_match": [
+        "^Ticket\\-owners: (?!background$).*$",
+        "^Evidence\\-helper: (?!background$).*$",
+        "^Wait: (?!completion\\-notification$).*$"
+      ]
+    }
+  ]
+}

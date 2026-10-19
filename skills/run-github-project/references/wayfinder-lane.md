@@ -84,7 +84,7 @@ is the canonical Wayfinder session boundary. The drain controller may continue
 with another AFK child only through another fresh context.
 
 For a research child, require the provider to invoke the installed `research`
-skill in a background subagent. Give it the ticket question and map Notes,
+skill in a separate subagent. Give it the ticket question and map Notes,
 require primary-source citations in one repository Markdown artifact on a
 throwaway `research/<name>` branch in an isolated research worktree, and return
 its linked context pointer to the Wayfinder owner. A drain invocation may

@@ -1,0 +1,25 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/launch.md",
+      "count": 1,
+      "must_match": [
+        "^Helpers: foreground\\-one\\-message$",
+        "^Slice\\-workers: foreground\\-one\\-message$",
+        "^Return: after\\-integration\\-and\\-review$"
+      ],
+      "must_not_match": [
+        "^Helpers: (?!foreground\\-one\\-message$).*$",
+        "^Slice\\-workers: (?!foreground\\-one\\-message$).*$",
+        "^Return: (?!after\\-integration\\-and\\-review$).*$"
+      ]
+    }
+  ]
+}
