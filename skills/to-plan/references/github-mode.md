@@ -118,8 +118,8 @@ agent and any tool reproduces it:
 2. Replace each CRLF with LF.
 3. For a `to-plan:implementation-plan` comment, drop every line before the
    first `## Implementation plan` line (the marker, revision metadata and any
-   superseded banner or `<details>` opening), and drop a final `</details>`
-   line. Every other marker comment keeps its whole body.
+   superseded banner or `<details>` opening), and drop the last nonempty line
+   when it is `</details>`. Every other marker comment keeps its whole body.
 4. Strip all trailing LF characters. This absorbs the newline that tools such
    as `jq -r` add.
 5. Hash the UTF-8 bytes with SHA-256 and record lowercase hexadecimal with no
@@ -129,6 +129,15 @@ For example, the body
 `<!-- to-plan:implementation-plan:v2 -->\r\n\r\n**Revision:** 1\r\n\r\n## Implementation plan\r\n\r\nStep one.\r\n`
 has the payload `## Implementation plan\n\nStep one.` and the digest
 `bcce4e2c20ff2a6fa053e9560880d1491c6458c51ed25e4ad6aa0b847d6c4da7`.
+
+A record published before this rule may carry another digest of the same
+comment. After verifying that comment's author and chain, accept the stored
+value as a legacy identity only when it equals the SHA-256 hexadecimal, with
+or without a `sha256:` prefix, of the decoded body as is or with trailing LF
+characters stripped. When normalizing, replace a verified legacy value with
+this rule's digest. A published amendment chain keeps the plan digest it
+pinned. Any other mismatch stays a blocker, and new records carry only this
+rule's digest.
 
 The complete `Epoch closure` line, including retained-work and evidence
 dispositions, is semantic payload: always include it in the digest, never

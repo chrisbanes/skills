@@ -275,9 +275,11 @@ comment is a revision-one root. A v2
 comment records its positive `revision`, predecessor permalink in
 `supersedes`, triggering report permalink in `replanRequest` when applicable,
 and payload publication time in `publishedAt`. Compute `digest` under the
-[payload digest](../../to-plan/references/github-mode.md#payload-digest) rule, which excludes the marker, revision
-metadata and any superseded wrapper, so presentation-only edits do not
-invalidate history.
+[payload digest](../../to-plan/references/github-mode.md#payload-digest) rule, which
+excludes the marker, revision metadata and any superseded wrapper, so
+presentation-only edits do not invalidate history. Normalize a verified legacy
+`previousPlanDigest` in a replan report to that rule's digest under the same
+rule's legacy path, so an older report still matches its plan.
 
 Require one root, contiguous revisions, one child per revision, and one
 unminimized leaf. The ranker returns that leaf as the synthesized

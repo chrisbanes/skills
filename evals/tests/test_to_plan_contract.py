@@ -377,6 +377,12 @@ def payload_digest(body):
     return digest(text.rstrip('\n'))
 
 
+
+def legacy_identity(stored, body):
+    """Reference for the rule's legacy path: a pre-rule digest of the same comment."""
+    value = stored.removeprefix('sha256:')
+    return value in {digest(body), digest(body.rstrip('\n'))}
+
 class PayloadDigestTest(unittest.TestCase):
     root = Path(__file__).resolve().parents[2]
 
@@ -398,6 +404,14 @@ class PayloadDigestTest(unittest.TestCase):
         self.assertEqual({digest(payload)}, {payload_digest(item) for item in variants})
         self.assertNotEqual(digest(body), payload_digest(body))
         self.assertNotEqual(payload_digest(body), payload_digest(body.replace('null', '{}')))
+
+    def test_legacy_digests_of_the_same_comment_are_recognized(self):
+        body = '<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 1\n\n## Implementation plan\n\nStep one.\n'
+        for stored in (digest(body), digest(body.rstrip('\n')), 'sha256:' + digest(body)):
+            with self.subTest(stored=stored):
+                self.assertTrue(legacy_identity(stored, body))
+        self.assertFalse(legacy_identity(digest(body + '\n'), body))
+        self.assertFalse(legacy_identity(digest(body.replace('one', 'two')), body))
 
     def test_runner_markers_keep_their_whole_body(self):
         body = '<!-- run-github-project:authority-pause:v1 -->\n\nBlocked: merge.\n'
