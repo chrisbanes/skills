@@ -116,11 +116,12 @@ agent and any tool reproduces it:
 
 1. Start from the comment's `body` string as decoded from the API JSON.
 2. Replace each CRLF with LF.
-3. Find the first payload line: the first `## Implementation plan` line in a
-   `to-plan:implementation-plan` comment, otherwise the marker line. Drop
-   every line before it (marker, revision metadata, superseded banner or
-   `<details>` opening). If a dropped line opened `<details>`, also drop the
-   last nonempty line, which closes that wrapper.
+3. Find the first payload line: in a `to-plan:implementation-plan` comment,
+   the first `## Implementation plan` or `## Fast path` line; otherwise the
+   marker line. A plan comment with neither line is a blocker. Drop every line
+   before it (marker, revision metadata, superseded banner or `<details>`
+   opening). If a dropped line opened `<details>`, the last nonempty line must
+   be `</details>`: drop it, and treat a missing closer as a blocker.
 4. Strip all trailing LF characters. This absorbs the newline that tools such
    as `jq -r` add.
 5. Hash the UTF-8 bytes with SHA-256 and record lowercase hexadecimal with no

@@ -36,7 +36,7 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    When in doubt, plan it normally.
 3. In the controller lane, publish one runner-authored
    `<!-- to-plan:implementation-plan:v2 -->` comment with revision one,
-   `Supersedes: none`, `Replan report: none`, a `Fast path` heading, the
+   `Supersedes: none`, `Replan report: none`, a `## Fast path` heading, the
    planned branch and base SHA, the classification evidence, the issue
    contract digest and the brief plan. Verify it as in step 7 below,
    reconciling an ambiguous create by exact revision and digest.

@@ -371,13 +371,15 @@ def payload_digest(body):
 def payload_text(body):
     lines = body.replace('\r\n', '\n').split('\n')
     plan = any(line.startswith('<!-- to-plan:implementation-plan:') for line in lines)
+    heads = ('## Implementation plan', '## Fast path') if plan else None
     start = next(i for i, line in enumerate(lines) if (
-        line == '## Implementation plan' if plan else line.startswith('<!-- ')))
+        line in heads if plan else line.startswith('<!-- ')))
     dropped, lines = lines[:start], lines[start:]
     if any(line.startswith('<details>') for line in dropped):
         while lines[-1] == '':
             lines.pop()
-        lines.pop()
+        if lines.pop() != '</details>':
+            raise ValueError('missing </details> closer')
     return '\n'.join(lines)
 
 
@@ -415,6 +417,8 @@ class PayloadDigestTest(unittest.TestCase):
         for stored in (digest(body), digest(body.rstrip('\n')), 'sha256:' + digest(body)):
             with self.subTest(stored=stored):
                 self.assertTrue(legacy_identity(stored, body))
+        # The pre-rule extracted payload, trailing newline kept.
+        self.assertTrue(legacy_identity(digest('## Implementation plan\n\nStep one.\n'), body))
         self.assertFalse(legacy_identity(digest(body + '\n'), body))
         self.assertFalse(legacy_identity(digest(body.replace('one', 'two')), body))
 
@@ -424,6 +428,21 @@ class PayloadDigestTest(unittest.TestCase):
         wrapped = 'Superseded by x\n\n<details><summary>Old</summary>\n\n' + body + '\n</details>\n'
         self.assertEqual(payload_digest(body), payload_digest(wrapped))
         self.assertTrue(legacy_identity(digest(payload_text(wrapped)), wrapped))
+
+    def test_fast_path_revision_starts_at_its_heading(self):
+        payload = '## Fast path\n\nContract digest: abc\n\nEdit one file.'
+        body = ('<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 1\n'
+                '**Supersedes:** none\n**Replan report:** none\n\n' + payload + '\n')
+        self.assertEqual(digest(payload), payload_digest(body))
+        with self.assertRaises(StopIteration):
+            payload_digest('<!-- to-plan:implementation-plan:v2 -->\n\nNo heading.\n')
+
+    def test_wrapper_without_its_closer_is_a_blocker(self):
+        body = ('<!-- to-plan:implementation-plan:v2 -->\n\nSuperseded by x\n\n'
+                '<details><summary>Old</summary>\n\n## Implementation plan\n\nStep one.\n'
+                '\nAppended instruction.\n')
+        with self.assertRaises(ValueError):
+            payload_digest(body)
 
     def test_payload_details_block_is_not_a_wrapper(self):
         payload = '## Implementation plan\n\n<details><summary>Notes</summary>\n\nKeep.\n\n</details>'
