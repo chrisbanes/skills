@@ -164,8 +164,9 @@ verification, and return the leaf as a no-op. Otherwise:
    runner-owned predecessor to add a superseded-by link and `<details>` opening
    before its first payload line (`## Implementation plan` or `## Fast path`)
    and a final `</details>` line, leaving the payload unchanged, then verify
-   its digest. Report failure of both presentation methods without
-   invalidating the verified new leaf.
+   its digest. Skip that edit when a record names the predecessor by a legacy
+   digest, which the edit would make unverifiable. Report failure or a skip of
+   both presentation methods without invalidating the verified new leaf.
 5. Delete only the exact draft after the active leaf is verified.
 
 An amendment is a separate append-only component of one effective contract,

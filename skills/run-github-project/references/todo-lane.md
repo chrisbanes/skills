@@ -94,9 +94,10 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    is unavailable, add a superseded banner and `<details>` opening before its
    first payload line (`## Implementation plan` or `## Fast path`) and a final
    `</details>` line, leaving the payload unchanged, then refetch and verify
-   its payload digest. If both
-   presentation operations fail after bounded reconciliation, report the
-   hygiene failure but continue because the chain is authoritative. Treat
+   its payload digest. Skip that edit when a record names the predecessor by
+   a legacy digest, which the edit would make unverifiable. If both
+   presentation operations fail or are skipped after bounded reconciliation,
+   report the hygiene failure but continue because the chain is authoritative. Treat
    missing `to-plan` as an issue-local planning blocker; it must not block
    implementation items with current plans.
 8. Move the item to `Ready to implement` and refetch its current Status,

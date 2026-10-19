@@ -420,6 +420,10 @@ class PayloadDigestTest(unittest.TestCase):
         # The pre-rule extracted payload, trailing newline kept.
         self.assertTrue(legacy_identity(digest('## Implementation plan\n\nStep one.\n'), body))
         self.assertFalse(legacy_identity(digest(body + '\n'), body))
+        # Wrapping makes a raw-body legacy digest unverifiable, so the fallback skips it.
+        wrapped = body.replace('## Implementation plan', 'Superseded by x\n\n<details><summary>Old</summary>\n\n## Implementation plan') + '\n</details>\n'
+        self.assertEqual(payload_digest(body), payload_digest(wrapped))
+        self.assertFalse(legacy_identity(digest(body), wrapped))
         self.assertFalse(legacy_identity(digest(body.replace('one', 'two')), body))
 
     def test_runner_markers_keep_their_whole_body(self):
