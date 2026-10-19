@@ -12,7 +12,8 @@ reviewer asks for a new public contract beyond the ticket source.
 D: The request is `drain --auto-merge`, with no other merge instruction and no
 answer to a startup question. The host supports bounded nonblocking input.
 E: A prior drain received "yes" to its startup question, then ended. A new drain
-has no merge instruction; no answer arrived within 60 seconds of its new
+reconstructs that run's human frontier and has no merge instruction; no answer
+arrived within 60 seconds of its new
 question. A preselected Yes in the UI was never submitted. Consider also a
 variant where the user dismisses the question. A ready PR and unrelated
 runnable ticket remain in both variants.

@@ -83,9 +83,11 @@ would become available next.
 
 On a later invocation, reconstruct the frontier from GitHub. Expire all prior
 standing mutation authority and resolve the new invocation's merge decision
-under [run authority](authority-and-pauses.md).
+under [run authority](authority-and-pauses.md): ask a fresh startup question
+when this invocation has no explicit merge or no-merge instruction.
 Keep uncovered operations paused while the board continues. Use no local
-checkpoint as an authority source and do not repeat the startup merge question.
+checkpoint as an authority source. Within this invocation, do not repeat the
+startup question once it has been asked or its decision otherwise settled.
 
 ## Finish Gate
 

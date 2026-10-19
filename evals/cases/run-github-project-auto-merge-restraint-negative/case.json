@@ -40,7 +40,7 @@
     },
     {
       "id": "default-no-and-expiry",
-      "text": "E expires the prior invocation grant and describes one fresh startup decision; silence after 60 seconds, unsubmitted preselected Yes and dismissal grant no permission. Continues unrelated delivery with the ready PR merge-paused, without repeated prompts, inherited authority or a run-wide stop."
+      "text": "E expires the prior invocation grant and describes one fresh startup decision even when recovering the prior human frontier; suppresses repeated questions only within the current invocation; silence after 60 seconds, unsubmitted preselected Yes and dismissal grant no permission. Continues unrelated delivery with the ready PR merge-paused, without repeated prompts, inherited authority or a run-wide stop."
     },
     {
       "id": "no-mutations",
