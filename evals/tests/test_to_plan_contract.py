@@ -365,23 +365,28 @@ class ContractTest(unittest.TestCase):
 
 def payload_digest(body):
     """Reference implementation of to-plan's payload digest rule."""
-    text = body.replace('\r\n', '\n')
-    if '<!-- to-plan:implementation-plan:' in text:
-        lines = text.split('\n')
-        lines = lines[lines.index('## Implementation plan'):]
-        while lines and lines[-1] == '':
+    return digest(payload_text(body).rstrip('\n'))
+
+
+def payload_text(body):
+    lines = body.replace('\r\n', '\n').split('\n')
+    plan = any(line.startswith('<!-- to-plan:implementation-plan:') for line in lines)
+    start = next(i for i, line in enumerate(lines) if (
+        line == '## Implementation plan' if plan else line.startswith('<!-- ')))
+    dropped, lines = lines[:start], lines[start:]
+    if any(line.startswith('<details>') for line in dropped):
+        while lines[-1] == '':
             lines.pop()
-        if lines and lines[-1] == '</details>':
-            lines.pop()
-        text = '\n'.join(lines)
-    return digest(text.rstrip('\n'))
+        lines.pop()
+    return '\n'.join(lines)
 
 
 
 def legacy_identity(stored, body):
     """Reference for the rule's legacy path: a pre-rule digest of the same comment."""
     value = stored.removeprefix('sha256:')
-    return value in {digest(body), digest(body.rstrip('\n'))}
+    forms = (body, payload_text(body))
+    return value in {digest(text) for form in forms for text in (form, form.rstrip('\n'))}
 
 class PayloadDigestTest(unittest.TestCase):
     root = Path(__file__).resolve().parents[2]
@@ -416,6 +421,14 @@ class PayloadDigestTest(unittest.TestCase):
     def test_runner_markers_keep_their_whole_body(self):
         body = '<!-- run-github-project:authority-pause:v1 -->\n\nBlocked: merge.\n'
         self.assertEqual(digest(body.rstrip('\n')), payload_digest(body + '\n'))
+        wrapped = 'Superseded by x\n\n<details><summary>Old</summary>\n\n' + body + '\n</details>\n'
+        self.assertEqual(payload_digest(body), payload_digest(wrapped))
+        self.assertTrue(legacy_identity(digest(payload_text(wrapped)), wrapped))
+
+    def test_payload_details_block_is_not_a_wrapper(self):
+        payload = '## Implementation plan\n\n<details><summary>Notes</summary>\n\nKeep.\n\n</details>'
+        body = '<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 1\n\n' + payload + '\n'
+        self.assertEqual(digest(payload), payload_digest(body))
 
     def test_eval_case_overlays_match_expected_digests(self):
         cases = {

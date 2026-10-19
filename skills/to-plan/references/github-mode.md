@@ -116,10 +116,11 @@ agent and any tool reproduces it:
 
 1. Start from the comment's `body` string as decoded from the API JSON.
 2. Replace each CRLF with LF.
-3. For a `to-plan:implementation-plan` comment, drop every line before the
-   first `## Implementation plan` line (the marker, revision metadata and any
-   superseded banner or `<details>` opening), and drop the last nonempty line
-   when it is `</details>`. Every other marker comment keeps its whole body.
+3. Find the first payload line: the first `## Implementation plan` line in a
+   `to-plan:implementation-plan` comment, otherwise the marker line. Drop
+   every line before it (marker, revision metadata, superseded banner or
+   `<details>` opening). If a dropped line opened `<details>`, also drop the
+   last nonempty line, which closes that wrapper.
 4. Strip all trailing LF characters. This absorbs the newline that tools such
    as `jq -r` add.
 5. Hash the UTF-8 bytes with SHA-256 and record lowercase hexadecimal with no
@@ -133,8 +134,8 @@ has the payload `## Implementation plan\n\nStep one.` and the digest
 A record published before this rule may carry another digest of the same
 comment. After verifying that comment's author and chain, accept the stored
 value as a legacy identity only when it equals the SHA-256 hexadecimal, with
-or without a `sha256:` prefix, of the decoded body as is or with trailing LF
-characters stripped. When normalizing, replace a verified legacy value with
+or without a `sha256:` prefix, of the decoded body, raw or after steps 2 and 3,
+either as is or with trailing LF characters stripped. When normalizing, replace a verified legacy value with
 this rule's digest. A published amendment chain keeps the plan digest it
 pinned. Any other mismatch stays a blocker, and new records carry only this
 rule's digest.
