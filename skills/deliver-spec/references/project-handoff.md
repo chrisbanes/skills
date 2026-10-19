@@ -75,7 +75,7 @@ handoff or take over a Project claim.
    [ticket pauses](../../run-github-project/references/authority-and-pauses.md),
    manages capacity, merges, closes issues, and reconciles terminal state.
    Return missing grants and material decisions to that controller even when
-   its invocation includes `--auto-merge`.
+   its invocation has merge permission.
 
 ## Finish Gate
 

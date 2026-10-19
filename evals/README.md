@@ -379,10 +379,12 @@ Deterministic coverage stages `deliver-spec` alone, follows its local procedure
 and handoff links, and checks that its bundled procedure matches the orchestration
 skill's copy.
 Three Project-delivery calibrations cover automatic `deliver-spec` handoff,
-run-scoped `--auto-merge`, ticket-local authority pauses with continued board
-progress, durable resumption, and restraint for absent grants, read-only modes,
-and stale final-head review. They use immutable synthetic state and have no
-live-provider or model-run evidence.
+one startup merge question with a 60-second default-no deadline, explicit
+instructions, nonblocking fallback, late replies and invocation expiry,
+ticket-local authority pauses with continued board progress, durable resumption,
+and restraint for retired flags, absent grants, read-only modes and stale
+final-head review. They use immutable synthetic state and have no live-provider
+or model-run evidence.
 Five watcher calibrations cover the `drain` project watcher: staying alive and
 launching it at a human frontier, refreshing before acting on a board-change
 wake, `next` returning without one, no watcher when only an agent notification

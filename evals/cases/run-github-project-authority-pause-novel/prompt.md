@@ -10,7 +10,17 @@ writes, and claims still work. The controller can quiesce all #51 descendants
 and verify/release its resource grants. Ticket #54 is an unassigned ready epic
 with no closure grant. No new Project Status option exists.
 
-Later, a fresh invocation is `drain --auto-merge`. #51 has
+At startup this host offered only an indefinitely blocking input question;
+the controller instead posted the nonblocking merges-disabled message and
+continued. Explain that fallback without claiming a timed question occurred.
+Contrast a `next` run on this same host when no work remains: does the fallback
+leave any startup deadline or input wait before normal handback?
+Before any new invocation, consider a clear user message "yes, merge for this
+run" while this same drain is active: explain whether #51 may resume, what must
+be refreshed, and whether the controller asks again for each PR. Contrast a
+bare "yes" when two unrelated questions are pending and its meaning is unclear.
+
+Later, a fresh invocation is `drain; merge when ready`. #51 has
 a verified runner-owned authority-pause comment, unchanged exclusive ownership,
 and the same PR head. #55 has a separate verified pause asking for a stakeholder
 scope decision which has not been supplied. Its original worker returned a
@@ -18,7 +28,7 @@ human-required replan packet proposing a changed acceptance contract. No human
 has directed abandoning its partial branch or transferring it to Backlog.
 Consider also a changed-head branch
 of this later observation where the prior review no longer covers the diff.
-In a separate later `drain` without an auto-merge grant, #51's exact PR has
+In a separate later `drain; don't merge`, #51's exact PR has
 already been merged externally. Its verified merged head and merge commit
 match the preserved PR, the issue is closed by closing-keyword policy, and Done
 automation has completed. Contrast a close-after-merge variant where the issue

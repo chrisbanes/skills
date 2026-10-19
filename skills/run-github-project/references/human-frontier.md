@@ -75,16 +75,17 @@ monitoring, or non-deferred triage action remains and `humanActions` or verified
 authority/decision pauses are non-empty. In `drain`, waiting under the
 [Project Watcher](drain-scheduler.md#project-watcher) is a monitoring action
 until the [finish gate](drain-scheduler.md#failure-isolation-and-finish-gate)
-allows the return; `next` returns at once. This result is resumable and is
+allows the return; `next` returns once its startup merge decision has settled.
+This result is resumable and is
 neither success nor partial drain.
 Report the complete frontier packet, parked dependency chain, and actions that
 would become available next.
 
 On a later invocation, reconstruct the frontier from GitHub. Expire all prior
-standing mutation authority and use the new invocation's explicit instruction
-or `--auto-merge` grant under [run authority](authority-and-pauses.md).
+standing mutation authority and resolve the new invocation's merge decision
+under [run authority](authority-and-pauses.md).
 Keep uncovered operations paused while the board continues. Use no local
-checkpoint as an authority source and request no blanket confirmation.
+checkpoint as an authority source and do not repeat the startup merge question.
 
 ## Finish Gate
 

@@ -39,11 +39,13 @@ else reports the exact blocker.
 ## Select the mode
 
 - `review`: inspect or explain only. `setup`: configure or validate the binding only.
-- `next`: default; at most one selected issue; returns `waiting-for-human` without waiting. A named Wayfinder child stays `next`.
+- `next`: default; at most one selected issue; after the startup merge decision settles, returns `waiting-for-human` without further waiting. A named Wayfinder child stays `next`.
 - `drain`: only on explicit drain/run-all/until-empty request; no ticket cap. With only remote or human waits left it runs the read-only [Project Watcher](references/drain-scheduler.md#project-watcher), never replacing the Refresh Gate.
 
-`--auto-merge` grants merge authority for this invocation; otherwise deliver
-ready PRs and pause only merges.
+Resolve merge permission once at startup under
+[run authority](references/authority-and-pauses.md): honor an explicit merge or
+no-merge instruction; otherwise ask with a 60-second default-no deadline while
+delivery continues. Without permission, deliver ready PRs and pause only merges.
 
 ## Read before acting
 

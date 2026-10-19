@@ -324,7 +324,7 @@ When the verified packet disposition is `human-required`:
 2. Apply the [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket)
    referencing that packet for the exact decision and authoritative source to
    change. A pending decision never triggers Backlog cleanup.
-3. Resume only from a recorded human outcome, not a merge flag or another
+3. Resume only from a recorded human outcome, not merge permission or another
    unchanged run. When the outcome keeps implementation with agents, reconcile
    the newly accepted source contract. Give the controlled replanning procedure
    above an `autonomous-replan` packet referencing the decision and prior plan;

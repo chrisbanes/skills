@@ -1,5 +1,16 @@
-Review the next steps for `drain --auto-merge` using only
+Review the next steps for a `drain` using only
 this supplied state. Do not run providers, agents, commands, or mutations.
+
+At startup, the user requested delivery without specifying merge permission.
+The host supports a nonblocking question with a bounded deadline, and runnable
+delivery work exists. The controller presented its merge question at t=0; the
+user replied "yes, merge for this run" at t=30 seconds. Explain the startup
+decision, scope and deadline while work proceeds. Contrast the same startup
+with no reply at t=60 seconds and an unrelated ticket still runnable.
+In a `next` variant, the PR is ready at t=20 with no other work or reply:
+explain how the original startup decision settles before handback, without
+restarting its deadline, starting a watcher or waiting indefinitely.
+The candidate below belongs to the branch where the user answered yes.
 
 The binding and exclusive claim are verified. The bundled spec-delivery and
 PR-monitoring workflows are installed; the separate orchestration skill is not.
