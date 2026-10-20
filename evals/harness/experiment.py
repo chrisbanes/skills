@@ -178,8 +178,9 @@ def _executed_invocations(commands: Iterable[Any]) -> tuple[str, ...]:
             invocations.extend(_segment_invocations(segment, successful_only=True))
         if record.exit_code == 0:
             invocations.extend(_successful_command_invocations(command))
-    # shortcut: shell conditions are not evaluated, so `bash -c 'false && gradle' || true`
-    # counts as a run; upgrade if such commands appear in real transcripts.
+    # shortcut: shell conditions are not evaluated. Known misses: a Gradle run after a
+    # completed if/for block or behind `false && true ||`; known false hit:
+    # `bash -c 'false && gradle' || true`. Upgrade if such commands appear in real transcripts.
     return tuple(shlex.join(invocation) for invocation in dict.fromkeys(invocations))
 
 
