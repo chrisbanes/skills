@@ -11,7 +11,7 @@
     "(?i)game.changing"
   ],
   "must_match": [
-    "(?i)\\b(?:(?:three|3)\\s+retr(?:y|ies)|retr(?:y|ies)\\s+(?:three|3)\\s+times)\\b",
-    "(?i)\\bduplicate\\s+records?\\b"
+    "(?i)\\b(?:(?:three|3)\\s+retr(?:y|ies)|retr(?:y|ies|ied|ying)(?:\\s+\\w+){0,4}\\s+(?:three|3)\\s+times)\\b",
+    "(?i)\\bduplicat(?:e[sd]?|ion)\\b"
   ]
 }

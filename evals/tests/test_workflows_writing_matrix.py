@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import urlsplit
 
 from evals.harness.cases import validate_corpus
 from evals.harness.codex import build_subject_command
@@ -977,6 +978,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         samples = (
             ("Please add an idempotency key to saveDraft: it retries three times and can create duplicate records.", 0),
             ("Please add an idempotency key to saveDraft: its 3 retries can create duplicate records.", 0),
+            ("Please add an idempotency key to saveDraft: it retries the operation three times and can create duplicate records.", 0),
+            ("Please add an idempotency key to saveDraft: after three retries, records may be duplicated.", 0),
+            ("Please add an idempotency key to saveDraft: its 3 retries risk duplication.", 0),
             ("Please add an idempotency key to saveDraft.", 1),
             ("Please add an idempotency key to saveDraft: it can create duplicate records.", 1),
             ("Please add an idempotency key to saveDraft: it retries three times.", 1),
@@ -992,6 +996,17 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                         cwd=workspace, text=True, capture_output=True, check=False,
                     )
                     self.assertEqual(expected, result.returncode, result.stderr)
+
+    def test_writing_style_sources_are_exclusively_chris_banes(self):
+        references = REPO_ROOT / "skills/grounded-writing/references"
+        for filename in ("style-profile.md", "source-observations.md"):
+            with self.subTest(file=filename):
+                text = (references / filename).read_text(encoding="utf-8")
+                urls = re.findall(r"https?://[^\s)]+", text)
+                if filename == "source-observations.md":
+                    self.assertTrue(urls, "Keep inspectable source evidence for the voice profile")
+                for url in urls:
+                    self.assertEqual("chrisbanes.me", urlsplit(url).hostname, url)
 
     def test_writing_calibration_restraint_and_routing_boundaries(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")

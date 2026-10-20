@@ -1,20 +1,25 @@
-# Grounded writing style profile
+# Chris Banes's writing style
 
-Use these patterns as a decision guide, not a phrase bank. Preserve the user's
-voice without copying distinctive constructions or accidental rough grammar.
+Derive the voice only from Chris's own writing in the linked source observations
+and any samples he supplies for the task. Use his restrained recent register by
+default; draw on his more playful tutorials when the format suits them. Treat
+these patterns as a guide, not a phrase bank or a reason to copy rough grammar.
 
 ## Voice and structure
 
-- Start from a concrete problem, observation, changed belief, or release. Use
-  personal context only when it explains why the subject matters.
-- Move from the familiar surface through the explanation to its consequence.
+- Start with what prompted the piece: a problem Chris encountered, an assumption
+  he tested, or something readers can now build. Use personal context when it
+  explains his position, and only when the facts are supplied.
+- Build the explanation from a familiar example to how it works and why that
+  changes the result.
   Introduce jargon where it becomes useful; place examples, code, or measurements
   close to the claims they support. Use realistic examples for the audience.
-- Let evidence narrow the claim. Distinguish fact from inference, retain relevant
+- Show the reasoning, including when the result changes the initial assumption.
+  Distinguish fact from inference, retain relevant
   measurement context, and explain what a limitation changes. Use contrast,
   surprise, and candid corrections only when the evidence supports them.
-- Write conversationally with plain words, contractions, focused paragraphs, and
-  varied sentence lengths. Use first person only when grounded; address the
+- Keep the direct, conversational tone: plain words, contractions, short focused
+  paragraphs, and occasional standalone sentences for emphasis. Use first person only when grounded; address the
   reader when useful. Answer any rhetorical question promptly.
 - End on a useful consequence, decision rule, or remaining insight. Land once;
   omit a recap or generic call to action unless the requested artifact needs it.
@@ -45,6 +50,8 @@ Read for natural rhythm; punctuation and emphasis should support clear sentences
 ## Optional provenance
 
 Read [source observations](source-observations.md) when examining the profile's
-basis or choosing a structural technique for a substantial piece. These sources
-illustrate techniques; they do not supply the user's personal claims or require
-imitating another author's personality.
+basis or choosing a structural technique for a substantial piece. All style
+sources are Chris's own posts. Other authors and works cited inside those posts
+are not additional style models. Technical research may establish facts for a
+draft, but must not expand the voice profile. Historical posts do not establish
+Chris's current opinions, experiences, or results for a new piece.

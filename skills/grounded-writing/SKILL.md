@@ -7,8 +7,8 @@ description: Use when drafting or reviewing public developer documentation, othe
 
 ## Core principle
 
-Make the reasoning visible at the scale the artifact supports. Preserve the
-user's meaning and evidence; remove anything invented, generic, or included
+Use Chris Banes's writing as the sole style model. Make the reasoning visible
+at the scale the artifact supports. Preserve the user's meaning and evidence; remove anything invented, generic, or included
 only to imitate a personality.
 
 ## Procedure
