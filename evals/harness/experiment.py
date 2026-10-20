@@ -149,7 +149,7 @@ def _executed_invocations(commands: Iterable[Any]) -> tuple[str, ...]:
         if record.exit_code == 0 and "||" in separators:
             # Only the head of an OR chain surely ran; a `false ||` head hands over to the next.
             found = _segment_invocations(segments[0])
-            if segments[0] == ("false",) and len(segments) > 1:
+            if segments[0] == ("false",) and separators[0] == "||":
                 found += _segment_invocations(segments[1])
         elif record.exit_code == 0:
             found = _successful_command_invocations(command)

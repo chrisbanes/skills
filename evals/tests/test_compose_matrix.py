@@ -71,6 +71,7 @@ class ComposeMatrixTest(unittest.TestCase):
             record("true || ./gradlew --offline test"),
             record("./gradlew --offline test || true"),
             record("false || ./gradlew --offline test"),
+            record("false && ./gradlew --offline test || true"),
         ]
         reconcile_automatic_eligibility(REPO_ROOT, [case], records)
         ran = [
@@ -78,7 +79,7 @@ class ComposeMatrixTest(unittest.TestCase):
             for r in records
         ]
         # A failed lone run or the head of an OR chain ran; a skipped branch never did.
-        self.assertEqual([False, True, True, False, False, True, True], ran)
+        self.assertEqual([False, True, True, False, False, True, True, False], ran)
 
     def test_calibration_cases_require_explicit_selection(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
