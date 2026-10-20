@@ -9,5 +9,9 @@
   "must_not_match": [
     "(?i)I (?:tested|verified|measured)",
     "(?i)game.changing"
+  ],
+  "must_match": [
+    "(?i)\\b(?:(?:three|3)\\s+retr(?:y|ies)|retr(?:y|ies)\\s+(?:three|3)\\s+times)\\b",
+    "(?i)\\bduplicate\\s+records?\\b"
   ]
 }

@@ -1,0 +1,1 @@
+Draft a short email to Alex in your response. I can meet on Tuesday at 10:00 or Thursday at 14:00; ask which works. Use only those facts. Do not edit any files. I need the finished email, not advice about writing it.

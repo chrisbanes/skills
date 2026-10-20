@@ -53,9 +53,10 @@ only to imitate a personality.
    action depends on them; an internal report need not become a rerun protocol.
    Leave an adequate draft unchanged and briefly explain the relevant evidence,
    mechanism, or qualification that supports that conclusion.
-6. Deliver the authorized result. Apply fixes only when editing is permitted;
-   otherwise give concrete recommendations. Resolve failed checks below within
-   that boundary. If resolution needs an unknown personal position, ask rather
+6. Deliver the authorized result: write the requested text for a drafting task,
+   apply fixes for an editing task, or give concrete recommendations for a
+   review-only task. Drafting in the response does not authorize file edits.
+   Resolve failed checks below within that boundary. If resolution needs an unknown personal position, ask rather
    than smoothing over the gap.
 
 ## Finish gate

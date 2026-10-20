@@ -276,13 +276,14 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(113, len(calibration))
+        self.assertEqual(114, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertEqual(
             {
+                "grounded-writing-response-draft-novel",
                 "grounded-writing-short-reply-direct",
                 "grounded-writing-email-novel",
                 "grounded-writing-personal-gap-negative",
@@ -643,6 +644,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         self.assertEqual(
             {
+                "grounded-writing-response-draft-novel",
                 "grounded-writing-short-reply-direct",
                 "grounded-writing-email-novel",
                 "grounded-writing-personal-gap-negative",
@@ -951,7 +953,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         samples = {
             "grounded-writing-short-reply-direct": (
                 "Please add an idempotency key to saveDraft: its three retries can create duplicate records.\n",
-                "I tested this. Please add an idempotency key to saveDraft.\n",
+                "I tested this. Please add an idempotency key to saveDraft: its three retries can create duplicate records.\n",
             ),
             "grounded-writing-email-novel": (
                 "Hi Alex, I can meet Tuesday at 10:00 or Thursday at 14:00. Which works for you?\n",
@@ -970,10 +972,31 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                         )
                         self.assertEqual(expected, result.returncode, result.stderr)
 
+    def test_short_reply_validator_requires_each_supporting_fact(self):
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        samples = (
+            ("Please add an idempotency key to saveDraft: it retries three times and can create duplicate records.", 0),
+            ("Please add an idempotency key to saveDraft: its 3 retries can create duplicate records.", 0),
+            ("Please add an idempotency key to saveDraft.", 1),
+            ("Please add an idempotency key to saveDraft: it can create duplicate records.", 1),
+            ("Please add an idempotency key to saveDraft: it retries three times.", 1),
+            ("Please add an idempotency key to saveDraft: it retries twice and can create duplicate records.", 1),
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            for content, expected in samples:
+                with self.subTest(content=content):
+                    (workspace / "draft.md").write_text(content, encoding="utf-8")
+                    result = subprocess.run(
+                        [sys.executable, str(validator), "grounded-writing-short-reply-direct"],
+                        cwd=workspace, text=True, capture_output=True, check=False,
+                    )
+                    self.assertEqual(expected, result.returncode, result.stderr)
+
     def test_writing_calibration_restraint_and_routing_boundaries(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         cases = {case.id: case for case in report.cases}
-        for suffix in ("personal-gap-negative", "tutorial-detail-negative", "assistant-reply-negative"):
+        for suffix in ("personal-gap-negative", "tutorial-detail-negative", "assistant-reply-negative", "response-draft-novel"):
             case_id = "grounded-writing-" + suffix
             with self.subTest(case=case_id):
                 case = cases[case_id]
