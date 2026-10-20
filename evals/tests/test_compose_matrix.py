@@ -44,7 +44,7 @@ class ComposeMatrixTest(unittest.TestCase):
         case = next(c for c in report.cases if c.id == "compose-animations-direct")
         self.assertNotIn("gradle-run", case.allowed_skills)
 
-        def record(command):
+        def record(command, exit_code=0):
             return {
                 "case_id": case.id,
                 "arm": "automatic",
@@ -52,18 +52,31 @@ class ComposeMatrixTest(unittest.TestCase):
                     "events": [
                         {
                             "type": "item.completed",
-                            "item": {"type": "command_execution", "command": command},
+                            "item": {
+                                "type": "command_execution",
+                                "command": command,
+                                "exit_code": exit_code,
+                                "status": "completed",
+                            },
                         }
                     ]
                 },
             }
 
-        records = [record("rg --files -g 'gradlew'"), record("./gradlew --offline test")]
+        records = [
+            record("rg --files -g 'gradlew'"),
+            record("./gradlew --offline test"),
+            record("./gradlew --offline test", exit_code=1),
+            record("test -x ./gradlew && ./gradlew --offline test", exit_code=1),
+            record("true || ./gradlew --offline test"),
+        ]
         reconcile_automatic_eligibility(REPO_ROOT, [case], records)
-        self.assertNotIn("gradle-run", records[0]["expected_skills"])
-        self.assertNotIn("gradle-run", records[0]["allowed_skills"])
-        self.assertIn("gradle-run", records[1]["expected_skills"])
-        self.assertIn("gradle-run", records[1]["allowed_skills"])
+        ran = [
+            "gradle-run" in r["expected_skills"] and "gradle-run" in r["allowed_skills"]
+            for r in records
+        ]
+        # A failed lone Gradle run still ran; a skipped branch never did.
+        self.assertEqual([False, True, True, False, False], ran)
 
     def test_calibration_cases_require_explicit_selection(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
