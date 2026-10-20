@@ -13,7 +13,14 @@ from typing import Any, Iterable
 from evals.harness.cases import EvalCase
 from evals.harness.claude import ClaudeRuntime, discover_builtin_skills
 from evals.harness.codex import discover_skill_paths
-from evals.harness.grade import ObjectiveGrade, _event_invocations, grade_subject
+from evals.harness.grade import (
+    ObjectiveGrade,
+    _command_invocations,
+    _command_text,
+    _shell_parts,
+    _successful_command_invocations,
+    grade_subject,
+)
 from evals.harness.judge import (
     JudgeConfig,
     JudgeResult,
@@ -130,12 +137,30 @@ def _apply_routing_expectations(
     record["automatic_eligible"] = _automatic_eligible(case, repo_root)
 
 
+def _executed_invocations(commands: Iterable[Any]) -> tuple[str, ...]:
+    """Return invocations that ran: successful branches, or a failed lone command."""
+    invocations: list[str] = []
+    for record in commands:
+        command = _command_text(record)
+        if not isinstance(command, str) or record.status == "denied":
+            continue
+        if record.exit_code == 0:
+            found = _successful_command_invocations(command)
+        elif len(_shell_parts(command)[0]) == 1:
+            # A failed compound command may have skipped its Gradle branch.
+            found = _command_invocations(command)
+        else:
+            found = ()
+        invocations.extend(shlex.join(invocation) for invocation in found)
+    return tuple(invocations)
+
+
 def _gradle_was_executed(events: object, runtime: str) -> bool:
     if not isinstance(events, (list, tuple)):
         return False
     normalized_events = tuple(event for event in events if isinstance(event, dict))
     commands = get_runtime(runtime).commands(normalized_events)
-    for invocation in _event_invocations(commands):
+    for invocation in _executed_invocations(commands):
         try:
             words = shlex.split(invocation)
         except ValueError:
