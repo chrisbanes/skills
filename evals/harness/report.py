@@ -304,6 +304,11 @@ def render_scorecard(
             ),
             f"- Router reported in automatic arm: {_percent(score.router_report_rate)}",
             f"- Forbidden-action failures: {score.forbidden_action_failures}",
+            "- Forbidden-action failures by arm: "
+            + ", ".join(
+                f"{arm} {count}"
+                for arm, count in score.forbidden_action_failures_by_arm.items()
+            ),
             "",
             "## Evaluator integrity",
             "",

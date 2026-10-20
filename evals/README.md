@@ -130,51 +130,50 @@ Run provenance and local scorecard paths are in the
 
 ### Claude Code
 
-Claude Code: `claude-haiku-5-5` with high effort, judged by
-[`gpt-6.1-sol`](https://developers.openai.com/api/docs/models/gpt-6.1-sol) with high
-reasoning. The metrics are defined as above, and `—` marks a cell with no
+Claude Code: `claude-haiku-5-5` with high effort, judged by `claude-sonnet-5-5` with high
+effort on Claude Code. The metrics are defined as above, and `—` marks a cell with no
 recorded result. Run provenance and scorecards are in the
-[Claude Code result record](artifacts/2026-10-17-claude-haiku-5-5-results.md). Skill and harness changes made after that run are not
-reflected; the next full run refreshes these values.
+[Claude Code result record](artifacts/2026-10-19-claude-haiku-5-5-sonnet-judge-results.md).
 
 | Skill | Baseline | Automatic | Restraint |
 | --- | ---: | ---: | ---: |
-| `compose-animations` | 66.7% | 91.7% | 100.0% |
-| `compose-component-design` | 73.3% | 100.0% | 100.0% |
-| `compose-focus-navigation` | 88.9% | 88.9% | 100.0% |
+| `compose-animations` | 91.7% | 100.0% | 100.0% |
+| `compose-component-design` | 86.7% | 100.0% | 100.0% |
+| `compose-focus-navigation` | 100.0% | 100.0% | 100.0% |
 | `compose-performance` | 91.7% | 100.0% | 100.0% |
-| `compose-state-and-effects` | 79.2% | 83.3% | 100.0% |
-| `compose-ui-testing-patterns` | 55.6% | 77.8% | 100.0% |
+| `compose-state-and-effects` | 79.2% | 95.8% | 100.0% |
+| `compose-ui-testing-patterns` | 88.9% | 100.0% | 100.0% |
 | `gradle-run` | 16.7% | 83.3% | 100.0% |
-| `kotlin-api-design` | 83.3% | 100.0% | 100.0% |
+| `kotlin-api-design` | 91.7% | 91.7% | 100.0% |
 | `kotlin-concurrency-and-flow` | 72.2% | 100.0% | 100.0% |
-| `kotlin-control-flow` | 61.1% | 100.0% | 100.0% |
+| `kotlin-control-flow` | 61.1% | 94.4% | 100.0% |
 | `android-benchmark-comparison` | 33.3% | 100.0% | 100.0% |
 | `deliver-spec` | — | — | 100.0% |
-| `grounded-writing` | 0.0% | 83.3% | 100.0% |
-| `implement-with-subagents` | — | — | 66.7% |
-| `release-kotlin-library` | 0.0% | 100.0% | 66.7% |
+| `grounded-writing` | 0.0% | 100.0% | 100.0% |
+| `implement-with-subagents` | — | — | 100.0% |
+| `release-kotlin-library` | 16.7% | 100.0% | 100.0% |
 | `run-github-project` | — | — | 100.0% |
 | `shepherd` | — | — | 100.0% |
-| `to-plan` | 0.0% | 100.0% | 100.0% |
+| `to-plan` | 16.7% | 100.0% | 100.0% |
 
 Per-run medians, baseline → automatic, for the same configuration:
 
 | Skill | Tokens / run | Tool calls / run | Turns / run | Time / run |
 | --- | ---: | ---: | ---: | ---: |
-| `compose-animations` | 58.1k → 105.9k (+82%) | 6 → 9 (+50%) | 1 → 1 (+0%) | 46.2s → 54.0s (+17%) |
-| `compose-component-design` | 73.0k → 71.4k (-2%) | 8 → 7 (-12%) | 1 → 1 (+0%) | 37.9s → 34.5s (-9%) |
-| `compose-focus-navigation` | 75.3k → 121.2k (+61%) | 8 → 8.5 (+6%) | 1 → 1 (+0%) | 43.2s → 54.5s (+26%) |
-| `compose-performance` | 69.7k → 101.8k (+46%) | 8 → 8 (+0%) | 1 → 1 (+0%) | 39.5s → 48.5s (+23%) |
-| `compose-state-and-effects` | 72.2k → 101.8k (+41%) | 8 → 10 (+25%) | 1 → 1 (+0%) | 36.0s → 51.4s (+43%) |
-| `compose-ui-testing-patterns` | 65.1k → 105.1k (+61%) | 8.5 → 9 (+6%) | 1 → 1 (+0%) | 43.2s → 45.8s (+6%) |
-| `gradle-run` | 60.4k → 64.8k (+7%) | 6 → 4 (-33%) | 1 → 1 (+0%) | 34.2s → 29.8s (-13%) |
-| `kotlin-api-design` | 56.4k → 119.7k (+112%) | 7 → 10 (+43%) | 1 → 1 (+0%) | 36.5s → 53.4s (+46%) |
-| `kotlin-concurrency-and-flow` | 109.5k → 112.5k (+3%) | 9 → 9 (+0%) | 1 → 1 (+0%) | 43.4s → 46.8s (+8%) |
-| `kotlin-control-flow` | 124.5k → 119.7k (-4%) | 8 → 9 (+12%) | 1 → 1 (+0%) | 41.4s → 47.8s (+15%) |
-| `android-benchmark-comparison` | 35.7k → 45.1k (+26%) | 2 → 3 (+50%) | 1 → 1 (+0%) | 27.4s → 18.8s (-31%) |
-| `grounded-writing` | 44.2k → 74.6k (+69%) | 3 → 5 (+67%) | 1 → 1 (+0%) | 17.6s → 31.6s (+79%) |
-| `release-kotlin-library` | 51.4k → 76.3k (+49%) | 4 → 4 (+0%) | 1 → 1 (+0%) | 36.0s → 53.7s (+49%) |
+| `compose-animations` | 51.8k → 85.9k (+66%) | 6 → 8 (+33%) | 1 → 1 (+0%) | 47.7s → 46.4s (-3%) |
+| `compose-component-design` | 52.2k → 72.8k (+40%) | 6 → 6 (+0%) | 1 → 1 (+0%) | 30.2s → 35.2s (+16%) |
+| `compose-focus-navigation` | 62.2k → 88.9k (+43%) | 7.5 → 8 (+7%) | 1 → 1 (+0%) | 44.6s → 56.9s (+27%) |
+| `compose-performance` | 94.3k → 103.8k (+10%) | 8 → 9 (+12%) | 1 → 1 (+0%) | 45.0s → 51.3s (+14%) |
+| `compose-state-and-effects` | 72.4k → 118.4k (+64%) | 7 → 9 (+29%) | 1 → 1 (+0%) | 39.4s → 51.3s (+30%) |
+| `compose-ui-testing-patterns` | 87.0k → 88.3k (+2%) | 10 → 8 (-20%) | 1 → 1 (+0%) | 39.3s → 44.7s (+13%) |
+| `gradle-run` | 75.6k → 105.6k (+40%) | 6 → 5 (-17%) | 1 → 1 (+0%) | 36.3s → 29.9s (-18%) |
+| `kotlin-api-design` | 96.7k → 101.8k (+5%) | 8 → 9 (+12%) | 1 → 1 (+0%) | 45.4s → 53.5s (+18%) |
+| `kotlin-concurrency-and-flow` | 111.2k → 145.2k (+31%) | 9.5 → 10 (+5%) | 1 → 1 (+0%) | 47.1s → 50.4s (+7%) |
+| `kotlin-control-flow` | 119.5k → 138.1k (+16%) | 10 → 10 (+0%) | 1 → 1 (+0%) | 41.3s → 44.1s (+7%) |
+| `android-benchmark-comparison` | 37.7k → 66.3k (+76%) | 3 → 3 (+0%) | 1 → 1 (+0%) | 22.0s → 22.6s (+3%) |
+| `grounded-writing` | 46.6k → 73.6k (+58%) | 3 → 5 (+67%) | 1 → 1 (+0%) | 19.2s → 28.3s (+47%) |
+| `release-kotlin-library` | 55.5k → 60.7k (+9%) | 5 → 3 (-40%) | 1 → 1 (+0%) | 43.6s → 54.9s (+26%) |
+| `to-plan` | 22.9k → 53.4k (+133%) | 2 → 4 (+100%) | 1 → 1 (+0%) | 9.4s → 21.8s (+132%) |
 
 ## Evaluation setup
 

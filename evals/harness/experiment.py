@@ -170,12 +170,16 @@ def _result_routing_expectations(
     runtime: str,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
     expected_skills, allowed_skills = _routing_expectations(case, arm, repo_root)
-    if arm == "automatic" and "gradle-run" in allowed_skills:
-        if _gradle_was_executed(events, runtime):
-            if "gradle-run" not in expected_skills:
-                expected_skills = (*expected_skills, "gradle-run")
-        elif "gradle-run" not in expected_skills:
-            allowed_skills = tuple(skill for skill in allowed_skills if skill != "gradle-run")
+    if arm != "automatic" or case.automatic_no_skill_control:
+        return expected_skills, allowed_skills
+    # Running Gradle makes gradle-run expected in every case, not only those that list it.
+    if _gradle_was_executed(events, runtime):
+        if "gradle-run" not in expected_skills:
+            expected_skills = (*expected_skills, "gradle-run")
+        if "gradle-run" not in allowed_skills:
+            allowed_skills = (*allowed_skills, "gradle-run")
+    elif "gradle-run" in allowed_skills and "gradle-run" not in expected_skills:
+        allowed_skills = tuple(skill for skill in allowed_skills if skill != "gradle-run")
     return expected_skills, allowed_skills
 
 

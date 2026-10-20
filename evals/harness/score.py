@@ -46,6 +46,8 @@ class Scorecard:
     observed_routing_recall: float | None = None
     # Isolation-invalid runs per arm: excluded from every metric above.
     isolation_invalid_counts: dict[str, int] = field(default_factory=dict)
+    # Forbidden-action failures per arm, to tell skill-caused violations from model habit.
+    forbidden_action_failures_by_arm: dict[str, int] = field(default_factory=dict)
 
 
 def _rate(records: list[dict[str, Any]]) -> float | None:
@@ -362,6 +364,14 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         if automatic_records
         else None
     )
+    forbidden_by_arm = {
+        arm: sum(
+            bool(record.get("forbidden_action_failure"))
+            for record in records
+            if record.get("arm") == arm and is_behavioral_evidence(record, arm)
+        )
+        for arm in arms
+    }
     forbidden_failures = sum(
         bool(record.get("forbidden_action_failure"))
         for record in records
@@ -420,6 +430,7 @@ def compute_scorecard(records: Iterable[dict[str, Any]]) -> Scorecard:
         routing_recall=routing_recall,
         router_report_rate=router_report_rate,
         forbidden_action_failures=forbidden_failures,
+        forbidden_action_failures_by_arm=forbidden_by_arm,
         invalid_forced_count=len(invalid_forced_record_ids),
         invalid_forced_record_ids=invalid_forced_record_ids,
         forced_integrity_categories=forced_integrity_categories,
