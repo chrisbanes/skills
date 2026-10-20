@@ -141,7 +141,7 @@ def _apply_routing_expectations(
 def _definite_segments(
     segments: tuple[tuple[str, ...], ...], separators: tuple[str, ...]
 ) -> list[tuple[str, ...]]:
-    """Segments that always ran: sequence heads, their pipe partners, `false ||` fallbacks."""
+    """Segments that always ran: sequence heads, their pipe partners, `false ||` and `true &&` successors."""
     definite: list[tuple[str, ...]] = []
     previous = False
     for index, segment in enumerate(segments):
@@ -151,6 +151,7 @@ def _definite_segments(
             or (before == "|" and previous)
             or before not in {"&&", "||", "|"}
             or (before == "||" and previous and segments[index - 1] == ("false",))
+            or (before == "&&" and previous and segments[index - 1] == ("true",))
         )
         if ran:
             definite.append(segment)

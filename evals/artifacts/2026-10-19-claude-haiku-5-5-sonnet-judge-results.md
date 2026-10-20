@@ -46,7 +46,7 @@ rate, falling back to the automatic arm only when forced is "not met".
   change. The harness now treats `gradle-run` as expected in every automatic
   case where Gradle ran, not only in cases that list it. A Gradle run counts
   when it sat at the head of a command sequence (including its pipe partners
-  and a `false ||` fallback), or when the whole command succeeded on a taken
+  a `false ||` fallback and a `true &&` successor), or when the whole command succeeded on a taken
   branch, whatever the exit status; a command in a skipped shell branch (for
   example `test -x ./gradlew && ./gradlew test`) does not. Shell conditions are
   not evaluated. Compose routing precision moved from 76.6% to 93.0% reported
