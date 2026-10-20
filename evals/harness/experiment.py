@@ -17,7 +17,7 @@ from evals.harness.grade import (
     ObjectiveGrade,
     _command_invocations,
     _command_text,
-    _has_shell_control_flow,
+    _SHELL_CONTROL_WORDS,
     _segment_invocations,
     _shell_parts,
     _successful_command_invocations,
@@ -143,8 +143,12 @@ def _definite_segments(
     segments: tuple[tuple[str, ...], ...], separators: tuple[str, ...]
 ) -> list[tuple[str, ...]]:
     """Segments that always ran: sequence heads, their pipe partners, `false ||` and `true &&` successors."""
-    if _has_shell_control_flow(segments):
-        return []  # an if, for or while body may be skipped; do not guess
+    # An if, for or while body may be skipped, so stop at the first one.
+    cut = next(
+        (i for i, s in enumerate(segments) if s and s[0] in _SHELL_CONTROL_WORDS),
+        len(segments),
+    )
+    segments, separators = segments[:cut], separators[: max(cut - 1, 0)]
     definite: list[tuple[str, ...]] = []
     previous = False
     for index, segment in enumerate(segments):
