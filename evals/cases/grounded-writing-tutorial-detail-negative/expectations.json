@@ -1,0 +1,12 @@
+{
+  "files": [
+    "draft.md"
+  ],
+  "must_contain": [
+    "hash map",
+    "doubly linked list",
+    "B, A",
+    "evicts A",
+    "Both structures"
+  ]
+}

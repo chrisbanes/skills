@@ -1,0 +1,39 @@
+{
+  "id": "grounded-writing-personal-gap-negative",
+  "title": "Pause an unsupported personal anecdote",
+  "family": "writing",
+  "target_skills": [
+    "grounded-writing"
+  ],
+  "expected_skills": [
+    "grounded-writing"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "grounded-writing-personal-gap-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "personal-gap",
+      "text": "Identifies the missing personal experience and asks a focused question about what happened and the actual lesson or position; pauses that part instead of writing a plausible story."
+    },
+    {
+      "id": "restraint",
+      "text": "Does not invent an anecdote, emotion, lesson, first-person claim, or file edit."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

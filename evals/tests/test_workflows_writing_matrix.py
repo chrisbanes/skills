@@ -276,13 +276,18 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(108, len(calibration))
+        self.assertEqual(113, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertEqual(
             {
+                "grounded-writing-short-reply-direct",
+                "grounded-writing-email-novel",
+                "grounded-writing-personal-gap-negative",
+                "grounded-writing-tutorial-detail-negative",
+                "grounded-writing-assistant-reply-negative",
                 "implement-with-subagents-missing-provider-challenge",
                 "run-github-project-missing-provider-challenge",
                 "to-plan-authorized-draft-direct",
@@ -638,6 +643,11 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         self.assertEqual(
             {
+                "grounded-writing-short-reply-direct",
+                "grounded-writing-email-novel",
+                "grounded-writing-personal-gap-negative",
+                "grounded-writing-tutorial-detail-negative",
+                "grounded-writing-assistant-reply-negative",
                 "grounded-writing-direct",
                 "grounded-writing-novel",
                 "grounded-writing-negative",
@@ -935,6 +945,48 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             )
 
         self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_writing_calibration_validators_check_claims_and_supplied_facts(self):
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        samples = {
+            "grounded-writing-short-reply-direct": (
+                "Please add an idempotency key to saveDraft: its three retries can create duplicate records.\n",
+                "I tested this. Please add an idempotency key to saveDraft.\n",
+            ),
+            "grounded-writing-email-novel": (
+                "Hi Alex, I can meet Tuesday at 10:00 or Thursday at 14:00. Which works for you?\n",
+                "Hi Alex, I can meet Tuesday at 10:00. Which works for you?\n",
+            ),
+        }
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            for case_id, (valid, invalid) in samples.items():
+                for content, expected in ((valid, 0), (invalid, 1)):
+                    with self.subTest(case=case_id, expected=expected):
+                        (workspace / "draft.md").write_text(content, encoding="utf-8")
+                        result = subprocess.run(
+                            [sys.executable, str(validator), case_id],
+                            cwd=workspace, text=True, capture_output=True, check=False,
+                        )
+                        self.assertEqual(expected, result.returncode, result.stderr)
+
+    def test_writing_calibration_restraint_and_routing_boundaries(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        cases = {case.id: case for case in report.cases}
+        for suffix in ("personal-gap-negative", "tutorial-detail-negative", "assistant-reply-negative"):
+            case_id = "grounded-writing-" + suffix
+            with self.subTest(case=case_id):
+                case = cases[case_id]
+                self.assertEqual((), case.allowed_write_paths)
+                self.assertTrue(case.calibration)
+                result = subprocess.run(
+                    [sys.executable, str(REPO_ROOT / "evals/validators/text_case.py"), case_id],
+                    cwd=REPO_ROOT / "evals/cases" / case_id / "overlay",
+                    text=True, capture_output=True, check=False,
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+        self.assertTrue(cases["grounded-writing-assistant-reply-negative"].automatic_no_skill_control)
+        self.assertFalse(cases["grounded-writing-tutorial-detail-negative"].automatic_no_skill_control)
 
     def test_plan_artifact_validator_requires_one_marked_local_draft(self):
         validator = REPO_ROOT / "evals/validators/text_case.py"

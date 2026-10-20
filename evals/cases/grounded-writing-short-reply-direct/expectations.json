@@ -1,0 +1,13 @@
+{
+  "files": [
+    "draft.md"
+  ],
+  "must_contain": [
+    "saveDraft",
+    "idempotency"
+  ],
+  "must_not_match": [
+    "(?i)I (?:tested|verified|measured)",
+    "(?i)game.changing"
+  ]
+}

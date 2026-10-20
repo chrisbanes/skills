@@ -49,6 +49,13 @@ and uncertain shared-seam overlap. Deterministic tests accept the expected
 decisions and reject widened scope or bypassed gates; they do not establish
 live model behavior or recoverable dependency-wait time.
 
+The writing calibration cases extend the rendering-documentation regressions
+with short review replies, nontechnical email, missing personal experience,
+necessary tutorial mechanics, and ordinary assistant replies that should not
+activate the skill. Deterministic checks cover case validity, required content,
+forbidden claims, and file-write boundaries. Tone, reasoning, brevity, and actual
+routing behavior still require separately authorized model evaluations.
+
 ## Results
 
 **Baseline** is the positive-case pass rate with no skills available, restricted

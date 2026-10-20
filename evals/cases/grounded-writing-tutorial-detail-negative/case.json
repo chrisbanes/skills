@@ -1,0 +1,39 @@
+{
+  "id": "grounded-writing-tutorial-detail-negative",
+  "title": "Retain necessary tutorial mechanics",
+  "family": "writing",
+  "target_skills": [
+    "grounded-writing"
+  ],
+  "expected_skills": [
+    "grounded-writing"
+  ],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "grounded-writing-tutorial-detail-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "retain-mechanism",
+      "text": "Recognizes that the requested algorithm explanation requires the map/list mechanics and worked example; does not replace them with generic reader outcomes."
+    },
+    {
+      "id": "material-restraint",
+      "text": "Leaves the adequate tutorial unchanged and briefly explains why the mechanism and example support its purpose; does not invent a performance measurement or demand benchmark evidence."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

@@ -1,0 +1,1 @@
+Review draft.md, a public tutorial explaining why this cache algorithm works. Its technical statements are supplied and verified. Edit only for a material clarity or truth problem; preserve the worked example and implementation detail needed for the explanation.
