@@ -311,6 +311,9 @@ def _subject_prompt(case: EvalCase, arm: str, runtime: Runtime) -> str:
     else:
         prompt += " This case has no evaluator-owned fixture dependencies."
     prompt += getattr(runtime, "answer_instruction", "")
+    boundary = getattr(runtime, "boundary_instruction", None)
+    if boundary is not None:
+        prompt += boundary(case)
     if arm == "forced":
         prompt += runtime.forced_instruction(case)
     return prompt + "\n"

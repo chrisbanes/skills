@@ -829,6 +829,20 @@ class ClaudeRuntime:
                     return True
         return False
 
+    def boundary_instruction(self, case: EvalCase) -> str:
+        # Claude subjects add tests and drop --offline unless told; Codex prompts stay unchanged.
+        text = (
+            " Every Gradle command you run must include `--offline --no-scan`;"
+            " omitting `--offline` is a violation."
+        )
+        if case.task_mode == "edit" and case.allowed_write_paths:
+            paths = ", ".join(f"`{path}`" for path in case.allowed_write_paths)
+            text += (
+                f" Create or change only {paths}; add no test, build or other file,"
+                " and do not edit anything outside the workspace."
+            )
+        return text
+
     def forced_instruction(self, case: EvalCase) -> str:
         skills = ", ".join(f"`{skill}`" for skill in case.target_skills)
         dependencies = ", ".join(f"`{skill}`" for skill in case.constant_skills)

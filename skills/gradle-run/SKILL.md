@@ -1,6 +1,6 @@
 ---
 name: gradle-run
-description: Use when planning to execute Gradle through `gradle`, `./gradlew`, or a custom `gradlew*` wrapper script, or diagnosing a Gradle build, recovering a workflow's status, compact workflow ledger, repeated failure fingerprint, check, test, lint, warning, or failure even when no new Gradle run is appropriate.
+description: Use when planning to execute Gradle through `gradle`, `./gradlew`, or a custom `gradlew*` wrapper script, including a quick compile or test check after an edit, or diagnosing a Gradle build, recovering a workflow's status, compact workflow ledger, repeated failure fingerprint, check, test, lint, warning, or failure even when no new Gradle run is appropriate.
 ---
 
 # Gradle run

@@ -28,7 +28,9 @@ branch, and let the compiler prove closed-domain coverage.
 3. Use a guard only on a subject `when`, after a primary condition, when the
    extra predicate belongs to that branch and an unguarded branch still handles
    the primary condition. Put the guarded branch first. Split comma-separated
-   conditions instead of guarding one of them.
+   conditions instead of guarding one of them. Guards are stable from Kotlin
+   2.2; the project's Kotlin version in its build file or version catalog is
+   enough to confirm support, so do not decline a guard for lack of further proof.
 4. For a closed enum, Boolean, sealed type, or nullable closed type, name every
    case and omit `else`. Match objects by value and class/data-class subtypes
    with `is`. If the input is an open server/platform value or needs real

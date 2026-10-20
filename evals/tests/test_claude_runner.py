@@ -20,6 +20,7 @@ from evals.harness.runner import (
     captured_skill_file_evidence,
     prepare_workspace,
     reported_skill_names,
+    _subject_prompt,
     run_subject,
 )
 from evals.harness.score import forced_integrity_status, is_behavioral_evidence
@@ -133,6 +134,16 @@ class ClaudeRunnerTest(unittest.TestCase):
         self.assertNotIn("$compose-state-and-effects", prompt)
         self.assertNotIn("`cat`", prompt)
         self.assertIn("In the final `skills_used`, include each of these exact public", prompt)
+
+    def test_claude_prompt_states_the_write_boundary_and_offline_rule_codex_does_not(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            edit = sample_case(Path(tmp))
+            review = replace(edit, task_mode="review", allowed_write_paths=())
+            claude = _subject_prompt(edit, "none", ClaudeRuntime())
+            self.assertIn("must include `--offline --no-scan`", claude)
+            self.assertIn("only `src/main/kotlin/example/Subject.kt`", claude)
+            self.assertNotIn("only `", _subject_prompt(review, "none", ClaudeRuntime()))
+            self.assertNotIn("must include", _subject_prompt(edit, "none", test_codex_runner.CodexRuntime()))
 
     def test_fixture_skill_dependencies_are_never_switched_off(self):
         self.write_subject_schema()
