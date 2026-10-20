@@ -37,6 +37,11 @@ def validate_version(version):
             f"zero-padded month/day: {version}"
         )
     parts = version.split(".")
+    year, month, day = map(int, parts[:3])
+    try:
+        dt.date(year, month, day)
+    except ValueError as error:
+        raise ValueError(f"Version must use a valid Gregorian calendar date: {version}") from error
     if len(parts) == 4 and len(parts[3]) == 1:
         return ".".join((*parts[:3], f"0{parts[3]}"))
     return version
