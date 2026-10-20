@@ -17,6 +17,7 @@ from evals.harness.grade import (
     ObjectiveGrade,
     _command_invocations,
     _command_text,
+    _SHELL_CONTROL_WORDS,
     _segment_invocations,
     _shell_parts,
     _successful_command_invocations,
@@ -138,28 +139,49 @@ def _apply_routing_expectations(
     record["automatic_eligible"] = _automatic_eligible(case, repo_root)
 
 
+def _definite_segments(
+    segments: tuple[tuple[str, ...], ...], separators: tuple[str, ...]
+) -> list[tuple[str, ...]]:
+    """Segments that always ran: sequence heads, their pipe partners, `false ||` and `true &&` successors."""
+    # An if, for or while body may be skipped, so stop at the first one.
+    cut = next(
+        (i for i, s in enumerate(segments) if s and s[0] in _SHELL_CONTROL_WORDS),
+        len(segments),
+    )
+    segments, separators = segments[:cut], separators[: max(cut - 1, 0)]
+    definite: list[tuple[str, ...]] = []
+    previous = False
+    for index, segment in enumerate(segments):
+        before = separators[index - 1] if index else None
+        ran = (
+            before is None
+            or (before == "|" and previous)
+            or before not in {"&&", "||", "|"}
+            or (before == "||" and previous and segments[index - 1] == ("false",))
+            or (before == "&&" and previous and segments[index - 1] == ("true",))
+        )
+        if ran:
+            definite.append(segment)
+        previous = ran
+    return definite
+
+
 def _executed_invocations(commands: Iterable[Any]) -> tuple[str, ...]:
-    """Return invocations that ran: successful branches, or a failed lone command."""
-    invocations: list[str] = []
+    """Return invocations that surely ran, whatever the command's exit status."""
+    invocations: list[tuple[str, ...]] = []
     for record in commands:
         command = _command_text(record)
         if not isinstance(command, str) or record.status == "denied":
             continue
         segments, separators = _shell_parts(command)
-        if record.exit_code == 0 and "||" in separators:
-            # Only the head of an OR chain surely ran; a `false ||` head hands over to the next.
-            found = _segment_invocations(segments[0])
-            if segments[0] == ("false",) and len(segments) > 1:
-                found += _segment_invocations(segments[1])
-        elif record.exit_code == 0:
-            found = _successful_command_invocations(command)
-        elif len(segments) == 1:
-            # A failed compound command may have skipped its Gradle branch.
-            found = _command_invocations(command)
-        else:
-            found = ()
-        invocations.extend(shlex.join(invocation) for invocation in found)
-    return tuple(invocations)
+        for segment in _definite_segments(segments, separators):
+            invocations.extend(_segment_invocations(segment, successful_only=True))
+        if record.exit_code == 0:
+            invocations.extend(_successful_command_invocations(command))
+    # shortcut: shell conditions are not evaluated. Known misses: a Gradle run after a
+    # completed if/for block or behind `false && true ||`; known false hit:
+    # `bash -c 'false && gradle' || true`. Upgrade if such commands appear in real transcripts.
+    return tuple(shlex.join(invocation) for invocation in dict.fromkeys(invocations))
 
 
 def _gradle_was_executed(events: object, runtime: str) -> bool:

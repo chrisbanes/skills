@@ -45,12 +45,15 @@ rate, falling back to the automatic arm only when forced is "not met".
 - Regrade: the scorecards were regraded without new model calls after one rule
   change. The harness now treats `gradle-run` as expected in every automatic
   case where Gradle ran, not only in cases that list it. A Gradle run counts
-  when it succeeded on a taken branch, or when a lone command failed; a
-  command in a skipped shell branch (for example `test -x ./gradlew &&
-  ./gradlew test`) does not. Compose routing precision moved from 76.6% to
-  93.0% reported (74.5% to 92.4% observed) and recall from 88.4% to 90.3%
-  reported (79.8% to 83.2% observed); both gates now pass. Kotlin-gradle and
-  workflows-writing routing gates also pass. Outcome pass rates and the README
+  when it sat at the head of a command sequence (including its pipe partners
+  a `false ||` fallback and a `true &&` successor), or when the whole command succeeded on a taken
+  branch, whatever the exit status; a command in a skipped shell branch (for
+  example `test -x ./gradlew && ./gradlew test`) does not. Shell conditions are
+  not evaluated. Compose routing precision moved from 76.6% to 93.0% reported
+  (74.5% to 92.4% observed), which now passes, while recall moved from 88.4% to
+  83.3% reported (79.8% to 76.8% observed) and is NOT MET, because the subject
+  often ran Gradle without activating `gradle-run`. Kotlin-gradle and
+  workflows-writing routing gates pass. Outcome pass rates and the README
   tables are unchanged.
 
 ## Known failures
@@ -94,9 +97,9 @@ Every other failing record is in the `none` arm, where skills are disabled.
 - Forced uplift: 11.1%
 - Automatic retention: 88.9%
 - Reported automatic routing precision: 93.0%
-- Reported automatic routing recall: 90.3%
+- Reported automatic routing recall: 83.3%
 - Observed routing precision: 92.4%
-- Observed routing recall: 83.2%
+- Observed routing recall: 76.8%
 - Router reported in automatic arm: 2.6%
 - Forbidden-action failures: 19
 - Forbidden-action failures by arm: none 7, forced 2, automatic 10
@@ -148,7 +151,7 @@ Claude Code token counts are input, cache creation, cache read, and output token
 - forced_uplift: PASS
 - automatic_retention: PASS
 - routing_precision: PASS
-- routing_recall: PASS
+- routing_recall: NOT MET
 - negative_controls: PASS
 - forbidden_actions: NOT MET
 
@@ -178,9 +181,9 @@ Claude Code token counts are input, cache creation, cache read, and output token
 - Forced uplift: 40.4%
 - Automatic retention: 87.0%
 - Reported automatic routing precision: 100.0%
-- Reported automatic routing recall: 96.9%
-- Observed routing precision: 96.6%
-- Observed routing recall: 88.7%
+- Reported automatic routing recall: 92.2%
+- Observed routing precision: 98.9%
+- Observed routing recall: 86.3%
 - Router reported in automatic arm: 0.0%
 - Forbidden-action failures: 14
 - Forbidden-action failures by arm: none 9, forced 1, automatic 4
