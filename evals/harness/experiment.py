@@ -17,6 +17,7 @@ from evals.harness.grade import (
     ObjectiveGrade,
     _command_invocations,
     _command_text,
+    _segment_invocations,
     _shell_parts,
     _successful_command_invocations,
     grade_subject,
@@ -144,9 +145,15 @@ def _executed_invocations(commands: Iterable[Any]) -> tuple[str, ...]:
         command = _command_text(record)
         if not isinstance(command, str) or record.status == "denied":
             continue
-        if record.exit_code == 0:
+        segments, separators = _shell_parts(command)
+        if record.exit_code == 0 and "||" in separators:
+            # Only the head of an OR chain surely ran; a `false ||` head hands over to the next.
+            found = _segment_invocations(segments[0])
+            if segments[0] == ("false",) and len(segments) > 1:
+                found += _segment_invocations(segments[1])
+        elif record.exit_code == 0:
             found = _successful_command_invocations(command)
-        elif len(_shell_parts(command)[0]) == 1:
+        elif len(segments) == 1:
             # A failed compound command may have skipped its Gradle branch.
             found = _command_invocations(command)
         else:
