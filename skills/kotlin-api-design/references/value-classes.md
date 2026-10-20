@@ -14,7 +14,9 @@ data class for multiple fields or different equality.
 3. Check equality, serialization, Java interop, and hot-path boxing.
 4. Choose the type below, then compile and test. For a Compose performance
    change, re-check compiler or recomposition evidence. On contract drift, keep
-   the existing type.
+   the existing type. When callers must stay untouched, change only the type
+   declaration: keep the public constructor and property, and add no private
+   constructor or factory.
 
 ## Decision flow
 

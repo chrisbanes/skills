@@ -94,7 +94,8 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    context before revising the diagnosis. Verify each source change with the
    same wrapper and narrowest applicable task. In the final diagnosis, name the
    focused inspection as the next action; do not claim a source fix before it.
-   A new question does not permit a blind repeat.
+   A new question does not permit a blind repeat: rerunning an unchanged task
+   under a relabeled question is still a repeat.
 7. Treat the full log as raw sensitive material even though summaries and
    ledgers redact common credentials. Never expose it in model-visible context.
    On interruption, use the wrapper's recorded signal and bounded partial

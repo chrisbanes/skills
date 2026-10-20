@@ -37,7 +37,9 @@ Project run already owns that issue, return it to that controller.
    publication gates. A source qualifying for the [fast path](references/fast-path.md)
    applies it instead. For a GitHub issue missing `ready-for-agent`, first use
    `triage` and wait for its approved outcome; do not change labels yourself.
-   Local sources skip triage but need explicit stakeholder approval.
+   Local sources skip triage but need explicit stakeholder approval. For an
+   approved local source with no plan, name conversation-mode `to-plan` as the
+   initial route, including when answering a resume question.
    Approval covers the accepted contract and only the live qualification
    allowances it explicitly records; do not infer extra attempts or authority.
 3. Verify scope and boundaries once. A verified handoff authorizes continuing
