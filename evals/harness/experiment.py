@@ -138,35 +138,41 @@ def _apply_routing_expectations(
     record["automatic_eligible"] = _automatic_eligible(case, repo_root)
 
 
+def _definite_segments(
+    segments: tuple[tuple[str, ...], ...], separators: tuple[str, ...]
+) -> list[tuple[str, ...]]:
+    """Segments that always ran: sequence heads, their pipe partners, `false ||` fallbacks."""
+    definite: list[tuple[str, ...]] = []
+    previous = False
+    for index, segment in enumerate(segments):
+        before = separators[index - 1] if index else None
+        ran = (
+            before is None
+            or (before == "|" and previous)
+            or before not in {"&&", "||", "|"}
+            or (before == "||" and previous and segments[index - 1] == ("false",))
+        )
+        if ran:
+            definite.append(segment)
+        previous = ran
+    return definite
+
+
 def _executed_invocations(commands: Iterable[Any]) -> tuple[str, ...]:
-    """Return invocations that ran: successful branches, or a failed lone command."""
-    invocations: list[str] = []
+    """Return invocations that surely ran, whatever the command's exit status."""
+    invocations: list[tuple[str, ...]] = []
     for record in commands:
         command = _command_text(record)
         if not isinstance(command, str) or record.status == "denied":
             continue
         segments, separators = _shell_parts(command)
+        for segment in _definite_segments(segments, separators):
+            invocations.extend(_segment_invocations(segment, successful_only=True))
         if record.exit_code == 0:
-            found = _successful_command_invocations(command)
-            if not found and "||" in separators:
-                # Only the head of the final OR chain surely ran; `false ||` hands over.
-                # shortcut: shell conditions are not evaluated, so `bash -c 'false && gradle' || true`
-                # counts as a run; upgrade if such commands appear in real transcripts.
-                start = max(
-                    (i + 1 for i, s in enumerate(separators) if s not in {"&&", "||", "|"}),
-                    default=0,
-                )
-                chain, chain_separators = segments[start:], separators[start:]
-                found = _segment_invocations(chain[0], successful_only=True)
-                if chain[0] == ("false",) and chain_separators[0] == "||":
-                    found += _segment_invocations(chain[1], successful_only=True)
-        elif len(segments) == 1:
-            # A failed compound command may have skipped its Gradle branch.
-            found = _command_invocations(command)
-        else:
-            found = ()
-        invocations.extend(shlex.join(invocation) for invocation in found)
-    return tuple(invocations)
+            invocations.extend(_successful_command_invocations(command))
+    # shortcut: shell conditions are not evaluated, so `bash -c 'false && gradle' || true`
+    # counts as a run; upgrade if such commands appear in real transcripts.
+    return tuple(shlex.join(invocation) for invocation in dict.fromkeys(invocations))
 
 
 def _gradle_was_executed(events: object, runtime: str) -> bool:
