@@ -835,10 +835,14 @@ class ClaudeRuntime:
             " Every Gradle command you run must include `--offline --no-scan`;"
             " omitting `--offline` is a violation."
         )
-        if case.task_mode == "edit" and case.allowed_write_paths:
-            paths = ", ".join(f"`{path}`" for path in case.allowed_write_paths)
+        if case.task_mode == "edit":
+            allowed = (
+                "only " + ", ".join(f"`{path}`" for path in case.allowed_write_paths)
+                if case.allowed_write_paths
+                else "no file"
+            )
             text += (
-                f" Create or change only {paths}; add no test, build or other file,"
+                f" Create or change {allowed}; add no test, build or other file,"
                 " and do not edit anything outside the workspace."
             )
         return text

@@ -142,7 +142,9 @@ class ClaudeRunnerTest(unittest.TestCase):
             claude = _subject_prompt(edit, "none", ClaudeRuntime())
             self.assertIn("must include `--offline --no-scan`", claude)
             self.assertIn("only `src/main/kotlin/example/Subject.kt`", claude)
-            self.assertNotIn("only `", _subject_prompt(review, "none", ClaudeRuntime()))
+            self.assertNotIn("Create or change", _subject_prompt(review, "none", ClaudeRuntime()))
+            no_write = replace(edit, allowed_write_paths=())
+            self.assertIn("Create or change no file", _subject_prompt(no_write, "none", ClaudeRuntime()))
             self.assertNotIn("must include", _subject_prompt(edit, "none", test_codex_runner.CodexRuntime()))
 
     def test_fixture_skill_dependencies_are_never_switched_off(self):
