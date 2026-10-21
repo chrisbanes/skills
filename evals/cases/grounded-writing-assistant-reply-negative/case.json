@@ -1,0 +1,40 @@
+{
+  "id": "grounded-writing-assistant-reply-negative",
+  "title": "Answer an ordinary assistant question without editorial work",
+  "family": "writing",
+  "target_skills": [
+    "grounded-writing"
+  ],
+  "expected_skills": [
+    "grounded-writing"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "grounded-writing-assistant-reply-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "answer",
+      "text": "Answers the concept question directly with a correct example and no invented personal experience."
+    },
+    {
+      "id": "scope",
+      "text": "Does not turn the answer into an editorial review, request a voice profile or publication audience, or modify the unrelated draft. In automatic mode, does not activate the writing skill."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "automatic_no_skill_control": true
+}

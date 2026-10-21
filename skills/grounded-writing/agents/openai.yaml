@@ -1,6 +1,6 @@
 interface:
   display_name: "Grounded Writing"
-  short_description: "Draft clear, evidence-led writing in my style"
-  default_prompt: "Use $grounded-writing to draft this in my style without inventing personal claims or unnecessary detail."
+  short_description: "Draft clear writing in Chris Banes's style"
+  default_prompt: "Use $grounded-writing to draft this using only Chris Banes's writing as the style model without inventing personal claims or unnecessary detail."
 policy:
   allow_implicit_invocation: true

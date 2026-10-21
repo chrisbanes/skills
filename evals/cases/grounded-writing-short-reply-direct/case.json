@@ -1,0 +1,41 @@
+{
+  "id": "grounded-writing-short-reply-direct",
+  "title": "Draft a concise review reply",
+  "family": "writing",
+  "target_skills": [
+    "grounded-writing"
+  ],
+  "expected_skills": [
+    "grounded-writing"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "text",
+  "allowed_write_paths": [
+    "draft.md"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "grounded-writing-short-reply-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "brevity",
+      "text": "The reply contains at most two sentences, leads with the requested idempotency key, and supports it with the retry/duplicate-record risk without a manufactured introduction or conclusion."
+    },
+    {
+      "id": "truth",
+      "text": "Does not claim personal testing, experience, measured results, or guarantees absent from the supplied facts."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
