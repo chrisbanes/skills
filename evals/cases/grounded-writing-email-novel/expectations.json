@@ -1,0 +1,16 @@
+{
+  "files": [
+    "draft.md"
+  ],
+  "must_contain": [
+    "Alex",
+    "Tuesday",
+    "10:00",
+    "Thursday",
+    "14:00"
+  ],
+  "must_not_contain": [
+    "fast-moving world",
+    "foster meaningful connections"
+  ]
+}

@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import urlsplit
 
 from evals.harness.cases import validate_corpus
 from evals.harness.codex import build_subject_command
@@ -276,13 +277,19 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(108, len(calibration))
+        self.assertEqual(114, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertEqual(
             {
+                "grounded-writing-response-draft-novel",
+                "grounded-writing-short-reply-direct",
+                "grounded-writing-email-novel",
+                "grounded-writing-personal-gap-negative",
+                "grounded-writing-tutorial-detail-negative",
+                "grounded-writing-assistant-reply-negative",
                 "implement-with-subagents-missing-provider-challenge",
                 "run-github-project-missing-provider-challenge",
                 "to-plan-authorized-draft-direct",
@@ -638,6 +645,12 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         self.assertEqual(
             {
+                "grounded-writing-response-draft-novel",
+                "grounded-writing-short-reply-direct",
+                "grounded-writing-email-novel",
+                "grounded-writing-personal-gap-negative",
+                "grounded-writing-tutorial-detail-negative",
+                "grounded-writing-assistant-reply-negative",
                 "grounded-writing-direct",
                 "grounded-writing-novel",
                 "grounded-writing-negative",
@@ -935,6 +948,83 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             )
 
         self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_writing_calibration_validators_check_claims_and_supplied_facts(self):
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        samples = {
+            "grounded-writing-short-reply-direct": (
+                "Please add an idempotency key to saveDraft: its three retries can create duplicate records.\n",
+                "I tested this. Please add an idempotency key to saveDraft: its three retries can create duplicate records.\n",
+            ),
+            "grounded-writing-email-novel": (
+                "Hi Alex, I can meet Tuesday at 10:00 or Thursday at 14:00. Which works for you?\n",
+                "Hi Alex, I can meet Tuesday at 10:00. Which works for you?\n",
+            ),
+        }
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            for case_id, (valid, invalid) in samples.items():
+                for content, expected in ((valid, 0), (invalid, 1)):
+                    with self.subTest(case=case_id, expected=expected):
+                        (workspace / "draft.md").write_text(content, encoding="utf-8")
+                        result = subprocess.run(
+                            [sys.executable, str(validator), case_id],
+                            cwd=workspace, text=True, capture_output=True, check=False,
+                        )
+                        self.assertEqual(expected, result.returncode, result.stderr)
+
+    def test_short_reply_validator_requires_each_supporting_fact(self):
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        samples = (
+            ("Please add an idempotency key to saveDraft: it retries three times and can create duplicate records.", 0),
+            ("Please add an idempotency key to saveDraft: its 3 retries can create duplicate records.", 0),
+            ("Please add an idempotency key to saveDraft: it retries the operation three times and can create duplicate records.", 0),
+            ("Please add an idempotency key to saveDraft: after three retries, records may be duplicated.", 0),
+            ("Please add an idempotency key to saveDraft: its 3 retries risk duplication.", 0),
+            ("Please add an idempotency key to saveDraft.", 1),
+            ("Please add an idempotency key to saveDraft: it can create duplicate records.", 1),
+            ("Please add an idempotency key to saveDraft: it retries three times.", 1),
+            ("Please add an idempotency key to saveDraft: it retries twice and can create duplicate records.", 1),
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = Path(temp_dir)
+            for content, expected in samples:
+                with self.subTest(content=content):
+                    (workspace / "draft.md").write_text(content, encoding="utf-8")
+                    result = subprocess.run(
+                        [sys.executable, str(validator), "grounded-writing-short-reply-direct"],
+                        cwd=workspace, text=True, capture_output=True, check=False,
+                    )
+                    self.assertEqual(expected, result.returncode, result.stderr)
+
+    def test_writing_style_sources_are_exclusively_chris_banes(self):
+        references = REPO_ROOT / "skills/grounded-writing/references"
+        for filename in ("style-profile.md", "source-observations.md"):
+            with self.subTest(file=filename):
+                text = (references / filename).read_text(encoding="utf-8")
+                urls = re.findall(r"https?://[^\s)]+", text)
+                if filename == "source-observations.md":
+                    self.assertTrue(urls, "Keep inspectable source evidence for the voice profile")
+                for url in urls:
+                    self.assertEqual("chrisbanes.me", urlsplit(url).hostname, url)
+
+    def test_writing_calibration_restraint_and_routing_boundaries(self):
+        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
+        cases = {case.id: case for case in report.cases}
+        for suffix in ("personal-gap-negative", "tutorial-detail-negative", "assistant-reply-negative", "response-draft-novel"):
+            case_id = "grounded-writing-" + suffix
+            with self.subTest(case=case_id):
+                case = cases[case_id]
+                self.assertEqual((), case.allowed_write_paths)
+                self.assertTrue(case.calibration)
+                result = subprocess.run(
+                    [sys.executable, str(REPO_ROOT / "evals/validators/text_case.py"), case_id],
+                    cwd=REPO_ROOT / "evals/cases" / case_id / "overlay",
+                    text=True, capture_output=True, check=False,
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+        self.assertTrue(cases["grounded-writing-assistant-reply-negative"].automatic_no_skill_control)
+        self.assertFalse(cases["grounded-writing-tutorial-detail-negative"].automatic_no_skill_control)
 
     def test_plan_artifact_validator_requires_one_marked_local_draft(self):
         validator = REPO_ROOT / "evals/validators/text_case.py"

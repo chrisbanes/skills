@@ -1,0 +1,8 @@
+{
+  "files": [
+    "draft.md"
+  ],
+  "must_contain": [
+    "[Open with a personal story"
+  ]
+}

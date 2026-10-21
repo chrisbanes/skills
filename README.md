@@ -122,7 +122,7 @@ for its lane-specific fallback and blocking behavior.
 
 ### Writing
 
-- [`grounded-writing`](skills/grounded-writing/SKILL.md) — draft or review public developer documentation and other user-owned text, including internal report reviews, while preserving evidence, format, and material-edit restraint.
+- [`grounded-writing`](skills/grounded-writing/SKILL.md) — draft or review public developer documentation and other user-owned text using Chris Banes’s writing as the sole style model, including internal report reviews, while preserving evidence, format, review-only authority, and material-edit restraint.
 
 ### Workflows
 

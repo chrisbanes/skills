@@ -1,0 +1,8 @@
+{
+  "files": [
+    "draft.md"
+  ],
+  "must_contain": [
+    "This draft is not part of the current question."
+  ]
+}

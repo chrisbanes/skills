@@ -1,0 +1,41 @@
+{
+  "id": "grounded-writing-email-novel",
+  "title": "Write a nontechnical scheduling email",
+  "family": "writing",
+  "target_skills": [
+    "grounded-writing"
+  ],
+  "expected_skills": [
+    "grounded-writing"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "text",
+  "allowed_write_paths": [
+    "draft.md"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "grounded-writing-email-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "format",
+      "text": "Keeps a short, friendly email with both supplied options and a clear request for Alex to choose; does not impose a technical explanation or essay structure."
+    },
+    {
+      "id": "no-invention",
+      "text": "Adds no unsupported reason, relationship, emotion, commitment, or personal experience."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

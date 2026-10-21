@@ -1,0 +1,1 @@
+Rewrite draft.md as a reply I can send on a code review, in at most two sentences. The only established facts are that saveDraft retries three times and can create duplicate records without an idempotency key. Ask for that key. Do not claim I tested the change.

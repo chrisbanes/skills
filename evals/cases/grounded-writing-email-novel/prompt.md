@@ -1,0 +1,1 @@
+Rewrite draft.md as a short email to Alex from me. Use these facts only: I can meet on Tuesday at 10:00 or Thursday at 14:00, and I need Alex to choose one. Keep both options and a friendly tone. Do not invent why I am arranging the meeting or promise anything else.
