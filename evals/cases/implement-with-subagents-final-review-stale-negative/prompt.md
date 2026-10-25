@@ -1,3 +1,5 @@
+The run selected delegated mode at preflight because its validated full graph has a parallel point; that choice and existing ownership remain in force.
+
 All tickets were integrated at aaaaaaa, where the full required suite passed
 and the joined diff was independently reviewed. The original task owner then
 repaired a shared interface; its accepted repair is integrated at bbbbbbb.

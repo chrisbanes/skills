@@ -46,14 +46,14 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    Reconcile applicable current-head review initiation under
    [PR review timing](references/pr-review-timing.md) on acquisition and relevant
    wakes, even without repairs; one-off inspections stay read-only.
-3. Before repeated polling, use one lowest-cost capable read-only evidence
-   helper when available. Select and brief it using the shared
-   [selection and handoff reference](references/subagent-selection.md)
-   when available. Give it targets and the snapshot; require new feedback IDs,
-   body, location, review state, non-manual CI state, failed jobs, and log references.
-   It never mutates. Keep triage, repairs, replies, pushes, resolution, retries,
-   and merging with the authorized controller. Skip it under host-managed
-   monitoring.
+3. Read routine PR/MR evidence in the controller. Use a read-only helper only
+   for one specific diagnostic question about a large failed CI log. Select and
+   brief it using the shared
+   [selection and handoff reference](references/subagent-selection.md).
+   Give it the exact target, head, failed job and log, the question, and a bounded
+   result format: diagnosis, supporting log references, and uncertainty. It
+   never mutates or takes over polling. Keep triage, repairs, replies, pushes,
+   resolution, retries, and merging with the authorized controller.
 4. Poll with the platform CLI using [provider commands](references/provider-commands.md),
    then compare complete review, comment, and CI state with the snapshot. Inspect
    failed logs only when needed. Do not reprocess old feedback or post a status-only

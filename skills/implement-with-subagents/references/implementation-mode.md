@@ -1,7 +1,7 @@
 # Implementation-mode procedure
 
 1. Read repository instructions and record the starting branch, exact `HEAD`,
-   and worktree status. Stop before delegation if the starting checkout has
+   and worktree status. Stop before implementation if the starting checkout has
    unrelated uncommitted changes. Identify or create a clean integration branch
    from that `HEAD`, and record its base SHA. Do not stash, reset, or absorb
    user work.
@@ -12,10 +12,11 @@
    ownership from a directory name.
 2. Resolve the implementation prerequisites in the entrypoint. For each
    behavior-changing item, identify user-approved test seams in the supplied
-   spec or tickets. If a seam is missing, obtain agreement before dispatching
+   spec or tickets. If a seam is missing, obtain agreement before implementing
    that item. Read the installed `tdd` skill and give its path to the owner;
    stop before behavior work when it is unavailable. Identify the final review
-   capability before delegation: one fresh independent read-only reviewer
+   capability before implementation in either path: one fresh independent
+   read-only reviewer
    against the approved source and repository standards under the entrypoint's
    review contract. Stop if independent review cannot run.
 3. Build and validate the task graph. Require unique stable task IDs, explicit
@@ -34,15 +35,28 @@
    behavior. Preserve native blockers, resource grants and final integrated
    validation; never split an accepted task or relax its prerequisites to
    create concurrency. Route changed ordering through authorized planning.
+   Choose solo or delegated implementation once at preflight from this entire
+   validated graph. A parallel point means two plan-proven independent items
+   can be ready together, respecting dependencies and shared-write constraints.
+   With no parallel point, including a single item or strict chain, the lead
+   owns every item. With any parallel point, workers own every item, including
+   a sequential head or tail. Record and retain this choice throughout the run;
+   temporary worker capacity does not change it.
 4. Keep the integration checkout stable and prepare the ready frontier.
+   In a solo run, allocate no worker slots: the lead follows step 6, skips the
+   separate acceptance in step 7, and commits each item directly on the
+   integration branch. Rerun affected checks at that integrated head under
+   step 8 before starting a dependent. Skip worker-only dispatch, handoff,
+   acceptance and lifecycle operations; keep final review and validation.
+   The remaining worker allocation rules in steps 4-5 apply to delegated runs.
    Reconcile prior task acceptance and integration evidence first. Do not
    reassign an accepted task or repeat implementation merely to satisfy worker
    routing; resume integration, review, or delivery from the verified current
    state. Resolve worker capacity before dispatching new implementation or a
    required repair. Wait until step 5 confirms capability before dispatching.
-   Assign even one supplied item to one worker; reuse a suitable worker checkout
-   for sequential items rather than keeping implementation in the lead. For
-   multiple items, actively dispatch all plan-proven independent ready items
+   Assign every item to a worker, reusing a suitable worker checkout for
+   sequential heads and tails. Actively dispatch all plan-proven independent
+   ready items
    with disjoint write sets by default. Each concurrent writer needs a distinct
    isolated checkout based on the same current integrated `HEAD`; reuse a
    suitable idle slot before creating another. Create only when concurrency or
@@ -77,17 +91,20 @@
    spec, approved test seams where applicable, and repository instructions.
    State that other agents may be editing independently, and require preservation of unrelated
    changes. Dispatch the ready frontier only after this capability check passes.
-6. Have each owner implement only its item. For behavior changes, invoke `tdd`
+6. Have each owner (the lead in solo runs) implement only its item. For behavior
+   changes, invoke `tdd`
    directly at the approved test seams and follow its red-green loop. For
    documentation or configuration without a meaningful test seam, use focused
    validation and record why TDD does not apply. Require focused checks, owner
    self-review against the task and repository standards, a task-scoped commit,
-   and a report in the [selection and handoff reference](subagent-selection.md)
-   return format, including each command's exit code, tested SHA, output tail,
-   and complete-log path, plus relevant input and environment identity. Run a
+   and record each command's exit code, tested SHA, output tail and complete-log
+   path, plus relevant input and environment identity. Delegated owners return
+   that evidence in the [selection and handoff reference](subagent-selection.md)
+   report format; solo work needs no separate acceptance receipt. Run a
    broader check here only when the user or repository requires it. Do not
    invoke the separate `/implement` skill.
-7. Perform the lead's one task acceptance before integration. Independently
+7. For delegated runs, perform the lead's one task acceptance before integration.
+   Independently
    inspect the complete commit range and diff from the recorded base for task
    scope and criteria. Verify the owner's branch advanced by a task-scoped
    commit and its worktree is clean. Inspect exit status, tested revision, and
@@ -98,7 +115,8 @@
    an affected check when evidence is missing, failed, stale, or explicitly
    required fresh. An owner's assertion is not acceptance. Return incomplete
    work to the same owner for repair and repeat this check on its new commit.
-8. While workers run, advance useful independent coordination work that does
+8. In delegated runs, while workers run, advance useful independent coordination
+   work that does
    not touch their owned files or invalidate their evidence. Integrate accepted
    task commits in dependency order. Before each attempt,
    record the integration branch and exact pre-attempt SHA and verify its
@@ -110,7 +128,8 @@
    returns a task-scoped commit with fresh affected evidence. Never resolve
    task-owned source conflicts in the controller.
 
-   After a completed integration, record its exact post-integration `HEAD`.
+   In either path, after a completed integration (a direct task commit in solo
+   runs), record its exact post-integration `HEAD`.
    Recheck only validation affected by changed inputs at that head, including
    shared interfaces, generated output, and merge or cherry-pick resolutions.
    Inspect the joined diff when cross-file interactions or conflict resolutions
@@ -118,11 +137,15 @@
    below. When checks pass, release newly ready dependents with no second lead
    sign-off. Do not rerun unrelated passing checks or hold a dependent for a
    routine duplicate acceptance ceremony.
-9. If a completed merge or cherry-pick fails affected validation, keep the
+9. If a completed merge or cherry-pick, or a solo task commit, fails affected
+   validation, keep the
    failed integrated `HEAD` on the integration branch; do not abort, reset, or
    dispatch dependents from it. If validation changed the worktree, stop until
    those changes are accounted for without discarding user work. Pause further
-   integration while the failure is repaired. Trace the failure to the relevant
+   integration while the failure is repaired. In a solo run, the lead repairs
+   forward from that failed head, self-reviews and commits the repair, then
+   reruns affected checks before dependents; skip worker handoff and acceptance.
+   In a delegated run, trace the failure to the relevant
    original owner or owners. If attribution is unclear, investigate read-only
    first; assign a new bounded implementation owner only when no prior owner
    fits. Retain the applicable owner handle and give the repair owner the failed
@@ -141,8 +164,9 @@
     Give the approved source, repository standards, and joined diff from the
     recorded starting base to one fresh independent read-only reviewer under
     the entrypoint's review contract.
-    Return findings to the relevant original owners, accept their task-scoped
-    repairs under step 7, and integrate them under steps 8-9. After any repair,
+    Return findings to the relevant original owners (the lead when solo). For
+    delegated repairs, apply step 7 acceptance; integrate under steps 8-9. After
+    any repair,
     rerun affected checks and renew review of the changed range and its
     interactions. Apply [Behavioral review and repair](behavioral-review.md) for
     affected-scope renewal and broadening conditions; preserve the required
@@ -155,7 +179,9 @@
 
 ## Runtime requirements
 
-Choose agents by capability, not runtime role name:
+Implementation-agent requirements apply only to delegated runs; both paths
+require an independent final reviewer. Choose agents by capability, not runtime
+role name:
 
 - Implementation owner: can edit, run validation and commit in its assigned
   checkout, and can be resumed in the same session for repairs.
@@ -180,6 +206,9 @@ Runtime caveats:
   it.
 
 ## Worker checkout lifecycle
+
+Apply these rules when worker checkouts exist; a solo run creates none and
+retains its integration checkout.
 
 Maintain this record in the workflow's existing reporting context, not a new
 committed ledger. Record each checkout's provenance and runtime identity, exact

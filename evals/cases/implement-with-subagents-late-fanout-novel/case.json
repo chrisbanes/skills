@@ -1,0 +1,45 @@
+{
+  "id": "implement-with-subagents-late-fanout-novel",
+  "title": "Choose delegated ownership before a late fanout",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-late-fanout-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "whole-graph",
+      "text": "Chooses delegated mode once at preflight because B and C form a later parallel point; assigns A as well as B and C to workers, rejecting per-frontier mode switching."
+    },
+    {
+      "id": "dependency",
+      "text": "Accepts and integrates the worker-owned A commit and passes affected checks at that integrated head before releasing B and C."
+    },
+    {
+      "id": "fanout",
+      "text": "Dispatches B and C concurrently within actual capacity in separate checkouts, preserving same-owner repair and mandatory independent final review."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

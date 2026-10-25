@@ -125,6 +125,11 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
     def test_affected_validation_cases_preserve_decisive_facts_and_read_only_scope(self):
         case_ids = (
+            "implement-with-subagents-solo-chain-direct",
+            "implement-with-subagents-solo-review-unavailable-negative",
+            "implement-with-subagents-late-fanout-novel",
+            "shepherd-direct-poll-direct",
+            "shepherd-large-log-helper-novel",
             "deliver-spec-shared-structure-direct",
             "deliver-spec-fixture-calibration-direct",
             "to-plan-fixture-calibration-novel",
@@ -277,7 +282,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(114, len(calibration))
+        self.assertEqual(119, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(38, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -302,6 +307,11 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "to-plan-prior-confirmed-novel",
                 "to-plan-unresolved-choice-negative",
                 "to-plan-discussion-only-negative",
+                "implement-with-subagents-solo-chain-direct",
+                "implement-with-subagents-solo-review-unavailable-negative",
+                "implement-with-subagents-late-fanout-novel",
+                "shepherd-direct-poll-direct",
+                "shepherd-large-log-helper-novel",
                 "implement-with-subagents-reuse-direct",
                 "implement-with-subagents-stale-evidence-negative",
                 "implement-with-subagents-missing-output-negative",

@@ -1,23 +1,20 @@
 ---
 name: implement-with-subagents
-description: Use when implementing supplied tickets or plan tasks through worker-owned bounded implementation and lead integration, or when reviewing that orchestration.
+description: Use when implementing supplied tickets or plan tasks with solo or worker-owned implementation selected from the task graph, or when reviewing that orchestration.
 compatibility: "Review mode has no external skill dependency. Implementation mode uses Matt Pocock's separately installed `tdd` for behavior changes and one fresh independent read-only reviewer for the final joined branch."
 disable-model-invocation: true
 ---
 
 # Implement with subagents
 
-Use this workflow whenever a delivery lead coordinates settled implementation
-tasks, including one task and sequential work. Assign one worker per supplied
-work item; do not split a single task into artificial pieces. Reuse a bounded
-pool of worker checkouts. The lead validates the task graph, dispatches the
-independent ready frontier with disjoint write sets by default, accepts each
-task once before integration, and integrates accepted commits in dependency
-order. After an ordinary integration, rerun affected checks and release
-dependents without a second lead sign-off. Retire eligible surplus checkouts,
-preserve task refs, and account for checkout dispositions at completion or
-interruption. Keep the lead out of task-owned code and return implementation
-repairs to the original worker.
+## Core principle
+
+Choose implementation ownership once from the whole task graph. Keep a single
+item or a graph with no parallel point in the lead; when the graph has parallel
+work, assign every item to a worker, including sequential heads and tails.
+Preserve dependency checks and independent final review in both paths. Keep
+repairs with the implementation owner and reuse a bounded pool of worker
+checkouts when delegating.
 
 ## Select the mode
 
@@ -31,19 +28,25 @@ repairs to the original worker.
 1. Inspect only permitted repository and orchestration state. Do not start an
    agent, edit, commit, change branches, perform worktree lifecycle operations,
    or contact a remote service.
-2. Assess the task graph, safe concurrency, implementation ownership,
-   task-scoped commits, owner self-review, focused validation, and controller
-   acceptance before integration. An owner's report alone does not satisfy
-   task acceptance. Separate worktrees do not make shared-file edits or work
+2. Assess the whole task graph and its recorded preflight choice. Flag a
+   forced worker for a single item or graph with no parallel point; the lead
+   implements those runs with self-review and no separate task acceptance.
+   A graph with any parallel point assigns every item to workers, including
+   sequential heads and tails. For delegated runs, assess task-scoped commits,
+   owner self-review, focused validation, and controller acceptance before
+   integration. An owner's report alone does not satisfy task acceptance.
+   Separate worktrees do not make shared-file edits or work
    depending on unintegrated code independent. Treat supplied readiness,
-   independence and capacity as authoritative: dispatch the whole ready
-   frontier concurrently. A prerequisite the state does not show missing,
+   independence and capacity as authoritative: in delegated runs, dispatch the
+   whole ready frontier concurrently. A prerequisite the state does not show
+   missing,
    including test seams, `tdd` and reviewer capability, is an execution-time
    check, not a dispatch hold. Check reuse-first allocation,
    distinct slots for active writers, and existing-checkout access for
    read-only helpers.
 3. Release a dependent only after each prerequisite's task commit is
-   accepted, integrated without conflicts, and its affected checks rerun and
+   integrated without conflicts, accepted first when delegated, and its affected
+   checks rerun and
    pass at that exact integrated head; a passing task branch is not enough. Do
    not require a second discretionary lead acceptance after an ordinary merge;
    inspect the joined diff when cross-file interactions, changed shared
@@ -62,14 +65,16 @@ repairs to the original worker.
 
 ### Prerequisites
 
-Identify the behavior-changing items and their user-approved test seams before delegation.
+Identify the behavior-changing items and their user-approved test seams before
+implementation.
 Their owners use the separately installed [`tdd`](https://github.com/mattpocock/skills)
 skill directly. If a behavior item has no approved seam, obtain agreement
-before dispatch; if `tdd` is unavailable, stop before dispatching that item.
+before implementing that item; if `tdd` is unavailable, stop before behavior work.
 Documentation and other items without a meaningful test seam use focused
 validation instead. Never install a dependency implicitly.
 
-Resolve one independent read-only reviewer before delegation. Use a fresh
+Establish independent read-only review capability before implementation in either
+path; do not launch a capability-only reviewer. For final review, use a fresh
 agent that makes no writes and does not inherit the implementation
 conversation, with a self-contained brief: approved source, plan, repository standards, fixed base,
 and exact candidate head. Require findings with evidence and a `ship`, `fix-first`, or `rethink` verdict
@@ -81,18 +86,19 @@ or tracker setup is required. If independent review cannot run, report the missi
 capability; never waive final review. Add reviewers only for distinct risks or
 substantial scope that justify separate assignments.
 
-Before delegation, read
+Before implementation, read
 [the implementation-mode procedure](references/implementation-mode.md)
 completely. It owns preflight, dispatch, owner packets, task acceptance,
 integration, repairs, and final validation. Stop when a dependency, task-scoped
-commit, or capability gate cannot be satisfied; never implement an item in the
-controller.
+commit, or capability gate cannot be satisfied. In a delegated run, wait for
+worker capacity rather than switching to lead implementation.
+
 ## Finish gate
 
 In `review`, finish only with the non-mutating assessment, evidence, and any
 acceptance gap. In `implement`, finish only when every queued item has a
-task-scoped, self-reviewed commit accepted before integration, all affected
-checks and the full required suite pass at the final integrated head, the
+task-scoped, self-reviewed commit (accepted before integration when delegated),
+all affected checks and the full required suite pass at the final integrated head, the
 joined review is current, and the integration checkout is clean. Preserve any
 unrelated user work from the starting checkout. Account for every run-created
 worker checkout as retired with verified readback or retained with a reason,

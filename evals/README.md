@@ -345,7 +345,7 @@ forbidden-action grading; they do not contact a provider. The
 dependency. Its missing-provider challenge supplies a behavior ticket without
 `tdd` and checks that implementation does not start.
 
-The workflows/writing corpus contains 114 calibration-only cases, including
+The workflows/writing corpus contains 119 calibration-only cases, including
 the two missing-provider challenges. Select them
 explicitly with `--case`; they do not change the published benchmark or its
 default call count. They cover authorized local planning, prior confirmation,
@@ -360,7 +360,7 @@ evidence reuse versus missing, stale, failed, or explicitly required fresh
 evidence. Six additional cases cover accessible context-pointer handoffs and
 optional shared discovery, including bounded evidence reuse, capacity and
 restraint. The local-planning cases check the generated plan artifact. The scored orchestration
-triad exercises a ready fork/join, a serial dependency chain, and restraint for
+triad exercises a ready fork/join, a solo serial dependency chain, and restraint for
 a cyclic or incomplete graph, unsafe shared-file overlap, and validation
 invalidated at an integrated head. Additional orchestration calibrations cover
 direct TDD at an approved behavior seam, documentation without TDD, completed
@@ -371,9 +371,13 @@ different slot, preservation of checkouts and artifacts that are unsafe to
 retire, and cleanup failure that blocks workflow completion despite successful
 code verification. These cases assess supplied state read-only and do not prove
 live subagent execution.
+Five ownership calibrations cover a solo chain with integrated-head checks,
+missing final-review capability before solo implementation, worker ownership of
+an entire late-fanout graph, direct controller polling, and one bounded large-log
+question with capability and model selection. Decisive supplied facts have
+mutation-sensitive deterministic fixture checks; model behavior is rubric-graded.
 Three shared-handoff calibrations check bounded implementation ownership,
-capability-based PR evidence helper selection, and restraint for one-off PR
-inspection. They also assess supplied state read-only.
+rejection of routine PR evidence helpers, and restraint for one-off PR inspection. They also assess supplied state read-only.
 Two host-monitor calibrations check that `shepherd` handles a Claude desktop
 CI-monitor wake with one read and no self-scheduled polling, and sets up the
 monitor from deferred tools with Auto-fix and authorized auto-merge, using
@@ -384,8 +388,8 @@ capability, and the trivial-edit exception versus useful overlap and retained
 repair ownership and the clean-checkout preflight. They assess immutable state
 without live execution.
 Deterministic coverage stages `deliver-spec` alone, follows its local procedure
-and handoff links, and checks that its bundled procedure matches the orchestration
-skill's copy.
+and handoff links, and checks its bundled procedure independently of the
+orchestration skill's mode-specific procedure.
 Three Project-delivery calibrations cover automatic `deliver-spec` handoff,
 one startup merge question with a 60-second default-no deadline, explicit
 instructions, nonblocking fallback, late replies and invocation expiry,

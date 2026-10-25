@@ -28,7 +28,7 @@
   "rubric": [
     {
       "id": "serial-dependency",
-      "text": "Dispatches only SCHEMA first, accepts its task commit before integration, then runs affected integrated checks before WRITER, then READER"
+      "text": "Chooses solo once for the whole serial graph: the lead self-reviews and commits SCHEMA, passes affected checks at the integrated head before WRITER, then READER, without worker slots or separate task acceptance."
     },
     {
       "id": "overlap",
@@ -36,7 +36,7 @@
     },
     {
       "id": "repair-owner",
-      "text": "Returns failed acceptance evidence to the same task owner rather than controller repair or reassignment"
+      "text": "Keeps implementation and repair ownership with the lead for this solo run and retains mandatory independent final review."
     }
   ],
   "provenance": {

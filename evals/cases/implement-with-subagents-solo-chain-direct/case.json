@@ -1,0 +1,45 @@
+{
+  "id": "implement-with-subagents-solo-chain-direct",
+  "title": "Use the lead for a strict implementation chain",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-subagents",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-solo-chain-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "solo",
+      "text": "Selects solo once for the entire graph; the lead owns A and B, allocates no worker slots, and rejects forced workers and separate pre-integration acceptance."
+    },
+    {
+      "id": "ordered-checks",
+      "text": "The lead self-reviews and commits A, runs affected checks at the integrated head, and only then begins B; passing evidence on an unintegrated task branch is insufficient."
+    },
+    {
+      "id": "review",
+      "text": "Preserves mandatory independent final review and final-head required validation; self-review does not replace it."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

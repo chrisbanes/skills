@@ -1,0 +1,45 @@
+{
+  "id": "shepherd-direct-poll-direct",
+  "title": "Poll routine PR evidence in the controller",
+  "family": "workflow",
+  "target_skills": [
+    "shepherd"
+  ],
+  "expected_skills": [
+    "shepherd"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "shepherd-direct-poll-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "direct-poll",
+      "text": "Keeps repeated provider reads and snapshot comparison in the controller and rejects the routine polling helper despite its available capability."
+    },
+    {
+      "id": "bounded-trigger",
+      "text": "Reserves a read-only helper for one specific diagnostic question about a large failed CI log; routine polling alone does not qualify."
+    },
+    {
+      "id": "authority",
+      "text": "Keeps triage, repairs, replies, pushes, resolution, retries and merging with the authorized controller; no side effects in this review-only case."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

@@ -1,3 +1,5 @@
+The run selected delegated mode at preflight because its validated full graph has a parallel point; that choice and existing ownership remain in force.
+
 Task `ENCODE` has an accepted commit integrated at `1111111`. The lead then
 cherry-picked the accepted `WIRE` task, producing integrated head `2222222`.
 That Git operation completed, but an endpoint check affected by `WIRE` fails at

@@ -1,0 +1,49 @@
+{
+  "id": "shepherd-large-log-helper-novel",
+  "title": "Bound a helper to one large failed-log question",
+  "family": "workflow",
+  "target_skills": [
+    "shepherd"
+  ],
+  "expected_skills": [
+    "shepherd"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "shepherd-large-log-helper-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "trigger",
+      "text": "Permits a read-only helper only for the supplied single large-log question, with the exact PR/head/log identity and bounded result format; rejects polling, broad triage and repairs in its brief."
+    },
+    {
+      "id": "capability",
+      "text": "Selects actual log-reading capability rather than a reviewer role name, gives the helper an existing checkout if needed without a worker slot, and allows no further delegation."
+    },
+    {
+      "id": "model-policy",
+      "text": "Separates capability and model selection; uses Luna/low for the supplied exact extraction task, leaves the lead unchanged, and preserves the alternative Sol model pin while resolving unspecified effort through the supplied policy."
+    },
+    {
+      "id": "controller",
+      "text": "The controller interprets the bounded evidence and retains triage, repair, replies, pushes, resolution, retries and merge authority; no operations occur during this review-only case."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

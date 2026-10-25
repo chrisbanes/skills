@@ -1,3 +1,5 @@
+The run selected delegated mode at preflight because its validated full graph has a parallel point; that choice and existing ownership remain in force.
+
 Review acceptance for one completed implementation item. The controller recorded
 base `1111111`; the owner committed only this item at `2222222`; independent
 diff inspection confirms that scope. The owner returned the exact command

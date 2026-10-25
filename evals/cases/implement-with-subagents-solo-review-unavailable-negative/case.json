@@ -1,0 +1,45 @@
+{
+  "id": "implement-with-subagents-solo-review-unavailable-negative",
+  "title": "Stop solo work when final review is unavailable",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-solo-review-unavailable-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "stop",
+      "text": "Selects the solo path but stops before implementation because independent final-review capability is missing; reports the specific missing capability."
+    },
+    {
+      "id": "no-waiver",
+      "text": "Rejects self-review as a substitute for independent final review and does not require a worker or tdd for the documentation-only task."
+    },
+    {
+      "id": "restraint",
+      "text": "Does not implement, commit, launch agents, install providers, or mutate the supplied state."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

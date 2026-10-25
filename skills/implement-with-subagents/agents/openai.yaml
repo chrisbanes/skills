@@ -1,6 +1,6 @@
 interface:
   display_name: "Implement with Subagents"
-  short_description: "Delegate tasks to implementation subagents"
-  default_prompt: "Use $implement-with-subagents to implement ready independent tickets or plan tasks through isolated owners, with dependent work following accepted integration."
+  short_description: "Choose solo or delegated implementation"
+  default_prompt: "Use $implement-with-subagents to implement supplied tickets or plan tasks, choosing solo ownership for a single item or serial graph and isolated workers for a graph with parallel work, with dependent work following verified integration."
 policy:
   allow_implicit_invocation: false

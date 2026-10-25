@@ -1,6 +1,6 @@
 {
   "id": "subagent-handoff-novel",
-  "title": "Check actual helper capability before recurring PR polling",
+  "title": "Reject a routine polling helper despite available capability",
   "family": "workflow",
   "target_skills": [
     "shepherd"
@@ -28,24 +28,16 @@
   ],
   "rubric": [
     {
-      "id": "capability",
-      "text": "Checks actual tools and provider access, then selects the read-only capable persistent generic helper rather than relying on the reviewer role name."
+      "id": "trigger",
+      "text": "Rejects both profiles as routine polling helpers because no large failed-log question is present; available capability alone does not justify delegation."
     },
     {
-      "id": "bounded-brief",
-      "text": "Includes the PR target and handled-ID snapshot, required evidence and result format, read-only authority, and no further delegation."
+      "id": "controller",
+      "text": "The controller reads PR state and snapshot deltas directly and retains triage, repairs, replies, pushes, resolution, retries and merges."
     },
     {
-      "id": "controller-authority",
-      "text": "Keeps triage, repairs, replies, pushes, resolution, and merging with the controller; keeps the selected lead model unchanged."
-    },
-    {
-      "id": "no-side-effects",
-      "text": "Does not start monitoring or mutate state."
-    },
-    {
-      "id": "scoped-model-selection",
-      "text": "Separates provider capability from model selection; chooses Luna/low for the unpinned mechanical evidence task under the supplied policy, without inheriting the lead tier or treating reviewer as a tier. Preserves the alternative explicit Sol pin and resolves unspecified reasoning through the user policy."
+      "id": "restraint",
+      "text": "Does not start monitoring, launch helpers, change the selected lead model, or mutate state during review."
     }
   ],
   "provenance": {
