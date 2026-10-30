@@ -3,10 +3,12 @@
   "title": "Stop on uncertain prerelease publication",
   "family": "workflow",
   "target_skills": [
-    "release-kotlin-library"
+    "release-kotlin-library",
+    "changelog"
   ],
   "expected_skills": [
-    "release-kotlin-library"
+    "release-kotlin-library",
+    "changelog"
   ],
   "task_mode": "review",
   "kind": "novel",

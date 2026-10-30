@@ -1,0 +1,42 @@
+{
+  "id": "changelog-novel",
+  "title": "Maintain incremental Unreleased notes without release machinery",
+  "family": "workflow",
+  "target_skills": [
+    "changelog"
+  ],
+  "expected_skills": [
+    "changelog"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    "CHANGELOG.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\bgit\\s+(?:push|fetch|pull|commit|tag|add|reset|checkout|switch)\\b",
+    "\\bgh\\b",
+    "(?:gradlew|release\\.py)",
+    "(?:~/|/Users/[^/]+/)\\.env"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "changelog-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "incremental-maintenance",
+      "text": "Uses beta01-to-HEAD as the incremental baseline. Preserves curated wording except the requested citation and credit, links the retry entry to PR #51 with guest-one profile credit, and gives the Unicode fix its own entry linked to PR #52 without unnecessary maintainer credit. Omits internal-only work and preserves the expanded active prerelease history. Reports scope and actual notes/diff; does not impose version selection, Kotlin publication prerequisites, Metalava or release approval."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

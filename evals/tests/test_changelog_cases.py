@@ -9,21 +9,21 @@ ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = ROOT / 'evals/validators/text_case.py'
 
 
-class ReleaseChangelogCaseTest(unittest.TestCase):
+class StableChangelogCaseTest(unittest.TestCase):
     def validate(self, changelog):
         with tempfile.TemporaryDirectory() as directory:
             Path(directory, 'CHANGELOG.md').write_text(changelog)
             return subprocess.run(
-                [sys.executable, str(VALIDATOR), 'release-kotlin-library-direct'],
+                [sys.executable, str(VALIDATOR), 'changelog-direct'],
                 cwd=directory, capture_output=True, text=True,
             )
 
     def test_missing_consumer_change_fails(self):
-        original = (ROOT / 'evals/cases/release-kotlin-library-direct/overlay/CHANGELOG.md').read_text()
+        original = (ROOT / 'evals/cases/changelog-direct/overlay/CHANGELOG.md').read_text()
         self.assertNotEqual(0, self.validate(original).returncode)
 
     def completed_changelog(self):
-        original = (ROOT / 'evals/cases/release-kotlin-library-direct/overlay/CHANGELOG.md').read_text()
+        original = (ROOT / 'evals/cases/changelog-direct/overlay/CHANGELOG.md').read_text()
         updated = original.replace(
             '- Keep this curated entry exactly.',
             '- Keep this curated entry exactly.\n'
@@ -40,12 +40,12 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
     def test_preserved_notes_and_evidenced_fix_pass(self):
         self.assertEqual(0, self.validate(self.completed_changelog()).returncode)
 
-    def test_next_snapshot_heading_can_follow_prerelease_details(self):
+    def test_unsupplied_next_snapshot_heading_fails(self):
         updated = self.completed_changelog().replace(
             '</details>\n\n## 1.4.0',
             '</details>\n\n## 2.0.1-SNAPSHOT\n\n## 1.4.0',
         )
-        self.assertEqual(0, self.validate(updated).returncode)
+        self.assertNotEqual(0, self.validate(updated).returncode)
 
     def test_cancelling_wording_in_stable_summary_passes(self):
         original = self.completed_changelog()
@@ -725,3 +725,42 @@ class ReleaseChangelogCaseTest(unittest.TestCase):
     def test_older_stable_release_must_remain_outside_details(self):
         updated = self.completed_changelog().replace('</details>\n\n', '') + '\n</details>\n'
         self.assertNotEqual(0, self.validate(updated).returncode)
+
+
+class UnreleasedChangelogCaseTest(unittest.TestCase):
+    case_id = 'changelog-novel'
+
+    def original(self):
+        return (ROOT / 'evals/cases' / self.case_id / 'overlay/CHANGELOG.md').read_text()
+
+    def completed(self):
+        return self.original().replace(
+            '- Retry interrupted downloads without losing progress.',
+            '- Retry interrupted downloads without losing progress. '
+            '([#51](https://github.com/example/downloader/pull/51), '
+            '[guest-one](https://github.com/guest-one)).\n'
+            '- Fix Unicode filenames ([#52](https://github.com/example/downloader/pull/52)).',
+        )
+
+    def validate(self, changelog):
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory, 'CHANGELOG.md').write_text(changelog)
+            return subprocess.run(
+                [sys.executable, str(VALIDATOR), self.case_id],
+                cwd=directory, capture_output=True, text=True,
+            )
+
+    def test_missing_change_and_citations_fail(self):
+        self.assertNotEqual(0, self.validate(self.original()).returncode)
+
+    def test_cited_unreleased_notes_pass(self):
+        self.assertEqual(0, self.validate(self.completed()).returncode)
+
+    def test_misattributed_pr_link_fails(self):
+        swapped = self.completed().replace('/pull/51', '/pull/temporary')
+        swapped = swapped.replace('/pull/52', '/pull/51').replace('/pull/temporary', '/pull/52')
+        self.assertNotEqual(0, self.validate(swapped).returncode)
+
+    def test_rewriting_released_history_fails(self):
+        changed = self.completed().replace('Add resumable downloads.', 'Add downloads.')
+        self.assertNotEqual(0, self.validate(changed).returncode)

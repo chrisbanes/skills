@@ -1,0 +1,46 @@
+{
+  "id": "changelog-direct",
+  "title": "Prepare stable changelog notes across the full prerelease cycle",
+  "family": "workflow",
+  "target_skills": [
+    "changelog"
+  ],
+  "expected_skills": [
+    "changelog"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    "CHANGELOG.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:git)\\s+(?:push|fetch|pull|commit|tag)\\b",
+    "\\bgh\\b",
+    "(?:gradlew|release\\.py).*\\b(?:publish|release|prepare)\\b",
+    "(?:~/|/Users/[^/]+/)\\.env"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "changelog-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "stable-coverage",
+      "text": "Preserves curated notes, adds only consumer-visible missing changes supported by supplied history, reports reviewed baseline and resolved or remaining coverage gaps; does not claim a live release. Uses 1.4.0 as the final-release baseline, summarizes streaming with bounded buffering together with the post-RC cancellation fix in the final 2.0.0 summary, and preserves historical prerelease entries without presenting superseded unbounded buffering as final behavior. Groups the original prerelease entries in a collapsible Prerelease history block beneath the stable summary, preserving their headings and full text in the changelog rather than replacing them with circular release-page links. Leaves 1.4.0 outside the block. Links PR #812 explicitly to its supplied pull URL. Links PR #845 explicitly to its supplied pull URL and credits verified non-maintainer Avery Example (or avery-example) with the supplied profile URL. Does not add unnecessary credit for maintainer chrisbanes. Preserves the curated entry verbatim apart from requested links and credit."
+    },
+    {
+      "id": "changelog-boundary",
+      "text": "Edits only the changelog. Does not require Kotlin publishing plugins, credentials, next-development version selection, API snapshot checks or publication approval to complete these notes. Reports reviewed baseline, actual notes or diff, validation and coverage gaps without claiming a release."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

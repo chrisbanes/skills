@@ -1,16 +1,29 @@
-Prepare the changelog portion of releasing 2.0.0, followed by 2.0.1-SNAPSHOT. Update only CHANGELOG.md; finalize the 2.0.0 heading and its prerelease history, leaving publication for the later release step. Identify any remaining release gates in your response. Do not run publishing, Git mutations or read real credentials.
+Read-only: review the changelog handoff for preparing Kotlin library release 2.0.0, followed by 2.0.1-SNAPSHOT. Use only the supplied state. Do not run commands, edit files, contact providers, mutate Git, load credentials or publish. Show the notes and remaining release gates; do not ask to publish now.
 
-The previous stable ancestor tag is 1.4.0. Later ancestor tags are 2.0.0-alpha01 and 2.0.0-rc00. The complete changes since 1.4.0 are:
-- 2.0.0-alpha01 added streaming responses.
-- 2.0.0-rc00 changed streaming responses to use bounded buffering; the alpha behavior is superseded.
-- Since rc00, public request cancellation now stops the underlying work (regression fix).
-- The bounded buffering change is PR #812 by repository maintainer `chrisbanes`: https://github.com/chrisbanes/skills/pull/812
-- The request cancellation fix is PR #845 by contributor `Avery Example` (`avery-example`): https://github.com/chrisbanes/skills/pull/845; profile: https://github.com/avery-example
-- Repository evidence lists `chrisbanes` as a maintainer and does not list `avery-example` as a maintainer.
-- Existing curated entry describes the other consumer-visible change accurately.
-- Rename internal helper, with no observable behavior change.
-The current Unreleased section is in CHANGELOG.md. API files are Metalava-generated `api/api.txt` files. Repository checks are unit tests and Metalava API generation and compatibility; no passing evidence for the candidate has been supplied.
+Published modules apply com.vanniktech.maven.publish through a convention plugin. Publishing route, coordinates and destination are not yet supplied. Repository checks are unit tests, Metalava API generation and compatibility. API files are Metalava api/api.txt files. No passing candidate-specific check evidence has been supplied.
 
-The published modules apply `com.vanniktech.maven.publish` from `gradle-maven-publish-plugin` through the repository convention plugin.
+The complete stable cycle is based on ancestor tag 1.4.0, followed by 2.0.0-alpha01 and 2.0.0-rc00. Alpha added streaming with unbounded buffering; RC superseded that with bounded buffering. Since RC, request cancellation was fixed. There are no other changes in this supplied range.
 
-The changelog renderer supports HTML details blocks. GitHub Release pages link back to this changelog and do not retain separate notes.
+The proposed notes below already cover both final behaviors. Repository evidence verifies chrisbanes as maintainer and Avery Example as non-maintainer. PR URLs, author/profile facts below are verified supplied evidence. The renderer supports HTML details. Changelog finalization belongs to the release helper; keep Unreleased until that step.
+
+## Unreleased
+
+- Add streaming responses with bounded buffering ([#812](https://github.com/chrisbanes/skills/pull/812), by maintainer chrisbanes).
+- Fix request cancellation so underlying work stops ([#845](https://github.com/chrisbanes/skills/pull/845), by [Avery Example](https://github.com/avery-example)).
+
+<details>
+<summary>Prerelease history</summary>
+
+## 2.0.0-rc00
+
+- Streaming responses now use bounded buffering.
+
+## 2.0.0-alpha01
+
+- Add streaming responses with unbounded buffering.
+
+</details>
+
+## 1.4.0
+
+- Initial stable API.
