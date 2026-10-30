@@ -1,0 +1,37 @@
+{
+  "files": [
+    "CHANGELOG.md"
+  ],
+  "must_contain": [
+    "- Retry interrupted downloads without losing progress.",
+    "## Unreleased\n",
+    "## 0.8.0-beta01\n\n- Add resumable downloads.\n\n## 0.7.0\n\n- Initial download support.\n"
+  ],
+  "must_not_contain": [
+    "<details>",
+    "Rename an internal helper"
+  ],
+  "markdown_bullets": {
+    "heading": "Unreleased",
+    "required": [
+      {
+        "text": [
+          "Retry interrupted downloads without losing progress"
+        ],
+        "links": [
+          "\\[\\#51\\]\\(https://github\\.com/example/downloader/pull/51\\)",
+          "\\[guest-one\\]\\(https://github\\.com/guest-one\\)"
+        ]
+      },
+      {
+        "text": [
+          "Unicode",
+          "filenames"
+        ],
+        "links": [
+          "\\[\\#52\\]\\(https://github\\.com/example/downloader/pull/52\\)"
+        ]
+      }
+    ]
+  }
+}

@@ -136,10 +136,10 @@ class CodexRunnerTest(unittest.TestCase):
             self.assertIn("SKILL.md", rendered)
         self.assertEqual(1, " ".join(none).count("path = "))
         self.assertEqual(2, " ".join(forced).count("path = "))
-        self.assertEqual(15, " ".join(automatic).count("path = "))
+        self.assertEqual(16, " ".join(automatic).count("path = "))
         self.assertEqual(0, " ".join(none).count("enabled = true"))
         self.assertEqual(1, " ".join(forced).count("enabled = true"))
-        self.assertEqual(14, " ".join(automatic).count("enabled = true"))
+        self.assertEqual(15, " ".join(automatic).count("enabled = true"))
         self.assertIn("$compose-state-and-effects", forced[-1])
         self.assertNotIn("$compose-state-and-effects", automatic[-1])
         self.assertIn("If you run Gradle, use `--offline --no-scan`.", automatic[-1])
@@ -567,7 +567,7 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertIn("+# Local plan", result.diff)
 
     def test_codex_command_lines_and_prompts_are_byte_identical(self):
-        # Golden digests captured before the runtime seam; any change is a Codex break.
+        # Golden command/prompt digest, refreshed for intentional public skill catalog changes.
         from evals.harness.judge import JudgeConfig, build_judge_command
 
         catalog = discover_skill_paths(self.root, roots=(self.root / "skills",))
@@ -596,7 +596,7 @@ class CodexRunnerTest(unittest.TestCase):
             rendered = rendered.replace(root, "<root>")
 
         self.assertEqual(
-            "c82199737a3442412aa20d550b6e9ebfd01e85dc6207f370a63beac9469710aa",
+            "5d87378b445d57244f29d91681a316c27891a4dcd47277aaf49dc9ce9cdb1b5f",
             hashlib.sha256(rendered.encode()).hexdigest(),
         )
 

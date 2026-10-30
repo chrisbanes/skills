@@ -1,0 +1,36 @@
+{
+  "id": "changelog-negative",
+  "title": "Skip missing changelog without creating release work",
+  "family": "workflow",
+  "target_skills": [
+    "changelog"
+  ],
+  "expected_skills": [
+    "changelog"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "changelog-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "missing-file-restraint",
+      "text": "Reports that changelog reconciliation was skipped because no changelog exists and creation was not requested. Does not create or propose routinely creating one, draft invented release notes or links/credits, demand publishing prerequisites or credentials, choose versions or ask for release approval. Forcing the skill still preserves this boundary."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

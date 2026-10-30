@@ -19,8 +19,11 @@ snapshots when the repository does not maintain them.
 
 ## Procedure
 
-1. Establish scope and inspect repository instructions, Git state, release
-   history, version properties, publishing configuration and required checks.
+1. Route standalone changelog maintenance to
+   [changelog](../changelog/SKILL.md) and finish that task
+   without applying this skill's publishing prerequisite or release answer forms.
+   For release work, establish scope and inspect repository instructions, Git
+   state, release history, version properties, publishing configuration and required checks.
    If the user limits review to supplied state, run no commands and mark
    unsupplied state unknown. Confirm, from build files or supplied repository facts, that published
    modules apply `com.vanniktech.maven.publish` directly or via a convention
@@ -31,17 +34,27 @@ snapshots when the repository does not maintain them.
    select the matching finish path before proceeding.
    For recovery or recovery review, select and read the
    [recovery answer form](references/recovery-output.md) before analysis. For
-   changelog-related review, also read [the changelog procedure](references/changelog.md).
-   For preparation or changelog-only work, read the
+   changelog-related review, also load
+   [changelog](../changelog/SKILL.md) in read-only mode.
+   For release preparation, including its changelog portion, read the
    [preparation answer form](references/preparation-output.md) completely, in
    its own call, before analysis.
    Keep reviews read-only, including credentials. Follow the existing local or
    CI publishing mechanism; do not migrate it. Read the
    [helper contract](references/helper.md) before configuring the bundled script.
    Stop before mutation on unsupported layouts or ambiguous destinations.
-2. Before preparation, read [the changelog procedure](references/changelog.md)
-   completely; resolve baseline, version and coverage ambiguity. Do not guess
-   or create a changelog.
+2. Before preparation, use [changelog](../changelog/SKILL.md)
+   for specified-release notes. If that skill is unavailable, report the missing
+   dependency and stop changelog preparation rather than inventing a substitute.
+   Supply the target version, repository heading
+   conventions and authorized scope; consume its reviewed baseline, notes,
+   coverage or skip result, and gaps. Leave heading finalization to the release helper
+   unless the request is explicitly limited to finalizing the changelog.
+   Resolve coverage gaps before publication. Use supplied release and
+   next-development versions; propose and confirm missing values before release
+   mutation, never silently incrementing a prerelease to a patch snapshot.
+   The caller owns any authorized changelog-correction commit needed before
+   helper preparation's clean-worktree gate.
 3. Identify repository release checks, including tests and Metalava API
    generation and compatibility checks where configured. Confirm that API files
    are current before snapshotting; the helper copies them without running
@@ -62,17 +75,9 @@ snapshots when the repository does not maintain them.
    loading or requiring local dotenv values.
 5. Prepare the release: update the version, finalize the changelog heading and
    applicable published-module API snapshots, run configured checks, and commit
-   only release files. When finalizing a stable release entry, draft the stable
-   summary from every surviving coverage-ledger row in final-behavior wording
-   before grouping that cycle's original prerelease entries beneath it in a
-   `<details>` block with
-   `<summary>Prerelease history</summary>`. Move the original prerelease entries
-   as one block without reordering them. Preserve their headings, anchors,
-   dates and text, with blank lines around the enclosed Markdown. Leave older
-   stable releases outside the block. If the renderer lacks collapsible HTML,
-   retain expanded entries. Before handing off, recheck the actual stable
-   summary against every surviving ledger row and the grouped history against
-   the source order. Inspect the resulting commit. Bind validation to
+   only release files. Recheck the finalized changelog against the
+   `changelog` coverage result; return to that skill if finalization
+   changes notes or history. Inspect the resulting commit. Bind validation to
    this state and invalidate it if relevant code changes. The helper must not
    publish during preparation.
 6. Present the prepared release for explicit user approval before publication:
@@ -104,8 +109,8 @@ snapshots when the repository does not maintain them.
 
 ## Finish paths
 
-- **Preparation, including changelog-only:** Fill the selected preparation
-  answer form. Show actual reviewable notes or diff, remaining checks, and the
+- **Release preparation, including its changelog portion:** Fill the selected
+  preparation answer form. Show actual reviewable notes or diff, remaining checks, and the
   explicit later publication-approval gate; do not request approval now.
 - **Recovery/recovery review:** Fill the selected recovery answer form as
   numbered sections; check every applicable disposition before replying.

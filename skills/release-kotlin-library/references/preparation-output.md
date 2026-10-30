@@ -1,7 +1,7 @@
 # Preparation answer form
 
-For preparation or changelog-only work, use three separate parts. When a
-structured response is required, put all three in full in `summary`; a recap
+For release preparation, including its changelog portion, use three separate
+parts. When a structured response is required, put all three in full in `summary`; a recap
 there drops them. Give verified values or
 `pending`; never invent release state or claim publication. Keep this a
 preparation handoff, not a request for publication approval now.
@@ -34,4 +34,6 @@ preparation handoff, not a request for publication approval now.
 
 Before sending, check that all three parts contain substance, not just their
 labels. Do not advance version files, tag, publish, or claim a completed release
-merely because a changelog-only preparation is reviewable.
+merely because the changelog portion of preparation is reviewable.
+Standalone changelog maintenance uses `changelog` and its finish gate
+instead of this release answer form.
