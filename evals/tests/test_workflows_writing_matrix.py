@@ -922,15 +922,57 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertFalse(any(re.search(pattern, text) for pattern in patterns))
 
+    def assert_prompt_does_not_disclose_skills(self, prompt, skills):
+        prompt = prompt.lower()
+        self.assertNotIn("$", prompt)
+        for skill in skills:
+            if skill != "changelog":
+                self.assertNotIn(skill, prompt)
+                continue
+            # The artifact name is ordinary task language; explicit skill references leak routing.
+            self.assertNotRegex(
+                prompt,
+                r"""[`'"]changelog[`'"]|\bchangelog\s+skill\b|"""
+                r"""\bskill\s+(?:named\s+)?[`'"]?changelog\b|"""
+                r"\b(?:use|invoke|load|run)\s+(?:the\s+)?changelog(?!\.md\b)"
+                r"(?=\s*(?:$|[.!?,;:]|\b(?:to|for|on)\b))|"
+                r"\bchangelog[/\\]skill\.md\b|\b[\w-]+:changelog\b",
+            )
+
     def test_workflow_prompts_do_not_disclose_the_target_skill(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
 
         for case in report.cases:
             with self.subTest(case=case.id):
-                prompt = case.prompt.lower()
-                self.assertNotIn("$", prompt)
-                for skill in case.expected_skills:
-                    self.assertNotIn(skill, prompt)
+                self.assert_prompt_does_not_disclose_skills(case.prompt, case.expected_skills)
+
+    def test_prompt_disclosure_guard_allows_changelog_task_language(self):
+        for prompt in (
+            "Update CHANGELOG.md with the missing changelog entries.",
+            "The changelog renderer supports HTML details blocks.",
+            "Use changelog entries to write a release summary.",
+            "Load CHANGELOG.md.",
+        ):
+            with self.subTest(prompt=prompt):
+                self.assert_prompt_does_not_disclose_skills(prompt, ("changelog",))
+
+    def test_prompt_disclosure_guard_rejects_explicit_skill_references(self):
+        for prompt, skill in (
+            ("Use $changelog to update the notes.", "changelog"),
+            ("Use changelog.", "changelog"),
+            ("Invoke changelog.", "changelog"),
+            ("Use changelog to update the notes.", "changelog"),
+            ("Run changelog on this repository.", "changelog"),
+            ("Use the changelog skill.", "changelog"),
+            ("Use the skill named changelog.", "changelog"),
+            ("Use `changelog`.", "changelog"),
+            ("Use 'changelog'.", "changelog"),
+            ("Read skills/changelog/SKILL.md.", "changelog"),
+            ("Use chrisbanes-skills:changelog.", "changelog"),
+            ("Use release-kotlin-library.", "release-kotlin-library"),
+        ):
+            with self.subTest(prompt=prompt), self.assertRaises(AssertionError):
+                self.assert_prompt_does_not_disclose_skills(prompt, (skill,))
 
     def test_review_prompts_allow_skill_instruction_reads(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
