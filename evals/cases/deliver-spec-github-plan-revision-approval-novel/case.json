@@ -15,7 +15,8 @@
     {"id": "standalone-publication", "text": "Records the equivalent file/test-seam correction briefly and continues under the existing approved outcome; no replan, republication or renewed approval merely because file/test rows differ."},
     {"id": "project-auto", "text": "Continues the routine correction under the verified handoff without per-stage packets; --auto does not expand external permissions or bypass publication/readback if a material plan revision is actually required."},
     {"id": "material-decision", "text": "Recognizes that --auto does not approve a material change to accepted behavior, scope, acceptance, policy or risk; stops for a stakeholder decision in either mode"},
-    {"id": "preservation", "text": "Preserves owner, valid reviews/checks, existing scope approval, repair progress and live allowance; no GitHub mutation in this read-only assessment."}
+    {"id": "preservation", "text": "Preserves owner, valid reviews/checks, existing scope approval, repair progress and live allowance; no GitHub mutation in this read-only assessment."},
+    {"id": "revision-overview", "text": "Presents the material revision for approval with a concise overview in the response: durable receipts before acknowledgment, reuse on retries, and recovery/duplicate-request validation, with the detailed revision pointer. Does not give only a link, bury the user in a full task graph, or treat --auto as approval."}
   ],
   "provenance": {"kind": "synthetic"},
   "calibration": true

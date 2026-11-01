@@ -19,3 +19,9 @@ the revised GitHub plan is used in each mode, what `--auto` does and does not
 authorize, and what to do with the proposed receipt change. Keep ownership and
 allowance intact. Do not publish, contact providers, launch agents, or change
 files.
+
+For the material receipt change, a proposed revised plan would persist receipts
+before acknowledging requests, return the stored receipt on retries, and test
+restart recovery and duplicate requests. The detailed revision is at
+`plans/durable-receipts.md`. Include the user-facing response presenting this
+revision for stakeholder approval; implementation must wait for that decision.

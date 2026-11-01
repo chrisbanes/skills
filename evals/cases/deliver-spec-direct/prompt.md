@@ -11,3 +11,10 @@ implements. No separate request for parallel execution was made.
 The implementation branch currently matches its base, and this invocation
 grants no merge authority. Explain the gates and ownership using only this
 supplied state. Do not run a delivery, contact GitHub, or change files.
+
+Separately, a second standalone delivery has finished planning and is awaiting
+stakeholder approval. Its local plan will add a CSV export action to the
+reports screen, reuse the existing export service, and verify column order and
+escaping with service tests plus a UI smoke check. The detailed plan is at
+`plans/report-export.md`; implementation has not been authorized. Write the
+user-facing response that presents this plan and requests approval.

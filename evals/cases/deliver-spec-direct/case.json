@@ -16,7 +16,8 @@
     {"id": "final-review", "text": "Requires one fresh independent read-only reviewer against the approved source, repository standards, exact clean candidate HEAD, and validation evidence; verifies the draft PR has that reviewed head, renews affected review after repairs, and has no dependency on external code-review or issue-tracker setup"},
     {"id": "empty-diff", "text": "Does not treat the initial empty diff as no-change; reports no-change only after implementation and verification finish with an empty final diff."},
     {"id": "repair-routing", "text": "Uses shepherd for CI feedback and PR operations while returning code repairs to their original implementation owner; renews affected checks and review at a repaired head before pushing, without lead takeover or redundant unaffected checks."},
-    {"id": "authority", "text": "Does not merge without authority valid for this invocation, and makes no mutation or provider call in this analysis-only case"}
+    {"id": "authority", "text": "Does not merge without authority valid for this invocation, and makes no mutation or provider call in this analysis-only case"},
+    {"id": "approval-overview", "text": "For the separate unapproved CSV plan, writes a user-facing approval request with a concise high-level overview of the outcome, main approach (reports action and existing export service), and validation (service tests and UI smoke check), plus the detailed plan pointer. A link alone is insufficient; does not implement or reopen approval for the first already-approved delivery."}
   ],
   "provenance": {"kind": "synthetic"}
 }
