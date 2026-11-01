@@ -41,6 +41,10 @@ Project run already owns that issue, return it to that controller.
    approved local source with no plan that does not qualify for the fast path,
    name conversation-mode `to-plan` as the initial route, including when
    answering a resume question.
+   When presenting a plan for approval, include a concise high-level overview
+   in the response: the intended outcome, main implementation steps and
+   validation approach. Link the detailed plan when available, then ask for
+   approval of that scope.
    Approval covers the accepted contract and only the live qualification
    allowances it explicitly records; do not infer extra attempts or authority.
 3. Verify scope and boundaries once. A verified handoff authorizes continuing
