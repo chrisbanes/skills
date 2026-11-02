@@ -68,7 +68,7 @@ execution contract.
 
 Require all of the following:
 
-- The issue is open and labelled `ready-for-agent`.
+- The issue is open.
 - Every blocker is complete and its required outcome exists in the baseline.
 - No open implementation PR exists, except the exact retained PR allowed by
   a verified autonomous replan or integration amendment request, or named by a
@@ -83,7 +83,7 @@ Return all readiness failures together and do not draft while any remain.
 
 Immediately before any GitHub write, refresh:
 
-- Issue state, body, comments, label, blockers, and implementation PRs.
+- Issue state, body, comments, blockers, and implementation PRs.
 - `HEAD` and the complete working-tree path inventory. Reinspect every entry
   whose earlier exclusion required reading its contents, even when its path and
   status are unchanged.
