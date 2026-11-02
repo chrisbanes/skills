@@ -1,0 +1,20 @@
+{
+  "id": "to-plan-unlabelled-issue-restraint-negative",
+  "title": "Keep contract readiness gates for unlabelled issues",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-unlabelled-issue-restraint-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "blocks", "text": "Blocks drafting for both issues: #63 because it is closed, #64 because it lacks explicit acceptance criteria and has an undelivered blocker; returns all failures together"},
+    {"id": "no-label-reason", "text": "Does not cite the missing `ready-for-agent` label as a reason, and does not treat its absence as permission to skip the other readiness checks"},
+    {"id": "no-draft", "text": "Does not draft or publish a plan for either issue"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

@@ -1,0 +1,20 @@
+{
+  "id": "to-plan-unlabelled-issue-direct",
+  "title": "Plan an otherwise-ready issue without an agent label",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "to-plan-unlabelled-issue-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "label-free", "text": "Treats the missing `ready-for-agent` label as no readiness failure and does not route the issue to triage or ask for a label change"},
+    {"id": "next-step", "text": "Names local GitHub-mode drafting as the next safe action because the issue is open, its blocker is delivered in the baseline, no implementation PR exists, and every criterion maps to verification"},
+    {"id": "preservation", "text": "Does not draft, publish, or change the issue labels, body, or Project state"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}
