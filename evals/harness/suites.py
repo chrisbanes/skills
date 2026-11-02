@@ -106,7 +106,7 @@ SUITES = {
         skills=WORKFLOWS_WRITING_SKILLS,
         benchmark_cases=41,
         routing_cases=0,
-        calibration_cases=119,
+        calibration_cases=122,
         require_skill_triads=True,
     ),
 }
