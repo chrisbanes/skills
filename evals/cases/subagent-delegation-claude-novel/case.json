@@ -1,0 +1,44 @@
+{
+  "id": "subagent-delegation-claude-novel",
+  "title": "Preserve Claude pins and route nested review results",
+  "family": "workflow",
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-claude-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "pins",
+      "text": "Preserves installed sonnet/high by omitting pinned invocation fields, retains read-only tools, and uses a fresh non-fork audit with original requirements, plan, exact candidate/base, correctness checks and evidenced ship/fix-first/rethink verdict."
+    },
+    {
+      "id": "continuity",
+      "text": "Keeps task-wide explicit invocation effective without demanding reinvocation per assignment. Uses SendMessage to the original worker for repairs, rechecks persistent overrides before a new assignment, and keeps final acceptance with the lead."
+    },
+    {
+      "id": "lifecycle",
+      "text": "Distinguishes interactive waiting from headless non-fork background completion routing. Headless parent explicitly foregrounds both needed helpers in one message and waits before returning; does not impose sequential launches or claim every nested runtime lacks notifications."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

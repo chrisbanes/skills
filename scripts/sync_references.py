@@ -25,7 +25,7 @@ COPIES = {
         f"skills/{skill}/references/subagent-selection.md"
         for skill in (
             "deliver-spec", "implement-with-subagents", "run-github-project",
-            "gradle-run", "shepherd",
+            "gradle-run", "shepherd", "subagent-delegation",
         )
     ),
 }

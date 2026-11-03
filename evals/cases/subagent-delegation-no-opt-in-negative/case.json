@@ -1,0 +1,42 @@
+{
+  "id": "subagent-delegation-no-opt-in-negative",
+  "title": "Leave delegation advice alone without a user opt-in",
+  "family": "workflow",
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-no-opt-in-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "answer",
+      "text": "Answers directly: keeps the tightly coupled two-file rename solo and gives a short reason, without spawning agents or editing files."
+    },
+    {
+      "id": "scope",
+      "text": "Does not impose the delegation playbook's routing tables, model/effort choices, or audit verdict format on this question. In automatic mode, does not activate the subagent-delegation skill."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "automatic_no_skill_control": true
+}

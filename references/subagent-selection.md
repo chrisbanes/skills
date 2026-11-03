@@ -91,13 +91,19 @@ log.
   set effort only when the user asks.
 - A top-level session runs workers in the background and waits for the
   completion notification; do not poll or sleep.
-- A subagent receives no completion notifications; they go to the top-level
-  session. When it launches an agent whose result it needs before returning,
-  such as a reviewer, evidence or discovery helper, or slice worker, it passes
-  `run_in_background: false` and puts independent launches in one message to
-  keep them parallel.
-- Before dispatching background writers, list the commit and validation
-  commands they will run and have the user approve them. A worker denied
-  permission anyway reports a blocker and does not seek a workaround.
+- Check the session's completion behavior before launching nested work.
+  Interactive nested calls normally wait for results. In headless `-p` or SDK
+  sessions with fork mode off, nested agents can default to background and
+  report to the main agent after the parent returns. When the parent needs a
+  result before returning, use the runtime's foreground/wait mechanism
+  (`run_in_background: false` where exposed); put independent launches in one
+  message to keep them parallel.
+- Before dispatching background writers, establish permission for the commit
+  and validation commands they will run, reusing existing authorization. A
+  worker denied permission reports a blocker and does not seek a workaround.
 - `Explore` and `Plan` are one-shot; do not use them for owners that may need
   repair or follow-up.
+
+Verify runtime mechanics against [Claude Code subagent
+documentation](https://code.claude.com/docs/en/sub-agents); session mode and
+exposed tool capabilities govern result delivery.

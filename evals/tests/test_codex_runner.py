@@ -136,10 +136,10 @@ class CodexRunnerTest(unittest.TestCase):
             self.assertIn("SKILL.md", rendered)
         self.assertEqual(1, " ".join(none).count("path = "))
         self.assertEqual(2, " ".join(forced).count("path = "))
-        self.assertEqual(16, " ".join(automatic).count("path = "))
+        self.assertEqual(17, " ".join(automatic).count("path = "))
         self.assertEqual(0, " ".join(none).count("enabled = true"))
         self.assertEqual(1, " ".join(forced).count("enabled = true"))
-        self.assertEqual(15, " ".join(automatic).count("enabled = true"))
+        self.assertEqual(16, " ".join(automatic).count("enabled = true"))
         self.assertIn("$compose-state-and-effects", forced[-1])
         self.assertNotIn("$compose-state-and-effects", automatic[-1])
         self.assertIn("If you run Gradle, use `--offline --no-scan`.", automatic[-1])
@@ -596,7 +596,7 @@ class CodexRunnerTest(unittest.TestCase):
             rendered = rendered.replace(root, "<root>")
 
         self.assertEqual(
-            "5d87378b445d57244f29d91681a316c27891a4dcd47277aaf49dc9ce9cdb1b5f",
+            "7b035913f8c9f4b3ee9229a658a5f3d2b865e2b8acd2e55095b5bdbcf650dfd3",
             hashlib.sha256(rendered.encode()).hexdigest(),
         )
 

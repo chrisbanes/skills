@@ -1,0 +1,44 @@
+{
+  "id": "subagent-delegation-negative",
+  "title": "Keep trivial work solo and reuse adequate validation",
+  "family": "workflow",
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "solo",
+      "text": "Keeps the trivial edit solo, does not mandate an audit, start implementation orchestration, or infer authority to execute from this advice-only task."
+    },
+    {
+      "id": "validation",
+      "text": "Reuses adequate unchanged validation after lead inspection, never treats a success assertion alone as acceptance; inspects changed diff and reruns the affected check after the repair invalidates its inputs."
+    },
+    {
+      "id": "restraint",
+      "text": "Fixes missing/stale context before tier escalation. Rejects Astra/ultra based only on elapsed time/repo size; exceptional selection needs why Sol/xhigh is insufficient. Does not spawn or edit anything."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}
