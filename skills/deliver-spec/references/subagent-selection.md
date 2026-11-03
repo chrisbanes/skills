@@ -1,5 +1,7 @@
 # Subagent selection and handoff
 
+<!-- Canonical source: references/subagent-selection.md. Edit it there, then run `npm run references:sync`. -->
+
 Use this reference when a workflow has permitted or required a subagent. The
 calling workflow owns the delegation trigger, authority, and acceptance rules;
 the selected agent owns only its bounded assignment. This reference grants no

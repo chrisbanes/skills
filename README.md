@@ -157,6 +157,8 @@ Edit `references/subagent-selection.md`, then run
 `npm run references:sync` and include the updated bundled copies in the change.
 Run `npm run build` to check that all copies are regular files matching their
 sources; it fails on drift without rewriting files.
+`.gitattributes` marks every copy as generated so GitHub collapses it in pull
+request diffs; a test keeps that list in step with the sync script.
 
 ### Delegation on another machine
 

@@ -1,5 +1,7 @@
 # PR review timing
 
+<!-- Canonical source: references/pr-review-timing.md. Edit it there, then run `npm run references:sync`. -->
+
 Start applicable external review of a locally qualified candidate while CI runs; accept or
 merge only with complete evidence applicable to the final head.
 
