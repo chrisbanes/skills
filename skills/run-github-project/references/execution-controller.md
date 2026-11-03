@@ -51,8 +51,15 @@ requires that kind of live work; do not add it to unrelated tickets.
    do not misreport it as a native dependency or missing user permission.
 4. Withhold dependent dispatch for absent fixture access, exhausted grants,
    unknown prerequisites, missing/failed offline harness evidence, or
-   unfulfilled qualification. Keep unclaimed work
-   unassigned. For claimed missing-authority work use the verified
+   unfulfilled qualification. When a required live grant or manifest is absent,
+   finish independently authorized offline slices and open a non-closing PR,
+   then hold live execution and merge. Claim only for that runnable offline
+   work; otherwise keep unclaimed work unassigned. Gather permitted non-mutating
+   substitute evidence, such as official documentation or read-only probes, and
+   present the remaining qualification decision to the user. Substitute evidence
+   does not pass the live gate or amend the accepted requirement; never create
+   or self-issue a grant or authority-bearing manifest. For claimed
+   missing-authority work use the verified
    [ticket pause](authority-and-pauses.md#pause-one-ticket); preserve other
    claimed blockers under the existing failure-isolation rules. Retain all
    native edges so blocked qualification never makes its dependants runnable.

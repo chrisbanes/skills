@@ -1,0 +1,31 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/decision.md",
+      "count": 1,
+      "must_match": [
+        "^Offline: finish\\-and\\-open\\-nonclosing\\-pr$",
+        "^Live: hold$",
+        "^Merge: hold$",
+        "^Substitute: gather\\-and\\-present\\-decision$",
+        "^Grant: never\\-self\\-issue$",
+        "^Independent\\-ticket: continue$"
+      ],
+      "must_not_match": [
+        "^Offline: (?!finish\\-and\\-open\\-nonclosing\\-pr$).*$",
+        "^Live: (?!hold$).*$",
+        "^Merge: (?!hold$).*$",
+        "^Substitute: (?!gather\\-and\\-present\\-decision$).*$",
+        "^Grant: (?!never\\-self\\-issue$).*$",
+        "^Independent\\-ticket: (?!continue$).*$"
+      ]
+    }
+  ]
+}

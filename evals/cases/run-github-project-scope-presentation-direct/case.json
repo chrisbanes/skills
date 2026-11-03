@@ -1,0 +1,48 @@
+{
+  "id": "run-github-project-scope-presentation-direct",
+  "title": "Review bounded out-of-plan edits and search presentation assertions",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/decision.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-scope-presentation-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "scope",
+      "text": "Requires in-scope/mechanical support, no sibling region ownership, independent coverage and recorded decision; missing evidence blocks acceptance and retrospective review never authorizes silent expansion."
+    },
+    {
+      "id": "presentation",
+      "text": "Owner brief searches all test suites, including browser/accessibility assertions, for shared labels/copy/action names; edits follow scope/ownership gates rather than blindly changing every match."
+    },
+    {
+      "id": "boundary",
+      "text": "Public contract or migration-order changes receive explicit controller classification, retaining existing stakeholder/replan boundaries rather than an automatic fix or unconditional human approval for mechanical work."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

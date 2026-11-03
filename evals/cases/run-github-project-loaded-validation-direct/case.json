@@ -1,0 +1,44 @@
+{
+  "id": "run-github-project-loaded-validation-direct",
+  "title": "Qualify complete shards without masking failures",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/decision.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-loaded-validation-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "equivalence",
+      "text": "Requires exact once coverage at a single candidate, static checks/build and preserved runner semantics; incomplete or semantically weaker shards do not replace the full command."
+    },
+    {
+      "id": "rerun",
+      "text": "Allows only one evidence-supported load rerun in untouched code, preserves and reports first failure and rerun; changed-code or repeated failures use normal repair and required final-head CI remains the merge gate."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

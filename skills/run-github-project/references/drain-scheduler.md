@@ -110,31 +110,33 @@ For planned or discovered overlap, the later-claimed slot is the younger one:
    unclaimed and consider the next candidate. Never infer conflicts or native
    blockers from title similarity alone, or silently weaken an accepted plan;
    use the authorized planning/change route if its scope or ordering must change.
-2. For a concrete shared path/resource, admit only when approved plans prove
-   independently testable slices that neither touch nor depend on that boundary.
-   Before dispatch, record the slice task IDs, explicit owner for each slice,
-   verified base, permitted paths/resources, independent focused checks, and a
-   stop boundary before shared edits or dependent behavior in both owners'
-   records. Without that proof, delay the ticket. A final integrated-baseline
-   requirement alone need not delay such preparation; preparation checks do not
-   satisfy final qualification.
-3. Let those safe slices proceed, but serialize the actual shared edit/resource
-   operation under the named-resource grant below. Stop before that operation
-   until its plan prerequisites and resource grant are satisfied. A file lock
-   covers the whole repository identity and canonical repository-relative path
-   across worktrees, not guessed disjoint line ranges. Repository-required
-   mutation ownership remains stricter.
-4. At the shared integration boundary, checkpoint and pause the younger claim,
-   revoke merge eligibility and apply the older-first base/review procedure
-   below. Neither a free edit lock nor completed disjoint slice permits a
-   younger ticket to merge ahead of its unresolved integration boundary.
+2. A shared path alone is not a conflict. Inspect functions, symbols and regions
+   plus behavioral dependencies: admit disjoint, independently testable edits
+   in isolated worktrees when neither consumes the other's behavior. Record
+   task IDs, region ownership, verified base, focused checks and the stop
+   boundary in both owners' records. Unknown overlap still delays admission;
+   disjoint line ranges alone do not establish semantic independence. For a
+   real overlap, admit only explicitly approved independent preparation that
+   stops before that boundary; its checks do not satisfy final qualification.
+3. Retain named-resource grants for genuinely exclusive operations and
+   repository-required file ownership. A declared file lock covers the canonical
+   repository-relative path across worktrees; disjoint regions do not bypass it.
+   Do not create a whole-file lock merely because isolated edits share a path.
+4. Merge concurrent same-file tickets in claim order, older first. For proven
+   disjoint edits, reassess the younger branch under
+   [Merge And Base Drift](#merge-and-base-drift); shared paths alone require no
+   rebase. For a shared integration boundary, checkpoint and pause the younger
+   claim, revoke merge eligibility and apply the older-first base/review
+   procedure below. Neither a free lock nor completed preparation clears an
+   unresolved behavioral dependency.
 
 Do not claim a ticket just to wait when it has no safe runnable slice. Keep
 native dependencies at whole-ticket admission and qualification gates at their
 required operation boundaries; partial work never bypasses either.
 
 When running agents discover a concrete overlap that was absent from their
-plans, stop further shared edits. Let the younger agent finish only the
+plans, including needing another owner's region, stop and report to the
+controller before further shared edits. Let the younger agent finish only the
 current atomic operation, verify work within its safe owned scope, and
 reach a clean focused commit checkpoint without crossing the uncertain seam.
 A reconciled push of that commit is also valid. If the agent cannot reach a
@@ -544,9 +546,14 @@ After a merge:
 
 1. Reconcile the issue and Project item.
 2. Refresh mergeability for every other PR.
-3. Update and rerun CI for another branch only when repository policy requires
-   the latest base, a conflict appears, or the merge invalidates a tested
-   assumption or planned seam. Never rebase every branch automatically.
+3. Shared files alone require neither a branch update nor a CI rerun. Use
+   `git merge-tree` against the verified new base to check conflicts without
+   mutating the owner's worktree; an unavailable/error result is unknown, not
+   a clean merge. Update and renew affected checks only for a confirmed
+   conflict, repository policy requiring an up-to-date branch, or evidence that
+   the merged change invalidates an assumption the PR's checks relied on.
+   Never rebase every branch automatically; apply final-head evidence rules
+   when an update is required.
 4. Snap the merged claim's clean worktree to the verified base and reuse it.
 5. Delete only that claim's merged local ticket branch.
 

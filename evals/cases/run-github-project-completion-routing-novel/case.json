@@ -1,0 +1,44 @@
+{
+  "id": "run-github-project-completion-routing-novel",
+  "title": "Route nested review results and stop completed owner loops",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/decision.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-completion-routing-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "brief",
+      "text": "Includes the Claude Code foreground rule when nested results are needed and ends the brief with \"after returning your report, stop; do not wait on background work\"; does not over-apply it to top-level owners."
+    },
+    {
+      "id": "routing",
+      "text": "Relays actual head/coverage to the retained owner; a stale review cannot pass current-head acceptance. Stops a pushed, looping active turn via runtime cancellation without discarding checkpoint/handle or polling background work."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

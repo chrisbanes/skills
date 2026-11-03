@@ -1,0 +1,35 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/decision.md",
+      "count": 1,
+      "must_match": [
+        "^Extra\\-reference: correct\\-and\\-recheck$",
+        "^Before\\-merge: recheck\\-exact\\-set$",
+        "^Partial\\-set: empty$",
+        "^Release\\-set: empty$",
+        "^Partial\\-read: block$",
+        "^Recovery: reopen\\-restore\\-comment\\-readback$",
+        "^Human\\-change: preserve\\-and\\-report$",
+        "^Partial\\-merge: retain\\-unfinished\\-claim$"
+      ],
+      "must_not_match": [
+        "^Extra\\-reference: (?!correct\\-and\\-recheck$).*$",
+        "^Before\\-merge: (?!recheck\\-exact\\-set$).*$",
+        "^Partial\\-set: (?!empty$).*$",
+        "^Release\\-set: (?!empty$).*$",
+        "^Partial\\-read: (?!block$).*$",
+        "^Recovery: (?!reopen\\-restore\\-comment\\-readback$).*$",
+        "^Human\\-change: (?!preserve\\-and\\-report$).*$",
+        "^Partial\\-merge: (?!retain\\-unfinished\\-claim$).*$"
+      ]
+    }
+  ]
+}

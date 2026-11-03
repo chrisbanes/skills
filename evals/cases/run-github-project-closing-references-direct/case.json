@@ -1,0 +1,44 @@
+{
+  "id": "run-github-project-closing-references-direct",
+  "title": "Verify exact closing references and recover accidental closure",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/decision.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-closing-references-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "guard",
+      "text": "Requires complete repository-qualified equality after every controller/owner PR create or body edit and immediately before merge; green CI cannot clear mismatch, and automatic CI need not be prevented."
+    },
+    {
+      "id": "recovery",
+      "text": "Restores only verified accidental closure with pending work, reads back reopen/Status/comment, respects human changes and unknown prior Status; handles non-closing and non-default-base policies without inventing a closing link. A partial merge retains the open issue, unfinished Status and owner for remaining work instead of terminal cleanup."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
