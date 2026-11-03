@@ -96,7 +96,8 @@ remain, and the installed Codex reference matches the repository.
 The user then replaced the task-wide explicit-invocation boundary with a
 user-level opt-in. Both root files (`~/.codex/AGENTS.md` and
 `~/.claude/CLAUDE.md`) now carry one line directing use of the skill before
-delegating; their earlier delegation rules live in the skill. The skill is
+delegating; their earlier delegation rules live in the skill (see PR review
+follow-up for four rules restored afterwards). The skill is
 model-invocable in both clients, with a description limited to user
 invocation or user instructions. The six cases supply that opt-in, worded as
 "the subagent delegation playbook" because the corpus forbids prompts that
@@ -113,3 +114,25 @@ Runtime provenance now lives here rather than in the skill references. Evaluate
 future Codex routing changes against the
 [OpenAI model-selection guidance](https://developers.openai.com/api/docs/guides/model-selection)
 and representative-task evidence.
+
+## PR review follow-up
+
+The Root opt-in revision supersedes the explicit-only invocation, arm, and
+case-count statements in Evaluation scope and Validation above: the skill is
+model-invocable, its six cases run in the automatic arm, and the corpus holds
+244 cases including the calibration-only no-opt-in control.
+
+The independent review of PR #141 found four tier-calibration rules from the
+user's earlier Claude root policy missing from the skill. With the user's
+approval, SKILL.md step 5 now keeps the lead's model unchanged, does not raise
+a tier for file count, component count, or a sensitive area alone, prefers a
+stronger model at lower effort when judgment matters, and requires a concrete
+investigation question or concrete review checks at opus or Sol with high
+effort or above. The
+Claude table marks ordinary implementation as the default row. The earlier
+"opus/medium rather than sonnet/xhigh for planning" rule was not restored
+because the approved Claude table has no sonnet/xhigh row.
+
+The shared subagent-selection reference relaxes its background-writer rule from
+listing commit and validation commands for user approval to establishing that
+permission, reusing existing authorization; the user confirmed this change.

@@ -11,7 +11,9 @@ not a claim that Claude and Codex models are equivalent.
 2. Preserve installed model and effort pins by omitting those fields in the
    Agent invocation: per-call overrides otherwise take precedence over agent
    frontmatter. For unpinned fields, select from the table and pass `model`
-   and `effort` only when the runtime exposes them. Per-call effort requires
+   and `effort`; if the runtime does not expose a field the table requires,
+   return the mismatch to the lead before dispatch rather than omitting it.
+   Per-call effort requires
    Claude Code 2.1.292 or later and a non-fork invocation. Check provider and
    organization restrictions and global overrides; if they prevent a required
    choice, return the mismatch to the lead instead of silently substituting.
@@ -25,7 +27,7 @@ not a claim that Claude and Codex models are equivalent.
 | Purely mechanical: exact checks, simple extraction, no judgment | haiku / low |
 | Computer use or visual interpretation with a defined outcome | sonnet / medium |
 | Concise drafting or editing from supplied material | sonnet / low |
-| Ordinary bounded implementation, fixes, refactoring, and UI fixes | sonnet / medium |
+| Ordinary bounded implementation, fixes, refactoring, and UI fixes (default) | sonnet / medium |
 | Substantial synthesis across several sources, clear constraints | sonnet / high |
 | Complex or ambiguous judgment across interacting components | opus / medium |
 | Difficult correctness investigations or independent correctness reviews | opus / high |

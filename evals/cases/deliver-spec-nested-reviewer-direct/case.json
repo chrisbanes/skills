@@ -32,7 +32,7 @@
   "rubric": [
     {
       "id": "nested-wait",
-      "text": "Launches the reviewer with `run_in_background: false` because a subagent receives no completion notifications, waits for the verdict in the same turn, and does not hand back `pending` while its own reviewer runs; `pending` names only remote or controller-owned gates."
+      "text": "Launches the reviewer with `run_in_background: false` because in this headless session completion notifications go to the main agent, not the waiting parent, waits for the verdict in the same turn, and does not hand back `pending` while its own reviewer runs; `pending` names only remote or controller-owned gates."
     },
     {
       "id": "review-gate",

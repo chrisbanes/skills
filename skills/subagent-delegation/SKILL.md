@@ -38,14 +38,20 @@ the lead. Installed agent definitions are authoritative for pinned settings.
      model identifiers or effort values. Resolve missing required settings
      before dispatch.
 5. Reassess capability and judgment for every new assignment, including
-   reassignment, independently of the parent task's size or model. Preserve
-   pinned settings and access restrictions. If required capability or settings
+   reassignment, independently of the parent task's size or model. Keep the
+   lead's model unchanged. File count, component count, or a sensitive area
+   alone does not raise a tier; when judgment matters, prefer a stronger model
+   at lower effort over a weaker model at higher effort. Preserve pinned
+   settings and access restrictions. If required capability or settings
    are unavailable, report and resolve the mismatch before dispatch. Name the
-   assignment category in the brief and justify routing departures. For
-   investigations, name the unresolved question; for reviews, identify the
-   correctness checks; for synthesis, identify the evidence or deliverable
-   demands. If work stalls, diagnose missing inputs, tool failures, or routine
-   test repairs before considering a higher tier.
+   assignment category in the brief and justify departures from the default
+   row. For investigations, name the unresolved question; for reviews,
+   identify the correctness checks; for synthesis, identify the evidence or
+   deliverable demands. At opus (Claude Code), Sol (Codex), or an equivalent
+   tier with high effort or above, make that question or those checks
+   concrete; touching a risky area alone does not qualify. If work stalls,
+   diagnose missing inputs, tool failures, or routine test repairs before
+   considering a higher tier.
 6. Give each agent a self-contained brief that fills every field of the
    [handoff brief](references/subagent-selection.md#handoff-brief). Tell
    workers they share the codebase, must preserve others' edits, and must
@@ -55,7 +61,8 @@ the lead. Installed agent definitions are authoritative for pinned settings.
 7. Launch independent assignments in parallel. Queue work behind another agent
    only for a stated dependency, such as shared files, a contract, or ordering;
    name that dependency. Separate worktrees alone do not remove dependencies.
-8. Choose independent audits proportionally to risk. Use a fresh read-only
+8. Choose independent audits proportionally to risk unless the calling
+   workflow requires one. Use a fresh read-only
    reviewer without the implementation conversation. Supply original
    requirements, the plan when available, and exact review scope; require a
    `ship`, `fix-first`, or `rethink` verdict with evidence. Keep repairs with

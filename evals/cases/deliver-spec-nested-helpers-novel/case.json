@@ -30,7 +30,7 @@
   "rubric": [
     {
       "id": "parallel-foreground",
-      "text": "Launches both discovery helpers in one message with `run_in_background: false`, then both slice workers the same way, keeping concurrency without depending on completion notifications a subagent never receives."
+      "text": "Launches both discovery helpers in one message with `run_in_background: false`, then both slice workers the same way, keeping concurrency without depending on completion notifications that, in this headless session, go to the main agent rather than the waiting parent."
     },
     {
       "id": "ownership",
