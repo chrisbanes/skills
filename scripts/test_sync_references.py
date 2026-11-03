@@ -16,6 +16,15 @@ class SyncReferencesTest(unittest.TestCase):
             "skills/deliver-spec/references/subagent-selection.md", destinations
         )
 
+    def test_gitattributes_marks_exactly_the_synced_copies_generated(self):
+        root = Path(__file__).resolve().parents[1]
+        marked = {
+            line.split()[0]
+            for line in (root / ".gitattributes").read_text(encoding="utf-8").splitlines()
+            if line.endswith(" linguist-generated=true")
+        }
+        self.assertEqual({item for copies in COPIES.values() for item in copies}, marked)
+
     def test_check_detects_drift_without_writing_and_sync_repairs_it(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

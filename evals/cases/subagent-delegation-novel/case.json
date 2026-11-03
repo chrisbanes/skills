@@ -1,0 +1,44 @@
+{
+  "id": "subagent-delegation-novel",
+  "title": "Reassign roles and request a fresh independent audit",
+  "family": "workflow",
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "audit",
+      "text": "Requires a fresh read-only investigator in review mode with fork_turns=none, preserving installed Sol/high. Brief supplies original requirements, plan, exact base/candidate and scope, correctness checks, and ship/fix-first/rethink verdict with evidence; no inherited implementation conversation."
+    },
+    {
+      "id": "pins",
+      "text": "Preserves custom explorer Terra/medium despite mechanical default. Does not override checker pins to turn it into an investigator; rechecks role/configuration and selects suitable capability before reassignment. Installed definitions override the table."
+    },
+    {
+      "id": "evidence",
+      "text": "Holds the unsupported investigation until there is a concrete unresolved question and evidence; distinguishes investigation from review, keeps repairs with original worker unless lead explicitly takes/reassigns ownership, and reserves acceptance to lead."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

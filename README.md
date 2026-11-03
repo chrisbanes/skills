@@ -130,6 +130,7 @@ for its lane-specific fallback and blocking behavior.
 - [`deliver-spec`](skills/deliver-spec/SKILL.md) — coordinate one approved spec or verified Project-controller handoff through solo or justified delegated implementation, a planning-free fast path for small well-understood tickets, CI-supplied full-suite evidence, concurrent external review with verified draft support or earlier PR readiness, reusable scope approval and evidence, independent integrated-candidate review and focused repair review, and PR shepherding; validate applicable live-qualification harness paths offline (isolated production stores for persistent paths, fake runtimes for asynchronous paths), then reconcile failures under bounded approved allowances.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, use `changelog` for notes, prepare Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; recover run identity and bounded results by workflow ID with read-only status, and diagnose failures with optional investigation helpers.
+- [`subagent-delegation`](skills/subagent-delegation/SKILL.md) — provider-neutral delegation playbook, loaded by name or through a one-line user-level opt-in, with separate Codex and Claude Code model routing, installed-role precedence, parallel briefs, independent audits, and lead acceptance.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — choose solo implementation for a single item or serial graph and worker ownership for every item in a graph with parallel work; preserve dependency-aware integration, independent final review, same-owner repair, bounded checkout reuse, and read-only orchestration review.
 - [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans that prove baselines from green CI, with observable slices and consequential boundary validation before dependent work, plus authenticated integration amendments and explicit consumer handoffs; decide separate PRs by coherent deliverable boundaries.
 - [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with current-column authorization, human-only Backlog promotion, and deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, resolve run-level merging once at startup with a 60-second default-no question unless already specified, preflight offline live-qualification harness evidence, preserve asynchronous or persistent failures in durable checkpoints, prioritize active delivery through safe planner checkpoints, fast-path small Todo tickets straight into implementation, start external review while CI runs after local qualification, free slots while reviewed PRs wait on CI, record ticket-local pauses while independent work continues, and keep `drain` alive under a read-only Project Watcher instead of returning at the first human wait.
@@ -156,6 +157,27 @@ Edit `references/subagent-selection.md`, then run
 `npm run references:sync` and include the updated bundled copies in the change.
 Run `npm run build` to check that all copies are regular files matching their
 sources; it fails on drift without rewriting files.
+`.gitattributes` marks every copy as generated so GitHub collapses it in pull
+request diffs; a test keeps that list in step with the sync script.
+
+### Delegation on another machine
+
+Install a revision of `chrisbanes-skills` containing `subagent-delegation`, then
+opt in by adding this line to `~/.codex/AGENTS.md` (or `~/.claude/CLAUDE.md`
+for Claude Code):
+
+```markdown
+Use `chrisbanes-skills:subagent-delegation` before delegating work or deciding whether to delegate.
+```
+
+Without that line, the skill loads only when invoked by name
+(`$chrisbanes-skills:subagent-delegation` in Codex or
+`/chrisbanes-skills:subagent-delegation` in Claude Code); its description keeps
+it from loading merely because a task involves subagents. No custom Codex or
+Claude agent definitions are required, and existing custom agent pins remain
+authoritative. Verify available roles, model aliases, effort controls, and
+permissions on each machine. `implement-with-subagents` continues to own
+implementation orchestration.
 
 ### Migration from pre-cluster skills
 

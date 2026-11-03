@@ -184,6 +184,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "run-github-project": "references/ticket-lifecycle.md",
             "gradle-run": "SKILL.md",
             "shepherd": "SKILL.md",
+            "subagent-delegation": "SKILL.md",
         }
         for skill, caller in consumers.items():
             with self.subTest(skill=skill):
@@ -283,11 +284,11 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
-        self.assertEqual(41, len(benchmark))
-        self.assertEqual(130, len(calibration))
+        self.assertEqual(47, len(benchmark))
+        self.assertEqual(131, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
-        self.assertEqual(41, len(filter_cases(report.cases, case_ids=None, skills=None)))
+        self.assertEqual(47, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertEqual(
             {
@@ -297,6 +298,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "grounded-writing-personal-gap-negative",
                 "grounded-writing-tutorial-detail-negative",
                 "grounded-writing-assistant-reply-negative",
+                "subagent-delegation-no-opt-in-negative",
                 "implement-with-subagents-missing-provider-challenge",
                 "run-github-project-missing-provider-challenge",
                 "to-plan-authorized-draft-direct",
@@ -686,6 +688,13 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "release-kotlin-library-direct",
                 "release-kotlin-library-novel",
                 "release-kotlin-library-negative",
+                "subagent-delegation-direct",
+                "subagent-delegation-novel",
+                "subagent-delegation-negative",
+                "subagent-delegation-claude-direct",
+                "subagent-delegation-claude-novel",
+                "subagent-delegation-claude-negative",
+                "subagent-delegation-no-opt-in-negative",
                 "to-plan-authorized-draft-direct",
                 "to-plan-boundary-validation-direct",
                 "to-plan-direct",

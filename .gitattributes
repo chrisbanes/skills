@@ -1,0 +1,16 @@
+# Synced copies of shared references; edit the source and run `npm run references:sync`.
+skills/deliver-spec/references/pr-review-timing.md linguist-generated=true
+skills/run-github-project/references/pr-review-timing.md linguist-generated=true
+skills/shepherd/references/pr-review-timing.md linguist-generated=true
+skills/deliver-spec/references/boundary-validation.md linguist-generated=true
+skills/implement-with-subagents/references/boundary-validation.md linguist-generated=true
+skills/deliver-spec/references/behavioral-review.md linguist-generated=true
+skills/implement-with-subagents/references/behavioral-review.md linguist-generated=true
+skills/run-github-project/references/behavioral-review.md linguist-generated=true
+skills/shepherd/references/behavioral-review.md linguist-generated=true
+skills/deliver-spec/references/subagent-selection.md linguist-generated=true
+skills/implement-with-subagents/references/subagent-selection.md linguist-generated=true
+skills/run-github-project/references/subagent-selection.md linguist-generated=true
+skills/gradle-run/references/subagent-selection.md linguist-generated=true
+skills/shepherd/references/subagent-selection.md linguist-generated=true
+skills/subagent-delegation/references/subagent-selection.md linguist-generated=true
