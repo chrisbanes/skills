@@ -128,7 +128,9 @@ stale/ineligible. Route role-labelled Todo through planning, epic, human-frontie
 Wayfinder and ready epics only through their named lanes. Adopt a PR only when
 exactly one open PR satisfies the configured issue-link/closure policy, belongs
 to the authenticated user, targets the configured repository/base, and has no
-competitor.
+competitor. For a retained current-user claim, apply the
+[verified partial-PR exception](normalized-ticket.md#partial-pr-recovery) even
+under `closing-keyword`; it does not waive missing qualification or authority.
 
 ## Claim and revalidate
 

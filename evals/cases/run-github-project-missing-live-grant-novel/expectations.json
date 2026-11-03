@@ -16,7 +16,9 @@
         "^Merge: hold$",
         "^Substitute: gather\\-and\\-present\\-decision$",
         "^Grant: never\\-self\\-issue$",
-        "^Independent\\-ticket: continue$"
+        "^Independent\\-ticket: continue$",
+        "^Recovery: resume\\-verified\\-partial$",
+        "^Unverified\\-partial: preserve\\-blocked$"
       ],
       "must_not_match": [
         "^Offline: (?!finish\\-and\\-open\\-nonclosing\\-pr$).*$",
@@ -24,7 +26,9 @@
         "^Merge: (?!hold$).*$",
         "^Substitute: (?!gather\\-and\\-present\\-decision$).*$",
         "^Grant: (?!never\\-self\\-issue$).*$",
-        "^Independent\\-ticket: (?!continue$).*$"
+        "^Independent\\-ticket: (?!continue$).*$",
+        "^Recovery: (?!resume\\-verified\\-partial$).*$",
+        "^Unverified\\-partial: (?!preserve\\-blocked$).*$"
       ]
     }
   ]

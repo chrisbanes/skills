@@ -35,6 +35,10 @@
     {
       "id": "authority",
       "text": "Gathers official/read-only evidence without probing mutatively or fabricating a grant/manifest; evidence cannot silently waive required live qualification, including under optional autonomy."
+    },
+    {
+      "id": "partial-recovery",
+      "text": "Uses the verified creation-body intent and current claim/plan/head to normalize linksIssue true, closesIssue false and verifiedPartial true, permitting retained-owner recovery without a published pause. Rechecks readiness and still holds live work/merge; unverified mentions remain blocked and do not authorize adoption."
     }
   ],
   "provenance": {

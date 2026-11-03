@@ -155,7 +155,9 @@ failure in untouched code, preserving both results and the load evidence;
 repetition or uncertainty remains a failure.
 
 PRs include the configured closing or non-closing issue link, rationale,
-validation, and residual risks. After every PR creation or body edit by the
+validation, and residual risks. For partial PRs, include and verify the
+[partial recovery metadata](normalized-ticket.md#partial-pr-recovery) in the
+original creation body. After every PR creation or body edit by the
 controller or its ticket owner, read the complete `closingIssuesReferences` set
 through the connector or GraphQL/`gh pr view` fallback. Compare repository-qualified
 issue identities exactly: only the ticket for a fully closing PR under
