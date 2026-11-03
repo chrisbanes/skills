@@ -1,0 +1,44 @@
+{
+  "id": "subagent-delegation-direct",
+  "title": "Choose models and parallel briefs for bounded assignments",
+  "family": "workflow",
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "routing",
+      "text": "Uses an available general agent with Luna/low for A; worker or other suitable unpinned role Terra/medium for B and C; worker Terra/high for D; suitable unpinned role Luna/xhigh for E, Sol/medium for F, and Sol/xhigh for G; explorer for specific discovery H, inspecting its exposed pins before choosing unpinned settings. Does not invent unavailable checker/investigator roles, install definitions, inherit the parent model, or escalate to Astra."
+    },
+    {
+      "id": "parallel",
+      "text": "Launches all genuinely independent assignments concurrently within stated capacity; rejects serializing merely for reporting and names actual dependencies if any."
+    },
+    {
+      "id": "brief",
+      "text": "D has self-contained scope, file ownership, constraints, acceptance criteria, context/revision, Terra/high category, fork_turns=none, and explicit unpinned settings; warns worker to preserve others edits, reserves remote writes to root and forbids unauthorized further delegation."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

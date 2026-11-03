@@ -283,11 +283,11 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
-        self.assertEqual(41, len(benchmark))
+        self.assertEqual(47, len(benchmark))
         self.assertEqual(130, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
-        self.assertEqual(41, len(filter_cases(report.cases, case_ids=None, skills=None)))
+        self.assertEqual(47, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertFalse(any(case.kind == "routing" for case in report.cases))
         self.assertEqual(
             {
@@ -630,6 +630,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_advanced_workflow_skills_require_explicit_invocation(self):
         explicit_only = (
             "deliver-spec",
+            "subagent-delegation",
             "implement-with-subagents",
             "run-github-project",
             "shepherd",

@@ -32,6 +32,7 @@ from evals.harness.experiment import write_subject_stdout_artifacts
 
 EXPLICIT_ONLY_SKILLS = (
     "deliver-spec",
+    "subagent-delegation",
     "implement-with-subagents",
     "run-github-project",
     "shepherd",
@@ -596,7 +597,7 @@ class CodexRunnerTest(unittest.TestCase):
             rendered = rendered.replace(root, "<root>")
 
         self.assertEqual(
-            "5d87378b445d57244f29d91681a316c27891a4dcd47277aaf49dc9ce9cdb1b5f",
+            "b0c0b22489bd33599c42b91cb2a94c227a9dab4784bef65c5567060fa728a694",
             hashlib.sha256(rendered.encode()).hexdigest(),
         )
 
