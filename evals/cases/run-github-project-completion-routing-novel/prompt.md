@@ -1,3 +1,7 @@
+Supplied runtime: a headless Claude Code SDK session with fork mode off.
+Nested agents default to background; completion notifications reach the main
+agent, not the waiting parent. The Agent tool exposes `run_in_background`.
+
 Use only this supplied offline snapshot and applicable skills. Do not run the
 workflow, launch agents, contact services, or mutate source, plans, grants or
 remote state. The only authorized write is `.scratch/decision.md`, an exception

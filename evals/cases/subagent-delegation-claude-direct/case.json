@@ -1,0 +1,44 @@
+{
+  "id": "subagent-delegation-claude-direct",
+  "title": "Choose Claude model and effort by bounded assignment",
+  "family": "workflow",
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-claude-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "routing",
+      "text": "Chooses haiku/low, sonnet/medium, sonnet/low, sonnet/medium, sonnet/high, opus/medium, opus/high, opus/xhigh in assignment order. Treats these as policy defaults, not claims of cross-provider model equivalence."
+    },
+    {
+      "id": "runtime",
+      "text": "Uses Agent model and effort aliases on fresh non-fork calls and never passes Codex model IDs, reasoning_effort, or fork_turns. Confirms tool capability separately from model choice and reserves fable/max for justified exceptions beyond opus/xhigh."
+    },
+    {
+      "id": "brief",
+      "text": "Matches roles by capability, gives ownership, exact state, constraints, expected checks and acceptance criteria, preserves other workers edits, keeps root authorization and final acceptance, and launches independent assignments concurrently."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

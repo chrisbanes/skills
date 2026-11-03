@@ -1,0 +1,6 @@
+interface:
+  display_name: "Subagent Delegation"
+  short_description: "Choose, brief, and review subagents explicitly"
+  default_prompt: "Use $subagent-delegation to choose, brief, and review subagents for this task using the active runtime's routing policy."
+policy:
+  allow_implicit_invocation: false

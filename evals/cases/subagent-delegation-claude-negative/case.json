@@ -1,0 +1,44 @@
+{
+  "id": "subagent-delegation-claude-negative",
+  "title": "Restrain Claude routing when work or capability does not warrant it",
+  "family": "workflow",
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-claude-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "restraint",
+      "text": "Keeps trivial tightly coupled work solo, makes audit proportional, reuses adequate unchanged evidence after lead inspection, and fixes missing inputs rather than escalating to fable/max."
+    },
+    {
+      "id": "capability",
+      "text": "Reports unavailable required model/effort to the lead before dispatch; does not fabricate Codex aliases or fields, silently downgrade, overwrite installed pins, or use one-shot Explore/Plan for repair ownership."
+    },
+    {
+      "id": "authority",
+      "text": "Makes no edits, launches, installations, or permission changes; leaves authorization, architecture, integration, and final acceptance with the lead."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}
