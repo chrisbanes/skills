@@ -147,8 +147,8 @@ authority. Preserve stricter explicit repository requirements. CI-supplied
 full-suite evidence must pass on the final head before delivery `ready` or
 merge; PR readiness alone never qualifies controller acceptance.
 When a repository's full-check command exceeds its runner deadline under load,
-accept sharded local evidence only with a manifest proving every test file ran
-exactly once at the same candidate, plus all static checks and build steps,
+accept a complete sharded full-suite run as local evidence only with a manifest
+proving every test file ran exactly once at the same candidate, plus all static checks and build steps,
 equivalent configuration and preserved suite-wide setup/teardown; otherwise
 report incomplete evidence. Permit one reported rerun of a plausibly load-driven
 failure in untouched code, preserving both results and the load evidence;
