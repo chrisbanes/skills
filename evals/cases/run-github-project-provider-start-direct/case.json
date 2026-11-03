@@ -1,0 +1,44 @@
+{
+  "id": "run-github-project-provider-start-direct",
+  "title": "Stop on repeated configured owner launch failure",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/decision.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-provider-start-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "failure",
+      "text": "Bounds the same-provider retry to one after proven failed start, stops the drain on repeated failure absent explicit fallback, reports error and preserves/quiesces current work."
+    },
+    {
+      "id": "restraint",
+      "text": "Does not turn capacity waits into provider failures or switch under autonomy alone; a configured/user-authorized fallback is usable only after reconciling failed starts, without duplicate owners."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

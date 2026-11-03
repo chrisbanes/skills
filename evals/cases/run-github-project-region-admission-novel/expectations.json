@@ -1,0 +1,39 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/decision.md",
+      "count": 1,
+      "must_match": [
+        "^Disjoint: admit\\-both$",
+        "^Merge\\-order: older\\-first$",
+        "^Clean\\-base: retain\\-head\\-and\\-checks$",
+        "^Behavior\\-dependency: hold\\-dependent\\-work$",
+        "^File\\-lock: honor\\-lock$",
+        "^Conflict: update\\-and\\-renew$",
+        "^Invalidated\\-assumption: renew\\-affected\\-evidence$",
+        "^Strict\\-policy: update\\-and\\-renew$",
+        "^Discovered\\-region: stop\\-and\\-report$",
+        "^Probe\\-error: unknown$"
+      ],
+      "must_not_match": [
+        "^Disjoint: (?!admit\\-both$).*$",
+        "^Merge\\-order: (?!older\\-first$).*$",
+        "^Clean\\-base: (?!retain\\-head\\-and\\-checks$).*$",
+        "^Behavior\\-dependency: (?!hold\\-dependent\\-work$).*$",
+        "^File\\-lock: (?!honor\\-lock$).*$",
+        "^Conflict: (?!update\\-and\\-renew$).*$",
+        "^Invalidated\\-assumption: (?!renew\\-affected\\-evidence$).*$",
+        "^Strict\\-policy: (?!update\\-and\\-renew$).*$",
+        "^Discovered\\-region: (?!stop\\-and\\-report$).*$",
+        "^Probe\\-error: (?!unknown$).*$"
+      ]
+    }
+  ]
+}

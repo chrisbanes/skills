@@ -1362,6 +1362,48 @@ class RankTicketsTest(unittest.TestCase):
                 self.assertEqual(0, returncode)
                 self.assertEqual("resume-pr", first_entry(output)["action"])
 
+    def test_recovers_verified_partial_pr_before_authority_pause(self) -> None:
+        for policy in ("closing-keyword", "close-after-merge"):
+            with self.subTest(policy=policy):
+                retained = ticket(
+                    60, projectStatus="In progress", assignees=["chris"],
+                    openPullRequests=[pull_request(
+                        600, closesIssue=False, linksIssue=True, verifiedPartial=True,
+                    )],
+                )
+                returncode, output = run_ranker([retained], "--issue-closure", policy)
+                self.assertEqual(0, returncode)
+                self.assertEqual("resume-pr", first_entry(output)["action"])
+                self.assertEqual(60, first_entry(output)["ticket"]["number"])
+                self.assertFalse(first_entry(output)["ticket"]["openPullRequests"][0]["closesIssue"])
+
+    def test_partial_pr_recovery_preserves_verification_and_ownership_gates(self) -> None:
+        for overrides, assignees, competitor in (
+            ({"verifiedPartial": False}, ["chris"], False),
+            ({"verifiedPartial": "true"}, ["chris"], False),
+            ({"linksIssue": False}, ["chris"], False),
+            ({"author": "other-user"}, ["chris"], False),
+            ({"baseRefName": "other-base"}, ["chris"], False),
+            ({"baseRepository": "other/repo"}, ["chris"], False),
+            ({}, [], False),
+            ({}, ["other-user"], False),
+            ({}, ["chris", "other-user"], False),
+            ({}, ["chris"], True),
+        ):
+            with self.subTest(overrides=overrides, assignees=assignees, competitor=competitor):
+                pr = pull_request(600, closesIssue=False, linksIssue=True, verifiedPartial=True)
+                pr.update(overrides)
+                retained = ticket(
+                    60, projectStatus="In progress" if assignees else "Ready",
+                    assignees=assignees,
+                    openPullRequests=[pr, pull_request(601)] if competitor else [pr],
+                )
+                returncode, output = run_ranker([retained], "--issue-closure", "closing-keyword")
+                self.assertEqual(0, returncode)
+                self.assertEqual([], output["candidates"])
+                self.assertFalse(any(entry["action"] == "resume-pr" for entry in output["claims"]))
+                self.assertTrue(output["excluded"] or output["blockedClaims"])
+
     def test_nonclosing_pr_requires_policy_and_exact_link(self) -> None:
         for policy, link in (
             ("closing-keyword", True),

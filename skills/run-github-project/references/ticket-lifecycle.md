@@ -17,7 +17,8 @@ exceptional investigator only for concrete unresolved architecture,
 security, rendering, performance, or data-integrity evidence that the default
 owner cannot safely resolve. Record task, actual runtime choice, and exceptional
 justification in the existing ownership record. Generic runtimes encode role
-and boundaries in prompt; unavailable controls use runtime default.
+and boundaries in prompt; unavailable optional controls use runtime default.
+Handle owner launch failures through [agent routing](agent-routing.md#owner-start-failure).
 
 Default owners handle every planner and normal ticket. Helpers are bounded
 read-only and never substitute for an owner. Do not call broad scope, API,
@@ -81,6 +82,19 @@ interval identities on resume rather than restarting elapsed counters. Missing
 required capability blocks only that ticket.
 Wayfinder, triage, and epic lanes keep their own procedures.
 
+In implementation briefs, require a search across every test suite for affected
+assertions when changing shared presentation such as labels, copy or action
+names; the plan's suite list does not bound that search. For every delegated
+brief, make result delivery explicit: in Claude Code, include the
+[nested-agent launch rule](subagent-selection.md#claude-code) whenever further
+delegation is allowed and the owner needs its results before returning. End
+every brief with: "after returning your report, stop; do not wait on background work".
+Relay a misrouted completion to its owner
+with the exact reviewed head and coverage; it still needs owner reconciliation.
+If a pushed owner repeats its report without new work, stop its active turn
+through the runtime's cancellation mechanism, preserve its handle/checkpoint,
+and resume only for an actionable event.
+
 ### Repair progress gate
 
 For an ordinary in-scope repair outside required CI, compare the failure after
@@ -132,9 +146,27 @@ and otherwise permitting earlier PR readiness under existing ticket-agent PR
 authority. Preserve stricter explicit repository requirements. CI-supplied
 full-suite evidence must pass on the final head before delivery `ready` or
 merge; PR readiness alone never qualifies controller acceptance.
+When a repository's full-check command exceeds its runner deadline under load,
+accept a complete sharded full-suite run as local evidence only with a manifest
+proving every test file ran exactly once at the same candidate, plus all static checks and build steps,
+equivalent configuration and preserved suite-wide setup/teardown; otherwise
+report incomplete evidence. Permit one reported rerun of a plausibly load-driven
+failure in untouched code, preserving both results and the load evidence;
+repetition or uncertainty remains a failure.
 
 PRs include the configured closing or non-closing issue link, rationale,
-validation, and residual risks. Keep claim/agent while open; drain follows
+validation, and residual risks. For partial PRs, include and verify the
+[partial recovery metadata](normalized-ticket.md#partial-pr-recovery) in the
+original creation body. After every PR creation or body edit by the
+controller or its ticket owner, read the complete `closingIssuesReferences` set
+through the connector or GraphQL/`gh pr view` fallback. Compare repository-qualified
+issue identities exactly: only the ticket for a fully closing PR under
+`closing-keyword`, and none for a non-closing partial PR or `close-after-merge`.
+On mismatch, correct the body and re-read before shepherding CI or merging;
+remove an unintended manual closing link through the permitted PR operation
+if a body correction cannot clear it. Unknown, partial or still-mismatched
+readback blocks acceptance. CI may start automatically; its success cannot
+clear this guard. Keep claim/agent while open; drain follows
 Remote Waiting and terminal-CI parking,
 next shepherds directly through `deliver-spec`'s Project mode. For feedback,
 invoke `shepherd` for triage and PR actions. Keep code repairs with the ticket
@@ -150,12 +182,16 @@ recorded authority. Use scheduler/wait mechanisms, never long sleep.
 
 Before merge, refresh the exact head and revalidate authority, required checks,
 reviews, finding dispositions, evidence applicability, mergeability and
-configuration. When a merge or associated closure grant is absent,
+configuration; repeat the closing-reference comparison above immediately before
+merge or merge-queue admission. When a merge or associated closure grant is absent,
 apply the [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket).
 Follow configured merge/queue, serialize oldest ready slot
 unless dependency requires otherwise, and reconcile exact merge. Enforce closure
-policy, reconcile Done automation without archiving/removing directly, stop on
-unexpected outcomes, cleanly detach/snap worktree to base without `git clean`,
+policy and [reconcile unintended closures](remote-reconciliation.md#unintended-closure)
+before Done automation or cleanup. A partial merge retains the open issue,
+unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
+For a completed ticket, reconcile Done without archiving/removing directly, stop
+on unexpected outcomes, cleanly detach/snap worktree to base without `git clean`,
 delete only skill-created local ticket branch, discard agent, refresh other PRs,
 and query Project completely. `next` finishes one selected terminal issue,
 Wayfinder child, tail triage, or ready epic; otherwise report human frontier.

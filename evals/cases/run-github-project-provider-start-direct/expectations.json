@@ -1,0 +1,31 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/decision.md",
+      "count": 1,
+      "must_match": [
+        "^Repeated\\-start: stop\\-drain\\-and\\-report$",
+        "^Silent\\-fallback: forbidden$",
+        "^Ambiguous\\-start: reconcile\\-before\\-retry$",
+        "^Busy\\-runtime: wait\\-for\\-capacity$",
+        "^Explicit\\-fallback: allowed\\-after\\-reconciliation$",
+        "^Active\\-owner: quiesce\\-and\\-preserve$"
+      ],
+      "must_not_match": [
+        "^Repeated\\-start: (?!stop\\-drain\\-and\\-report$).*$",
+        "^Silent\\-fallback: (?!forbidden$).*$",
+        "^Ambiguous\\-start: (?!reconcile\\-before\\-retry$).*$",
+        "^Busy\\-runtime: (?!wait\\-for\\-capacity$).*$",
+        "^Explicit\\-fallback: (?!allowed\\-after\\-reconciliation$).*$",
+        "^Active\\-owner: (?!quiesce\\-and\\-preserve$).*$"
+      ]
+    }
+  ]
+}

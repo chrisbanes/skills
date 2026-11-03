@@ -253,10 +253,11 @@ def pull_request_values(
             raise InputError(
                 f"ticket {number}: pull request closesIssue must be a boolean",
             )
-        if "linksIssue" in value and not isinstance(value["linksIssue"], bool):
-            raise InputError(
-                f"ticket {number}: pull request linksIssue must be a boolean",
-            )
+        for field in ("linksIssue", "verifiedPartial"):
+            if field in value and not isinstance(value[field], bool):
+                raise InputError(
+                    f"ticket {number}: pull request {field} must be a boolean",
+                )
         if not require_execution_fields:
             result.append(value)
             continue
@@ -356,10 +357,15 @@ def has_current_user_assignment(ticket: Any, current_user: str) -> bool:
     )
 
 
-def matches_issue_policy(pull_request: dict[str, Any], issue_closure: str) -> bool:
+def matches_issue_policy(
+    pull_request: dict[str, Any], issue_closure: str, *, retained_claim: bool,
+) -> bool:
     return pull_request.get("closesIssue") is True or (
-        issue_closure == "close-after-merge"
-        and pull_request.get("linksIssue") is True
+        pull_request.get("linksIssue") is True
+        and (
+            issue_closure == "close-after-merge"
+            or (retained_claim and pull_request.get("verifiedPartial") is True)
+        )
     )
 
 
@@ -686,7 +692,9 @@ def analyze_ticket(
     ]
     own_linked_pull_requests = [
         pull_request for pull_request in own_pull_requests
-        if matches_issue_policy(pull_request, issue_closure)
+        if matches_issue_policy(
+            pull_request, issue_closure, retained_claim=assigned_to_current_user,
+        )
     ]
     retained_pr_matches_report = (
         replan_request is not None
@@ -761,7 +769,9 @@ def analyze_ticket(
     ]
     own_unlinked_pull_requests = [
         pull_request for pull_request in own_pull_requests
-        if not matches_issue_policy(pull_request, issue_closure)
+        if not matches_issue_policy(
+            pull_request, issue_closure, retained_claim=assigned_to_current_user,
+        )
     ]
     other_pull_requests = [
         pull_request for pull_request in pull_requests

@@ -1,0 +1,33 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/decision.md",
+      "count": 1,
+      "must_match": [
+        "^Complete\\-shards: accept\\-local\\-evidence$",
+        "^Load\\-rerun: report\\-both\\-results$",
+        "^Pending\\-ci: hold\\-merge$",
+        "^Missing\\-file: incomplete$",
+        "^Lost\\-setup: not\\-equivalent$",
+        "^Changed\\-code: normal\\-repair$",
+        "^Repeated\\-failure: retain\\-failure$"
+      ],
+      "must_not_match": [
+        "^Complete\\-shards: (?!accept\\-local\\-evidence$).*$",
+        "^Load\\-rerun: (?!report\\-both\\-results$).*$",
+        "^Pending\\-ci: (?!hold\\-merge$).*$",
+        "^Missing\\-file: (?!incomplete$).*$",
+        "^Lost\\-setup: (?!not\\-equivalent$).*$",
+        "^Changed\\-code: (?!normal\\-repair$).*$",
+        "^Repeated\\-failure: (?!retain\\-failure$).*$"
+      ]
+    }
+  ]
+}

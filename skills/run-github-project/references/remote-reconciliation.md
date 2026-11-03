@@ -25,3 +25,18 @@ check, comment, PR, merge, or closure is absent.
    failure is global. Preserve its claim and worktree and report the last
    confirmed state. Access, configuration, and ambiguous-mutation failures are
    never parking signals; apply the scheduler's failure-isolation rules.
+
+## Unintended Closure
+
+After a merge or discovery of an unexpected closure, compare actual issue
+closures with the intended set recorded under the
+[ticket lifecycle guard](ticket-lifecycle.md#pre-push-shepherd-and-merge).
+For a controller-run PR proven to have closed an unintended issue with pending
+work, reopen it, restore its last verified pre-closure Project Status, and leave
+one explanatory comment linking the PR and remaining work. Perform and read back
+each correction through the controller lane using the procedure above. Preserve
+concurrent human changes; if cause, prior Status or write authority is uncertain,
+report the exact repair needed and pause affected reconciliation rather than
+guessing. Backlog recovery remains read-only under the execution controller's
+column rule. Do not report the issue Done or clean its retained work until
+recovery is verified.

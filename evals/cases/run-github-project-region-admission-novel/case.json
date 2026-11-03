@@ -1,0 +1,44 @@
+{
+  "id": "run-github-project-region-admission-novel",
+  "title": "Admit disjoint regions without blanket CI reruns",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/decision.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-region-admission-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "regions",
+      "text": "Proves semantic independence, records region ownership/checks/stop boundaries; does not invent a whole-file lock, but honors declared locks and genuine dependencies."
+    },
+    {
+      "id": "drift",
+      "text": "Does not rebase/rerun merely for shared files; uses conflict, policy and tested-assumption invalidation gates, older-first integration and same-owner affected evidence renewal. Unknown probe outcome is not a clean merge."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

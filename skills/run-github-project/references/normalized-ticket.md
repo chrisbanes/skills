@@ -211,6 +211,22 @@ only after verifying every intervening renewal and predecessor. The ranker
 checks normalized identity consistency; it does not authenticate comments,
 compare configuration semantics or grant access.
 
+## Partial PR Recovery
+
+For an intentionally non-closing implementation PR, include its non-closing
+issue URL, approved plan permalink/digest and remaining work in the original PR
+creation body. This makes intent recoverable even if the run stops before
+publishing an authority pause. On recovery, verify that body against the current
+claim and approved plan, authenticated PR author, exact head, repository/base
+and complete competing-PR inventory. Then normalize `linksIssue: true`,
+`closesIssue: false` and `verifiedPartial: true`; record the evidence with the
+existing ownership record. `verifiedPartial` is an optional controller-derived
+boolean, false when omitted; a bare issue mention or unverified body supplies
+no proof. The ranker permits this exception only for a retained current-user
+claim, never unclaimed adoption. Unknown or stale proof preserves a blocked
+claim. Matching a partial PR authorizes neither live qualification nor merge;
+repeat unattended readiness and the closing-reference guard at their gates.
+
 ## Other Ticket Shapes And Plan State
 
 Use the same canonical shape for Todo triage contenders, with `replanRequest`

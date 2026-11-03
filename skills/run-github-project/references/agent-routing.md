@@ -1,8 +1,8 @@
 # Agent routing
 
 Read this reference only when the trusted Project configuration has an Agent
-Setup section. Profiles select execution capabilities, not model tiers; they
-grant no authority.
+Setup section, or when an owner fails to start. Profiles select execution
+capabilities, not model tiers; they grant no authority.
 
 1. Validate configured profiles against the runtime. Keep the user-selected
    lead model unchanged. Use `default-owner` for planners and ticket owners,
@@ -28,3 +28,16 @@ grant no authority.
    selection alone does not resolve those settings. Record the assignment, actual
    runtime role, configured profile, and model and reasoning when exposed in
    the existing ownership record. Finish with the agent's evidence or blocker.
+
+## Owner Start Failure
+
+After a configured runtime/provider fails to start a ticket owner, confirm no
+owner started before retrying that same profile once. An ambiguous start needs
+reconciliation before any retry. If the retry fails, stop the drain and report
+the provider error and preserved claims, branches, PRs and checkpoints; quiesce
+active owners safely rather than abandoning their writes. Never silently switch
+providers. An explicit Agent Setup fallback or current user instruction may
+permit a named alternative after failed-start reconciliation; record that
+authority and selection. A reversible-decision option cannot supply fallback
+authority. Distinguish start failure from temporary capacity exhaustion or an
+unsupported profile found before launch, which use the selection rules above.

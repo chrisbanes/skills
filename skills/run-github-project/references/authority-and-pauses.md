@@ -37,9 +37,28 @@
 The controller's [unattended preflight](execution-controller.md#unattended-readiness)
 discovers missing execution and qualification authority before dispatch. A
 preflight observation never grants permission or satisfies qualification. Keep
-unclaimed work unassigned, record its exact blocked operation and resume
-condition here, and continue independent work. Recheck bounded grant consumption
-before each affected operation; a pause or resume never resets it.
+work with no independently authorized runnable slice unassigned, record its
+exact blocked operation and resume condition here, and continue independent
+work. Recheck bounded grant consumption before each affected operation; a pause or resume never resets it.
+
+## Optional Autonomous Decisions
+
+Enable this behavior only when the user asks this `drain` invocation to resolve
+blockers autonomously; record its scope and expire it with the run grant.
+Within that scope and the accepted stakeholder contract, make reversible
+process and product decisions without another question. Before acting, record
+in a user-reviewable decision log the situation, choice, evidence and reason,
+and concrete reversal procedure; link the entry from the affected ticket's
+ownership record. Include the log's location in the final report. If a change
+alters the accepted contract, use the existing replan/stakeholder route instead.
+
+This option supplies neither operation-specific permission nor missing
+qualification. Stop the affected operation for a new irreversible decision,
+permission denials or self-granted authority, preserving work under the ticket pause
+procedure; handle provider start failures under
+[agent routing](agent-routing.md#owner-start-failure). Keep global failures under
+the drain's existing stop rules. With the option off, retain ordinary in-scope
+execution authority and route material decisions through the normal pause.
 
 ## Resolve The Merge Question
 

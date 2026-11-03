@@ -253,6 +253,17 @@ does not count these repairs. Apply the [repair progress gate](ticket-lifecycle.
 when attempts reproduce the same failure; required CI also follows the
 [terminal required-CI rule](drain-scheduler.md#terminal-required-ci-parking).
 
+When a repair needs a path or region outside the plan's file list, the owner
+stops and reports it before proceeding. The controller may extend ownership
+without full replanning only when the edit is mechanical or directly supports
+an in-scope fix, no sibling owns the path or affected region, and independent
+review covers the resulting edit before acceptance. Record the scope decision
+and review evidence in the ownership record or enabled decision log. If an
+unreported edit is discovered at handoff, hold acceptance until these checks
+pass; retrospective acceptance never permits silent scope expansion. Changes
+to another ticket's behavior, a public contract or migration ordering require
+an explicit controller decision under the packet classification below.
+
 For a fast-path revision, a failed fast-path condition or a changed contract
 digest also requires a packet. When the controller detects the digest change,
 it stops the ticket's writes and asks the owning ticket agent for the packet.
