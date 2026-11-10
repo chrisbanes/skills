@@ -25,17 +25,20 @@ not a claim that Claude and Codex models are equivalent.
 | Assignment | Model / effort |
 |---|---|
 | Purely mechanical: exact checks, simple extraction, no judgment | haiku / low |
-| Computer use or visual interpretation with a defined outcome | sonnet / medium |
+| Computer use or visual interpretation with a defined outcome | opus / medium |
 | Concise drafting or editing from supplied material | sonnet / low |
 | Ordinary bounded implementation, fixes, refactoring, and UI fixes (default) | sonnet / medium |
 | Substantial synthesis across several sources, clear constraints | sonnet / high |
 | Complex or ambiguous judgment across interacting components | opus / medium |
 | Difficult correctness investigations or independent correctness reviews | opus / high |
-| Conflicting evidence or demanding cross-component polish | opus / xhigh |
+| Conflicting evidence or demanding cross-component polish | fable / high |
 
-4. Reserve `fable` and `max` for justified exceptions: explain why
-   `opus / xhigh` is insufficient and confirm availability. Repository size,
-   elapsed time, missing inputs, or routine tool failures do not justify them.
+4. `fable / high` is the top routine row. Reserve `max`, and `fable` above
+   `high`, for justified exceptions: explain why `fable / high` is
+   insufficient and confirm availability. Repository size, elapsed time,
+   missing inputs, or routine tool failures do not justify them. If `fable`
+   is unavailable or not entitled on the active provider, use `opus / xhigh`
+   and report the substitution to the lead; never downgrade silently.
 5. Follow the [Claude Code handoff rules](subagent-selection.md#claude-code)
    for resuming owners, forbidding nesting, one-shot `Explore` and `Plan`,
    result delivery, and writer permissions. Model and effort overrides persist

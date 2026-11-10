@@ -47,7 +47,7 @@ the lead. Installed agent definitions are authoritative for pinned settings.
    assignment category in the brief and justify departures from the default
    row. For investigations, name the unresolved question; for reviews,
    identify the correctness checks; for synthesis, identify the evidence or
-   deliverable demands. At opus (Claude Code), Sol (Codex), or an equivalent
+   deliverable demands. At opus or fable (Claude Code), Sol (Codex), or an equivalent
    tier with high effort or above, make that question or those checks
    concrete; touching a risky area alone does not qualify. If work stalls,
    diagnose missing inputs, tool failures, or routine test repairs before
