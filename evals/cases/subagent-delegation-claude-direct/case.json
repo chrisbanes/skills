@@ -27,11 +27,11 @@
   "rubric": [
     {
       "id": "routing",
-      "text": "Chooses haiku/low, sonnet/medium, sonnet/low, sonnet/medium, sonnet/high, opus/medium, opus/high, opus/xhigh in assignment order. Treats these as policy defaults, not claims of cross-provider model equivalence."
+      "text": "Chooses haiku/low, opus/medium, sonnet/low, sonnet/medium, sonnet/high, opus/medium, opus/high, fable/high in assignment order. Treats these as policy defaults, not claims of cross-provider model equivalence."
     },
     {
       "id": "runtime",
-      "text": "Uses Agent model and effort aliases on fresh non-fork calls and never passes Codex model IDs, reasoning_effort, or fork_turns. Confirms tool capability separately from model choice and reserves fable/max for justified exceptions beyond opus/xhigh."
+      "text": "Uses Agent model and effort aliases on fresh non-fork calls and never passes Codex model IDs, reasoning_effort, or fork_turns. Confirms tool capability separately from model choice and reserves max, and fable above high, for justified exceptions beyond fable/high; does not escalate the ordinary rows to fable."
     },
     {
       "id": "brief",
