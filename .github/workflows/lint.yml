@@ -19,7 +19,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build
+      - run: npm run references:check
 
       - run: npm run lint
 
