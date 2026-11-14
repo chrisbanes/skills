@@ -285,7 +285,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(47, len(benchmark))
-        self.assertEqual(131, len(calibration))
+        self.assertEqual(134, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(47, len(filter_cases(report.cases, case_ids=None, skills=None)))
@@ -406,6 +406,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-preparation-direct",
                 "deliver-spec-behavioral-dependency-novel",
                 "run-github-project-shared-seam-negative",
+                "deliver-spec-revision-evidence-direct",
+                "deliver-spec-revision-preservation-novel",
+                "deliver-spec-revision-reuse-negative",
                 "deliver-spec-nested-reviewer-direct",
                 "deliver-spec-nested-helpers-novel",
                 "run-github-project-background-owners-negative",
@@ -1871,6 +1874,95 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     with self.subTest(case=case_id, contradictory=key):
                         result = check({**fields, key: f"{fields[key]}\n{key}: {unsafe[key]}"})
                         self.assertEqual(1, result.returncode, result.stderr)
+
+    def test_revision_evidence_decisions_reject_unsafe_variants(self):
+        reports = {
+            "deliver-spec-revision-evidence-direct": [
+                {
+                    "Folder": "1753-evidence/r3/",
+                    "Old-output": "refuse-and-redirect-to-r3",
+                    "Earlier-reports": "read-only",
+                    "Budget": "preserve-consumption",
+                    "Handoff": "folder-written-paths-and-comparison",
+                    "Controller": "independent-outside-folder-check"
+                },
+                {
+                    "Folder": "1753-evidence/r2/",
+                    "Old-output": "overwrite",
+                    "Earlier-reports": "rewrite",
+                    "Budget": "reset",
+                    "Handoff": "tests-only",
+                    "Controller": "trust-owner"
+                }
+            ],
+            "deliver-spec-revision-preservation-novel": [
+                {
+                    "Handoff": "fail",
+                    "Legacy-change": "preservation-failure",
+                    "Symlink-write": "refuse",
+                    "Missing-baseline": "preservation-unknown",
+                    "Recovery": "stop-writes-preserve-and-reconcile",
+                    "Source-edits": "normal-approved-scope"
+                },
+                {
+                    "Handoff": "ready",
+                    "Legacy-change": "ignore",
+                    "Symlink-write": "allow",
+                    "Missing-baseline": "rebaseline-and-accept",
+                    "Recovery": "silent-restore",
+                    "Source-edits": "forbid-all"
+                }
+            ],
+            "deliver-spec-revision-reuse-negative": [
+                {
+                    "Folder": "evidence/r4/",
+                    "Reuse": "cite-r2-original-path-and-identity",
+                    "Earlier-files": "unchanged",
+                    "Reruns": "affected-only",
+                    "Local-folder": "local-results/",
+                    "New-revision": "none"
+                },
+                {
+                    "Folder": "evidence/r5/",
+                    "Reuse": "copy-and-relabel",
+                    "Earlier-files": "rewrite",
+                    "Reruns": "all",
+                    "Local-folder": "local-results/r1/",
+                    "New-revision": "invent-r5"
+                }
+            ]
+        }
+        cases = {case.id: case for case in validate_corpus(REPO_ROOT, suite="workflows-writing").cases}
+        validator = REPO_ROOT / "evals/validators/text_case.py"
+        for case_id, (fields, unsafe) in reports.items():
+            self.assertEqual((".scratch/evidence.md",), cases[case_id].allowed_write_paths)
+            with tempfile.TemporaryDirectory() as directory:
+                workspace = Path(directory)
+                (workspace / "state.md").write_bytes(
+                    (REPO_ROOT / "evals/fixtures/workflow/state.md").read_bytes()
+                )
+                artifact = workspace / ".scratch/evidence.md"
+                artifact.parent.mkdir()
+
+                def check(values):
+                    artifact.write_text("\n".join(f"{key}: {value}" for key, value in values.items()) + "\n")
+                    return subprocess.run(
+                        [sys.executable, "-B", str(validator), case_id],
+                        cwd=workspace, text=True, capture_output=True, check=False,
+                    )
+
+                result = check(fields)
+                self.assertEqual(0, result.returncode, result.stderr)
+                for key in fields:
+                    variants = {
+                        "missing": {k: v for k, v in fields.items() if k != key},
+                        "unsafe": {**fields, key: unsafe[key]},
+                        "contradictory": {**fields, key: f"{fields[key]}\n{key}: {unsafe[key]}"},
+                    }
+                    for variant, values in variants.items():
+                        with self.subTest(case=case_id, field=key, variant=variant):
+                            result = check(values)
+                            self.assertEqual(1, result.returncode, result.stderr)
 
     def test_nested_agent_and_payload_digest_decisions_reject_unsafe_variants(self):
         reports = {

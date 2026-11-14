@@ -63,6 +63,13 @@ evidence to the delivery owner; implementation and evidence renewal stay there.
 For every ordinary implementation
 ticket, invoke `deliver-spec` with this verified packet under its
 [Project handoff procedure](../../deliver-spec/references/project-handoff.md).
+Before dispatch or resume, bind the marker's active revision and evidence
+folder and retain a controller-owned preservation baseline under
+[revision evidence isolation](../../deliver-spec/references/evidence-and-review.md#isolate-plan-revision-evidence).
+Require the folder and written paths in every returned handoff; independently
+compare the evidence tree outside that folder with the retained baseline before
+acceptance. Changed or unknown preservation blocks that handoff and further
+evidence writes pending reconciliation; passing checks do not waive it.
 When the accepted source requires asynchronous or persistent live
 qualification, include the finite qualification contract, offline harness
 result, exact execution and recovery checkpoint, remaining approved allowance,

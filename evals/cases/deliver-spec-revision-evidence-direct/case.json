@@ -1,0 +1,42 @@
+{
+  "id": "deliver-spec-revision-evidence-direct",
+  "title": "deliver spec revision evidence direct",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec",
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "deliver-spec",
+    "run-github-project"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/evidence.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-revision-evidence-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "revision-isolation",
+      "text": "Explains the supplied decisions using verified revision identity, containment, immutable earlier evidence and independently checked preservation. No silent restoration, baseline reset, budget reset, unnecessary rerun or invented revision."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
