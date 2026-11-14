@@ -4,6 +4,43 @@ Keep completed work and valid evidence, while renewing what the current
 candidate changes. Apply this procedure in standalone and Project delivery;
 the selected mode retains its approval, authority and finish gates.
 
+## Isolate plan-revision evidence
+
+1. Before producing evidence for a numbered plan, resolve the verified active
+   plan marker and its revision N (`v1` means revision 1; `v2` uses `Revision`).
+   Bind the plan permalink/digest, evidence root and `<evidence>/rN/` in the
+   delivery record and every writer's brief. Use that folder for all new or
+   renewed reports, logs, check output and blocker evidence, including delegated
+   and tool-generated output. A resume of the same revision keeps its folder;
+   a verified new revision gets a new folder without moving earlier evidence.
+   Missing or ambiguous revision identity blocks evidence writes; local
+   conversation plans without numbered markers keep their existing storage.
+2. Before dispatch or standalone execution, retain an inventory of paths, file
+   types and content hashes for the evidence tree outside the active folder,
+   including legacy unversioned files. The controller retains its own baseline
+   outside the delivery writer's evidence tree; standalone leads retain the same
+   baseline in their delivery record. Reuse it across resumes, reconciling any
+   missing baseline before more writes rather than accepting current files as
+   proof of preservation.
+3. Before each evidence write, resolve the destination and any symlinked parent;
+   require containment in the active revision folder under the verified root.
+   Reject a revision folder or path alias that resolves into another revision
+   or outside that root.
+   Refuse writes, deletes, renames or output redirection outside it, especially
+   under `rM/` where M < N. Earlier evidence remains read-only: cite its original
+   path and identity when still applicable, and record reuse or invalidation in
+   the current folder. Write replacement results there; preserve prior failures,
+   blocker records and consumed budgets rather than relabelling them.
+4. At every handoff, list the plan revision, exact revision folder, written paths
+   and preservation comparison against the retained baseline. The standalone
+   lead or Project controller independently checks path membership, file types
+   and hashes outside that folder, including additions, deletions and renames.
+   This boundary covers evidence, not authorised source-code edits. Fail the
+   handoff if anything outside changed or preservation is unknown, even if tests
+   pass. Stop evidence writes, preserve the incident and available copies, and
+   return the discrepancy for reconciliation; do not silently restore files or
+   reset the baseline to hide it. Resume only after preservation is reconciled.
+
 ## Implementation and validation
 
 1. Apply [Behavioral review and repair](behavioral-review.md) for implementation

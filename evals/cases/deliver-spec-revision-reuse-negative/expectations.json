@@ -1,0 +1,31 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/evidence.md",
+      "count": 1,
+      "must_match": [
+        "^Folder: evidence/r4/$",
+        "^Reuse: cite\\-r2\\-original\\-path\\-and\\-identity$",
+        "^Earlier\\-files: unchanged$",
+        "^Reruns: affected\\-only$",
+        "^Local\\-folder: local\\-results/$",
+        "^New\\-revision: none$"
+      ],
+      "must_not_match": [
+        "^Folder: (?!evidence/r4/$)[^\\n]*$",
+        "^Reuse: (?!cite\\-r2\\-original\\-path\\-and\\-identity$)[^\\n]*$",
+        "^Earlier\\-files: (?!unchanged$)[^\\n]*$",
+        "^Reruns: (?!affected\\-only$)[^\\n]*$",
+        "^Local\\-folder: (?!local\\-results/$)[^\\n]*$",
+        "^New\\-revision: (?!none$)[^\\n]*$"
+      ]
+    }
+  ]
+}

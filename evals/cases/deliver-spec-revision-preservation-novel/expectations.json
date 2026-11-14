@@ -1,0 +1,31 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/evidence.md",
+      "count": 1,
+      "must_match": [
+        "^Handoff: fail$",
+        "^Legacy\\-change: preservation\\-failure$",
+        "^Symlink\\-write: refuse$",
+        "^Missing\\-baseline: preservation\\-unknown$",
+        "^Recovery: stop\\-writes\\-preserve\\-and\\-reconcile$",
+        "^Source\\-edits: normal\\-approved\\-scope$"
+      ],
+      "must_not_match": [
+        "^Handoff: (?!fail$)[^\\n]*$",
+        "^Legacy\\-change: (?!preservation\\-failure$)[^\\n]*$",
+        "^Symlink\\-write: (?!refuse$)[^\\n]*$",
+        "^Missing\\-baseline: (?!preservation\\-unknown$)[^\\n]*$",
+        "^Recovery: (?!stop\\-writes\\-preserve\\-and\\-reconcile$)[^\\n]*$",
+        "^Source\\-edits: (?!normal\\-approved\\-scope$)[^\\n]*$"
+      ]
+    }
+  ]
+}

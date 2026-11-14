@@ -10,7 +10,8 @@ handoff or take over a Project claim.
    [ticket lifecycle](../../run-github-project/references/ticket-lifecycle.md):
    source/plan identities and task graph, trusted binding, item and runner,
    configuration and authority leases, fixed base, worktree/branch/PR head,
-   review evidence, repair usage, and agent capacity. Reconcile live state on
+   review evidence, repair usage, agent capacity, active revision evidence folder
+   and controller-retained preservation baseline. Reconcile live state on
    resume; return gaps to the controller without selecting or claiming work.
    Establish independent-review capability from runtime metadata, without a
    capability-only reviewer. Reconcile retained candidate evidence; solo delivery
@@ -71,6 +72,9 @@ handoff or take over a Project claim.
    passes; resume the same context when actionable. Remote waiting consumes
    no active-agent capacity.
 7. Return `ready`, `pending`, `blocked`, or `no-change` with exact evidence.
+   Include the revision folder and written paths under
+   [evidence isolation](evidence-and-review.md#isolate-plan-revision-evidence);
+   controller preservation verification is required before accepting the handoff.
    `pending` names only remote or controller-owned gates; never return while a
    reviewer or helper you launched is still running. The controller alone
    claims, assigns, changes labels/Project Status, records

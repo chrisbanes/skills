@@ -63,7 +63,8 @@ Project run already owns that issue, return it to that controller.
    Reconcile retained work before implementing; never redo accepted work for
    routing.
    Follow [Evidence and review](references/evidence-and-review.md) for testing,
-   corrections and the single reusable delivery record. When the source requires
+   corrections, revision-isolated evidence and the single reusable delivery
+   record. When the source requires
    asynchronous or persistent live qualification, apply
    [Live qualification and failure recovery](references/qualification-failure.md)
    before attempts and resumes; do not add it to ordinary offline work.
