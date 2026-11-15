@@ -1,0 +1,3 @@
+Use only the supplied state and applicable skill instructions. Read skill entrypoints and needed Markdown references using standalone `cat` commands. Do not execute the workflow, run other commands, contact providers, launch agents or change files.
+
+In `drain` on T3 Code, the controller is about to claim #90 for a free implementation slot. T3 Code can create managed worktrees for delegated threads at a chosen base, but exposes no operation that removes them, and its documentation says the worktree stays after the thread is deleted. Later the run restarts and must find #90's worktree again; its authority-pause marker must not leak local paths. How is #90's worktree created, recorded and found after restart?

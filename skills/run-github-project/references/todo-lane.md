@@ -58,9 +58,10 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    authenticated user, refetch and verify the assignment, and release the lane. Reconcile an
    ambiguous Status or assignment mutation before retrying. Preserve the
    assignment through planning and implementation.
-2. Use one dedicated, reusable, clean planning worktree at a stable
-   controller-recorded path outside the checkout, detached at the configured
-   base. Refresh it only between tickets; never discard ignored build state.
+2. Use one dedicated planning worktree per run, created outside the checkout
+   under the [checkout lifecycle](checkout-lifecycle.md) and detached at the
+   configured base. Reuse it within the run, refresh it only between tickets,
+   and never discard ignored build state while reusing it.
 3. Start a fresh ephemeral planning agent using the default-owner capability
    from [Route Agents By Task](ticket-lifecycle.md#route-agents-by-task) and invoke:
 
@@ -109,9 +110,10 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    resume that handoff before new claims when a slot frees.
 
 After a successful handoff, require the planning worktree to be clean with no
-retained draft, detach it, snap it to the verified base, and keep it for reuse.
-Preserve its exact path, base, and draft only when planning blocks and recovery
-requires them.
+retained draft, detach it, snap it to the verified base, and keep it for reuse
+in this run; [Worktrees](ticket-lifecycle.md#worktrees) step 6 retires it at
+run end. Preserve its exact path, base, and draft only when planning blocks and
+recovery requires them; report it as retained with that reason.
 
 Project schema mutations are never part of this procedure. Stop with the
 required configuration repair when an expected field or option is missing.
@@ -352,8 +354,10 @@ Use this only after a recorded stakeholder direction explicitly abandons the
 partial work. While the item is still in Todo or a later eligible column:
 
 1. Publish and verify the decision-bearing report and exact owned artifacts.
-2. Reconcile the explicit PR closure and skill-owned process, resource,
-   worktree, and branch cleanup. Preserve any foreign or ambiguous artifact.
+2. Reconcile the explicit PR closure and skill-owned process and resource
+   cleanup, and clean up the worktree and branch under
+   [Worktrees](ticket-lifecycle.md#worktrees). Preserve any foreign or
+   ambiguous artifact.
 3. Verify cleanup, replace the agent role with the configured human-work role,
    and unassign the runner. Keep unresolved cleanup paused in the current
    eligible column; do not transfer an unfinished cleanup lease to Backlog.

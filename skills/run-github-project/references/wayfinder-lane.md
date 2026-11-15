@@ -86,8 +86,11 @@ with another AFK child only through another fresh context.
 For a research child, require the provider to invoke the installed `research`
 skill in a separate subagent. Give it the ticket question and map Notes,
 require primary-source citations in one repository Markdown artifact on a
-throwaway `research/<name>` branch in an isolated research worktree, and return
-its linked context pointer to the Wayfinder owner. A drain invocation may
+throwaway `research/<name>` branch in an isolated research worktree created
+under the [checkout lifecycle](checkout-lifecycle.md), and return its linked
+context pointer to the Wayfinder owner. Once the branch push and context
+pointer are verified, retire that worktree under the
+[checkout lifecycle](checkout-lifecycle.md#retire). A drain invocation may
 process multiple research tickets under Wayfinder's research exception, but it
 must claim each child before dispatch. A generic discovery helper is not a
 substitute for the `research` provider.

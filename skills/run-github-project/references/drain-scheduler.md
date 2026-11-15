@@ -13,13 +13,14 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    effective slot limit to the ranker, not the currently free agent count.
    Never turn a ranked candidate or idle slot into an agent-capacity grant.
 2. Give each occupied slot one ticket agent, issue, authority lease, warm
-   worktree, branch, PR, verified SHA, remote-wait deadline, and fix-round count.
+   worktree under [Worktrees](ticket-lifecycle.md#worktrees), branch, PR,
+   verified SHA, remote-wait deadline, and fix-round count.
    Start unrelated ticket agents concurrently by default when agent capacity
    permits.
 3. Keep every implementation claim `In progress` until merge reconciliation. Derive
    operational state from its slot, PR, checks, and reviews; require no extra
    Project Status values. A claim in [Remote Waiting](#remote-waiting) keeps
-   its status, idle agent, warm worktree and PR but frees its slot. Cap waiting
+   its status, idle agent, worktree and PR but frees its slot. Cap waiting
    claims at the effective slot limit unless the user sets another cap; when
    the cap is full, the claim keeps its slot. Keep waiting claims outside the
    ranker's normalized array and `--max-claims` count, as for parked claims.
@@ -27,8 +28,8 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    [Remote Waiting](#remote-waiting),
    [Terminal Required-CI Parking](#terminal-required-ci-parking) and
    [ticket authority pauses](authority-and-pauses.md), using GitHub
-   claims and marker records plus verified skill-owned worktrees. Use local
-   caches only as hints.
+   claims and marker records plus worktrees located by branch under
+   [Worktrees](ticket-lifecycle.md#worktrees). Use local caches only as hints.
 5. Recover verified authority pauses outside capacity before ranking. Preserve
    invalid current-user claims as blocked slots, classify waiting claims
    (those beyond the waiting cap occupy slots), resume every other valid
@@ -447,7 +448,8 @@ releasing the slot:
 
 1. Publish one runner-authored issue comment containing
    `<!-- run-github-project:parked-implementation:v1 -->`, the issue and Project
-   item IDs, PR URL, branch and head SHA, verified base SHA, committed
+   item IDs, PR URL, branch, head SHA and
+   [checkout ID](ticket-lifecycle.md#worktrees), verified base SHA, committed
    configuration digest, and
    [live merge-policy fingerprint](project-config.md#live-merge-policy-fingerprint),
    required-check names and conclusions, sanitized failure fingerprint, and the
@@ -554,8 +556,8 @@ After a merge:
    the merged change invalidates an assumption the PR's checks relied on.
    Never rebase every branch automatically; apply final-head evidence rules
    when an update is required.
-4. Snap the merged claim's clean worktree to the verified base and reuse it.
-5. Delete only that claim's merged local ticket branch.
+4. Clean up the merged claim's worktree and branch under
+   [Worktrees](ticket-lifecycle.md#worktrees).
 
 ## Failure Isolation And Finish Gate
 
@@ -575,11 +577,15 @@ claims when the same collision or infrastructure failure affects two slots or
 the verified base.
 
 If an item is now in Backlog, stop its writers and release capacity. Preserve
-and report any assignment, PR, process checkpoint, worktree, or branch without
-mutating that ticket or cleaning its artifacts. Backlog role labels and prior
+and report any assignment, PR, process checkpoint, or branch without mutating
+that ticket. Retire or retain its worktree under
+[Worktrees](ticket-lifecycle.md#worktrees). Backlog role labels and prior
 ownership never authorize work; only a human promotion makes it eligible again.
 Keep Backlog issues in the native dependency graph, so they can still block
 eligible dependants, but exclude them from automatic frontier actions.
+
+Whenever a drain finishes, waits for humans or stops, apply
+[Worktrees](ticket-lifecycle.md#worktrees) step 6.
 
 Pass the refresh gate before evaluating the finish state. Finish successfully
 only when the authoritative execution-clear predicate in

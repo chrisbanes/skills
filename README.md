@@ -153,8 +153,13 @@ preparation needs explicit slice ownership, permitted paths/resources, focused
 checks and a stop before shared edits; native blockers, accepted-plan ordering,
 resource grants and final integrated validation still apply.
 
-Edit `references/subagent-selection.md`, then run
-`npm run references:sync` and include the updated bundled copies in the change.
+Workflows that create worktrees (`deliver-spec`, `implement-with-subagents`
+and `run-github-project`) likewise share the
+[checkout lifecycle](references/checkout-lifecycle.md).
+
+Edit `references/subagent-selection.md` or `references/checkout-lifecycle.md`,
+then run `npm run references:sync` and include the updated bundled copies in
+the change.
 Run `npm run references:check` to check that all copies are regular files matching their
 sources; it fails on drift without rewriting files.
 `.gitattributes` marks every copy as generated so GitHub collapses it in pull

@@ -1,0 +1,53 @@
+{
+  "id": "run-github-project-worktree-retention-negative",
+  "title": "Keep a merged worktree that still has tracked edits",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-worktree-retention-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "retain",
+      "text": "Rejects the force-removal: a modified tracked file keeps the worktree even though the ticket merged."
+    },
+    {
+      "id": "report",
+      "text": "Records the `git status --porcelain` output and reports the worktree as retained with the modified tracked file as its reason."
+    },
+    {
+      "id": "no-destructive",
+      "text": "Does not run `git clean`, `git reset`, `git checkout`, `git restore` or delete untracked files to make the worktree removable."
+    },
+    {
+      "id": "finish",
+      "text": "Accounts for the worktree in the drain's finish accounting as retained with its reason, leaves the human to resolve the unexplained edit, and continues independent work without stalling the drain."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

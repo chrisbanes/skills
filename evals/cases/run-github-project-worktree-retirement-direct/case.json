@@ -1,0 +1,53 @@
+{
+  "id": "run-github-project-worktree-retirement-direct",
+  "title": "Retire a merged ticket worktree with untracked scratch files",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-worktree-retirement-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "retire",
+      "text": "Retires #80's worktree under the checkout lifecycle instead of snapping it to base and keeping it for reuse."
+    },
+    {
+      "id": "dirt-rule",
+      "text": "Records the exact `git status --porcelain` output in the run report, then removes the worktree with a single `git worktree remove --force` because only untracked files remain; notes that ignored `build/` output does not block removal."
+    },
+    {
+      "id": "readback",
+      "text": "Verifies the path is absent from `git worktree list --porcelain` and accounts for the worktree as retired with readback."
+    },
+    {
+      "id": "branch",
+      "text": "Deletes only the skill-created local `cb/issue-80-cache-key` branch; never runs `git clean`, `git reset`, a double force or a global prune."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

@@ -1,0 +1,53 @@
+{
+  "id": "run-github-project-worktree-runtime-novel",
+  "title": "Choose plain Git worktrees when the runtime cannot remove its own",
+  "family": "workflow",
+  "target_skills": [
+    "run-github-project"
+  ],
+  "expected_skills": [
+    "run-github-project"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-worktree-runtime-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "mechanism",
+      "text": "Creates #90's worktree as a plain Git worktree with `git worktree add -b cb/issue-90-<slug> <path> <verified-base-sha>` because the runtime cannot remove managed worktrees, and verifies its branch and HEAD."
+    },
+    {
+      "id": "one-per-ticket",
+      "text": "Gives #90 its own worktree rather than reusing a pooled slot or another ticket's worktree."
+    },
+    {
+      "id": "marker",
+      "text": "Records branch, base SHA and checkout ID (null for a plain Git worktree) in the run record and markers, never the local path."
+    },
+    {
+      "id": "restart",
+      "text": "After restart, locates the worktree by its branch in `git worktree list --porcelain`, verifies HEAD against the PR head or recorded base, and treats a worktree with no live claim or verified marker as foreign and untouched."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not run commands, launch agents, contact providers or edit files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "allow_skill_reference_reads": true
+}

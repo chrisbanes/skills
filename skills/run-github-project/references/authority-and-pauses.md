@@ -116,7 +116,8 @@ integrity blocker.
    Project item IDs, committed configuration digest, base identity, exact
    blocked operation, missing authority or decision, and an observable resume
    condition. Include current Status and assignment, source and plan
-   permalink/digest, and PR URL, branch, and head when present. Explain which
+   permalink/digest, PR URL, branch, head, and the
+   [checkout ID](ticket-lifecycle.md#worktrees) when present. Explain which
    completed work is preserved. Use nulls for absent artifacts. Keep secrets,
    local paths, and unsanitized logs out of the comment.
 3. Refetch the comment and live ticket/artifact state. Verify the authenticated
