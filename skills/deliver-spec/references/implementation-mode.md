@@ -94,9 +94,9 @@ Runtime caveats:
 
 - [Claude Code](https://code.claude.com/docs/en/sub-agents): `Explore` and
   `Plan` are one-shot and cannot own an item. The lead creates each run-owned
-  plain Git worktree with
-  `git worktree add -b <task-branch> <path> <integrated-sha>`, verifies its
-  branch and SHA, and passes the absolute path in the brief. Never use
+  plain Git worktree at the integrated SHA under the checkout lifecycle's
+  [create rule](checkout-lifecycle.md#create) and passes the absolute path in
+  the brief. Never use
   `Agent(isolation: "worktree")`; it bases on the default branch, not the
   integrated `HEAD`.
 - [OpenCode](https://opencode.ai/docs/agents): `build` is a primary agent, not
@@ -108,44 +108,7 @@ Runtime caveats:
 
 ## Worker checkout lifecycle
 
-Maintain this record in the workflow's existing reporting context, not a new
-committed ledger. Record each checkout's provenance and runtime identity, exact
-path, owner, task branch and base, accepted commits, integration and check
-evidence, active use, and disposition. Distinguish the stable integration
-checkout, run-created worker slots, and pre-existing or adopted checkouts.
-Never infer ownership from a directory name. Pre-existing, adopted, pinned,
-and shared checkouts are not automatically retired.
-
-Release a slot only after its accepted task commit and original branch ref are
-recorded and preserved, integration succeeds, affected checks pass at the exact
-integrated SHA, its owner and processes stop using it, it is clean, and needed
-untracked or ignored artifacts are accounted for. Otherwise retain it. Before
-reuse, create a fresh unique task branch from the recorded current integrated
-SHA, verify the branch and SHA, and hand off the exact path, branch, base, and
-instructions. Never reset or delete an old branch to reuse its checkout.
-
-Retire released surplus slots when remaining work no longer needs their
-capacity, retaining one for sequential work and only justified capacity for
-future concurrent writers. At completion, retire all eligible run-created
-worker slots. On a blocker or interruption, retire eligible surplus when
-execution remains available; retain active, unfinished, failing, dirty, or
-otherwise unsafe checkouts. If interruption prevents cleanup, report it at the
-next opportunity. Preserve the integration checkout, user work, and required
-ignored artifacts. Do not force cleanup to meet a capacity cap.
-
-Use the runtime's native operation for managed worktrees and verify retirement
-through provider inventory. For plain Git worktrees owned by the run, remove
-only the exact eligible path without force and verify it is absent from
-`git worktree list --porcelain`. Never shell-delete a managed checkout, force
-removal, prune globally, or delete branch refs. If ownership or eligibility is
-uncertain, retain and report the checkout.
-
-Account for every run-created checkout as retired with verified readback or
-retained with a reason. Record the integration checkout as retained and explain
-retained exclusions. If eligible retirement fails or cleanup capability is
-missing, report code verification separately and mark the workflow
-cleanup-incomplete; do not claim overall completion. Include the exact path,
-error, and provider readback. Do not retry blindly.
+Follow the [checkout lifecycle](checkout-lifecycle.md) for worker checkouts.
 
 
 ## Ownership boundaries

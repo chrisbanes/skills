@@ -16,7 +16,7 @@ Default lanes are `Backlog` → `Todo` → `Ready to implement` → `In progress
 
 ## Invariants
 
-1. **Column authority:** current column membership authorizes a ticket, never transition history. Backlog is read-only: never claim, plan, triage, close epics or resume cleanup there; only humans move items out. Automatic work starts at Todo.
+1. **Column authority:** current column membership authorizes a ticket, never transition history. Backlog is read-only: never claim, plan, triage, close epics, or mutate or clean up its ticket, PR or remote artifacts there; only humans move items out. Automatic work starts at Todo.
 2. **Live authority:** claims, selection, merge, recovery and finish need complete fresh state; caches and partial reads are hints; rehydrate only changed or unverified records. Recheck operation-specific authority before each claim, write or merge, even from a reused snapshot; ranker eligibility grants nothing.
 3. **Controller ownership:** only the controller claims, assigns, mutates shared Project state, merges, closes issues and reconciles; a ticket agent owns only its worktree, branch and non-merge PR changes.
 4. **Unknown outcomes:** reconcile an unknown or failed mutation or publication before retrying, freeing capacity or reporting success.

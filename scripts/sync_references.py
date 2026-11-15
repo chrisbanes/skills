@@ -28,6 +28,10 @@ COPIES = {
             "gradle-run", "shepherd", "subagent-delegation",
         )
     ),
+    "references/checkout-lifecycle.md": tuple(
+        f"skills/{skill}/references/checkout-lifecycle.md"
+        for skill in ("deliver-spec", "implement-with-subagents", "run-github-project")
+    ),
 }
 
 

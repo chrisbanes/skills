@@ -14,3 +14,6 @@ skills/run-github-project/references/subagent-selection.md linguist-generated=tr
 skills/gradle-run/references/subagent-selection.md linguist-generated=true
 skills/shepherd/references/subagent-selection.md linguist-generated=true
 skills/subagent-delegation/references/subagent-selection.md linguist-generated=true
+skills/deliver-spec/references/checkout-lifecycle.md linguist-generated=true
+skills/implement-with-subagents/references/checkout-lifecycle.md linguist-generated=true
+skills/run-github-project/references/checkout-lifecycle.md linguist-generated=true

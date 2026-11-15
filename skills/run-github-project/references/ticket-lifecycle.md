@@ -29,19 +29,50 @@ boundary. Helpers get one question, immutable SHA, repository/worktree, ticket
 contract, and exact evidence. They never edit, claim, push, comment, resolve,
 merge, or mutate Project state; the owner reconciles their evidence.
 
+## Worktrees
+
+Apply the [checkout lifecycle](checkout-lifecycle.md) to every worktree this
+skill creates. Give each claimed ticket its own worktree; never pool or hand a
+ticket worktree to another ticket.
+
+1. Create it only when the claim enters a slot and no verified worktree exists
+   for its branch: create the `cb/issue-<number>-<short-slug>` branch at the
+   verified base under the lifecycle's create rule, or attach the exact
+   verified PR head when resuming an existing PR.
+2. Record branch, base SHA and checkout ID (the runtime's checkout identity, or
+   null for a plain Git worktree) in the run record and in every marker that
+   names the branch. Never publish a local path.
+3. On restart, read `git worktree list --porcelain` once per recovery pass,
+   locate each claim's worktree by its branch, and verify its HEAD against the
+   claim's PR head or recorded base. A worktree whose branch has no live claim
+   or verified marker is foreign: report it and never adopt, reuse or remove it.
+4. Retire it with the lifecycle's per-checkout
+   [retire steps](checkout-lifecycle.md#retire) only once its work is
+   delivered; until then keep it, including in remote wait, parking or pause:
+   - merged: HEAD is contained in the reconciled merged PR;
+   - not merged (PR closed unmerged, verified abandonment, or a human move to
+     Backlog): the PR's remote head ref still exists and equals local HEAD. A
+     deleted remote branch keeps the worktree and reports it.
+5. After a merge, also delete the skill-created local ticket branch. After an
+   unmerged retirement, keep the local branch ref.
+6. Whenever a `next` or `drain` run finishes, waits for humans or stops,
+   retire the [planning worktree](todo-lane.md) and any delivered research
+   worktree, then [account](checkout-lifecycle.md#account) for every worktree
+   the run created: retired with readback, or retained with its claim and
+   reason. A cleanup-incomplete run never reports success.
+
 ## Implement in ticket context
 
-For each occupied slot, refresh verified base; create/reuse a clean stable
-skill-owned worktree with exact base identity; create new
-`cb/issue-<number>-<short-slug>` branch unless instructions say otherwise, or
-resume exact verified PR head without replacement. Stop on divergence, access
-ambiguity, or changed head. Start one fresh ticket-specific context per slot,
-pair it until free, and resume it for every pass. Pass repository/worktree/
-branch/base, ticket and approved plan, authority leases, durable repair usage,
-HEAD/check/review/PR events, and worker contract. Verify the worker returns a
-clean focused final HEAD with coherent commits, current verification and review
-evidence, and no unrelated change, or a complete replan packet with no later
-mutation.
+For each occupied slot, refresh verified base and create or locate the ticket's
+own worktree under [Worktrees](#worktrees), on its new branch unless
+instructions say otherwise or at the exact verified PR head. Stop on
+divergence, access ambiguity, or changed head. Start one fresh ticket-specific
+context per slot, pair it until free, and resume it for every pass. Pass
+repository/worktree/ branch/base, ticket and approved plan, authority leases,
+durable repair usage, HEAD/check/review/PR events, and worker contract. Verify
+the worker returns a clean focused final HEAD with coherent commits, current
+verification and review evidence, and no unrelated change, or a complete replan
+packet with no later mutation.
 
 Persist plan-mismatch repair consumption by ticket, plan permalink, and payload
 digest. Count only a wrong factual seam or repository assumption in the approved
@@ -198,9 +229,10 @@ policy and [reconcile unintended closures](remote-reconciliation.md#unintended-c
 before Done automation or cleanup. A partial merge retains the open issue,
 unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
 For a completed ticket, reconcile Done without archiving/removing directly, stop
-on unexpected outcomes, cleanly detach/snap worktree to base without `git clean`,
-delete only skill-created local ticket branch, discard agent, refresh other PRs,
-and query Project completely. `next` finishes one selected terminal issue,
+on unexpected outcomes, clean up the ticket worktree and branch under
+[Worktrees](#worktrees), discard agent, refresh other PRs, and query Project
+completely. `next` finishes one selected terminal issue,
 Wayfinder child, tail triage, or ready epic; otherwise report human frontier.
-`drain` follows its scheduler finish gate. On blocked/ambiguous next work,
+Both modes end with [Worktrees](#worktrees) step 6; `drain` then follows its
+scheduler finish gate. On blocked/ambiguous next work,
 preserve worktree, branch, PR, assignment, and In-progress state.
