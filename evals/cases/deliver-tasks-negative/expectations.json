@@ -1,0 +1,16 @@
+{
+  "decisions": {
+    "backlog-81": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    },
+    "backlog-82": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    },
+    "backlog-83": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    }
+  }
+}

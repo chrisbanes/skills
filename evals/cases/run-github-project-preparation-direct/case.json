@@ -4,12 +4,13 @@
   "family": "workflow",
   "target_skills": [
     "run-github-project",
-    "to-plan"
+    "to-plan", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project",
     "to-plan"
   ],
+  "allowed_skills": ["run-github-project", "to-plan", "deliver-tasks"],
   "task_mode": "edit",
   "kind": "direct",
   "fixture": "workflow",

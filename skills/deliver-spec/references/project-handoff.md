@@ -1,13 +1,13 @@
 # Project Controller Handoff
 
-Use this mode only for an active `run-github-project` controller's exclusively
+Use this mode only for an active `deliver-tasks` controller's (`run-github-project` GitHub entrypoint) exclusively
 claimed implementation ticket. A direct named-spec request cannot create this
 handoff or take over a Project claim.
 
 ## Procedure
 
 1. Verify the controller packet under the Project's
-   [ticket lifecycle](../../run-github-project/references/ticket-lifecycle.md):
+   [ticket lifecycle](../../deliver-tasks/references/ticket-lifecycle.md):
    source/plan identities and task graph, trusted binding, item and runner,
    configuration and authority leases, fixed base, worktree/branch/PR head,
    review evidence, repair usage, agent capacity, active revision evidence folder
@@ -43,7 +43,7 @@ handoff or take over a Project claim.
    the [fast path](fast-path.md) and return its escalation packet to the
    controller as soon as a condition fails.
 4. Before any push, satisfy the Project's
-   [review contracts](../../run-github-project/references/review-contracts.md).
+   [review contracts](../../deliver-tasks/references/review-contracts.md).
    Give the single independent reviewer the
    [delivery record](evidence-and-review.md) and all applicable contracts.
    Record coverage at the final clean head; run only missing or invalidated
@@ -78,7 +78,7 @@ handoff or take over a Project claim.
    `pending` names only remote or controller-owned gates; never return while a
    reviewer or helper you launched is still running. The controller alone
    claims, assigns, changes labels/Project Status, records
-   [ticket pauses](../../run-github-project/references/authority-and-pauses.md),
+   [ticket pauses](../../deliver-tasks/references/authority-and-pauses.md),
    manages capacity, merges, closes issues, and reconciles terminal state.
    Return missing grants and material decisions to that controller even when
    its invocation has merge permission.

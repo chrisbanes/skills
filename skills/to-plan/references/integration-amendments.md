@@ -47,7 +47,7 @@ below protect mutable external plan comments and lineage, not each local step.
    enumerate and hydrate the entire chain, validate the effective digest, retain
    its starting candidate, and renew affected result evidence. Standalone work
    requires `deliver-spec` support; Project-owned work requires both
-   `run-github-project` and `deliver-spec` support. Record the inspected consumer
+   `deliver-tasks` (the `run-github-project` controller) and `deliver-spec` support. Record the inspected consumer
    revisions and capability evidence with the publication preflight. A reference
    to this format or a planner's claim is not consumer support. Missing, unknown
    or full-plan-only support blocks amendment publication and handoff, including
@@ -227,7 +227,7 @@ to the full plan alone.
   verified result candidate, never an unexecuted guessed result. Bind that prior
   result to its effective tip/digest, starting candidate, resulting candidate,
   target base, owner and PR; a matching next-start SHA alone is insufficient.
-- **`run-github-project`:** Verify that effective contract and the existing
+- **`deliver-tasks` (`run-github-project` entrypoint):** Verify that effective contract and the existing
   exclusive claim, current-column authority, native blockers/qualification,
   leases, base/head and retained owner/artifacts. Revalidate affected leases in
   place only within existing authority; do not renew external grants, claim

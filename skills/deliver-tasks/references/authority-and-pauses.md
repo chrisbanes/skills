@@ -32,7 +32,7 @@
    merge decision; never inherit authority from a comment, checkpoint, binding,
    or previous run's answer. After that startup decision, missing authority
    produces a ticket pause without repeated per-ticket or per-PR merge prompts.
-   Permission cannot supply missing GitHub access or override repository protection.
+   Permission cannot supply missing binding access or override repository protection.
 
 The controller's [unattended preflight](execution-controller.md#unattended-readiness)
 discovers missing execution and qualification authority before dispatch. A
@@ -111,20 +111,10 @@ integrity blocker.
    source, plan, branch, worktree, PR, and dirty work. Do not add a role label,
    move the ticket to Backlog, close its PR, or discard work merely because
    authority is missing. Before claim, leave it unassigned with no artifacts.
-2. In the controller lane, publish one runner-authored issue comment containing
-   `<!-- run-github-project:authority-pause:v1 -->`, the repository, issue and
-   Project item IDs, committed configuration digest, base identity, exact
-   blocked operation, missing authority or decision, and an observable resume
-   condition. Include current Status and assignment, source and plan
-   permalink/digest, PR URL, branch, head, and the
-   [checkout ID](ticket-lifecycle.md#worktrees) when present. Explain which
-   completed work is preserved. Use nulls for absent artifacts. Keep secrets,
-   local paths, and unsanitized logs out of the comment.
-3. Refetch the comment and live ticket/artifact state. Verify the authenticated
-   runner author, identifiers, [payload digest](../../to-plan/references/github-mode.md#payload-digest), and existing authority lease
-   when claimed. Reconcile ambiguous publication before retrying. Update the
-   ticket only when that record is verified; report a failed write precisely
-   and continue other safe work rather than claiming the update succeeded.
+2. In the controller lane, [publish the authority-pause record](github-binding.md#publish-an-authority-pause) through the selected binding.
+3. Verify its publication, runner identity, payload digest and claimed lease
+   under that procedure; reconcile ambiguous publication before retrying.
+   A failed write preserves affected capacity and never counts as success.
 4. For a verified pause, quiesce any ticket/planning agent and descendants;
    reconcile processes and release held grants under the scheduler's
    [resource rules](drain-scheduler.md#named-resource-locks). Preserve exact
@@ -175,7 +165,7 @@ resume condition, or preserved evidence changes.
 4. Revalidate configuration, membership, exclusivity, source and plan leases,
    base, worktree ownership, current PR head, and every applicable check/review
    before further writes. Use only verified
-   [presentation-only renewal](project-config.md#renew-presentation-only-configuration)
+   [presentation-only renewal](github-binding.md#renew-presentation-only-configuration)
    for a changed committed display-name digest; it does not satisfy the pause's
    resume condition or renew invocation grants. Follow controlled replanning for
    contract-preserving
@@ -183,7 +173,7 @@ resume condition, or preserved evidence changes.
    contract; never infer that decision from merge approval. Never reuse
    earlier-head evidence for changed code.
 5. Publish and verify one runner-authored
-   `<!-- run-github-project:authority-resume:v1 -->` comment referencing the
+   [authority-resume comment](github-binding.md#authority-resume-format) referencing the
    pause permalink and digest, the new instruction or decision evidence, and
    current lease/artifact identities. For completed terminal reconciliation,
    record the verified external-merge evidence instead of a new merge grant;

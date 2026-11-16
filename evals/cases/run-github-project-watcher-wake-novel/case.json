@@ -3,11 +3,12 @@
   "title": "Treat a board-change wake as a hint and refresh before claiming",
   "family": "workflow",
   "target_skills": [
-    "run-github-project"
+    "run-github-project", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project"
   ],
+  "allowed_skills": ["run-github-project", "deliver-tasks"],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow",

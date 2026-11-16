@@ -27,7 +27,7 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 4. Reconstruct slots, waiting claims and parked claims after restart through
    [Remote Waiting](#remote-waiting),
    [Terminal Required-CI Parking](#terminal-required-ci-parking) and
-   [ticket authority pauses](authority-and-pauses.md), using GitHub
+   [ticket authority pauses](authority-and-pauses.md), using binding
    claims and marker records plus worktrees located by branch under
    [Worktrees](ticket-lifecycle.md#worktrees). Use local caches only as hints.
 5. Recover verified authority pauses outside capacity before ranking. Preserve
@@ -304,8 +304,7 @@ release an active planner for delivery; occupied ticket owners are not preempted
 ### Project Watcher
 
 In `drain` only, wake the controller from a wait with the read-only
-`python3 <skill-dir>/scripts/watch_project.py`, which runs only `gh api graphql`
-queries; `next` never starts one. Its report is a hint to refresh, never
+the binding's [Project Watcher command](github-binding.md#project-watcher-command); `next` never starts one. Its report is a hint to refresh, never
 authority: it never satisfies the [Refresh Gate](#refresh-gate), authorizes a
 claim, merge, or close, replaces a complete Project query, or serves as a
 resumption signal for a [parked claim](#terminal-required-ci-parking). Waiting
@@ -322,7 +321,7 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    alone require no new watcher snapshot or restart.
 2. When starting or replacing a watcher, write a baseline immediately before
    the complete Project query or targeted refetch that will arm it:
-   `snapshot --project-id <Node ID> --repository <owner/name> --status-field <Status field name> [--pr <N>]... [--issue <N>]... > <baseline file>`.
+   use the binding's `snapshot` command and baseline arguments.
    Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
    paused, parked, or authority-paused ticket, and `--issue` for every parked
    claim, paused ticket, human-frontier issue, Wayfinder human-frontier item, and
@@ -342,7 +341,7 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    project, repository and status-field arguments, `--pr` and `--issue` built from the completed
    read's watch set, the pre-read `--baseline <file>`, `--deadline <ISO-8601>`,
    and, when the binding sets one, `--interval <seconds>` from
-   [Monitoring](project-config.md#monitoring-optional); the default is 120. A PR
+   [Monitoring](github-binding.md#monitoring-optional); the default is 120. A PR
    or issue the read added to or dropped from the set reports `added` or
    `removed` on the first poll, at most one redundant wake; handle it like any
    other report. If a read unexpectedly changes the inputs of a retained
@@ -446,16 +445,7 @@ failure at a verified PR head. Treat three rounds with the same sanitized
 failure fingerprint and no new diagnostic direction as non-converging. Before
 releasing the slot:
 
-1. Publish one runner-authored issue comment containing
-   `<!-- run-github-project:parked-implementation:v1 -->`, the issue and Project
-   item IDs, PR URL, branch, head SHA and
-   [checkout ID](ticket-lifecycle.md#worktrees), verified base SHA, committed
-   configuration digest, and
-   [live merge-policy fingerprint](project-config.md#live-merge-policy-fingerprint),
-   required-check names and conclusions, sanitized failure fingerprint, and the
-   check-run IDs, heads, and fingerprints for all three rounds. Include the
-   preserved assignment and `In progress` Status. Never include local paths,
-   secrets, or unsanitized logs.
+1. Publish the binding's [CI parking record](github-binding.md#publish-a-ci-parking-record) with the complete preserved identity and three-round check evidence.
 2. Refetch the comment, assignment, Project Status, PR head, and checks. Require
    the marker author to be the authenticated runner and compute its
    [payload digest](../../to-plan/references/github-mode.md#payload-digest). Reconcile an ambiguous create before retrying. Keep
@@ -488,14 +478,14 @@ IDs on the same head, but keep the claim parked when it reaches the same failure
 without new diagnostics.
 
 Before restoring a parked claim, publish and verify one runner-authored
-`<!-- run-github-project:resume-parked-implementation:v1 -->` issue comment that
+[resume-parking issue comment](github-binding.md#resume-parking-format) that
 references the parking permalink and digest, records the qualifying recovery
 signal and its evidence or a reference to the explicit investigation authority,
 and captures the current PR head, checks, base, configuration, and merge-policy
 evidence. An ambiguous resume record leaves the claim parked. Before publishing
 that record, freshly revalidate the committed configuration digest and canonical
 live merge-policy fingerprint. A committed display-name-only change may use
-[verified lease renewal](project-config.md#renew-presentation-only-configuration);
+[verified lease renewal](github-binding.md#renew-presentation-only-configuration);
 every other mismatch or unknown read stops the drain and preserves the parked
 claim. Renewal alone is never a qualifying ticket-local resumption signal. After
 verification, return the claim to the next free slot ahead of new claims,

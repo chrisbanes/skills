@@ -15,7 +15,7 @@ Require both:
 1. the exact `ready-for-agent` label; and
 2. current `Todo` Status.
 
-Verify the active marked plan under the [normalized-ticket contract](normalized-ticket.md):
+Verify the active marked plan under the [normalized-ticket contract](github-binding.md#normalized-ticket-schema):
 runner authorship, revision chain, semantic payload digest, and configured base.
 Hydrate minimized predecessors; accept only the unique unminimized leaf. Plan
 missing or stale plans, or fast-path an item without any plan chain when it
@@ -34,12 +34,7 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
 2. In the controller context, classify it from the issue and bounded read-only
    inspection at the verified base. Start no planner or planning worktree.
    When in doubt, plan it normally.
-3. In the controller lane, publish one runner-authored
-   `<!-- to-plan:implementation-plan:v2 -->` comment with revision one,
-   `Supersedes: none`, `Replan report: none`, a `## Fast path` heading, the
-   planned branch and base SHA, the classification evidence, the issue
-   contract digest and the brief plan. Verify it as in step 7 below,
-   reconciling an ambiguous create by exact revision and digest.
+3. In the controller lane, [publish and verify the fast-path plan](github-binding.md#publish-a-fast-path-plan), reconciling an ambiguous create before retrying.
 4. In `next`, or when an implementation slot is free, move the item directly
    to `In progress` and verify the authority lease, including the contract
    digest. Otherwise apply step 8 below and resume it as a verified Ready
@@ -52,12 +47,7 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
 
 ## Plan a Todo item
 
-1. Enter the controller lane and refetch current `Todo` membership. If the
-   item is in Backlog, stop its automatic work and preserve its artifacts;
-   only a human can promote it. Assign the issue exclusively to the
-   authenticated user, refetch and verify the assignment, and release the lane. Reconcile an
-   ambiguous Status or assignment mutation before retrying. Preserve the
-   assignment through planning and implementation.
+1. In the controller lane, use the binding's [Todo claim operation](github-binding.md#claim-todo-work), retaining exclusive assignment through planning and implementation.
 2. Use one dedicated planning worktree per run, created outside the checkout
    under the [checkout lifecycle](checkout-lifecycle.md) and detached at the
    configured base. Reuse it within the run, refresh it only between tickets,
@@ -309,7 +299,7 @@ applies. Otherwise use this full lifecycle:
 1. Enter the controller lane and revalidate the current authority lease,
    verified base, assignment, Status, plan leaf, branch, worktree and PR.
 2. Publish one new comment containing
-   `<!-- run-github-project:replan-request:v1 -->` and the exact evidence packet.
+   the binding's [replan-request marker](github-binding.md#replan-request-format) and the exact evidence packet.
    Refetch and verify it.
    If publication or verification fails, keep the ticket In progress and its
    slot occupied.
@@ -418,5 +408,5 @@ subagents.
 ## Migration Gate
 
 Before adopting a new Status schema, apply the human-owned migration gate in
-[project configuration](project-config.md). A display-name rename alone does
+[project configuration](github-binding.md#github-project-configuration). A display-name rename alone does
 not require that migration.

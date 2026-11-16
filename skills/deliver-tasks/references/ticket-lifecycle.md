@@ -194,17 +194,9 @@ repetition or uncertainty remains a failure.
 
 PRs include the configured closing or non-closing issue link, rationale,
 validation, and residual risks. For partial PRs, include and verify the
-[partial recovery metadata](normalized-ticket.md#partial-pr-recovery) in the
-original creation body. After every PR creation or body edit by the
-controller or its ticket owner, read the complete `closingIssuesReferences` set
-through the connector or GraphQL/`gh pr view` fallback. Compare repository-qualified
-issue identities exactly: only the ticket for a fully closing PR under
-`closing-keyword`, and none for a non-closing partial PR or `close-after-merge`.
-On mismatch, correct the body and re-read before shepherding CI or merging;
-remove an unintended manual closing link through the permitted PR operation
-if a body correction cannot clear it. Unknown, partial or still-mismatched
-readback blocks acceptance. CI may start automatically; its success cannot
-clear this guard. Keep claim/agent while open; drain follows
+[partial recovery metadata](github-binding.md#partial-pr-recovery) in the
+original creation body. After every PR creation or body edit, apply the binding's
+[closing reference verification](github-binding.md#closing-reference-verification). Keep claim/agent while open; drain follows
 Remote Waiting and terminal-CI parking,
 next shepherds directly through `deliver-spec`'s Project mode. For feedback,
 invoke `shepherd` for triage and PR actions. Keep code repairs with the ticket
@@ -220,12 +212,12 @@ recorded authority. Use scheduler/wait mechanisms, never long sleep.
 
 Before merge, refresh the exact head and revalidate authority, required checks,
 reviews, finding dispositions, evidence applicability, mergeability and
-configuration; repeat the closing-reference comparison above immediately before
+configuration; repeat the binding's closing-reference comparison immediately before
 merge or merge-queue admission. When a merge or associated closure grant is absent,
 apply the [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket).
 Follow configured merge/queue, serialize oldest ready slot
 unless dependency requires otherwise, and reconcile exact merge. Enforce closure
-policy and [reconcile unintended closures](remote-reconciliation.md#unintended-closure)
+policy and [reconcile unintended closures](github-binding.md#unintended-closure)
 before Done automation or cleanup. A partial merge retains the open issue,
 unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
 For a completed ticket, reconcile Done without archiving/removing directly, stop

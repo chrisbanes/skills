@@ -3,11 +3,12 @@
   "title": "Keep slots when waiting rules do not apply",
   "family": "workflow",
   "target_skills": [
-    "run-github-project"
+    "run-github-project", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project"
   ],
+  "allowed_skills": ["run-github-project", "deliver-tasks"],
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",

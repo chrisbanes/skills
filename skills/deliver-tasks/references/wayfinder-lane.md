@@ -111,36 +111,10 @@ mutations and reconcile ambiguous outcomes before the next mutation.
 
 After a successful provider outcome, enter the controller lane. Require either
 `resolved` for a decision on the route or `out-of-scope` for a scope boundary.
-Post and refetch the resolution answer or scope-disposition comment. Before any
-terminal mutation, compute one exact reconciliation plan covering the correct
-map section, fog changes, child creates/updates/closes, parent-child and
-dependency edges, Project additions, child terminal state, and possible map
-completion. Post and refetch a durable runner-authored marker comment with this
-machine-readable payload:
-
-```json
-{
-  "markerVersion": 1,
-  "disposition": "resolved",
-  "mapNumber": 7,
-  "projectItemId": "PVTI_child",
-  "outcomePermalink": "https://github.com/owner/repository/issues/52#issuecomment-1",
-  "configurationDigest": "sha256:configuration",
-  "planDigest": "sha256:semantic-reconciliation-plan",
-  "plannedMutations": [
-    {"kind": "update-map", "issueNumber": 7, "digest": "sha256:map-body"}
-  ]
-}
-```
-
-Wrap it with the marker
-`<!-- run-github-project:wayfinder-reconciliation:v1 -->`. Record every
-mutation with a unique operation key and the exact intended state. For an
-existing object, also record its stable node ID or issue number. For a new
-issue, include the operation key in its marker-owned body so recovery can find
-the result before retrying creation. Exclude presentation-only text from
-`planDigest`. Assignment is the durable lease. Do not close the child, edit the
-map, or perform another terminal mutation until the marker is authoritative.
+Publish and verify the selected binding's
+[Wayfinder reconciliation record](github-binding.md#wayfinder-reconciliation-record)
+before any terminal mutation. It must durably identify the outcome, exact plan,
+operation keys and ownership so an ambiguous write is reconciled before retry.
 
 Before mutating an existing issue, refetch its current Project column. Require Todo or a later configured column for each map or child being
 updated or closed, including additional out-of-scope children. If any target
@@ -201,10 +175,10 @@ the complete live map graph. Require exactly one authoritative marker, its
 author and sole assignee to be the authenticated runner, its Project item and
 map identities to match, and its configuration digest to match the invocation's
 committed configuration. A different historical digest is usable only after
-[presentation-only renewal](project-config.md#renew-presentation-only-configuration)
+[presentation-only renewal](github-binding.md#renew-presentation-only-configuration)
 verifies committed equivalence, current authority and the exact immutable
 marker binding. Preserve its original digest and normalize the verified renewal
-under the [schema](normalized-ticket.md#wayfinder-configuration-renewal).
+under the [schema](github-binding.md#wayfinder-configuration-renewal).
 Normalize it as `wayfinderReconciliation`; the ranker returns
 `resume-wayfinder-reconciliation` ahead of new Wayfinder work.
 

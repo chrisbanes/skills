@@ -18,7 +18,8 @@ authority. Never select work from a Project queue.
 
 ## Select the mode
 
-For an active `run-github-project` controller's verified ticket handoff, read
+For an active `deliver-tasks` controller's verified ticket handoff (including
+the `run-github-project` entrypoint), read
 [Project controller handoff](references/project-handoff.md) and apply its
 procedure instead of the standalone approval, merge, and timeout rules below.
 The Project controller retains all shared state and merge authority.

@@ -1,0 +1,9 @@
+{
+  "decisions": {
+    "single-91": {
+      "skill": "deliver-spec",
+      "select_scope": false,
+      "reapprove_plan": false
+    }
+  }
+}

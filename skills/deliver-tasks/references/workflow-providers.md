@@ -47,7 +47,7 @@ must invoke it in a separate subagent; a generic helper is not an equivalent
 provider. If it is unavailable, block only research children and continue
 other authorized lanes. Never install it implicitly.
 
-The explicit `run-github-project` procedure may dispatch `triage` to its
+The explicit `deliver-tasks` procedure (including `run-github-project`) may dispatch `triage` to its
 recommendation boundary. Its disabled implicit invocation and maintainer
 approval gate still prohibit automatic label, comment, or close mutations.
 

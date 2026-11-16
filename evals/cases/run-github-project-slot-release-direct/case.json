@@ -3,11 +3,12 @@
   "title": "Free a slot for a reviewed PR waiting on CI",
   "family": "workflow",
   "target_skills": [
-    "run-github-project"
+    "run-github-project", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project"
   ],
+  "allowed_skills": ["run-github-project", "deliver-tasks"],
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow",

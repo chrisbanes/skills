@@ -8,8 +8,8 @@ before their relevant action; follow its affected-lane blocker rules when a
 provider is unavailable. Read [human frontier](human-frontier.md),
 [Todo](todo-lane.md), [triage](triage-lane.md), and, when enabled,
 [Wayfinder](wayfinder-lane.md), plus [review contracts](review-contracts.md)
-before ticket acceptance. Confirm GitHub identity, read/write and
-`project` scope, default/base branch, clean state, and automation compatibility.
+before ticket acceptance. Confirm the binding's
+[execution prerequisites](github-binding.md#execution-prerequisites).
 
 For `next`/`drain`, establish invocation authority through
 [run authority and ticket pauses](authority-and-pauses.md), checking grants at
@@ -81,9 +81,9 @@ access or configuration failure. Do not repeatedly probe unchanged blockers.
 
 ## Remote state and queue
 
-Prefer the GitHub connector for issues, PRs, reviews, comments, threads, and CI;
-use `gh project`/GraphQL only when Project operations require it. Before retry,
-mutation, or success claim, apply [remote reconciliation](remote-reconciliation.md).
+Use the selected binding's [GitHub access](github-binding.md#github-access) and
+[remote reconciliation](github-binding.md#remote-reconciliation) before retry,
+mutation or a success claim.
 
 Query complete live Project state at start and after merges. In `drain`, obey the
 scheduler Refresh Gate and include new Todo/Ready work plus Todo
@@ -129,7 +129,7 @@ Wayfinder and ready epics only through their named lanes. Adopt a PR only when
 exactly one open PR satisfies the configured issue-link/closure policy, belongs
 to the authenticated user, targets the configured repository/base, and has no
 competitor. For a retained current-user claim, apply the
-[verified partial-PR exception](normalized-ticket.md#partial-pr-recovery) even
+[verified partial-PR exception](github-binding.md#partial-pr-recovery) even
 under `closing-keyword`; it does not waive missing qualification or authority.
 
 ## Claim and revalidate
@@ -141,11 +141,9 @@ that column supplies ticket authorization. Never promote or select Backlog,
 and never fetch transition history to prove permission.
 Route planning and Wayfinder modes through their lanes; a
 `next` planning selection stays the same issue through terminal reconciliation.
-For Ready work, assign only the authenticated user, refetch exclusivity, recover
-only own lost claim race, transition to In progress, refetch membership/status/
-assignment/open state/readiness/current plan/no blockers/no
-competing PR, then record item, identity, configuration, and every plan
-lease as authority. Ambiguity after In progress is a preserved blocked slot.
+For Ready work, perform the binding's [claim operation](github-binding.md#claim-ready-work).
+Record its verified lease; ambiguity after the claim transition preserves a
+blocked slot.
 
 Revalidate membership, current status, exclusivity, configuration, label, and
 every lease before external material writes, including push, review mutation, or
@@ -159,6 +157,6 @@ non-plan comment edits do not revoke the lease, except that a changed contract
 digest revokes a fast-path lease and sends the ticket to controlled replanning.
 
 For an already committed display-name-only configuration change, apply
-[presentation-only renewal](project-config.md#renew-presentation-only-configuration)
+[presentation-only renewal](github-binding.md#renew-presentation-only-configuration)
 before using a new digest. Unknown or semantic drift still stops and preserves
 the run; no automatic setup repair is permitted.

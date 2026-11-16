@@ -52,5 +52,5 @@ commits, PR and evidence, and record which condition failed and why.
   `to-plan` with the retained work as evidence and honor its gates before
   continuing.
 - Project: return a replan packet to the controller under its
-  [replan packet contract](../../run-github-project/references/todo-lane.md#replan-packet-contract),
+  [replan packet contract](../../deliver-tasks/references/todo-lane.md#replan-packet-contract),
   citing the fast-path plan revision as the active plan.

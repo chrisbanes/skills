@@ -3,11 +3,12 @@
   "title": "Stop on repeated configured owner launch failure",
   "family": "workflow",
   "target_skills": [
-    "run-github-project"
+    "run-github-project", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project"
   ],
+  "allowed_skills": ["run-github-project", "deliver-tasks"],
   "task_mode": "edit",
   "kind": "direct",
   "fixture": "workflow",
