@@ -305,6 +305,11 @@ release an active planner for delivery; occupied ticket owners are not preempted
 
 ### Project Watcher
 
+For parent scope, “Project query” in this scheduler means the binding's complete
+parent/descendant/dependency graph read; Status means its logical claim state.
+Use the same watcher with `--parent-id`, no Project ID or Status field. Every
+wake still requires the full Refresh Gate and each item's own role authority.
+
 In `drain` only, wake the controller from a wait with the read-only
 the binding's [Project Watcher command](github-binding.md#project-watcher-command); `next` never starts one. Its report is a hint to refresh, never
 authority: it never satisfies the [Refresh Gate](#refresh-gate), authorizes a

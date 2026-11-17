@@ -60,7 +60,10 @@ stale plans require planning or base-drift screening before implementation.
    tracker key, integer or qualified identity; `itemId` and `itemRef` are strings.
    Retain `number` as the integer local selection and tie-break key. The current
    `projectStatus`, `projectPriority` and `projectPosition` fields still carry the
-   binding's status, priority and ordering values.
+   binding's status, priority and ordering values. For GitHub parent scope use
+   the parent-scope normalization in the binding, including optional boolean
+   `scopeParent` for the root's epic work shape, unset priority and depth-first
+   sub-issue order. Closed issues remain graph evidence outside active inputs.
 2. Supply an explicit boolean `parked` on every item. Parked items enter no
    candidate lane, regardless of labels; keep them in the dependency graph.
    A parked active implementation claim is blocked and retains its slot.

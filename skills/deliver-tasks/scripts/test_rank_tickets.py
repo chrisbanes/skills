@@ -1135,6 +1135,49 @@ class RankTicketsTest(unittest.TestCase):
             output["parkedBlocked"],
         )
 
+    def test_parent_scope_orders_only_authorized_children_by_subissue_position(self):
+        items = [ticket(90, projectPosition=0, projectPriority=None, labels=[]),
+                 ticket(8, projectPosition=2, projectPriority=None),
+                 ticket(70, projectPosition=1, projectPriority=None)]
+        code, output = run_ranker(items)
+        self.assertEqual(0, code)
+        self.assertEqual([70, 8], [x["ticket"]["number"] for x in output["candidates"]])
+
+    def test_parent_label_claim_requires_runner_assignment_and_stop_preserves_it(self):
+        marker = '{"label":"agent:in-progress","requiresAssignment":true}'
+        for assignees, expected in ((["chris"], True), ([], False), (["other"], False)):
+            with self.subTest(assignees=assignees):
+                child = ticket(71, projectPriority=None, assignees=assignees,
+                               labels=["ready-for-agent", "agent:in-progress"])
+                code, output = run_ranker([child], "--claim-marker", marker)
+                self.assertEqual(0, code)
+                self.assertEqual(expected, bool(output["claims"]))
+        child = ticket(71, assignees=["chris"], labels=["agent:in-progress"])
+        code, output = run_ranker([child], "--claim-marker", marker)
+        self.assertEqual(0, code)
+        self.assertEqual(child, output["stoppedItems"][0]["ticket"])
+        self.assertEqual([], output["claims"])
+        self.assertEqual([], output["blockedClaims"])
+
+    def test_parent_scope_root_uses_epic_roles_and_open_descendant_gate(self):
+        root = todo_role_ticket(50, scopeParent=True, labels=["ready-for-agent"])
+        code, output = run_ranker([root, ticket(51)])
+        self.assertEqual(0, code)
+        self.assertEqual([51], [x["ticket"]["number"] for x in output["candidates"]])
+        self.assertIn("epic cannot be ready for agent implementation", output["excluded"][0]["reasons"])
+        for descendants in (["acme/repo#51"], []):
+            root = todo_role_ticket(50, scopeParent=True, labels=["ready-for-human"],
+                                    openDescendants=descendants)
+            code, output = run_ranker([root])
+            self.assertEqual(0, code)
+            self.assertEqual([], output["readyEpics"])
+            self.assertEqual(bool(descendants), bool(output["parkedBlocked"]))
+            self.assertEqual(not descendants, bool(output["humanActions"]))
+        code, output = run_ranker([todo_role_ticket(50, scopeParent=True, labels=[])])
+        self.assertEqual(0, code)
+        self.assertEqual([], output["readyEpics"])
+        self.assertEqual([], output["candidates"])
+
     def test_epic_shape_without_role_never_authorizes_automatic_closure(self):
         for descendants in ([], [21]):
             code, output = run_ranker([todo_role_ticket(19, labels=["epic"],

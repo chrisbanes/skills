@@ -1,6 +1,6 @@
 ---
 name: deliver-tasks
-description: Use when explicitly asked to deliver a scope of several tasks, including triage, planning, implementation, human pauses, or an authorized drain; use deliver-spec for one named item.
+description: Use when explicitly asked to deliver a scope of several tasks, including parent-issue descendants, triage, planning, implementation, human pauses, or an authorized drain; use deliver-spec for one named implementation item.
 compatibility: "External skill providers are mode-specific: review and setup require none; execution, triage, and Wayfinder lanes use the providers documented in references/workflow-providers.md."
 disable-model-invocation: true
 ---
@@ -12,13 +12,14 @@ disable-model-invocation: true
 The bound scope is the live control plane: fresh board state and this run's
 operation-specific grants decide every claim, write and finish.
 Default lanes are `Todo` → `In progress` → `Done`; resolve them
-through the resolved binding's verified option IDs. Implementation readiness is
+through the resolved binding's claim and completion markers. Implementation readiness is
 derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 
 Load the selected tracker/code-host binding before applying these rules. GitHub
 is the only binding: read [GitHub binding](references/github-binding.md), including
 its optional overrides, fresh defaults, operations and normalization contract. Use its neutral ranker inputs and preserve durable marker formats. `run-github-project` selects this
-binding; an explicit `deliver-tasks` request must resolve the same GitHub scope.
+binding; an explicit `deliver-tasks` request resolves a Project or `deliver #N`
+parent scope. Each descendant needs its own role authority.
 For one named implementation item, use `deliver-spec`; this controller owns
 selection across a scope of tasks.
 

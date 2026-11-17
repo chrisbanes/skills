@@ -26,6 +26,8 @@ CASES = (
     "deliver-tasks-default-binding-direct",
     "deliver-tasks-binding-override-novel",
     "deliver-tasks-binding-ambiguity-negative",
+    "deliver-tasks-parent-scope-direct", "deliver-tasks-parent-lifecycle-novel",
+    "deliver-tasks-parent-restraint-negative",
     "deliver-tasks-label-stop-direct", "deliver-tasks-label-recovery-novel",
 )
 

@@ -376,8 +376,8 @@ order:
 
 Exclude unlabelled Todo, binding-parked items and label-stopped work from every scheduling and recovery class.
 
-Within a class, use configured Priority, visible Project position, then issue
-number.
+Within a class, use the binding’s priority and order, then issue number. Parent
+scope uses unset priority and depth-first native sub-issue order.
 
 In `next`, selecting a Todo item commits the invocation to that one issue:
 plan it, hand it off, implement it, merge it, and reconcile it before finishing.

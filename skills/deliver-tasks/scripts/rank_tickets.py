@@ -338,6 +338,8 @@ def require_ticket_shape(ticket: Any) -> dict[str, Any]:
         raise InputError(f"ticket {number}: projectStatus must be a non-empty string")
     if not isinstance(ticket["parked"], bool):
         raise InputError(f"ticket {number}: parked must be a boolean")
+    if "scopeParent" in ticket and not isinstance(ticket["scopeParent"], bool):
+        raise InputError(f"ticket {number}: scopeParent must be a boolean")
     project_priority = ticket["projectPriority"]
     if project_priority is not None and (
         not isinstance(project_priority, str) or not project_priority
@@ -658,7 +660,7 @@ def analyze_ticket(
         exclusions.append(f"missing {agent_work_label} label")
     if human_work_label in labels or needs_triage_label in labels:
         exclusions.append("conflicting execution role labels")
-    if epic_label in labels:
+    if epic_label in labels or ticket.get("scopeParent") is True:
         exclusions.append("epic cannot be ready for agent implementation")
 
     implementation_plans, implementation_plan = parse_implementation_plan_chain(
@@ -892,7 +894,7 @@ def analyze_role_ticket(
     blocker_reasons: list[str] = []
     if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
-    is_epic = epic_label in labels
+    is_epic = epic_label in labels or ticket.get("scopeParent") is True
     is_agent_work = agent_work_label in labels
     is_human_work = human_work_label in labels
     needs_triage = needs_triage_label in labels
@@ -1375,9 +1377,9 @@ def main() -> int:
                     ticket["projectStatus"] == args.planning_status
                     and not matches_claim_marker(ticket, claim_marker)
                     and isinstance(labels, list)
-                    and any(label in labels for label in (
+                    and (ticket.get("scopeParent") is True or any(label in labels for label in (
                         args.needs_triage_label, args.epic_label, args.human_work_label,
-                    ))
+                    )))
                 ):
                     role_analysis = analyze_role_ticket(
                         ticket,

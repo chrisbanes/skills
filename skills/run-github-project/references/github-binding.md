@@ -4,18 +4,18 @@
 
 Translate the controller's decisions into verified GitHub operations; this
 binding supplies no selection, mutation or merge authority of its own. GitHub
-Project is the only supported scope. Resolve optional overrides and fresh
+Project and parent-issue scopes are supported. Resolve optional overrides and fresh
 defaults below; preserve existing marker formats and label authority.
 
 ## Operations
 
 1. For setup or execution, validate identity, access and configuration under
    Binding validation and Setup; review uses only permitted or supplied evidence.
-2. For authorized reads, obtain complete Project/issue/PR state through Remote
+2. For authorized reads, obtain complete scope/issue/PR state through Remote
    reconciliation, then
    normalize it under Normalized Ticket Schema for the controller ranker.
 3. Execute only controller-authorized operations: assign the authenticated runner,
-   write Status by verified field/option ID, publish/refetch marker comments,
+   write the scope's verified claim/completion marker, publish/refetch comments,
    perform permitted PR operations and merges, and reconcile closure/Done.
 4. Use Project Watcher commands only under the controller scheduler. Its output
    is a wake hint, never authority or a replacement for a complete live read.
@@ -152,12 +152,14 @@ Only an already trusted, committed display-name-only edit may use
    defaults; execution returns `configuration-blocked` and never migrates.
 2. Select **Tracker** and **Code host** independently (default `github` for
    each; other providers need their own supported binding), then **Scope** from
-   the explicit override or invocation Project URL.
-   Resolve exactly one Project owner, number, canonical URL and node ID.
-   Validate any Project identity pins against Scope; contradictory fields block.
-   A missing, inaccessible, unresolved or multiply resolved scope blocks the run;
-   never guess from linked Projects, named views or an issue reference. Parent
-   scope is a separate task. Scope selection supplies no item authority.
+   the explicit override or invocation: a Project URL selects a board;
+   `deliver #N` or an explicit parent issue URL selects its open descendants.
+   Resolve exactly one canonical URL, repository identity and stable node ID;
+   resolve a short `#N` only against the verified checkout repository in step 3.
+   Validate any identity pins against Scope; contradictory fields block.
+   A missing, inaccessible, unresolved or multiply resolved scope blocks the run.
+   Never guess from linked Projects or named views. Scope selection supplies no
+   item authority. Follow Parent-issue scope below for graph and lifecycle reads.
 3. Resolve repository host and `owner/repository` from the current checkout's
    git remote and verify its live identity. Use explicit repository overrides
    first; without them, conflicting remotes or an unclear repository block.
@@ -168,8 +170,13 @@ Only an already trusted, committed display-name-only edit may use
    invent a preference. Verify any override against live permissions/rules.
    Default issue closure to `closing-keyword` for the default base, otherwise
    `close-after-merge`; default Done automation to `set-status` without archive.
-   Read actual Project workflows and reject conflicting automation.
-4. Overlay only supplied override fields on these defaults. Resolve the live
+   For Project scope read actual workflows and reject conflicting automation;
+   parent scope uses closed issues as Done and no Project automation.
+4. Overlay only supplied override fields on these defaults. For parent scope,
+   resolve the existing `agent:in-progress` claim label by the same unique-name/ID
+   rules as role labels, requiring a distinct ID from every role label. It is
+   agent-owned bookkeeping, never a role grant.
+   Skip Project Status/Priority/automation lookups entirely. For Project scope resolve the live
    `Status` field and `Todo`, `In Progress`, `Done` options by exact name on
    **every run**, including no-file recovery. Each lookup must have exactly one
    result. A missing or duplicate field/option blocks; show its name and all
@@ -186,14 +193,77 @@ Only an already trusted, committed display-name-only edit may use
    Never create/rename labels, infer roles from prose, or add/restore agent
    authority. Optional Wayfinder stays disabled unless explicitly enabled with
    complete mappings. Agent Setup defaults to runtime capabilities.
-6. Resolve optional Priority if present: require one `Priority` field, unique
+6. For Project scope resolve optional Priority if present: require one `Priority` field, unique
    option names and its complete live option order; absence means all items
    have unset priority and no `--priority` arguments. Explicit Priority mappings
-   override order/names/IDs and are validated. Default filter is none, polling
+   override order/names/IDs and are validated. Parent scope uses sub-issue order,
+   unset priority and no Project filter. Default filter is none, polling
    is 120 seconds; read all applicable protection/review/check requirements live.
    Finish `configuration-valid` only with complete evidence and an effective
    fingerprint. No-file validation creates neither a file nor an instruction
    patch and grants no claim, write or merge permission.
+
+### Parent-issue scope
+
+1. Resolve the parent through its repository-qualified issue URL or `#N` in the
+   verified repository. Read back its exact repository, URL, node ID and open
+   state. A conflicting override, inaccessible node, unknown root state or
+   ambiguous cross-repository identity is `configuration-blocked`; preserve work. No
+   Project, Project token scope or configuration file is required. A standalone
+   implementation request for one issue still uses `deliver-spec`; `deliver #N`
+   here explicitly selects the descendant scope. In controller and handoff
+   references, Project means this resolved scope, Project item means the issue
+   node, and Status means the logical state below. Existing marker formats keep
+   their names while binding actual scope/item node identities; invent no
+   Project IDs or configuration file. Preserve closed-root completion evidence.
+2. Paginate native `subIssues` recursively in GitHub's returned order, including
+   closed intermediate parents so their open descendants cannot disappear.
+   Preserve each ordered edge and stable issue identity; reject cycles,
+   duplicates, null nodes, missing pages or unstable readback. Require every
+   descendant to belong to the verified repository; cross-repository descendants
+   need explicit reconciliation rather than conflating equal issue numbers.
+   Read complete native `blockedBy` edges and current blocker states, including
+   outside-scope repositories with their canonical URL/node identities. Never
+   treat an unreadable blocker or partial graph as an empty dependency list.
+3. Select open descendants in depth-first pre-order, visiting each parent's
+   ordered sub-issues before its next sibling. Include the root separately for
+   epic reconciliation, with `scopeParent: true`; this is a work shape, never an
+   added GitHub label. Build every item's complete open-descendant gate from
+   the graph, and preserve closed nodes as dependency/completion evidence.
+   Each item requires its own human-applied next-action role. The parent,
+   invocation, order, claim label and runner assignment grant none.
+4. Normalize open issues using issue node IDs as `itemId`, canonical URLs as
+   `itemRef`, qualified unresolved `blockerRefs`/`openDescendants`,
+   `parked: false`, `projectPriority: null`, and the pre-order index as
+   `projectPosition`.
+   Supply logical `Todo` unless the claim marker matches, then `In progress`;
+   Done means authoritative `CLOSED`, regardless of remaining labels. Retain
+   closed issues in the graph/readback, outside the active ranker array.
+   Pass no `--priority` inputs. Pass `--claim-marker` with JSON
+   `{"label":"agent:in-progress","requiresAssignment":true}`, using the resolved
+   exact live label and authenticated runner, including configured overrides.
+5. Claim implementation only after the usual plan, role, blocker, competing-PR
+   and capacity checks: assign only the runner, verify exclusive assignment,
+   add only the resolved claim label, then refetch both plus scope membership,
+   open state and all authority preconditions before granting a lease. A label
+   without assignment or assignment without that label is not an active claim.
+   Planning keeps Todo assignment until this implementation claim. Reconcile
+   ambiguous writes and lost races before retrying; never remove another owner.
+6. On human removal of `ready-for-agent`, stop writers, release capacity and
+   preserve assignment, claim label, branch, PR, plans and artifacts under the
+   label-stop gate. Only human restoration permits recovery. For ordinary
+   authorized claim release, remove only the runner-owned claim marker after
+   writer quiescence and verified ownership; verify readback and apply the
+   caller's assignment policy. Stop preservation takes precedence over release.
+7. Finish an implementation only after verified merge and separate issue-close
+   readback under Delivery operations. A claim-label removal, merged PR or
+   empty sub-issue list alone is not Done. Reconcile the root through the
+   existing Epics And Human Frontier rules: all open descendants and native
+   blockers gate closure; a bare root never auto-closes. Human-work roots stay
+   in the human frontier, triage roots need the approved closure outcome, and
+   `ready-for-agent` on the root contradicts its epic shape. Only separately
+   authorized closure with fresh graph/ownership reads may close the root;
+   refetch `CLOSED` before reporting scope completion.
 
 ### Effective binding fingerprint
 
@@ -423,6 +493,12 @@ that owns the queue. Include only sections/fields being overridden; the followin
 is a field catalogue, not a required complete file. Resolve omitted fields from
 fresh defaults. Replace included placeholders with live verified data. The
 closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
+For parent scope, use Scope type `parent-issue` and the canonical parent issue
+URL; omit Project, Status, Priority and Done automation sections. Optional
+`Claim` overrides are `Label` and `Label ID`, defaulting to the existing
+`agent:in-progress` label. Verify its distinct identity as above; these overrides
+never rename/create labels or change next-action roles.
+
 For an existing binding, run `setup` from its current values instead of copying
 this template over it. Follow the
 [additive setup procedure](#additive-setup-for-an-existing-repository).
@@ -440,8 +516,8 @@ this template over it. Follow the
 
 ## Scope
 
-- Type: `project`
-- URL: `<Project URL>`
+- Type: `<project or parent-issue>`
+- URL: `<Project or parent issue URL>`
 
 ## Repository
 
@@ -724,8 +800,12 @@ recovery is verified.
 
 Use the controller's [ranker invocation](../../deliver-tasks/references/normalized-ticket.md#ranker-invocation).
 
-Normalize the fully resolved GitHub Project binding before ranking. Use the
-resolved exact live names (including overrides), IDs and effective binding
+Normalize the fully resolved GitHub binding before ranking. For parent scope,
+apply Parent-issue scope above; the Project-specific mapping below applies only
+to board scope. `scopeParent` is an optional boolean identifying the selected
+root's epic work shape; ordinary items omit it. It never supplies role authority.
+
+Use the resolved exact live names (including overrides), IDs and effective binding
 fingerprint from validation; absence of an override file is not missing state:
 
 1. Map the Project item node ID to `itemId`, the issue URL to `itemRef`, and
@@ -1183,8 +1263,17 @@ snapshot --project-id <Node ID> --repository <owner/name> --status-field <Status
 ```
 
 Invoke that subcommand through the script above. For `wait`, use the same
-project/repository/status-field and watch set plus `--baseline <file>` and
+scope/repository and watch set plus `--baseline <file>` and
 `--deadline <ISO-8601>`; use configured `--interval <seconds>` when present.
+For parent scope replace `--project-id` and `--status-field` with
+`--parent-id <resolved issue node ID>`. The read-only query paginates every
+sub-issue, dependency, label and assignee connection, reads through closed
+intermediate parents, and follows transitive blockers outside the scope. It
+fingerprints ordered sub-issue IDs, dependency IDs and states, labels,
+assignment, identity and latest marker-comment change. Equal dependency counts
+cannot hide replaced edges. Incomplete reads or identity ambiguity return an
+error, never an unchanged/empty graph. `--board-from` preserves the same prior
+scope graph for parent scope too; it refreshes only watched PRs.
 The default interval remains 120 seconds. This command never performs writes.
 
 ## Publish an authority pause
@@ -1239,15 +1328,17 @@ map, or perform another terminal mutation until the marker is authoritative.
 
 ## Execution prerequisites
 
-Before ticket acceptance, confirm GitHub identity, read/write and
-`project` scope, default/base branch, clean state, and automation compatibility.
+Before ticket acceptance, confirm GitHub identity, applicable read/write access,
+default/base branch, clean state and automation compatibility. Require Project
+access only for Project scope; parent scope needs issue access.
 
 ## Claim implementation work
 
 For Todo work with `ready-for-agent` and a verified usable active plan leaf,
 wait for an implementation slot while preserving any planning assignment in
 Todo. Once a slot is free, assign only the authenticated user, refetch
-exclusivity, recover only own lost claim race, transition to In progress,
+exclusivity, recover only own lost claim race, transition to In progress through
+the scope's claim marker (Status for Project, label for parent scope),
 refetch membership/status/assignment/open state/readiness/current plan/no blockers/no
 competing PR, then record item, identity, configuration, and every plan
 lease as authority. Keep `ready-for-agent` on the item throughout active work.

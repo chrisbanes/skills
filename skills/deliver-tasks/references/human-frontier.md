@@ -5,7 +5,8 @@ a human rather than an implementation agent.
 
 ## Classify Work
 
-Treat the configured `epic` label as the work shape. Treat the exact
+Treat the configured `epic` label or the binding’s `scopeParent: true` as the
+epic work shape; neither supplies a next-action role. Treat the exact
 `ready-for-agent`, configured human-work, and configured `needs-triage` labels
 as mutually exclusive next-action roles.
 
@@ -32,7 +33,8 @@ but never enforce it.
 1. Verify labels, ownership, and native dependencies under the classification
    above. Return unblocked items in the table's collections; return blocked
    items as role-tagged `parkedBlocked`.
-2. Rank each collection by Priority, visible Project position, then issue number.
+2. Rank each collection by the binding’s priority and order, then issue number;
+   parent scope uses unset priority and depth-first native sub-issue order.
 3. Derive each action's direct unlocks from reverse native blocker and
    parent-child relationships in the complete live graph, never from prose.
 
@@ -50,7 +52,9 @@ labelled epic to the human frontier and an epic with `needs-triage` to approved
 triage; reject an epic carrying `ready-for-agent`. Never manufacture a role
 to close an epic. Require an explicit human closure instruction or the triage
 provider's approved closure outcome and fresh dependency/ownership reads
-before closing through the controller and reconciling Done automation.
+before closing through the controller and reconciling Done. For parent scope,
+refetch every descendant and native blocker; only a separately authorized root
+closure with verified closed readback completes the epic.
 
 ## Wait For Human Work
 

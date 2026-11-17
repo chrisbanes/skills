@@ -86,7 +86,9 @@ Use the selected binding's [GitHub access](github-binding.md#github-access) and
 [remote reconciliation](github-binding.md#remote-reconciliation) before retry,
 mutation or a success claim.
 
-Query complete live Project state at start and after merges. In `drain`, obey the
+Query complete live scope state at start and after merges: Project state or
+the parent binding’s complete descendant/dependency graph. Parent scope
+requires no Project configuration; apply its logical claim/Done mapping. In `drain`, obey the
 scheduler Refresh Gate and include new Todo implementation/planning work plus Todo
 needs-triage until the first complete empty executable-and-triage query; leave
 later arrivals for next run. In `next`, post-merge query is reconciliation only.

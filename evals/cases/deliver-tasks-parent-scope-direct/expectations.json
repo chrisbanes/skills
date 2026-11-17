@@ -1,0 +1,19 @@
+{
+  "decisions": {
+    "scope": {
+      "action": "resolved-parent-scope",
+      "requires_project": false,
+      "requires_file": false,
+      "grants_child_authority": false,
+      "ordered_candidates": [
+        70,
+        8
+      ],
+      "claim_marker": {
+        "label": "agent:in-progress",
+        "requiresAssignment": true
+      },
+      "auto_close_parent": false
+    }
+  }
+}
