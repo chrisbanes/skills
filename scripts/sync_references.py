@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 COPIES = {
     "references/github-binding.md": (
+        "skills/deliver-spec/references/github-binding.md",
         "skills/deliver-tasks/references/github-binding.md",
         "skills/run-github-project/references/github-binding.md",
         "skills/to-plan/references/github-binding.md",

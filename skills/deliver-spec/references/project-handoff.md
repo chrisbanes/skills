@@ -6,9 +6,10 @@ handoff or take over a Project claim.
 
 ## Procedure
 
-1. Verify the controller packet under the Project's
+1. Verify the controller's independently selected providers under
+   [Delivery bindings](provider-bindings.md), then verify its packet under the Project's
    [ticket lifecycle](../../deliver-tasks/references/ticket-lifecycle.md):
-   source/plan identities and task graph, trusted binding, item and runner,
+   source/plan identities and task graph, trusted bindings, item and runner,
    configuration and authority leases, fixed base, worktree/branch/PR head,
    review evidence, repair usage, agent capacity, active revision evidence folder
    and controller-retained preservation baseline. Reconcile live state on
@@ -52,10 +53,14 @@ handoff or take over a Project claim.
    invoked providers retain their actual scope, roles and capacity requirements.
    Report missing coverage rather than weakening a provider. Never waive final
    review.
-5. Reuse the supplied branch and verified PR. After review, push and reconcile
+5. Reuse the supplied branch and verified change request. After review, push and
+   reconcile
    the exact head; create one draft PR only for a nonempty integrated diff.
-   Use `Fixes #<ticket>` for `closing-keyword`, or a non-closing issue link for
-   `close-after-merge`. Apply [PR review timing](pr-review-timing.md) to start
+   Open/update through the code-host binding and link through the selected
+   provider pair. Use closing keywords only for verified native tracker closure
+   under `closing-keyword`; otherwise use a non-closing link for
+   `close-after-merge`. Verify the complete effective closing-reference set.
+   Apply [PR review timing](pr-review-timing.md) to start
    applicable external review while CI runs, preferring verified draft review and otherwise
    permitting earlier PR readiness. Verify that state separately from delivery
    `ready`, which requires all required checks, reviews and finding dispositions

@@ -19,6 +19,7 @@ class SyncReferencesTest(unittest.TestCase):
     def test_github_binding_consumers_detect_and_repair_drift(self):
         source = "references/github-binding.md"
         consumers = (
+            "skills/deliver-spec/references/github-binding.md",
             "skills/deliver-tasks/references/github-binding.md",
             "skills/run-github-project/references/github-binding.md",
             "skills/to-plan/references/github-binding.md",

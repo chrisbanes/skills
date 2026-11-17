@@ -1,0 +1,38 @@
+{
+  "decisions": {
+    "native-open": {
+      "tracker": "github",
+      "code_host": "github",
+      "change_action": "open_draft",
+      "closing_keywords": true,
+      "expected_host_closures": [
+        "chrisbanes/app#42"
+      ],
+      "tracker_action": "link",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "native-merged": {
+      "tracker": "github",
+      "code_host": "github",
+      "change_action": "none",
+      "closing_keywords": true,
+      "expected_host_closures": [
+        "chrisbanes/app#42"
+      ],
+      "tracker_action": "none",
+      "ticket_complete": true,
+      "delivery_state": "merged"
+    },
+    "nondefault-merged": {
+      "tracker": "github",
+      "code_host": "github",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "close_and_verify",
+      "ticket_complete": false,
+      "delivery_state": "merged"
+    }
+  }
+}

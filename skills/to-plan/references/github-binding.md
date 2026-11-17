@@ -61,6 +61,72 @@ payload digest, revision chain and effective-contract verification.
    comments stay visible. This grants no issue-body, label, assignment, Project
    field/status or unrelated-comment mutation authority.
 
+## Delivery operations
+
+Use the GitHub tracker and code-host roles independently. Selecting GitHub as
+code host supplies no tracker identity or authority; a Jira item linked to a
+GitHub PR stays a Jira item. These operations also support standalone
+`deliver-spec` without requiring Project configuration; controller execution
+retains its trusted configuration, leases and merge/closure policy.
+
+1. **Tracker source/readiness and markers:** Use Planning marker operations.
+   GitHub readiness requires `ready-for-agent` and the existing contradiction,
+   blocker and approval checks; a missing label routes standalone delivery to
+   `triage`. Marker publication grants no label or item-closure authority.
+2. **Code-host open/update:** Resolve the exact repository and base, authenticate
+   permissions, and find the existing PR for the supplied branch before create.
+   Prefer the connector, falling back to `gh pr`/GraphQL. Create one draft PR
+   for the reviewed nonempty diff or update the verified existing PR; refetch
+   repository, URL/node ID, base, head SHA, draft state and complete body. After
+   an ambiguous write, reconcile Remote reconciliation before retrying. Never
+   replace an existing PR or overwrite unrelated human body edits.
+3. **Checks/reviews/feedback:** Read complete paginated check runs/statuses,
+   required checks, reviews, comments and unresolved threads for the exact head
+   and current base. Resolve repository rules, protection and merge-queue policy;
+   separate pending, failed and unknown from passing. Request review, change
+   draft/readiness, reply and resolve threads only within caller authority and
+   verify resulting state. Apply the caller's review-timing and final-head gates;
+   GitHub review transport does not replace independent integrated review.
+4. **Link and native closure capability:** Link the exact tracker identity in the
+   PR body and return its verified permalink to the tracker through its selected
+   binding when authorized. For GitHub issues, compare repository-qualified
+   identities; for another tracker, retain its canonical URL/key. Native closing
+   keywords apply only to verified GitHub issues fully satisfied by this PR,
+   under `closing-keyword` when the target is the repository default branch.
+   Use `Fixes #<number>` only for the same repository, or a repository-qualified
+   closing reference for an explicitly intended cross-repository GitHub issue
+   whose native closure is verified. A non-default base, `close-after-merge`,
+   partial delivery or non-GitHub tracker requires a non-closing link and no
+   native closing references. A local source without an item has no closure set.
+5. **Closing-reference readback:** Apply Closing reference verification after
+   every PR create/body edit and immediately before merge, including standalone
+   delivery and mixed-provider cases. The complete `closingIssuesReferences`
+   set must equal the exact intended native GitHub issue set, or be empty when
+   closure belongs to another tracker/controller or delivery is partial. Correct
+   unintended body/manual closing links within authority and refetch; unknown,
+   incomplete or mismatched state blocks acceptance and merge.
+6. **Code-host merge:** Refresh exact head/base, applicable checks, reviews,
+   finding dispositions, merge-policy fingerprint and closure references.
+   Require invocation-specific merge authority and the caller's final-head
+   gates. Use the selected merge method or queue; verify GitHub merged state,
+   merged head/commit and refreshed target base. Queue admission or auto-merge
+   enablement is pending, not a completed merge. Reconcile an ambiguous merge
+   before retrying or asking any tracker to close.
+7. **GitHub tracker close/readback:** For native closure, verify the exact
+   intended issues are closed after merge; do not equate PR merged with issue
+   closed. Under `close-after-merge`, only the authorized standalone lead or
+   owning controller may close the verified issue after merge readback and
+   renewed full-contract/remaining-work checks; refetch closed state. Partial
+   delivery leaves it open. For a different tracker, return merge evidence to
+   that tracker's binding; never call a GitHub issue close with its key. Failed
+   or unknown closure preserves merged evidence and blocks ticket completion;
+   reconcile before any retry. Use Unintended Closure for authorized recovery
+   of an unintended GitHub closure, preserving concurrent human changes.
+8. Finish with PR identity/head/base, check/review applicability, effective
+   closing references, merge readback and separate tracker closure readback.
+   Controller Done/cleanup still requires its terminal reconciliation; a merged
+   PR alone cannot satisfy that finish gate.
+
 ## Binding validation
 
 For `next` or `drain`, use the Setup section below only to validate the

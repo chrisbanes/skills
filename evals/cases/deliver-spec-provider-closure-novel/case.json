@@ -1,0 +1,48 @@
+{
+  "id": "deliver-spec-provider-closure-novel",
+  "title": "Jira tracker with GitHub code host keeps closure independent",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-spec"
+  ],
+  "expected_skills": [
+    "deliver-spec"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-spec-provider-closure-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "independent-bindings",
+      "text": "Selects tracker and code host independently, routes change-request operations through the host and linking/closure through the tracker without guessing GitHub issue identities."
+    },
+    {
+      "id": "closure",
+      "text": "Uses closing keywords only for verified native full-item closure on the correct base; verifies effective closing references, merge and tracker terminal state separately."
+    },
+    {
+      "id": "recovery-authority",
+      "text": "Preserves controller-owned operations, partial work and missing capability boundaries; reconciles unknown mutations without duplicate merges or closes."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

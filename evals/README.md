@@ -682,3 +682,11 @@ publication with independent progress, and Backlog restraint through determinist
 decision artifacts. A routing counterexample keeps one named item in `deliver-spec`.
 Existing GitHub scenarios install both the entrypoint and extracted controller;
 their prompts, rubrics and expected decisions remain unchanged.
+
+The `deliver-spec` provider-closure calibration triad preserves native GitHub
+closure and non-default-base controller closure, exercises Jira tracker/GitHub
+code-host linking and separate merge/closure recovery, and rejects closure for
+partial work, unintended host links, missing capabilities and delegated owners.
+Offline decision artifacts use the existing deterministic validator and grader;
+they validate the fixture contract, not live provider support or model behavior.
+No live evaluations or new result metrics are reported.
