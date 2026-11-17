@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 The bound scope is the live control plane: fresh board state and this run's
 operation-specific grants decide every claim, write and finish.
-Default lanes are `Todo` → `In progress` → `Done`; resolve them
+Default lanes are `Todo` → `In Progress` → `Done`; resolve them
 through the resolved binding's claim and completion markers. Implementation readiness is
 derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 

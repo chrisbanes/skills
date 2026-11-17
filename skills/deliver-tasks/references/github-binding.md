@@ -553,7 +553,7 @@ this template over it. Follow the
 - Field ID: `<PVTSSF_...>`
 - Todo name: `<Todo>`
 - Todo option ID: `<option-id>`
-- In progress name: `<In progress>`
+- In progress name: `<In Progress>`
 - In progress option ID: `<option-id>`
 - Done name: `<Done>`
 - Done option ID: `<option-id>`
@@ -650,8 +650,9 @@ resolves to another label. A renamed matching ID is repairable drift. The map
 label identifies the parent map; the other four labels are mutually exclusive
 child types. Never create, rename, or infer any of them.
 
-Humans own the Project schema and agent role authority. Require only `Todo`,
-`In progress`, and `Done` Status options with verified IDs. Unlabelled Todo is
+Humans own the Project schema and agent role authority. Require the resolved
+`Todo`, `In Progress`, and `Done` Status options (or explicit configured names)
+with verified IDs. Unlabelled Todo is
 the backlog; placement never grants authority. Keep `ready-for-agent` throughout
 active work. The controller never adds or restores it, including setup, triage,
 recovery and retries. Only [approved setup migration](#approval-gated-legacy-migration)
@@ -832,8 +833,8 @@ fingerprint from validation; absence of an override file is not missing state:
    `ready-for-agent` below denotes that role, including its human-only grant.
    Pass `--claim-marker '{"status":"<configured In progress name>","requiresAssignment":true}'`.
    Use the exact configured column display name and authenticated runner login.
-   Require only Todo, In progress and Done; derive implementation readiness
-   from Todo, `ready-for-agent`, and a verified usable active plan leaf. Pass no
+   Require only the resolved Todo, In Progress and Done options; derive
+   implementation readiness from Todo, `ready-for-agent`, and a verified usable active plan leaf. Pass no
    Ready option or CLI input.
 4. For `wayfinderReconciliation`, map the durable GitHub marker's
    `projectItemId` to normalized `itemId`; compare the same node ID without

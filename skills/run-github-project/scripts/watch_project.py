@@ -12,6 +12,7 @@ import json
 import subprocess
 import sys
 import time
+from collections import deque
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
@@ -131,32 +132,41 @@ def await_budget(rate: dict[str, Any], deadline: datetime | None) -> bool:
 
 PARENT_CONNECTIONS = {"subIssues": "id", "blockedBy": "id",
                       "labels": "name", "assignees": "login"}
-PARENT_QUERY = """
-query($id: ID!, $subIssues: String, $blockedBy: String,
-      $labels: String, $assignees: String) {
-  rateLimit { cost remaining resetAt }
-  node(id: $id) { ... on Issue {
+PARENT_FIELDS = """
+  ... on Issue {
     id url state updatedAt repository { nameWithOwner } parent { id }
     comments(last: 1) { nodes { id updatedAt } }
     CONNECTIONS
-  } }
-}
+  }
 """.replace("CONNECTIONS", "\n".join(
     f"{name}(first: 100, after: ${name}) {{ pageInfo {{ hasNextPage endCursor }} nodes {{ {field} }} }}"
     for name, field in PARENT_CONNECTIONS.items()
 ))
 
+PARENT_BATCH_SIZE = 20
+
+
+def parent_query(node_ids: list[str], cursors: dict[str, str]) -> tuple[str, dict[str, str]]:
+    variables = {f"id{i}": node_id for i, node_id in enumerate(node_ids)}
+    declarations = [f"$id{i}: ID!" for i in range(len(node_ids))]
+    declarations.extend(f"${name}: String" for name in PARENT_CONNECTIONS)
+    aliases = [f"node{i}: node(id: $id{i}) {{ {PARENT_FIELDS} }}"
+               for i in range(len(node_ids))]
+    return (f"query({', '.join(declarations)}) {{ rateLimit {{ cost remaining resetAt }} "
+            + " ".join(aliases) + " }", {**variables, **cursors})
+
 
 def fetch_parent(args: argparse.Namespace, deadline: datetime | None) -> dict[str, Any] | None:
     """Read every descendant and transitive blocker, including closed nodes."""
-    pending = [args.parent_id]
+    pending = deque([args.parent_id])
+    prefetched = {}
     scope = {args.parent_id}
     expanded = set()
     records = {}
     limits = []
     identities = {}
     while pending:
-        node_id = pending.pop(0)
+        node_id = pending.popleft()
         if node_id in records:
             if node_id in scope and node_id not in expanded:
                 children = records[node_id]["subIssues"]
@@ -170,11 +180,24 @@ def fetch_parent(args: argparse.Namespace, deadline: datetime | None) -> dict[st
         seen_cursors = {name: set() for name in active}
         metadata = None
         while active:
-            if limits and not await_budget(limits[-1], deadline):
-                return None
-            data = graphql(PARENT_QUERY, deadline, id=node_id, **cursors)
-            limits.append(data["rateLimit"])
-            node = data.get("node")
+            if node_id in prefetched and metadata is None:
+                node = prefetched.pop(node_id)
+            else:
+                batch = [node_id]
+                if metadata is None:
+                    for candidate in pending:
+                        if candidate not in records and candidate not in prefetched and candidate not in batch:
+                            batch.append(candidate)
+                            if len(batch) == PARENT_BATCH_SIZE:
+                                break
+                if limits and not await_budget(limits[-1], deadline):
+                    return None
+                query, variables = parent_query(batch, cursors)
+                data = graphql(query, deadline, **variables)
+                limits.append(data["rateLimit"])
+                for index, identity in enumerate(batch):
+                    prefetched[identity] = data.get(f"node{index}")
+                node = prefetched.pop(node_id)
             if not isinstance(node, dict) or node.get("id") != node_id:
                 raise WatchError(f"issue {node_id} missing or identity changed")
             if not {"id", "url", "state", "updatedAt", "repository", "parent", "comments"} <= node.keys():
