@@ -15,6 +15,9 @@ uncertainty, or `review-blocked` when permitted evidence is insufficient.
 
 ## Setup
 
+Detect legacy boards/configuration through the
+[approval-gated migration](github-binding.md#approval-gated-legacy-migration)
+before ordinary setup. Discovery and a dry run grant no mutation authority.
 Follow [GitHub setup](github-binding.md#setup), including its additive setup,
 active-lease, confirmation and finish gates. An absent override file uses
 read-only default resolution and may finish `configuration-valid`; only requested

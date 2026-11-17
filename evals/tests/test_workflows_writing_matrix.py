@@ -286,13 +286,17 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(51, len(benchmark))
-        self.assertEqual(150, len(calibration))
+        self.assertEqual(154, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(51, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertEqual(["router-single-item-deliver-spec"], [case.id for case in report.cases if case.kind == "routing"])
         self.assertEqual(
             {
+                "deliver-tasks-migration-dry-run-direct",
+                "deliver-tasks-migration-apply-direct",
+                "deliver-tasks-migration-decline-negative",
+                "deliver-tasks-migration-partial-failure-novel",
                 "deliver-tasks-default-binding-direct",
                 "deliver-tasks-binding-override-novel",
                 "deliver-tasks-binding-ambiguity-negative",

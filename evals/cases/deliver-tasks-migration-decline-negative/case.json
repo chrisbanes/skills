@@ -1,0 +1,41 @@
+{
+  "id": "deliver-tasks-migration-decline-negative",
+  "title": "Approval-gated legacy migration: decline-negative",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-tasks"
+  ],
+  "expected_skills": [
+    "deliver-tasks"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-tasks-migration-decline-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "migration",
+      "text": "Discover legacy board/config, enumerate every move and new eligibility, require explicit exact approval, preserve labels and pins, journal originals before writes, reconcile unknown outcomes and protect concurrent changes during rollback; leave options to humans."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "staged_skill_files": [
+    "run-github-project/scripts/watch_project.py"
+  ],
+  "calibration": true
+}

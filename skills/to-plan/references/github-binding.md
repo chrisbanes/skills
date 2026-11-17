@@ -147,8 +147,9 @@ Only an already trusted, committed display-name-only edit may use
    `docs/agents/deliver-tasks.md`, or their explicitly referenced override path.
    If both exist and select different files, stop on conflicting configuration.
    Treat an existing legacy `docs/agents/run-github-project.md` as migration
-   required, not as an absent file. Leave its rename/reshape to the separately
-   approved migration task; do not migrate during execution.
+   required, not as an absent file. Setup must inspect the
+   [legacy migration](#approval-gated-legacy-migration) gate before resolving
+   defaults; execution returns `configuration-blocked` and never migrates.
 2. Select **Tracker** and **Code host** independently (default `github` for
    each; other providers need their own supported binding), then **Scope** from
    the explicit override or invocation Project URL.
@@ -223,12 +224,15 @@ reconciliation and a new verified lease before writers resume.
 
 ## Setup
 
-Validate defaults first through the resolution procedure. Configuration is
+Inspect for a legacy Status schema or configuration first under
+[legacy migration](#approval-gated-legacy-migration); otherwise validate defaults
+through the resolution procedure. Configuration is
 optional and holds only requested overrides. For requested file creation or
 repair use [project configuration](#github-project-configuration) and additive
 setup below; preserve all unrelated values and explicit pins. Never create or
-rename Project fields/options, move legacy items, or infer role authority from
-placement. Validate Agent Setup profiles against current runtime capabilities;
+rename Project fields/options or infer role authority from placement. Legacy
+item moves require the explicit migration approval below. Validate Agent Setup
+profiles against current runtime capabilities;
 keep the selected lead model unchanged. Allow `closing-keyword` only on the
 default base. Finish with the applicable validation or proposed-edit result.
 
@@ -312,7 +316,105 @@ contents never gate Todo eligibility.
 Setup uses the read-only pagination, retry, and incomplete-read rules from
 [remote reconciliation](#remote-reconciliation). If a complete configuration
 read cannot be established, discard partial state and return
-`configuration-blocked`; setup never applies mutation reconciliation.
+`configuration-blocked`. Ordinary additive setup is read-only remotely; approved
+legacy migration alone uses mutation reconciliation below.
+
+## Approval-gated legacy migration
+
+Core principle: approve an exact, reversible migration before changing any
+board or repository state; preserve labels and concurrent work throughout.
+This is the only exception to humans placing legacy items. Setup permission
+alone authorizes discovery and a dry run, not migration or execution.
+
+1. **Discover read-only.** Read the working and committed configuration and its
+   closest trusted `AGENTS.md`/`CLAUDE.md` references, plus complete paginated
+   Project fields/options, items (including drafts and archived items), labels,
+   assignments, workflows and active leases. Detect the old five-column schema
+   (`Backlog`, `Todo`, `Ready to implement`, `In progress`, `Done`) by verified
+   names/IDs, including explicit legacy name mappings, and the old
+   `docs/agents/run-github-project.md` or explicitly referenced legacy file.
+   Either signal enters this gate; config-only migration needs no item moves,
+   board-only migration creates no optional file. An adopted three-column board
+   with no legacy file stays on additive setup. If old options remain empty and
+   no legacy file/patch remains, validate read-only with no migration writes or
+   repeated approval; reconcile any prior journal before declaring completion.
+   Missing, ambiguous, inaccessible
+   or partial identities block migration; ask the human to resolve missing
+   target options instead of creating/renaming them. Require zero In Progress
+   items, no active/paused/parked old-binding leases, and quiesced writers before
+   applying; otherwise present the dry run with those exact blockers.
+2. **Present the complete dry run.** Enumerate every item in Backlog or Ready to
+   implement, including identity/reference, old option ID/name, target Todo
+   ID/name, exact current label IDs/names and unchanged labels. Include zero
+   counts when empty. Separately list every Backlog item already carrying the
+   agent-work role that will become immediately eligible, after parked,
+   contradictory-role, open-state and blocker checks; also list labelled items
+   that remain blocked and why. A Ready item still needs a verified plan leaf
+   before implementation. Show exact before/after file paths and full patch:
+   rename the legacy file to `docs/agents/deliver-tasks.md` (or an explicitly
+   approved override path), change its heading to `Deliver tasks`, add Tracker
+   and Code host Provider `github`, and Scope Type `project`/URL from the
+   verified Project. Retain Project/repository identity pins, Todo/In progress/
+   Done mappings, roles, filters, priority, agent settings, merge/closure policy,
+   comments and unrelated content. Remove only legacy Backlog/Ready name/ID
+   fields and explicitly shown obsolete fields under additive setup. Add any
+   missing required role mappings only from verified live identities. Update
+   each trusted exact-file reference in `AGENTS.md`/`CLAUDE.md` in the same patch.
+   An existing destination, conflicting references or local edits require a
+   reconciled patch preserving both, never overwrite. Show the journal location,
+   rollback plan and activation/commit boundary. Leave every Status option intact.
+   Finish `migration-awaiting-approval` with no board or repository writes,
+   including no journal file, until explicit approval of this exact plan. A
+   decline finishes `migration-declined` with no changes; silence is not approval.
+3. **Journal before applying.** Refresh the whole plan and preconditions after
+   approval; changed membership, labels, files or identities require a revised
+   dry run and renewed approval. Persist a durable local migration record at
+   the approved location before the first write and verify it can be read back.
+   Include migration/operation IDs, approval evidence, repository/Project/field/
+   option identities, source commit and binding digest, plan digest, each item's
+   old/target Status, labels (label changes: empty), assignment and archive state.
+   Store original bytes/digests and existence of every touched config/instruction
+   path, proposed bytes/digests, file rename mapping and ordered operations.
+   Never put secrets in the record. Record intent before each write, and append
+   attempted/verified/unknown/conflicted results and authoritative readbacks
+   durably after it. If journaling fails, stop before the next write.
+4. **Apply and reconcile one operation at a time.** Recheck each original-state
+   precondition immediately before its write. Change only Status for a listed
+   item, using the verified Project/item/field/option IDs; refetch and verify
+   Status, labels, membership, assignment and archive state after every write.
+   Preserve labels verbatim; migration never adds/restores `ready-for-agent`.
+   For failed, timed-out or unknown writes, read complete authoritative state
+   before retry: target state means record success without replay; original
+   state permits a retry only with fresh preconditions and unchanged approval;
+   any other state or incomplete read stops as `migration-blocked`, preserving
+   the journal and completed operations. Never infer failure from an error or
+   success from the command exit alone. Apply the approved config/reference
+   patch with original-bytes preconditions, verify exact bytes/existence after
+   each write, and journal partial rename/reference outcomes the same way.
+5. **Rollback safely when requested.** Use the journal in reverse operation
+   order, reconciling every unknown attempt first, including a write whose
+   success was not journaled. Restore each item's original Status only if it
+   still has the migration's verified target Status and unchanged membership,
+   labels, assignments and archive state; otherwise preserve current state and
+   report a rollback conflict for human reconciliation. Restore original config/
+   instruction bytes and legacy path, removing a migration-created destination
+   only when its current bytes still equal the recorded migration output. For
+   partial file writes use each operation's recorded before/after state. Preserve
+   concurrent edits; offer a reviewed inverse patch instead of wholesale restore
+   on mismatch. Journal rollback intent and verify every inverse write; apply
+   the same unknown-outcome reconciliation before retry. Already restored state
+   is a no-op. A missing old option blocks its inverse; never recreate or delete
+   options. Report remaining conflicts and retained recovery evidence.
+6. **Finish from readback.** Re-enumerate affected items and all touched paths;
+   verify intended statuses, unchanged labels and the complete config/reference
+   pair. Report each verified, pending, unknown or conflicted operation, journal
+   location and recovery action. Return `migration-blocked` for incomplete or
+   divergent outcomes; do not start execution or commit implicitly. Successful
+   file edits finish `configuration-ready-to-commit`; activation/new claims wait
+   until the pair is committed on verified base and freshly validated. A
+   board-only migration finishes `configuration-valid` only after fresh binding
+   validation. Human option deletion is a separate action once old options are
+   empty; setup never deletes options, even after approval or rollback.
 
 ## GitHub Project Configuration
 
@@ -463,9 +565,9 @@ Humans own the Project schema and agent role authority. Require only `Todo`,
 `In progress`, and `Done` Status options with verified IDs. Unlabelled Todo is
 the backlog; placement never grants authority. Keep `ready-for-agent` throughout
 active work. The controller never adds or restores it, including setup, triage,
-recovery and retries. Leave legacy schema migration and option deletion to a
-separately authorized setup task; never create or rename Status options. Do not
-retain an Agent Brief compatibility path. Revalidate
+recovery and retries. Only [approved setup migration](#approval-gated-legacy-migration)
+may move legacy items; humans alone delete empty old options. Never create or
+rename Status options. Do not retain an Agent Brief compatibility path. Revalidate
 usable marker plans by their identity, integrity, and configured base; do not
 require Status event history. An existing `Execution approver logins` entry is
 obsolete and must not affect eligibility.
@@ -575,8 +677,10 @@ because an unchanged parked claim appears in an otherwise fresh queue snapshot.
 
 ## Remote Reconciliation
 
-Use this procedure for every GitHub read. In `setup`, apply steps 1, 2, and the
-`setup` branch of step 5; setup permits no mutation. In `next` and `drain`,
+Use this procedure for every GitHub read. In ordinary `setup`, apply steps 1,
+2, and the `setup` branch of step 5. Approved legacy migration uses the complete
+procedure plus its journal and original-state preconditions; exhausted access
+returns `migration-blocked`. In `next` and `drain`,
 apply the complete procedure to reads and mutations. A missing or failed
 response is unknown, never evidence that a Project item, blocker, review,
 check, comment, PR, merge, or closure is absent.

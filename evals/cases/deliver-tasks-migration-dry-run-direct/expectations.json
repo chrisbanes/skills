@@ -1,0 +1,76 @@
+{
+  "decisions": {
+    "legacy": {
+      "action": "migration-awaiting-approval",
+      "moves": {
+        "I1": [
+          "B",
+          "T"
+        ],
+        "I2": [
+          "B",
+          "T"
+        ],
+        "I3": [
+          "R",
+          "T"
+        ],
+        "I4": [
+          "B",
+          "T"
+        ]
+      },
+      "newly_eligible": [
+        "I1"
+      ],
+      "blocked_labelled": {
+        "I4": "contradictory-roles"
+      },
+      "label_changes": [],
+      "board_writes": 0,
+      "repository_writes": 0,
+      "journal_written": false,
+      "delete_options": false,
+      "config_rename": [
+        "docs/agents/run-github-project.md",
+        "docs/agents/deliver-tasks.md"
+      ],
+      "add_sections": [
+        "Tracker",
+        "Code host",
+        "Scope"
+      ],
+      "remove_status_fields": [
+        "Backlog name",
+        "Backlog option ID",
+        "Ready name",
+        "Ready option ID"
+      ],
+      "trusted_references": [
+        "AGENTS.md",
+        "CLAUDE.md"
+      ],
+      "preserve_pins": true
+    },
+    "adopted": {
+      "action": "configuration-valid",
+      "migration_required": false,
+      "writes": 0
+    },
+    "active": {
+      "action": "migration-awaiting-approval",
+      "apply_blocker": "active-lease",
+      "writes": 0
+    },
+    "config-only": {
+      "action": "migration-awaiting-approval",
+      "moves": {},
+      "create_optional_file": false
+    },
+    "retained-options": {
+      "action": "configuration-valid",
+      "writes": 0,
+      "delete_options": false
+    }
+  }
+}

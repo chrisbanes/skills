@@ -65,6 +65,11 @@ They retain runtime fingerprints through recovery without a phantom file digest;
 missing/duplicate columns, multi-label roles and unresolved scopes fail closed.
 Deterministic validation checks decision artifacts, not live model behavior.
 
+The migration calibration cases cover a read-only dry run, explicit approval
+and journaled apply, declined/silent approval, partial/unknown writes and
+concurrent-change-safe rollback. They use immutable legacy state and the
+existing offline decision validator; they never migrate a live board.
+
 The writing calibration cases extend the rendering-documentation regressions
 with short review replies, nontechnical email (file edits and response-only
 drafting), missing personal experience,
