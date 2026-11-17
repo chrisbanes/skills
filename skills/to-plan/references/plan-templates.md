@@ -7,7 +7,7 @@ and shared setup instead of repeating them. Add precise symbols, ordered edits,
 wiring and failure branches where they resolve ambiguity or protect correctness.
 Apply the [validation placement rule](workflow.md) to slice and final checks.
 
-## GitHub plan comment
+## Tracker plan marker
 
 ```markdown
 <!-- to-plan:implementation-plan:v2 -->

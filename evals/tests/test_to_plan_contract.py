@@ -390,6 +390,57 @@ def legacy_identity(stored, body):
     forms = (body, payload_text(body))
     return value in {digest(text) for form in forms for text in (form, form.rstrip('\n'))}
 
+class TrackerBindingContractTest(unittest.TestCase):
+    root = Path(__file__).resolve().parents[2]
+
+    def test_marker_operations_are_binding_owned_and_chain_is_provider_neutral(self):
+        skill = (self.root / 'skills/to-plan/SKILL.md').read_text()
+        mode = (self.root / 'skills/to-plan/references/github-mode.md').read_text()
+        amendments = (self.root / 'skills/to-plan/references/integration-amendments.md').read_text()
+        binding = (self.root / 'references/github-binding.md').read_text()
+        self.assertIn('references/github-binding.md', skill)
+        for operation in ('read-markers', 'write-marker', 'supersede-marker'):
+            self.assertIn(f'`{operation}`', mode)
+            self.assertIn(f'`{operation}`', binding)
+        self.assertIn('`write-marker`', amendments)
+        self.assertNotIn('one unminimized leaf', mode)
+        self.assertNotIn('unique\n   unminimized leaf', mode)
+        self.assertIn('best-effort', mode)
+        self.assertIn('### Payload digest', mode)
+
+
+    def test_no_minimization_case_accepts_exact_decisions_and_rejects_wrong_fields(self):
+        from evals.harness.cases import load_case
+        from evals.harness.runner import prepare_workspace
+        case_id = 'to-plan-no-minimization-novel'
+        case = load_case(self.root / 'evals/cases' / case_id / 'case.json', self.root)
+        snapshot = json.loads((case.directory / 'overlay/readback.json').read_text())
+        first, leaf = snapshot['records']
+        self.assertEqual(first['url'], leaf['supersedes'])
+        self.assertEqual([1, 2], [record['revision'] for record in snapshot['records']])
+        self.assertFalse(snapshot['binding']['minimization'])
+        self.assertFalse(snapshot['binding']['predecessor_editing'])
+        self.assertTrue(all(not record['hidden'] for record in snapshot['records']))
+        self.assertEqual(payload_digest(leaf['body']), leaf['digest'])
+        fields = {'Active': leaf['url'], 'Digest': leaf['digest'],
+                  'Presentation': 'warning', 'Next': 'no-op', 'Fork': 'blocked',
+                  'Gap': 'blocked', 'Foreign': 'blocked', 'Tampered': 'blocked'}
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = prepare_workspace(case, self.root, Path(directory) / 'fixture',
+                                          enabled_skills=case.target_skills)
+            artifact = workspace / '.scratch/decision.md'
+            artifact.parent.mkdir(exist_ok=True)
+            command = [sys.executable, str(self.root / 'evals/validators/text_case.py'), case_id]
+            for wrong in (None, *fields):
+                answers = dict(fields)
+                if wrong:
+                    answers[wrong] = 'incorrect'
+                artifact.write_text('\n'.join(f'{key}: {value}' for key, value in answers.items()))
+                result = subprocess.run(command, cwd=workspace, capture_output=True, text=True)
+                with self.subTest(wrong=wrong):
+                    self.assertEqual(wrong is None, result.returncode == 0, result.stderr)
+
+
 class PayloadDigestTest(unittest.TestCase):
     root = Path(__file__).resolve().parents[2]
 

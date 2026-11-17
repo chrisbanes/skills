@@ -21,6 +21,7 @@ class SyncReferencesTest(unittest.TestCase):
         consumers = (
             "skills/deliver-tasks/references/github-binding.md",
             "skills/run-github-project/references/github-binding.md",
+            "skills/to-plan/references/github-binding.md",
         )
         self.assertEqual(consumers, COPIES.get(source))
         with tempfile.TemporaryDirectory() as directory:

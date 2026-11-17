@@ -11,7 +11,7 @@ durable cross-session consumption, or to resume an existing amendment chain.
 Routine compatible base integration, implementation and fixture corrections use
 the existing delivery record and affected checks; they require no new amendment.
 Do not add hashes for committed source already identified by Git. The digests
-below protect mutable external plan comments and lineage, not each local step.
+below protect mutable external plan records and lineage, not each local step.
 
 ## Classify before drafting
 
@@ -124,8 +124,9 @@ reconciliation, not an automatic retry or silently refreshed hash.
 
 ## Verify identities and lineage
 
-1. Enumerate all full-plan and amendment marker comments, including minimized
-   history. Apply GitHub mode's existing v1/v2 plan-chain checks. Pin the current
+1. Use the tracker binding's `read-markers` to enumerate all full-plan and
+   amendment records, including hidden history. Apply tracker mode's existing
+   provider-independent v1/v2 plan-chain checks. Pin the current
    full-plan revision and its [payload digest](github-mode.md#payload-digest);
    an existing chain keeps the verified legacy plan digest it pinned. Do not
    retroactively rehash or rewrite a legacy plan.
@@ -176,7 +177,7 @@ reconciliation, not an automatic retry or silently refreshed hash.
    Require early independent review only for a concrete risk that must be resolved
    before integration; otherwise record review as deferred to the integrated
    candidate. Reuse applicable independent coverage, resolve findings and
-   revalidate the exact draft before publication. Normal GitHub
+   revalidate the exact draft before publication. Normal tracker
    mode needs publication approval; `--auto` uses only already-verified
    authority and cannot extend it. Material changes return to the appropriate
    decision/replan route.
@@ -186,14 +187,15 @@ reconciliation, not an automatic retry or silently refreshed hash.
    against the installed revisions and current owner request. Keep one publisher.
    A changed semantic input
    invalidates the draft approval/review; reconcile before proceeding.
-3. Publish one new comment, never edit an active semantic payload. Refetch all
-   markers; verify author, exact body, payload/effective digests, unique chain,
+3. Use `write-marker` to publish one new record, never edit an active semantic
+   payload. Use `read-markers` for complete history; verify author, exact body, payload/effective digests, unique chain,
    base/candidate identities and timestamps. Keep supporting plans/amendments
    visible as components of the effective contract, not superseded payloads.
-   Supersede the epoch only during full replanning under GitHub mode.
+   Supersede the epoch only during full replanning under tracker mode, using
+   `supersede-marker` for optional best-effort presentation.
 4. On timeout or ambiguous creation, preserve the exact draft and expected
    author/body/digests/sequence/predecessor. Reconcile complete fresh reads for
-   that identity before retrying; reuse exactly one matching verified comment.
+   that identity before retrying; reuse exactly one matching verified record.
    Multiple matches, an unexpected child, partial reads or unresolved write
    outcome block dependent work. Retry only when absence is proved and the
    fresh preconditions still hold; do not use blanket retries.

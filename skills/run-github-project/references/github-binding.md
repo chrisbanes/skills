@@ -22,6 +22,45 @@ configuration path, labels and recovery markers unchanged.
 5. Pass the invoked lane's finish gate only after authoritative readback; preserve
    unknown outcomes and artifacts under Remote reconciliation.
 
+## Planning marker operations
+
+Use these operations for `to-plan` source reads and plan/handoff markers. They
+supply transport and presentation only; the planner owns publication authority,
+payload digest, revision chain and effective-contract verification.
+
+1. **Source reads:** Resolve the exact issue/repository, authenticated GitHub
+   login and permissions. Read the complete issue body/comments, linked specs,
+   parents, blockers and outcomes, linked/closing PRs and current open state.
+   Prefer the connector; use the GitHub access fallback below when needed.
+2. **`read-markers`:** Paginate every issue comment, including minimized ones.
+   Return exact API-decoded `body`, stable comment ID/permalink, author,
+   creation/update times and minimized state. Include full-plan, amendment and
+   relevant handoff/replan records. Partial or unknown reads block publication;
+   reconcile under Remote reconciliation before retrying. Authenticate the
+   publisher and permission against GitHub, not marker text.
+3. **`write-marker`:** Create one runner-authored issue comment with the exact
+   approved marker body. Return its ID/permalink and refetch through
+   `read-markers`; verify exact body, author, digest, revision/sequence,
+   predecessor and timestamp under the planner's protocol. After an ambiguous
+   create, reconcile the complete history by expected identity/body/digest and
+   revision/predecessor before retrying; reuse exactly one verified match and
+   retry only after proving absence with fresh preconditions.
+4. **`supersede-marker`:** After verifying the successor's unique active leaf,
+   minimize the runner-owned predecessor as `OUTDATED`. If unavailable, edit
+   only that predecessor to add a superseded-by link and `<details>` opening
+   before its first payload line (`## Implementation plan` or `## Fast path`),
+   plus a final `</details>`, preserving the payload. Skip this edit when a
+   record pins a legacy digest that editing would make unverifiable. Refetch
+   and verify its unchanged semantic digest; a payload/digest mismatch blocks
+   dependent work. Report failure or skip of both
+   methods as a presentation warning; preserve the verified successor and
+   history. No other marker semantic payload may be edited.
+5. Finish only after the planner verifies the complete revision/effective chain
+   through readback. Minimization and fallback editing are best-effort tidying;
+   the explicit revision/predecessor chain remains authoritative when old
+   comments stay visible. This grants no issue-body, label, assignment, Project
+   field/status or unrelated-comment mutation authority.
+
 ## Binding validation
 
 For `next` or `drain`, use the Setup section below only to validate the

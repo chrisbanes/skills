@@ -1,0 +1,48 @@
+{
+  "id": "to-plan-no-minimization-novel",
+  "title": "Visible predecessor remains valid without tracker minimization",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/decision.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-no-minimization-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "binding-operations",
+      "text": "Uses tracker read-markers/write-marker/supersede-marker; unsupported minimization and predecessor editing only lose presentation. Preserves both exact bodies, no GitHub fallback or mutation."
+    },
+    {
+      "id": "chain-authority",
+      "text": "Selects revision 2 by authenticated contiguous revision/predecessor chain, verifies provider-independent payload digest and treats an identical current payload/baseline as no-op. Multiple visible records are not multiple active leaves; forks, gaps, foreign authors and digest mismatches still block."
+    },
+    {
+      "id": "limits",
+      "text": "Separates offline supplied observations from live authority; keeps source/readiness/approval gates and exact-draft cleanup requirements. Does not claim actual publication or permission verification."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

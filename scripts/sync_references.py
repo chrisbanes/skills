@@ -9,6 +9,7 @@ COPIES = {
     "references/github-binding.md": (
         "skills/deliver-tasks/references/github-binding.md",
         "skills/run-github-project/references/github-binding.md",
+        "skills/to-plan/references/github-binding.md",
     ),
     "references/pr-review-timing.md": tuple(
         f"skills/{skill}/references/pr-review-timing.md"
