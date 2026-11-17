@@ -54,7 +54,8 @@ ticket worktree to another ticket.
    - merged: HEAD is contained in the reconciled merged PR;
    - not merged (PR closed unmerged or verified abandonment): the PR's remote head ref still exists and equals local HEAD. A
      deleted remote branch keeps the worktree and reports it.
-5. After a merge, also delete the skill-created local ticket branch. After an
+5. After a merge, also delete the skill-created local ticket branch, including
+   after a host-cleanup handoff, which detaches the worktree first. After an
    unmerged retirement, keep the local branch ref.
 6. Whenever a `next` or `drain` run finishes, waits for humans or stops,
    retain every label-stopped planning or ticket worktree, including clean ones;

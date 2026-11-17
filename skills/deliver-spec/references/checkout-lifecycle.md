@@ -9,13 +9,17 @@ checkouts are created, recorded, reused and retired.
 
 1. Use the runtime's managed checkout when it can remove that checkout with
    an inventory readback, or when the runtime forbids shell-created checkouts
-   and owns their cleanup. Otherwise create a plain Git worktree with
-   `git worktree add -b <task-branch> <path> <exact-sha>`.
+   and owns their cleanup. If the runtime forbids shell-created checkouts but
+   its managed checkout has neither a removal operation nor host-owned cleanup,
+   stop and report the blocker before creating one. Otherwise create a plain
+   Git worktree with `git worktree add -b <task-branch> <path> <exact-sha>`.
 2. Verify the new checkout's branch and HEAD SHA before work starts in it,
    then hand off or record its exact path, branch, base and instructions. If
    the runtime starts the owner with its checkout, the owner runs this check
-   first, creating the task branch at the exact SHA if needed, and stops on a
-   mismatch.
+   first: it switches to an absent task branch created at the exact SHA
+   (`git switch -c <task-branch> <exact-sha>`), and stops and reports when
+   HEAD or an existing branch differs. Confirm the owner's reported branch and
+   HEAD before accepting its work.
 
 ## Record
 
@@ -65,7 +69,9 @@ For each eligible run-created checkout:
    worktree. For a plain Git worktree, run `git worktree remove --force <path>`
    once; step 2 already retained tracked changes and locks, so only untracked
    and ignored files are dropped. A managed checkout whose host owns cleanup
-   and offers no removal operation is handed to host cleanup instead.
+   and offers no removal operation is handed to host cleanup instead: first
+   detach it at its HEAD with `git -C <path> switch --detach` so its branch is
+   free, then leave its owning thread or task in place for the host.
 5. Verify the path is absent from the provider inventory or from
    `git worktree list --porcelain`. For a handoff, verify instead that the host
    inventory still attributes the checkout to its run-created thread or task.

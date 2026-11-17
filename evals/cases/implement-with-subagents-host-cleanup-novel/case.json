@@ -36,7 +36,7 @@
     },
     {
       "id": "host-handoff",
-      "text": "Hands `/workspace/worker-1` to the host's cleanup, citing the inventory readback that attributes it to its run-created task, and lists its path in the final report"
+      "text": "Detaches `/workspace/worker-1` at its HEAD and hands it to the host's cleanup, citing the inventory readback that attributes it to its run-created task, and lists its path in the final report"
     },
     {
       "id": "orphan-gap",
