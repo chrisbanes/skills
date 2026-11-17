@@ -17,7 +17,7 @@ precise stop, and preserve owner/artifacts. No merge authority is supplied.
 Explain A's immutable marker/effective lease distinction, why B–D cannot renew,
 and why even a valid renewal does not resume a parked CI failure or grant new
 live turns by itself. Distinguish E's existing replan fallback, F's retained-owner
-handoff without Todo/Ready reset, and G's block/replan/stakeholder paths. Keep H
+handoff without Todo reset, and G's block/replan/stakeholder paths. Keep H
 unchanged: no unnecessary amendment, full plan republication, board reset or
 second selected ticket. Do not treat any earlier-head check/review as proof for
 changed integration code.

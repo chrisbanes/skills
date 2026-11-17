@@ -17,7 +17,7 @@ CASES = (
     "deliver-tasks-direct", "deliver-tasks-novel", "deliver-tasks-negative",
     "router-single-item-deliver-spec",
     "deliver-tasks-neutral-direct", "deliver-tasks-claim-marker-novel",
-    "deliver-tasks-parked-negative",
+    "deliver-tasks-parked-negative", "deliver-tasks-derived-handoff-novel",
 )
 
 

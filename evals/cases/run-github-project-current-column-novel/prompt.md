@@ -1,5 +1,5 @@
 Review this supplied queue without contacting providers or mutating state.
-#61 is open, unassigned, in configured `Ready to implement`, labelled
+#61 is open, unassigned, in configured `Todo`, labelled
 `ready-for-agent`, and has no native blockers, descendants, or PR. Its unique
 runner-authored marker plan has a valid revision chain and matches the current
 base. Legacy Ready history says a foreign actor made an automated transition

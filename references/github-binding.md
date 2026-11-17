@@ -145,7 +145,7 @@ Read closest trusted instructions and require an explicit reference to
 `docs/agents/run-github-project.md`; use
 [project configuration](#github-project-configuration) as its structure. Require repository
 identity, default/base branches and closure policy; Project owner/number/URL/node
-ID; Status field and Backlog/Todo/Ready/In-progress/Done options; exact
+ID; Status field and Backlog/Todo/In-progress/Done options; exact
 needs-triage, epic, and human-work labels; complete optional Wayfinder labels;
 Priority field/options; optional trusted filter; merge
 method; Done automation/archive behavior. Store names with IDs; a renamed name
@@ -177,7 +177,7 @@ If the trusted instructions already point to the exact configuration file,
 leave them unchanged. If that reference is missing, propose the minimum patch
 to those instructions and write it after confirmation, preserving their other
 text and the existing configuration. Do not run the Status-schema migration
-gate for an already adopted schema, move Ready items, reroute an existing ticket
+gate for an already adopted schema, move waiting Todo handoffs, reroute an existing ticket
 owner, or touch Project, issue, or PR state.
 
 When adding or updating Agent Setup, discover the current runtime's available
@@ -281,8 +281,6 @@ this template over it. Follow the
 - Backlog option ID: `<option-id>`
 - Todo name: `<Todo>`
 - Todo option ID: `<option-id>`
-- Ready to implement name: `<Ready to implement>`
-- Ready to implement option ID: `<option-id>`
 - In progress name: `<In progress>`
 - In progress option ID: `<option-id>`
 - Done name: `<Done>`
@@ -380,7 +378,7 @@ child types. Never create, rename, or infer any of them.
 Humans own the Project schema and all promotion out of Backlog. Never create
 or rename Status options, promote Backlog, or process Backlog work from the
 runner. Before adopting a new schema, require zero `In progress` items and
-have humans create and verify `Backlog`, `Todo`, and `Ready to implement` options,
+have humans create and verify `Backlog`, `Todo`, `In progress`, and `Done` options,
 configure their IDs, and place legacy work needing a new plan in Todo. Do not
 retain an Agent Brief compatibility path. Revalidate
 usable marker plans by their identity, integrity, and configured base; do not
@@ -547,7 +545,9 @@ Normalize the GitHub Project binding before ranking:
    human-controlled column in this prefactor; it is still excluded separately.
 3. Pass `--claim-marker '{"status":"<configured In progress name>","requiresAssignment":true}'`.
    Use the exact configured column display name and authenticated runner login.
-   Keep all five configured Status options and the existing Ready plan gate.
+   Require Backlog, Todo, In progress and Done; derive implementation readiness
+   from Todo, `ready-for-agent`, and a verified usable active plan leaf. Pass no
+   Ready option or CLI input.
 4. For `wayfinderReconciliation`, map the durable GitHub marker's
    `projectItemId` to normalized `itemId`; compare the same node ID without
    rewriting existing marker comments or their digests.
@@ -575,7 +575,7 @@ or pause field for this ranker CLI. Use this shape for execution contenders:
   "state": "OPEN",
   "itemId": "PVTI_example",
   "parked": false,
-  "projectStatus": "Ready to implement",
+  "projectStatus": "Todo",
   "projectPriority": "High",
   "projectPosition": 17,
   "labels": ["ready-for-agent"],
@@ -814,7 +814,8 @@ revisions, missing predecessors, foreign marker authors, and a minimized active
 leaf. A verified runner-authored `autonomous-replan` report naming a plan's exact
 permalink and payload digest invalidates that predecessor in every execution
 column until a later revision links the report. Todo may plan its replacement;
-Ready and In-progress work remain blocked. For compatibility, the ranker also accepts the former singular
+In-progress work remains blocked; Todo cannot implement the invalidated leaf.
+For compatibility, the ranker also accepts the former singular
 `implementationPlan` input as one v1 root.
 
 An integration amendment is not a synthetic implementation-plan revision or
@@ -860,8 +861,10 @@ unblocked item as `triageCandidates`. Neither consumes an implementation slot.
 For other role-labelled Todo work, apply
 [Epics And Human Frontier](../../deliver-tasks/references/human-frontier.md). Return a bare unblocked epic as
 `readyEpics`, unblocked human work as `humanActions`, and unblocked
-`ready-for-agent` work in `candidates` with action `plan`. Permit an existing
-assignee only on human work. Role-tag dependency-blocked Todo results in
+`ready-for-agent` work in `candidates` with action `claim` when its active
+plan is usable, or `plan` when planning is needed. Retain agent planning/handoff
+assignment leases separately; among other roles, permit an existing assignee
+only on human work. Role-tag dependency-blocked Todo results in
 `parkedBlocked`. Never infer a human promotion from labels on a Backlog item.
 
 The ranker returns valid current-user claims and ordered unclaimed candidates:
@@ -1042,11 +1045,13 @@ map, or perform another terminal mutation until the marker is authoritative.
 Before ticket acceptance, confirm GitHub identity, read/write and
 `project` scope, default/base branch, clean state, and automation compatibility.
 
-## Claim Ready work
+## Claim implementation work
 
-For Ready work, assign only the authenticated user, refetch exclusivity, recover
-only own lost claim race, transition to In progress, refetch membership/status/
-assignment/open state/readiness/current plan/no blockers/no
+For Todo work with `ready-for-agent` and a verified usable active plan leaf,
+wait for an implementation slot while preserving any planning assignment in
+Todo. Once a slot is free, assign only the authenticated user, refetch
+exclusivity, recover only own lost claim race, transition to In progress,
+refetch membership/status/assignment/open state/readiness/current plan/no blockers/no
 competing PR, then record item, identity, configuration, and every plan
 lease as authority. Ambiguity after In progress is a preserved blocked slot.
 

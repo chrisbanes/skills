@@ -48,7 +48,7 @@ Use the existing Todo scheduling class: resumed Wayfinder claims occupy the
 resumable-Todo class and eligible fresh Wayfinder tickets occupy the
 new-Todo class. Within either class, use configured Priority, visible
 Project position, then issue number. They never consume implementation capacity
-and never enter `Ready to implement`, `In progress`, or an implementation PR
+and never enter `In progress` or an implementation PR
 flow.
 
 ## Require Authority And Provider
@@ -157,7 +157,8 @@ Apply the recorded plan idempotently and in this order:
    outcomes, post the map completion summary, close the map, and reconcile its
    configured Project Done/archive outcome in the same way.
 
-Never move a resolved Wayfinder child to `Ready to implement`.
+Keep resolved Wayfinder children on their recorded reconciliation route;
+implementation-plan readiness does not apply to them.
 
 When any completion condition does not hold, keep the map open. Unassign the
 selected child only after every recorded mutation and every applicable terminal

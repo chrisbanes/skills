@@ -41,7 +41,7 @@ below protect mutable external plan records and lineage, not each local step.
    checks; a standalone request cannot take over that claim. Permit only this
    retained PR through the normal no-open-implementation-PR gate. Competing
    PRs, foreign requests or uncertain ownership block. This route does not
-   require a full-replan report or a Todo/Ready round trip.
+   require a full-replan report or a Todo round trip.
 6. Before publication, verify the installed consumer's instructions and retained
    owner's authenticated request explicitly support this amendment version:
    enumerate and hydrate the entire chain, validate the effective digest, retain
@@ -234,7 +234,7 @@ to the full plan alone.
   leases, base/head and retained owner/artifacts. Revalidate affected leases in
   place only within existing authority; do not renew external grants, claim
   different work or manufacture readiness. Keep implementation/evidence renewal
-  with `deliver-spec`, without an unnecessary Todo/Ready lifecycle reset. The
+  with `deliver-spec`, without an unnecessary Todo lifecycle reset. The
   controller owns scheduling, capacity and lease mutation; this reference grants
   none of those powers to the planner.
 

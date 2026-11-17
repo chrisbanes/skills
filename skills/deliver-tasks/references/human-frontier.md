@@ -16,7 +16,7 @@ Classify an open Todo issue as follows:
 | Epic only | `readyEpics` / `close-epic` |
 | Epic plus human work | `humanActions` / `perform-human-work` |
 | Human work only | `humanActions` / `perform-human-work` |
-| Ready for agent only | Normal Todo candidate / `plan` |
+| Ready for agent only | Todo implementation candidate with a usable active plan; otherwise `plan` |
 | Needs triage | `triageCandidates` / `triage` |
 
 Reject `epic` plus `ready-for-agent` and multiple next-action labels. Treat an

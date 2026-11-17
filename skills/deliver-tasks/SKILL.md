@@ -11,8 +11,9 @@ disable-model-invocation: true
 
 The bound scope is the live control plane: fresh board state and this run's
 operation-specific grants decide every claim, write and finish.
-Default lanes are `Backlog` → `Todo` → `Ready to implement` → `In progress` →
-`Done`; resolve them through the trusted binding's verified option IDs.
+Default lanes are `Backlog` → `Todo` → `In progress` → `Done`; resolve them
+through the trusted binding's verified option IDs. Implementation readiness is
+derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 
 Load the selected tracker/code-host binding before applying these rules. GitHub
 is the only binding: read [GitHub binding](references/github-binding.md), including
@@ -29,7 +30,7 @@ selection across a scope of tasks.
 3. **Controller ownership:** only the controller claims, assigns, mutates shared Project state, merges, closes issues and reconciles; a ticket agent owns only its worktree, branch and non-merge PR changes.
 4. **Unknown outcomes:** reconcile an unknown or failed mutation or publication before retrying, freeing capacity or reporting success.
 5. **Preservation:** keep blocked, dependency-gated and human work in its frontier with owner, claim, slot, draft, artifacts, grants and budgets; never change state to empty the queue. Released capacity resumes only in free slots.
-6. **Retained owner:** feedback, repairs and amendments keep the owner, claim and slot without a Todo/Ready reset; renew affected checks and reviews at the final head, never relying on earlier-head evidence.
+6. **Retained owner:** feedback, repairs and amendments keep the owner, claim and slot without a Todo reset; renew affected checks and reviews at the final head, never relying on earlier-head evidence.
 7. **No invented gates:** never infer a permission, capacity limit, provider or prerequisite the supplied state lacks; independent runnable work continues while others wait.
 8. **Supplied state:** decide review, setup or analysis from supplied complete state without another Project or repository read (still read references); judge the described environment, not providers missing from this workspace. A validated proposed diff is `configuration-ready-to-commit` even unwritten and uncommitted. Profile selection calls no routing service and grants no claim or merge authority; ignore legacy routing fields without editing them.
 9. **No escape hatch:** renewal or amendment never resumes parked CI, grants live turns or resets qualification. Unknown or stale evidence blocks dependants; material architecture changes need full replan and review; changed authority or qualification needs a stakeholder or source decision.

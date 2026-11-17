@@ -4,7 +4,7 @@ only this state. Do not run commands, providers, agents, or mutations.
 Ticket #51 holds the sole implementation slot. It has a verified exclusive
 claim, a clean skill-owned worktree, one reviewed PR at head h51, all required
 checks green, and no unresolved feedback. Nothing in the current user request
-grants merging. Ticket #52 is unrelated, Ready to implement, and has a current
+grants merging. Ticket #52 is unrelated, in Todo with ready-for-agent, and has a current
 verified plan. Ticket #53 is natively blocked by #51. Board reads, issue-comment
 writes, and claims still work. The controller can quiesce all #51 descendants
 and verify/release its resource grants. Ticket #54 is an unassigned ready epic

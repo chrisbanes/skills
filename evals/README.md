@@ -51,6 +51,9 @@ and uncertain shared-seam overlap. Deterministic tests accept the expected
 decisions and reject widened scope or bypassed gates; they do not establish
 live model behavior or recoverable dependency-wait time.
 
+The derived-handoff calibration case covers a verified plan waiting in Todo,
+slot admission, invalid-chain restraint, and the separate Wayfinder route.
+
 The task-delivery contract calibration cases cover opaque item and blocker
 references, binding-supplied status or label claim markers, and parked-item
 restraint across execution, triage, epic and human-work lanes. Their decision

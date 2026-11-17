@@ -30,7 +30,7 @@ ordering as untrusted blocker evidence.
 
 Start the triage lane only after a complete query finds no valid or blocked
 implementation claim, valid or blocked Todo
-claim, runnable Todo or Ready candidate, active planning handoff, or
+claim, runnable Todo implementation or planning candidate, active planning handoff, or
 occupied implementation slot. A parked implementation claim remains unresolved
 execution under
 [Terminal Required-CI Parking](drain-scheduler.md#terminal-required-ci-parking)

@@ -32,8 +32,6 @@ DEFAULT_STATUS_ARGUMENTS = (
     '{"status":"In progress","requiresAssignment":true}',
     "--backlog-status",
     "Backlog",
-    "--ready-status",
-    "Ready",
     "--in-progress-status",
     "In progress",
     "--needs-triage-label",
@@ -114,7 +112,7 @@ def ticket(number: int, **overrides: object) -> dict:
         "state": "OPEN",
         "itemId": f"PVTI_{number}",
         "parked": False,
-        "projectStatus": "Ready",
+        "projectStatus": "Todo",
         "projectPriority": "High",
         "projectPosition": number,
         "labels": ["ready-for-agent"],
@@ -382,8 +380,28 @@ class NeutralContractTest(unittest.TestCase):
 
 
 class RankTicketsTest(unittest.TestCase):
+    def test_ready_status_is_no_longer_a_cli_input(self) -> None:
+        result = subprocess.run([
+            sys.executable, str(SCRIPT), "--mode", "drain", "--current-user", "chris",
+            *DEFAULT_PROJECT_ARGUMENTS, *DEFAULT_PRIORITY_ARGUMENTS,
+            *DEFAULT_STATUS_ARGUMENTS, "--ready-status", "Ready",
+        ], input="[]", capture_output=True, text=True, check=False)
+        self.assertEqual(2, result.returncode)
+        self.assertIn("unrecognized arguments: --ready-status Ready", result.stderr)
+
+    def test_todo_derives_implementation_readiness_from_active_plan(self) -> None:
+        returncode, output = run_ranker([
+            ticket(418, projectStatus="Todo"),
+            ticket(419, projectStatus="Todo", implementationPlan=None),
+        ])
+        self.assertEqual(0, returncode)
+        self.assertEqual([(418, "claim"), (419, "plan")], [
+            (entry["ticket"]["number"], entry["action"])
+            for entry in output["candidates"]
+        ])
+
     def test_duplicate_identities_reject_contradictory_columns_in_any_order(self) -> None:
-        for status in ("Backlog", "Ready", "Todo"):
+        for status in ("Backlog", "Todo"):
             first = ticket(417, projectStatus=status)
             if status == "Backlog":
                 first["implementationPlans"] = "malformed"
@@ -434,7 +452,7 @@ class RankTicketsTest(unittest.TestCase):
                 )
 
     def test_wayfinder_parent_accepts_configured_authorized_columns(self) -> None:
-        for status in ("Todo", "Ready", "In progress", "Done"):
+        for status in ("Todo", "In progress", "Done"):
             with self.subTest(status=status):
                 contender = wayfinder_ticket(415)
                 contender["parentIssue"]["projectStatus"] = status
@@ -461,10 +479,8 @@ class RankTicketsTest(unittest.TestCase):
              "wasAutomated": True, "createdAt": "2999-01-01T00:00:00Z"},
         )
         for status, assignment, action in (
-            ("Todo", [], "plan"),
+            ("Todo", [], "claim"),
             ("Todo", ["chris"], "resume-planning-handoff"),
-            ("Ready", [], "claim"),
-            ("Ready", ["chris"], "resume-planning-handoff"),
             ("In progress", ["chris"], "resume-implementation"),
         ):
             for variant in (*variants, "missing"):
@@ -707,8 +723,7 @@ class RankTicketsTest(unittest.TestCase):
 
         for status, assignment, action in (
             ("Todo", ["chris"], "resume-planning-handoff"),
-            ("Ready", [], "claim"),
-            ("Ready", ["chris"], "resume-planning-handoff"),
+            ("Todo", [], "claim"),
             ("In progress", ["chris"], "resume-implementation"),
         ):
             for report_link in (replan["permalink"], None):
@@ -731,7 +746,7 @@ class RankTicketsTest(unittest.TestCase):
     def test_replan_report_invalidates_predecessor_in_every_execution_column(self) -> None:
         for status, assignment in (
             ("Todo", []), ("Todo", ["chris"]),
-            ("Ready", []), ("Ready", ["chris"]), ("In progress", ["chris"]),
+            ("In progress", ["chris"]),
         ):
             for retained_pr in (False, True):
                 with self.subTest(status=status, assignment=assignment, pr=retained_pr):
@@ -765,6 +780,7 @@ class RankTicketsTest(unittest.TestCase):
             projectStatus="Todo",
             assignees=[],
             replanRequest=replan_request(205, disposition="human-required"),
+            implementationPlan=None,
         )
 
         returncode, output = run_ranker([planning])
@@ -1388,7 +1404,7 @@ class RankTicketsTest(unittest.TestCase):
             output["excluded"],
         )
 
-    def test_ready_assignment_without_verified_handoff_blocks_even_with_owned_pr(self) -> None:
+    def test_todo_assignment_without_verified_replan_blocks_even_with_owned_pr(self) -> None:
         partial_claim = ticket(
             50,
             projectPosition=1,
@@ -1405,7 +1421,7 @@ class RankTicketsTest(unittest.TestCase):
                 {
                     "number": 50,
                     "reasons": [
-                        "missing current implementation plan",
+                        "Todo requeue lacks a verified replan report",
                     ],
                 },
             ],
@@ -1484,7 +1500,7 @@ class RankTicketsTest(unittest.TestCase):
             with self.subTest(assignees=assignees):
                 linked = ticket(
                     60,
-                    projectStatus="In progress" if assignees else "Ready",
+                    projectStatus="In progress" if assignees else "Todo",
                     assignees=assignees,
                     openPullRequests=[
                         pull_request(600, closesIssue=False, linksIssue=True),
@@ -1528,7 +1544,7 @@ class RankTicketsTest(unittest.TestCase):
                 pr = pull_request(600, closesIssue=False, linksIssue=True, verifiedPartial=True)
                 pr.update(overrides)
                 retained = ticket(
-                    60, projectStatus="In progress" if assignees else "Ready",
+                    60, projectStatus="In progress" if assignees else "Todo",
                     assignees=assignees,
                     openPullRequests=[pr, pull_request(601)] if competitor else [pr],
                 )
@@ -1670,7 +1686,7 @@ class RankTicketsTest(unittest.TestCase):
         returncode, output = run_ranker(
             [],
             "--backlog-status",
-            "Ready",
+            "Todo",
         )
 
         self.assertEqual(2, returncode)

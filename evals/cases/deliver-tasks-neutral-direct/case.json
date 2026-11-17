@@ -1,6 +1,6 @@
 {
   "id": "deliver-tasks-neutral-direct",
-  "title": "Neutral references preserve GitHub five-column ranking",
+  "title": "Neutral references derive implementation readiness in Todo",
   "family": "workflow",
   "target_skills": [
     "deliver-tasks"
@@ -30,7 +30,7 @@
   "rubric": [
     {
       "id": "contract",
-      "text": "Accepts neutral identities and opaque blocker references while preserving Ready and Todo behavior."
+      "text": "Accepts neutral identities and opaque blocker references while deriving implementation readiness from a verified plan in Todo."
     }
   ],
   "provenance": {

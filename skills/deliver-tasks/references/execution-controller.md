@@ -86,7 +86,7 @@ Use the selected binding's [GitHub access](github-binding.md#github-access) and
 mutation or a success claim.
 
 Query complete live Project state at start and after merges. In `drain`, obey the
-scheduler Refresh Gate and include new Todo/Ready work plus Todo
+scheduler Refresh Gate and include new Todo implementation/planning work plus Todo
 needs-triage until the first complete empty executable-and-triage query; leave
 later arrivals for next run. In `next`, post-merge query is reconciliation only.
 Exclude Backlog before hydration or recovery. Keep its native dependency edges
@@ -141,7 +141,8 @@ that column supplies ticket authorization. Never promote or select Backlog,
 and never fetch transition history to prove permission.
 Route planning and Wayfinder modes through their lanes; a
 `next` planning selection stays the same issue through terminal reconciliation.
-For Ready work, perform the binding's [claim operation](github-binding.md#claim-ready-work).
+For Todo work with a verified usable active plan, perform the binding's
+[implementation claim operation](github-binding.md#claim-implementation-work).
 Record its verified lease; ambiguity after the claim transition preserves a
 blocked slot.
 

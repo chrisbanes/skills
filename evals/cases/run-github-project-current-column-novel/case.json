@@ -1,6 +1,6 @@
 {
   "id": "run-github-project-current-column-novel",
-  "title": "Ready and Wayfinder work ignore conflicting legacy transition data",
+  "title": "Planned Todo and Wayfinder work ignore conflicting legacy transition data",
   "family": "workflow",
   "target_skills": [
     "run-github-project", "deliver-tasks"
@@ -29,7 +29,7 @@
   "rubric": [
     {
       "id": "current-column",
-      "text": "Current Ready membership authorizes implementation preparation despite foreign, automated, older, or malformed transition data; does not request event history or another approval."
+      "text": "Current Todo membership plus ready-for-agent and a verified usable active plan authorizes implementation preparation despite foreign, automated, older, or malformed transition data; does not request event history or another approval."
     },
     {
       "id": "integrity",

@@ -244,10 +244,11 @@ dispatching the next:
    time and attempt count. Choose preserved replan claims before other Todo
    claims; never start a second planner while one retains the planning lane.
 7. Apply the [Conflict Admission Gate](#conflict-admission-gate), claim ranked
-   `Ready to implement` tickets one at a time, and launch unrelated slot agents
+   Todo tickets with verified usable active plans one at a time, and launch
+   unrelated slot agents
    until the in-flight or active-agent limit, less any watcher relay
    reservation ([step 4](#project-watcher)), is reached.
-8. Start the next ranked `Todo` item with the default-owner capability only
+8. Start the next ranked `Todo` planning item with the default-owner capability only
    when the planning lane and active agent capacity are free after maximizing
    runnable implementation. An AFK Wayfinder research or task item uses this
    same step, but each non-research child receives a fresh provider context and
@@ -269,7 +270,7 @@ wait for either while any step above remains runnable.
 ### Refresh Gate
 
 Require one successful complete Project query and verified-base refresh before
-new selection after a merge, parked or released slot, Todo or Ready
+new selection after a merge, parked or released slot, Todo
 handoff, epic closure, user prompt, controller resumption after interruption,
 or other event that
 can change capacity, dependencies, or eligibility. Rebuild and rank every class
@@ -298,7 +299,8 @@ authority and identities; snapshot reuse does not waive that check.
 
 Use [Todo Lane](todo-lane.md) for handoffs and bounded planner recovery.
 When several slots requeue, retain their original claim order ahead of new
-Ready and Todo work. Only the verified cooperative planner checkpoint may
+Todo implementation and planning work. Only the verified cooperative planner
+checkpoint may
 release an active planner for delivery; occupied ticket owners are not preempted.
 
 ### Project Watcher

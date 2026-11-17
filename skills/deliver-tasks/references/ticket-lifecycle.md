@@ -88,7 +88,7 @@ outcome, make evidence-backed in-scope adjustments under the
 packet only when that contract requires it. For a supported routine integration
 amendment, use the controller's
 [effective-contract gate](todo-lane.md#consume-a-verified-integration-amendment)
-and retain this delivery owner and slot without a Todo/Ready reset. Pass the
+and retain this delivery owner and slot without a Todo reset. Pass the
 verified source/plan/amendment lineage, retained starting candidate and affected
 evidence to the delivery owner; implementation and evidence renewal stay there.
 For every ordinary implementation

@@ -1,7 +1,7 @@
 Assess four independent supplied binding contract scenarios for task delivery
 in review mode. Runner is chris. Every item is open, not parked, ready-for-agent,
 unblocked, has no descendants or PRs, and has a verified current runner-owned plan.
-All other configuration is valid and the existing five-column model remains.
+All other configuration is valid and the Status schema has no Ready option.
 A: marker {"status":"Working","requiresAssignment":true}, item status Working,
 assigned only to chris.
 B: marker {"label":"agent:active","requiresAssignment":true}, item status Todo,

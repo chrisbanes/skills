@@ -6,7 +6,7 @@ into implementation.
 Configured Wayfinder children take the separate integration branch in
 [Wayfinder Todo Lane](wayfinder-lane.md). They share this lane's scheduling
 class and safe-checkpoint rules, but never use the implementation-plan marker,
-Ready handoff, or implementation lifecycle below.
+implementation handoff, or implementation lifecycle below.
 
 ## Eligibility And Plan State
 
@@ -37,8 +37,8 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
 3. In the controller lane, [publish and verify the fast-path plan](github-binding.md#publish-a-fast-path-plan), reconciling an ambiguous create before retrying.
 4. In `next`, or when an implementation slot is free, move the item directly
    to `In progress` and verify the authority lease, including the contract
-   digest. Otherwise apply step 8 below and resume it as a verified Ready
-   handoff.
+   digest. Otherwise keep it assigned in Todo as a verified
+   implementation handoff and resume it when a slot frees.
 5. Hand off under deliver-spec's Project mode with the fast-path revision as
    the approved plan. It carries no plan-mismatch repair budget; a failed
    condition returns a replan packet citing that revision, and
@@ -91,12 +91,12 @@ deliver-spec's [fast path](../../deliver-spec/references/fast-path.md).
    report the hygiene failure but continue because the chain is authoritative. Treat
    missing `to-plan` as an issue-local planning blocker; it must not block
    implementation items with current plans.
-8. Move the item to `Ready to implement` and refetch its current Status,
-   assignment, and usable active plan. Verify the mutation by current field
-   value; do not query or inspect its transition event.
+8. Keep the item in `Todo` and refetch its current Status, exclusive
+   assignment, `ready-for-agent` label, and usable active plan. This verified
+   state is the implementation handoff; it requires no extra column or label.
 9. In `next`, or when an implementation slot is free, move the same item to
    `In progress`, verify the full authority lease, and start its slot. Otherwise
-   preserve the assigned verified Ready handoff, release the planner, and
+   preserve the assigned verified implementation handoff, release the planner, and
    resume that handoff before new claims when a slot frees.
 
 After a successful handoff, require the planning worktree to be clean with no
@@ -161,14 +161,14 @@ report the delivery wait; do not bypass its required research/session contracts.
 Resume an assigned `Todo` item before starting new Todo work:
 
 - run planning when the plan is missing or stale;
-- finish the Ready handoff when the plan is current.
+- finish the implementation handoff when the plan is current.
 
-Resume an assigned `Ready to implement` item when its current column,
-exclusive ownership, and usable active plan pass verification. No historical
-Ready event is required. Preserve a missing or invalid plan as a blocked
-planning claim without consuming an implementation slot.
+Resume an assigned verified Todo handoff before new claims when a slot frees.
+Refetch its current Todo membership, label, exclusive ownership, and usable
+active plan. A missing plan returns to planning; preserve invalid chains as
+blocked planning claims. Neither consumes an implementation slot.
 
-Before the Ready or In-progress transition, compare the planned SHA with the
+Before the In-progress transition, compare the planned SHA with the
 current base:
 
 - accept non-overlapping committed drift after screening the changed files,
@@ -197,7 +197,7 @@ or infer support from an issue proposing it.
    provider's classification and any risk-required early review in the existing
    planning lane and available capacity; otherwise defer to integrated review.
    The controller still owns shared publication
-   and Project mutations. Do not move the ticket through Todo/Ready merely
+   and Project mutations. Do not move the ticket through Todo merely
    to obtain a supported amendment.
 2. Verify the provider-owned effective contract: original source and active
    plan identities/digests, authenticated append-only amendment lineage,
@@ -313,14 +313,14 @@ applies. Otherwise use this full lifecycle:
    and dirty-work summary as evidence, not as the planning baseline. Permit
    exactly that runner-owned implementation PR during this replan; competing
    or foreign PRs still block.
-6. Publish and verify the next plan revision, perform the Ready handoff, then
+6. Publish and verify the next plan revision, perform the implementation handoff, then
    reacquire the next free implementation slot ahead of new claims. Resume the
    same ticket context and let it reconcile retained work to the new plan.
 
 The report's predecessor plan identity and exact retained PR/head remain
 recovery evidence. A missing or mismatched link preserves a blocked planning
 claim until reconciled. Current Todo membership supplies planning authority;
-no preceding Ready event or following Todo event is required.
+no transition history is required.
 
 ### Pause A Stakeholder Decision
 
@@ -377,8 +377,8 @@ order:
 1. existing implementation and PR claims;
 2. contract-preserving replan claims;
 3. other resumable Todo and verified handoff claims;
-4. new `Ready to implement` candidates;
-5. new `Todo` candidates, including configured AFK Wayfinder children.
+4. new Todo candidates with verified usable active plans;
+5. new `Todo` planning candidates, including configured AFK Wayfinder children.
 
 Exclude Backlog from every scheduling and recovery class.
 

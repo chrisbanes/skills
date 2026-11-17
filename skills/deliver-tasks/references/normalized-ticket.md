@@ -15,7 +15,6 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --issue-closure <closing-keyword-or-close-after-merge> \
   --backlog-status <backlog-name> \
   --planning-status <todo-name> \
-  --ready-status <ready-to-implement-name> \
   --in-progress-status <in-progress-name> \
   --claim-marker '<binding-claim-marker-json>' \
   --done-status <done-name> \
@@ -48,7 +47,10 @@ claims still count toward this limit; planner/handoff claims and drain claims in
 Read [GitHub normalization](github-binding.md#normalized-ticket-schema) for every
 input field, plan/recovery shape and output collection before normalizing.
 The ranker lives in `deliver-tasks/scripts/rank_tickets.py`. Preserve its output
-collections and five-column decisions while supplying the neutral fields below.
+collections while supplying the neutral fields below. Todo plus `ready-for-agent`
+and a verified usable active plan leaf produces an implementation candidate;
+without a plan it produces a planning candidate. Invalid chains block both;
+stale plans require planning or base-drift screening before implementation.
 
 ## Binding-supplied inputs
 
@@ -75,10 +77,10 @@ collections and five-column decisions while supplying the neutral fields below.
    not required, the matched status or label itself represents an active claim.
    Missing or malformed marker configuration blocks ranking.
 4. Retain planning/handoff assignment leases independently of active claims.
-   An active marker takes precedence over a Todo/Ready planning handoff, still
+   An active marker takes precedence over a Todo planning handoff, still
    requires the verified implementation plan, and occupies implementation
    capacity even when blocked. `--in-progress-status` remains the configured
-   column for five-column validation and Wayfinder recovery; it does not infer
+   column for Status validation and Wayfinder recovery; it does not infer
    active implementation claims.
 5. Verify the binding's normalization covers every required field before
    ranking. Read the resulting claims, blocked claims and candidate collections

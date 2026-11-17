@@ -1,0 +1,47 @@
+{
+  "id": "deliver-tasks-derived-handoff-novel",
+  "title": "Verified plan handoff waits in Todo until an implementation slot frees",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-tasks"
+  ],
+  "expected_skills": [
+    "deliver-tasks"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-derived-handoff-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "derived-handoff",
+      "text": "Keeps the verified assigned handoff in Todo without a new label or Ready option; releases planner capacity and retains assignment. When a slot frees, refetches authority, plan and drift, then claims In progress ahead of new planning."
+    },
+    {
+      "id": "integrity",
+      "text": "Invalid or stale chains cannot authorize implementation, and Wayfinder children keep their separate reconciliation route."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "staged_skill_files": [
+    "run-github-project/scripts/watch_project.py"
+  ],
+  "calibration": true
+}

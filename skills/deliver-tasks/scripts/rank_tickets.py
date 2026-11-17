@@ -83,11 +83,6 @@ def parse_args() -> argparse.Namespace:
         help="Configured GitHub Project status display name that queues planning.",
     )
     parser.add_argument(
-        "--ready-status",
-        default="Ready to implement",
-        help="Configured Project status display name that marks implementation-ready work.",
-    )
-    parser.add_argument(
         "--in-progress-status",
         default="In progress",
         help="Configured GitHub Project status display name that marks an item active.",
@@ -630,7 +625,6 @@ def analyze_ticket(
     *,
     current_user: str,
     planning_status: str,
-    ready_status: str,
     claim_marker: dict[str, Any],
     needs_triage_label: str,
     human_work_label: str,
@@ -778,10 +772,10 @@ def analyze_ticket(
 
     if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
-    if project_status not in (planning_status, ready_status) and not marker_matches:
+    if project_status != planning_status and not marker_matches:
         errors.append(
             "expected project status "
-            f"{planning_status!r}, {ready_status!r}, or the binding claim marker, "
+            f"{planning_status!r} or the binding claim marker, "
             f"found {project_status!r}",
         )
     if blockers:
@@ -846,17 +840,13 @@ def analyze_ticket(
     if active_claim:
         action = "resume-pr" if resumable_pull_requests else "resume-implementation"
     elif project_status == planning_status:
-        action = (
-            "resume-planning-handoff"
-            if assigned_to_current_user and plan_is_usable
-            else ("resume-planning" if assigned_to_current_user else "plan")
-        )
-    elif (
-        project_status == ready_status
-        and assigned_to_current_user
-        and plan_is_usable
-    ):
-        action = "resume-planning-handoff"
+        if plan_is_usable:
+            action = (
+                "resume-planning-handoff" if assigned_to_current_user
+                else ("resume-pr" if resumable_pull_requests else "resume-implementation")
+            )
+        else:
+            action = "resume-planning" if assigned_to_current_user else "plan"
     else:
         action = "resume-pr" if resumable_pull_requests else "resume-implementation"
     return {
@@ -1253,7 +1243,6 @@ def main() -> int:
         statuses = (
             args.backlog_status,
             args.planning_status,
-            args.ready_status,
             args.in_progress_status,
             args.done_status,
         )
@@ -1355,7 +1344,7 @@ def main() -> int:
                             current_user=args.current_user,
                             planning_status=args.planning_status,
                             recovery_statuses=(
-                                args.planning_status, args.ready_status,
+                                args.planning_status,
                                 args.in_progress_status, args.done_status,
                             ),
                             priorities=priorities,
@@ -1395,7 +1384,6 @@ def main() -> int:
                             ticket,
                             current_user=args.current_user,
                             planning_status=args.planning_status,
-                            ready_status=args.ready_status,
                             claim_marker=claim_marker,
                             needs_triage_label=args.needs_triage_label,
                             human_work_label=args.human_work_label,
@@ -1440,10 +1428,7 @@ def main() -> int:
                     if (
                         isinstance(raw_ticket, dict)
                         and raw_ticket.get("projectStatus")
-                        in (
-                            args.planning_status,
-                            args.ready_status,
-                        )
+                        == args.planning_status
                     ):
                         invalid_planning_claimed.append(invalid)
                     else:
@@ -1462,7 +1447,7 @@ def main() -> int:
                     item["activeClaim"]
                     or item["assignedToCurrentUser"]
                     and item["ticket"]["projectStatus"]
-                    not in (args.planning_status, args.ready_status)
+                    != args.planning_status
                 )
                 and (item["errors"] or item["exclusions"])
             )
@@ -1477,10 +1462,7 @@ def main() -> int:
                 item["assignedToCurrentUser"]
                 and not item["activeClaim"]
                 and item["ticket"]["projectStatus"]
-                in (
-                    args.planning_status,
-                    args.ready_status,
-                )
+                == args.planning_status
                 and (item["errors"] or item["exclusions"])
             )
         ]

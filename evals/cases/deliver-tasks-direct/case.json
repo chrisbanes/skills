@@ -34,7 +34,7 @@
     },
     {
       "id": "delivery",
-      "text": "Plans Todo and implements Ready only after fresh operation-specific checks; missing merge authority pauses only merging."
+      "text": "Plans Todo without a plan and implements Todo with a verified usable active plan only after fresh operation-specific checks; missing merge authority pauses only merging."
     }
   ],
   "provenance": {
