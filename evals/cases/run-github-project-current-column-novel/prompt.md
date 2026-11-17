@@ -5,10 +5,10 @@ runner-authored marker plan has a valid revision chain and matches the current
 base. Legacy Ready history says a foreign actor made an automated transition
 before the plan was updated; `planningTransition` is malformed. #62 is an open,
 unassigned, unblocked Wayfinder research child currently in `Todo`, with its
-verified direct map parent currently in Todo and configured type label, but no
+verified direct map parent currently in Todo and configured type label and human-applied ready-for-agent, not parked, but no
 transition history.
-Explain which routes the current columns authorize and which independent
+Explain which routes the current role labels and columns permit and which independent
 ownership, plan, provider, review, and merge safeguards remain. Use only the
 immutable supplied workflow state.
 If resolving #62 makes a new child precise, describe its initial queue
-placement and whether automatic planning can start before human promotion.
+placement and whether automatic planning can start before a human applies a role label.

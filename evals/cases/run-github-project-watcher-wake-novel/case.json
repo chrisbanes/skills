@@ -27,7 +27,7 @@
   "rubric": [
     {
       "id": "changed-report",
-      "text": "Treats the watcher's changed report naming a Backlog-to-Todo item as a hint to refresh, not as evidence that #57 is ready or claimable."
+      "text": "Treats the watcher's changed report naming a Todo item whose human added ready-for-agent as a hint to refresh, not as evidence that #57 is ready or claimable."
     },
     {
       "id": "refresh-gate",

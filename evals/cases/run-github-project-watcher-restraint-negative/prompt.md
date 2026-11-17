@@ -3,7 +3,7 @@ or agents, or edit files.
 
 A `drain` is in progress after a complete refresh. Ticket #61 is held by a
 background implementation agent whose completion notification is due. Every
-other ticket is Done, dependency-blocked on #61, or in Backlog. No PR is in
+other ticket is Done, dependency-blocked on #61, or unlabelled Todo. No PR is in
 remote wait, no human action or authority pause exists, and no slot is idle with
 runnable work.
 

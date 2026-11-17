@@ -26,6 +26,10 @@ not authority. A code-host merge and a tracker closure are separate facts.
    `ready-for-agent` and its existing triage route. A different tracker must
    explicitly define its readiness gate. A controller handoff retains the
    controller's bindings, claim and authority; a ticket owner cannot replace them.
+   Keep `ready-for-agent` throughout active GitHub work. Recheck it before
+   material writes and recovery; removal invokes the binding's label-stop gate,
+   quiescing writers and releasing capacity while preserving assignment and
+   every artifact. Neither owner nor controller adds or restores the label.
 4. After local qualification and independent review, use code-host open/update
    to create one draft change request or reuse the existing one, verifying exact
    repository, base and reviewed head. Link the exact tracker item through the

@@ -13,7 +13,6 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --configuration-digest <committed-configuration-digest> \
   --base-branch <base-branch> \
   --issue-closure <closing-keyword-or-close-after-merge> \
-  --backlog-status <backlog-name> \
   --planning-status <todo-name> \
   --in-progress-status <in-progress-name> \
   --claim-marker '<binding-claim-marker-json>' \
@@ -82,6 +81,7 @@ stale plans require planning or base-drift screening before implementation.
    capacity even when blocked. `--in-progress-status` remains the configured
    column for Status validation and Wayfinder recovery; it does not infer
    active implementation claims.
-5. Verify the binding's normalization covers every required field before
+5. Read `stoppedItems` before blocked claims or dispatch. Each entry carries the unchanged ticket, action `stop-preserve` and reasons. These are owned items missing `ready-for-agent`; stop writers and release capacity while retaining assignment and all artifacts. No plan or PR hydration is required to establish that authority is absent. Later runs remain stopped until a human restores the label.
+6. Verify the binding's normalization covers every required field before
    ranking. Read the resulting claims, blocked claims and candidate collections
    before dispatch; a candidate alone never grants mutation authority.

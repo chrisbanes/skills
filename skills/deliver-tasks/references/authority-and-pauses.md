@@ -96,20 +96,27 @@ Finish this decision with a recorded grant, pending deadline, or no-permission
 state. A grant still requires all operation-specific checks above; without one,
 use the ticket-local merge pause while independent work continues.
 
+## Stop on label removal
+
+1. Recheck `ready-for-agent` on active planning, implementation, waiting, CI-parked and paused work at startup, on watcher changes, before recovery and before material writes. Keep the label through active work; never add or restore it, including recovery, triage outcomes and retries.
+2. When it is absent, stop the ticket's writers and descendants, reconcile in-flight outcomes read-only, then release verified process/resource grants and slot/agent capacity. Unknown writer ownership keeps only the affected resources blocked until quiescence is proven; it never authorizes more writes.
+3. Preserve Status, assignment, worktree (including dirty files), branch, PR, plans, checkpoints and artifacts exactly. Perform no ticket/PR mutation, marker publication, unassignment, closure or artifact cleanup. Report the preserved identities and the missing label from live state; no successful comment write is needed to stop.
+4. On every later run keep it outside dispatch and capacity while the label is absent. Retain dependency edges and report `stoppedItems` separately. Only a human restoring the label permits revalidation of the same ownership, plans, head, configuration, grants and reviews before resuming in a free slot; restoration alone passes none of those checks. Treat stopped work as a human frontier, not an empty successful drain.
+
 ## Pause One Ticket
 
 Use this procedure when a specific operation needs authority absent from the
 current run, or a ticket needs a material stakeholder decision. A pending
 `human-required` packet uses this preservation pause. Explicit abandonment
-cleanup must finish while the ticket is still in an eligible column, before
-any final return to Backlog. Never resume or mutate Backlog work. Missing
+cleanup must finish while `ready-for-agent` still authorizes the ticket, before
+its final transfer to the human-work role in Todo. Missing
 merge or closure authority alone is not a replan or a reason to close a PR. Board-wide loss of reliable reads or writes remains an
 integrity blocker.
 
 1. Stop only the affected operation and its ticket's writers. Reconcile any
    unknown remote outcome first. Preserve the existing Status, assignment,
    source, plan, branch, worktree, PR, and dirty work. Do not add a role label,
-   move the ticket to Backlog, close its PR, or discard work merely because
+   change its Status, close its PR, or discard work merely because
    authority is missing. Before claim, leave it unassigned with no artifacts.
 2. In the controller lane, [publish the authority-pause record](github-binding.md#publish-an-authority-pause) through the selected binding.
 3. Verify its publication, runner identity, payload digest and claimed lease
@@ -135,10 +142,8 @@ resume condition, or preserved evidence changes.
 
 ## Recover And Resume
 
-1. At startup, exclude Backlog items from automatic recovery. Preserve their
-   dependency edges and any known interrupted artifacts for a read-only report;
-   do not publish a pause/resume comment or clean artifacts on those tickets.
-   Reconstruct eligible-column pauses from live runner-owned marker comments and
+1. At startup, apply [Stop on label removal](#stop-on-label-removal) before any pause, CI, planning or Wayfinder recovery. Preserve stopped dependency edges and interrupted artifacts for a read-only report; publish no pause/resume comments or cleanup on those items.
+   Reconstruct currently authorized pauses from live runner-owned marker comments and
    the complete ticket graph before ranking. At each Refresh Gate, compare
    lightweight marker and ticket/artifact observations; hydrate full records
    only when reconstructing them or those observations change. Reuse unchanged
@@ -156,7 +161,7 @@ resume condition, or preserved evidence changes.
    Check authority only for operations still needed: if configured issue closure
    lacks its own grant, supersede the obsolete merge pause with a verified pause
    for that closure, preserving the merged result.
-3. Resume unfinished work only when a fresh observation satisfies the exact
+3. Resume unfinished agent work only when a human has supplied `ready-for-agent`, the binding reports `parked: false`, a fresh observation satisfies the exact
    condition and the current invocation supplies the required authority.
    A clear merge approval in the active invocation, or a fresh grant on a new
    invocation, can unlock a merge pause. It cannot resolve a scope decision.
@@ -190,7 +195,7 @@ resume condition, or preserved evidence changes.
 
 Continue the board while any authorized action is runnable. Return
 `waiting-for-human` only after a complete refreshed query proves that only
-verified authority/decision pauses and other human-frontier actions remain. In
+verified authority/decision pauses, label-stopped items and other human-frontier actions remain. In
 `drain`, return only as the scheduler's
 [Project Watcher](drain-scheduler.md#project-watcher) allows.
 Report each ticket, exact blocker, preserved PR/head, and resume condition.

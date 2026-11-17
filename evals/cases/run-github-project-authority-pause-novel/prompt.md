@@ -7,8 +7,8 @@ checks green, and no unresolved feedback. Nothing in the current user request
 grants merging. Ticket #52 is unrelated, in Todo with ready-for-agent, and has a current
 verified plan. Ticket #53 is natively blocked by #51. Board reads, issue-comment
 writes, and claims still work. The controller can quiesce all #51 descendants
-and verify/release its resource grants. Ticket #54 is an unassigned ready epic
-with no closure grant. No new Project Status option exists.
+and verify/release its resource grants. Ticket #54 is an unassigned epic with the human-work role
+and no closure grant. No new Project Status option exists.
 
 At startup this host offered only an indefinitely blocking input question;
 the controller instead posted the nonblocking merges-disabled message and
@@ -25,7 +25,7 @@ a verified runner-owned authority-pause comment, unchanged exclusive ownership,
 and the same PR head. #55 has a separate verified pause asking for a stakeholder
 scope decision which has not been supplied. Its original worker returned a
 human-required replan packet proposing a changed acceptance contract. No human
-has directed abandoning its partial branch or transferring it to Backlog.
+has directed abandoning its partial branch or transferring it to human work in Todo.
 Consider also a changed-head branch
 of this later observation where the prior review no longer covers the diff.
 In a separate later `drain; don't merge`, #51's exact PR has

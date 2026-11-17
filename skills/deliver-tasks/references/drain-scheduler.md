@@ -45,7 +45,7 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
 7. When an implementation slot requeues for contract-preserving planning,
    release the slot but park its assignment, branch, worktree, PR, dirty work
    and idle ticket context on the planning claim. Restore that same ownership
-   when the handoff reacquires a slot. Handle a human move to Backlog under the
+   when the handoff reacquires a slot. Handle human removal of `ready-for-agent` under the
    [failure-isolation procedure](#failure-isolation-and-finish-gate).
 8. Apply [Terminal Required-CI Parking](#terminal-required-ci-parking) only to a
    qualifying failure after its repair budget, and the
@@ -56,9 +56,9 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    the authoritative execution-clear predicate in
    [Todo Triage Lane](triage-lane.md#dispatch). It consumes no implementation
    slot and processes one issue at a time.
-10. Keep ready epics and human actions in the separate
+10. Keep role-labelled epics and human actions in the separate
    [Epics And Human Frontier](human-frontier.md). They consume neither a slot
-   nor agent capacity. Serialize epic closure in the controller lane, surface
+   nor agent capacity. Require explicit human closure authority for a shape-only epic; surface
    changed human actions immediately, and continue independent work.
 11. Keep configured Wayfinder work in the same single planning lane. Give it
     one durable controller lease, but start a fresh Wayfinder provider context
@@ -229,12 +229,12 @@ At every controller event or worker yield, perform all independent runnable
 actions that fit the slot and active-agent limits. Exhaust each class before
 dispatching the next:
 
-1. Exclude Backlog from automatic work and recovery. Reconcile eligible
+1. Apply the label-stop gate before automatic work and recovery. Exclude unlabelled Todo and binding-parked work. Reconcile eligible
    resumable authority pauses and park newly blocked operations
    through their controller procedure before selecting another ticket.
 2. Merge the oldest merge-ready claim, unless an explicit dependency requires a
    different order. Admit or merge only one at a time.
-3. Reconcile the highest-ranked ready epic with issue-close authority, then
+3. Reconcile explicitly human-authorized epic closures, then
    refresh the complete Project graph before taking another action.
 4. Resume owning ticket agents for actionable review, CI, or base-repair events
    in oldest-event order.
@@ -325,8 +325,8 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    the complete Project query or targeted refetch that will arm it:
    use the binding's `snapshot` command and baseline arguments.
    Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
-   paused, parked, or authority-paused ticket, and `--issue` for every parked
-   claim, paused ticket, human-frontier issue, Wayfinder human-frontier item, and
+   paused, parked, label-stopped, or authority-paused ticket, and `--issue` for every parked
+   claim, paused or label-stopped ticket, human-frontier issue, Wayfinder human-frontier item, and
    assigned Wayfinder HITL attention item. For the targeted refetch, add
    `--board-from <reporting watcher's baseline file>` and write a new file, so
    board and issue-comment drift missed since that watcher's last poll still
@@ -568,13 +568,7 @@ occurrence. Discover and add the narrow named lock before retrying. Pause new
 claims when the same collision or infrastructure failure affects two slots or
 the verified base.
 
-If an item is now in Backlog, stop its writers and release capacity. Preserve
-and report any assignment, PR, process checkpoint, or branch without mutating
-that ticket. Retire or retain its worktree under
-[Worktrees](ticket-lifecycle.md#worktrees). Backlog role labels and prior
-ownership never authorize work; only a human promotion makes it eligible again.
-Keep Backlog issues in the native dependency graph, so they can still block
-eligible dependants, but exclude them from automatic frontier actions.
+If `ready-for-agent` is removed, apply [Stop on label removal](authority-and-pauses.md#stop-on-label-removal) before any recovery or write. Stop writers, release verified capacity, and retain assignment, worktree, dirty draft, branch, PR and artifacts without cleanup. Later runs stay stopped until a human restores the label; the controller never restores it. Keep these items and unlabelled Todo in the native dependency graph and report stopped work in the human frontier.
 
 Whenever a drain finishes, waits for humans or stops, apply
 [Worktrees](ticket-lifecycle.md#worktrees) step 6.
@@ -583,14 +577,13 @@ Pass the refresh gate before evaluating the finish state. Finish successfully
 only when the authoritative execution-clear predicate in
 [Todo Triage Lane](triage-lane.md#dispatch) is satisfied, the complete live
 query has no non-deferred triage candidate after merge reconciliation, no
-marked Wayfinder reconciliation claim remains, and no authority/decision pause,
+marked Wayfinder reconciliation claim remains, and no label-stopped work, authority/decision pause,
 human action, Wayfinder
 human-frontier item, or assigned Wayfinder HITL attention item remains.
-Excluded Backlog items do not prevent completion of the authorized queue;
-report any of them that blocks eligible work or retains interrupted artifacts.
+Unlabelled Todo without retained work does not prevent completion of the authorized queue. Stopped retained work remains a human frontier; report its artifacts and any dependency edges blocking eligible work.
 Dependency-parked Todo items retain their normal blocker reporting. If only human
 actions, verified authority/decision pauses, Wayfinder human-frontier items,
-and/or assigned HITL attention remain,
+and/or assigned HITL attention or label-stopped work remain,
 wait under the [Project Watcher](#project-watcher) instead of returning. Return
 `waiting-for-human` through [Epics And Human Frontier](human-frontier.md) and
 the Wayfinder frontier only when the drain's no-progress deadline has passed or

@@ -1,5 +1,5 @@
 Assess this supplied complete immutable scope in review mode. The configured
-Status options are Backlog, Todo, In progress and Done; no Ready option exists.
+Status options are Todo, In progress and Done; no Ready option exists.
 All implementation slots are occupied. Todo #81 is exclusively assigned to
 runner chris, ready-for-agent, open, unblocked, with no descendants or PR. Its
 planner just published and read back one verified runner-authored active plan

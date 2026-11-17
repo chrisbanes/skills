@@ -1,5 +1,5 @@
 Assess this supplied immutable ranker input contract for task delivery in
-review mode. The binding supplies the columns Backlog, Todo,
+review mode. The binding supplies the columns Todo,
 In progress and Done, and claim marker
 {"status":"In progress","requiresAssignment":true}. Runner is chris.
 Both items are open, unassigned, ready-for-agent, not parked, with no descendants

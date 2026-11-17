@@ -48,15 +48,17 @@ ticket worktree to another ticket.
    or verified marker is foreign: report it and never adopt, reuse or remove it.
 4. Retire it with the lifecycle's per-checkout
    [retire steps](checkout-lifecycle.md#retire) only once its work is
-   delivered; until then keep it, including in remote wait, parking or pause:
+   delivered; until then keep it, including in remote wait, parking, pause or a label stop.
+   Label-stopped worktrees and branches are always retained until human restoration;
+   PR closure alone never authorizes their retirement:
    - merged: HEAD is contained in the reconciled merged PR;
-   - not merged (PR closed unmerged, verified abandonment, or a human move to
-     Backlog): the PR's remote head ref still exists and equals local HEAD. A
+   - not merged (PR closed unmerged or verified abandonment): the PR's remote head ref still exists and equals local HEAD. A
      deleted remote branch keeps the worktree and reports it.
 5. After a merge, also delete the skill-created local ticket branch. After an
    unmerged retirement, keep the local branch ref.
 6. Whenever a `next` or `drain` run finishes, waits for humans or stops,
-   retire the [planning worktree](todo-lane.md) and any delivered research
+   retain every label-stopped planning or ticket worktree, including clean ones;
+   retire only the reusable [planning worktree](todo-lane.md) and delivered research
    worktree, then [account](checkout-lifecycle.md#account) for every worktree
    the run created: retired with readback, or retained with its claim and
    reason. A cleanup-incomplete run never reports success.

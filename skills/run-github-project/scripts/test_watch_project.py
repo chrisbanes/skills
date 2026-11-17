@@ -343,6 +343,17 @@ class WatchProjectTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertEqual(json.loads(result.stdout)["status"], "error")
 
+    def test_agent_label_removal_and_human_restoration_are_wake_signals(self):
+        for before, after in ((["ready-for-agent"], []), ([], ["ready-for-agent"])):
+            with self.subTest(before=before, after=after):
+                _, baseline = self.snapshot([page([item("I1", "In progress",
+                    assignees=["chris"], labels=before)])])
+                result, report = self.wait(baseline, [page([item("I1", "In progress",
+                    assignees=["chris"], labels=after)])])
+                self.assertEqual(0, result.returncode)
+                self.assertEqual({"status": "changed", "changes": [
+                    {"kind": "item", "key": "I1", "fields": ["labels"]}]}, report)
+
     def test_status_change_reports_changed_item_and_field(self):
         _, baseline = self.snapshot([page([item("I1", "Backlog")])])
         result, report = self.wait(

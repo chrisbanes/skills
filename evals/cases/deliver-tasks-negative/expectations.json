@@ -1,14 +1,14 @@
 {
   "decisions": {
-    "backlog-81": {
+    "unlabelled-81": {
       "action": "leave_untouched",
       "preserve_dependencies": true
     },
-    "backlog-82": {
+    "unlabelled-82": {
       "action": "leave_untouched",
       "preserve_dependencies": true
     },
-    "backlog-83": {
+    "stopped-83": {
       "action": "leave_untouched",
       "preserve_dependencies": true
     }

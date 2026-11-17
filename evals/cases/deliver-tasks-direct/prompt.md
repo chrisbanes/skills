@@ -1,6 +1,5 @@
 Assess this task scope with the GitHub Project binding in review mode. This is
-supplied complete immutable state: verified committed configuration uses Backlog,
-Todo, In progress and Done. Runner is chris. Todo #61 is open,
+supplied complete immutable state: verified committed configuration uses Todo, In progress and Done. Runner is chris. Todo #61 is open,
 unassigned, ready-for-agent, unblocked, has no descendants, plan chain or PR and
 needs a normal plan. Todo #62 is open, unassigned, ready-for-agent, unblocked,
 with a verified current runner-owned plan and no PR. One implementation slot is

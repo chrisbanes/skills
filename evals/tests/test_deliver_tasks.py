@@ -18,6 +18,7 @@ CASES = (
     "router-single-item-deliver-spec",
     "deliver-tasks-neutral-direct", "deliver-tasks-claim-marker-novel",
     "deliver-tasks-parked-negative", "deliver-tasks-derived-handoff-novel",
+    "deliver-tasks-label-stop-direct", "deliver-tasks-label-recovery-novel",
 )
 
 

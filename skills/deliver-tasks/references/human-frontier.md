@@ -13,16 +13,16 @@ Classify an open Todo issue as follows:
 
 | Labels | Result |
 | --- | --- |
-| Epic only | `readyEpics` / `close-epic` |
+| Epic only | Unclassified backlog; no automatic closure |
 | Epic plus human work | `humanActions` / `perform-human-work` |
 | Human work only | `humanActions` / `perform-human-work` |
 | Ready for agent only | Todo implementation candidate with a usable active plan; otherwise `plan` |
 | Needs triage | `triageCandidates` / `triage` |
 
 Reject `epic` plus `ready-for-agent` and multiple next-action labels. Treat an
-unlabelled non-epic Todo issue as human-owned and outside this frontier.
+Todo issue without a next-action role as human-owned and outside this frontier.
 Permit an existing human assignee on human work, but never assign one from this
-workflow. Require a bare epic, Todo candidate, or triage item
+workflow. Require a Todo candidate or triage item
 to have no assignee or open implementation pull request. Use only native open
 blockers and descendants as gates. Report a prose-only dependency discrepancy,
 but never enforce it.
@@ -42,27 +42,15 @@ unlocks change. Do not repeat an unchanged packet and do not stop autonomous
 controller, planning, implementation, monitoring, or triage work merely
 because the packet is non-empty.
 
-## Reconcile A Ready Epic
+## Reconcile an epic
 
-Enter the controller lane and require standing issue-close authority covering
-the epic. If absent, record an unclaimed
-[authority pause](authority-and-pauses.md#pause-one-ticket) and continue the
-drain; never prompt before taking another eligible action. Refetch it and require all of:
-
-1. open issue state and configured repository and Project membership;
-2. current Todo Status and the configured epic label;
-3. no next-action role label, assignee, or open implementation pull request;
-4. no native open blocker or descendant; and
-5. unchanged configuration digest and verified base.
-
-Close the issue directly with the live descendant and blocker evidence. Treat
-an ambiguous response as unknown, refetch before retrying, and never issue a
-duplicate close. Reconcile the Project Status and archive state through the
-configured Done automation exactly as for a merged issue. Then perform a
-complete live Project refresh before selecting more work.
-
-In `next`, reconcile at most one ready epic and finish. In `drain`, reconcile
-ready epics serially and continue through newly unlocked work.
+Keep `readyEpics` empty when an epic has no next-action role. The shape label
+does not authorize closure even after all descendants close. Route a human-
+labelled epic to the human frontier and an epic with `needs-triage` to approved
+triage; reject an epic carrying `ready-for-agent`. Never manufacture a role
+to close an epic. Require an explicit human closure instruction or the triage
+provider's approved closure outcome and fresh dependency/ownership reads
+before closing through the controller and reconciling Done automation.
 
 ## Wait For Human Work
 
@@ -71,8 +59,10 @@ Observe its completion only through refreshed authoritative GitHub state; a
 watcher report prompts that refresh but is never the observation.
 
 Return `waiting-for-human` only when no controller, planning, implementation,
-monitoring, or non-deferred triage action remains and `humanActions` or verified
-authority/decision pauses are non-empty. In `drain`, waiting under the
+monitoring, or non-deferred triage action remains and `humanActions`,
+`stoppedItems` or verified authority/decision pauses are non-empty. Include every
+stopped item's assignment and retained artifacts, with human label restoration
+as its necessary resume condition. Never dispatch a human-work role to an agent. In `drain`, waiting under the
 [Project Watcher](drain-scheduler.md#project-watcher) is a monitoring action
 until the [finish gate](drain-scheduler.md#failure-isolation-and-finish-gate)
 allows the return; `next` returns once its startup merge decision has settled.

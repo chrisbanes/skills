@@ -145,7 +145,7 @@ Read closest trusted instructions and require an explicit reference to
 `docs/agents/run-github-project.md`; use
 [project configuration](#github-project-configuration) as its structure. Require repository
 identity, default/base branches and closure policy; Project owner/number/URL/node
-ID; Status field and Backlog/Todo/In-progress/Done options; exact
+ID; Status field and Todo/In-progress/Done options; exact
 needs-triage, epic, and human-work labels; complete optional Wayfinder labels;
 Priority field/options; optional trusted filter; merge
 method; Done automation/archive behavior. Store names with IDs; a renamed name
@@ -153,7 +153,7 @@ is repairable drift but an ID resolving elsewhere stops work. Never create or
 rename Project fields/options. Apply the planning lane migration gate only when
 adopting that Status schema, not when adding or repairing mappings for a schema
 already in use. Humans perform any legacy-item placement; setup and execution
-never promote Backlog or require transition-history authorization. Allow
+never infer label authority from placement or require transition-history authorization. Allow
 `closing-keyword` only when base is the default branch.
 When Agent Setup is present, validate unique profile names, required default
 owner profiles, and runtime role/model/reasoning compatibility. Keep the
@@ -277,8 +277,6 @@ this template over it. Follow the
 
 - Field name: `<Status>`
 - Field ID: `<PVTSSF_...>`
-- Backlog name: `<Backlog>`
-- Backlog option ID: `<option-id>`
 - Todo name: `<Todo>`
 - Todo option ID: `<option-id>`
 - In progress name: `<In progress>`
@@ -375,11 +373,12 @@ resolves to another label. A renamed matching ID is repairable drift. The map
 label identifies the parent map; the other four labels are mutually exclusive
 child types. Never create, rename, or infer any of them.
 
-Humans own the Project schema and all promotion out of Backlog. Never create
-or rename Status options, promote Backlog, or process Backlog work from the
-runner. Before adopting a new schema, require zero `In progress` items and
-have humans create and verify `Backlog`, `Todo`, `In progress`, and `Done` options,
-configure their IDs, and place legacy work needing a new plan in Todo. Do not
+Humans own the Project schema and agent role authority. Require only `Todo`,
+`In progress`, and `Done` Status options with verified IDs. Unlabelled Todo is
+the backlog; placement never grants authority. Keep `ready-for-agent` throughout
+active work. The controller never adds or restores it, including setup, triage,
+recovery and retries. Leave legacy schema migration and option deletion to a
+separately authorized setup task; never create or rename Status options. Do not
 retain an Agent Brief compatibility path. Revalidate
 usable marker plans by their identity, integrity, and configured base; do not
 require Status event history. An existing `Execution approver logins` entry is
@@ -434,10 +433,10 @@ and for active, planning, paused, parked and Wayfinder recovery leases.
    entire binding, not just the renamed field; a same-ID rename alone is not
    proof of unchanged meaning. Missing old evidence, an uncommitted replacement,
    unknown equivalence, a changed ID or any semantic change stops the run.
-3. Freshly revalidate membership, current-column authority, exclusivity,
+3. Freshly revalidate membership, current role-label authority, exclusivity,
    source/plan and any amendment, retained artifacts/heads and grants for each
    affected lease. Screen base drift under the existing plan rules. A
-   presentation change does not revive Backlog work, pass qualification, alter
+   presentation change does not revive label-stopped work, pass qualification, alter
    a bounded grant, reset a repair budget or supply new invocation authority.
 4. In the controller lane, publish one runner-authored issue record per affected
    ticket with `<!-- run-github-project:configuration-renewal:v1 -->`. Record
@@ -527,8 +526,8 @@ one explanatory comment linking the PR and remaining work. Perform and read back
 each correction through the controller lane using the procedure above. Preserve
 concurrent human changes; if cause, prior Status or write authority is uncertain,
 report the exact repair needed and pause affected reconciliation rather than
-guessing. Backlog recovery remains read-only under the execution controller's
-column rule. Do not report the issue Done or clean its retained work until
+guessing. Label-stopped recovery remains read-only under the controller's
+[stop gate](../../deliver-tasks/references/authority-and-pauses.md#stop-on-label-removal); never restore its agent label. Do not report the issue Done or clean its retained work until
 recovery is verified.
 
 ## Normalized Ticket Schema
@@ -541,11 +540,12 @@ Normalize the GitHub Project binding before ranking:
    unresolved native blocker identities to `blockerRefs`. Preserve local issue
    numbers and cross-repository `owner/repository#N` references as opaque
    blocker values; include blockers outside the selected scope.
-2. Supply `parked: false` for every GitHub item. Backlog remains the existing
-   human-controlled column in this prefactor; it is still excluded separately.
+2. Supply `parked: false` for every GitHub item. GitHub has no parked column;
+   unlabelled Todo is outside automatic work. Other bindings must supply their
+   own parked gate, independently of role authority.
 3. Pass `--claim-marker '{"status":"<configured In progress name>","requiresAssignment":true}'`.
    Use the exact configured column display name and authenticated runner login.
-   Require Backlog, Todo, In progress and Done; derive implementation readiness
+   Require only Todo, In progress and Done; derive implementation readiness
    from Todo, `ready-for-agent`, and a verified usable active plan leaf. Pass no
    Ready option or CLI input.
 4. For `wayfinderReconciliation`, map the durable GitHub marker's
@@ -639,8 +639,9 @@ shape above plus its direct parent and, for a task, its controller-derived mode:
 
 The parent must be the direct map parent, not an inferred ancestor. Hydrate its
 current Project Status too; require a configured Todo-or-later column for the
-parent before automatic map work or recovery. Missing, unknown, and Backlog
-parent Status block the child; a child's column never authorizes its map.
+parent before automatic map work or recovery. Missing or unknown parent Status
+blocks the child. Require a human-applied agent role and a non-parked parent
+before mutating it; a child never authorizes its map.
 Use exactly
 one configured type label. Research is AFK; prototype and grilling are HITL.
 For a task, use `"afk"` only with non-empty fresh evidence that every action is
@@ -782,17 +783,19 @@ to resume; a branch name or historical report alone is insufficient. Keep all
 other open implementation PRs in the array as competitors. The ranker defaults
 to `closing-keyword` for compatibility; pass the binding's policy explicitly.
 
-Current Project Status supplies ticket authorization. Do not hydrate status
+A human-applied role label plus `parked: false` supplies eligibility; current Project Status routes the lane. Do not hydrate status
 history. `planningTransition`, `readyTransition`, and `backlogTransition` are
 obsolete inputs: omit them; legacy values are ignored even when malformed,
 foreign, automated, or missing. Check usable active-plan integrity and the
 configured base rather than comparing publication times with column events.
 
-Backlog items are always excluded from dispatch, including assigned items with
-old cleanup reports, PRs, or Wayfinder reconciliation markers. Never place
-Backlog work in claims, planning candidates, triage candidates, ready epics,
-human actions, or automatic cleanup. Keep its dependency edges in the complete
-live graph and report interrupted artifacts for human handling.
+Unlabelled Todo enters no automatic lane. Owned work missing `ready-for-agent`
+is returned in `stoppedItems` before plan, PR or recovery hydration, with the
+unchanged ticket, `stop-preserve` action and reason. Stop its writers, release
+verified capacity and preserve assignment, Status, worktree, branch, PR and all
+artifacts without cleanup or comment writes. Later runs remain stopped until a
+human restores the label; the controller never adds or restores it. Keep all
+dependency edges in the complete graph and report stopped work in the human frontier.
 
 Hydrate every comment containing `<!-- to-plan:implementation-plan:v1 -->` or
 `<!-- to-plan:implementation-plan:v2 -->`, including minimized comments, and
@@ -848,8 +851,8 @@ For an automatic requeue, normalize the verified report comment as:
 
 A pending `human-required` decision stays in its original eligible column
 under a verified authority pause, outside dispatch ranking. Explicit
-abandonment cleanup must finish before a final transfer to Backlog; never
-recover cleanup there. Retained head and PR fields may be null but must identify
+abandonment cleanup must finish while the agent label remains, then transfer
+to the human-work role in Todo. Label removal at any earlier point stops cleanup. Retained head and PR fields may be null but must identify
 exact durable state when present. The replan report identifies its predecessor
 plan and retained artifacts; no column-event ordering is required.
 
@@ -859,13 +862,12 @@ item with open native blockers or descendants as `parkedBlocked`; return an
 unblocked item as `triageCandidates`. Neither consumes an implementation slot.
 
 For other role-labelled Todo work, apply
-[Epics And Human Frontier](../../deliver-tasks/references/human-frontier.md). Return a bare unblocked epic as
-`readyEpics`, unblocked human work as `humanActions`, and unblocked
+[Epics And Human Frontier](../../deliver-tasks/references/human-frontier.md). A bare epic is shape without a role and grants no automatic closure; keep `readyEpics` empty. Return unblocked human work as `humanActions`, and unblocked
 `ready-for-agent` work in `candidates` with action `claim` when its active
 plan is usable, or `plan` when planning is needed. Retain agent planning/handoff
 assignment leases separately; among other roles, permit an existing assignee
 only on human work. Role-tag dependency-blocked Todo results in
-`parkedBlocked`. Never infer a human promotion from labels on a Backlog item.
+`parkedBlocked`. Reject contradictory roles, including agent plus epic. A role never overrides the binding's parked gate.
 
 The ranker returns valid current-user claims and ordered unclaimed candidates:
 
@@ -897,8 +899,9 @@ The ranker returns valid current-user claims and ordered unclaimed candidates:
   "triageCandidates": [
     {"ticket": {"number": 47}, "action": "triage"}
   ],
-  "readyEpics": [
-    {"ticket": {"number": 48}, "action": "close-epic"}
+  "readyEpics": [],
+  "stoppedItems": [
+    {"ticket": {"number": 48}, "action": "stop-preserve", "reasons": ["missing ready-for-agent label; human restoration required"]}
   ],
   "humanActions": [
     {"ticket": {"number": 50}, "action": "perform-human-work"}
@@ -924,7 +927,7 @@ human actions consume neither slots nor agent capacity. Triage candidates are
 ordered separately and run only through [Todo Triage Lane](../../deliver-tasks/references/triage-lane.md).
 Process ready epics and human actions through
 [Epics And Human Frontier](../../deliver-tasks/references/human-frontier.md); Todo `parkedBlocked` items consume
-neither a slot nor an agent. No Backlog cleanup action is emitted.
+neither a slot nor an agent. `stoppedItems` also consumes neither once writers are quiesced; it never emits cleanup or label restoration.
 
 When enabled in `next`, the ranker emits any eligible Wayfinder candidate as
 `wayfind` and an assigned one as `resume-wayfind`. In `drain`, it emits only AFK
@@ -1053,13 +1056,15 @@ Todo. Once a slot is free, assign only the authenticated user, refetch
 exclusivity, recover only own lost claim race, transition to In progress,
 refetch membership/status/assignment/open state/readiness/current plan/no blockers/no
 competing PR, then record item, identity, configuration, and every plan
-lease as authority. Ambiguity after In progress is a preserved blocked slot.
+lease as authority. Keep `ready-for-agent` on the item throughout active work.
+Ambiguity after In progress is a preserved blocked slot; verified label removal
+instead invokes the stop gate and releases capacity once writers are quiesced.
 
 ## Claim Todo work
 
-1. Enter the controller lane and refetch current `Todo` membership. If the
-   item is in Backlog, stop its automatic work and preserve its artifacts;
-   only a human can promote it. Assign the issue exclusively to the
+1. Enter the controller lane and refetch current `Todo` membership,
+   `ready-for-agent`, non-parked state and exclusive next-action role. If the
+   label is absent, stop and preserve under the label-stop gate. Assign exclusively to the
    authenticated user, refetch and verify the assignment, and release the lane. Reconcile an
    ambiguous Status or assignment mutation before retrying. Preserve the
    assignment through planning and implementation.

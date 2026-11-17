@@ -30,8 +30,6 @@ DEFAULT_PROJECT_ARGUMENTS = (
 DEFAULT_STATUS_ARGUMENTS = (
     "--claim-marker",
     '{"status":"In progress","requiresAssignment":true}',
-    "--backlog-status",
-    "Backlog",
     "--in-progress-status",
     "In progress",
     "--needs-triage-label",
@@ -148,7 +146,7 @@ def wayfinder_ticket(
     result = ticket(
         number,
         projectStatus="Todo",
-        labels=[f"wayfinder:{ticket_type}"],
+        labels=[f"wayfinder:{ticket_type}", "ready-for-agent"],
         implementationPlan=None,
         parentIssue={
             "number": 1,
@@ -249,6 +247,33 @@ def first_entry(output: dict) -> dict:
 
 
 class NeutralContractTest(unittest.TestCase):
+    def test_removed_agent_label_stops_owned_work_and_releases_capacity(self):
+        for marker, fields in (
+            ({"status": "In progress", "requiresAssignment": True},
+             {"projectStatus": "In progress", "assignees": ["chris"]}),
+            ({"label": "agent:active", "requiresAssignment": True},
+             {"projectStatus": "Todo", "assignees": ["chris"], "labels": ["agent:active"]}),
+            ({"status": "In progress", "requiresAssignment": False},
+             {"projectStatus": "In progress"}),
+            ({"status": "In progress", "requiresAssignment": True},
+             {"projectStatus": "Todo", "assignees": ["chris"]}),
+        ):
+            with self.subTest(marker=marker, fields=fields):
+                stopped = ticket(501, labels=[], openPullRequests=[pull_request(501)],
+                                 **{k: v for k, v in fields.items() if k != "labels"})
+                stopped["labels"] = fields.get("labels", [])
+                stopped["implementationPlans"] = "unhydrated preserved artifact"
+                for _ in range(2):  # A later run has the same absence of human authority.
+                    code, output = run_ranker([stopped, ticket(502)],
+                                               "--claim-marker", json.dumps(marker))
+                    self.assertEqual(0, code)
+                    self.assertEqual([], output["claims"])
+                    self.assertEqual([], output["blockedClaims"])
+                    self.assertEqual([], output["blockedPlanningClaims"])
+                    self.assertEqual([502], [x["ticket"]["number"] for x in output["candidates"]])
+                    self.assertEqual(stopped, output["stoppedItems"][0]["ticket"])
+                    self.assertEqual("stop-preserve", output["stoppedItems"][0]["action"])
+
     def test_status_only_claim_can_recover_its_verified_partial_pr(self):
         item = ticket(1, projectStatus="Working", openPullRequests=[
             pull_request(100, closesIssue=False, linksIssue=True, verifiedPartial=True),
@@ -259,7 +284,7 @@ class NeutralContractTest(unittest.TestCase):
         self.assertEqual("resume-pr", output["claims"][0]["action"])
 
     def test_conflicting_todo_role_cannot_bypass_an_active_label_claim(self):
-        item = todo_role_ticket(1, labels=["needs-triage", "agent:active"], assignees=["chris"])
+        item = todo_role_ticket(1, labels=["ready-for-agent", "needs-triage", "agent:active"], assignees=["chris"])
         code, output = run_ranker([item], "--claim-marker",
                                   '{"label":"agent:active","requiresAssignment":true}')
         self.assertEqual(0, code)
@@ -542,55 +567,49 @@ class RankTicketsTest(unittest.TestCase):
                 self.assertIn("Todo requeue lacks a verified replan report",
                               output["blockedPlanningClaims"][0]["reasons"])
 
-    def test_backlog_is_read_only_for_every_role_assignment_and_artifact(self) -> None:
-        for labels in (
-            [], ["ready-for-agent"], ["needs-triage"], ["epic"],
-            ["ready-for-human"], ["epic", "ready-for-human"],
-            ["ready-for-agent", "ready-for-human", "needs-triage"],
-        ):
-            for assignment in ([], ["chris"], ["maintainer"]):
-                with self.subTest(labels=labels, assignment=assignment):
-                    parked = ticket(
-                        405, projectStatus="Backlog", labels=labels,
-                        assignees=assignment, replanRequest="malformed",
-                        implementationPlans="malformed", openPullRequests="malformed",
-                        backlogTransition="malformed", planningTransition="malformed",
-                        readyTransition="malformed",
-                    )
-                    returncode, output = run_ranker([parked, ticket(406)])
-                    self.assertEqual(0, returncode)
-                    for key in ("claims", "blockedClaims", "blockedPlanningClaims",
-                                "triageCandidates", "readyEpics", "humanActions", "parkedBlocked"):
-                        self.assertEqual([], output[key], key)
-                    self.assertEqual([406], [entry["ticket"]["number"]
-                                             for entry in output["candidates"]])
-                    self.assertEqual(405, output["excluded"][0]["number"])
-                    self.assertIn("human-controlled", output["excluded"][0]["reasons"][0])
+    def test_human_restored_agent_label_resumes_same_claim_and_artifacts(self):
+        item = ticket(503, projectStatus="In progress", assignees=["chris"],
+                      openPullRequests=[pull_request(503)])
+        code, output = run_ranker([item])
+        self.assertEqual(0, code)
+        self.assertEqual("resume-pr", output["claims"][0]["action"])
+        self.assertEqual(item["openPullRequests"], output["claims"][0]["ticket"]["openPullRequests"])
+        self.assertEqual([], output["stoppedItems"])
 
-    def test_configured_backlog_is_read_only_even_for_an_owned_pr(self) -> None:
-        parked = ticket(407, projectStatus="Icebox", assignees=["chris"],
-                        openPullRequests=[pull_request(407)],
-                        replanRequest=replan_request(407))
-        returncode, output = run_ranker([parked], "--backlog-status", "Icebox")
-        self.assertEqual(0, returncode)
-        self.assertEqual([], output["claims"])
-        self.assertEqual([], output["candidates"])
-        self.assertEqual([], output["blockedPlanningClaims"])
-        self.assertEqual(407, output["excluded"][0]["number"])
+    def test_backlog_status_is_no_longer_a_cli_input(self):
+        result = subprocess.run([sys.executable, str(SCRIPT), "--mode", "drain",
+                                 "--current-user", "chris", *DEFAULT_PROJECT_ARGUMENTS,
+                                 *DEFAULT_PRIORITY_ARGUMENTS, *DEFAULT_STATUS_ARGUMENTS,
+                                 "--backlog-status", "Backlog"],
+                                input="[]", text=True, capture_output=True)
+        self.assertEqual(2, result.returncode)
+        self.assertIn("unrecognized arguments: --backlog-status Backlog", result.stderr)
 
-    def test_wayfinder_backlog_never_dispatches_or_resumes_reconciliation(self) -> None:
-        for retained in (None, wayfinder_reconciliation(408), "malformed"):
-            with self.subTest(retained=retained):
-                parked = wayfinder_ticket(
-                    408, projectStatus="Backlog", assignees=["chris"],
-                    wayfinderReconciliation=retained,
-                )
-                returncode, output = run_ranker([parked], *DEFAULT_WAYFINDER_ARGUMENTS)
-                self.assertEqual(0, returncode)
-                self.assertEqual([], output["claims"])
-                self.assertEqual([], output["blockedPlanningClaims"])
-                self.assertEqual([], output["wayfinderClaimedHitl"])
-                self.assertEqual(408, output["excluded"][0]["number"])
+    def test_unlabelled_todo_never_enters_any_work_lane(self):
+        for plans in ([], [implementation_plan(405)]):
+            code, output = run_ranker([ticket(405, labels=[], implementationPlans=plans)])
+            self.assertEqual(0, code)
+            for key in ("claims", "candidates", "triageCandidates", "readyEpics", "humanActions"):
+                self.assertEqual([], output[key], key)
+
+    def test_wayfinder_agent_role_rejects_contradictory_roles(self):
+        for role in ("ready-for-human", "needs-triage", "epic"):
+            code, output = run_ranker([wayfinder_ticket(504,
+                labels=["wayfinder:research", "ready-for-agent", role])],
+                *DEFAULT_WAYFINDER_ARGUMENTS)
+            self.assertEqual(0, code)
+            self.assertEqual([], output["candidates"])
+            self.assertIn("conflicting Wayfinder role labels", str(output["excluded"]))
+
+    def test_wayfinder_type_does_not_authorize_work_or_recovery(self):
+        for retained in (None, wayfinder_reconciliation(408)):
+            item = wayfinder_ticket(408, labels=["wayfinder:research"],
+                                    wayfinderReconciliation=retained)
+            code, output = run_ranker([item], *DEFAULT_WAYFINDER_ARGUMENTS)
+            self.assertEqual(0, code)
+            self.assertEqual([], output["claims"])
+            self.assertEqual([], output["candidates"])
+            self.assertIn("missing ready-for-agent label", str(output["excluded"]))
 
     def test_new_wayfinder_resolution_requires_current_todo(self) -> None:
         for status in ("Ready", "In progress", "Done", "Preapproval"):
@@ -865,7 +884,7 @@ class RankTicketsTest(unittest.TestCase):
             ticket(number, projectStatus="In progress", assignees=["chris"])
             for number in (1, 2, 3, 4, 5)
         ]
-        claims[-1]["labels"] = []
+        claims[-1]["blockerRefs"] = ["TRACK-blocker"]
 
         returncode, output = run_ranker(claims, "--max-claims", "4")
 
@@ -910,7 +929,7 @@ class RankTicketsTest(unittest.TestCase):
             6,
             projectStatus="In progress",
             assignees=["chris"],
-            labels=[],
+            blockerRefs=["TRACK-blocker"],
         )
         valid = ticket(7, projectStatus="In progress", assignees=["chris"])
 
@@ -1077,38 +1096,14 @@ class RankTicketsTest(unittest.TestCase):
             output["parkedBlocked"],
         )
 
-    def test_unblocked_epic_is_ready_for_reconciliation(self) -> None:
-        epic = todo_role_ticket(19, labels=["epic"])
-
-        returncode, output = run_ranker([epic])
-
-        self.assertEqual(0, returncode)
-        self.assertEqual(
-            [{"ticket": epic, "action": "close-epic"}],
-            output["readyEpics"],
-        )
-
-    def test_parks_epic_until_its_native_descendants_close(self) -> None:
-        epic = todo_role_ticket(
-            20,
-            labels=["epic"],
-            openDescendants=[21],
-        )
-
-        returncode, output = run_ranker([epic])
-
-        self.assertEqual(0, returncode)
-        self.assertEqual([], output["readyEpics"])
-        self.assertEqual(
-            [
-                {
-                    "ticket": epic,
-                    "role": "epic",
-                    "reasons": ["open descendants ['21']"],
-                },
-            ],
-            output["parkedBlocked"],
-        )
+    def test_epic_shape_without_role_never_authorizes_automatic_closure(self):
+        for descendants in ([], [21]):
+            code, output = run_ranker([todo_role_ticket(19, labels=["epic"],
+                                                       openDescendants=descendants)])
+            self.assertEqual(0, code)
+            self.assertEqual([], output["readyEpics"])
+            self.assertEqual([], output["parkedBlocked"])
+            self.assertIn("missing next-action role label", str(output["excluded"]))
 
     def test_human_gated_epic_is_never_automatically_closed(self) -> None:
         epic = todo_role_ticket(
@@ -1149,7 +1144,6 @@ class RankTicketsTest(unittest.TestCase):
 
     def test_relabelled_todo_claim_remains_a_blocked_planning_claim(self) -> None:
         for labels in (
-            ["needs-triage"], ["epic"],
             ["ready-for-agent", "needs-triage"], ["ready-for-agent", "epic"],
         ):
             with self.subTest(labels=labels):
@@ -1434,7 +1428,7 @@ class RankTicketsTest(unittest.TestCase):
             projectPosition=1,
             assignees=["chris"],
             projectStatus="In progress",
-            labels=[],
+            blockerRefs=["TRACK-blocker"],
         )
         valid_claim = ticket(
             52,
@@ -1600,8 +1594,7 @@ class RankTicketsTest(unittest.TestCase):
                 retained = ticket(
                     208,
                     projectStatus=status,
-                    labels=["ready-for-human"] if status == "Backlog"
-                    else ["ready-for-agent"],
+                    labels=["ready-for-agent"],
                     assignees=["chris"],
                     openPullRequests=[
                         pull_request(208, closesIssue=False, linksIssue=True),
@@ -1685,7 +1678,7 @@ class RankTicketsTest(unittest.TestCase):
     def test_status_names_must_be_unique(self) -> None:
         returncode, output = run_ranker(
             [],
-            "--backlog-status",
+            "--done-status",
             "Todo",
         )
 
@@ -2288,7 +2281,7 @@ class RankTicketsTest(unittest.TestCase):
         collision = wayfinder_ticket(
             316,
             assignees=["chris"],
-            labels=["wayfinder:map", "wayfinder:research"],
+            labels=["wayfinder:map", "wayfinder:research", "ready-for-agent"],
         )
 
         returncode, output = run_ranker(
@@ -2484,7 +2477,8 @@ class RankTicketsTest(unittest.TestCase):
     def test_wayfinder_reconciliation_stays_behind_earlier_claim_classes(self) -> None:
         cleanup = ticket(
             335,
-            projectStatus="Backlog",
+            projectStatus="Todo",
+            labels=[],
             projectPriority="Low",
             assignees=["chris"],
             replanRequest=replan_request(335, disposition="human-required"),

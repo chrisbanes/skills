@@ -37,7 +37,7 @@
     },
     {
       "id": "preserve-and-progress",
-      "text": "Preserves #51 status, assignment, branch, worktree and PR; verifies quiescence, releases grants and the implementation slot only after a durable pause record, then refreshes and starts #52 in a separate worktree; #53 remains dependency-blocked. Does not close the PR or run Backlog replan cleanup for a merge grant."
+      "text": "Preserves #51 status, assignment, branch, worktree and PR; verifies quiescence, releases grants and the implementation slot only after a durable pause record, then refreshes and starts #52 in a separate worktree; #53 remains dependency-blocked. Does not close the PR or run abandonment cleanup for a merge grant."
     },
     {
       "id": "resume-authority",
@@ -57,7 +57,7 @@
     },
     {
       "id": "decision-preservation",
-      "text": "Treats the actual human-required packet on #55 as a decision pause preserving its PR and partial work, not automatic Backlog transfer, PR closure, branch deletion, or cleanup. Only a recorded stakeholder direction to abandon work can authorize cleanup while the ticket remains in Todo or a later eligible column, before a final return to Backlog; never resume cleanup in Backlog; an accepted new contract resumes controlled replanning with retained artifacts."
+      "text": "Treats the actual human-required packet on #55 as a decision pause preserving its PR and partial work, not automatic human-role transfer, PR closure, branch deletion, or cleanup. Only a recorded stakeholder direction to abandon work can authorize cleanup while ready-for-agent remains present, before the final human-work role in Todo; label removal stops cleanup; an accepted new contract resumes controlled replanning with retained artifacts."
     }
   ],
   "provenance": {

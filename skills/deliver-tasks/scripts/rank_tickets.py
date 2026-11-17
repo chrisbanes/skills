@@ -73,11 +73,6 @@ def parse_args() -> argparse.Namespace:
         help="Configured issue-closure policy for identifying linked pull requests.",
     )
     parser.add_argument(
-        "--backlog-status",
-        default="Backlog",
-        help="Configured human-controlled Project status excluded from automatic work.",
-    )
-    parser.add_argument(
         "--planning-status",
         default="Todo",
         help="Configured GitHub Project status display name that queues planning.",
@@ -628,6 +623,7 @@ def analyze_ticket(
     claim_marker: dict[str, Any],
     needs_triage_label: str,
     human_work_label: str,
+    epic_label: str,
     priorities: tuple[str, ...],
     repository: str,
     base_branch: str,
@@ -656,6 +652,8 @@ def analyze_ticket(
         exclusions.append(f"missing {AGENT_WORK_LABEL} label")
     if human_work_label in labels or needs_triage_label in labels:
         exclusions.append("conflicting execution role labels")
+    if epic_label in labels:
+        exclusions.append("epic cannot be ready for agent implementation")
 
     implementation_plans, implementation_plan = parse_implementation_plan_chain(
         ticket,
@@ -907,8 +905,7 @@ def analyze_role_ticket(
             role = "triage"
             action = "triage"
         elif is_epic:
-            role = "epic"
-            action = "close-epic"
+            exclusions.append("missing next-action role label")
         else:
             exclusions.append("unclassified Todo work")
 
@@ -1105,6 +1102,9 @@ def analyze_wayfinder_ticket(
     errors = common["errors"]
     exclusions = common["exclusions"]
 
+    if AGENT_WORK_LABEL not in labels:
+        exclusions.append("missing ready-for-agent label")
+
     reconciliation = parse_wayfinder_reconciliation(
         ticket.get("wayfinderReconciliation"),
         number=number,
@@ -1241,7 +1241,6 @@ def main() -> int:
             else {}
         )
         statuses = (
-            args.backlog_status,
             args.planning_status,
             args.in_progress_status,
             args.done_status,
@@ -1280,6 +1279,7 @@ def main() -> int:
         execution_analyses: list[dict[str, Any]] = []
         wayfinder_analyses: list[dict[str, Any]] = []
         role_analyses: list[dict[str, Any]] = []
+        stopped_items: list[dict[str, Any]] = []
         invalid_unclaimed: list[dict[str, Any]] = []
         invalid_claimed: list[dict[str, Any]] = []
         invalid_planning_claimed: list[dict[str, Any]] = []
@@ -1289,19 +1289,24 @@ def main() -> int:
                 if number in seen_numbers:
                     raise InputError(f"duplicate ticket number {number}")
                 seen_numbers.add(number)
-            if (
-                isinstance(raw_ticket, dict)
-                and raw_ticket.get("projectStatus") == args.backlog_status
-            ):
-                invalid_unclaimed.append(
-                    {
-                        "number": raw_ticket.get("number", "?"),
-                        "reasons": [
-                            "Backlog is human-controlled; automatic work is not authorized",
-                        ],
-                    },
-                )
-                continue
+            if isinstance(raw_ticket, dict):
+                labels = raw_ticket.get("labels")
+                if isinstance(labels, list) and all(isinstance(label, str) for label in labels):
+                    human_frontier = (
+                        raw_ticket.get("projectStatus") == args.planning_status
+                        and not matches_claim_marker(raw_ticket, claim_marker)
+                        and args.human_work_label in labels
+                    )
+                    if AGENT_WORK_LABEL not in labels and not human_frontier and (
+                        is_active_claim(raw_ticket, claim_marker, args.current_user)
+                        or has_current_user_assignment(raw_ticket, args.current_user)
+                    ):
+                        stopped_items.append({
+                            "ticket": raw_ticket,
+                            "action": "stop-preserve",
+                            "reasons": ["missing ready-for-agent label; human restoration required"],
+                        })
+                        continue
             try:
                 ticket = require_ticket_shape(raw_ticket)
                 labels = ticket["labels"]
@@ -1338,6 +1343,10 @@ def main() -> int:
                     else:
                         invalid_unclaimed.append(invalid)
                 elif is_wayfinder:
+                    if isinstance(labels, list) and any(label in labels for label in (
+                        args.human_work_label, args.needs_triage_label, args.epic_label,
+                    )):
+                        raise InputError("conflicting Wayfinder role labels")
                     wayfinder_analyses.append(
                         analyze_wayfinder_ticket(
                             ticket,
@@ -1387,6 +1396,7 @@ def main() -> int:
                             claim_marker=claim_marker,
                             needs_triage_label=args.needs_triage_label,
                             human_work_label=args.human_work_label,
+                            epic_label=args.epic_label,
                             priorities=priorities,
                             repository=args.repository,
                             base_branch=args.base_branch,
@@ -1679,6 +1689,7 @@ def main() -> int:
         )
         output = {
             "claimLimit": args.max_claims,
+            "stoppedItems": stopped_items,
             "blockedClaims": blocked_claims,
             "blockedPlanningClaims": blocked_planning_claims,
             "claims": [

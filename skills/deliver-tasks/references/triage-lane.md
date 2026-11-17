@@ -1,9 +1,7 @@
 # Todo Triage Lane
 
 Use the installed `triage` skill to re-evaluate unblocked Todo issues without
-changing its state machine or approval gate. Never triage, assign, relabel,
-comment on, close, or promote a Backlog item. A human must first move it to
-Todo; its current column supplies authorization to enter this lane.
+changing its recommendation or approval gate. Require a human-applied `needs-triage` role and `parked: false`; unlabelled Todo stays untouched.
 
 ## Eligibility
 
@@ -14,7 +12,7 @@ Treat an issue as a triage contender only when fresh reads prove all of:
 3. it has the configured `needs-triage` label;
 4. it has no assignee or open implementation pull request;
 5. it has no native open `blocked by` relationship or open descendant; and
-6. it passes the trusted Project filter.
+6. it passes the trusted Project filter and is not parked.
 
 Classify an otherwise eligible issue with an open blocker or descendant as
 `parkedBlocked`. Do not invoke `triage`, claim it, assign it, change its labels,
@@ -86,9 +84,7 @@ hand the issue back to the maintainer without changing it.
 
 Use the batched post-mutation read to reconcile the approved outcome:
 
-- For `ready-for-agent`, require the provider's durable agent brief and exact
-  label change. Leave the item in Todo; the next complete ranker pass
-  returns it as a planning candidate without a Status promotion.
+- For a `ready-for-agent` recommendation, publish only the approved durable agent brief and other authorized non-agent-label changes. The controller never adds or restores `ready-for-agent`, even after triage approval. Ask the human to apply it and reconcile that live observation before the next ranker pass; leave the item in Todo and defer this triage attempt while awaiting the human action.
 - For the configured human-work label, `needs-info`, or `wontfix`, require the
   provider's approved comment, label, and closure result as applicable. Leave
   open human work in Todo for the human frontier.

@@ -11,21 +11,20 @@ disable-model-invocation: true
 
 The bound scope is the live control plane: fresh board state and this run's
 operation-specific grants decide every claim, write and finish.
-Default lanes are `Backlog` → `Todo` → `In progress` → `Done`; resolve them
+Default lanes are `Todo` → `In progress` → `Done`; resolve them
 through the trusted binding's verified option IDs. Implementation readiness is
 derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 
 Load the selected tracker/code-host binding before applying these rules. GitHub
 is the only binding: read [GitHub binding](references/github-binding.md), including
-its configuration, operations and normalization contract. Preserve its existing
-GitHub-shaped ranker inputs and marker formats. `run-github-project` selects this
+its configuration, operations and normalization contract. Use its neutral ranker inputs and preserve durable marker formats. `run-github-project` selects this
 binding; an explicit `deliver-tasks` request must resolve the same GitHub scope.
 For one named implementation item, use `deliver-spec`; this controller owns
 selection across a scope of tasks.
 
 ## Invariants
 
-1. **Column authority:** current column membership authorizes a ticket, never transition history. Backlog is read-only: never claim, plan, triage, close epics, or mutate or clean up its ticket, PR or remote artifacts there; only humans move items out. Automatic work starts at Todo.
+1. **Label authority:** eligibility requires a human-applied next-action role and `parked: false`; current Status routes the lane, never grants authority. Unlabelled Todo is the backlog. Keep `ready-for-agent` through active work; its removal stops writers and releases capacity while preserving assignment and all artifacts. Only a human restoring it permits recovery; the controller never adds or restores it, including triage and retries.
 2. **Live authority:** claims, selection, merge, recovery and finish need complete fresh state; caches and partial reads are hints; rehydrate only changed or unverified records. Recheck operation-specific authority before each claim, write or merge, even from a reused snapshot; ranker eligibility grants nothing.
 3. **Controller ownership:** only the controller claims, assigns, mutates shared Project state, merges, closes issues and reconciles; a ticket agent owns only its worktree, branch and non-merge PR changes.
 4. **Unknown outcomes:** reconcile an unknown or failed mutation or publication before retrying, freeing capacity or reporting success.

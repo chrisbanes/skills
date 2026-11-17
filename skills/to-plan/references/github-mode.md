@@ -90,7 +90,7 @@ execution contract.
 
 Require all of the following:
 
-- The issue is open.
+- The issue is open and still has human-applied `ready-for-agent`; the binding reports it is not parked. In a task-controller handoff, label removal stops the planner and preserves its assignment, draft and worktree for human restoration. Never add or restore the label.
 - Every blocker is complete and its required outcome exists in the baseline.
 - No open implementation PR exists, except the exact retained PR allowed by
   a verified autonomous replan or integration amendment request, or named by a

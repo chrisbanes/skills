@@ -13,7 +13,7 @@ implementation handoff, or implementation lifecycle below.
 Require both:
 
 1. the exact `ready-for-agent` label; and
-2. current `Todo` Status.
+2. current `Todo` Status and `parked: false`.
 
 Verify the active marked plan under the [normalized-ticket contract](github-binding.md#normalized-ticket-schema):
 runner authorship, revision chain, semantic payload digest, and configured base.
@@ -22,7 +22,7 @@ missing or stale plans, or fast-path an item without any plan chain when it
 qualifies; preserve invalid chains and foreign markers as semantic
 blockers. Never fall back to an unmarked Agent Brief.
 Record the plan identities and metadata in the authority lease and screen base
-SHA drift before implementation. Column membership supplies authority; a verified
+SHA drift before implementation. The human-applied role supplies authority; a verified
 replan report determines when a replacement revision is needed.
 
 ## Fast-path a Todo item
@@ -319,7 +319,7 @@ applies. Otherwise use this full lifecycle:
 
 The report's predecessor plan identity and exact retained PR/head remain
 recovery evidence. A missing or mismatched link preserves a blocked planning
-claim until reconciled. Current Todo membership supplies planning authority;
+claim until reconciled. Current Todo plus the human-applied agent role permits planning;
 no transition history is required.
 
 ### Pause A Stakeholder Decision
@@ -329,7 +329,7 @@ When the verified packet disposition is `human-required`:
 1. Publish and verify the marker-owned exact evidence packet.
 2. Apply the [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket)
    referencing that packet for the exact decision and authoritative source to
-   change. A pending decision never triggers Backlog cleanup.
+   change. A pending decision never triggers abandonment cleanup.
 3. Resume only from a recorded human outcome, not merge permission or another
    unchanged run. When the outcome keeps implementation with agents, reconcile
    the newly accepted source contract. Give the controlled replanning procedure
@@ -338,27 +338,21 @@ When the verified packet disposition is `human-required`:
    Require early independent review only for a concrete risk that must be
    resolved before continuation; otherwise review the integrated candidate.
 
-### Abandon Partial Work And Return It To Backlog
+### Abandon Partial Work And Return It To Human Work
 
 Use this only after a recorded stakeholder direction explicitly abandons the
-partial work. While the item is still in Todo or a later eligible column:
+partial work. While the item still has `ready-for-agent` and is not parked:
 
 1. Publish and verify the decision-bearing report and exact owned artifacts.
 2. Reconcile the explicit PR closure and skill-owned process and resource
    cleanup, and clean up the worktree and branch under
    [Worktrees](ticket-lifecycle.md#worktrees). Preserve any foreign or
    ambiguous artifact.
-3. Verify cleanup, replace the agent role with the configured human-work role,
-   and unassign the runner. Keep unresolved cleanup paused in the current
-   eligible column; do not transfer an unfinished cleanup lease to Backlog.
-4. Return the item to Backlog only as the final verified transfer. Release its
-   scheduler resources and perform no further automatic work on it.
+3. Verify cleanup, unassign the runner and set Todo while the agent role still authorizes the operation. Keep unresolved cleanup paused in its current state.
+4. Replace the agent role with the configured human-work role as the final transfer and verify it read-only. Finish in Todo. Release its
+   scheduler resources and report it in the human frontier.
 
-If a human moves any active item to Backlog, stop its writers, release capacity,
-and preserve/report its assignment and artifacts without issue, PR, or artifact
-cleanup. A later run must not resume Backlog cleanup. Only a human promotion
-out of Backlog can make it eligible again; labels alone never do so. Revalidate
-any retained plan and artifact state once the current column permits work.
+If a human removes `ready-for-agent`, follow [Stop on label removal](authority-and-pauses.md#stop-on-label-removal), including during abandonment. Preserve assignment and every artifact without cleanup; later runs remain stopped until a human restores the label.
 
 Semantic planning blockers are issue-local. Preserve the assignment and retry
 them only when authoritative inputs change. Retry transient planner/tool
@@ -366,7 +360,7 @@ failures through the bounded reconciled recovery above. Never consume an
 implementation slot merely to wait for a planning blocker.
 
 Treat a `to-plan` Blocked result labelled `human-required` as one of these
-planning blockers and record a verified decision pause, not Backlog cleanup. No
+planning blockers and record a verified decision pause, not abandonment cleanup. No
 implementation slot or implementation artifact exists at that stage.
 
 ## Scheduling
@@ -380,7 +374,7 @@ order:
 4. new Todo candidates with verified usable active plans;
 5. new `Todo` planning candidates, including configured AFK Wayfinder children.
 
-Exclude Backlog from every scheduling and recovery class.
+Exclude unlabelled Todo, binding-parked items and label-stopped work from every scheduling and recovery class.
 
 Within a class, use configured Priority, visible Project position, then issue
 number.

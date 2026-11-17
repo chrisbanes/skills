@@ -20,15 +20,16 @@ Require fresh authoritative reads proving that a child is:
 3. the direct child of an open parent carrying the configured `wayfinder:map`
    label;
 4. marked with exactly one configured Wayfinder type label;
-5. natively unblocked with no open descendant.
+5. natively unblocked with no open descendant; and
+6. carrying human-applied `ready-for-agent`, with no contradictory role and `parked: false`.
 
-Current Todo membership supplies authorization. Do not fetch or inspect its
-transition history. Backlog children never qualify, including claimed items
-with reconciliation markers.
+The agent role supplies authority; Todo routes the lane. Do not inspect
+transition history. Label removal stops work even with a reconciliation marker.
 
 Require the direct parent map's current Project column to be Todo or a later
-configured column too. Block missing, unknown, or Backlog parent membership;
-child authorization never grants permission to process its Backlog map.
+configured column too. Block missing or unknown parent membership. Before
+mutating the map require its own human-applied agent role and `parked: false`;
+child authorization never grants permission to process its map.
 
 Do not inherit a child's membership, Status, type, or blockers from its parent
 map, a comment, or a previous invocation. Pass the complete normalized graph to `rank_tickets.py`
@@ -118,15 +119,16 @@ operation keys and ownership so an ambiguous write is reconciled before retry.
 
 Before mutating an existing issue, refetch its current Project column. Require Todo or a later configured column for each map or child being
 updated or closed, including additional out-of-scope children. If any target
-is in Backlog, missing, or unknown, preserve the recorded reconciliation and
-report the exact human promotion needed; never promote or mutate that target.
+lacks its human-applied agent role, is parked, missing, or unknown, preserve
+the recorded reconciliation and report the exact human action needed; never
+add or restore an agent label or mutate that target.
 An already-closed Done target satisfies only its recorded completed step.
 
-Treat an authorized new child's initial body, dependency links, and Backlog
-placement as one recorded creation operation under the eligible parent. Verify
-exact creation ownership before resuming an incomplete operation. Once initial
-Backlog placement is verified, do not edit or dispatch that child; leave later
-changes and promotion to humans.
+Treat an authorized new child's initial body, dependency links and unlabelled
+Todo placement as one recorded creation operation under the authorized parent.
+Verify exact creation ownership before resuming an incomplete creation. Once
+initial placement is verified, leave it untouched until a human supplies its
+next-action role; never add `ready-for-agent` during creation or retries.
 
 Apply the recorded plan idempotently and in this order:
 
@@ -148,7 +150,7 @@ Apply the recorded plan idempotently and in this order:
    of scope, close it and add its linked gist and reason only to `Out of scope`.
    Reconcile every additionally closed child's configured Project Done/archive
    outcome by exact item ID;
-5. add newly created children to the configured Project in Backlog as their
+5. add newly created children to the configured Project in unlabelled Todo as their
    initial placement and verify that value under the recorded creation operation.
    Refetch the complete live graph; and
 6. only when fresh reads prove the destination's way is clear, no open child
@@ -170,7 +172,7 @@ does not justify reordering map reconciliation ahead of that closure.
 
 At startup, query runner-assigned marked Wayfinder children independently of
 the ordinary open-Project inventory. First check the current child and parent
-columns: Backlog never resumes, even with a valid marker. Refetch the marker,
+columns and current labels: absent `ready-for-agent` never resumes, even with a valid marker. Refetch the marker,
 its recorded Project item even when archived, the child, the direct map parent even when closed, and
 the complete live map graph. Require exactly one authoritative marker, its
 author and sole assignee to be the authenticated runner, its Project item and
@@ -198,6 +200,6 @@ ticket is reported.
 In `drain`, an ordered human frontier or assigned HITL attention collection is
 not a failure and must not pause independent lanes. Report the selected linked
 ticket name, authority scope, provider result, map reconciliation, created
-children awaiting human promotion, completion state, remaining human frontier,
+children awaiting human-applied roles, completion state, remaining human frontier,
 and assigned HITL
 attention.

@@ -89,12 +89,11 @@ Query complete live Project state at start and after merges. In `drain`, obey th
 scheduler Refresh Gate and include new Todo implementation/planning work plus Todo
 needs-triage until the first complete empty executable-and-triage query; leave
 later arrivals for next run. In `next`, post-merge query is reconciliation only.
-Exclude Backlog before hydration or recovery. Keep its native dependency edges
-and report interrupted artifacts for human action. Verify
+Apply the label-stop gate before hydration or recovery: quiesce writers and release capacity for owned work missing `ready-for-agent`, preserving assignment and all artifacts. Keep unlabelled Todo outside every lane and retain its dependency edges. Verify
 configured field/option IDs. Read every item through pagination, exact
 labels/assignees/position/linked PR, recovery markers, and parking signals;
 apply trusted filters plus repository/open/non-draft/status/frontier rules. Never
-use named views implicitly or convert drafts. Preserve invalid claims as blocked
+use named views implicitly or convert drafts. Handle label removal under [Stop on label removal](authority-and-pauses.md#stop-on-label-removal) before treating other invalid claims as blocked
 slots; skip and report invalid unclaimed items.
 
 Use the scheduler's refresh-reason and changed-record evidence in `drain`;
@@ -136,9 +135,7 @@ under `closing-keyword`; it does not waive missing qualification or authority.
 
 Before claim, verify unattended readiness for the selected operation, committed
 configuration digest and refetch selected issue
-and Project item. Require current Todo or later applicable column membership;
-that column supplies ticket authorization. Never promote or select Backlog,
-and never fetch transition history to prove permission.
+and Project item. Require the lane's current Status, its human-applied role label and `parked: false`. Status and assignment supply no role authority. Never add or restore `ready-for-agent`; never fetch transition history to prove permission.
 Route planning and Wayfinder modes through their lanes; a
 `next` planning selection stays the same issue through terminal reconciliation.
 For Todo work with a verified usable active plan, perform the binding's

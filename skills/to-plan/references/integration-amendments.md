@@ -230,7 +230,7 @@ to the full plan alone.
   result to its effective tip/digest, starting candidate, resulting candidate,
   target base, owner and PR; a matching next-start SHA alone is insufficient.
 - **`deliver-tasks` (`run-github-project` entrypoint):** Verify that effective contract and the existing
-  exclusive claim, current-column authority, native blockers/qualification,
+  exclusive claim, current human-applied agent role and non-parked state, native blockers/qualification,
   leases, base/head and retained owner/artifacts. Revalidate affected leases in
   place only within existing authority; do not renew external grants, claim
   different work or manufacture readiness. Keep implementation/evidence renewal

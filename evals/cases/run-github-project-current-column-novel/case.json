@@ -37,11 +37,11 @@
     },
     {
       "id": "wayfinder",
-      "text": "Current Todo membership authorizes routing the unassigned AFK research child through its configured Wayfinder lane without event-history proof."
+      "text": "Current Todo membership plus human-applied ready-for-agent authorizes routing the unassigned AFK research child through its configured Wayfinder lane without event-history proof."
     },
     {
       "id": "new-child-boundary",
-      "text": "Creates any authorized new child initially in Backlog and leaves its promotion and automatic work eligibility to humans; the active Todo child does not authorize processing the new Backlog child."
+      "text": "Creates any authorized new child initially in unlabelled Todo and leaves role authority to humans; never adds ready-for-agent during creation or retries. The active child does not authorize work on the unlabelled child."
     }
   ],
   "provenance": {

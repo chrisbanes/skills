@@ -1,0 +1,15 @@
+{
+  "decisions": {
+    "stopped-101": {
+      "stop_writers": true,
+      "release_capacity": true,
+      "retain_assignment": true,
+      "retain_artifacts": true,
+      "cleanup": false,
+      "restore_label": false
+    },
+    "independent-102": {
+      "action": "claim"
+    }
+  }
+}
