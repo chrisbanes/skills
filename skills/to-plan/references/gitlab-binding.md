@@ -155,8 +155,10 @@ is the merge request IID.
     [live merge-policy fingerprint](#live-merge-policy-fingerprint). Require
     invocation-specific merge authority, the caller's final-head gates,
     `detailed_merge_status` equal to `mergeable`, `draft: false`,
-    `has_conflicts: false` and `sha` equal to the expected head. Any other
-    status refuses with zero writes and reports GitLab's status. Then
+    `has_conflicts: false` and `sha` equal to the expected head. Re-read
+    transient statuses (`checking`, `unchecked`, `preparing`) with bounded
+    polling; a fresh draft can report `checking` rather than `draft_status`.
+    Any other status refuses with zero writes and reports GitLab's status. Then
     `PUT projects/:id/merge_requests/:iid/merge` with `sha=<expected head>`
     and `squash` from the policy, and no other merge option. Never set
     auto-merge.
