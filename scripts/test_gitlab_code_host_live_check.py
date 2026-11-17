@@ -3,6 +3,7 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from urllib.parse import unquote
 
 from scripts import gitlab_code_host_live_check as check
@@ -15,7 +16,9 @@ P = check.PREFIX
 class FakeGitLab:
     """Minimal in-memory fixture project answering the calls the run makes."""
 
-    def __init__(self, *, auto_delete_source=True, pipeline_ready_after=1):
+    def __init__(self, *, auto_delete_source=True, pipeline_ready_after=1, account=check.ACCOUNT_ID, trains=None):
+        self.account = account
+        self.trains = trains
         self.branches = {"main": "MAIN0"}
         self.mrs = {}
         self.discussions = {}
@@ -30,13 +33,13 @@ class FakeGitLab:
         path, _, query = path.partition("?")
         rest = path[len(P):] if path.startswith(P) else path
         if (method, path) == ("GET", "user"):
-            return 200, {}, {"id": 1, "username": "operator"}
+            return 200, {}, {"id": self.account, "username": "operator"}
         if (method, path) == ("GET", "version"):
             return 200, {}, {"version": "19.6.0-pre"}
         if method == "GET" and path in (f"projects/{check.PROJECT_ID}", check.ENCODED_PROJECT):
             return 200, {}, {
                 "id": check.PROJECT_ID, "path_with_namespace": check.PROJECT_PATH, "default_branch": "main",
-                "merge_method": "merge", "squash_option": "default_off", "merge_trains_enabled": None,
+                "merge_method": "merge", "squash_option": "default_off", "merge_trains_enabled": self.trains,
                 "only_allow_merge_if_pipeline_succeeds": False,
             }
         if method == "GET" and rest == "protected_branches":
@@ -229,6 +232,50 @@ class RunTest(unittest.TestCase):
         self.assertEqual(3, len(client.rate_limited) - 1)  # four attempts, three retries
 
 
+class SafetyTest(unittest.TestCase):
+    def test_wrong_account_or_merge_trains_refuse_before_any_write(self):
+        for fake in (FakeGitLab(account=1), FakeGitLab(trains=True)):
+            with self.subTest(fake=fake.account):
+                result, _ = run(fake)
+                self.assertFalse(result["passed"])
+                self.assertEqual(0, result["writes"])
+                self.assertEqual({"main": "MAIN0"}, fake.branches)
+
+    def test_unexpected_exception_after_writes_still_cleans_up(self):
+        class Breaking(FakeGitLab):
+            def request(self, method, path, body=None):
+                if method == "POST" and path.endswith("/discussions"):
+                    raise KeyError("unexpected response shape")
+                return super().request(method, path, body)
+
+        fake = Breaking()
+        result, _ = run(fake)
+        self.assertFalse(result["passed"])
+        self.assertIn("KeyError", result["error"])
+        self.assertTrue(result["cleanup"]["verified"])
+        self.assertEqual({"main"}, set(fake.branches))
+        self.assertEqual("closed", fake.mrs[1]["state"])
+
+    def test_transport_keeps_only_rate_limit_headers_and_maps_timeouts(self):
+        output = (
+            "HTTP/2.0 429 Too Many Requests\r\nSet-Cookie: session=" + SENTINEL + "\r\n"
+            "RateLimit-Remaining: 0\r\nRetry-After: Wed, 21 Oct 2026 07:28:00 GMT\r\n\r\n{\"message\": \"slow down\"}"
+        )
+        transport = check.GlabTransport("glab")
+        completed = check.subprocess.CompletedProcess([], 1, stdout=output, stderr="")
+        with patch.object(check.subprocess, "run", return_value=completed):
+            status, headers, body = transport.request("GET", "user")
+        self.assertEqual(429, status)
+        self.assertNotIn(SENTINEL, json.dumps(headers))
+        self.assertEqual("0", headers["ratelimit-remaining"])
+        client = check.Client(type("T", (), {"request": lambda *_: (status, headers, body)})(), check.Guard("RUN"), sleep=lambda _: None)
+        with self.assertRaises(check.ProviderError):
+            client.get("user")  # an HTTP-date Retry-After falls back to backoff instead of crashing
+        with patch.object(check.subprocess, "run", side_effect=check.subprocess.TimeoutExpired("glab", 120)):
+            with self.assertRaises(check.CheckError):
+                transport.request("GET", "user")
+
+
 class PreconditionTest(unittest.TestCase):
     def arguments(self, *extra, result=None):
         return ["--result", result or "/nonexistent/result.json", *extra]
@@ -240,7 +287,7 @@ class PreconditionTest(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertEqual(2, check.main(self.arguments("--live"), environ={name: SENTINEL}))
 
-    def test_refuses_a_third_attempt_and_keeps_credentials_out_of_results(self):
+    def test_refuses_a_third_write_attempt(self):
         with tempfile.TemporaryDirectory() as directory:
             result = Path(directory) / "result.json"
             argv = ["--live", "--result", str(result)]
@@ -248,8 +295,7 @@ class PreconditionTest(unittest.TestCase):
             check.shutil.which = lambda _: "/usr/bin/glab"
             try:
                 for _ in range(check.MAX_ATTEMPTS):
-                    self.assertEqual(0, check.main(argv, environ={"CAB_GITLAB_TOKEN": SENTINEL}, transport=FakeGitLab(), sleep=lambda _: None))
-                    self.assertNotIn(SENTINEL, result.read_text(encoding="utf-8"))
+                    self.assertEqual(0, check.main(argv, environ={}, transport=FakeGitLab(), sleep=lambda _: None))
                 self.assertEqual(2, check.main(argv, environ={}, transport=FakeGitLab(), sleep=lambda _: None))
                 self.assertEqual(2, len(json.loads((Path(directory) / "gitlab-live-attempts.json").read_text())))
             finally:

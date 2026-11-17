@@ -26,7 +26,8 @@ HOST = "gitlab.com"
 PROJECT_ID = 88319115
 PROJECT_PATH = "banes3/Banes-project"
 PROTECTED_BASE = "main"
-OVERRIDE_VARIABLES = ("GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN")
+OVERRIDE_VARIABLES = ("GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN", "GLAB_CONFIG_DIR")
+ACCOUNT_ID = 43935395  # fixture operator account from cab's GitLab evidence
 MAX_WRITES = 16
 MAX_ATTEMPTS = 2
 PREFIX = f"projects/{PROJECT_ID}/"
@@ -145,7 +146,10 @@ class GlabTransport:
                 payload = Path(directory) / "body.json"
                 payload.write_text(json.dumps(body), encoding="utf-8")
                 command += ["--input", str(payload), "-H", "Content-Type: application/json"]
-            result = subprocess.run(command, capture_output=True, text=True, timeout=120)
+            try:
+                result = subprocess.run(command, capture_output=True, text=True, timeout=120)
+            except (OSError, subprocess.TimeoutExpired) as error:
+                raise CheckError(f"{method} {path}: glab failed: {type(error).__name__}") from None
         head, _, text = result.stdout.replace("\r\n", "\n").partition("\n\n")
         lines = head.split("\n")
         status_match = re.match(r"HTTP/\S+ (\d{3})", lines[0]) if lines else None
@@ -182,7 +186,8 @@ class Client:
             if status == 429 or status >= 500:
                 self.rate_limited.append({"path": path, "status": status, "headers": headers})
                 if attempt + 1 < attempts:
-                    self.sleep(float(headers.get("retry-after", 2 ** (attempt + 2))))
+                    delay = headers.get("retry-after", "")
+                    self.sleep(float(delay) if delay.isdigit() else 2 ** (attempt + 2))
                     continue
             message = parsed.get("message") if isinstance(parsed, dict) else parsed
             raise ProviderError(method, path, status, message)
@@ -274,10 +279,14 @@ class Run:
     def preflight(self):
         user = self.client.get("user")
         self.result["account_id"] = user["id"]
+        if user["id"] != ACCOUNT_ID:
+            raise CheckError(f"glab:{HOST} login is account {user['id']}, not the fixture operator")
         project = self.client.get(f"projects/{PROJECT_ID}")
         by_path = self.client.get(f"projects/{quote(PROJECT_PATH, safe='')}")
         if project["id"] != PROJECT_ID or by_path["id"] != PROJECT_ID or project["path_with_namespace"] != PROJECT_PATH:
             raise CheckError("fixture project identity mismatch")
+        if project.get("merge_trains_enabled"):
+            raise CheckError("fixture has merge trains enabled; a merge would join a train")
         protected = self.client.get_all(f"{PREFIX}protected_branches")
         approval_rules = self.client.get_all(f"{PREFIX}approval_rules")
         approvals = self.client.get(f"{PREFIX}approvals")
@@ -431,11 +440,11 @@ class Run:
             self.client.write("POST", f"{PREFIX}repository/branches", {"branch": self.guard.base, "ref": PROTECTED_BASE})
             self.journey_a()
             self.journey_b()
-        except CheckError as caught:
+        except Exception as caught:  # any failure after a write must still reach cleanup
             error = caught
         try:
             verified = self.cleanup() if self.guard.writes else True
-        except CheckError as caught:
+        except Exception as caught:
             verified = False
             error = error or caught
         self.result.update(
@@ -443,7 +452,7 @@ class Run:
             requests=self.client.requests,
             rate_limited=self.client.rate_limited,
             guard={"denied": self.guard.denied},
-            error=str(error) if error else None,
+            error=f"{type(error).__name__}: {error}" if error else None,
             passed=error is None and verified and not self.guard.denied,
         )
         return self.result

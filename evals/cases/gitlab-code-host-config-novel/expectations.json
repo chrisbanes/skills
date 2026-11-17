@@ -31,7 +31,7 @@
       "tracker_lanes": "blocked"
     },
     "glab-missing": {
-      "action": "configuration-blocked",
+      "action": "configuration-valid",
       "code_host_lanes": "blocked",
       "tracker_lanes": "available"
     },

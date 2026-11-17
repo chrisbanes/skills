@@ -7,9 +7,13 @@ is a complete 2xx response and live values equal the recorded fingerprint
 inputs.
 
 Write `.scratch/review-decisions.json`, keyed by snapshot ID, with exactly
-these fields: `action` (`configuration-valid`, `configuration-blocked`,
-`stop-preserve` or `refuse-start`), `code_host_lanes` and `tracker_lanes`
-(`available` or `blocked`).
+these fields: `action`, `code_host_lanes` and `tracker_lanes` (`available`
+or `blocked`). `action` is one of `configuration-valid` (the binding resolves;
+capability gaps are reported per lane), `configuration-blocked` (repairable
+configuration drift or a missing binding contract blocks the run until setup
+or a contract fixes it), `stop-preserve` (merge-policy drift, an identity that
+now names a different project, or unknown state stops all work and preserves
+it) or `refuse-start` (the run must not start).
 
 - `policy-drift`: The live pipeline requirement differs from the recorded fingerprint.
 - `credential-override`: `GITLAB_TOKEN` is set while the source is `glab:`.

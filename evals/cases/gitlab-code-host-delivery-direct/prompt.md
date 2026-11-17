@@ -19,10 +19,13 @@ merge and tracker-closure authority. The full contract is satisfied by H1.
 
 - `mr-open`: No merge request exists for the task branch. Open one and link it.
 - `pipeline-failed`: The head pipeline failed on a non-optional job.
-- `not-mergeable`: The pipeline passed, but GitLab reports an unresolved discussion.
+- `not-mergeable`: The pipeline passed, but GitLab reports an unresolved
+  discussion requesting a code change.
 - `mergeable`: Every gate passes at H1 and no merge has been sent.
-- `merge-train`: The project uses merge trains; the authorized merge call was
-  sent and accepted, and the request is on the train.
+- `merge-train`: This snapshot's project uses merge trains (its own
+  `merge_policy` replaces the top-level one, and the recorded and live
+  fingerprints both match it); the authorized merge call was sent and
+  accepted, and the request is on the train.
 - `merged`: Readback shows the request merged at H1 with its commit on `main`;
   the GitHub issue is still open.
 

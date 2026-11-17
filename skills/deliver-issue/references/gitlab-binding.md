@@ -20,7 +20,9 @@ GitHub commands or invent GitLab issue operations.
 
 Use the existing `docs/agents/deliver-tasks.md` shape from the
 [GitHub Project configuration](github-binding.md#github-project-configuration);
-there is no GitLab-only section. Overrides for a GitLab code host:
+there is no GitLab-only section. Add these fields to the existing sections for
+a GitLab code host, keeping every other field (including the `Merge Policy`
+Done automation fields a GitHub Project board needs):
 
 ```markdown
 ## Tracker
@@ -56,8 +58,9 @@ there is no GitLab-only section. Overrides for a GitLab code host:
   GitLab checkout origin cannot identify the tracker repository.
 - `Project ID` is operator-supplied; setup may propose it from a read. Keep
   names beside IDs: the same Project ID under a new path is repairable drift
-  (`configuration-blocked` until setup reconciles the path); a path or ID that
-  now resolves to a different project stops all work.
+  (`configuration-blocked` for the whole run until setup reconciles the path);
+  a path or ID that now resolves to a different project is `stop-preserve`:
+  stop all work and preserve it.
 - `Credential` names the source, never the value. `glab:<host>` uses the GitLab
   CLI login for that host. `env:<VARIABLE>` reads that variable at call time.
 - `Squash` must be permitted by the project's `squash_option` (`always`
@@ -81,8 +84,9 @@ there is no GitLab-only section. Overrides for a GitLab code host:
    bodies, checkpoints or evidence. Report only the source name.
 4. Verify `GET user` succeeds with the selected source before any write, and
    record the account ID and username.
-5. A missing `glab` executable blocks only the code-host lanes. Tracker reads,
-   planning and local validation continue.
+5. A missing `glab` executable is a capability gap, not invalid
+   configuration: it blocks only the code-host lanes. Tracker reads, planning
+   and local validation continue.
 6. Treat any non-2xx response, timeout, malformed JSON or incomplete pagination
    as unknown state, never as absence. Retry a transient read (429, 5xx,
    timeout) at most three times, honoring `Retry-After`; repeat the complete
@@ -165,7 +169,9 @@ is the merge request IID.
 12. **Merge readback:** `GET projects/:id/merge_requests/:iid` must show
     `state: merged`, the expected head, and a `merge_commit_sha` or
     `squash_commit_sha` reachable from the refreshed base
-    (`GET projects/:id/repository/branches/<base>`). Then return merge
+    (`GET projects/:id/repository/branches/<base>`). A fast-forward merge
+    (`ff` without squash) has neither; require the expected head itself to be
+    reachable from the base instead. Then return merge
     evidence to the tracker binding for `close-after-merge`; GitLab closes
     nothing. GitLab may delete the source branch on merge; treat a missing
     source branch after verified merge as cleaned up.
@@ -196,7 +202,8 @@ host for a GitLab target.
 credential checks above, then read `GET projects/:id` (or the path when the ID
 is not yet known), the default and base branches
 (`GET projects/:id/repository/branches/<branch>`), merge settings,
-`GET projects/:id/protected_branches`, `GET projects/:id/approval_rules` and
+`GET projects/:id/protected_branches`, `GET version` and, unless it reports
+Community Edition, `GET projects/:id/approval_rules` and
 `GET projects/:id/approvals`. Propose `Repository`, `Project ID`,
 `Credential`, branches and `Merge Policy` values from those reads under the
 GitHub binding's [additive setup](github-binding.md#additive-setup-for-an-existing-repository).
@@ -219,9 +226,12 @@ JSON (sorted keys, compact separators, sorted set-like arrays) containing:
   approval settings where the tier exposes them.
 
 A field that is `null` or absent in a complete 2xx read records the stable
-value `unavailable`. A failed or partial read is unknown state: stop, never
-fingerprint it, and never read a 403 or 404 as `unavailable`. A changed
-fingerprint is global merge-policy drift: stop and preserve all work until the
+value `unavailable`. Decide endpoint availability by edition, not status code:
+when `GET version` reports `enterprise: false` (Community Edition), the
+approval endpoints are `unavailable` and are not read. Otherwise a failed or
+partial read is unknown state: stop with `stop-preserve`, never fingerprint
+it, and never read a 403 or 404 as `unavailable`. A changed
+fingerprint is global merge-policy drift (`stop-preserve`): stop and preserve all work until the
 trusted configuration and live policy are reconciled, as in the
 [GitHub fingerprint](github-binding.md#live-merge-policy-fingerprint).
 

@@ -17,9 +17,10 @@ not authority. A code-host merge and a tracker closure are separate facts.
    host, read the bundled [GitLab binding](gitlab-binding.md#code-host-operations);
    a `gitlab` tracker has no trusted contract and blocks. A repository on either
    host does not imply a tracker on it. When the tracker repository differs
-   from the checkout origin, take it from the trusted `Tracker` configuration
-   and accept only canonical item URLs or repository-qualified references;
-   never resolve a bare `#N` against another host. For another provider, require
+   from the checkout origin, take it from the trusted `Tracker` configuration;
+   resolve a bare `#N` only against that tracker repository, never against the
+   code host, and without it accept only canonical item URLs or
+   repository-qualified references. For another provider, require
    its trusted operation contract; do not invent a binding or substitute
    GitHub commands.
 2. Verify the capabilities needed by the next operation. The tracker supplies

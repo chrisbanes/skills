@@ -25,7 +25,7 @@
     "not-mergeable": {
       "tracker": "github",
       "code_host": "gitlab",
-      "change_action": "none",
+      "change_action": "repair",
       "closing_keywords": false,
       "expected_host_closures": [],
       "merge_permitted": false,

@@ -126,9 +126,6 @@
       "closes_issues": []
     },
     "merge-train": {
-      "merge_policy_override": {
-        "merge_trains_enabled": true
-      },
       "merge_call": {
         "request": "PUT projects/88001/merge_requests/7/merge sha=H1",
         "status": 200
@@ -159,7 +156,14 @@
           "status": "running"
         }
       },
-      "closes_issues": []
+      "closes_issues": [],
+      "merge_policy": {
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": true,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": true
+      }
     },
     "merged": {
       "merge_request": {
