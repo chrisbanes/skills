@@ -42,7 +42,7 @@
     },
     {
       "id": "both-handoffs",
-      "text": "Delivery retains owner/work/PR and renews affected evidence with exact result provenance; controller verifies effective contract and existing leases without an unnecessary Todo/Ready reset. No expanded external grants or qualification waivers."
+      "text": "Delivery retains owner/work/PR and renews affected evidence with exact result provenance; controller verifies effective contract and existing leases without an unnecessary Todo reset. No expanded external grants or qualification waivers."
     },
     {
       "id": "evidence-limits",

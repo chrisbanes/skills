@@ -1,0 +1,28 @@
+{
+  "decisions": {
+    "A": {
+      "active_claim": true,
+      "may_resume": true
+    },
+    "B": {
+      "stop_writers": true,
+      "release_capacity": true,
+      "preserve_assignment": true,
+      "preserve_claim_label": true,
+      "preserve_artifacts": true,
+      "requires_human_restoration": true
+    },
+    "C": {
+      "blocked_by_descendant": true,
+      "may_close": false
+    },
+    "D": {
+      "may_close": true,
+      "done": true
+    },
+    "E": {
+      "done": false,
+      "preserve_evidence": true
+    }
+  }
+}

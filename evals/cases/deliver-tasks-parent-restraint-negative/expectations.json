@@ -1,0 +1,26 @@
+{
+  "decisions": {
+    "A": {
+      "may_claim_child": false,
+      "may_close_parent": false
+    },
+    "B": {
+      "action": "blocked-incomplete-graph",
+      "successful_empty": false
+    },
+    "C": {
+      "action": "blocked-identity-ambiguity",
+      "may_claim": false
+    },
+    "D": {
+      "may_close": false
+    },
+    "E": {
+      "active_runner_claim": false
+    },
+    "F": {
+      "may_claim_from_wake": false,
+      "requires_full_refresh": true
+    }
+  }
+}

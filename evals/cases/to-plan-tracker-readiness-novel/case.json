@@ -1,0 +1,48 @@
+{
+  "id": "to-plan-tracker-readiness-novel",
+  "title": "Start a full tracker plan through binding readiness without a GitHub role",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/decision.md"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "to-plan-tracker-readiness-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "entry-readiness",
+      "text": "Allows a new full plan for OPS-32 through its trusted Jira readiness gate, despite absent GitHub labels and no existing plan; does not use a post-publication no-op or invent a provider."
+    },
+    {
+      "id": "binding-authority",
+      "text": "Uses the selected tracker independently of GitHub code host. Blocks parked Jira work; accepts the human-applied configured GitHub agent:approved role; stops on removal, preserving artifacts and requiring human restoration."
+    },
+    {
+      "id": "limits",
+      "text": "Reports an offline next-action assessment only; drafting eligibility supplies no marker publication authority. Missing or unknown readiness contracts fail closed."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

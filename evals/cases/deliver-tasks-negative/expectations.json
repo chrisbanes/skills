@@ -1,0 +1,16 @@
+{
+  "decisions": {
+    "unlabelled-81": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    },
+    "unlabelled-82": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    },
+    "stopped-83": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    }
+  }
+}

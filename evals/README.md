@@ -5,7 +5,7 @@ and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
 tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
 cover six Compose skills, four Kotlin/Gradle skills, and ten workflow/writing
-skills: `android-benchmark-comparison`, `deliver-spec`, `grounded-writing`,
+skills: `android-benchmark-comparison`, `deliver-spec`, `deliver-tasks`, `grounded-writing`,
 `implement-with-subagents`, `subagent-delegation`, `changelog`, `release-kotlin-library`,
 `run-github-project`,
 `shepherd`, and `to-plan`. It is designed to answer three separate questions:
@@ -51,6 +51,25 @@ and uncertain shared-seam overlap. Deterministic tests accept the expected
 decisions and reject widened scope or bypassed gates; they do not establish
 live model behavior or recoverable dependency-wait time.
 
+The derived-handoff calibration case covers a verified plan waiting in Todo,
+slot admission, invalid-chain restraint, and the separate Wayfinder route.
+
+The task-delivery contract calibration cases cover opaque item and blocker
+references, binding-supplied status or label claim markers, and parked-item
+restraint across execution, triage, epic and human-work lanes. Their decision
+artifacts have deterministic validation; live model behavior is unmeasured.
+
+The optional-binding calibration cases cover fresh no-file Project defaults,
+trusted partial overrides, pinned identity drift and every ambiguous lookup.
+They retain runtime fingerprints through recovery without a phantom file digest;
+missing/duplicate columns, multi-label roles and unresolved scopes fail closed.
+Deterministic validation checks decision artifacts, not live model behavior.
+
+The migration calibration cases cover a read-only dry run, explicit approval
+and journaled apply, declined/silent approval, partial/unknown writes and
+concurrent-change-safe rollback. They use immutable legacy state and the
+existing offline decision validator; they never migrate a live board.
+
 The writing calibration cases extend the rendering-documentation regressions
 with short review replies, nontechnical email (file edits and response-only
 drafting), missing personal experience,
@@ -93,6 +112,7 @@ suite-wide aggregate.
 | `kotlin-control-flow` | 33.3% | 100.0% | 100.0% |
 | `android-benchmark-comparison` | 33.3% | 100.0% | 100.0% |
 | `deliver-spec` | — | — | — |
+| `deliver-tasks` | — | — | — |
 | `grounded-writing` | 0.0% | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
 | `release-kotlin-library` | 0.0% | 100.0% | 100.0% |
@@ -159,6 +179,7 @@ recorded result. Run provenance and scorecards are in the
 | `kotlin-control-flow` | 61.1% | 94.4% | 100.0% |
 | `android-benchmark-comparison` | 33.3% | 100.0% | 100.0% |
 | `deliver-spec` | — | — | 100.0% |
+| `deliver-tasks` | — | — | — |
 | `grounded-writing` | 0.0% | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
 | `release-kotlin-library` | 16.7% | 100.0% | 100.0% |
@@ -206,8 +227,8 @@ Each eligible `case × arm` condition runs three times by default. A case that
 targets no implicitly invokable skill is excluded from the automatic arm before
 execution. The 38-case Compose suite schedules 342 subject calls and 342
 blinded judge calls. The 24-case Kotlin/Gradle suite schedules 216 subject calls
-and 216 blinded judge calls. The 47-case workflows/writing suite schedules 345
-subject calls and 345 blinded judge calls.
+and 216 blinded judge calls. The 51-case workflows/writing suite schedules 369
+subject calls and 369 blinded judge calls.
 
 Codex subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,
@@ -334,8 +355,8 @@ The Kotlin/Gradle benchmark contains 24 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-The workflows/writing benchmark contains 47 scored cases: direct, novel, and
-no-change coverage for each of its ten skills, plus additional workflow
+The workflows/writing benchmark contains 51 scored cases: direct, novel, and
+no-change coverage for each of its eleven skills, plus additional workflow
 scenarios. The surrounding corpus also contains the two calibration-only
 missing-provider challenges described above.
 The `subagent-delegation` Codex and Claude triads cover assignment-level model
@@ -669,3 +690,20 @@ Analysis-only cases may opt into `allow_skill_reference_reads` alongside
 entrypoints and Markdown files under their `references/` directories in forced
 and automatic arms. Other commands, paths and workflow actions remain forbidden;
 cases without this option retain the single forced-entrypoint-read exception.
+
+The `deliver-tasks` triad checks scoped planning/delivery, unknown pause
+publication with independent progress, and unlabelled Todo and label-stop restraint through deterministic
+decision artifacts. A routing counterexample keeps one named item in `deliver-spec`.
+Existing GitHub scenarios install both the entrypoint and extracted controller;
+their prompts and decisions follow the same human-applied role and stop rules.
+Label-stop and recovery calibration fixtures cover capacity release, artifact
+preservation, human restoration, triage restraint and abandonment to human Todo;
+the existing parked counterexample keeps label authority separate from parking.
+
+The `deliver-spec` provider-closure calibration triad preserves native GitHub
+closure and non-default-base controller closure, exercises Jira tracker/GitHub
+code-host linking and separate merge/closure recovery, and rejects closure for
+partial work, unintended host links, missing capabilities and delegated owners.
+Offline decision artifacts use the existing deterministic validator and grader;
+they validate the fixture contract, not live provider support or model behavior.
+No live evaluations or new result metrics are reported.

@@ -54,7 +54,7 @@ install them, and the workflows never install them implicitly.
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tasks | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | [`run-github-project`](skills/run-github-project/SKILL.md) explicit/repository-required test-first work | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | `run-github-project` Todo triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
-| `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-github-project/references/workflow-providers.md) |
+| `run-github-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/deliver-tasks/references/workflow-providers.md) |
 
 Delivery and parallel implementation use one fresh independent read-only reviewer
 against the approved source and repository standards; no external review skill
@@ -74,7 +74,7 @@ before expanding the acceptance matrix; established fixtures reuse valid evidenc
 
 Review mode in `implement-with-subagents`, and review or setup mode in
 `run-github-project`, do not require these external skills. See the
-[`run-github-project` provider matrix](skills/run-github-project/references/workflow-providers.md)
+[`deliver-tasks` provider matrix](skills/deliver-tasks/references/workflow-providers.md)
 for its lane-specific fallback and blocking behavior.
 
 ## Skills
@@ -132,11 +132,12 @@ for its lane-specific fallback and blocking behavior.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; recover run identity and bounded results by workflow ID with read-only status, and diagnose failures with optional investigation helpers.
 - [`subagent-delegation`](skills/subagent-delegation/SKILL.md) — provider-neutral delegation playbook, loaded by name or through a one-line user-level opt-in, with separate Codex and Claude Code model routing, installed-role precedence, parallel briefs, independent audits, and lead acceptance.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — choose solo implementation for a single item or serial graph and worker ownership for every item in a graph with parallel work; preserve dependency-aware integration, independent final review, same-owner repair, bounded checkout reuse, and read-only orchestration review.
-- [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans that prove baselines from green CI, with observable slices and consequential boundary validation before dependent work, plus authenticated integration amendments and explicit consumer handoffs; decide separate PRs by coherent deliverable boundaries.
-- [`run-github-project`](skills/run-github-project/SKILL.md) — set up, review, or operate a repository's GitHub Project workflow with current-column authorization, human-only Backlog promotion, and deterministic configured agent selection; deliver ordinary implementation tickets through `deliver-spec`, resolve run-level merging once at startup with a 60-second default-no question unless already specified, preflight offline live-qualification harness evidence, preserve asynchronous or persistent failures in durable checkpoints, prioritize active delivery through safe planner checkpoints, fast-path small Todo tickets straight into implementation, start external review while CI runs after local qualification, free slots while reviewed PRs wait on CI, record ticket-local pauses while independent work continues, and keep `drain` alive under a read-only Project Watcher instead of returning at the first human wait.
+- [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans that prove baselines from green CI, with observable slices and consequential boundary validation before dependent work, plus authenticated integration amendments, tracker-bound markers and explicit consumer handoffs; decide separate PRs by coherent deliverable boundaries.
+- [`deliver-tasks`](skills/deliver-tasks/SKILL.md) — explicitly triage, plan and deliver a Project or parent issue’s open descendants through the shared controller, using Todo / In progress / Done, human-applied role authority, preserved label stops, scheduling and review gates; use `deliver-spec` for one named item.
+- [`run-github-project`](skills/run-github-project/SKILL.md) — GitHub Project entry point for `deliver-tasks`, using the synced GitHub binding, Project URL defaults, optional trusted `deliver-tasks` overrides and read-only Project Watcher.
 - [`shepherd`](skills/shepherd/SKILL.md) — poll open PRs and MRs directly in the controller, using a read-only helper only for a bounded large failed-log question, or follow a host PR monitor's wake events (such as Claude desktop's Auto-fix) instead of polling, triage review comments, and repair CI failures with affected checks and required integrated-candidate validation; start external review during CI while retaining final-head merge gates.
 
-For selective skill installations, install `changelog` alongside
+For selective skill installations, install `deliver-tasks` and `run-github-project` together, and `changelog` alongside
 `release-kotlin-library`; the full plugin includes both.
 
 Workflows that delegate agents share the [subagent selection and handoff
@@ -154,7 +155,7 @@ checks and a stop before shared edits; native blockers, accepted-plan ordering,
 resource grants and final integrated validation still apply.
 
 Workflows that create worktrees (`deliver-spec`, `implement-with-subagents`
-and `run-github-project`) likewise share the
+and `deliver-tasks`) likewise share the
 [checkout lifecycle](references/checkout-lifecycle.md).
 
 Edit `references/subagent-selection.md` or `references/checkout-lifecycle.md`,
@@ -320,6 +321,7 @@ for Astra and 5.6 coverage and its current evidence limits.
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`deliver-spec`](skills/deliver-spec/SKILL.md) | — | — | — |
+| [`deliver-tasks`](skills/deliver-tasks/SKILL.md) | — | — | — |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 0.0% | 100.0% | 100.0% |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 0.0% | 100.0% | 100.0% |
@@ -386,6 +388,7 @@ recorded result. Run provenance and scorecards are in the
 | [`kotlin-control-flow`](skills/kotlin-control-flow/SKILL.md) | 61.1% | 94.4% | 100.0% |
 | [`android-benchmark-comparison`](skills/android-benchmark-comparison/SKILL.md) | 33.3% | 100.0% | 100.0% |
 | [`deliver-spec`](skills/deliver-spec/SKILL.md) | — | — | 100.0% |
+| [`deliver-tasks`](skills/deliver-tasks/SKILL.md) | — | — | — |
 | [`grounded-writing`](skills/grounded-writing/SKILL.md) | 0.0% | 100.0% | 100.0% |
 | [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) | — | — | 100.0% |
 | [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) | 16.7% | 100.0% | 100.0% |

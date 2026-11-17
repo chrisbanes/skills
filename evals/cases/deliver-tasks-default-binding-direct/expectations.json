@@ -1,0 +1,25 @@
+{
+  "decisions": {
+    "defaults": {
+      "action": "configuration-valid",
+      "identity_source": "runtime-fingerprint",
+      "requires_file": false,
+      "creates_config": false,
+      "grants_authority": false
+    },
+    "resume": {
+      "action": "resume-after-fresh-checks",
+      "identity_source": "runtime-fingerprint",
+      "requires_file": false,
+      "creates_config": false,
+      "grants_authority": false
+    },
+    "changed": {
+      "action": "stop-preserve",
+      "identity_source": "runtime-fingerprint",
+      "requires_file": false,
+      "creates_config": false,
+      "grants_authority": false
+    }
+  }
+}

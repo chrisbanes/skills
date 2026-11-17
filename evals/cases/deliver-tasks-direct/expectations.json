@@ -1,0 +1,14 @@
+{
+  "decisions": {
+    "todo-61": {
+      "action": "plan",
+      "shared_state_owner": "controller",
+      "merge_permitted": false
+    },
+    "ready-62": {
+      "action": "implement",
+      "shared_state_owner": "controller",
+      "merge_permitted": false
+    }
+  }
+}

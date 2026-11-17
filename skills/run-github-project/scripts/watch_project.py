@@ -12,8 +12,10 @@ import json
 import subprocess
 import sys
 import time
+from collections import deque
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlparse
 
 ITEMS_QUERY = """
 query($id: ID!, $status: String!, $after: String) {
@@ -128,18 +130,150 @@ def await_budget(rate: dict[str, Any], deadline: datetime | None) -> bool:
     return reset_in < left
 
 
+PARENT_CONNECTIONS = {"subIssues": "id", "blockedBy": "id",
+                      "labels": "name", "assignees": "login"}
+PARENT_FIELDS = """
+  ... on Issue {
+    id url state updatedAt repository { nameWithOwner } parent { id }
+    comments(last: 1) { nodes { id updatedAt } }
+    CONNECTIONS
+  }
+""".replace("CONNECTIONS", "\n".join(
+    f"{name}(first: 100, after: ${name}) {{ pageInfo {{ hasNextPage endCursor }} nodes {{ {field} }} }}"
+    for name, field in PARENT_CONNECTIONS.items()
+))
+
+PARENT_BATCH_SIZE = 20
+
+
+def parent_query(node_ids: list[str], cursors: dict[str, str]) -> tuple[str, dict[str, str]]:
+    variables = {f"id{i}": node_id for i, node_id in enumerate(node_ids)}
+    declarations = [f"$id{i}: ID!" for i in range(len(node_ids))]
+    declarations.extend(f"${name}: String" for name in PARENT_CONNECTIONS)
+    aliases = [f"node{i}: node(id: $id{i}) {{ {PARENT_FIELDS} }}"
+               for i in range(len(node_ids))]
+    return (f"query({', '.join(declarations)}) {{ rateLimit {{ cost remaining resetAt }} "
+            + " ".join(aliases) + " }", {**variables, **cursors})
+
+
+def fetch_parent(args: argparse.Namespace, deadline: datetime | None) -> dict[str, Any] | None:
+    """Read every descendant and transitive blocker, including closed nodes."""
+    pending = deque([args.parent_id])
+    prefetched = {}
+    scope = {args.parent_id}
+    expanded = set()
+    records = {}
+    limits = []
+    identities = {}
+    while pending:
+        node_id = pending.popleft()
+        if node_id in records:
+            if node_id in scope and node_id not in expanded:
+                children = records[node_id]["subIssues"]
+                scope.update(children)
+                pending.extend(children)
+                expanded.add(node_id)
+            continue
+        cursors = {}
+        active = set(PARENT_CONNECTIONS)
+        connections = {name: [] for name in active}
+        seen_cursors = {name: set() for name in active}
+        metadata = None
+        while active:
+            if node_id in prefetched and metadata is None:
+                node = prefetched.pop(node_id)
+            else:
+                batch = [node_id]
+                if metadata is None:
+                    for candidate in pending:
+                        if candidate not in records and candidate not in prefetched and candidate not in batch:
+                            batch.append(candidate)
+                            if len(batch) == PARENT_BATCH_SIZE:
+                                break
+                if limits and not await_budget(limits[-1], deadline):
+                    return None
+                query, variables = parent_query(batch, cursors)
+                data = graphql(query, deadline, **variables)
+                limits.append(data["rateLimit"])
+                for index, identity in enumerate(batch):
+                    prefetched[identity] = data.get(f"node{index}")
+                node = prefetched.pop(node_id)
+            if not isinstance(node, dict) or node.get("id") != node_id:
+                raise WatchError(f"issue {node_id} missing or identity changed")
+            if not {"id", "url", "state", "updatedAt", "repository", "parent", "comments"} <= node.keys():
+                raise WatchError(f"issue {node_id}: incomplete readback")
+            if not isinstance(node["comments"]["nodes"], list) or not node["updatedAt"]:
+                raise WatchError(f"issue {node_id}: incomplete marker readback")
+            current = {k: v for k, v in node.items() if k not in PARENT_CONNECTIONS}
+            if metadata is not None and metadata != current:
+                raise WatchError(f"issue {node_id} changed during pagination; refresh required")
+            metadata = current
+            for name in list(active):
+                connection = node[name]
+                nodes, info = connection["nodes"], connection["pageInfo"]
+                if not isinstance(nodes, list) or any(not n or not n.get(PARENT_CONNECTIONS[name]) for n in nodes):
+                    raise WatchError(f"issue {node_id}: incomplete {name}")
+                values = [n[PARENT_CONNECTIONS[name]] for n in nodes]
+                if len(set(connections[name] + values)) != len(connections[name]) + len(values):
+                    raise WatchError(f"issue {node_id}: duplicate {name} page")
+                connections[name].extend(values)
+                if info["hasNextPage"] is False:
+                    active.remove(name)
+                elif info["hasNextPage"] is True and info["endCursor"] and info["endCursor"] not in seen_cursors[name]:
+                    cursors[name] = info["endCursor"]
+                    seen_cursors[name].add(info["endCursor"])
+                else:
+                    raise WatchError(f"issue {node_id}: incomplete {name} pagination")
+        repository = metadata["repository"]["nameWithOwner"]
+        url = urlparse(metadata["url"])
+        prefix = f"/{repository}/issues/"
+        if (not url.netloc or url.scheme != "https" or not url.path.startswith(prefix)
+                or not url.path[len(prefix):].isdigit() or metadata["state"] not in ("OPEN", "CLOSED")):
+            raise WatchError(f"issue {node_id}: ambiguous repository identity or state")
+        if metadata["url"] in identities and identities[metadata["url"]] != node_id:
+            raise WatchError("conflicting issue identities")
+        identities[metadata["url"]] = node_id
+        if node_id == args.parent_id and repository.casefold() != args.repository.casefold():
+            raise WatchError("parent issue belongs to a different repository")
+        for name in ("blockedBy", "labels", "assignees"):
+            connections[name].sort()
+        records[node_id] = {**metadata, **connections}
+        pending.extend(connections["blockedBy"])
+        if node_id in scope:
+            expanded.add(node_id)
+            scope.update(connections["subIssues"])
+            pending.extend(connections["subIssues"])
+    # A dependency may have been fetched before becoming a discovered descendant.
+    frontier = [args.parent_id]
+    visited = set()
+    while frontier:
+        node_id = frontier.pop()
+        if node_id in visited:
+            raise WatchError("cyclic or duplicate sub-issue graph; refresh required")
+        visited.add(node_id)
+        if node_id not in records:
+            raise WatchError("descendant graph changed or is incomplete; refresh required")
+        if records[node_id]["repository"]["nameWithOwner"].casefold() != args.repository.casefold():
+            raise WatchError("cross-repository descendant scope requires explicit reconciliation")
+        frontier.extend(records[node_id]["subIssues"])
+    return {"records": records, "limits": limits}
+
+
 def fetch(
     args: argparse.Namespace, deadline: datetime | None = None, *, pr_only: bool = False
 ) -> dict[str, Any] | None:
-    """Return raw responses: all Project item pages plus one repository query.
+    """Return the complete scope graph plus watched repository records.
 
     `pr_only` fetches just watched PRs for a board-preserving snapshot.
     `rate` aggregates the cycle: summed cost, lowest remaining, latest reset.
     Returns None if the deadline arrives while waiting out the rate budget.
     """
     pages: list[dict[str, Any]] = []
+    parent = fetch_parent(args, deadline) if args.parent_id and not pr_only else None
+    if args.parent_id and not pr_only and parent is None:
+        return None
     after = ""
-    while not pr_only:
+    while not pr_only and not args.parent_id:
         variables = {"id": args.project_id, "status": args.status_field}
         if after:
             variables["after"] = after
@@ -157,25 +291,28 @@ def fetch(
     issues = [] if pr_only else args.issue
     if args.pr or issues:
         owner, _, name = args.repository.partition("/")
-        if pages and not await_budget(pages[-1]["rateLimit"], deadline):
+        prior_rate = parent["limits"][-1] if parent else pages[-1]["rateLimit"] if pages else None
+        if prior_rate and not await_budget(prior_rate, deadline):
             return None
         repo = graphql(
             repository_query(args.pr, issues), deadline, owner=owner, name=name
         )
         if repo.get("repository") is None:
             raise WatchError(f"repository {args.repository} not found")
-    limits = [r["rateLimit"] for r in (*pages, *([repo] if repo else []))]
+    limits = [*(parent["limits"] if parent else []),
+              *(r["rateLimit"] for r in (*pages, *([repo] if repo else [])))]
     rate = {
         "cost": sum(r["cost"] for r in limits),
         "remaining": min(r["remaining"] for r in limits),
         "resetAt": max((r["resetAt"] for r in limits), key=parse_time),
     }
-    return {"pages": pages, "repository": repo, "rate": rate}
+    return {"pages": pages, "repository": repo, "rate": rate,
+            "parent": parent["records"] if parent else {}}
 
 
 def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
     """Reduce raw responses to the fields whose change should wake the controller."""
-    items: dict[str, Any] = {}
+    items: dict[str, Any] = dict(responses.get("parent", {}))
     for data in responses["pages"]:
         for node in data["node"]["items"]["nodes"]:
             content = node.get("content") or {}
@@ -260,9 +397,11 @@ def report(payload: dict[str, Any]) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--project-id", required=True, help="Project node ID (PVT_...)")
+    scope = common.add_mutually_exclusive_group(required=True)
+    scope.add_argument("--project-id", help="Project node ID (PVT_...)")
+    scope.add_argument("--parent-id", help="Resolved parent issue node ID")
     common.add_argument("--repository", required=True, help="owner/name")
-    common.add_argument("--status-field", required=True)
+    common.add_argument("--status-field", default="Status")
     common.add_argument("--pr", type=int, action="append", default=[])
     common.add_argument("--issue", type=int, action="append", default=[])
     commands = parser.add_subparsers(dest="command", required=True)

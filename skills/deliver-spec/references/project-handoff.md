@@ -1,14 +1,15 @@
 # Project Controller Handoff
 
-Use this mode only for an active `run-github-project` controller's exclusively
+Use this mode only for an active `deliver-tasks` controller's (`run-github-project` GitHub entrypoint) exclusively
 claimed implementation ticket. A direct named-spec request cannot create this
 handoff or take over a Project claim.
 
 ## Procedure
 
-1. Verify the controller packet under the Project's
-   [ticket lifecycle](../../run-github-project/references/ticket-lifecycle.md):
-   source/plan identities and task graph, trusted binding, item and runner,
+1. Verify the controller's independently selected providers under
+   [Delivery bindings](provider-bindings.md), then verify its packet under the Project's
+   [ticket lifecycle](../../deliver-tasks/references/ticket-lifecycle.md):
+   source/plan identities and task graph, trusted bindings, item and runner,
    configuration and authority leases, fixed base, worktree/branch/PR head,
    review evidence, repair usage, agent capacity, active revision evidence folder
    and controller-retained preservation baseline. Reconcile live state on
@@ -43,7 +44,7 @@ handoff or take over a Project claim.
    the [fast path](fast-path.md) and return its escalation packet to the
    controller as soon as a condition fails.
 4. Before any push, satisfy the Project's
-   [review contracts](../../run-github-project/references/review-contracts.md).
+   [review contracts](../../deliver-tasks/references/review-contracts.md).
    Give the single independent reviewer the
    [delivery record](evidence-and-review.md) and all applicable contracts.
    Record coverage at the final clean head; run only missing or invalidated
@@ -52,10 +53,14 @@ handoff or take over a Project claim.
    invoked providers retain their actual scope, roles and capacity requirements.
    Report missing coverage rather than weakening a provider. Never waive final
    review.
-5. Reuse the supplied branch and verified PR. After review, push and reconcile
+5. Reuse the supplied branch and verified change request. After review, push and
+   reconcile
    the exact head; create one draft PR only for a nonempty integrated diff.
-   Use `Fixes #<ticket>` for `closing-keyword`, or a non-closing issue link for
-   `close-after-merge`. Apply [PR review timing](pr-review-timing.md) to start
+   Open/update through the code-host binding and link through the selected
+   provider pair. Use closing keywords only for verified native tracker closure
+   under `closing-keyword`; otherwise use a non-closing link for
+   `close-after-merge`. Verify the complete effective closing-reference set.
+   Apply [PR review timing](pr-review-timing.md) to start
    applicable external review while CI runs, preferring verified draft review and otherwise
    permitting earlier PR readiness. Verify that state separately from delivery
    `ready`, which requires all required checks, reviews and finding dispositions
@@ -78,7 +83,7 @@ handoff or take over a Project claim.
    `pending` names only remote or controller-owned gates; never return while a
    reviewer or helper you launched is still running. The controller alone
    claims, assigns, changes labels/Project Status, records
-   [ticket pauses](../../run-github-project/references/authority-and-pauses.md),
+   [ticket pauses](../../deliver-tasks/references/authority-and-pauses.md),
    manages capacity, merges, closes issues, and reconciles terminal state.
    Return missing grants and material decisions to that controller even when
    its invocation has merge permission.

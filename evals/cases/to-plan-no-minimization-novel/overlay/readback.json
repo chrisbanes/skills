@@ -1,0 +1,34 @@
+{
+  "binding": {
+    "tracker": "example",
+    "publisher": "runner",
+    "read_complete": true,
+    "operations": [
+      "read-markers",
+      "write-marker",
+      "supersede-marker"
+    ],
+    "minimization": false,
+    "predecessor_editing": false
+  },
+  "records": [
+    {
+      "url": "https://tracker.example.test/items/OPS-31/records/1",
+      "author": "runner",
+      "body": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 1\n**Supersedes:** none\n**Replan report:** none\n\n## Implementation plan\n\nPreserve receipt identity; verify parser tests at base aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.\n",
+      "revision": 1,
+      "supersedes": "none",
+      "hidden": false,
+      "digest": "de3f0ec43bb1c5828c7e38e9ec45ba8c1afa3998b1569fd4cb28b02552cb823c"
+    },
+    {
+      "url": "https://tracker.example.test/items/OPS-31/records/2",
+      "author": "runner",
+      "body": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n**Supersedes:** https://tracker.example.test/items/OPS-31/records/1\n**Replan report:** none\n\n## Implementation plan\n\nPreserve receipt identity; verify parser tests at base aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.\n",
+      "revision": 2,
+      "supersedes": "https://tracker.example.test/items/OPS-31/records/1",
+      "hidden": false,
+      "digest": "de3f0ec43bb1c5828c7e38e9ec45ba8c1afa3998b1569fd4cb28b02552cb823c"
+    }
+  ]
+}

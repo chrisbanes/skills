@@ -3,11 +3,12 @@
   "title": "Requalify changed heads without serializing external review and CI",
   "family": "workflow",
   "target_skills": [
-    "run-github-project"
+    "run-github-project", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project"
   ],
+  "allowed_skills": ["run-github-project", "deliver-tasks"],
   "task_mode": "edit",
   "kind": "novel",
   "fixture": "workflow",

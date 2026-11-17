@@ -1,0 +1,102 @@
+{
+  "decisions": {
+    "missing-option": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Status.Done",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "duplicate-option": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Status.Todo",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "duplicate-field": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Status",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "multi-label": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "role.ready-for-human",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "missing-label": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "role.needs-triage",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "unresolved-scope": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Scope",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "missing-scope": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Scope",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "multiple-scope": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Scope",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "unknown-scope": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Scope",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "conflicting-repository": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Repository",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "ambiguous-merge": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Merge Policy.Method",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "duplicate-role": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Work Roles",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "legacy-file": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "legacy-config",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "source-switch": {
+      "action": "stop-preserve",
+      "ambiguous_lookup": "binding-source",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    }
+  }
+}

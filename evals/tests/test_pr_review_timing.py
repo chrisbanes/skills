@@ -64,14 +64,14 @@ class PrReviewTimingTest(unittest.TestCase):
                 "SKILL.md", "references/evidence-and-review.md",
                 "references/project-handoff.md",
             ),
-            "run-github-project": (
+            "deliver-tasks": (
                 "references/ticket-lifecycle.md", "references/drain-scheduler.md",
             ),
             "shepherd": ("SKILL.md", "references/provider-commands.md"),
         }
         for case_id in CASES:
             case = corpus[case_id]
-            skill_name = case.target_skills[0]
+            skill_name = "deliver-tasks" if "run-github-project" in case.target_skills else case.target_skills[0]
             with self.subTest(skill=skill_name), tempfile.TemporaryDirectory() as directory:
                 workspace = prepare_workspace(
                     case, ROOT, Path(directory) / "fixture",

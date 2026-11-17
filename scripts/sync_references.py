@@ -6,9 +6,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COPIES = {
+    "references/github-binding.md": (
+        "skills/deliver-spec/references/github-binding.md",
+        "skills/deliver-tasks/references/github-binding.md",
+        "skills/run-github-project/references/github-binding.md",
+        "skills/to-plan/references/github-binding.md",
+    ),
     "references/pr-review-timing.md": tuple(
         f"skills/{skill}/references/pr-review-timing.md"
-        for skill in ("deliver-spec", "run-github-project", "shepherd")
+        for skill in ("deliver-spec", "deliver-tasks", "shepherd")
     ),
     "skills/to-plan/references/boundary-validation.md": tuple(
         f"skills/{skill}/references/boundary-validation.md"
@@ -17,20 +23,20 @@ COPIES = {
     "references/behavioral-review.md": tuple(
         f"skills/{skill}/references/behavioral-review.md"
         for skill in (
-            "deliver-spec", "implement-with-subagents", "run-github-project",
+            "deliver-spec", "implement-with-subagents", "deliver-tasks",
             "shepherd",
         )
     ),
     "references/subagent-selection.md": tuple(
         f"skills/{skill}/references/subagent-selection.md"
         for skill in (
-            "deliver-spec", "implement-with-subagents", "run-github-project",
+            "deliver-spec", "implement-with-subagents", "deliver-tasks",
             "gradle-run", "shepherd", "subagent-delegation",
         )
     ),
     "references/checkout-lifecycle.md": tuple(
         f"skills/{skill}/references/checkout-lifecycle.md"
-        for skill in ("deliver-spec", "implement-with-subagents", "run-github-project")
+        for skill in ("deliver-spec", "implement-with-subagents", "deliver-tasks")
     ),
 }
 

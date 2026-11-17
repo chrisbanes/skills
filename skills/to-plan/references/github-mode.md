@@ -1,12 +1,34 @@
-# GitHub Mode
+# Tracker Mode
 
-Read this reference after selecting GitHub mode and the
+Read this reference after selecting a tracker binding and the
 [shared workflow](workflow.md). That workflow owns baseline, discovery, draft,
-handoff, repair, and finish contracts.
+handoff, repair, and finish contracts. The historical `github-mode.md` path is
+retained for existing links; this marker and digest protocol is provider-independent.
+
+## Use the tracker binding
+
+1. Resolve the selected item's stable identity and authenticated publisher through
+   the trusted binding, including its explicit readiness gate and resolved role
+   mappings. Select the tracker independently of the code host; another provider
+   needs its own trusted operation contract. Missing or unknown readiness rules
+   block planning. For GitHub use
+   [planning marker operations](github-binding.md#planning-marker-operations).
+2. Use `read-markers` for complete history and exact decoded bodies, stable
+   permalinks, authors, revision metadata and any presentation state; use the
+   binding's source reads for the source packet and readiness refresh below.
+3. Use `write-marker` only within publication authority, then `read-markers` to
+   verify or reconcile its outcome. Use `supersede-marker` only after verifying
+   the successor. Presentation is best-effort; a binding may support neither
+   minimization nor predecessor editing. Revision/predecessor edges determine
+   the active leaf even when every predecessor remains visible.
+4. Block incomplete reads, missing identities or unsupported required operations.
+   Unsupported or failed presentation cannot invalidate an otherwise verified
+   chain. A changed semantic payload or digest still blocks handoff.
+   Return the verified marker permalink/digest and any presentation warning.
 
 ## Build the source packet
 
-Fetch live GitHub state and read:
+Fetch live tracker state through the binding's source reads and read:
 
 - The complete issue body and every comment.
 - Any linked specification or parent issue.
@@ -24,8 +46,8 @@ Treat acceptance criteria and recorded upstream decisions as authoritative.
 Compatible comments may clarify them. Block on unresolved conflicts between
 authoritative sources.
 
-Find all full-plan and integration-amendment marker comments, including
-minimized comments. When amendments exist or are requested, apply
+Use `read-markers` to find all full-plan and integration-amendment records,
+including hidden or minimized history. When amendments exist or are requested, apply
 [integration amendments](integration-amendments.md) as well: the full-plan leaf
 alone is not the effective contract. Full replans close the preceding amendment
 epoch with its exact effective tip/digest and retained-work disposition.
@@ -40,9 +62,13 @@ The full-plan markers are:
 Treat v1 as a revision-one root. For v2, parse the positive revision,
 `Supersedes` permalink or `none`, and `Replan report` permalink or `none`.
 Require one root, contiguous revisions, at most one child per revision, and one
-unminimized leaf. Verify that the active GitHub identity authored every marker
-comment and can create the next revision. A fork, gap, duplicate, missing
-predecessor, foreign marker, or minimized active leaf is a blocker.
+active leaf derived from revision/predecessor edges. Verify that the authenticated
+publisher authored every marker and can create the next revision. Verify exact
+bodies and payload digests throughout the chain, retaining verified legacy
+identities under the digest rule below.
+A fork, gap, duplicate, missing predecessor, foreign marker, digest mismatch, or
+a hidden active leaf reported by a binding with visibility controls is a blocker.
+Visible superseded predecessors are valid; visibility never chooses the leaf.
 
 For a claimed-plan integration amendment, use the retained-owner/controller
 request checks in that reference. For a full autonomous replan, accept only from
@@ -68,7 +94,10 @@ execution contract.
 
 Require all of the following:
 
-- The issue is open.
+- The selected tracker binding confirms current planning authority and non-parked
+  state under its readiness gate and resolved role mappings. Recheck that gate
+  before drafting, publishing and recovery; apply its stop/preservation rules
+  when authority is lost. A code-host binding supplies no tracker readiness.
 - Every blocker is complete and its required outcome exists in the baseline.
 - No open implementation PR exists, except the exact retained PR allowed by
   a verified autonomous replan or integration amendment request, or named by a
@@ -81,13 +110,13 @@ Return all readiness failures together and do not draft while any remain.
 
 ## Refresh before publishing
 
-Immediately before any GitHub write, refresh:
+Immediately before any tracker write, refresh through the binding:
 
 - Issue state, body, comments, blockers, and implementation PRs.
 - `HEAD` and the complete working-tree path inventory. Reinspect every entry
   whose earlier exclusion required reading its contents, even when its path and
   status are unchanged.
-- Plan markers, minimized state, revision edges, active-leaf permission, and any
+- Plan markers, available presentation state, revision edges, active-leaf permission, and any
   autonomous replan report.
 
 Reapply readiness and overlap checks. Retain baseline evidence only while
@@ -105,16 +134,19 @@ brief correction record instead of creating a new plan revision.
 
 ## Publish and verify
 
-Plan comments are the only GitHub state this skill may mutate. Never change the
-issue body, labels, assignee, relationships, Project fields, status, or any
-non-plan comment.
+Plan and handoff marker records are the only tracker state this skill may write
+through the binding. Keep source bodies, labels, assignment, relationships, board
+fields/status and unrelated records unchanged. Superseding permits only the
+binding's presentation operation on the authenticated predecessor; semantic
+payloads remain append-only.
 
 ### Payload digest
 
 Every full-plan and runner-marker payload digest uses this one form, so any
 agent and any tool reproduces it:
 
-1. Start from the comment's `body` string as decoded from the API JSON.
+1. Start from the marker's `body` string decoded by the binding, never rendered
+   HTML or command output. The binding preserves the exact decoded text.
 2. Replace each CRLF with LF.
 3. Find the first payload line: in a `to-plan:implementation-plan` comment,
    the first `## Implementation plan` or `## Fast path` line; otherwise the
@@ -151,22 +183,21 @@ If the active leaf already has the same payload and
 baseline, perform no write, delete only an exact matching temporary draft after
 verification, and return the leaf as a no-op. Otherwise:
 
-1. Create one v2 comment with revision one and `Supersedes: none`, or the active
+1. Use `write-marker` to create one v2 record with revision one and `Supersedes: none`, or the active
    revision plus one and its permalink. Include the verified replan-report
    permalink when applicable.
-2. Refetch marker comments and verify the new author, exact body, digest,
+2. Use `read-markers` and verify the new author, exact body, digest,
    revision, predecessor, report link, branch, SHA, and publication time. If
    creation times out, perform bounded reconciliation by exact revision and
    digest before retrying.
-3. Require one root, no fork or gap, and the new comment as the unique
-   unminimized leaf.
-4. Minimize the predecessor as `OUTDATED`. If unavailable, edit only that
-   runner-owned predecessor to add a superseded-by link and `<details>` opening
-   before its first payload line (`## Implementation plan` or `## Fast path`)
-   and a final `</details>` line, leaving the payload unchanged, then verify
-   its digest. Skip that edit when a record names the predecessor by a legacy
-   digest, which the edit would make unverifiable. Report failure or a skip of
-   both presentation methods without invalidating the verified new leaf.
+3. Require one root, no fork or gap, and the new record as the unique active leaf
+   derived from revision/predecessor edges.
+4. Use `supersede-marker` for best-effort predecessor presentation. Supply the
+   verified predecessor/successor identities and digests, including any pinned
+   legacy identity. Re-read changed records and verify unchanged payload/digest.
+   If unsupported, skipped or failed, report the warning and retain the verified
+   successor as active; leave predecessors intact. Never require minimization
+   or a presentation edit to establish lineage.
 5. Delete only the exact draft after the active leaf is verified.
 
 An amendment is a separate append-only component of one effective contract,

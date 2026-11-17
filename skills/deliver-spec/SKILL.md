@@ -1,6 +1,6 @@
 ---
 name: deliver-spec
-description: Use when explicitly asked to deliver an approved GitHub or local spec through a reviewed pull request, or when a Project controller delegates one claimed implementation ticket.
+description: Use when explicitly asked to deliver an approved tracker or local spec through a reviewed change request, or when a task controller delegates one claimed implementation ticket.
 compatibility: "Solo or delegated implementation uses the bundled procedure; triage is conditional. Never installs providers."
 ---
 
@@ -14,11 +14,12 @@ tightly coupled or sequential work directly by default. Delegate only when
 independent work, isolation or specialist investigation justifies the
 overhead; available worker capacity alone does not. Preserve explicit ownership,
 external-action permissions, execution budgets and invocation-specific merge
-authority. Never select work from a Project queue.
+authority. Never select work from a task queue.
 
 ## Select the mode
 
-For an active `run-github-project` controller's verified ticket handoff, read
+For an active `deliver-tasks` controller's verified ticket handoff (including
+the `run-github-project` entrypoint), read
 [Project controller handoff](references/project-handoff.md) and apply its
 procedure instead of the standalone approval, merge, and timeout rules below.
 The Project controller retains all shared state and merge authority.
@@ -27,16 +28,20 @@ Project run already owns that issue, return it to that controller.
 
 ## Procedure
 
-1. Resolve the named source, repository, approved contract, and any existing
-   branch or PR from fresh state. On resume, reconcile the PR, exact head,
+1. Select independent tracker and code-host bindings under
+   [Delivery bindings](references/provider-bindings.md), then resolve the named
+   source, repository, approved contract and existing branch or change request
+   from fresh state. On resume, reconcile the PR, exact head,
    checks, feedback, and authority before acting. For integration amendments,
    use [Evidence and review](references/evidence-and-review.md) to verify the
    installed planner contract and retained work before consuming any delta.
 2. Plan: reuse a current `to-plan` plan; otherwise invoke `to-plan`
    (conversation mode for a local source) and honor its readiness and
    publication gates. A source qualifying for the [fast path](references/fast-path.md)
-   applies it instead. For a GitHub issue missing `ready-for-agent`, first use
-   `triage` and wait for its approved outcome; do not change labels yourself.
+   applies it instead. For a tracker item, verify its binding-defined readiness
+   gate; on GitHub,
+   a missing `ready-for-agent` requires `triage` and its approved outcome.
+   Do not grant readiness yourself.
    Local sources skip triage but need explicit stakeholder approval. For an
    approved local source with no plan that does not qualify for the fast path,
    name conversation-mode `to-plan` as the initial route, including when
@@ -81,27 +86,32 @@ Project run already owns that issue, return it to that controller.
    be bounded or an explicit requirement demands it. Confirm combined coverage
    of the final clean head before pushing. If finished, verified work leaves
    the final diff empty, report `no-change`; a starting empty diff is not
-   `no-change`. Otherwise create one draft PR, or reuse the existing PR, and
-   verify its head is the reviewed head. Apply
+   `no-change`. Otherwise open or update one draft change request through the
+   code-host binding and verify its head is the reviewed head. Apply
    [PR review timing](references/pr-review-timing.md): start applicable external review
    while CI runs, using verified draft support or earlier PR readiness when
-   permitted. Keep delivery `pending` until all final-head gates pass. Use
-   closing links only for verified GitHub issues.
-6. `shepherd` owns CI, feedback and every PR operation. Keep repairs with their
+   permitted. Keep delivery `pending` until all final-head gates pass. Link and
+   verify the tracker item and closure intent under Delivery bindings;
+   closing keywords require verified native closure for the selected provider pair.
+6. `shepherd` coordinates CI, feedback and change-request operations through
+   the selected code-host binding. Keep repairs with their
    implementation owner; renew affected checks and focused review at the
    repaired head before pushing. Routine implementation or fixture corrections preserving
    requirements, coverage, architecture and authority proceed under the existing
    approval; record them briefly. Material changes require the appropriate
    decision and replan before affected work continues. Weakened qualification
    or expanded permissions are material. Merge only with explicit authority
-   valid for this invocation. After about 30 minutes of pending gates, hand back
+   valid for this invocation. Verify merge through the code-host binding, then
+   reconcile native closure or perform the authorized tracker close under
+   Delivery bindings. After about 30 minutes of pending gates, hand back
    the exact pending checks, feedback, PR and head for later resume.
 
 ## Finish gate
 
 Report `ready` only when the final head passes required checks and reviews
 with findings resolved and evidence applicable to that clean head;
-`merged` only after authorized merge readback;
+`merged` only after authorized merge readback, reporting tracker closure
+separately and never declaring a ticket complete before verified closure;
 `no-change` only when implementation and verification finish with an empty
 final diff; `pending` with exact outstanding gates; otherwise `blocked` with the
 needed decision or capability. Preserve the PR and source pointers on pending

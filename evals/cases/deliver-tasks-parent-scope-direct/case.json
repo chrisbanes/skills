@@ -1,0 +1,43 @@
+{
+  "id": "deliver-tasks-parent-scope-direct",
+  "title": "Resolve deliver #50 without a Project or config",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-tasks"
+  ],
+  "expected_skills": [
+    "deliver-tasks"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-parent-scope-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "parent-contract",
+      "text": "Resolve deliver #50 without a Project or config; retain item-specific authority, complete graph reads, stop preservation and verified closed readback."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "staged_skill_files": [
+    "run-github-project/scripts/watch_project.py"
+  ],
+  "calibration": true
+}

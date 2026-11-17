@@ -3,7 +3,7 @@ or agents, or edit files.
 
 A `drain` is waiting on its project watcher with #41 awaiting human input. The
 watcher exits with a one-line `changed` report naming Project item `PVTI_lADO57`
-(the item for issue #57) with field `status`: the item moved from Backlog to Todo. Nothing else changed. No
+(the item for issue #57) with field `labels`: a human added ready-for-agent to the Todo item. Nothing else changed. No
 agent is working and no refresh has happened since the watcher began.
 
 Describe the controller's next actions in order, what the report may and may

@@ -3,11 +3,12 @@
   "title": "Rebuild waiting claims after restart and route failures",
   "family": "workflow",
   "target_skills": [
-    "run-github-project"
+    "run-github-project", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project"
   ],
+  "allowed_skills": ["run-github-project", "deliver-tasks"],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow",

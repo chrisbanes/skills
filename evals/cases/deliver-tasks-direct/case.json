@@ -1,0 +1,46 @@
+{
+  "id": "deliver-tasks-direct",
+  "title": "Scope planning and implementation retain controller ownership",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-tasks"
+  ],
+  "expected_skills": [
+    "deliver-tasks"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "ownership",
+      "text": "Keeps assignment, shared tracker writes and merging in the controller; review makes no mutations."
+    },
+    {
+      "id": "delivery",
+      "text": "Plans Todo without a plan and implements Todo with a verified usable active plan only after fresh operation-specific checks; missing merge authority pauses only merging."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "staged_skill_files": [
+    "run-github-project/scripts/watch_project.py"
+  ]
+}

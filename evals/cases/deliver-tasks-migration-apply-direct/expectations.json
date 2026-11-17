@@ -1,0 +1,31 @@
+{
+  "decisions": {
+    "apply": {
+      "action": "configuration-ready-to-commit",
+      "journal_before_first_write": true,
+      "journal_has_original_bytes": true,
+      "journal_has_original_status_ids": true,
+      "journal_has_approval_and_plan": true,
+      "moves_verified": [
+        "I1",
+        "I2",
+        "I3",
+        "I4"
+      ],
+      "label_changes": [],
+      "config_and_references_verified": true,
+      "delete_options": false,
+      "implicit_commit": false,
+      "start_execution": false
+    },
+    "changed-before-apply": {
+      "action": "migration-awaiting-approval",
+      "renew_approval": true,
+      "writes": 0
+    },
+    "journal-failed": {
+      "action": "migration-blocked",
+      "mutation_writes": 0
+    }
+  }
+}

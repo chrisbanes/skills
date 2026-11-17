@@ -1,0 +1,43 @@
+{
+  "id": "deliver-tasks-default-binding-direct",
+  "title": "Project invocation resolves fresh defaults without a configuration file",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-tasks"
+  ],
+  "expected_skills": [
+    "deliver-tasks"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-default-binding-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "defaults",
+      "text": "Resolves Project scope, git repository and live repository defaults, fresh unique columns/labels and runtime fingerprint without creating files or granting authority. Recovery compares the preserved runtime snapshot; no phantom committed digest is required."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "staged_skill_files": [
+    "run-github-project/scripts/watch_project.py"
+  ],
+  "calibration": true
+}

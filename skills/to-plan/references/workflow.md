@@ -3,10 +3,11 @@
 ## Establish context and baseline
 
 Read repository instructions. Resolve checkout root, branch, `HEAD`, and
-normalized GitHub remotes without exposing credentials. Verify a selected issue
-belongs to this checkout or GitHub-verified fork; use the current checkout and
-authorized title for conversation mode. Use `.scratch/to-plan/<issue-number>.md`
-in GitHub mode; conversation paths are defined by its mode contract.
+normalized repository remotes without exposing credentials. Verify a selected issue
+belongs to this checkout or a binding-verified fork; use the current checkout and
+authorized title for conversation mode. Use `.scratch/to-plan/<item-id>.md`
+in tracker mode (the issue number for GitHub; use a binding-resolved safe local
+identifier for another tracker); conversation paths are defined by its mode contract.
 
 Inventory tracked and untracked changes. Exclude only paths that cannot affect
 planned behavior, files, symbols, seams, contracts, or validation; inspect
@@ -17,7 +18,7 @@ stash, reset, clean, delete, or commit user work. The baseline is committed
 
 ## Validate and discover
 
-For GitHub, enforce its source-packet and readiness contract. For conversation,
+For a tracker, enforce its source-packet and readiness contract. For conversation,
 require the source plus repository-supported details to establish goal, success
 criteria, scope, constraints, decisions, and trade-offs. Every criterion maps
 to automated or precise manual verification; stop on identity or readiness
@@ -101,7 +102,7 @@ conversation source authorizes the smallest coherent contract-realizing design.
 Record non-obvious choices and evidence. Escalate only conflicting authority,
 material user-visible outcome/scope/acceptance choices, security/privacy/
 permission policy, or unsupported compatibility, irreversible migration, or
-credible data-loss risks. Complete discovery first. In normal GitHub mode ask
+credible data-loss risks. Complete discovery first. In normal tracker mode ask
 one recommended question and require it in issue/specification/ADR; in
 conversation reconfirm a compact summary; in `--auto` return all human-required
 blockers together. Do not reject or split a ready source merely because it is
@@ -209,16 +210,16 @@ above unchanged.
 
 Write the selected draft. Preserve compatible user edits, refresh code facts,
 and stop on conflict; never replace a whole existing draft merely on rerun. In
-normal GitHub mode return path, summary, and substantive active-plan changes and
-wait for publication approval; in `--auto` revalidate and continue. The GitHub
+normal tracker mode return path, summary, and substantive active-plan changes and
+wait for publication approval; in `--auto` revalidate and continue. The tracker
 mode contract owns refresh and publishing.
 
-After GitHub publication, return issue URL, plan permalink, baseline, validation
+After tracker publication, return issue URL, plan permalink, baseline, validation
 evidence, publication mode, revision, predecessor, presentation result, and
-whether the active comment was created or reused, ending:
+whether the active marker was created or reused, ending:
 
 ```text
-Implement <issue URL> using the approved implementation plan at <comment permalink>.
+Implement <issue URL> using the approved implementation plan at <marker permalink>.
 ```
 
 For an existing amendment chain or a changed published integration decision

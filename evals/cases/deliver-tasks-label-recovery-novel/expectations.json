@@ -1,0 +1,20 @@
+{
+  "decisions": {
+    "absent-111": {
+      "resume": false,
+      "restore_label": false,
+      "retain_artifacts": true
+    },
+    "restored-111": {
+      "action": "resume"
+    },
+    "triage-112": {
+      "controller_adds_agent_label": false,
+      "next_actor": "human"
+    },
+    "abandoned-113": {
+      "final_status": "Todo",
+      "final_role": "ready-for-human"
+    }
+  }
+}

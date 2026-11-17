@@ -3,11 +3,12 @@
   "title": "Treat a board-change wake as a hint and refresh before claiming",
   "family": "workflow",
   "target_skills": [
-    "run-github-project"
+    "run-github-project", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project"
   ],
+  "allowed_skills": ["run-github-project", "deliver-tasks"],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow",
@@ -26,7 +27,7 @@
   "rubric": [
     {
       "id": "changed-report",
-      "text": "Treats the watcher's changed report naming a Backlog-to-Todo item as a hint to refresh, not as evidence that #57 is ready or claimable."
+      "text": "Treats the watcher's changed report naming a Todo item whose human added ready-for-agent as a hint to refresh, not as evidence that #57 is ready or claimable."
     },
     {
       "id": "refresh-gate",

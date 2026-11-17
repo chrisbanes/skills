@@ -1,0 +1,21 @@
+{
+  "decisions": {
+    "waiting-81": {
+      "status": "Todo",
+      "retain_assignment": true,
+      "release_planner": true,
+      "implementation_slot": false
+    },
+    "slot-freed-81": {
+      "action": "claim",
+      "status": "In progress",
+      "refetch_lease": true
+    },
+    "invalid-82": {
+      "action": "block"
+    },
+    "wayfinder-83": {
+      "action": "wayfind"
+    }
+  }
+}

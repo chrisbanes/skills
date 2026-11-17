@@ -96,7 +96,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     case, REPO_ROOT, Path(directory) / "fixture",
                     enabled_skills=case.target_skills,
                 )
-                skill = workspace / ".agents/skills" / case.target_skills[0]
+                skill_name = "deliver-tasks" if "run-github-project" in case.target_skills else case.target_skills[0]
+                skill = workspace / ".agents/skills" / skill_name
                 for caller, reference, canonical in resources:
                     source = skill / caller
                     links = re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8"))
@@ -181,7 +182,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         consumers = {
             "deliver-spec": "references/implementation-mode.md",
             "implement-with-subagents": "references/implementation-mode.md",
-            "run-github-project": "references/ticket-lifecycle.md",
+            "deliver-tasks": "references/ticket-lifecycle.md",
             "gradle-run": "SKILL.md",
             "shepherd": "SKILL.md",
             "subagent-delegation": "SKILL.md",
@@ -231,22 +232,22 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             self.assertIn("## Runtime requirements", procedure.read_text(encoding="utf-8"))
 
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
-        entrypoint = (REPO_ROOT / "skills/run-github-project/SKILL.md").read_text(
+        entrypoint = (REPO_ROOT / "skills/deliver-tasks/SKILL.md").read_text(
             encoding="utf-8"
         )
         controller = (
-            REPO_ROOT / "skills/run-github-project/references/execution-controller.md"
+            REPO_ROOT / "skills/deliver-tasks/references/execution-controller.md"
         ).read_text(encoding="utf-8")
         setup = (
-            REPO_ROOT / "skills/run-github-project/references/review-and-setup.md"
+            REPO_ROOT / "skills/deliver-tasks/references/github-binding.md"
         ).read_text(encoding="utf-8")
         self.assertIn(
             "`next` or `drain` | [Review and setup](references/review-and-setup.md) for binding validation",
             entrypoint,
         )
-        self.assertIn("validate the binding through the setup", controller)
-        self.assertIn("committed digest", setup)
-        self.assertIn("If any value is missing,", setup)
+        self.assertIn("github-binding.md#binding-validation", controller)
+        self.assertIn("#effective-binding-fingerprint", setup)
+        self.assertIn("Missing, ambiguous, unknown or drifted state", setup)
         self.assertIn("references/drain-scheduler.md", entrypoint)
         self.assertIn("references/review-contracts.md", entrypoint)
         normalized = " ".join(entrypoint.split())
@@ -279,19 +280,38 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertNotIn("git reset --hard", guidance)
         self.assertNotIn("invoke the installed `implement` skill", guidance)
 
-    def test_has_skill_triads_and_workflow_calibration_coverage_without_routing(self):
+    def test_has_skill_triads_and_workflow_calibration_and_routing_coverage(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
 
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
-        self.assertEqual(47, len(benchmark))
-        self.assertEqual(137, len(calibration))
+        self.assertEqual(51, len(benchmark))
+        self.assertEqual(158, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
-        self.assertEqual(47, len(filter_cases(report.cases, case_ids=None, skills=None)))
-        self.assertFalse(any(case.kind == "routing" for case in report.cases))
+        self.assertEqual(51, len(filter_cases(report.cases, case_ids=None, skills=None)))
+        self.assertEqual(["router-single-item-deliver-spec"], [case.id for case in report.cases if case.kind == "routing"])
         self.assertEqual(
             {
+                "deliver-tasks-migration-dry-run-direct",
+                "deliver-tasks-migration-apply-direct",
+                "deliver-tasks-migration-decline-negative",
+                "deliver-tasks-migration-partial-failure-novel",
+                "deliver-tasks-parent-scope-direct",
+                "deliver-tasks-parent-lifecycle-novel",
+                "deliver-tasks-parent-restraint-negative",
+                "deliver-tasks-default-binding-direct",
+                "deliver-tasks-binding-override-novel",
+                "deliver-tasks-binding-ambiguity-negative",
+                "deliver-tasks-neutral-direct",
+                "deliver-tasks-claim-marker-novel",
+                "deliver-tasks-parked-negative",
+                "deliver-tasks-derived-handoff-novel",
+                "deliver-tasks-label-stop-direct",
+                "deliver-tasks-label-recovery-novel",
+                "deliver-spec-provider-closure-direct",
+                "deliver-spec-provider-closure-novel",
+                "deliver-spec-provider-closure-negative",
                 "grounded-writing-response-draft-novel",
                 "grounded-writing-short-reply-direct",
                 "grounded-writing-email-novel",
@@ -415,6 +435,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "deliver-spec-nested-reviewer-direct",
                 "deliver-spec-nested-helpers-novel",
                 "run-github-project-background-owners-negative",
+                "to-plan-no-minimization-novel",
+                "to-plan-tracker-readiness-novel",
                 "to-plan-payload-digest-direct",
                 "run-github-project-payload-digest-novel",
                 "to-plan-payload-digest-restraint-negative",
@@ -534,7 +556,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         for skill in WORKFLOWS_WRITING_SKILLS:
             kinds = {case.kind for case in benchmark if skill in case.target_skills}
             with self.subTest(skill=skill):
-                self.assertEqual({"direct", "novel", "negative"}, kinds)
+                self.assertEqual({"direct", "novel", "negative", "routing"} if skill == "deliver-spec" else {"direct", "novel", "negative"}, kinds)
 
         self.assertEqual(
             {
@@ -640,6 +662,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "deliver-spec",
             "implement-with-subagents",
             "run-github-project",
+            "deliver-tasks",
             "shepherd",
         )
         # The Project controller chain invokes these through Claude Code's Skill tool.
@@ -726,6 +749,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "run-github-project-preparation-direct",
                 "deliver-spec-behavioral-dependency-novel",
                 "run-github-project-shared-seam-negative",
+                "to-plan-no-minimization-novel",
+                "to-plan-tracker-readiness-novel",
                 "to-plan-payload-digest-direct",
                 "run-github-project-payload-digest-novel",
                 "to-plan-payload-digest-restraint-negative",

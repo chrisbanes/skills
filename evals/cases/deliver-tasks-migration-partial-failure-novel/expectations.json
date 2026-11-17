@@ -1,0 +1,36 @@
+{
+  "decisions": {
+    "partial": {
+      "action": "migration-blocked",
+      "verified": [
+        "I1",
+        "I2"
+      ],
+      "retry_I2": false,
+      "I3": "unknown",
+      "retry_I3": false,
+      "config_writes": 0,
+      "preserve_journal": true
+    },
+    "retry-original": {
+      "I3": "retry-with-fresh-preconditions",
+      "write_intent_first": true,
+      "readback_required": true
+    },
+    "rollback": {
+      "I1": "preserve-concurrent-change",
+      "I2": "restore-B-with-readback",
+      "I3": "already-original-no-op",
+      "config": "restore-legacy-remove-unchanged-destination",
+      "AGENTS.md": "restore-original-with-readback",
+      "CLAUDE.md": "preserve-and-propose-inverse-patch",
+      "journal_inverse_operations": true,
+      "delete_options": false
+    },
+    "missing-option": {
+      "I2": "rollback-conflict",
+      "create_option": false,
+      "delete_options": false
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "decisions": {
+    "pause-71": {
+      "action": "reconcile",
+      "release_capacity": false,
+      "preserve_artifacts": true
+    },
+    "independent-72": {
+      "action": "continue"
+    }
+  }
+}

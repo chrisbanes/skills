@@ -133,6 +133,28 @@ def repository(*, prs=None, issues=None, rate=None):
     return {"data": {"rateLimit": rate or DEFAULT_RATE, "repository": records}}
 
 
+def parent_page(node_id, *, children=(), blockers=(), state="OPEN", cursors=None,
+                repository_name="acme/repo"):
+    cursors = cursors or {}
+    connections = {"subIssues": [{"id": x} for x in children],
+                   "blockedBy": [{"id": x} for x in blockers],
+                   "labels": [{"name": "ready-for-agent"}],
+                   "assignees": []}
+    return {"data": {"rateLimit": DEFAULT_RATE, "node0": {
+        "id": node_id, "url": f"https://github.com/{repository_name}/issues/{int.from_bytes(node_id.encode(), 'big')}",
+        "repository": {"nameWithOwner": repository_name}, "state": state,
+        "updatedAt": "2026-11-17T00:00:00Z", "parent": None,
+        "comments": {"nodes": []},
+        **{name: {"nodes": nodes, "pageInfo": {
+            "hasNextPage": name in cursors, "endCursor": cursors.get(name)}}
+           for name, nodes in connections.items()}}}}
+
+
+def parent_batch(*pages):
+    return {"data": {"rateLimit": DEFAULT_RATE,
+                     **{f"node{i}": page["data"]["node0"] for i, page in enumerate(pages)}}}
+
+
 def iso(delta_seconds):
     moment = datetime.now(timezone.utc) + timedelta(seconds=delta_seconds)
     return moment.isoformat()
@@ -342,6 +364,17 @@ class WatchProjectTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 1)
         self.assertEqual(json.loads(result.stdout)["status"], "error")
+
+    def test_agent_label_removal_and_human_restoration_are_wake_signals(self):
+        for before, after in ((["ready-for-agent"], []), ([], ["ready-for-agent"])):
+            with self.subTest(before=before, after=after):
+                _, baseline = self.snapshot([page([item("I1", "In progress",
+                    assignees=["chris"], labels=before)])])
+                result, report = self.wait(baseline, [page([item("I1", "In progress",
+                    assignees=["chris"], labels=after)])])
+                self.assertEqual(0, result.returncode)
+                self.assertEqual({"status": "changed", "changes": [
+                    {"kind": "item", "key": "I1", "fields": ["labels"]}]}, report)
 
     def test_status_change_reports_changed_item_and_field(self):
         _, baseline = self.snapshot([page([item("I1", "Backlog")])])
@@ -678,6 +711,169 @@ class WatchProjectTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertEqual(report["status"], "error")
                 self.assertEqual(self.calls["calls"], 0)
+
+    def test_parent_scope_reads_descendants_without_a_project(self):
+        responses = [parent_page("ROOT", children=["CHILD"]), parent_page("CHILD")]
+        result = self.run_script(["snapshot", "--parent-id", "ROOT",
+                                  "--repository", "acme/repo"], responses)
+        self.assertEqual(0, result.returncode, result.stdout)
+        snapshot = json.loads(result.stdout)
+        self.assertEqual(["CHILD", "ROOT"], sorted(snapshot["item"]))
+        self.assertEqual(["CHILD"], snapshot["item"]["ROOT"]["subIssues"])
+        self.assertEqual([], snapshot["item"]["CHILD"]["blockedBy"])
+        for argv in self.calls["argv"]:
+            self.assertNotIn("ProjectV2", " ".join(argv))
+            self.assertNotIn("mutation", " ".join(argv))
+
+    def parent_snapshot(self, responses):
+        return self.run_script(["snapshot", "--parent-id", "ROOT",
+                                "--repository", "acme/repo"], responses)
+
+    def test_parent_scope_paginates_graph_and_wakes_on_order_and_dependency_changes(self):
+        first = parent_page("ROOT", children=["A"], cursors={"subIssues": "C1"})
+        second = parent_page("ROOT", children=["B"])
+        responses = [first, second, parent_batch(parent_page("A", blockers=["DEP"]),
+                                  parent_page("B")), parent_page("DEP", repository_name="other/repo")]
+        before = self.parent_snapshot(responses)
+        self.assertEqual(0, before.returncode, before.stdout)
+        self.assertIn("subIssues=C1", self.calls["argv"][1])
+        baseline = self.root / "parent.json"
+        baseline.write_text(before.stdout)
+        changed = [parent_page("ROOT", children=["B", "A"]), parent_batch(parent_page("B"),
+                                parent_page("A", blockers=["DEP"])),
+                   parent_page("DEP", state="CLOSED", repository_name="other/repo")]
+        result = self.run_script(["wait", "--parent-id", "ROOT", "--repository", "acme/repo",
+                                  "--baseline", str(baseline), "--deadline", iso(60)], changed)
+        self.assertEqual(0, result.returncode, result.stdout)
+        self.assertEqual({"status": "changed", "changes": [
+            {"kind": "item", "key": "DEP", "fields": ["state"]},
+            {"kind": "item", "key": "ROOT", "fields": ["subIssues"]}]}, json.loads(result.stdout))
+
+    def test_parent_scope_rejects_partial_connections_and_ambiguous_identity(self):
+        for connection in ("subIssues", "blockedBy", "labels", "assignees"):
+            bad = parent_page("ROOT")
+            del bad["data"]["node0"][connection]["pageInfo"]
+            with self.subTest(connection=connection):
+                result = self.parent_snapshot([bad])
+                self.assertEqual(1, result.returncode)
+                self.assertEqual("error", json.loads(result.stdout)["status"])
+        for responses in (
+            [{"data": {"rateLimit": DEFAULT_RATE, "node0": None}}],
+            [parent_page("ROOT", repository_name="other/repo")],
+            [parent_page("ROOT", children=["A"]), parent_page("A", repository_name="other/repo")],
+            [parent_page("ROOT", cursors={"blockedBy": "C"}),
+             parent_page("ROOT", cursors={"blockedBy": "C"})],
+        ):
+            with self.subTest(responses=responses):
+                result = self.parent_snapshot(responses)
+                self.assertEqual(1, result.returncode, result.stdout)
+                self.assertEqual("error", json.loads(result.stdout)["status"])
+
+    def test_parent_scope_paginates_labels_assignees_and_dependencies(self):
+        first = parent_page("ROOT", blockers=["D1"], cursors={
+            "blockedBy": "D", "labels": "L", "assignees": "A"})
+        second = parent_page("ROOT", blockers=["D2"])
+        first["data"]["node0"]["assignees"]["nodes"] = [{"login": "chris"}]
+        second["data"]["node0"]["labels"]["nodes"] = [{"name": "agent:in-progress"}]
+        result = self.parent_snapshot([first, second, parent_batch(parent_page("D1"), parent_page("D2"))])
+        self.assertEqual(0, result.returncode, result.stdout)
+        root = json.loads(result.stdout)["item"]["ROOT"]
+        self.assertEqual(["D1", "D2"], root["blockedBy"])
+        self.assertEqual(["agent:in-progress", "ready-for-agent"], root["labels"])
+        self.assertEqual(["chris"], root["assignees"])
+
+    def test_parent_scope_detects_membership_replacement_and_authority_changes(self):
+        for before, after, expected in (
+            (parent_page("ROOT", children=["A"]), parent_page("ROOT", children=["B"]), "subIssues"),
+            (parent_page("ROOT", blockers=["A"]), parent_page("ROOT", blockers=["B"]), "blockedBy"),
+            (parent_page("ROOT"), parent_page("ROOT"), "labels"),
+        ):
+            if expected == "labels":
+                after["data"]["node0"]["labels"]["nodes"] = []
+            initial = self.parent_snapshot([before, parent_page("A")])
+            self.assertEqual(0, initial.returncode, initial.stdout)
+            baseline = self.root / "parent-change.json"
+            baseline.write_text(initial.stdout)
+            result = self.run_script(["wait", "--parent-id", "ROOT", "--repository", "acme/repo",
+                                      "--baseline", str(baseline), "--deadline", iso(60)],
+                                     [after, parent_page("B")])
+            self.assertEqual(0, result.returncode, result.stdout)
+            self.assertIn({"kind": "item", "key": "ROOT", "fields": [expected]},
+                          json.loads(result.stdout)["changes"])
+
+    def test_parent_scope_reads_through_closed_intermediates_and_shared_dependencies(self):
+        responses = [parent_page("ROOT", children=["A"], blockers=["B"]),
+                     parent_batch(parent_page("B", children=["C"]),
+                                  parent_page("A", state="CLOSED", children=["B"])), parent_page("C")]
+        result = self.parent_snapshot(responses)
+        self.assertEqual(0, result.returncode, result.stdout)
+        self.assertEqual(["A", "B", "C", "ROOT"], sorted(json.loads(result.stdout)["item"]))
+
+    def test_parent_scope_rejects_subissue_cycles_and_duplicate_parent_edges(self):
+        for responses in (
+            [parent_page("ROOT", children=["A"]), parent_page("A", children=["ROOT"])],
+            [parent_page("ROOT", children=["A", "B"]),
+             parent_batch(parent_page("A", children=["B"]), parent_page("B"))],
+        ):
+            result = self.parent_snapshot(responses)
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertEqual("error", json.loads(result.stdout)["status"])
+
+    def test_parent_scope_rejects_missing_readback_and_changed_pagination(self):
+        for field in ("comments", "parent", "updatedAt"):
+            bad = parent_page("ROOT")
+            del bad["data"]["node0"][field]
+            result = self.parent_snapshot([bad])
+            self.assertEqual(1, result.returncode, (field, result.stdout))
+        first = parent_page("ROOT", children=["A"], cursors={"subIssues": "C"})
+        second = parent_page("ROOT", children=["B"])
+        second["data"]["node0"]["updatedAt"] = "2026-11-18T00:00:00Z"
+        result = self.parent_snapshot([first, second])
+        self.assertEqual(1, result.returncode)
+        self.assertEqual("error", json.loads(result.stdout)["status"])
+
+    def test_parent_scope_batches_wide_graph(self):
+        children = [f"CHILD{i}" for i in range(100)]
+        responses = [parent_page("ROOT", children=children)]
+        responses.extend(parent_batch(*(parent_page(child) for child in children[i:i + 20]))
+                         for i in range(0, len(children), 20))
+        result = self.parent_snapshot(responses)
+        self.assertEqual(0, result.returncode, result.stdout)
+        self.assertEqual(101, len(json.loads(result.stdout)["item"]))
+        self.assertEqual(6, self.calls["calls"])
+        for argv in self.calls["argv"]:
+            query = next(value for value in argv if value.startswith("query="))
+            self.assertLessEqual(query.count(": node(id:"), 20)
+
+    def test_parent_scope_batch_preserves_individual_pagination(self):
+        result = self.parent_snapshot([
+            parent_page("ROOT", children=["A", "B"]),
+            parent_batch(parent_page("A", children=["C"], cursors={"subIssues": "NEXT"}),
+                         parent_page("B")),
+            parent_page("A", children=["D"]),
+            parent_batch(parent_page("C"), parent_page("D")),
+        ])
+        self.assertEqual(0, result.returncode, result.stdout)
+        self.assertEqual(["C", "D"], json.loads(result.stdout)["item"]["A"]["subIssues"])
+        self.assertIn("subIssues=NEXT", self.calls["argv"][2])
+        self.assertEqual(4, self.calls["calls"])
+
+    def test_parent_scope_checks_budget_after_batch(self):
+        batch = parent_batch(parent_page("A", children=["C"]), parent_page("B"))
+        batch["data"]["rateLimit"] = {"cost": 20, "remaining": 0, "resetAt": iso(3600)}
+        result = self.parent_snapshot([
+            parent_page("ROOT", children=["A", "B"]), batch, parent_page("C"),
+        ])
+        self.assertEqual(1, result.returncode)
+        self.assertIn("rate limit exhausted", json.loads(result.stdout)["message"])
+        self.assertEqual(2, self.calls["calls"])
+
+    def test_parent_scope_rejects_missing_batch_member(self):
+        result = self.parent_snapshot([
+            parent_page("ROOT", children=["A", "B"]), parent_page("A"),
+        ])
+        self.assertEqual(1, result.returncode)
+        self.assertIn("issue B missing", json.loads(result.stdout)["message"])
 
     def test_queries_are_read_only(self):
         self.snapshot([page([]), repository()], "--pr", "7")

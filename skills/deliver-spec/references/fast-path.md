@@ -8,8 +8,9 @@ contract. It skips `to-plan`, not validation, independent review or authority.
 Qualify only when every condition holds; otherwise use the full path. When in
 doubt, use the full path.
 
-1. The source is a verified `ready-for-agent` GitHub issue, or an approved local
-   source, whose acceptance criteria are concrete and testable as written, and
+1. The source is a verified tracker item passing its binding-defined readiness
+   gate, or an approved local source, whose acceptance criteria are concrete
+   and testable as written, and
    every blocker is complete with its required outcome in the baseline.
 2. The fix location is known from the source or bounded inspection. The root
    cause is not unknown, flaky, intermittent or still under investigation.
@@ -34,7 +35,7 @@ recompute it; a change is a failed condition.
 
 1. Treat the source as the approved contract. Do not invoke `to-plan` or wait
    for plan publication approval. Standalone, the explicit request and the
-   `ready-for-agent` label approve it; a local source still needs explicit
+   tracker readiness gate approve it; a local source still needs explicit
    stakeholder approval.
 2. Implement solo under the [implementation procedure](implementation-mode.md),
    with affected checks, self-review and the single independent final review
@@ -52,5 +53,5 @@ commits, PR and evidence, and record which condition failed and why.
   `to-plan` with the retained work as evidence and honor its gates before
   continuing.
 - Project: return a replan packet to the controller under its
-  [replan packet contract](../../run-github-project/references/todo-lane.md#replan-packet-contract),
+  [replan packet contract](../../deliver-tasks/references/todo-lane.md#replan-packet-contract),
   citing the fast-path plan revision as the active plan.

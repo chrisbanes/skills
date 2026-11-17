@@ -51,6 +51,8 @@ only when its independent behavior changes the same work.
 | Unreleased changelog maintenance or specified-release notes | [`changelog`](../changelog/SKILL.md) |
 | Kotlin library release preparation, publication, or readiness | [`release-kotlin-library`](../release-kotlin-library/SKILL.md) |
 | One ready GitHub issue or in-chat task needs repository-aware planning | [`to-plan`](../to-plan/SKILL.md) |
+| Explicit delivery of one named approved issue or in-chat spec | [`deliver-spec`](../deliver-spec/SKILL.md) |
+| Explicit triage, planning or delivery across a scope of tasks, including human pauses | [`deliver-tasks`](../deliver-tasks/SKILL.md); for a GitHub Project invocation use [`run-github-project`](../run-github-project/SKILL.md) |
 | Polling PRs/MRs, review comments, CI failures, or routine follow-up | [`shepherd`](../shepherd/SKILL.md) |
 
 ## Combination boundaries

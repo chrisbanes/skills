@@ -1,0 +1,64 @@
+{
+  "decisions": {
+    "mixed-open": {
+      "tracker": "jira",
+      "code_host": "github",
+      "change_action": "open_draft",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "link",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "mixed-update": {
+      "tracker": "jira",
+      "code_host": "github",
+      "change_action": "update",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "mixed-merge-unknown": {
+      "tracker": "jira",
+      "code_host": "github",
+      "change_action": "reconcile_merge",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "mixed-merged-open": {
+      "tracker": "jira",
+      "code_host": "github",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "close_and_verify",
+      "ticket_complete": false,
+      "delivery_state": "merged"
+    },
+    "mixed-closure-unknown": {
+      "tracker": "jira",
+      "code_host": "github",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "reconcile_closure",
+      "ticket_complete": false,
+      "delivery_state": "merged"
+    },
+    "mixed-complete": {
+      "tracker": "jira",
+      "code_host": "github",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "none",
+      "ticket_complete": true,
+      "delivery_state": "merged"
+    }
+  }
+}

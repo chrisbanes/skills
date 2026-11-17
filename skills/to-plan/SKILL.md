@@ -1,6 +1,6 @@
 ---
 name: to-plan
-description: Use when asked for an implementation plan or execution contract for one or more GitHub issues or an in-chat task, including a read-only review of the next safe step, without drafting or provider access, when the source or contract is incomplete, or a retained approved GitHub plan has an existing amendment chain or a changed published integration decision needing durable consumption.
+description: Use when asked for an implementation plan or execution contract for one or more tracker items or an in-chat task, including a read-only review of the next safe step, without drafting or provider access, when the source or contract is incomplete, or a retained approved tracker plan has an existing amendment chain or a changed published integration decision needing durable consumption.
 ---
 
 # To Plan
@@ -21,14 +21,19 @@ If nobody asked for a plan, as when an issue link is background to another
 review, answer that request directly and read no references.
 
 Accept `/to-plan <issue URL | owner/repository#number | #number>`, its `--auto`
-form, or an in-chat task. Use GitHub mode only for exactly one named issue (or
+form, or an in-chat task. Use tracker mode only for exactly one named item (or
 one previously established implementation target with no competing inline task).
-Resolve shorthand through the checkout; reject pull requests and ambiguous
-repository identity. `--auto` requires an issue in the current invocation.
+Resolve GitHub shorthand through the checkout; reject change requests and ambiguous
+tracker or repository identity. `--auto` requires an item in the current invocation.
+Select the established tracker binding; for GitHub read
+[the GitHub binding](references/github-binding.md#planning-marker-operations).
+For another tracker, require its trusted binding to define source reads, identity,
+permissions and marker operations before provider access; an absent or incomplete
+binding blocks tracker mode rather than falling back to GitHub commands.
 
 Otherwise use conversation mode. An inline task is a new source unless it
 explicitly selects an established issue. Creating a plan authorizes a local
-conversation draft, not GitHub writes; discussion or review alone authorizes no
+conversation draft, not tracker writes; discussion or review alone authorizes no
 draft. For a discussion-only review of a supplied plan, answer the requested
 assessment and stop. Executor-readiness checks and command-level handoff details
 apply when drafting a plan or preparing its implementation handoff, not to a
@@ -42,12 +47,12 @@ question about how they relate does not resolve source selection.
 Before any planning work, read these references completely in order:
 
 1. [The shared workflow](references/workflow.md).
-2. Exactly one source-mode contract: [GitHub mode](references/github-mode.md)
-   after selecting GitHub, or [conversation mode](references/conversation-mode.md)
+2. Exactly one source-mode contract: [tracker mode](references/github-mode.md)
+   after selecting a tracker, or [conversation mode](references/conversation-mode.md)
    otherwise.
 3. [Plan templates](references/plan-templates.md) before drafting.
 
-For a retained GitHub plan, record routine compatible base updates and corrections
+For a retained tracker plan, record routine compatible base updates and corrections
 under the shared workflow without replanning or publication. Read
 [integration amendments](references/integration-amendments.md) only for an
 existing amendment chain or a changed published integration decision needing
@@ -59,9 +64,9 @@ existing replan route.
 
 ## Authority and blockers
 
-Normal GitHub mode requires publication approval; `--auto` skips only that
+Normal tracker mode requires publication approval; `--auto` skips only that
 pause. A decision-complete current task or explicit confirmation authorizes its
-local conversation draft, never a GitHub write. Maintain one blocker set: a stop
+local conversation draft, never a tracker write. Maintain one blocker set: a stop
 blocks mutations and dependent work, not safe independent checks. Before
 drafting, publishing, or handoff, return every blocker with impact, recommended
 resolution, and required upstream change.
@@ -83,10 +88,10 @@ remains.
 
 ## Finish states
 
-Finish in exactly one state: **Awaiting approval** (validated GitHub draft only),
+Finish in exactly one state: **Awaiting approval** (validated tracker draft only),
 **Published** (verified active plan or effective amended contract, applicable
 predecessor presentation attempted, draft deleted, and handoff returned), **No-op** (current effective contract returned),
-**Blocked** (one actionable report, GitHub unchanged, draft preserved), or
-**Conversation handoff** (validated marked scratch plan and handoff, GitHub
+**Blocked** (one actionable report, tracker unchanged, draft preserved), or
+**Conversation handoff** (validated marked scratch plan and handoff, tracker
 unchanged). The shared workflow defines the exact handoff and bounded mechanical
 repair contract.

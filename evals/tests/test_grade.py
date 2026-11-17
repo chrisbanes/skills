@@ -292,7 +292,7 @@ class DeterministicGradeTest(unittest.TestCase):
     def test_analysis_only_opt_in_allows_multiple_target_and_reference_reads(self):
         case = EvalCase(**{
             **make_case(self.workspace, task_mode="review").__dict__,
-            "target_skills": ("deliver-spec", "run-github-project"),
+            "target_skills": ("deliver-spec", "run-github-project", "deliver-tasks"),
             "forbid_all_commands": True,
             "allow_skill_reference_reads": True,
         })
@@ -300,7 +300,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "cat .agents/skills/deliver-spec/SKILL.md",
             "cat .agents/skills/run-github-project/SKILL.md",
             "cat -- .agents/skills/deliver-spec/references/evidence-and-review.md",
-            "/bin/zsh -lc 'cat .agents/skills/run-github-project/references/ticket-lifecycle.md'",
+            "/bin/zsh -lc 'cat .agents/skills/deliver-tasks/references/ticket-lifecycle.md'",
         )
         for arm in ("forced", "automatic"):
             with self.subTest(arm=arm):

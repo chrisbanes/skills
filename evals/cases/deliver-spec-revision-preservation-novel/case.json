@@ -4,12 +4,13 @@
   "family": "workflow",
   "target_skills": [
     "deliver-spec",
-    "run-github-project"
+    "run-github-project", "deliver-tasks"
   ],
   "expected_skills": [
     "deliver-spec",
     "run-github-project"
   ],
+  "allowed_skills": ["deliver-spec", "run-github-project", "deliver-tasks"],
   "task_mode": "edit",
   "kind": "novel",
   "fixture": "workflow",

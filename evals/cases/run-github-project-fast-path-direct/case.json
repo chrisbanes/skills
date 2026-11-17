@@ -4,12 +4,13 @@
   "family": "workflow",
   "target_skills": [
     "run-github-project",
-    "deliver-spec"
+    "deliver-spec", "deliver-tasks"
   ],
   "expected_skills": [
     "run-github-project",
     "deliver-spec"
   ],
+  "allowed_skills": ["run-github-project", "deliver-spec", "deliver-tasks"],
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow",
@@ -36,7 +37,7 @@
     },
     {
       "id": "board",
-      "text": "Moves #57 from Todo directly to In progress because a slot is free, skipping Ready, and records the lease including the contract digest; #58 keeps its normal plan."
+      "text": "Moves #57 from Todo directly to In progress because a slot is free, and records the lease including the contract digest; #58 keeps its normal plan."
     },
     {
       "id": "handoff",

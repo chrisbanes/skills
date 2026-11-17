@@ -1,0 +1,7 @@
+interface:
+  display_name: "Deliver tasks"
+  short_description: "Triage, plan and deliver a scope of tasks"
+  default_prompt: "Use $deliver-tasks with the GitHub binding to deliver the selected scope; preserve human pauses and resolve invocation merge authority."
+
+policy:
+  allow_implicit_invocation: false

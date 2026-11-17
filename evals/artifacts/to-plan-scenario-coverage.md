@@ -44,3 +44,19 @@ deterministic local evidence from provider-dependent behavior.
 Definitions and deterministic tests are current; these three cases have not
 been run against a model. Provider publication/readback and actual consumer
 adoption remain unverified. Existing score tables are unchanged.
+
+## Tracker marker transport
+
+- `to-plan-no-minimization-novel` supplies a synthetic non-GitHub binding with
+  complete reads and append-only writes, with neither minimization nor editing.
+  Both revisions stay visible; lineage selects revision 2 and identical payload
+  and baseline produce no-op. Deterministic fields cover digest, active identity,
+  presentation warning and fork/gap/foreign/edit rejection decisions.
+- Existing payload-digest direct/restraint and integration-amendment cases retain
+  their bodies, digests and authenticated-chain expectations unchanged.
+- Reference-sync tests cover the additional `to-plan` binding copy and drift.
+  Offline checks do not prove live provider behavior; no model evaluation ran.
+
+- `to-plan-tracker-readiness-novel` starts a full plan with no existing markers
+  through a trusted non-GitHub readiness gate. It also covers parked work,
+  a GitHub role override, role removal and an unknown gate.
