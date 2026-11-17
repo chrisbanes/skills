@@ -15,13 +15,16 @@ Default lanes are `Todo` → `In Progress` → `Done`; resolve them
 through the resolved binding's claim and completion markers. Implementation readiness is
 derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 
-Resolve only a Project board; a named issue routes to `deliver-issue` without
-claiming it here. Board selection never automatically expands a ticket into its
-descendant tree.
+Resolve the requested board scope. A Jira board configuration can select a
+parent tree explicitly. A named issue routes to `deliver-issue` without
+claiming it here. Selecting one board candidate does not broaden its authority
+to descendants.
 
-Load the selected tracker/code-host binding before applying these rules. GitHub
-is the only binding: read [GitHub binding](references/github-binding.md), including
-its optional overrides, fresh defaults, operations and normalization contract. Use its neutral ranker inputs and preserve durable marker formats.
+Select the tracker and code host independently under
+[Delivery bindings](references/provider-bindings.md). For Jira Cloud JQL boards
+read the [Jira tracker binding](references/jira-binding.md) for validation,
+scope, normalization and operations. For GitHub read the
+[GitHub binding](references/github-binding.md). Preserve durable marker formats.
 
 ## Invariants
 
@@ -57,7 +60,7 @@ else reports the exact blocker.
 
 - `review`: inspect or explain only. `setup`: configure or validate the binding, including explicitly approved legacy migration through the binding.
 - `next`: default; at most one selected issue; after the startup merge decision settles, returns `waiting-for-human` without further waiting. A named Wayfinder child stays `next`.
-- `drain`: only on explicit drain/run-all/until-empty request; no ticket cap. With only remote or human waits left it runs the read-only [Project Watcher](references/drain-scheduler.md#project-watcher), never replacing the Refresh Gate.
+- `drain`: only on explicit drain/run-all/until-empty request; no ticket cap. Use the selected tracker’s [remote wait procedure](references/drain-scheduler.md#project-watcher) when only remote or human waits remain.
 
 Resolve merge permission once at startup under
 [run authority](references/authority-and-pauses.md): honor an explicit merge or

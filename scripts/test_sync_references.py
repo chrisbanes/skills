@@ -16,25 +16,27 @@ class SyncReferencesTest(unittest.TestCase):
             "skills/deliver-issue/references/subagent-selection.md", destinations
         )
 
-    def test_github_binding_consumers_detect_and_repair_drift(self):
-        source = "references/github-binding.md"
-        consumers = (
-            "skills/deliver-issue/references/github-binding.md",
-            "skills/run-project/references/github-binding.md",
-            "skills/to-plan/references/github-binding.md",
-        )
-        self.assertEqual(consumers, COPIES.get(source))
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            for relative in (source, *consumers):
-                target = root / relative
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text("canonical" if relative == source else "drift")
-            with patch("scripts.sync_references.COPIES", {source: consumers}):
-                self.assertEqual(1, synchronize(root, check=True))
-                self.assertEqual("drift", (root / consumers[0]).read_text())
-                self.assertEqual(0, synchronize(root, check=False))
-                self.assertEqual(0, synchronize(root, check=True))
+    def test_tracker_binding_consumers_detect_and_repair_drift(self):
+        for binding in ("github", "jira"):
+            with self.subTest(binding=binding):
+                source = f"references/{binding}-binding.md"
+                consumers = (
+                    f"skills/deliver-issue/references/{binding}-binding.md",
+                    f"skills/run-project/references/{binding}-binding.md",
+                    f"skills/to-plan/references/{binding}-binding.md",
+                )
+                self.assertEqual(consumers, COPIES.get(source))
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    for relative in (source, *consumers):
+                        target = root / relative
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        target.write_text("canonical" if relative == source else "drift")
+                    with patch("scripts.sync_references.COPIES", {source: consumers}):
+                        self.assertEqual(1, synchronize(root, check=True))
+                        self.assertEqual("drift", (root / consumers[0]).read_text())
+                        self.assertEqual(0, synchronize(root, check=False))
+                        self.assertEqual(0, synchronize(root, check=True))
 
     def test_gitattributes_marks_exactly_the_synced_copies_generated(self):
         root = Path(__file__).resolve().parents[1]

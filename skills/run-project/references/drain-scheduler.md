@@ -226,8 +226,11 @@ Before starting new work, recover and select claim classes in the order defined
 by [Todo Lane](todo-lane.md#scheduling).
 
 At every controller event or worker yield, perform all independent runnable
-actions that fit the slot and active-agent limits. Exhaust each class before
-dispatching the next:
+actions that fit the slot and active-agent limits. Exhaust each existing-claim
+class before dispatching the next. For Jira, select new work at steps 7–8 from
+the combined ranker order across planning and implementation. Pick the first
+runnable candidate with capacity in its lane. For GitHub keep the separate
+new-work classes in steps 7 and 8.
 
 1. Apply the label-stop gate before automatic work and recovery. Exclude unlabelled Todo and binding-parked work. Reconcile eligible
    resumable authority pauses and park newly blocked operations
@@ -248,16 +251,16 @@ dispatching the next:
    unrelated slot agents
    until the in-flight or active-agent limit, less any watcher relay
    reservation ([step 4](#project-watcher)), is reached.
-8. Start the next ranked `Todo` planning item with the default-owner capability only
-   when the planning lane and active agent capacity are free after maximizing
-   runnable implementation. An AFK Wayfinder research or task item uses this
+8. Start the next selected `Todo` planning item with the default-owner
+   capability when the planning lane and active agent capacity are free.
+   For GitHub, maximize runnable implementation first. An AFK Wayfinder research or task item uses this
    same step, but each non-research child receives a fresh provider context and
    research uses the required `research` subagent. Resume a marked Wayfinder
    reconciliation before new Todo work. Surface unassigned Wayfinder HITL
    frontier work and assigned HITL attention without dispatching either.
-9. Keep the [Project Watcher](#project-watcher) running for every remote claim
-   and human-gated item, even while other slots have agents working. When no
-   local or controller action remains, wait on it and on agent notifications.
+9. Use the selected tracker's [remote wait procedure](#project-watcher) for
+   remote claims and human-gated items. Continue handling agent notifications
+   while local or controller actions remain.
 10. After the authoritative execution-clear predicate in
    [Todo Triage Lane](triage-lane.md#dispatch) is satisfied, process the next
    unblocked Todo `needs-triage` item through the triage tail lane.
@@ -307,11 +310,17 @@ release an active planner for delivery; occupied ticket owners are not preempted
 
 For parent scope, “Project query” in this scheduler means the binding's complete
 parent/descendant/dependency graph read; Status means its logical claim state.
-Use the same watcher with `--parent-id`, no Project ID or Status field. Every
-wake still requires the full Refresh Gate and each item's own role authority.
+For the GitHub parent watcher use `--parent-id`, without a Project ID or Status
+field. Every wake still requires the full Refresh Gate and each item's own role authority.
 
-In `drain` only, wake the controller from a wait with the read-only
-the binding's [Project Watcher command](github-binding.md#project-watcher-command); `next` never starts one. Its report is a hint to refresh, never
+In `drain`, use the selected tracker binding's change signal. For Jira,
+apply its [unavailable wait lane](jira-binding.md#unavailable-lanes-and-finish-gate)
+and use the [finish gate](#failure-isolation-and-finish-gate) when eligible
+work is exhausted. The watcher steps below apply only to GitHub.
+
+For GitHub, use the read-only
+[Project Watcher command](github-binding.md#project-watcher-command). `next`
+never starts a watcher. Its report is a hint to refresh, never
 authority: it never satisfies the [Refresh Gate](#refresh-gate), authorizes a
 claim, merge, or close, replaces a complete Project query, or serves as a
 resumption signal for a [parked claim](#terminal-required-ci-parking). Waiting
@@ -452,9 +461,12 @@ failure at a verified PR head. Treat three rounds with the same sanitized
 failure fingerprint and no new diagnostic direction as non-converging. Before
 releasing the slot:
 
-1. Publish the binding's [CI parking record](github-binding.md#publish-a-ci-parking-record) with the complete preserved identity and three-round check evidence.
-2. Refetch the comment, assignment, Project Status, PR head, and checks. Require
-   the marker author to be the authenticated runner and compute its
+1. Publish the [CI parking payload](github-binding.md#publish-a-ci-parking-record)
+   through the selected tracker's marker operations, with the preserved item and
+   scope identities and the three-round check evidence.
+2. Refetch the marker, exact claim status and assignment through the selected
+   tracker. Refetch the PR head and checks through the selected code host.
+   Require the marker author to be the authenticated runner and compute its
    [payload digest](../../to-plan/references/github-mode.md#payload-digest). Reconcile an ambiguous create before retrying. Keep
    the slot occupied when the record cannot be verified.
 3. Preserve the verified record permalink and digest with the branch, worktree,
@@ -485,11 +497,11 @@ IDs on the same head, but keep the claim parked when it reaches the same failure
 without new diagnostics.
 
 Before restoring a parked claim, publish and verify one runner-authored
-[resume-parking issue comment](github-binding.md#resume-parking-format) that
-references the parking permalink and digest, records the qualifying recovery
+[resume-parking marker](github-binding.md#resume-parking-format) through the
+selected tracker's marker operations. Include the parking permalink and digest,
+the qualifying recovery
 signal and its evidence or a reference to the explicit investigation authority,
-and captures the current PR head, checks, base, configuration, and merge-policy
-evidence. An ambiguous resume record leaves the claim parked. Before publishing
+and the current PR head, checks, base, configuration, and merge-policy evidence. An ambiguous resume record leaves the claim parked. Before publishing
 that record, freshly revalidate the effective binding fingerprint and canonical
 live merge-policy fingerprint. A committed display-name-only change may use
 [verified lease renewal](github-binding.md#renew-presentation-only-configuration);
@@ -520,8 +532,8 @@ After a reconciled push and the PR review timing step above:
    event does not make it active: queue it for the next free slot ahead of
    new claims.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
-   capacity. Monitor all PRs together through the
-   [Project Watcher](#project-watcher), without no-op comments.
+   capacity. Monitor PRs under the selected tracker's
+   [remote wait procedure](#project-watcher), without no-op comments.
 3. Give that PR a 24-hour deadline from its latest push unless the user or
    repository specifies another duration.
 4. Reset only that PR's deadline after a fix push.
@@ -586,7 +598,14 @@ marked Wayfinder reconciliation claim remains, and no label-stopped work, author
 human action, Wayfinder
 human-frontier item, or assigned Wayfinder HITL attention item remains.
 Unlabelled Todo without retained work does not prevent completion of the authorized queue. Stopped retained work remains a human frontier; report its artifacts and any dependency edges blocking eligible work.
-Dependency-parked Todo items retain their normal blocker reporting. If only human
+Dependency-parked Todo items retain their normal blocker reporting. If the
+selected tracker cannot monitor waits, finish runnable work and refresh once.
+Return `waiting-for-human` for a human-only frontier or `partial-drain` for
+pending PRs or other blockers. Preserve all affected state and name the fresh
+tracker and host reads needed on resume. Use the following watcher deadline
+and failure rules only where the binding supplies a watcher.
+
+If only human
 actions, verified authority/decision pauses, Wayfinder human-frontier items,
 and/or assigned HITL attention or label-stopped work remain,
 wait under the [Project Watcher](#project-watcher) instead of returning. Return

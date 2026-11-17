@@ -1,0 +1,42 @@
+{
+  "decisions": {
+    "departed-claim": {
+      "action": "block-preserve",
+      "retainsSlot": true
+    },
+    "departed-unclaimed": {
+      "action": "exclude",
+      "retainsSlot": false
+    },
+    "label-removed": {
+      "action": "stop-preserve",
+      "retainsSlot": false
+    },
+    "board-subtask": {
+      "action": "exclude",
+      "parked": false
+    },
+    "board-epic": {
+      "action": "exclude",
+      "parked": true
+    },
+    "no-backlog": {
+      "action": "implementation-candidate",
+      "parked": false
+    },
+    "external-blockers": {
+      "action": "block",
+      "blockerRefs": [
+        "KAN-99",
+        "https://other.atlassian.net/browse/OPS-1"
+      ]
+    },
+    "priority-rank": {
+      "order": [
+        "B",
+        "C",
+        "A"
+      ]
+    }
+  }
+}

@@ -11,6 +11,10 @@ COPIES = {
         "skills/run-project/references/github-binding.md",
         "skills/to-plan/references/github-binding.md",
     ),
+    "references/jira-binding.md": tuple(
+        f"skills/{skill}/references/jira-binding.md"
+        for skill in ("deliver-issue", "run-project", "to-plan")
+    ),
     "references/pr-review-timing.md": tuple(
         f"skills/{skill}/references/pr-review-timing.md"
         for skill in ("deliver-issue", "run-project", "shepherd")

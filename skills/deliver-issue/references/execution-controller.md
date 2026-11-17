@@ -3,14 +3,16 @@
 ## Preconditions
 
 Read trusted repository instructions and validate the binding read-only through
-[binding validation](github-binding.md#binding-validation), resolving optional
+[GitHub validation](github-binding.md#binding-validation) or
+[Jira validation](jira-binding.md#binding-validation), resolving optional
 overrides and defaults without entering setup repair. Resolve lane-specific dependencies under [workflow providers](workflow-providers.md)
 before their relevant action; follow its affected-lane blocker rules when a
 provider is unavailable. Read [human frontier](human-frontier.md),
 [Todo](todo-lane.md), [triage](triage-lane.md), and, when enabled,
 [Wayfinder](wayfinder-lane.md), plus [review contracts](review-contracts.md)
 before ticket acceptance. Confirm the binding's
-[execution prerequisites](github-binding.md#execution-prerequisites).
+execution prerequisites for [GitHub](github-binding.md#execution-prerequisites)
+or [Jira](jira-binding.md#unavailable-lanes-and-finish-gate).
 
 For `next`/`drain`, establish invocation authority through
 [run authority and ticket pauses](authority-and-pauses.md), checking grants at
@@ -82,9 +84,10 @@ access or configuration failure. Do not repeatedly probe unchanged blockers.
 
 ## Remote state and queue
 
-Use the selected binding's [GitHub access](github-binding.md#github-access) and
-[remote reconciliation](github-binding.md#remote-reconciliation) before retry,
-mutation or a success claim.
+Before retry, mutation or a success claim, use the tracker binding's
+reconciliation procedure ([GitHub](github-binding.md#remote-reconciliation) or
+[Jira](jira-binding.md#claim-release-and-status)). Use
+[GitHub access](github-binding.md#github-access) for a selected GitHub role.
 
 Query complete live scope state at start and after merges: Project state or
 the parent binding’s complete descendant/dependency graph. Parent scope
@@ -104,8 +107,8 @@ do not rehydrate an unchanged verified ticket merely because another ticket
 emitted a CI event. Full selection/recovery/finish reads and fresh write
 authority remain mandatory.
 
-Keep remote monitoring with the scheduler's single
-[Project Watcher](drain-scheduler.md#project-watcher). An empty host wait timeout
+Use the selected tracker's
+[remote wait procedure](drain-scheduler.md#project-watcher). An empty host wait timeout
 does not invalidate the snapshot or require a query, restart, or progress
 notification; consume delivered reports and completions before waiting again.
 
@@ -120,7 +123,7 @@ pauses before selection and exclude them from dispatch under their reference.
 Preserve unchanged parked claims outside ranker/capacity; normalize other items with the exact
 [normalized-ticket schema and CLI](normalized-ticket.md#ranker-invocation),
 using display Status/Priority, exact role labels, complete Wayfinder labels,
-GitHub logins, and finite positions.
+binding-resolved account identities, and finite positions.
 
 Hydrate current-user claims before unclaimed contenders. Preserve returned
 blocked claims/planning blockers in their lanes; resume claims then fill capacity
@@ -142,7 +145,8 @@ and Project item. Require the lane's current Status, its human-applied role labe
 Route planning and Wayfinder modes through their lanes; a
 `next` planning selection stays the same issue through terminal reconciliation.
 For Todo work with a verified usable active plan, perform the binding's
-[implementation claim operation](github-binding.md#claim-implementation-work).
+implementation claim operation for [GitHub](github-binding.md#claim-implementation-work)
+or [Jira](jira-binding.md#claim-release-and-status).
 Record its verified lease; ambiguity after the claim transition preserves a
 blocked slot.
 

@@ -1,0 +1,49 @@
+{
+  "id": "jira-board-scope-direct",
+  "title": "Jira JQL scope and live claim authority",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b",
+    "\\b(?:curl|wget|acli)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "jira-board-scope-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "binding",
+      "text": "Selects Jira Cloud as tracker and GitHub as code host, preserving the bound scope and explicit authority."
+    },
+    {
+      "id": "scenario-decisions",
+      "text": "Makes every tracker, transition, selection and presentation decision from the supplied authoritative snapshot."
+    },
+    {
+      "id": "preservation",
+      "text": "Preserves claims and artifacts when effects or eligibility change, and never contacts either provider for this assessment."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

@@ -27,6 +27,8 @@ permissions; one controller retains ownership from clarification through closure
    then [Delivery bindings](references/provider-bindings.md) and the selected
    binding's issue operations. On GitHub read
    [Direct issue scope](references/github-binding.md#direct-issue-scope).
+   For a Jira Cloud key read [Scope and readiness](references/jira-binding.md#scope-and-readiness)
+   and the Jira tracker operations.
    Resolve the complete root/descendant graph, holds, ownership, approved plans,
    pending outcomes and invocation grants before planning or writing.
 4. Follow the issue lifecycle for clarification, planning, dependencies and
@@ -34,8 +36,9 @@ permissions; one controller retains ownership from clarification through closure
    [delivery lifecycle](references/delivery-lifecycle.md),
    [implementation procedure](references/implementation-mode.md) and
    [evidence and review](references/evidence-and-review.md).
-   Preserve existing plans and use one cohesive PR or dependency-ordered PRs
-   according to independently shippable outcomes. Keep repairs with their owner.
+   Preserve existing plans and use the PR boundaries in the
+   [tree delivery procedure](references/issue-lifecycle.md#deliver-the-tree).
+   Keep repairs with their owner.
 5. Reconcile exact-head checks/reviews and explicit merge/closure grants through
    the binding. Follow the issue lifecycle's bounded waiting and resume procedure;
    board handoffs follow their controller's cadence instead.

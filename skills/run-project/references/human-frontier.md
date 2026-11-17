@@ -34,7 +34,8 @@ but never enforce it.
    above. Return unblocked items in the table's collections; return blocked
    items as role-tagged `parkedBlocked`.
 2. Rank each collection by the binding’s priority and order, then issue number;
-   parent scope uses unset priority and depth-first native sub-issue order.
+   GitHub parent scope uses unset priority and depth-first native sub-issue
+   order. Jira parent scope uses configured priority and Rank.
 3. Derive each action's direct unlocks from reverse native blocker and
    parent-child relationships in the complete live graph, never from prose.
 
@@ -59,23 +60,22 @@ closure with verified closed readback completes the epic.
 ## Wait For Human Work
 
 Never assign role-labelled human work, move it to Todo, or close it.
-Observe its completion only through refreshed authoritative GitHub state; a
+Observe its completion only through refreshed authoritative tracker and code-host state; a
 watcher report prompts that refresh but is never the observation.
 
 Return `waiting-for-human` only when no controller, planning, implementation,
 monitoring, or non-deferred triage action remains and `humanActions`,
 `stoppedItems` or verified authority/decision pauses are non-empty. Include every
 stopped item's assignment and retained artifacts, with human label restoration
-as its necessary resume condition. Never dispatch a human-work role to an agent. In `drain`, waiting under the
-[Project Watcher](drain-scheduler.md#project-watcher) is a monitoring action
-until the [finish gate](drain-scheduler.md#failure-isolation-and-finish-gate)
-allows the return; `next` returns once its startup merge decision has settled.
+as its necessary resume condition. Never dispatch a human-work role to an agent. In `drain`, follow the binding's
+[remote wait procedure](drain-scheduler.md#project-watcher) and the
+[finish gate](drain-scheduler.md#failure-isolation-and-finish-gate); `next` returns once its startup merge decision has settled.
 This result is resumable and is
 neither success nor partial drain.
 Report the complete frontier packet, parked dependency chain, and actions that
 would become available next.
 
-On a later invocation, reconstruct the frontier from GitHub. Expire all prior
+On a later invocation, reconstruct the frontier from the selected bindings. Expire all prior
 standing mutation authority and resolve the new invocation's merge decision
 under [run authority](authority-and-pauses.md): ask a fresh startup question
 when this invocation has no explicit merge or no-merge instruction.
