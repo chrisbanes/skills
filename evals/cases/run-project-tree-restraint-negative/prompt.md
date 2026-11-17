@@ -7,3 +7,5 @@ Required output fields:
 - board: selected, select_children, start_drain, claims_owner, merge_owner, close_without_grant
 
 This is a no-change assessment: write no files, including scratch artifacts.
+
+Put only the exact decision JSON object (no Markdown fences or prose) in the final structured response's `summary` string; put supporting reasoning in `evidence`.

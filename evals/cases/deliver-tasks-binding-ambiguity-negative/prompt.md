@@ -18,3 +18,5 @@ Assess each independent immutable complete snapshot in read-only setup/recovery 
 Return the decision JSON in your response with every row key. Each records action (configuration-blocked or stop-preserve), ambiguous_lookup (the exact lookup key below), guesses (boolean), mutates (boolean), preserves_work (boolean). Use stop-preserve for source-switch and configuration-blocked otherwise. Lookup keys by row order: Status.Done, Status.Todo, Status, role.ready-for-human, role.needs-triage, Scope, Scope, Scope, Scope, Repository, Merge Policy.Method, Work Roles, legacy-config, binding-source. Explain missing versus duplicate/incomplete evidence, name matching versus pinned-ID validation, exact corrections needed, and why legacy migration/parent scope are outside this task. Do not create config, labels or columns to repair ambiguity.
 
 This is a no-change assessment: write no files, including scratch artifacts.
+
+Put only the exact decision JSON object (no Markdown fences or prose) in the final structured response's `summary` string; put supporting reasoning in `evidence`.

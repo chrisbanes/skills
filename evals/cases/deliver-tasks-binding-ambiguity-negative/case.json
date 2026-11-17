@@ -23,6 +23,15 @@
         "deliver-tasks-binding-ambiguity-negative"
       ],
       "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-binding-ambiguity-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
     }
   ],
   "rubric": [

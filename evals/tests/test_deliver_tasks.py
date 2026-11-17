@@ -53,16 +53,27 @@ class DeliverTasksTest(unittest.TestCase):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
         for case_id in NEGATIVE_CASES:
             case = corpus[case_id]
+            expected = json.loads((case.directory / "expectations.json").read_text())["decisions"]
             with self.subTest(case=case_id), tempfile.TemporaryDirectory() as directory:
                 workspace = prepare_workspace(case, ROOT, Path(directory) / "fixture", enabled_skills=case.target_skills)
                 subject = SubjectResult(
                     case_id=case_id, arm="forced", command=("codex",), workspace=workspace,
                     returncode=0, events=(), usage={}, changed_paths=(), diff="", stdout="", stderr="", elapsed_seconds=0.1,
-                    final_output={"summary": "Assessed supplied state without actions", "skills_used": list(case.target_skills), "evidence": ["state.md"]},
+                    final_output={"summary": json.dumps(expected), "skills_used": list(case.target_skills), "evidence": ["state.md"]},
                 )
                 grade = grade_subject(case, subject)
                 self.assertTrue(grade.objective_pass, grade.objective_failures)
                 self.assertFalse(grade.forbidden_action_failure)
+                for scenario, fields in expected.items():
+                    for field, value in fields.items():
+                        wrong = copy.deepcopy(expected)
+                        wrong[scenario][field] = not value if isinstance(value, bool) else "wrong"
+                        unsafe = replace(subject, final_output={**subject.final_output, "summary": json.dumps(wrong)})
+                        with self.subTest(scenario=scenario, field=field):
+                            self.assertFalse(grade_subject(case, unsafe).objective_pass)
+                for summary in ("not JSON", "{}"):
+                    invalid = replace(subject, final_output={**subject.final_output, "summary": summary})
+                    self.assertFalse(grade_subject(case, invalid).objective_pass)
                 for path in ("state.md", ".scratch/review-decisions.json"):
                     changed = grade_subject(case, replace(subject, changed_paths=(path,)))
                     self.assertFalse(changed.objective_pass)

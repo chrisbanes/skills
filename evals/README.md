@@ -697,7 +697,9 @@ Direct-issue calibration contrasts invocation grants with board admission, forge
 grants, retained ownership and human holds; tree/resume/closure cases cover
 external blockers, parent acceptance, proportional PRs and bounded handback.
 Negative assessments return decisions in the response: the existing grader
-requires zero workspace writes, and evaluator rubrics check their reasoning.
+requires zero workspace writes. The existing decision validator reads the final
+response through evaluator-supplied standard input and rejects unsafe decisions;
+evaluator rubrics check supporting reasoning.
 Each skill installs with its own internal reference closure.
 Label-stop and recovery calibration fixtures cover capacity release, artifact
 preservation, human restoration, triage restraint and abandonment to human Todo;

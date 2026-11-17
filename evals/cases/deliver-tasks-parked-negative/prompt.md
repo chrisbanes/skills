@@ -13,3 +13,5 @@ Return the requested exact JSON decision fields in your response.
 Use skill references; make no provider calls or mutations.
 
 This is a no-change assessment: write no files, including scratch artifacts.
+
+Put only the exact decision JSON object (no Markdown fences or prose) in the final structured response's `summary` string; put supporting reasoning in `evidence`.

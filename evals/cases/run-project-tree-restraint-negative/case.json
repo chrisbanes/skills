@@ -23,6 +23,15 @@
         "run-project-tree-restraint-negative"
       ],
       "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-project-tree-restraint-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
     }
   ],
   "rubric": [
