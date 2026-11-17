@@ -1,0 +1,47 @@
+{
+  "decisions": {
+    "direct-tree": {
+      "eligibleScope": [
+        "KAN-10",
+        "KAN-12",
+        "KAN-13"
+      ],
+      "rootAction": "block-on-descendants"
+    },
+    "partial-graph": {
+      "action": "block",
+      "write": false
+    },
+    "issue-type-override": {
+      "doneId": "10105",
+      "write": true
+    },
+    "unmapped-type": {
+      "action": "block",
+      "write": false
+    },
+    "parent-validator": {
+      "merge": "verified",
+      "closure": "pending",
+      "retry": false
+    },
+    "confirmed-close": {
+      "closure": "verified"
+    },
+    "external-close": {
+      "closure": "external",
+      "write": false
+    },
+    "plain-key": {
+      "action": "allow"
+    },
+    "closing-keyword": {
+      "action": "refuse",
+      "write": false
+    },
+    "smart-commit": {
+      "action": "refuse",
+      "write": false
+    }
+  }
+}

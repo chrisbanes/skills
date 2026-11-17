@@ -138,6 +138,10 @@ for its lane-specific fallback and blocking behavior.
 Both delivery skills bundle their internal references for selective installation.
 Install `changelog` alongside `release-kotlin-library`.
 
+The delivery skills support Jira Cloud as a tracker for JQL boards, direct
+issue delivery and planning markers. Select the code host separately.
+See the [Jira binding](references/jira-binding.md) for setup and supported operations.
+
 Delivery workflow migration: `run-github-project` is replaced by `run-project`;
 `deliver-tasks` is split into board execution and `deliver-issue`; `deliver-spec`
 is folded into their internal delivery procedures. All three old skill names are

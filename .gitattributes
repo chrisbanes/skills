@@ -2,6 +2,9 @@
 skills/deliver-issue/references/github-binding.md linguist-generated=true
 skills/run-project/references/github-binding.md linguist-generated=true
 skills/to-plan/references/github-binding.md linguist-generated=true
+skills/deliver-issue/references/jira-binding.md linguist-generated=true
+skills/run-project/references/jira-binding.md linguist-generated=true
+skills/to-plan/references/jira-binding.md linguist-generated=true
 skills/deliver-issue/references/pr-review-timing.md linguist-generated=true
 skills/run-project/references/pr-review-timing.md linguist-generated=true
 skills/shepherd/references/pr-review-timing.md linguist-generated=true

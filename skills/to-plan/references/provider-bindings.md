@@ -13,7 +13,8 @@ not authority. A code-host merge and a tracker closure are separate facts.
    delivery. For either
    GitHub role, read the applicable operations in the bundled
    [GitHub binding](github-binding.md#delivery-operations). A GitHub repository
-   does not imply a GitHub tracker. For another provider, require its trusted
+   does not imply a GitHub tracker. For a Jira Cloud tracker use the bundled
+   [Jira binding](jira-binding.md). For another provider, require its trusted
    operation contract; do not invent a binding or substitute GitHub commands.
 2. Verify the capabilities needed by the next operation. The tracker supplies
    source/readiness, durable marker reads/writes/supersession and item linking,
@@ -23,8 +24,9 @@ not authority. A code-host merge and a tracker closure are separate facts.
    safe independent validation and preserve artifacts. Required external review
    remains separate from code-host review transport and local independent review.
 3. Before planning, verify the invocation mode under the binding. A direct-issue
-   controller uses [Direct issue planning readiness](github-binding.md#direct-issue-planning-readiness)
-   and the [issue lifecycle](issue-lifecycle.md); a board handoff retains its
+   controller uses the [issue lifecycle](issue-lifecycle.md) and the selected
+   tracker readiness branch ([GitHub](github-binding.md#direct-issue-planning-readiness)
+   or [Jira](jira-binding.md#scope-and-readiness)); a board handoff retains its
    controller's bindings, claim, role authority and grants. Ordinary standalone
    to-plan keeps its own readiness gate. Recheck the applicable operation grant
    and explicit holds/stops before material writes and recovery. Never add or

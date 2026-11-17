@@ -47,7 +47,7 @@ deliver-issue's [fast path](fast-path.md).
 
 ## Plan a Todo item
 
-1. In the controller lane, use the binding's [Todo claim operation](github-binding.md#claim-todo-work), retaining exclusive assignment through planning and implementation.
+1. In the controller lane, use the binding's Todo claim operation ([GitHub](github-binding.md#claim-todo-work) or [Jira](jira-binding.md#claim-release-and-status)), retaining exclusive assignment through planning and implementation.
 2. Use one dedicated planning worktree per run, created outside the checkout
    under the [checkout lifecycle](checkout-lifecycle.md) and detached at the
    configured base. Reuse it within the run, refresh it only between tickets,

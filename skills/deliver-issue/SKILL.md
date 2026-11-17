@@ -27,6 +27,8 @@ permissions; one controller retains ownership from clarification through closure
    then [Delivery bindings](references/provider-bindings.md) and the selected
    binding's issue operations. On GitHub read
    [Direct issue scope](references/github-binding.md#direct-issue-scope).
+   For a Jira Cloud key read [Scope and readiness](references/jira-binding.md#scope-and-readiness)
+   and the Jira tracker operations.
    Resolve the complete root/descendant graph, holds, ownership, approved plans,
    pending outcomes and invocation grants before planning or writing.
 4. Follow the issue lifecycle for clarification, planning, dependencies and

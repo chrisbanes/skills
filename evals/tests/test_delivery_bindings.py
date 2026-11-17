@@ -16,6 +16,9 @@ CASES = (
     "deliver-spec-provider-closure-direct",
     "deliver-spec-provider-closure-novel",
     "deliver-spec-provider-closure-negative",
+    "jira-board-scope-direct",
+    "jira-direct-closure-novel",
+    "jira-transition-marker-negative",
 )
 
 
@@ -31,20 +34,30 @@ class DeliveryBindingsTest(unittest.TestCase):
                 )
                 relative = ".scratch/review-decisions.json"
                 artifact = workspace / relative
-                if expected is not None:
+                response_mode = case_id == "jira-transition-marker-negative"
+                writes_artifact = expected is not None and not response_mode
+                if writes_artifact:
                     artifact.parent.mkdir()
                     artifact.write_text(json.dumps(expected))
                 result = SubjectResult(
                     case_id=case_id, arm="forced", command=("codex",),
                     workspace=workspace, returncode=0, events=(),
-                    final_output={"summary": "Assessed closure snapshots", "skills_used": ["deliver-issue"], "evidence": [relative] if expected is not None else ["state.md"]},
-                    usage={}, changed_paths=(relative,) if expected is not None else (), diff="", stdout="", stderr="", elapsed_seconds=0.1,
+                    final_output={
+                        "summary": json.dumps(expected) if response_mode else "Assessed tracker snapshots",
+                        "skills_used": list(case.target_skills),
+                        "evidence": [relative] if writes_artifact else ["jira-state.md" if response_mode else "state.md"],
+                    },
+                    usage={}, changed_paths=(relative,) if writes_artifact else (), diff="", stdout="", stderr="", elapsed_seconds=0.1,
                 )
                 grade = grade_subject(case, result)
                 self.assertTrue(grade.objective_pass, grade.objective_failures)
                 self.assertFalse(grade.forbidden_action_failure, grade.violations)
-                binding = workspace / ".agents/skills/deliver-issue/references/github-binding.md"
-                self.assertEqual((ROOT / "references/github-binding.md").read_bytes(), binding.read_bytes())
+                filename = "jira-binding.md" if case_id.startswith("jira-") else "github-binding.md"
+                binding = workspace / ".agents/skills" / case.target_skills[0] / "references" / filename
+                self.assertEqual((ROOT / "references" / filename).read_bytes(), binding.read_bytes())
+                if response_mode:
+                    changed = replace(result, changed_paths=("jira-state.md",))
+                    self.assertFalse(grade_subject(case, changed).objective_pass)
                 # Reject each unsafe closure/merge substitution, not only missing artifacts.
                 if expected is None:
                     changed = replace(result, changed_paths=("state.md",))

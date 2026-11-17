@@ -1165,6 +1165,24 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual([(70, "plan"), (8, "claim")],
                          [(x["ticket"]["number"], x["action"]) for x in output["candidates"]])
 
+    def test_jira_positions_keep_priority_and_rank_and_ignore_unclaimed_parked_items(self):
+        items = [
+            ticket(901, itemId="901", itemRef="https://fixture.atlassian.net/browse/KAN-31",
+                   projectPosition=2, projectPriority="Low"),
+            ticket(902, itemId="902", itemRef="https://fixture.atlassian.net/browse/KAN-32",
+                   projectPosition=0, implementationPlans=[]),
+            ticket(903, itemId="903", itemRef="https://fixture.atlassian.net/browse/KAN-33",
+                   projectPosition=1),
+            ticket(904, itemId="904", itemRef="https://fixture.atlassian.net/browse/KAN-34",
+                   projectPosition=0, parked=True),
+            ticket(905, itemId="905", itemRef="https://fixture.atlassian.net/browse/KAN-35",
+                   projectPosition=0, blockerRefs=["https://other.atlassian.net/browse/OPS-1"]),
+        ]
+        code, output = run_ranker(items, "--candidate-order", "scope-position")
+        self.assertEqual(0, code)
+        self.assertEqual([(902, "plan"), (903, "claim"), (901, "claim")],
+                         [(x["ticket"]["number"], x["action"]) for x in output["candidates"]])
+
     def test_project_scope_keeps_action_precedence_across_plan_states(self):
         items = [ticket(70, projectPosition=0, projectPriority=None, implementationPlans=[]),
                  ticket(8, projectPosition=1, projectPriority=None)]

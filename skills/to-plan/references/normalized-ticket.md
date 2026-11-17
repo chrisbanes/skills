@@ -37,16 +37,18 @@ child. Pass all five Wayfinder label options only for a complete enabled
 configuration; otherwise omit all five.
 
 Use resolved Status and Priority display names, not option IDs; use IDs only
-for Project mutations. Preserve GitHub logins, rank an unset Priority last, and
-reject non-finite Project positions. Run `--help` if the installed script's
+for provider mutations. Preserve binding-resolved assignee identities, rank an
+unset Priority last, and reject non-finite positions. Run `--help` if the installed script's
 interface is uncertain rather than guessing an option. `--max-claims` accepts
 any positive integer; pass the controller's effective implementation-slot
 limit. Agent capacity is a separate dispatch constraint. Blocked implementation
 claims still count toward this limit; planner/handoff claims and drain claims in
 [Remote Waiting](drain-scheduler.md#remote-waiting) do not.
 
-Read [GitHub normalization](github-binding.md#normalized-ticket-schema) for every
-input field, plan/recovery shape and output collection before normalizing.
+Read the common field, plan/recovery and output shapes in
+[GitHub normalization](github-binding.md#normalized-ticket-schema).
+For Jira apply the [Jira field mapping](jira-binding.md#normalize-and-reconcile)
+and use its account identities and ordered positions.
 The ranker lives in `run-project/scripts/rank_tickets.py`. Preserve its output
 collections while supplying the neutral fields below. Todo plus `ready-for-agent`
 and a verified usable active plan leaf produces an implementation candidate;
@@ -96,8 +98,9 @@ stale plans require planning or base-drift screening before implementation.
 
 ## Binding identity and defaults
 
-Validate through the binding's [defaults and overrides](github-binding.md#resolve-defaults-and-overrides)
-procedure before normalization. Use its [effective binding fingerprint](github-binding.md#effective-binding-fingerprint)
+Validate the selected binding before normalization
+([GitHub](github-binding.md#resolve-defaults-and-overrides) or
+[Jira](jira-binding.md#binding-validation)). Use its effective binding fingerprint
 for `--configuration-digest` and every lease/marker `configurationDigest`.
 No-file runs supply the verified runtime fingerprint; trusted override runs
 retain their committed digest and resolved snapshot. Exact historical comparisons

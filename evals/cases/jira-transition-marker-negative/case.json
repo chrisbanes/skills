@@ -1,0 +1,48 @@
+{
+  "id": "jira-transition-marker-negative",
+  "title": "Jira changed claims and marker safety",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b",
+    "\\b(?:curl|wget|acli)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "jira-transition-marker-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "binding",
+      "text": "Selects Jira Cloud as tracker and GitHub as code host, preserving the bound scope and explicit authority."
+    },
+    {
+      "id": "scenario-decisions",
+      "text": "Makes every tracker, transition, selection and presentation decision from the supplied authoritative snapshot."
+    },
+    {
+      "id": "preservation",
+      "text": "Preserves claims and artifacts when effects or eligibility change, and never contacts either provider for this assessment."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

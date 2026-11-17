@@ -1,7 +1,8 @@
 # Review and setup lanes
 
 For binding validation or configuration, read the selected
-[GitHub setup procedure](github-binding.md#binding-validation) before acting.
+[GitHub](github-binding.md#binding-validation) or
+[Jira](jira-binding.md#binding-validation) binding before acting.
 
 ## Review
 
@@ -15,7 +16,8 @@ uncertainty, or `review-blocked` when permitted evidence is insufficient.
 
 ## Setup
 
-Detect legacy boards/configuration through the
+For Jira, use its [read-only setup validation](jira-binding.md#binding-validation).
+For GitHub, detect legacy boards/configuration through the
 [approval-gated migration](github-binding.md#approval-gated-legacy-migration)
 before ordinary setup. Discovery and a dry run grant no mutation authority.
 Follow [GitHub setup](github-binding.md#setup), including its additive setup,

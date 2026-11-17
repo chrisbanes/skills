@@ -1,0 +1,40 @@
+{
+  "decisions": {
+    "zero-transitions": {
+      "action": "skip",
+      "claim": false,
+      "transitionSend": false
+    },
+    "multiple-transitions": {
+      "action": "skip",
+      "claim": false,
+      "transitionSend": false
+    },
+    "required-fields": {
+      "action": "skip",
+      "claim": false,
+      "transitionSend": false
+    },
+    "assignment-only": {
+      "claim": false,
+      "state": "todo"
+    },
+    "moved-in-review": {
+      "action": "block-preserve",
+      "retainsSlot": true,
+      "write": false
+    },
+    "marker-round-trip": {
+      "active": "successor",
+      "digest": "unchanged",
+      "digestSource": "codeBlock-text"
+    },
+    "marker-fallback": {
+      "action": "paragraph-only"
+    },
+    "marker-warning": {
+      "active": "successor",
+      "action": "presentation-warning"
+    }
+  }
+}

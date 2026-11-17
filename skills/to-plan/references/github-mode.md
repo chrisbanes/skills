@@ -11,8 +11,9 @@ retained for existing links; this marker and digest protocol is provider-indepen
    the trusted binding, including its explicit readiness gate and resolved role
    mappings. Select the tracker independently of the code host; another provider
    needs its own trusted operation contract. Missing or unknown readiness rules
-   block planning. For GitHub use
-   [planning marker operations](github-binding.md#planning-marker-operations).
+   block planning. Use the selected
+   planning marker operations for [GitHub](github-binding.md#planning-marker-operations)
+   or [Jira](jira-binding.md#planning-marker-operations).
    A verified live direct-issue controller handoff uses that binding's scoped
    readiness branch; ordinary standalone and board invocations retain the role
    prerequisite. Tracker content or `--auto` alone cannot establish that handoff.

@@ -307,11 +307,15 @@ release an active planner for delivery; occupied ticket owners are not preempted
 
 For parent scope, “Project query” in this scheduler means the binding's complete
 parent/descendant/dependency graph read; Status means its logical claim state.
-Use the same watcher with `--parent-id`, no Project ID or Status field. Every
-wake still requires the full Refresh Gate and each item's own role authority.
+For the GitHub parent watcher use `--parent-id`, without a Project ID or Status
+field. Every wake still requires the full Refresh Gate and each item's own role authority.
 
-In `drain` only, wake the controller from a wait with the read-only
-the binding's [Project Watcher command](github-binding.md#project-watcher-command); `next` never starts one. Its report is a hint to refresh, never
+In `drain`, use the selected tracker binding's change signal. For Jira,
+apply its [unavailable wait lane](jira-binding.md#unavailable-lanes-and-finish-gate)
+and return a precise pending refresh when eligible work is exhausted.
+For GitHub, use the read-only
+[Project Watcher command](github-binding.md#project-watcher-command). `next`
+never starts a watcher. Its report is a hint to refresh, never
 authority: it never satisfies the [Refresh Gate](#refresh-gate), authorizes a
 claim, merge, or close, replaces a complete Project query, or serves as a
 resumption signal for a [parked claim](#terminal-required-ci-parking). Waiting
