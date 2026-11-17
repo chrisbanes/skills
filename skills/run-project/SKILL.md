@@ -60,7 +60,7 @@ else reports the exact blocker.
 
 - `review`: inspect or explain only. `setup`: configure or validate the binding, including explicitly approved legacy migration through the binding.
 - `next`: default; at most one selected issue; after the startup merge decision settles, returns `waiting-for-human` without further waiting. A named Wayfinder child stays `next`.
-- `drain`: only on explicit drain/run-all/until-empty request; no ticket cap. With only remote or human waits left it runs the read-only [Project Watcher](references/drain-scheduler.md#project-watcher), never replacing the Refresh Gate.
+- `drain`: only on explicit drain/run-all/until-empty request; no ticket cap. Use the selected tracker’s [remote wait procedure](references/drain-scheduler.md#project-watcher) when only remote or human waits remain.
 
 Resolve merge permission once at startup under
 [run authority](references/authority-and-pauses.md): honor an explicit merge or

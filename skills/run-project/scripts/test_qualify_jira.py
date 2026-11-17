@@ -27,6 +27,7 @@ class JiraFixture:
     def __init__(self, *, sub_tasks=True, denied=None, ambiguous_create=None, ambiguous_delete=None):
         self.types = [TASK, CHILD] if sub_tasks else [TASK]
         self.advertised = self.types
+        self.project_style = "next-gen"
         self.denied = denied
         self.ambiguous_create = ambiguous_create
         self.ambiguous_delete = ambiguous_delete
@@ -50,7 +51,8 @@ class JiraFixture:
         if path == "/myself":
             return {"accountId": "runner", "active": True}
         if path == "/project/KAN":
-            return {"id": PROJECT_ID, "key": "KAN", "issueTypes": self.advertised}
+            return {"id": PROJECT_ID, "key": "KAN", "issueTypes": self.advertised,
+                    "style": self.project_style, "projectTypeKey": "software"}
         if path == "/mypermissions":
             if "issueId" in query:
                 assert query["issueId"] in self.issues
@@ -103,10 +105,12 @@ class JiraFixture:
             parent = fields.get("parent")
             if parent:
                 self.issues[parent["id"]]["fields"]["subtasks"].append({"id": issue_id})
-            fields.update(status=STATUSES[0], subtasks=[], assignee=None)
+            creator = "someone-else" if self.ambiguous_create == "foreign-clone" else "runner"
+            fields.update(status=STATUSES[0], subtasks=[], assignee=None,
+                          creator={"accountId": creator})
             self.issues[issue_id] = {"id": issue_id, "key": f"KAN-{issue_id}", "fields": fields}
             self.histories[issue_id] = []
-            if self.ambiguous_create == "persisted":
+            if self.ambiguous_create in ("persisted", "foreign-clone"):
                 raise RequestFailed()
             return {"id": issue_id, "key": f"KAN-{issue_id}"}
 
@@ -175,6 +179,14 @@ class QualificationTests(unittest.TestCase):
                 self.assertEqual([], fixture.writes)
                 self.assertIn(reason, str(self.events))
 
+    def test_project_permission_without_team_managed_role_guarantee_cannot_create(self):
+        fixture = JiraFixture()
+        fixture.project_style = "classic"
+        run = self.set_up_run(fixture)
+        self.assertFalse(run.run())
+        self.assertEqual([], fixture.writes)
+        self.assertIn("cannot verify team-managed software delete permission", str(self.events))
+
     def test_guard_rejects_foreign_targets_and_preserves_cleanup_reserve(self):
         fixture = JiraFixture(sub_tasks=False)
         run = self.set_up_run(fixture)
@@ -201,6 +213,14 @@ class QualificationTests(unittest.TestCase):
         self.assertEqual(1, fixture.writes.count(("POST", "/issue")))
         self.assertEqual(1, fixture.writes.count(("DELETE", "/issue/21")))
         self.assertIn(("deleted", {"id": "21", "readback": 404}), self.events)
+
+    def test_unknown_create_never_adopts_a_matching_foreign_issue(self):
+        fixture = JiraFixture(ambiguous_create="foreign-clone")
+        run = self.set_up_run(fixture)
+        self.assertFalse(run.run())
+        self.assertEqual([("POST", "/issue")], fixture.writes)
+        self.assertFalse(run.owned)
+        self.assertIn("21", fixture.issues)
 
     def test_unknown_create_preserves_reconciliation_checkpoint(self):
         fixture = JiraFixture(sub_tasks=False, ambiguous_create="missing")

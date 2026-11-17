@@ -255,9 +255,9 @@ dispatching the next:
    research uses the required `research` subagent. Resume a marked Wayfinder
    reconciliation before new Todo work. Surface unassigned Wayfinder HITL
    frontier work and assigned HITL attention without dispatching either.
-9. Keep the [Project Watcher](#project-watcher) running for every remote claim
-   and human-gated item, even while other slots have agents working. When no
-   local or controller action remains, wait on it and on agent notifications.
+9. Use the selected tracker's [remote wait procedure](#project-watcher) for
+   remote claims and human-gated items. Continue handling agent notifications
+   while local or controller actions remain.
 10. After the authoritative execution-clear predicate in
    [Todo Triage Lane](triage-lane.md#dispatch) is satisfied, process the next
    unblocked Todo `needs-triage` item through the triage tail lane.
@@ -312,7 +312,9 @@ field. Every wake still requires the full Refresh Gate and each item's own role 
 
 In `drain`, use the selected tracker binding's change signal. For Jira,
 apply its [unavailable wait lane](jira-binding.md#unavailable-lanes-and-finish-gate)
-and return a precise pending refresh when eligible work is exhausted.
+and use the [finish gate](#failure-isolation-and-finish-gate) when eligible
+work is exhausted. The watcher steps below apply only to GitHub.
+
 For GitHub, use the read-only
 [Project Watcher command](github-binding.md#project-watcher-command). `next`
 never starts a watcher. Its report is a hint to refresh, never
@@ -524,8 +526,8 @@ After a reconciled push and the PR review timing step above:
    event does not make it active: queue it for the next free slot ahead of
    new claims.
 2. Idle its persistent ticket agent so remote waiting consumes no active-agent
-   capacity. Monitor all PRs together through the
-   [Project Watcher](#project-watcher), without no-op comments.
+   capacity. Monitor PRs under the selected tracker's
+   [remote wait procedure](#project-watcher), without no-op comments.
 3. Give that PR a 24-hour deadline from its latest push unless the user or
    repository specifies another duration.
 4. Reset only that PR's deadline after a fix push.
@@ -590,7 +592,14 @@ marked Wayfinder reconciliation claim remains, and no label-stopped work, author
 human action, Wayfinder
 human-frontier item, or assigned Wayfinder HITL attention item remains.
 Unlabelled Todo without retained work does not prevent completion of the authorized queue. Stopped retained work remains a human frontier; report its artifacts and any dependency edges blocking eligible work.
-Dependency-parked Todo items retain their normal blocker reporting. If only human
+Dependency-parked Todo items retain their normal blocker reporting. If the
+selected tracker cannot monitor waits, finish runnable work and refresh once.
+Return `waiting-for-human` for a human-only frontier or `partial-drain` for
+pending PRs or other blockers. Preserve all affected state and name the fresh
+tracker and host reads needed on resume. Use the following watcher deadline
+and failure rules only where the binding supplies a watcher.
+
+If only human
 actions, verified authority/decision pauses, Wayfinder human-frontier items,
 and/or assigned HITL attention or label-stopped work remain,
 wait under the [Project Watcher](#project-watcher) instead of returning. Return

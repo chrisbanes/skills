@@ -36,8 +36,9 @@ permissions; one controller retains ownership from clarification through closure
    [delivery lifecycle](references/delivery-lifecycle.md),
    [implementation procedure](references/implementation-mode.md) and
    [evidence and review](references/evidence-and-review.md).
-   Preserve existing plans and use one cohesive PR or dependency-ordered PRs
-   according to independently shippable outcomes. Keep repairs with their owner.
+   Preserve existing plans and use the PR boundaries in the
+   [tree delivery procedure](references/issue-lifecycle.md#deliver-the-tree).
+   Keep repairs with their owner.
 5. Reconcile exact-head checks/reviews and explicit merge/closure grants through
    the binding. Follow the issue lifecycle's bounded waiting and resume procedure;
    board handoffs follow their controller's cadence instead.

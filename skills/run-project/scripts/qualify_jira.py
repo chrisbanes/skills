@@ -26,7 +26,7 @@ CLEANUP_RESERVE = 6
 REQUEST_TIMEOUT = 10
 RECONCILE_READS = 6
 PAGE_LIMIT = 20
-FIELDS = "project,summary,issuetype,labels,parent,subtasks,status,assignee"
+FIELDS = "project,summary,issuetype,labels,parent,subtasks,status,assignee,creator"
 PERMISSIONS = ("BROWSE_PROJECTS", "CREATE_ISSUES", "DELETE_ISSUES",
                "ASSIGN_ISSUES", "TRANSITION_ISSUES", "ADD_COMMENTS")
 
@@ -205,7 +205,8 @@ class Qualification:
     def check_identity(self, issue):
         fields = issue["fields"]
         require(numeric_id(issue["id"]) and re.fullmatch(r"KAN-[1-9][0-9]*", issue["key"])
-                and fields["project"]["id"] == PROJECT_ID and self.label in fields["labels"],
+                and fields["project"]["id"] == PROJECT_ID and self.label in fields["labels"]
+                and (fields.get("creator") or {}).get("accountId") == self.account,
                 "run issue identity or label mismatch")
 
     def read_issue(self, issue_id):
@@ -225,6 +226,9 @@ class Qualification:
         require(self.account and identity.get("active") is True, "active Jira identity unavailable")
         project = self.get(f"/project/{PROJECT}")
         require((project["key"], project["id"]) == (PROJECT, PROJECT_ID), "fixture identity changed")
+        # Jira Software team-managed roles grant Delete any work item for the space.
+        require(project.get("style") == "next-gen" and project.get("projectTypeKey") == "software",
+                "cannot verify team-managed software delete permission")
         self.check_permissions(projectId=PROJECT_ID)
         types = self.offset_pages(f"/issue/createmeta/{PROJECT}/issuetypes", "issueTypes")
         advertised = project["issueTypes"]

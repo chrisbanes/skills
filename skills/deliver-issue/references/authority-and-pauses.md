@@ -200,7 +200,7 @@ Continue the board while any authorized action is runnable. Return
 `waiting-for-human` only after a complete refreshed query proves that only
 verified authority/decision pauses, label-stopped items and other human-frontier actions remain. In
 `drain`, return only as the scheduler's
-[Project Watcher](drain-scheduler.md#project-watcher) allows.
+[finish gate](drain-scheduler.md#failure-isolation-and-finish-gate) allows.
 Report each ticket, exact blocker, preserved PR/head, and resume condition.
 Use `partial-drain` for unresolved integrity, unknown pause publication, other
 blocked slots, or parked required-CI failures. Never report these as an empty

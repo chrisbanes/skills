@@ -6,7 +6,8 @@
         "KAN-12",
         "KAN-13"
       ],
-      "rootAction": "block-on-descendants"
+      "rootAction": "block-on-descendants",
+      "subTaskDelivery": "separate-plan-claim-and-change-request"
     },
     "partial-graph": {
       "action": "block",
@@ -41,6 +42,10 @@
     },
     "smart-commit": {
       "action": "refuse",
+      "write": false
+    },
+    "unknown-visibility": {
+      "action": "block",
       "write": false
     }
   }

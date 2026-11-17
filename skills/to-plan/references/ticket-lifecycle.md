@@ -219,8 +219,10 @@ merge or merge-queue admission. When a merge or associated closure grant is abse
 apply the [ticket-pause procedure](authority-and-pauses.md#pause-one-ticket).
 Follow configured merge/queue, serialize oldest ready slot
 unless dependency requires otherwise, and reconcile exact merge. Enforce closure
-policy and [reconcile unintended closures](github-binding.md#unintended-closure)
-before Done automation or cleanup. A partial merge retains the open issue,
+policy and reconcile unintended tracker closure before Done automation or
+cleanup. Use the selected tracker procedure for
+[GitHub](github-binding.md#unintended-closure) or
+[Jira](jira-binding.md#link-and-close). A partial merge retains the open issue,
 unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
 For a completed ticket, reconcile Done without archiving/removing directly, stop
 on unexpected outcomes, clean up the ticket worktree and branch under

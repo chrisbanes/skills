@@ -107,8 +107,8 @@ do not rehydrate an unchanged verified ticket merely because another ticket
 emitted a CI event. Full selection/recovery/finish reads and fresh write
 authority remain mandatory.
 
-Keep remote monitoring with the scheduler's single
-[Project Watcher](drain-scheduler.md#project-watcher). An empty host wait timeout
+Use the selected tracker's
+[remote wait procedure](drain-scheduler.md#project-watcher). An empty host wait timeout
 does not invalidate the snapshot or require a query, restart, or progress
 notification; consume delivered reports and completions before waiting again.
 

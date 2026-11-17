@@ -4,8 +4,9 @@ Use the supplied jira-state.md as the complete scenario snapshot. Do not contact
 
 Use the scenario IDs as object keys, and exactly these fields for each scenario. Use lowercase hyphenated tokens for decision strings.
 
-- direct-tree: eligibleScope, rootAction
+- direct-tree: eligibleScope, rootAction, subTaskDelivery
 - partial-graph: action, write
+- unknown-visibility: action, write
 - issue-type-override: doneId, write
 - unmapped-type: action, write
 - parent-validator: merge, closure, retry
