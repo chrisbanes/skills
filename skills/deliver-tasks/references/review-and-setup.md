@@ -16,5 +16,7 @@ uncertainty, or `review-blocked` when permitted evidence is insufficient.
 ## Setup
 
 Follow [GitHub setup](github-binding.md#setup), including its additive setup,
-active-lease, confirmation and finish gates. Execution validates read-only; it
+active-lease, confirmation and finish gates. An absent override file uses
+read-only default resolution and may finish `configuration-valid`; only requested
+file edits need the trusted committed instruction/configuration pair. Execution validates read-only; it
 never enters setup repair.

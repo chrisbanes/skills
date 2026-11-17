@@ -404,6 +404,45 @@ class NeutralContractTest(unittest.TestCase):
         self.assertIn("TRACK-2", str(output["excluded"]))
 
 
+class DefaultBindingTest(unittest.TestCase):
+    def test_default_board_without_priority_field_ranks_by_position(self):
+        result = subprocess.run([
+            sys.executable, str(SCRIPT), "--mode", "next", "--current-user", "chris",
+            *DEFAULT_PROJECT_ARGUMENTS, *DEFAULT_STATUS_ARGUMENTS,
+        ], input=json.dumps([
+            ticket(905, projectStatus="Todo", projectPriority=None, projectPosition=2, implementationPlan=None),
+            ticket(904, projectStatus="Todo", projectPriority=None, projectPosition=1, implementationPlan=None),
+        ]), capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual([904, 905], [x["ticket"]["number"] for x in json.loads(result.stdout)["candidates"]])
+
+    def test_agent_role_override_routes_planning_and_stops_only_when_removed(self):
+        code, result = run_ranker([
+            ticket(901, projectStatus="Todo", labels=["agent:ready"], implementationPlan=None),
+            ticket(902, labels=["agent:ready"], assignees=["chris"]),
+            ticket(903, labels=["ready-for-agent"], assignees=["chris"]),
+        ], "--agent-work-label", "agent:ready")
+        self.assertEqual(0, code, result)
+        self.assertEqual([901], [x["ticket"]["number"] for x in result["candidates"]])
+        self.assertEqual([902], [x["ticket"]["number"] for x in result["claims"]])
+        self.assertEqual([903], [x["ticket"]["number"] for x in result["stoppedItems"]])
+
+    def test_agent_override_still_rejects_conflicting_or_empty_roles(self):
+        for label in ("", "ready-for-human", "epic", "needs-triage"):
+            with self.subTest(label=label):
+                code, result = run_ranker([], "--agent-work-label", label)
+                self.assertEqual(2, code)
+                self.assertEqual("invalid-input", result["reason"])
+        code, result = run_ranker([
+            ticket(906, labels=["agent:ready", "epic"]),
+            todo_role_ticket(907, labels=["agent:ready", "needs-triage"]),
+            wayfinder_ticket(908, labels=["agent:ready", "wayfinder:research"]),
+        ], "--agent-work-label", "agent:ready", *DEFAULT_WAYFINDER_ARGUMENTS)
+        self.assertEqual(0, code, result)
+        self.assertEqual([908], [x["ticket"]["number"] for x in result["candidates"]])
+        self.assertEqual({906, 907}, {x["number"] for x in result["excluded"]})
+
+
 class RankTicketsTest(unittest.TestCase):
     def test_ready_status_is_no_longer_a_cli_input(self) -> None:
         result = subprocess.run([
@@ -1656,24 +1695,6 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(0, returncode)
         self.assertEqual(90, output["blockedClaims"][0]["number"])
         self.assertEqual(91, output["candidates"][0]["ticket"]["number"])
-
-    def test_priority_order_is_required(self) -> None:
-        result = subprocess.run(
-            [
-                sys.executable,
-                str(SCRIPT),
-                "--current-user",
-                "chris",
-                *DEFAULT_PROJECT_ARGUMENTS,
-            ],
-            input="[]",
-            capture_output=True,
-            check=False,
-            text=True,
-        )
-
-        self.assertEqual(2, result.returncode)
-        self.assertIn("--priority", result.stderr)
 
     def test_status_names_must_be_unique(self) -> None:
         returncode, output = run_ranker(

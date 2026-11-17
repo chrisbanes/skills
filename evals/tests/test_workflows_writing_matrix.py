@@ -245,9 +245,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "`next` or `drain` | [Review and setup](references/review-and-setup.md) for binding validation",
             entrypoint,
         )
-        self.assertIn("validate the binding through the setup", controller)
-        self.assertIn("committed digest", setup)
-        self.assertIn("If any value is missing,", setup)
+        self.assertIn("github-binding.md#binding-validation", controller)
+        self.assertIn("#effective-binding-fingerprint", setup)
+        self.assertIn("Missing, ambiguous, unknown or drifted state", setup)
         self.assertIn("references/drain-scheduler.md", entrypoint)
         self.assertIn("references/review-contracts.md", entrypoint)
         normalized = " ".join(entrypoint.split())
@@ -286,13 +286,16 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(51, len(benchmark))
-        self.assertEqual(147, len(calibration))
+        self.assertEqual(150, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(51, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertEqual(["router-single-item-deliver-spec"], [case.id for case in report.cases if case.kind == "routing"])
         self.assertEqual(
             {
+                "deliver-tasks-default-binding-direct",
+                "deliver-tasks-binding-override-novel",
+                "deliver-tasks-binding-ambiguity-negative",
                 "deliver-tasks-neutral-direct",
                 "deliver-tasks-claim-marker-novel",
                 "deliver-tasks-parked-negative",

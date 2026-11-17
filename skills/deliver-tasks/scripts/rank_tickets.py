@@ -59,7 +59,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--configuration-digest",
         required=True,
-        help="Digest of the committed Project configuration for recovery leases.",
+        help="Effective binding identity: committed override digest or runtime fingerprint.",
     )
     parser.add_argument(
         "--base-branch",
@@ -91,6 +91,11 @@ def parse_args() -> argparse.Namespace:
         "--done-status",
         default="Done",
         help="Configured terminal Project status allowed for recorded Wayfinder recovery.",
+    )
+    parser.add_argument(
+        "--agent-work-label",
+        default=AGENT_WORK_LABEL,
+        help="Resolved human-applied label authorizing agent work.",
     )
     parser.add_argument(
         "--needs-triage-label",
@@ -131,7 +136,7 @@ def parse_args() -> argparse.Namespace:
         "--priority",
         action="append",
         dest="priorities",
-        required=True,
+        default=[],
         help="Project priority display name in descending order. Repeat for each rank.",
     )
     parser.add_argument(
@@ -618,6 +623,7 @@ def analyze_common_ticket(
 def analyze_ticket(
     ticket: dict[str, Any],
     *,
+    agent_work_label: str,
     current_user: str,
     planning_status: str,
     claim_marker: dict[str, Any],
@@ -648,8 +654,8 @@ def analyze_ticket(
     active_claim = is_active_claim(ticket, claim_marker, current_user)
     errors = common["errors"]
     exclusions = common["exclusions"]
-    if AGENT_WORK_LABEL not in labels:
-        exclusions.append(f"missing {AGENT_WORK_LABEL} label")
+    if agent_work_label not in labels:
+        exclusions.append(f"missing {agent_work_label} label")
     if human_work_label in labels or needs_triage_label in labels:
         exclusions.append("conflicting execution role labels")
     if epic_label in labels:
@@ -862,6 +868,7 @@ def analyze_ticket(
 def analyze_role_ticket(
     ticket: dict[str, Any],
     *,
+    agent_work_label: str,
     needs_triage_label: str,
     epic_label: str,
     human_work_label: str,
@@ -886,7 +893,7 @@ def analyze_role_ticket(
     if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
     is_epic = epic_label in labels
-    is_agent_work = AGENT_WORK_LABEL in labels
+    is_agent_work = agent_work_label in labels
     is_human_work = human_work_label in labels
     needs_triage = needs_triage_label in labels
     action_roles = [is_agent_work, is_human_work, needs_triage]
@@ -1080,6 +1087,7 @@ def parse_wayfinder_reconciliation(
 def analyze_wayfinder_ticket(
     ticket: dict[str, Any],
     *,
+    agent_work_label: str,
     current_user: str,
     planning_status: str,
     recovery_statuses: tuple[str, ...],
@@ -1102,8 +1110,8 @@ def analyze_wayfinder_ticket(
     errors = common["errors"]
     exclusions = common["exclusions"]
 
-    if AGENT_WORK_LABEL not in labels:
-        exclusions.append("missing ready-for-agent label")
+    if agent_work_label not in labels:
+        exclusions.append(f"missing {agent_work_label} label")
 
     reconciliation = parse_wayfinder_reconciliation(
         ticket.get("wayfinderReconciliation"),
@@ -1251,7 +1259,7 @@ def main() -> int:
             args.needs_triage_label,
             args.epic_label,
             args.human_work_label,
-            AGENT_WORK_LABEL,
+            args.agent_work_label,
         )
         if any(not label for label in role_labels):
             raise InputError("role labels must be non-empty")
@@ -1297,14 +1305,14 @@ def main() -> int:
                         and not matches_claim_marker(raw_ticket, claim_marker)
                         and args.human_work_label in labels
                     )
-                    if AGENT_WORK_LABEL not in labels and not human_frontier and (
+                    if args.agent_work_label not in labels and not human_frontier and (
                         is_active_claim(raw_ticket, claim_marker, args.current_user)
                         or has_current_user_assignment(raw_ticket, args.current_user)
                     ):
                         stopped_items.append({
                             "ticket": raw_ticket,
                             "action": "stop-preserve",
-                            "reasons": ["missing ready-for-agent label; human restoration required"],
+                            "reasons": [f"missing {args.agent_work_label} label; human restoration required"],
                         })
                         continue
             try:
@@ -1350,6 +1358,7 @@ def main() -> int:
                     wayfinder_analyses.append(
                         analyze_wayfinder_ticket(
                             ticket,
+                            agent_work_label=args.agent_work_label,
                             current_user=args.current_user,
                             planning_status=args.planning_status,
                             recovery_statuses=(
@@ -1372,6 +1381,7 @@ def main() -> int:
                 ):
                     role_analysis = analyze_role_ticket(
                         ticket,
+                        agent_work_label=args.agent_work_label,
                         needs_triage_label=args.needs_triage_label,
                         epic_label=args.epic_label,
                         human_work_label=args.human_work_label,
@@ -1391,6 +1401,7 @@ def main() -> int:
                     execution_analyses.append(
                         analyze_ticket(
                             ticket,
+                            agent_work_label=args.agent_work_label,
                             current_user=args.current_user,
                             planning_status=args.planning_status,
                             claim_marker=claim_marker,

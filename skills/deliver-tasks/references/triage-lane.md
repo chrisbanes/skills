@@ -74,7 +74,7 @@ reuse merge or issue-close authority.
 
 Resume the same triage context with the maintainer's decision. Serialize and
 reconcile each approved label, comment, or close mutation before continuing.
-Recheck the committed configuration digest and refetch the issue immediately
+Recheck the effective binding fingerprint and refetch the issue immediately
 before dispatch and before every approved mutation.
 If the recommendation needs grilling, domain-model or ADR edits, checkout
 mutation, external access, or another material decision, stop the lane and

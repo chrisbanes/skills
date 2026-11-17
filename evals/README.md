@@ -59,6 +59,12 @@ references, binding-supplied status or label claim markers, and parked-item
 restraint across execution, triage, epic and human-work lanes. Their decision
 artifacts have deterministic validation; live model behavior is unmeasured.
 
+The optional-binding calibration cases cover fresh no-file Project defaults,
+trusted partial overrides, pinned identity drift and every ambiguous lookup.
+They retain runtime fingerprints through recovery without a phantom file digest;
+missing/duplicate columns, multi-label roles and unresolved scopes fail closed.
+Deterministic validation checks decision artifacts, not live model behavior.
+
 The writing calibration cases extend the rendering-documentation regressions
 with short review replies, nontechnical email (file edits and response-only
 drafting), missing personal experience,

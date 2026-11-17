@@ -1,0 +1,43 @@
+{
+  "id": "deliver-tasks-binding-ambiguity-negative",
+  "title": "Every ambiguous or untrusted binding blocks without repair",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-tasks"
+  ],
+  "expected_skills": [
+    "deliver-tasks"
+  ],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-binding-ambiguity-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "binding",
+      "text": "Report the exact missing/duplicate option or field, multi-label or missing role, unresolved/missing/multiple/inaccessible scope, conflicting repository/method/role mapping, legacy config and source-switch blocker. Preserve work; no guessed identity, implicit migration, phantom digest or fallback around trust checks."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "staged_skill_files": [
+    "run-github-project/scripts/watch_project.py"
+  ],
+  "calibration": true
+}

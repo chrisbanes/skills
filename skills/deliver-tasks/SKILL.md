@@ -12,12 +12,12 @@ disable-model-invocation: true
 The bound scope is the live control plane: fresh board state and this run's
 operation-specific grants decide every claim, write and finish.
 Default lanes are `Todo` → `In progress` → `Done`; resolve them
-through the trusted binding's verified option IDs. Implementation readiness is
+through the resolved binding's verified option IDs. Implementation readiness is
 derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 
 Load the selected tracker/code-host binding before applying these rules. GitHub
 is the only binding: read [GitHub binding](references/github-binding.md), including
-its configuration, operations and normalization contract. Use its neutral ranker inputs and preserve durable marker formats. `run-github-project` selects this
+its optional overrides, fresh defaults, operations and normalization contract. Use its neutral ranker inputs and preserve durable marker formats. `run-github-project` selects this
 binding; an explicit `deliver-tasks` request must resolve the same GitHub scope.
 For one named implementation item, use `deliver-spec`; this controller owns
 selection across a scope of tasks.

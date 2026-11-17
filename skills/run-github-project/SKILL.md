@@ -14,8 +14,9 @@ Use the shared delivery controller with the GitHub Project binding.
 ## Procedure
 
 1. Read [GitHub binding](references/github-binding.md) and select it for this
-   invocation. Preserve the configured Status schema, trusted configuration
-   path, role labels, marker formats and Project Watcher.
+   invocation. Resolve a Project URL with fresh defaults or trusted optional
+   `deliver-tasks` overrides. Preserve role authority, marker formats and the
+   Project Watcher.
 2. Load [deliver-tasks](../deliver-tasks/SKILL.md) and follow its complete
    procedure for `review`, `setup`, `next` or explicitly authorized `drain`.
    Loading that procedure is part of this explicit invocation; it grants no

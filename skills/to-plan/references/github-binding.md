@@ -4,8 +4,8 @@
 
 Translate the controller's decisions into verified GitHub operations; this
 binding supplies no selection, mutation or merge authority of its own. GitHub
-Project is the only supported scope. Keep the existing five Status options,
-configuration path, labels and recovery markers unchanged.
+Project is the only supported scope. Resolve optional overrides and fresh
+defaults below; preserve existing marker formats and label authority.
 
 ## Operations
 
@@ -129,36 +129,108 @@ retains its trusted configuration, leases and merge/closure policy.
 
 ## Binding validation
 
-For `next` or `drain`, use the Setup section below only to validate the
-existing binding as a read-only precondition. Require the trusted reference and
-configuration pair to be committed on verified base; validate all required
-fields and IDs against complete live reads, and record the committed digest,
-default branch, and live merge-policy fingerprint. If any value is missing,
-unknown, or drifted, stop and preserve work. The sole execution exception is
-an already trusted, committed display-name-only change passing
+For `next` or `drain`, resolve the binding read-only using the procedure below.
+An absent override file is valid; an existing file requires its exact trusted
+instruction reference and both files committed on verified base. Never ignore an
+untrusted, uncommitted or invalid file to fall back to defaults. Validate all
+resolved values and pinned identities against complete live reads. Record the
+[effective binding fingerprint](#effective-binding-fingerprint), default branch
+and live merge-policy fingerprint. Missing, ambiguous, unknown or drifted state
+returns `configuration-blocked`, naming the lookup, candidate identities and
+required correction; preserve all work. Execution never enters setup repair.
+Only an already trusted, committed display-name-only edit may use
 [presentation-only renewal](#renew-presentation-only-configuration).
-Do not enter the setup repair flow or edit a binding during execution.
+
+### Resolve defaults and overrides
+
+1. Read closest trusted repository instructions and inspect
+   `docs/agents/deliver-tasks.md`, or their explicitly referenced override path.
+   If both exist and select different files, stop on conflicting configuration.
+   Treat an existing legacy `docs/agents/run-github-project.md` as migration
+   required, not as an absent file. Leave its rename/reshape to the separately
+   approved migration task; do not migrate during execution.
+2. Select **Tracker** and **Code host** independently (default `github` for
+   each; other providers need their own supported binding), then **Scope** from
+   the explicit override or invocation Project URL.
+   Resolve exactly one Project owner, number, canonical URL and node ID.
+   Validate any Project identity pins against Scope; contradictory fields block.
+   A missing, inaccessible, unresolved or multiply resolved scope blocks the run;
+   never guess from linked Projects, named views or an issue reference. Parent
+   scope is a separate task. Scope selection supplies no item authority.
+3. Resolve repository host and `owner/repository` from the current checkout's
+   git remote and verify its live identity. Use explicit repository overrides
+   first; without them, conflicting remotes or an unclear repository block.
+   Obtain the default branch from live repository settings and use it as base
+   unless overridden. Resolve a merge queue when required by live policy;
+   otherwise use the sole permitted repository merge method. Multiple permitted
+   methods without an explicit repository preference or override block; do not
+   invent a preference. Verify any override against live permissions/rules.
+   Default issue closure to `closing-keyword` for the default base, otherwise
+   `close-after-merge`; default Done automation to `set-status` without archive.
+   Read actual Project workflows and reject conflicting automation.
+4. Overlay only supplied override fields on these defaults. Resolve the live
+   `Status` field and `Todo`, `In Progress`, `Done` options by exact name on
+   **every run**, including no-file recovery. Each lookup must have exactly one
+   result. A missing or duplicate field/option blocks; show its name and all
+   matching IDs. Explicit name overrides replace the conventional name. A pin
+   selects its ID instead, but must still resolve to the intended object in the
+   correct Project/field/repository with the stored name. A name change on the
+   same ID is drift requiring reconciliation; an ID resolving elsewhere stops.
+5. Paginate repository labels and resolve the conventional role names
+   `ready-for-agent`, `ready-for-human`, `needs-triage`, and `epic` freshly.
+   Match names case-insensitively for discovery, then retain the exact live name
+   and ID. Require exactly one label per role; missing labels or multiple
+   matches (including case variants) block. Explicit role names/IDs override
+   discovery; validate their identity and require distinct role mappings.
+   Never create/rename labels, infer roles from prose, or add/restore agent
+   authority. Optional Wayfinder stays disabled unless explicitly enabled with
+   complete mappings. Agent Setup defaults to runtime capabilities.
+6. Resolve optional Priority if present: require one `Priority` field, unique
+   option names and its complete live option order; absence means all items
+   have unset priority and no `--priority` arguments. Explicit Priority mappings
+   override order/names/IDs and are validated. Default filter is none, polling
+   is 120 seconds; read all applicable protection/review/check requirements live.
+   Finish `configuration-valid` only with complete evidence and an effective
+   fingerprint. No-file validation creates neither a file nor an instruction
+   patch and grants no claim, write or merge permission.
+
+### Effective binding fingerprint
+
+For no-file runs compute `sha256` over UTF-8 canonical JSON (sorted object keys,
+compact separators, sorted set-like arrays, preserved priority/profile order)
+containing tracker/code-host identities, resolved repository and scope IDs,
+base/default branches, field/option/role IDs **and names**, claim marker,
+filter, priority order, agent/Wayfinder/monitoring defaults and resolved
+merge/closure/Done policies. Include `configurationSource: "defaults"`; store
+this resolved snapshot and fingerprint in the controller checkpoint and leases.
+Do not include timestamps, checkout paths or moving base SHAs in this digest;
+base identity and live merge-policy fingerprint are independently revalidated.
+
+Retain existing committed-file digest semantics for trusted override bindings;
+record their resolved snapshot alongside that digest and revalidate both.
+Throughout controller leases, pause/parking/Wayfinder markers and normalization,
+`configurationDigest` and `--configuration-digest` mean this effective binding
+identity: the committed override digest when a file exists, the runtime
+fingerprint otherwise. In all controller prose, `ready-for-agent` denotes the
+resolved agent-work role, never an additional literal-label requirement.
+Never require a phantom file digest or rewrite historical
+markers. Recompute/compare before every claim, material write, merge and recovery.
+Missing prior snapshot, changed defaults/IDs/policy, a source switch to/from a
+file or unknown reads stop and preserve affected work; they never silently
+rebind old claims. Presentation-only renewal applies to committed override
+edits only, with all its existing proofs; no-file drift requires explicit
+reconciliation and a new verified lease before writers resume.
 
 ## Setup
 
-Read closest trusted instructions and require an explicit reference to
-`docs/agents/run-github-project.md`; use
-[project configuration](#github-project-configuration) as its structure. Require repository
-identity, default/base branches and closure policy; Project owner/number/URL/node
-ID; Status field and Todo/In-progress/Done options; exact
-needs-triage, epic, and human-work labels; complete optional Wayfinder labels;
-Priority field/options; optional trusted filter; merge
-method; Done automation/archive behavior. Store names with IDs; a renamed name
-is repairable drift but an ID resolving elsewhere stops work. Never create or
-rename Project fields/options. Apply the planning lane migration gate only when
-adopting that Status schema, not when adding or repairing mappings for a schema
-already in use. Humans perform any legacy-item placement; setup and execution
-never infer label authority from placement or require transition-history authorization. Allow
-`closing-keyword` only when base is the default branch.
-When Agent Setup is present, validate unique profile names, required default
-owner profiles, and runtime role/model/reasoning compatibility. Keep the
-selected lead model unchanged. Agent selection uses configured defaults and
-capability checks without an external routing service.
+Validate defaults first through the resolution procedure. Configuration is
+optional and holds only requested overrides. For requested file creation or
+repair use [project configuration](#github-project-configuration) and additive
+setup below; preserve all unrelated values and explicit pins. Never create or
+rename Project fields/options, move legacy items, or infer role authority from
+placement. Validate Agent Setup profiles against current runtime capabilities;
+keep the selected lead model unchanged. Allow `closing-keyword` only on the
+default base. Finish with the applicable validation or proposed-edit result.
 
 ### Additive Setup for an Existing Repository
 
@@ -209,7 +281,7 @@ that result. Report `configuration-valid` only after the committed
 configuration and trusted reference on verified base pass fresh validation. Pause new claims while the edit is pending; existing claims may
 continue on their unchanged binding.
 
-Changing the committed configuration digest while a ticket still holds an old
+Changing the effective binding fingerprint while a ticket still holds an old
 lease invalidates it unless execution has verified the narrow
 [presentation-only renewal](#renew-presentation-only-configuration).
 Setup does not perform that renewal or assume it will succeed. While old-digest claims exist, prepare the
@@ -224,16 +296,12 @@ old-digest claims finish. If validation passes, report
 appropriate; do not change existing owners or leases. New routing and other
 configuration changes apply only after activation.
 
-When no configuration exists, discover linked Projects and fields, ask
-unresolved questions one at a time, present complete configuration and the
-minimum trusted-instruction patch together, and write only after confirmation
-while preserving unrelated text. Creating or repairing the pair pauses
-execution until both files are committed to verified base; do not commit
-implicitly. Validate the pair live. A user-authorized dedicated configuration
-commit may contain only that pair. Record committed digest, default branch, and
-[live merge-policy fingerprint](#live-merge-policy-fingerprint);
-recheck them before every claim and merge and stop/preserve work on drift or
-unknown state.
+When a user requests overrides and no configuration exists, present only the
+requested overrides with the minimum exact-file trusted-instruction reference.
+Write after confirmation, preserving unrelated text; do not commit implicitly.
+Pause new claims until the pair is committed on verified base and freshly
+validated. A user-authorized configuration commit may contain only that pair.
+Absent a request for overrides, keep the no-file binding and create nothing.
 
 Treat a legacy `Execution approver logins` entry as obsolete configuration.
 Remove one shown in the binding during an otherwise authorized setup edit when no old-digest claim
@@ -248,15 +316,30 @@ read cannot be established, discard partial state and return
 
 ## GitHub Project Configuration
 
-Copy this structure to `docs/agents/run-github-project.md` in the repository
-that owns the queue. Replace every placeholder with live verified data. The
+Use `docs/agents/deliver-tasks.md` for optional overrides in the repository
+that owns the queue. Include only sections/fields being overridden; the following
+is a field catalogue, not a required complete file. Resolve omitted fields from
+fresh defaults. Replace included placeholders with live verified data. The
 closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
 For an existing binding, run `setup` from its current values instead of copying
 this template over it. Follow the
 [additive setup procedure](#additive-setup-for-an-existing-repository).
 
 ```markdown
-# Run GitHub Project
+# Deliver tasks
+
+## Tracker
+
+- Provider: `github`
+
+## Code host
+
+- Provider: `github`
+
+## Scope
+
+- Type: `project`
+- URL: `<Project URL>`
 
 ## Repository
 
@@ -287,9 +370,12 @@ this template over it. Follow the
 ## Triage
 
 - Needs-triage label: `<repository label mapped to needs-triage>`
+- Needs-triage label ID: `<LA_...>`
 
 ## Work Roles
 
+- Agent-work label: `<repository label mapped to ready-for-agent>`
+- Agent-work label ID: `<LA_...>`
 - Epic label: `<repository label mapped to epic>`
 - Epic label ID: `<LA_...>`
 - Human-work label: `<repository label mapped to ready-for-human>`
@@ -352,8 +438,8 @@ specific comments and additions when repairing stale mappings.
 
 `Todo` is the default display name for the lane that queues planning. Pass its
 configured name through `--planning-status`; planning action names and
-`blockedPlanningClaims` still describe that work. Current column membership is
-authority. Never read transition history to prove authorization or a handoff.
+`blockedPlanningClaims` still describe that work. Current human-applied role-label membership is
+authority; column membership only routes work. Never read transition history to prove authorization or a handoff.
 Preserve an existing binding's verified lane name, including `Planning`, until
 a human renames the live option and an authorized setup reconciles the same
 option ID. Once that presentation-only edit is trusted and committed, execution
@@ -534,7 +620,9 @@ recovery is verified.
 
 Use the controller's [ranker invocation](../../deliver-tasks/references/normalized-ticket.md#ranker-invocation).
 
-Normalize the GitHub Project binding before ranking:
+Normalize the fully resolved GitHub Project binding before ranking. Use the
+resolved exact live names (including overrides), IDs and effective binding
+fingerprint from validation; absence of an override file is not missing state:
 
 1. Map the Project item node ID to `itemId`, the issue URL to `itemRef`, and
    unresolved native blocker identities to `blockerRefs`. Preserve local issue
@@ -543,7 +631,9 @@ Normalize the GitHub Project binding before ranking:
 2. Supply `parked: false` for every GitHub item. GitHub has no parked column;
    unlabelled Todo is outside automatic work. Other bindings must supply their
    own parked gate, independently of role authority.
-3. Pass `--claim-marker '{"status":"<configured In progress name>","requiresAssignment":true}'`.
+3. Pass `--agent-work-label` with the exact resolved agent-work role name;
+   `ready-for-agent` below denotes that role, including its human-only grant.
+   Pass `--claim-marker '{"status":"<configured In progress name>","requiresAssignment":true}'`.
    Use the exact configured column display name and authenticated runner login.
    Require only Todo, In progress and Done; derive implementation readiness
    from Todo, `ready-for-agent`, and a verified usable active plan leaf. Pass no
@@ -997,7 +1087,7 @@ The default interval remains 120 seconds. This command never performs writes.
 
 1. In the controller lane, publish one runner-authored issue comment containing
    `<!-- run-github-project:authority-pause:v1 -->`, the repository, issue and
-   Project item IDs, committed configuration digest, base identity, exact
+   Project item IDs, effective binding fingerprint, base identity, exact
    blocked operation, missing authority or decision, and an observable resume
    condition. Include current Status and assignment, source and plan
    permalink/digest, PR URL, branch, head, and the
@@ -1083,8 +1173,8 @@ instead invokes the stop gate and releases capacity once writers are quiesced.
 1. Publish one runner-authored issue comment containing
    `<!-- run-github-project:parked-implementation:v1 -->`, the issue and Project
    item IDs, PR URL, branch, head SHA and
-   [checkout ID](../../deliver-tasks/references/ticket-lifecycle.md#worktrees), verified base SHA, committed
-   configuration digest, and
+   [checkout ID](../../deliver-tasks/references/ticket-lifecycle.md#worktrees), verified base SHA, effective
+   binding fingerprint, and
    [live merge-policy fingerprint](#live-merge-policy-fingerprint),
    required-check names and conclusions, sanitized failure fingerprint, and the
    check-run IDs, heads, and fingerprints for all three rounds. Include the

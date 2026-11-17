@@ -1,0 +1,35 @@
+{
+  "decisions": {
+    "valid": {
+      "action": "configuration-valid",
+      "scope": "project-8",
+      "base": "release",
+      "planning_status": "Planning",
+      "agent_role": "agent:ready",
+      "human_role": "human:next",
+      "closure": "close-after-merge",
+      "identity_source": "committed-override-digest",
+      "requires_file": true
+    },
+    "wrong-id": {
+      "action": "configuration-blocked",
+      "falls_back_to_defaults": false,
+      "edits_config": false
+    },
+    "renamed": {
+      "action": "configuration-blocked",
+      "falls_back_to_defaults": false,
+      "edits_config": false
+    },
+    "untrusted": {
+      "action": "configuration-blocked",
+      "falls_back_to_defaults": false,
+      "edits_config": false
+    },
+    "uncommitted": {
+      "action": "configuration-blocked",
+      "falls_back_to_defaults": false,
+      "edits_config": false
+    }
+  }
+}

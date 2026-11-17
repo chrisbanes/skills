@@ -485,7 +485,7 @@ references the parking permalink and digest, records the qualifying recovery
 signal and its evidence or a reference to the explicit investigation authority,
 and captures the current PR head, checks, base, configuration, and merge-policy
 evidence. An ambiguous resume record leaves the claim parked. Before publishing
-that record, freshly revalidate the committed configuration digest and canonical
+that record, freshly revalidate the effective binding fingerprint and canonical
 live merge-policy fingerprint. A committed display-name-only change may use
 [verified lease renewal](github-binding.md#renew-presentation-only-configuration);
 every other mismatch or unknown read stops the drain and preserves the parked

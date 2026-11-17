@@ -10,13 +10,14 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   [--wayfinder-ticket <explicit-user-selected-child-number>] \
   --current-user <runner-identity> \
   --repository <owner/repository> \
-  --configuration-digest <committed-configuration-digest> \
+  --configuration-digest <effective-binding-fingerprint> \
   --base-branch <base-branch> \
   --issue-closure <closing-keyword-or-close-after-merge> \
   --planning-status <todo-name> \
   --in-progress-status <in-progress-name> \
   --claim-marker '<binding-claim-marker-json>' \
   --done-status <done-name> \
+  --agent-work-label <agent-work-label> \
   --needs-triage-label <needs-triage-label> \
   --epic-label <epic-label> \
   --human-work-label <human-work-label> \
@@ -25,7 +26,7 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --wayfinder-prototype-label <wayfinder:prototype-label> \
   --wayfinder-grilling-label <wayfinder:grilling-label> \
   --wayfinder-task-label <wayfinder:task-label> \
-  --priority <highest-name> [--priority <next-name> ...] \
+  [--priority <highest-name>] [--priority <next-name> ...] \
   --max-claims <mode-slot-limit> \
   < normalized-tickets.json
 ```
@@ -34,7 +35,7 @@ In `next`, add `--wayfinder-ticket` only for an explicitly selected eligible
 child. Pass all five Wayfinder label options only for a complete enabled
 configuration; otherwise omit all five.
 
-Use configured Status and Priority display names, not option IDs; use IDs only
+Use resolved Status and Priority display names, not option IDs; use IDs only
 for Project mutations. Preserve GitHub logins, rank an unset Priority last, and
 reject non-finite Project positions. Run `--help` if the installed script's
 interface is uncertain rather than guessing an option. `--max-claims` accepts
@@ -85,3 +86,20 @@ stale plans require planning or base-drift screening before implementation.
 6. Verify the binding's normalization covers every required field before
    ranking. Read the resulting claims, blocked claims and candidate collections
    before dispatch; a candidate alone never grants mutation authority.
+
+## Binding identity and defaults
+
+Validate through the binding's [defaults and overrides](github-binding.md#resolve-defaults-and-overrides)
+procedure before normalization. Use its [effective binding fingerprint](github-binding.md#effective-binding-fingerprint)
+for `--configuration-digest` and every lease/marker `configurationDigest`.
+No-file runs supply the verified runtime fingerprint; trusted override runs
+retain their committed digest and resolved snapshot. Exact historical comparisons
+and verified committed-file renewal remain unchanged. Missing files alone do
+not invalidate no-file leases; a changed fingerprint or source does.
+
+Pass every resolved role name explicitly, including `--agent-work-label`.
+`ready-for-agent` in controller prose names that semantic role; overrides change
+its label, never its human-only authority or stop-on-removal rule. Keep raw live
+labels unchanged in normalized input. Without Priority, supply null
+`projectPriority` on every ticket and omit `--priority`; ordering falls back to
+position and number. A present but unresolved Priority is a blocker, not absence.

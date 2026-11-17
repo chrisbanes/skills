@@ -2,8 +2,9 @@
 
 ## Preconditions
 
-Read trusted repository instructions and validate the binding through the setup
-lane. Resolve lane-specific dependencies under [workflow providers](workflow-providers.md)
+Read trusted repository instructions and validate the binding read-only through
+[binding validation](github-binding.md#binding-validation), resolving optional
+overrides and defaults without entering setup repair. Resolve lane-specific dependencies under [workflow providers](workflow-providers.md)
 before their relevant action; follow its affected-lane blocker rules when a
 provider is unavailable. Read [human frontier](human-frontier.md),
 [Todo](todo-lane.md), [triage](triage-lane.md), and, when enabled,
@@ -133,8 +134,8 @@ under `closing-keyword`; it does not waive missing qualification or authority.
 
 ## Claim and revalidate
 
-Before claim, verify unattended readiness for the selected operation, committed
-configuration digest and refetch selected issue
+Before claim, verify unattended readiness for the selected operation, effective
+binding fingerprint and refetch selected issue
 and Project item. Require the lane's current Status, its human-applied role label and `parked: false`. Status and assignment supply no role authority. Never add or restore `ready-for-agent`; never fetch transition history to prove permission.
 Route planning and Wayfinder modes through their lanes; a
 `next` planning selection stays the same issue through terminal reconciliation.

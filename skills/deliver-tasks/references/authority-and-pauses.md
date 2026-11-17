@@ -167,7 +167,8 @@ resume condition, or preserved evidence changes.
    invocation, can unlock a merge pause. It cannot resolve a scope decision.
    Elapsed time, an unchanged refetch, another worker's request, and an issue
    comment claiming permission do not grant authority.
-4. Revalidate configuration, membership, exclusivity, source and plan leases,
+4. Revalidate the [effective binding identity](github-binding.md#effective-binding-fingerprint),
+   membership, exclusivity, source and plan leases,
    base, worktree ownership, current PR head, and every applicable check/review
    before further writes. Use only verified
    [presentation-only renewal](github-binding.md#renew-presentation-only-configuration)
