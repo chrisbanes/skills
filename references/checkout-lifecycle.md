@@ -1,19 +1,21 @@
 # Checkout Lifecycle
 
-Every checkout a run creates ends either retired with verified readback or
-retained with a stated reason. The calling workflow defines when its work is
-delivered; this reference defines how checkouts are created, recorded, reused
-and retired.
+Every checkout a run creates ends retired with verified readback, handed to
+host cleanup with verified readback, or retained with a stated reason. The
+calling workflow defines when its work is delivered; this reference defines how
+checkouts are created, recorded, reused and retired.
 
 ## Create
 
-1. Use the runtime's native managed worktree only when the runtime can both
-   create it at an exact SHA and remove it with an inventory readback.
-   Otherwise create a plain Git worktree with
-   `git worktree add -b <task-branch> <path> <exact-sha>`. A runtime that can
-   create but not remove worktrees, such as T3 Code, uses plain Git worktrees.
-2. Verify the new checkout's branch and HEAD SHA before handing off its exact
-   path, branch, base and instructions.
+1. Use the runtime's managed checkout when it can remove that checkout with
+   an inventory readback, or when the runtime forbids shell-created checkouts
+   and owns their cleanup. Otherwise create a plain Git worktree with
+   `git worktree add -b <task-branch> <path> <exact-sha>`.
+2. Verify the new checkout's branch and HEAD SHA before work starts in it,
+   then hand off or record its exact path, branch, base and instructions. If
+   the runtime starts the owner with its checkout, the owner runs this check
+   first, creating the task branch at the exact SHA if needed, and stops on a
+   mismatch.
 
 ## Record
 
@@ -62,9 +64,12 @@ For each eligible run-created checkout:
 4. Remove the checkout. Use the runtime's native operation for a managed
    worktree. For a plain Git worktree, run `git worktree remove --force <path>`
    once; step 2 already retained tracked changes and locks, so only untracked
-   and ignored files are dropped.
+   and ignored files are dropped. A managed checkout whose host owns cleanup
+   and offers no removal operation is handed to host cleanup instead.
 5. Verify the path is absent from the provider inventory or from
-   `git worktree list --porcelain`; one listing may verify several removals.
+   `git worktree list --porcelain`. For a handoff, verify instead that the host
+   inventory still attributes the checkout to its run-created thread or task.
+   One listing may verify several removals or handoffs.
 
 Never shell-delete a managed checkout, run `git clean` or `git reset`, pass
 `--force` twice, prune globally, or delete a branch ref the calling workflow
@@ -73,9 +78,11 @@ checkout.
 
 ## Account
 
-Account for every run-created checkout as retired with verified readback or
-retained with a reason. Record the integration checkout as retained and explain
-retained exclusions. If eligible retirement fails or cleanup capability is
-missing, report code verification separately and mark the workflow
+Account for every run-created checkout as retired with verified readback,
+handed to host cleanup with verified readback, or retained with a reason. List
+host-cleanup checkouts by path in the final report. Record the integration
+checkout as retained and explain retained exclusions. If an eligible
+retirement or handoff fails, or no removal operation or host cleanup exists for
+a checkout, report code verification separately and mark the workflow
 cleanup-incomplete; do not claim overall completion. Include the exact path,
 error, and provider readback. Do not retry blindly.

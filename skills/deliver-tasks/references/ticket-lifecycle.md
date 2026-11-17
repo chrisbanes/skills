@@ -60,8 +60,7 @@ ticket worktree to another ticket.
    retain every label-stopped planning or ticket worktree, including clean ones;
    retire only the reusable [planning worktree](todo-lane.md) and delivered research
    worktree, then [account](checkout-lifecycle.md#account) for every worktree
-   the run created: retired with readback, or retained with its claim and
-   reason. A cleanup-incomplete run never reports success.
+   the run created, retaining with its claim and reason where applicable. A cleanup-incomplete run never reports success.
 
 ## Implement in ticket context
 

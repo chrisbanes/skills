@@ -193,7 +193,7 @@ Runtime caveats:
 
 - [Claude Code](https://code.claude.com/docs/en/sub-agents): `Explore` and
   `Plan` are one-shot and cannot own an item. The lead creates each run-owned
-  plain Git worktree at the integrated SHA under the checkout lifecycle's
+  worker checkout at the integrated SHA under the checkout lifecycle's
   [create rule](checkout-lifecycle.md#create) and passes the absolute path in
   the brief. Never use
   `Agent(isolation: "worktree")`; it bases on the default branch, not the
