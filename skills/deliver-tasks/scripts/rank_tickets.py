@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and rank a normalized live GitHub Project run."""
+"""Validate and rank normalized tracker items."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ CANDIDATE_OUTPUT_ACTIONS = {"resume-implementation": "claim"}
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Validate claims and rank eligible GitHub Project tickets.",
+        description="Validate claims and rank eligible normalized tracker items.",
     )
     parser.add_argument(
         "--mode",
@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--current-user",
         required=True,
-        help="Authenticated GitHub login used to detect resumable claims.",
+        help="Authenticated runner identity used to detect resumable claims.",
     )
     parser.add_argument(
         "--repository",
@@ -91,6 +91,11 @@ def parse_args() -> argparse.Namespace:
         "--in-progress-status",
         default="In progress",
         help="Configured GitHub Project status display name that marks an item active.",
+    )
+    parser.add_argument(
+        "--claim-marker",
+        required=True,
+        help='Binding JSON: exactly one status or label, plus requiresAssignment boolean.',
     )
     parser.add_argument(
         "--done-status",
@@ -307,15 +312,16 @@ def require_ticket_shape(ticket: Any) -> dict[str, Any]:
     required = {
         "number",
         "title",
-        "url",
+        "itemRef",
         "state",
-        "projectItemId",
+        "itemId",
+        "parked",
         "projectStatus",
         "projectPriority",
         "projectPosition",
         "labels",
         "assignees",
-        "blockedBy",
+        "blockerRefs",
         "openDescendants",
         "openPullRequests",
     }
@@ -329,12 +335,14 @@ def require_ticket_shape(ticket: Any) -> dict[str, Any]:
     number = ticket["number"]
     if not isinstance(number, int) or isinstance(number, bool):
         raise InputError(f"ticket {number!r}: number must be an integer")
-    if not isinstance(ticket["title"], str) or not isinstance(ticket["url"], str):
-        raise InputError(f"ticket {number}: title and url must be strings")
-    if not isinstance(ticket["projectItemId"], str) or not ticket["projectItemId"]:
-        raise InputError(f"ticket {number}: projectItemId must be a non-empty string")
+    if not isinstance(ticket["title"], str) or not isinstance(ticket["itemRef"], str):
+        raise InputError(f"ticket {number}: title and itemRef must be strings")
+    if not isinstance(ticket["itemId"], str) or not ticket["itemId"]:
+        raise InputError(f"ticket {number}: itemId must be a non-empty string")
     if not isinstance(ticket["projectStatus"], str) or not ticket["projectStatus"]:
         raise InputError(f"ticket {number}: projectStatus must be a non-empty string")
+    if not isinstance(ticket["parked"], bool):
+        raise InputError(f"ticket {number}: parked must be a boolean")
     project_priority = ticket["projectPriority"]
     if project_priority is not None and (
         not isinstance(project_priority, str) or not project_priority
@@ -354,6 +362,36 @@ def has_current_user_assignment(ticket: Any, current_user: str) -> bool:
         or isinstance(assignee, dict)
         and assignee.get("login") == current_user
         for assignee in assignees
+    )
+
+
+def parse_claim_marker(value: str) -> dict[str, Any]:
+    try:
+        marker = json.loads(value)
+    except json.JSONDecodeError as error:
+        raise InputError("claim marker must be a JSON object") from error
+    if (
+        not isinstance(marker, dict)
+        or set(marker) not in ({"status", "requiresAssignment"}, {"label", "requiresAssignment"})
+        or not isinstance(marker["requiresAssignment"], bool)
+        or not isinstance(marker.get("status", marker.get("label")), str)
+        or not marker.get("status", marker.get("label"))
+    ):
+        raise InputError("claim marker requires exactly one non-empty status or label and requiresAssignment boolean")
+    return marker
+
+
+def matches_claim_marker(ticket: dict[str, Any], marker: dict[str, Any]) -> bool:
+    if "status" in marker:
+        return ticket.get("projectStatus") == marker["status"]
+    labels = ticket.get("labels")
+    return isinstance(labels, list) and marker["label"] in labels
+
+
+def is_active_claim(ticket: dict[str, Any], marker: dict[str, Any], current_user: str) -> bool:
+    return matches_claim_marker(ticket, marker) and (
+        not marker["requiresAssignment"]
+        or has_current_user_assignment(ticket, current_user)
     )
 
 
@@ -566,7 +604,7 @@ def analyze_common_ticket(
     return {
         "assignees": assignee_values(ticket["assignees"], number),
         "labels": string_values(ticket["labels"], "labels", number),
-        "blockers": string_values(ticket["blockedBy"], "blockedBy", number),
+        "blockers": string_values(ticket["blockerRefs"], "blockerRefs", number),
         "openDescendants": string_values(
             ticket["openDescendants"],
             "openDescendants",
@@ -583,7 +621,7 @@ def analyze_common_ticket(
         ),
         "priorityRank": priority_rank,
         "errors": [priority_error] if priority_error is not None else [],
-        "exclusions": [],
+        "exclusions": ["item is parked"] if ticket["parked"] else [],
     }
 
 
@@ -593,7 +631,7 @@ def analyze_ticket(
     current_user: str,
     planning_status: str,
     ready_status: str,
-    in_progress_status: str,
+    claim_marker: dict[str, Any],
     needs_triage_label: str,
     human_work_label: str,
     priorities: tuple[str, ...],
@@ -616,6 +654,8 @@ def analyze_ticket(
     priority_rank = common["priorityRank"]
     project_status = ticket["projectStatus"]
     assigned_to_current_user = current_user in assignees
+    marker_matches = matches_claim_marker(ticket, claim_marker)
+    active_claim = is_active_claim(ticket, claim_marker, current_user)
     errors = common["errors"]
     exclusions = common["exclusions"]
     if AGENT_WORK_LABEL not in labels:
@@ -636,7 +676,7 @@ def analyze_ticket(
     if implementation_plan is not None:
         plan_targets_base = implementation_plan["plannedBranch"] == base_branch
         plan_authored_by_runner = implementation_plan["author"] == current_user
-        if not plan_targets_base and project_status != planning_status:
+        if not plan_targets_base and (project_status != planning_status or marker_matches):
             exclusions.append(
                 "implementation plan targets "
                 f"{implementation_plan['plannedBranch']!r}, expected {base_branch!r}",
@@ -660,7 +700,7 @@ def analyze_ticket(
                 "implementation plan history authors "
                 f"{foreign_plan_authors} do not match current user {current_user!r}",
             )
-    if project_status != planning_status and implementation_plan is None:
+    if (project_status != planning_status or marker_matches) and implementation_plan is None:
         exclusions.append("missing current implementation plan")
 
     replan_request = (
@@ -693,7 +733,7 @@ def analyze_ticket(
     own_linked_pull_requests = [
         pull_request for pull_request in own_pull_requests
         if matches_issue_policy(
-            pull_request, issue_closure, retained_claim=assigned_to_current_user,
+            pull_request, issue_closure, retained_claim=assigned_to_current_user or active_claim,
         )
     ]
     retained_pr_matches_report = (
@@ -714,6 +754,7 @@ def analyze_ticket(
     )
     if (
         project_status == planning_status
+        and not marker_matches
         and assigned_to_current_user
         and (replan_request is not None or bool(own_linked_pull_requests))
     ):
@@ -727,7 +768,7 @@ def analyze_ticket(
             if plan["revision"] > prior_plan["revision"]
         ]
         plan_is_usable = bool(replan_revisions) and plan_is_usable
-        if not replan_revisions and project_status != planning_status:
+        if not replan_revisions and (project_status != planning_status or marker_matches):
             exclusions.append("implementation plan awaits a verified replan revision")
         if any(
             plan["replanRequest"] != replan_request["permalink"]
@@ -737,10 +778,10 @@ def analyze_ticket(
 
     if str(ticket["state"]).upper() != "OPEN":
         exclusions.append("not open")
-    if project_status not in (planning_status, ready_status, in_progress_status):
+    if project_status not in (planning_status, ready_status) and not marker_matches:
         errors.append(
             "expected project status "
-            f"{planning_status!r}, {ready_status!r}, or {in_progress_status!r}, "
+            f"{planning_status!r}, {ready_status!r}, or the binding claim marker, "
             f"found {project_status!r}",
         )
     if blockers:
@@ -750,8 +791,8 @@ def analyze_ticket(
     other_assignees = [assignee for assignee in assignees if assignee != current_user]
     if other_assignees:
         exclusions.append(f"assigned to {other_assignees}")
-    if project_status == in_progress_status and not assignees:
-        exclusions.append("in progress without an assignee")
+    if marker_matches and claim_marker["requiresAssignment"] and not assignees:
+        exclusions.append("claim marker without an assignee")
 
     wrong_target_pull_requests = [
         pull_request for pull_request in own_linked_pull_requests
@@ -770,7 +811,7 @@ def analyze_ticket(
     own_unlinked_pull_requests = [
         pull_request for pull_request in own_pull_requests
         if not matches_issue_policy(
-            pull_request, issue_closure, retained_claim=assigned_to_current_user,
+            pull_request, issue_closure, retained_claim=assigned_to_current_user or active_claim,
         )
     ]
     other_pull_requests = [
@@ -802,7 +843,9 @@ def analyze_ticket(
             f"{[pull_request['url'] for pull_request in pull_requests]}",
         )
 
-    if project_status == planning_status:
+    if active_claim:
+        action = "resume-pr" if resumable_pull_requests else "resume-implementation"
+    elif project_status == planning_status:
         action = (
             "resume-planning-handoff"
             if assigned_to_current_user and plan_is_usable
@@ -821,6 +864,7 @@ def analyze_ticket(
         "priorityRank": priority_rank,
         "projectPosition": project_position,
         "assignedToCurrentUser": assigned_to_current_user,
+        "activeClaim": active_claim,
         "resumeAction": action,
         "errors": errors,
         "exclusions": exclusions,
@@ -942,7 +986,7 @@ def parse_wayfinder_reconciliation(
     *,
     number: int,
     current_user: str,
-    project_item_id: str,
+    item_id: str,
     configuration_digest: str,
 ) -> dict[str, Any] | None:
     if value is None:
@@ -967,7 +1011,7 @@ def parse_wayfinder_reconciliation(
             "permalink",
             "author",
             "disposition",
-            "projectItemId",
+            "itemId",
             "outcomePermalink",
             "configurationDigest",
             "planDigest",
@@ -999,9 +1043,9 @@ def parse_wayfinder_reconciliation(
         raise InputError(
             f"ticket {number}: Wayfinder reconciliation marker is not runner-authored",
         )
-    if result["projectItemId"] != project_item_id:
+    if result["itemId"] != item_id:
         raise InputError(
-            f"ticket {number}: Wayfinder reconciliation Project item changed",
+            f"ticket {number}: Wayfinder reconciliation item identity changed",
         )
     if "configurationRenewal" in value:
         # The controller verifies committed equivalence and publication first;
@@ -1075,7 +1119,7 @@ def analyze_wayfinder_ticket(
         ticket.get("wayfinderReconciliation"),
         number=number,
         current_user=current_user,
-        project_item_id=ticket["projectItemId"],
+        item_id=ticket["itemId"],
         configuration_digest=configuration_digest,
     )
 
@@ -1192,6 +1236,7 @@ def main() -> int:
         if not isinstance(payload, list):
             raise InputError("input must be a JSON array")
 
+        claim_marker = parse_claim_marker(args.claim_marker)
         priorities = tuple(args.priorities)
         if len(set(priorities)) != len(priorities):
             raise InputError("project priorities must be unique")
@@ -1321,6 +1366,7 @@ def main() -> int:
                     )
                 elif (
                     ticket["projectStatus"] == args.planning_status
+                    and not matches_claim_marker(ticket, claim_marker)
                     and isinstance(labels, list)
                     and any(label in labels for label in (
                         args.needs_triage_label, args.epic_label, args.human_work_label,
@@ -1350,7 +1396,7 @@ def main() -> int:
                             current_user=args.current_user,
                             planning_status=args.planning_status,
                             ready_status=args.ready_status,
-                            in_progress_status=args.in_progress_status,
+                            claim_marker=claim_marker,
                             needs_triage_label=args.needs_triage_label,
                             human_work_label=args.human_work_label,
                             priorities=priorities,
@@ -1368,6 +1414,7 @@ def main() -> int:
                 is_human_frontier_item = (
                     isinstance(raw_ticket, dict)
                     and raw_ticket.get("projectStatus") == args.planning_status
+                    and not matches_claim_marker(raw_ticket, claim_marker)
                     and isinstance(raw_ticket.get("labels"), list)
                     and args.human_work_label in raw_ticket["labels"]
                 )
@@ -1385,6 +1432,10 @@ def main() -> int:
                     invalid_unclaimed.append(invalid)
                 elif is_wayfinder_claim:
                     invalid_planning_claimed.append(invalid)
+                elif isinstance(raw_ticket, dict) and is_active_claim(
+                    raw_ticket, claim_marker, args.current_user,
+                ):
+                    invalid_claimed.append(invalid)
                 elif has_current_user_assignment(raw_ticket, args.current_user):
                     if (
                         isinstance(raw_ticket, dict)
@@ -1407,8 +1458,12 @@ def main() -> int:
             }
             for item in execution_analyses
             if (
-                item["assignedToCurrentUser"]
-                and item["ticket"]["projectStatus"] == args.in_progress_status
+                (
+                    item["activeClaim"]
+                    or item["assignedToCurrentUser"]
+                    and item["ticket"]["projectStatus"]
+                    not in (args.planning_status, args.ready_status)
+                )
                 and (item["errors"] or item["exclusions"])
             )
         ]
@@ -1420,6 +1475,7 @@ def main() -> int:
             for item in execution_analyses
             if (
                 item["assignedToCurrentUser"]
+                and not item["activeClaim"]
                 and item["ticket"]["projectStatus"]
                 in (
                     args.planning_status,
@@ -1480,7 +1536,7 @@ def main() -> int:
                     [
                         item["ticket"]["number"]
                         for item in selection_pool
-                        if item["assignedToCurrentUser"]
+                        if (item["assignedToCurrentUser"] or item.get("activeClaim", False))
                         and item["ticket"]["number"] != args.wayfinder_ticket
                     ]
                     + [
@@ -1508,7 +1564,7 @@ def main() -> int:
             item
             for item in selection_pool
             if (
-                item["assignedToCurrentUser"]
+                (item["assignedToCurrentUser"] or item.get("activeClaim", False))
                 and (
                     args.mode == "next"
                     or item.get("resolutionMode", "afk") == "afk"
@@ -1553,7 +1609,7 @@ def main() -> int:
             (
                 item
                 for item in selection_pool
-                if not item["assignedToCurrentUser"]
+                if not item["assignedToCurrentUser"] and not item.get("activeClaim", False)
                 and (
                     args.mode == "next"
                     or item.get("resolutionMode", "afk") == "afk"
@@ -1572,7 +1628,7 @@ def main() -> int:
             }
             for item in execution_analyses
             if (
-                not item["assignedToCurrentUser"]
+                not item["assignedToCurrentUser"] and not item["activeClaim"]
                 and (item["errors"] or item["exclusions"])
             )
         ] + [

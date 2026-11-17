@@ -1,0 +1,20 @@
+{
+  "decisions": {
+    "parked-91": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    },
+    "parked-92": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    },
+    "parked-93": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    },
+    "parked-94": {
+      "action": "leave_untouched",
+      "preserve_dependencies": true
+    }
+  }
+}

@@ -286,13 +286,16 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(51, len(benchmark))
-        self.assertEqual(138, len(calibration))
+        self.assertEqual(141, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(51, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertEqual(["router-single-item-deliver-spec"], [case.id for case in report.cases if case.kind == "routing"])
         self.assertEqual(
             {
+                "deliver-tasks-neutral-direct",
+                "deliver-tasks-claim-marker-novel",
+                "deliver-tasks-parked-negative",
                 "grounded-writing-response-draft-novel",
                 "grounded-writing-short-reply-direct",
                 "grounded-writing-email-novel",

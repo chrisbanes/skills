@@ -1,0 +1,43 @@
+{
+  "id": "deliver-tasks-neutral-direct",
+  "title": "Neutral references preserve GitHub five-column ranking",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-tasks"
+  ],
+  "expected_skills": [
+    "deliver-tasks"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-neutral-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "contract",
+      "text": "Accepts neutral identities and opaque blocker references while preserving Ready and Todo behavior."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "staged_skill_files": [
+    "run-github-project/scripts/watch_project.py"
+  ],
+  "calibration": true
+}

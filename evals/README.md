@@ -51,6 +51,11 @@ and uncertain shared-seam overlap. Deterministic tests accept the expected
 decisions and reject widened scope or bypassed gates; they do not establish
 live model behavior or recoverable dependency-wait time.
 
+The task-delivery contract calibration cases cover opaque item and blocker
+references, binding-supplied status or label claim markers, and parked-item
+restraint across execution, triage, epic and human-work lanes. Their decision
+artifacts have deterministic validation; live model behavior is unmeasured.
+
 The writing calibration cases extend the rendering-documentation regressions
 with short review replies, nontechnical email (file edits and response-only
 drafting), missing personal experience,

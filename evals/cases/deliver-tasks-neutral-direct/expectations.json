@@ -1,0 +1,10 @@
+{
+  "decisions": {
+    "item-31": {
+      "action": "implement"
+    },
+    "item-32": {
+      "action": "exclude"
+    }
+  }
+}

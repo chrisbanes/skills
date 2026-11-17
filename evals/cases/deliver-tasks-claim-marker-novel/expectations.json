@@ -1,0 +1,20 @@
+{
+  "decisions": {
+    "A": {
+      "active_claim": true,
+      "resume_implementation": true
+    },
+    "B": {
+      "active_claim": true,
+      "resume_implementation": true
+    },
+    "C": {
+      "active_claim": true,
+      "resume_implementation": true
+    },
+    "D": {
+      "active_claim": false,
+      "resume_implementation": false
+    }
+  }
+}

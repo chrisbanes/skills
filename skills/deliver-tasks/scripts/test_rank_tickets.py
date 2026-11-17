@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the GitHub Project ticket ranker."""
+"""CLI behavior tests for the normalized tracker item ranker."""
 
 import json
 import subprocess
@@ -28,6 +28,8 @@ DEFAULT_PROJECT_ARGUMENTS = (
     "main",
 )
 DEFAULT_STATUS_ARGUMENTS = (
+    "--claim-marker",
+    '{"status":"In progress","requiresAssignment":true}',
     "--backlog-status",
     "Backlog",
     "--ready-status",
@@ -108,15 +110,16 @@ def ticket(number: int, **overrides: object) -> dict:
     result = {
         "number": number,
         "title": f"Issue {number}",
-        "url": f"https://github.com/acme/repo/issues/{number}",
+        "itemRef": f"https://github.com/acme/repo/issues/{number}",
         "state": "OPEN",
-        "projectItemId": f"PVTI_{number}",
+        "itemId": f"PVTI_{number}",
+        "parked": False,
         "projectStatus": "Ready",
         "projectPriority": "High",
         "projectPosition": number,
         "labels": ["ready-for-agent"],
         "assignees": [],
-        "blockedBy": [],
+        "blockerRefs": [],
         "openDescendants": [],
         "openPullRequests": [],
         "implementationPlans": [implementation_plan(number)],
@@ -171,7 +174,7 @@ def wayfinder_reconciliation(number: int, **overrides: object) -> dict:
         "markerVersion": 1,
         "disposition": "resolved",
         "mapNumber": 1,
-        "projectItemId": f"PVTI_{number}",
+        "itemId": f"PVTI_{number}",
         "outcomePermalink": (
             f"https://github.com/acme/repo/issues/{number}#issuecomment-resolution"
         ),
@@ -245,6 +248,137 @@ def replan_request(
 def first_entry(output: dict) -> dict:
     entries = output["claims"] or output["candidates"]
     return entries[0]
+
+
+class NeutralContractTest(unittest.TestCase):
+    def test_status_only_claim_can_recover_its_verified_partial_pr(self):
+        item = ticket(1, projectStatus="Working", openPullRequests=[
+            pull_request(100, closesIssue=False, linksIssue=True, verifiedPartial=True),
+        ])
+        code, output = run_ranker([item], "--claim-marker",
+                                  '{"status":"Working","requiresAssignment":false}')
+        self.assertEqual(0, code)
+        self.assertEqual("resume-pr", output["claims"][0]["action"])
+
+    def test_conflicting_todo_role_cannot_bypass_an_active_label_claim(self):
+        item = todo_role_ticket(1, labels=["needs-triage", "agent:active"], assignees=["chris"])
+        code, output = run_ranker([item], "--claim-marker",
+                                  '{"label":"agent:active","requiresAssignment":true}')
+        self.assertEqual(0, code)
+        self.assertEqual([], output["triageCandidates"])
+        self.assertEqual([1], [item["number"] for item in output["blockedClaims"]])
+        self.assertEqual([], output["blockedPlanningClaims"])
+
+    def test_label_claim_in_todo_resumes_its_pr_without_a_replan_report(self):
+        item = ticket(1, projectStatus="Todo", labels=["ready-for-agent", "agent:active"],
+                      assignees=["chris"], openPullRequests=[pull_request(100)])
+        code, output = run_ranker([item], "--claim-marker",
+                                  '{"label":"agent:active","requiresAssignment":true}')
+        self.assertEqual(0, code)
+        self.assertEqual("resume-pr", output["claims"][0]["action"])
+
+    def test_invalid_binding_markers_fail_closed(self):
+        for marker in ("null", "[]", "{", "{}", '{"status":"Working"}',
+                       '{"status":"","requiresAssignment":true}',
+                       '{"label":"agent:active","requiresAssignment":"yes"}',
+                       '{"status":"Working","label":"active","requiresAssignment":true}',
+                       '{"status":"Working","requiresAssignment":true,"extra":1}'):
+            with self.subTest(marker=marker):
+                code, output = run_ranker([ticket(1)], "--claim-marker", marker)
+                self.assertEqual(2, code)
+                self.assertIn("claim marker", str(output))
+
+    def test_parked_must_be_an_explicit_boolean(self):
+        for value in (None, "false", 0, []):
+            with self.subTest(value=value):
+                code, output = run_ranker([ticket(1, parked=value)])
+                self.assertEqual(0, code)
+                self.assertEqual([], output["candidates"])
+                self.assertIn("parked must be a boolean", str(output["excluded"]))
+        item = ticket(1)
+        item.pop("parked")
+        code, output = run_ranker([item])
+        self.assertEqual(0, code)
+        self.assertEqual([], output["candidates"])
+        self.assertIn("missing parked", str(output["excluded"]))
+
+    def test_claim_label_needs_runner_assignment_and_never_uses_column_as_fallback(self):
+        marker = '{"label":"agent:active","requiresAssignment":true}'
+        for assignees in ([], ["other"], ["chris", "other"]):
+            with self.subTest(assignees=assignees):
+                item = ticket(1, labels=["ready-for-agent", "agent:active"], assignees=assignees)
+                code, output = run_ranker([item], "--claim-marker", marker)
+                self.assertEqual(0, code)
+                self.assertEqual([], output["claims"])
+                self.assertEqual([], output["candidates"])
+        code, output = run_ranker([ticket(1, projectStatus="In progress", assignees=["chris"])],
+                                  "--claim-marker", marker)
+        self.assertEqual(0, code)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([1], [item["number"] for item in output["blockedClaims"]])
+
+    def test_blocked_status_only_claims_still_occupy_capacity(self):
+        marker = '{"status":"Working","requiresAssignment":false}'
+        for overrides in ({"blockerRefs": ["TRACK-9"]}, {"parked": True},
+                          {"projectPosition": "unknown"}):
+            with self.subTest(overrides=overrides):
+                item = ticket(1, projectStatus="Working", **overrides)
+                code, output = run_ranker([item, ticket(2)], "--claim-marker", marker)
+                self.assertEqual(0, code)
+                self.assertEqual([], output["claims"])
+                self.assertEqual([1], [item["number"] for item in output["blockedClaims"]])
+                second = ticket(3, projectStatus="Working")
+                code, output = run_ranker([item, second], "--claim-marker", marker)
+                self.assertEqual(2, code)
+                self.assertEqual("over-capacity-claims", output["reason"])
+
+    def test_label_claim_in_todo_still_requires_a_verified_plan(self):
+        item = ticket(2, projectStatus="Todo", labels=["ready-for-agent", "agent:active"],
+                      assignees=["chris"], implementationPlan=None)
+        code, output = run_ranker([item], "--claim-marker",
+                                  '{"label":"agent:active","requiresAssignment":true}')
+        self.assertEqual(0, code)
+        self.assertEqual([], output["claims"])
+        self.assertEqual([2], [item["number"] for item in output["blockedClaims"]])
+
+    def test_binding_claim_shapes_resume_before_ready_work(self):
+        for marker, overrides in (
+            ({"status": "Working", "requiresAssignment": True}, {"projectStatus": "Working", "assignees": ["chris"]}),
+            ({"label": "agent:active", "requiresAssignment": True}, {"projectStatus": "Todo", "labels": ["ready-for-agent", "agent:active"], "assignees": ["chris"]}),
+            ({"status": "Working", "requiresAssignment": False}, {"projectStatus": "Working"}),
+        ):
+            with self.subTest(marker=marker):
+                code, output = run_ranker([ticket(1), ticket(2, **overrides)], "--claim-marker", json.dumps(marker))
+                self.assertEqual(0, code)
+                self.assertEqual([2], [claim["ticket"]["number"] for claim in output["claims"]])
+                self.assertEqual("resume-implementation", output["claims"][0]["action"])
+                self.assertEqual([1], [item["ticket"]["number"] for item in output["candidates"]])
+
+    def test_parked_items_never_enter_any_candidate_lane(self):
+        items = [ticket(1, parked=True), ticket(2, projectStatus="Todo", parked=True),
+                 todo_role_ticket(3, parked=True),
+                 todo_role_ticket(4, labels=["epic"], parked=True),
+                 todo_role_ticket(5, labels=["ready-for-human"], parked=True),
+                 wayfinder_ticket(6, parked=True)]
+        code, output = run_ranker(items, *DEFAULT_WAYFINDER_ARGUMENTS)
+        self.assertEqual(0, code)
+        for field in ("claims", "candidates", "triageCandidates", "readyEpics", "humanActions"):
+            self.assertEqual([], output[field], field)
+        self.assertCountEqual([1, 2, 3, 4, 5, 6], [item["number"] for item in output["excluded"]])
+
+    def test_neutral_identity_and_references_are_preserved(self):
+        item = ticket(1)
+        item["itemId"] = "tracker-id-1"
+        item["itemRef"] = "TRACK-1"
+        code, output = run_ranker([item])
+        self.assertEqual(0, code)
+        self.assertEqual("TRACK-1", output["candidates"][0]["ticket"]["itemRef"])
+        self.assertEqual("tracker-id-1", output["candidates"][0]["ticket"]["itemId"])
+        blocked = {**item, "blockerRefs": ["TRACK-2"]}
+        code, output = run_ranker([blocked])
+        self.assertEqual(0, code)
+        self.assertEqual([], output["candidates"])
+        self.assertIn("TRACK-2", str(output["excluded"]))
 
 
 class RankTicketsTest(unittest.TestCase):
@@ -891,7 +1025,7 @@ class RankTicketsTest(unittest.TestCase):
         )
 
     def test_parks_todo_item_with_open_native_blocker(self) -> None:
-        blocked = todo_role_ticket(16, blockedBy=[17])
+        blocked = todo_role_ticket(16, blockerRefs=[17])
 
         returncode, output = run_ranker([blocked])
 
@@ -979,7 +1113,7 @@ class RankTicketsTest(unittest.TestCase):
         human_work = todo_role_ticket(
             22,
             labels=["ready-for-human"],
-            blockedBy=[20],
+            blockerRefs=[20],
         )
 
         returncode, output = run_ranker([human_work])
@@ -1250,7 +1384,7 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual(0, returncode)
         self.assertEqual(41, first_entry(output)["ticket"]["number"])
         self.assertEqual(
-            [{"number": 40, "reasons": ["in progress without an assignee"]}],
+            [{"number": 40, "reasons": ["claim marker without an assignee"]}],
             output["excluded"],
         )
 
@@ -1607,7 +1741,7 @@ class RankTicketsTest(unittest.TestCase):
         )
 
     def test_blocker_objects_must_be_normalized_to_identifiers(self) -> None:
-        invalid = ticket(170, blockedBy=[{"number": 171}])
+        invalid = ticket(170, blockerRefs=[{"number": 171}])
         valid = ticket(171)
 
         returncode, output = run_ranker([invalid, valid])
@@ -2263,7 +2397,7 @@ class RankTicketsTest(unittest.TestCase):
     def test_explicit_wayfinder_ticket_does_not_fall_back_when_ineligible(self) -> None:
         selected = wayfinder_ticket(
             331,
-            blockedBy=[330],
+            blockerRefs=[330],
         )
         fallback = wayfinder_ticket(332, projectPriority="Critical")
 
@@ -2376,7 +2510,7 @@ class RankTicketsTest(unittest.TestCase):
             projectStatus="Done",
             wayfinderReconciliation=wayfinder_reconciliation(
                 323,
-                projectItemId="PVTI_other",
+                itemId="PVTI_other",
             ),
         )
 
@@ -2392,7 +2526,7 @@ class RankTicketsTest(unittest.TestCase):
                 {
                     "number": 323,
                     "reasons": [
-                        "ticket 323: Wayfinder reconciliation Project item changed",
+                        "ticket 323: Wayfinder reconciliation item identity changed",
                     ],
                 },
             ],

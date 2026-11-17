@@ -471,6 +471,21 @@ recovery is verified.
 
 Use the controller's [ranker invocation](../../deliver-tasks/references/normalized-ticket.md#ranker-invocation).
 
+Normalize the GitHub Project binding before ranking:
+
+1. Map the Project item node ID to `itemId`, the issue URL to `itemRef`, and
+   unresolved native blocker identities to `blockerRefs`. Preserve local issue
+   numbers and cross-repository `owner/repository#N` references as opaque
+   blocker values; include blockers outside the selected scope.
+2. Supply `parked: false` for every GitHub item. Backlog remains the existing
+   human-controlled column in this prefactor; it is still excluded separately.
+3. Pass `--claim-marker '{"status":"<configured In progress name>","requiresAssignment":true}'`.
+   Use the exact configured column display name and authenticated runner login.
+   Keep all five configured Status options and the existing Ready plan gate.
+4. For `wayfinderReconciliation`, map the durable GitHub marker's
+   `projectItemId` to normalized `itemId`; compare the same node ID without
+   rewriting existing marker comments or their digests.
+
 Provide every field below to `scripts/rank_tickets.py` from fresh, completely
 paginated GitHub and Project reads. Before dispatch ranking, the controller
 recovers [authority pauses](../../deliver-tasks/references/authority-and-pauses.md#recover-and-resume) and
@@ -490,15 +505,16 @@ or pause field for this ranker CLI. Use this shape for execution contenders:
 {
   "number": 42,
   "title": "Short title",
-  "url": "https://github.com/owner/repository/issues/42",
+  "itemRef": "https://github.com/owner/repository/issues/42",
   "state": "OPEN",
-  "projectItemId": "PVTI_example",
+  "itemId": "PVTI_example",
+  "parked": false,
   "projectStatus": "Ready to implement",
   "projectPriority": "High",
   "projectPosition": 17,
   "labels": ["ready-for-agent"],
   "assignees": [{"login": "octocat"}],
-  "blockedBy": [41, "other/repository#7"],
+  "blockerRefs": [41, "other/repository#7"],
   "openDescendants": [43],
   "replanRequest": null,
   "implementationPlans": [
@@ -581,7 +597,7 @@ exact recorded Project item node ID.
     "markerVersion": 1,
     "disposition": "resolved",
     "mapNumber": 7,
-    "projectItemId": "PVTI_example",
+    "itemId": "PVTI_example",
     "outcomePermalink": "https://github.com/owner/repository/issues/52#issuecomment-1",
     "configurationDigest": "sha256:configuration",
     "planDigest": "sha256:semantic-reconciliation-plan"
@@ -665,15 +681,16 @@ execution-only author, draft, head, and base fields:
 {
   "number": 43,
   "title": "Unblocked issue awaiting triage",
-  "url": "https://github.com/owner/repository/issues/43",
+  "itemRef": "https://github.com/owner/repository/issues/43",
   "state": "OPEN",
-  "projectItemId": "PVTI_triage",
+  "itemId": "PVTI_triage",
+  "parked": false,
   "projectStatus": "Todo",
   "projectPriority": "High",
   "projectPosition": 18,
   "labels": ["needs-triage"],
   "assignees": [],
-  "blockedBy": [],
+  "blockerRefs": [],
   "openDescendants": [],
   "replanRequest": null,
   "implementationPlans": [],
@@ -687,7 +704,7 @@ label. The ranker derives the work shape and next action from configured label
 names; never add a synthetic role to its input.
 
 Use GitHub logins, never display names, for assignees and PR authors. Normalize `labels` to exact label names. Normalize
-`blockedBy` and `openDescendants` entries to integer issue numbers for the
+`blockerRefs` and `openDescendants` entries to integer issue numbers for the
 configured repository or `owner/repository#number` strings for cross-repository
 issues; never pass GraphQL objects. Use a finite non-negative numeric Project
 position. An empty PR array is valid.
