@@ -4,7 +4,8 @@
 
 Read repository instructions. Resolve checkout root, branch, `HEAD`, and
 normalized repository remotes without exposing credentials. Verify a selected issue
-belongs to this checkout or a binding-verified fork; use the current checkout and
+belongs to this checkout, a binding-verified fork, or the trusted binding's
+tracker repository when the code host is another provider; use the current checkout and
 authorized title for conversation mode. Use `.scratch/to-plan/<item-id>.md`
 in tracker mode (the issue number for GitHub; use a binding-resolved safe local
 identifier for another tracker); conversation paths are defined by its mode contract.

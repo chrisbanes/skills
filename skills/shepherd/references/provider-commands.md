@@ -9,6 +9,23 @@ Use these read commands when the platform-specific API is otherwise unclear.
 
 Use `glab ci retry <job-id>` only for the one permitted suspected-flake retry.
 
+## GitLab feedback operations
+
+For a GitLab target, read and write review state through
+`glab api --hostname <host>` with the project ID and MR IID. Under a delivery
+binding, follow its GitLab code-host credential and transport rules.
+
+| Operation | Command |
+| --- | --- |
+| Discussions | `glab api --hostname <host> --paginate projects/<id>/merge_requests/<iid>/discussions` |
+| Approvals | `glab api --hostname <host> projects/<id>/merge_requests/<iid>/approvals` |
+| Reply | `glab api --hostname <host> -X POST projects/<id>/merge_requests/<iid>/discussions/<discussion-id>/notes -f body=<reply>` |
+| Resolve | `glab api --hostname <host> -X PUT projects/<id>/merge_requests/<iid>/discussions/<discussion-id> -f resolved=true` |
+
+Refetch a discussion after resolving it under the procedure's reply-then-resolve
+rule. When an operation is unavailable (no `glab`, unsupported endpoint, failed
+or unknown read), report it with the target and leave the thread as it is.
+
 ## Host-managed monitoring
 
 Use this when the host wakes the session on PR events. Claude desktop's Code

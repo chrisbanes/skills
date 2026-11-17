@@ -170,7 +170,8 @@ Only an already trusted, committed display-name-only edit may use
    [legacy migration](#approval-gated-legacy-migration) gate before resolving
    defaults; execution returns `configuration-blocked` and never migrates.
 2. Select **Tracker** and **Code host** independently (default `github` for
-   each; other providers need their own supported binding), then **Scope** from
+   each; a `gitlab` code host uses the [GitLab binding](gitlab-binding.md);
+   other providers need their own supported binding), then **Scope** from
    the explicit override or invocation: a Project URL selects a board;
    `deliver #N` or an explicit parent issue URL selects its open descendants.
    Resolve exactly one canonical URL, repository identity and stable node ID;
@@ -180,7 +181,10 @@ Only an already trusted, committed display-name-only edit may use
    Never guess from linked Projects or named views. Scope selection supplies no
    item authority. Follow Parent-issue scope below for graph and lifecycle reads.
 3. Resolve repository host and `owner/repository` from the current checkout's
-   git remote and verify its live identity. Use explicit repository overrides
+   git remote and verify its live identity. When the code host is not GitHub,
+   resolve the tracker repository under [Delivery bindings](provider-bindings.md)
+   step 1 (labels and short `#N` use it) and take code-host identity, base and
+   merge policy from that host's binding. Use explicit repository overrides
    first; without them, conflicting remotes or an unclear repository block.
    Obtain the default branch from live repository settings and use it as base
    unless overridden. Resolve a merge queue when required by live policy;
@@ -535,6 +539,7 @@ this template over it. Follow the
 ## Tracker
 
 - Provider: `github`
+- Repository: `<owner>/<repository; required when Code host is not github>`
 
 ## Code host
 

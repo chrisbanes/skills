@@ -12,10 +12,17 @@ not authority. A code-host merge and a tracker closure are separate facts.
    exact item/repository identities. Local sources route to `implement` before
    delivery. For either
    GitHub role, read the applicable operations in the bundled
-   [GitHub binding](github-binding.md#delivery-operations). A GitHub repository
-   does not imply a GitHub tracker. For a Jira Cloud tracker use the bundled
-   [Jira binding](jira-binding.md). For another provider, require its trusted
-   operation contract; do not invent a binding or substitute GitHub commands.
+   [GitHub binding](github-binding.md#delivery-operations). For a Jira Cloud
+   tracker use the bundled [Jira binding](jira-binding.md). For a GitLab code
+   host, read the bundled [GitLab binding](gitlab-binding.md#code-host-operations).
+   A repository on either
+   host does not imply a tracker on it. When the tracker repository differs
+   from the checkout origin, take it from the trusted `Tracker` configuration;
+   resolve a bare `#N` only against that tracker repository, never against the
+   code host, and without it accept only canonical item URLs or
+   repository-qualified references. For another provider, require
+   its trusted operation contract; do not invent a binding or substitute
+   GitHub commands.
 2. Verify the capabilities needed by the next operation. The tracker supplies
    source/readiness, durable marker reads/writes/supersession and item linking,
    closure and readback. The code host supplies change-request open/update,

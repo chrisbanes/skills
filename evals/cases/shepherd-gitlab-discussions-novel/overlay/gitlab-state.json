@@ -1,0 +1,103 @@
+{
+  "target": {
+    "host": "gitlab.example.com",
+    "project_id": 88001,
+    "iid": 7,
+    "origin": "git@gitlab.example.com:acme/platform/app.git"
+  },
+  "snapshots": {
+    "reply-push-ok": {
+      "discussion": {
+        "id": "d1",
+        "resolved": false,
+        "notes": [
+          {
+            "author": "reviewer",
+            "body": "Rename `flag` to `enabled`."
+          }
+        ]
+      },
+      "local_fix": "committed",
+      "push": {
+        "status": "succeeded",
+        "head": "H2"
+      },
+      "reply": {
+        "status": 201
+      }
+    },
+    "local-only": {
+      "discussion": {
+        "id": "d2",
+        "resolved": false,
+        "notes": [
+          {
+            "author": "reviewer",
+            "body": "Handle the empty list."
+          }
+        ]
+      },
+      "local_fix": "committed",
+      "push": "not attempted; other review items are still being batched"
+    },
+    "push-failed": {
+      "discussion": {
+        "id": "d3",
+        "resolved": false,
+        "notes": [
+          {
+            "author": "reviewer",
+            "body": "Add a test for null input."
+          }
+        ]
+      },
+      "local_fix": "committed",
+      "push": {
+        "status": "rejected",
+        "reason": "remote head moved"
+      }
+    },
+    "answer-only": {
+      "discussion": {
+        "id": "d4",
+        "resolved": false,
+        "notes": [
+          {
+            "author": "reviewer",
+            "body": "Why is the timeout 30s?"
+          }
+        ]
+      },
+      "local_fix": "none needed",
+      "push": "not needed",
+      "reply": {
+        "status": 201
+      }
+    },
+    "unavailable-op": {
+      "discussion": {
+        "id": "d5",
+        "resolved": false,
+        "notes": [
+          {
+            "author": "reviewer",
+            "body": "Use the shared helper."
+          }
+        ]
+      },
+      "local_fix": "committed",
+      "push": {
+        "status": "succeeded",
+        "head": "H3"
+      },
+      "reply": {
+        "status": 201
+      },
+      "resolve_endpoint": {
+        "status": 405,
+        "message": "Method Not Allowed on this instance"
+      },
+      "gh": "installed and authenticated to github.com"
+    }
+  }
+}

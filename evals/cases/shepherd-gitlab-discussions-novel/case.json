@@ -1,0 +1,44 @@
+{
+  "id": "shepherd-gitlab-discussions-novel",
+  "title": "Shepherd resolves GitLab discussions only after reply and push",
+  "family": "workflow",
+  "target_skills": [
+    "shepherd"
+  ],
+  "expected_skills": [
+    "shepherd"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "shepherd-gitlab-discussions-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "reply-then-resolve",
+      "text": "Resolves a GitLab discussion only after its reply and any required push succeed; never resolves a local-only or unpushed fix."
+    },
+    {
+      "id": "transport",
+      "text": "Uses glab api for GitLab discussions and reports an unavailable operation instead of falling back to gh."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

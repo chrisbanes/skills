@@ -1,0 +1,81 @@
+{
+  "decisions": {
+    "mr-open": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "open_draft",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "link",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "pipeline-failed": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "repair",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "not-mergeable": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "repair",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "mergeable": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": true,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "merge-train": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "merged": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "close_and_verify",
+      "ticket_complete": false,
+      "delivery_state": "merged"
+    },
+    "merged-results": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": true,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    }
+  }
+}

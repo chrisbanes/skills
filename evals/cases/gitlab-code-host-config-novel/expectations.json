@@ -1,0 +1,44 @@
+{
+  "decisions": {
+    "policy-drift": {
+      "action": "stop-preserve",
+      "code_host_lanes": "blocked",
+      "tracker_lanes": "blocked"
+    },
+    "credential-override": {
+      "action": "refuse-start",
+      "code_host_lanes": "blocked",
+      "tracker_lanes": "blocked"
+    },
+    "renamed-path": {
+      "action": "configuration-blocked",
+      "code_host_lanes": "blocked",
+      "tracker_lanes": "blocked"
+    },
+    "id-mismatch": {
+      "action": "stop-preserve",
+      "code_host_lanes": "blocked",
+      "tracker_lanes": "blocked"
+    },
+    "tier-unavailable": {
+      "action": "configuration-valid",
+      "code_host_lanes": "available",
+      "tracker_lanes": "available"
+    },
+    "partial-read": {
+      "action": "stop-preserve",
+      "code_host_lanes": "blocked",
+      "tracker_lanes": "blocked"
+    },
+    "glab-missing": {
+      "action": "configuration-valid",
+      "code_host_lanes": "blocked",
+      "tracker_lanes": "available"
+    },
+    "gitlab-tracker": {
+      "action": "configuration-blocked",
+      "code_host_lanes": "blocked",
+      "tracker_lanes": "blocked"
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "configured": {
+    "code_host": "gitlab",
+    "host": "gitlab.example.com",
+    "repository": "acme/platform/app",
+    "project_id": 88001,
+    "credential": "glab:gitlab.example.com",
+    "tracker": "github",
+    "tracker_repository": "acme/app"
+  },
+  "recorded_fingerprint_inputs": {
+    "merge_method": "merge",
+    "squash_option": "default_off",
+    "only_allow_merge_if_pipeline_succeeds": true,
+    "allow_merge_on_skipped_pipeline": false,
+    "only_allow_merge_if_all_discussions_are_resolved": true,
+    "merge_trains_enabled": false,
+    "merge_pipelines_enabled": false
+  },
+  "snapshots": {
+    "policy-drift": {
+      "project": {
+        "id": 88001,
+        "path_with_namespace": "acme/platform/app",
+        "default_branch": "main",
+        "web_url": "https://gitlab.example.com/acme/platform/app",
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": false,
+        "allow_merge_on_skipped_pipeline": false,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": false,
+        "merge_pipelines_enabled": false
+      }
+    },
+    "credential-override": {
+      "environment": {
+        "GITLAB_TOKEN": "<set, value withheld>"
+      }
+    },
+    "renamed-path": {
+      "project_by_id": {
+        "id": 88001,
+        "path_with_namespace": "acme/platform/app-renamed",
+        "default_branch": "main",
+        "web_url": "https://gitlab.example.com/acme/platform/app"
+      },
+      "project_by_path": {
+        "status": 404
+      }
+    },
+    "id-mismatch": {
+      "project_by_id": {
+        "id": 88001,
+        "path_with_namespace": "acme/other/tool"
+      },
+      "project_by_path": {
+        "id": 99123,
+        "path_with_namespace": "acme/platform/app"
+      }
+    },
+    "tier-unavailable": {
+      "recorded_fingerprint_inputs": {
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": true,
+        "allow_merge_on_skipped_pipeline": false,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": "unavailable",
+        "merge_pipelines_enabled": "unavailable"
+      },
+      "project": {
+        "id": 88001,
+        "path_with_namespace": "acme/platform/app",
+        "default_branch": "main",
+        "web_url": "https://gitlab.example.com/acme/platform/app",
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": true,
+        "allow_merge_on_skipped_pipeline": false,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": null,
+        "merge_pipelines_enabled": null
+      },
+      "approval_rules": [],
+      "protected_branches": [
+        {
+          "name": "main",
+          "merge_access_levels": [
+            {
+              "access_level": 40
+            }
+          ]
+        }
+      ]
+    },
+    "partial-read": {
+      "project": {
+        "id": 88001,
+        "path_with_namespace": "acme/platform/app",
+        "default_branch": "main",
+        "web_url": "https://gitlab.example.com/acme/platform/app",
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": true,
+        "allow_merge_on_skipped_pipeline": false,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": false,
+        "merge_pipelines_enabled": false
+      },
+      "approval_rules": {
+        "status": 500,
+        "attempts": 3
+      }
+    },
+    "glab-missing": {
+      "glab": "not found on PATH",
+      "tracker_reads": "complete"
+    },
+    "gitlab-tracker": {
+      "configured_override": {
+        "tracker": "gitlab",
+        "code_host": "gitlab"
+      }
+    }
+  }
+}
