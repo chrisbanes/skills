@@ -1,0 +1,41 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state"
+  ],
+  "decisions": {
+    "unsupported": {
+      "next": "pause",
+      "blocker": "settings",
+      "model": "gpt-6.1-terra",
+      "effort": "high",
+      "edit_now": false,
+      "unrelated": "continue"
+    },
+    "unauthorized": {
+      "next": "pause",
+      "blocker": "authority",
+      "model": "gpt-6.1-terra",
+      "effort": "high",
+      "edit_now": false,
+      "unrelated": "continue"
+    },
+    "busy": {
+      "next": "wait-capacity",
+      "blocker": "capacity",
+      "model": "gpt-6.1-terra",
+      "effort": "high",
+      "edit_now": false,
+      "unrelated": "continue"
+    },
+    "unset": {
+      "next": "implement",
+      "owner": "lead",
+      "model": "gpt-6.2-sol",
+      "effort": "medium",
+      "unrelated": "continue"
+    }
+  }
+}

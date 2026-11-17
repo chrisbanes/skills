@@ -5,9 +5,7 @@
    clean isolated checkout; stop on unrelated or uncertain changes. Never stash,
    reset or absorb user work. Inventory checkouts through their owning runtime
    and apply the lifecycle rules below; never infer ownership from their names.
-2. Choose solo or delegated implementation. Tightly coupled work may stay with
-   the lead. Delegate only when independent work, isolation or specialist
-   investigation justifies it. Use runtime metadata to establish independent
+2. Use runtime metadata to establish independent
    final-review capability; do not spawn a capability-only reviewer. Follow
    [Evidence and review](evidence-and-review.md) for owner-driven testing,
    checkpoint feedback, proportional checks and evidence reuse.
@@ -25,7 +23,15 @@
    behavior. Preserve native blockers, resource grants and final integrated
    validation. Do not split an accepted task or relax its prerequisites to
    create concurrency; route changed ordering through authorized planning.
-4. When delegating, apply [subagent selection](subagent-selection.md) and the
+4. Before choosing an owner, apply
+   [Implementation ownership](subagent-selection.md#implementation-ownership)
+   to the approved work and validated graph, including on the fast path.
+   Independent work, genuine isolation needs or specialist investigation can
+   justify delegation under the existing rules. For otherwise solo-eligible
+   work, apply the required settings and serial-worker exception in that
+   reference. For a serial worker handoff, start each task with that same
+   owner after its prerequisites are
+   integrated and checked. When delegating, apply the handoff procedure and the
    runtime requirements below. Confirm edit, validation, commit and resumable repair
    capability; retain the owner handle. Fit descendants within actual caller,
    runtime and repository capacity and respect Project scheduling priority.

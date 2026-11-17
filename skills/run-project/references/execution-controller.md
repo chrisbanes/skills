@@ -24,6 +24,17 @@ dispatch all independent work that fits both, with delivery repair first.
 Before dispatch, use the complete eligible-column inventory to preflight likely
 runnable tickets and their required qualification. Repeat affected checks when
 their evidence changes; do not deeply hydrate unchanged blocked work.
+For approved implementation, including the fast path, apply
+[Implementation ownership](subagent-selection.md#implementation-ownership)
+using the approved work, invocation settings, verified ticket-context settings
+and actual authority and capacity. Resolve what the controller can establish
+before dispatch. If only the ticket context can verify its effective settings,
+have it complete preflight before implementation edits or worker dispatch.
+Carry the requirements and any verified route in the ticket handoff.
+Keep a settings or delegation blocker local to the affected ticket; preserve
+existing ownership and schedule unrelated ready work. A temporarily busy
+compatible route follows the existing capacity rules.
+
 For asynchronous or persistent live qualification, carry forward the
 [deliver-issue live qualification and failure recovery procedure](qualification-failure.md)
 through preflight and ticket handoff. It applies only when the accepted source

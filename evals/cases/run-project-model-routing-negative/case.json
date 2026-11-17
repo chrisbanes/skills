@@ -1,0 +1,50 @@
+{
+  "id": "run-project-model-routing-negative",
+  "title": "Bound unavailable implementation routes to affected tickets",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-project-model-routing-negative"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-project-model-routing-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "routing-evidence",
+      "text": "Names the exact settings and distinguishes an unavailable route, missing authority, and waitable capacity. Keeps the requested route pending, gives a supported resume action, and preserves unrelated ticket work."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Assesses the supplied state without starting agents, contacting providers or changing files, including scratch files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

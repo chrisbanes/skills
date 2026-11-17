@@ -18,8 +18,8 @@ never selects a queue or expands a delegated scope.
    metadata, never by spawning a capability-only reviewer. If final review
    cannot run, report that delivery blocker without waiving review.
 2. Follow the bundled [implementation procedure](implementation-mode.md)
-   for solo or delegated work, ownership, isolation and recovery. Implement
-   sequential or tightly coupled slices as the lead, not through a worker. Follow the stated repository or user testing policy.
+   for ownership preflight, isolation and recovery. Follow the stated
+   repository or user testing policy with the selected owner.
    Reconcile retained work before implementing; never redo accepted work for
    routing.
    Follow [Evidence and review](evidence-and-review.md) for testing,

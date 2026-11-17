@@ -9,9 +9,10 @@ disable-model-invocation: true
 
 ## Core principle
 
-Choose implementation ownership once from the whole task graph. Keep a single
-item or a graph with no parallel point in the lead; when the graph has parallel
-work, assign every item to a worker, including sequential heads and tails.
+Choose implementation ownership once from the whole task graph and the effective
+implementation settings. Default to the lead for a single item or a graph with
+no parallel point. When the graph has parallel work, assign every item to a
+worker, including sequential heads and tails.
 Preserve dependency checks and independent final review in both paths. Keep
 repairs with the implementation owner and reuse a bounded pool of worker
 checkouts when delegating.
@@ -28,9 +29,12 @@ checkouts when delegating.
 1. Inspect only permitted repository and orchestration state. Do not start an
    agent, edit, commit, change branches, perform worktree lifecycle operations,
    or contact a remote service.
-2. Assess the whole task graph and its recorded preflight choice. Flag a
-   forced worker for a single item or graph with no parallel point; the lead
-   implements those runs with self-review and no separate task acceptance.
+2. Assess the whole task graph and its recorded preflight choice using
+   [Implementation ownership](references/subagent-selection.md#implementation-ownership)
+   and the supplied policy, effective settings, authority and capacity.
+   Flag an unnecessary serial worker or a split serial handoff. Accept one
+   capable worker for a serial run with required settings the lead cannot meet
+   when the worker is authorized and meets them. Solo runs use self-review.
    A graph with any parallel point assigns every item to workers, including
    sequential heads and tails. For delegated runs, assess task-scoped commits,
    owner self-review, focused validation, and controller acceptance before
@@ -38,10 +42,10 @@ checkouts when delegating.
    Separate worktrees do not make shared-file edits or work
    depending on unintegrated code independent. Treat supplied readiness,
    independence and capacity as authoritative: in delegated runs, dispatch the
-   whole ready frontier concurrently. A prerequisite the state does not show
-   missing,
-   including test seams, `tdd` and reviewer capability, is an execution-time
-   check, not a dispatch hold. Check reuse-first allocation,
+   eligible ready frontier concurrently within capacity. Report any required
+   routing mismatch and the safe resume action. Treat test seams, `tdd`
+   and reviewer capability as execution-time checks unless the supplied
+   state shows they are missing. Check reuse-first allocation,
    distinct slots for active writers, and existing-checkout access for
    read-only helpers.
 3. Release a dependent only after each prerequisite's task commit is

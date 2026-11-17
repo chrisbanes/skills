@@ -1,0 +1,38 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state"
+  ],
+  "decisions": {
+    "chain": {
+      "valid": true,
+      "model": "gpt-6.1-terra",
+      "effort": "high",
+      "owner": "W1",
+      "next": "dispatch",
+      "dependent": "wait-for-integrated-checks",
+      "final_review": true
+    },
+    "split": {
+      "valid": false,
+      "next": "correct-owner"
+    },
+    "repair": {
+      "owner": "W1",
+      "next": "repair-forward",
+      "final_review": true
+    },
+    "parallel": {
+      "valid": true,
+      "frontier": [
+        "A",
+        "B"
+      ],
+      "tail_owner": "worker",
+      "task_acceptance": true,
+      "final_review": true
+    }
+  }
+}

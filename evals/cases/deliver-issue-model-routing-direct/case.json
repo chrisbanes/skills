@@ -1,0 +1,50 @@
+{
+  "id": "deliver-issue-model-routing-direct",
+  "title": "Apply implementation settings on the issue fast path",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-issue-model-routing-direct"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-issue-model-routing-direct",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "routing-evidence",
+      "text": "Explains why ownership differs across the snapshots while fast-path qualification, affected checks, self-review, independent final review, and the non-merge boundary remain applicable."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Assesses the supplied state without starting agents, contacting providers or changing files, including scratch files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
