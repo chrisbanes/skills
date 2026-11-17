@@ -226,8 +226,11 @@ Before starting new work, recover and select claim classes in the order defined
 by [Todo Lane](todo-lane.md#scheduling).
 
 At every controller event or worker yield, perform all independent runnable
-actions that fit the slot and active-agent limits. Exhaust each class before
-dispatching the next:
+actions that fit the slot and active-agent limits. Exhaust each existing-claim
+class before dispatching the next. For Jira, select new work at steps 7–8 from
+the combined ranker order across planning and implementation. Pick the first
+runnable candidate with capacity in its lane. For GitHub keep the separate
+new-work classes in steps 7 and 8.
 
 1. Apply the label-stop gate before automatic work and recovery. Exclude unlabelled Todo and binding-parked work. Reconcile eligible
    resumable authority pauses and park newly blocked operations
@@ -248,9 +251,9 @@ dispatching the next:
    unrelated slot agents
    until the in-flight or active-agent limit, less any watcher relay
    reservation ([step 4](#project-watcher)), is reached.
-8. Start the next ranked `Todo` planning item with the default-owner capability only
-   when the planning lane and active agent capacity are free after maximizing
-   runnable implementation. An AFK Wayfinder research or task item uses this
+8. Start the next selected `Todo` planning item with the default-owner
+   capability when the planning lane and active agent capacity are free.
+   For GitHub, maximize runnable implementation first. An AFK Wayfinder research or task item uses this
    same step, but each non-research child receives a fresh provider context and
    research uses the required `research` subagent. Resume a marked Wayfinder
    reconciliation before new Todo work. Surface unassigned Wayfinder HITL
@@ -458,7 +461,9 @@ failure at a verified PR head. Treat three rounds with the same sanitized
 failure fingerprint and no new diagnostic direction as non-converging. Before
 releasing the slot:
 
-1. Publish the binding's [CI parking record](github-binding.md#publish-a-ci-parking-record) with the complete preserved identity and three-round check evidence.
+1. Publish the [CI parking payload](github-binding.md#publish-a-ci-parking-record)
+   through the selected tracker's marker operations, with the preserved item and
+   scope identities and the three-round check evidence.
 2. Refetch the comment, assignment, Project Status, PR head, and checks. Require
    the marker author to be the authenticated runner and compute its
    [payload digest](../../to-plan/references/github-mode.md#payload-digest). Reconcile an ambiguous create before retrying. Keep
@@ -491,11 +496,11 @@ IDs on the same head, but keep the claim parked when it reaches the same failure
 without new diagnostics.
 
 Before restoring a parked claim, publish and verify one runner-authored
-[resume-parking issue comment](github-binding.md#resume-parking-format) that
-references the parking permalink and digest, records the qualifying recovery
+[resume-parking marker](github-binding.md#resume-parking-format) through the
+selected tracker's marker operations. Include the parking permalink and digest,
+the qualifying recovery
 signal and its evidence or a reference to the explicit investigation authority,
-and captures the current PR head, checks, base, configuration, and merge-policy
-evidence. An ambiguous resume record leaves the claim parked. Before publishing
+and the current PR head, checks, base, configuration, and merge-policy evidence. An ambiguous resume record leaves the claim parked. Before publishing
 that record, freshly revalidate the effective binding fingerprint and canonical
 live merge-policy fingerprint. A committed display-name-only change may use
 [verified lease renewal](github-binding.md#renew-presentation-only-configuration);

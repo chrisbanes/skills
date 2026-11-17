@@ -17,7 +17,8 @@ Require both:
 
 Verify the active marked plan under the [normalized-ticket contract](github-binding.md#normalized-ticket-schema):
 runner authorship, revision chain, semantic payload digest, and configured base.
-Hydrate minimized predecessors; accept only the unique unminimized leaf. Plan
+Read predecessors in every binding-supported presentation state. Accept only
+the unique verified active leaf under that binding's visibility rules. Plan
 missing or stale plans, or fast-path an item without any plan chain when it
 qualifies; preserve invalid chains and foreign markers as semantic
 blockers. Never fall back to an unmarked Agent Brief.
@@ -34,7 +35,11 @@ deliver-issue's [fast path](fast-path.md).
 2. In the controller context, classify it from the issue and bounded read-only
    inspection at the verified base. Start no planner or planning worktree.
    When in doubt, plan it normally.
-3. In the controller lane, [publish and verify the fast-path plan](github-binding.md#publish-a-fast-path-plan), reconciling an ambiguous create before retrying.
+3. In the controller lane, publish the [fast-path plan payload](github-binding.md#publish-a-fast-path-plan)
+   through the selected tracker. GitHub uses a GitHub comment. Jira uses
+   [write-marker and read-markers](jira-binding.md#planning-marker-operations)
+   with the same payload in its ADF comment. Verify the readback and reconcile
+   an ambiguous create before retrying.
 4. In `next`, or when an implementation slot is free, move the item directly
    to `In progress` and verify the authority lease, including the contract
    digest. Otherwise keep it assigned in Todo as a verified
@@ -80,16 +85,12 @@ deliver-issue's [fast path](fast-path.md).
    active leaf as a no-op. Never edit a semantic plan payload in place.
 7. Refetch all marker comments and verify the unique active leaf, revision
    chain, authenticated-runner author, [payload digest](../../to-plan/references/github-mode.md#payload-digest), permalink, planned
-   branch, planned SHA, replan-report link, and timestamps. After a new leaf is
-   verified, minimize its predecessor as `OUTDATED`. When native minimization
-   is unavailable, add a superseded banner and `<details>` opening before its
-   first payload line (`## Implementation plan` or `## Fast path`) and a final
-   `</details>` line, leaving the payload unchanged, then refetch and verify
-   its payload digest. Skip that edit when a record names the predecessor by
-   a legacy digest, which the edit would make unverifiable. If both
-   presentation operations fail or are skipped after bounded reconciliation,
-   report the hygiene failure but continue because the chain is authoritative. Treat
-   missing `to-plan` as an issue-local planning blocker; it must not block
+   branch, planned SHA, replan-report link, and timestamps. After verifying the
+   leaf, use the selected binding's supersede-marker operation for
+   [GitHub](github-binding.md#planning-marker-operations) or
+   [Jira](jira-binding.md#planning-marker-operations). Preserve the semantic
+   payload and record a presentation warning where required. Treat missing
+   `to-plan` as an issue-local planning blocker; it must not block
    implementation items with current plans.
 8. Keep the item in `Todo` and refetch its current Status, exclusive
    assignment, `ready-for-agent` label, and usable active plan. This verified
@@ -298,13 +299,15 @@ applies. Otherwise use this full lifecycle:
 
 1. Enter the controller lane and revalidate the current authority lease,
    verified base, assignment, Status, plan leaf, branch, worktree and PR.
-2. Publish one new comment containing
-   the binding's [replan-request marker](github-binding.md#replan-request-format) and the exact evidence packet.
-   Refetch and verify it.
+2. Publish the [replan-request marker payload](github-binding.md#replan-request-format)
+   and exact evidence packet via the selected tracker. Refetch and verify
+   through its marker operations.
    If publication or verification fails, keep the ticket In progress and its
    slot occupied.
-3. Move the item to Todo and refetch its current Status, assignment, report,
-   and retained artifacts. Verify the field value without a transition event.
+3. Use the selected binding's status operation to move the item to Todo
+   while keeping the assignment. Refetch exact Todo, assignment, report and
+   artifacts. A skipped, failed or unknown move keeps the current claim and
+   slot blocked. Continue only after verifying the Todo readback.
 4. Release the implementation slot without preempting another worker. Preserve
    exclusive assignment, deterministic branch and worktree, open PR, dirty
    partial work, and idle ticket context as one priority replan claim. These
@@ -403,6 +406,6 @@ subagents.
 
 ## Migration Gate
 
-Before adopting a new Status schema, apply the human-owned migration gate in
+For a new GitHub Project Status schema, apply the human-owned migration gate in
 [project configuration](github-binding.md#github-project-configuration). A display-name rename alone does
 not require that migration.

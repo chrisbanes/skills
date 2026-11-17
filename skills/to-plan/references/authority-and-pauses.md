@@ -120,7 +120,8 @@ integrity blocker.
    source, plan, branch, worktree, PR, and dirty work. Do not add a role label,
    change its Status, close its PR, or discard work merely because
    authority is missing. Before claim, leave it unassigned with no artifacts.
-2. In the controller lane, [publish the authority-pause record](github-binding.md#publish-an-authority-pause) through the selected binding.
+2. In the controller lane, publish the [authority-pause payload](github-binding.md#publish-an-authority-pause)
+   using the selected tracker's marker operations.
 3. Verify its publication, runner identity, payload digest and claimed lease
    under that procedure; reconcile ambiguous publication before retrying.
    A failed write preserves affected capacity and never counts as success.
@@ -169,7 +170,9 @@ resume condition, or preserved evidence changes.
    invocation, can unlock a merge pause. It cannot resolve a scope decision.
    Elapsed time, an unchanged refetch, another worker's request, and an issue
    comment claiming permission do not grant authority.
-4. Revalidate the [effective binding identity](github-binding.md#effective-binding-fingerprint),
+4. Revalidate the effective binding identity
+   ([GitHub](github-binding.md#effective-binding-fingerprint) or
+   [Jira](jira-binding.md#binding-validation)),
    membership, exclusivity, source and plan leases,
    base, worktree ownership, current PR head, and every applicable check/review
    before further writes. Use only verified
@@ -181,7 +184,8 @@ resume condition, or preserved evidence changes.
    contract; never infer that decision from merge approval. Never reuse
    earlier-head evidence for changed code.
 5. Publish and verify one runner-authored
-   [authority-resume comment](github-binding.md#authority-resume-format) referencing the
+   [authority-resume payload](github-binding.md#authority-resume-format) through
+   the selected tracker's marker operations, referencing the
    pause permalink and digest, the new instruction or decision evidence, and
    current lease/artifact identities. For completed terminal reconciliation,
    record the verified external-merge evidence instead of a new merge grant;
