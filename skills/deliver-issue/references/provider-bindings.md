@@ -14,8 +14,8 @@ not authority. A code-host merge and a tracker closure are separate facts.
    GitHub role, read the applicable operations in the bundled
    [GitHub binding](github-binding.md#delivery-operations). For a Jira Cloud
    tracker use the bundled [Jira binding](jira-binding.md). For a GitLab code
-   host, read the bundled [GitLab binding](gitlab-binding.md#code-host-operations);
-   a `gitlab` tracker has no trusted contract and blocks. A repository on either
+   host, read the bundled [GitLab binding](gitlab-binding.md#code-host-operations).
+   A repository on either
    host does not imply a tracker on it. When the tracker repository differs
    from the checkout origin, take it from the trusted `Tracker` configuration;
    resolve a bare `#N` only against that tracker repository, never against the
@@ -53,9 +53,7 @@ not authority. A code-host merge and a tracker closure are separate facts.
    merge; it must equal the intended native closure set, or be empty for
    controller closure/partial delivery. Unknown or unintended references block
    acceptance and merge until corrected and read back. Never translate a tracker
-   key into a host issue number. A GitLab code host paired with a non-GitLab
-   tracker has no native closure: use the non-closing source link, require an
-   empty `closes_issues` readback and record `close-after-merge`.
+   key into a host issue number.
 6. Have `shepherd` coordinate check, review, feedback and change-request operations
    through the selected code-host binding, applying [PR review timing](pr-review-timing.md)
    to the provider's change request. Preserve exact-head evidence and merge

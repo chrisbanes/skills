@@ -22,10 +22,9 @@ binding, follow its GitLab code-host credential and transport rules.
 | Reply | `glab api --hostname <host> -X POST projects/<id>/merge_requests/<iid>/discussions/<discussion-id>/notes -f body=<reply>` |
 | Resolve | `glab api --hostname <host> -X PUT projects/<id>/merge_requests/<iid>/discussions/<discussion-id> -f resolved=true` |
 
-Resolve a discussion only after its reply and any required push succeed, then
-refetch it. Never resolve a local-only fix. When an operation is unavailable
-(no `glab`, unsupported endpoint, failed or unknown read), report it with the
-target and leave the thread as it is; never fall back to `gh` or another host.
+Refetch a discussion after resolving it under the procedure's reply-then-resolve
+rule. When an operation is unavailable (no `glab`, unsupported endpoint, failed
+or unknown read), report it with the target and leave the thread as it is.
 
 ## Host-managed monitoring
 

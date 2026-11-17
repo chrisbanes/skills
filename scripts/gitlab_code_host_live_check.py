@@ -15,7 +15,6 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import uuid
 from pathlib import Path
@@ -33,6 +32,7 @@ MAX_ATTEMPTS = 2
 PREFIX = f"projects/{PROJECT_ID}/"
 ENCODED_PROJECT = "projects/" + quote(PROJECT_PATH, safe="")
 FORBIDDEN_KEYS = ("auto_merge", "merge_when_pipeline_succeeds")
+WRITE_OK = (200, 201, 202, 204)
 FINGERPRINT_FIELDS = (
     "merge_method", "squash_option", "only_allow_merge_if_pipeline_succeeds",
     "allow_merge_on_skipped_pipeline", "only_allow_merge_if_all_discussions_are_resolved",
@@ -51,7 +51,6 @@ class GuardDenied(CheckError):
 class ProviderError(CheckError):
     def __init__(self, method, path, status, message):
         super().__init__(f"{method} {path}: HTTP {status}: {message}")
-        self.status = status
 
 
 class Guard:
@@ -91,9 +90,6 @@ class Guard:
         # Counted before sending: a write that errors or is rate-limited still counts.
         self.writes += 1
 
-    def _mr(self, iid):
-        return iid.isdigit() and int(iid) in self.merge_requests
-
     def _allowed(self, method, rest, body):
         if method == "POST" and rest == "repository/branches":
             return body.get("branch") == self.base and body.get("ref") == PROTECTED_BASE and set(body) == {"branch", "ref"}
@@ -114,7 +110,7 @@ class Guard:
             branch = rest[len("repository/branches/"):]
             return branch in {quote(name, safe="") for name in (*self.task_branches, self.base)}
         match = re.fullmatch(r"merge_requests/(\d+)(/.*)?", rest)
-        if not match or not self._mr(match.group(1)):
+        if not match or int(match.group(1)) not in self.merge_requests:
             return False
         tail = match.group(2) or ""
         if method == "PUT" and tail == "":
@@ -141,15 +137,15 @@ class GlabTransport:
 
     def request(self, method, path, body=None):
         command = [self.executable, "api", "--hostname", HOST, "-i", "-X", method, path]
-        with tempfile.TemporaryDirectory() as directory:
-            if body is not None:
-                payload = Path(directory) / "body.json"
-                payload.write_text(json.dumps(body), encoding="utf-8")
-                command += ["--input", str(payload), "-H", "Content-Type: application/json"]
-            try:
-                result = subprocess.run(command, capture_output=True, text=True, timeout=120)
-            except (OSError, subprocess.TimeoutExpired) as error:
-                raise CheckError(f"{method} {path}: glab failed: {type(error).__name__}") from None
+        if body is not None:
+            command += ["--input", "-"]  # glab sends a stdin body as application/json
+        try:
+            result = subprocess.run(
+                command, input=None if body is None else json.dumps(body),
+                capture_output=True, text=True, timeout=120,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            raise CheckError(f"{method} {path}: glab failed: {type(error).__name__}") from None
         head, _, text = result.stdout.replace("\r\n", "\n").partition("\n\n")
         lines = head.split("\n")
         status_match = re.match(r"HTTP/\S+ (\d{3})", lines[0]) if lines else None
@@ -175,7 +171,7 @@ class Client:
         self.requests = 0
         self.rate_limited = []
 
-    def call(self, method, path, body=None, allow=(200, 201, 202, 204)):
+    def call(self, method, path, body=None, allow=WRITE_OK):
         self.guard.check(method, path, body)
         attempts = 4 if method == "GET" else 1
         for attempt in range(attempts):
@@ -193,8 +189,8 @@ class Client:
             raise ProviderError(method, path, status, message)
         raise AssertionError("unreachable")
 
-    def get(self, path, allow=(200,)):
-        return self.call("GET", path, allow=allow)[1]
+    def get(self, path):
+        return self.call("GET", path, allow=(200,))[1]
 
     def get_all(self, path):
         items, page = [], "1"
@@ -207,7 +203,7 @@ class Client:
             page = headers.get("x-next-page", "")
         return items
 
-    def write(self, method, path, body=None, allow=(200, 201, 202, 204)):
+    def write(self, method, path, body=None, allow=WRITE_OK):
         return self.call(method, path, body, allow=allow)[1]
 
 
@@ -251,21 +247,11 @@ def fingerprint(project, protected, approval_rules, approvals):
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest(), payload
 
 
-def wait_for(read, done, *, polls, interval, sleep, what):
-    for _ in range(polls):
-        value = read()
-        if done(value):
-            return value
-        sleep(interval)
-    raise CheckError(f"timed out waiting for {what}")
-
-
 class Run:
-    def __init__(self, client, run_id, *, sleep=time.sleep, polls=60, interval=20):
+    def __init__(self, client, run_id, *, polls=60, interval=20):
         self.client = client
         self.guard = client.guard
         self.run_id = run_id
-        self.sleep = sleep
         self.polls = polls
         self.interval = interval
         self.result = {"run_id": run_id, "host": HOST, "project_id": PROJECT_ID, "model_turns": 0, "steps": []}
@@ -276,13 +262,25 @@ class Run:
     def mr_path(self, iid, tail=""):
         return f"{PREFIX}merge_requests/{iid}{tail}"
 
+    def branch_path(self, branch):
+        return f"{PREFIX}repository/branches/{quote(branch, safe='')}"
+
+    def wait_for(self, read, done, what):
+        for poll in range(self.polls):
+            value = read()
+            if done(value):
+                return value
+            if poll + 1 < self.polls:
+                self.client.sleep(self.interval)
+        raise CheckError(f"timed out waiting for {what}")
+
     def preflight(self):
         user = self.client.get("user")
         self.result["account_id"] = user["id"]
         if user["id"] != ACCOUNT_ID:
             raise CheckError(f"glab:{HOST} login is account {user['id']}, not the fixture operator")
         project = self.client.get(f"projects/{PROJECT_ID}")
-        by_path = self.client.get(f"projects/{quote(PROJECT_PATH, safe='')}")
+        by_path = self.client.get(ENCODED_PROJECT)
         if project["id"] != PROJECT_ID or by_path["id"] != PROJECT_ID or project["path_with_namespace"] != PROJECT_PATH:
             raise CheckError("fixture project identity mismatch")
         if project.get("merge_trains_enabled"):
@@ -291,7 +289,7 @@ class Run:
         approval_rules = self.client.get_all(f"{PREFIX}approval_rules")
         approvals = self.client.get(f"{PREFIX}approvals")
         digest, inputs = fingerprint(project, protected, approval_rules, approvals)
-        main = self.client.get(f"{PREFIX}repository/branches/{PROTECTED_BASE}")
+        main = self.client.get(self.branch_path(PROTECTED_BASE))
         self.result.update(
             version=self.client.get("version").get("version"),
             fingerprint=digest,
@@ -301,13 +299,14 @@ class Run:
         )
         self.step("preflight", writes=self.guard.writes)
 
-    def task(self, branch, file_name, fail):
-        actions = [{"action": "create", "file_path": f"qual/{self.run_id}-{file_name}.md", "content": f"{self.run_id}\n"}]
+    def task(self, name, fail):
+        branch = f"qual/{self.run_id}-{name}"
+        actions = [{"action": "create", "file_path": f"{branch}.md", "content": f"{self.run_id}\n"}]
         if fail:
             actions.append({"action": "create", "file_path": "FAIL_PIPELINE", "content": "fail on purpose\n"})
         commit = self.client.write("POST", f"{PREFIX}repository/commits", {
             "branch": branch, "start_branch": self.guard.base,
-            "commit_message": f"Qualification {self.run_id} {file_name}", "actions": actions,
+            "commit_message": f"Qualification {self.run_id} {name}", "actions": actions,
         })
         lookup = (
             f"{PREFIX}merge_requests?source_branch={quote(branch, safe='')}"
@@ -318,7 +317,7 @@ class Run:
         try:
             mr = self.client.write("POST", f"{PREFIX}merge_requests", {
                 "source_branch": branch, "target_branch": self.guard.base,
-                "title": f"Draft: Qualification {self.run_id} {file_name}",
+                "title": f"Draft: Qualification {self.run_id} {name}",
                 "description": "Source: https://github.com/chrisbanes/skills/issues/158",
             })
         except CheckError:
@@ -353,11 +352,10 @@ class Run:
         def finished(value):
             return value[1] is not None and value[1]["status"] in ("success", "failed", "canceled", "skipped")
 
-        return wait_for(read, finished, polls=self.polls, interval=self.interval, sleep=self.sleep, what="pipeline")
+        return self.wait_for(read, finished, "pipeline")
 
     def journey_a(self):
-        branch = f"qual/{self.run_id}-a"
-        mr = self.task(branch, "a", fail=True)
+        mr = self.task("a", fail=True)
         source, pipeline = self.pipeline(mr)
         if pipeline["status"] != "failed":
             raise CheckError(f"journey A pipeline {pipeline['status']}, expected failed")
@@ -374,8 +372,7 @@ class Run:
         return mr
 
     def journey_b(self):
-        branch = f"qual/{self.run_id}-b"
-        mr = self.task(branch, "b", fail=False)
+        mr = self.task("b", fail=False)
         refusal = merge_refusal(mr)
         if refusal is None:
             raise CheckError("draft merge request was not refused")
@@ -387,10 +384,10 @@ class Run:
         source, pipeline = self.pipeline(mr)
         if pipeline["status"] != "success":
             raise CheckError(f"journey B pipeline {pipeline['status']}, expected success")
-        mr = wait_for(
+        mr = self.wait_for(
             lambda: self.read_mr(mr["iid"]),
             lambda value: value["detailed_merge_status"] not in ("checking", "unchecked", "preparing", "ci_still_running"),
-            polls=self.polls, interval=self.interval, sleep=self.sleep, what="merge status",
+            "merge status",
         )
         refusal = merge_refusal(mr)
         if refusal is not None:
@@ -398,12 +395,9 @@ class Run:
         self.check_no_closures(mr["iid"])
         expected = mr["sha"]
         self.client.write("PUT", self.mr_path(mr["iid"], "/merge"), {"sha": expected, "squash": False})
-        merged = wait_for(
-            lambda: self.read_mr(mr["iid"]), lambda value: value["state"] == "merged",
-            polls=self.polls, interval=self.interval, sleep=self.sleep, what="merge readback",
-        )
+        merged = self.wait_for(lambda: self.read_mr(mr["iid"]), lambda value: value["state"] == "merged", "merge readback")
         commit = merged.get("merge_commit_sha") or merged.get("squash_commit_sha")
-        base = self.client.get(f"{PREFIX}repository/branches/{quote(self.guard.base, safe='')}")
+        base = self.client.get(self.branch_path(self.guard.base))
         if merged["sha"] != expected or not commit or base["commit"]["id"] != commit:
             raise CheckError("merge readback mismatch")
         self.step("journey-b", mr=mr["iid"], pipeline=pipeline["id"], pipeline_source=source, merged_head=expected, merge_commit=commit, writes=self.guard.writes)
@@ -414,23 +408,19 @@ class Run:
         for iid in sorted(self.guard.merge_requests):
             mr = self.read_mr(iid)
             if mr["state"] == "opened":
-                self.client.write("PUT", self.mr_path(iid), {"state_event": "close"})
-                mr = self.read_mr(iid)
+                mr = self.client.write("PUT", self.mr_path(iid), {"state_event": "close"})
             outcome[f"!{iid}"] = mr["state"]
         for branch in sorted(self.guard.task_branches) + [self.guard.base]:
-            path = f"{PREFIX}repository/branches/{quote(branch, safe='')}"
+            path = self.branch_path(branch)
             status, _, _ = self.client.call("GET", path, allow=(200, 404))
             if status == 200:
                 # GitLab may already have removed a merged source branch; 404 counts as removed.
                 self.client.write("DELETE", path, allow=(204, 404))
             status, _, _ = self.client.call("GET", path, allow=(200, 404))
             outcome[branch] = "deleted" if status == 404 else "present"
-        main = self.client.get(f"{PREFIX}repository/branches/{PROTECTED_BASE}")
-        verified = (
-            all(value in ("closed", "merged", "deleted") for value in outcome.values())
-            and main["commit"]["id"] == self.result.get("main_tip_before")
-        )
-        self.result["cleanup"] = {"outcome": outcome, "main_unchanged": main["commit"]["id"] == self.result.get("main_tip_before"), "verified": verified}
+        main_unchanged = self.client.get(self.branch_path(PROTECTED_BASE))["commit"]["id"] == self.result.get("main_tip_before")
+        verified = main_unchanged and all(value in ("closed", "merged", "deleted") for value in outcome.values())
+        self.result["cleanup"] = {"outcome": outcome, "main_unchanged": main_unchanged, "verified": verified}
         return verified
 
     def execute(self):
@@ -506,7 +496,7 @@ def main(argv=None, environ=None, transport=None, sleep=time.sleep):
     ledger.parent.mkdir(parents=True, exist_ok=True)
     ledger.write_text(json.dumps([*attempts, run_id]), encoding="utf-8")
     client = Client(transport or GlabTransport(executable), Guard(run_id), sleep=sleep)
-    result = Run(client, run_id, sleep=sleep).execute()
+    result = Run(client, run_id).execute()
     if not result["writes"]:
         ledger.write_text(json.dumps(attempts), encoding="utf-8")  # a zero-write run is not a write attempt
     Path(arguments.result).write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")

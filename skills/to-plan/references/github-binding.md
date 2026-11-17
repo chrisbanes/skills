@@ -182,9 +182,9 @@ Only an already trusted, committed display-name-only edit may use
    item authority. Follow Parent-issue scope below for graph and lifecycle reads.
 3. Resolve repository host and `owner/repository` from the current checkout's
    git remote and verify its live identity. When the code host is not GitHub,
-   resolve the tracker repository from the required `Tracker` `Repository`
-   field instead, resolve short `#N` and repository labels against it, and
-   take code-host identity, base and merge policy from that host's binding. Use explicit repository overrides
+   resolve the tracker repository under [Delivery bindings](provider-bindings.md)
+   step 1 (labels and short `#N` use it) and take code-host identity, base and
+   merge policy from that host's binding. Use explicit repository overrides
    first; without them, conflicting remotes or an unclear repository block.
    Obtain the default branch from live repository settings and use it as base
    unless overridden. Resolve a merge queue when required by live policy;

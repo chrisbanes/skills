@@ -88,10 +88,8 @@ Done automation fields a GitHub Project board needs):
    configuration: it blocks only the code-host lanes. Tracker reads, planning
    and local validation continue.
 6. Treat any non-2xx response, timeout, malformed JSON or incomplete pagination
-   as unknown state, never as absence. Retry a transient read (429, 5xx,
-   timeout) at most three times, honoring `Retry-After`; repeat the complete
-   logical read. Never blindly retry a write: refetch the resulting resource
-   first and follow [Reconciliation](#reconciliation).
+   as unknown state, never as absence. Retry reads and reconcile writes under
+   [Reconciliation](#reconciliation).
 
 ## Code-host operations
 
@@ -148,9 +146,9 @@ is the merge request IID.
    GitLab closing patterns (`Closes`, `Fixes`, `Resolves`, `Implements` and
    their variants) while GitLab is only the code host. After every create or
    description edit and immediately before merge, read
-   `GET projects/:id/merge_requests/:iid/closes_issues`; it must be empty.
-   A non-empty or unknown set blocks acceptance and merge until corrected and
-   read back. Native closure is unavailable.
+   `GET projects/:id/merge_requests/:iid/closes_issues` as the host's effective
+   closing-reference set; with no native closure it must be empty under
+   [Delivery bindings](provider-bindings.md) step 5.
 10. **Merge:** Refresh operations 4–6 and 9 and the
     [live merge-policy fingerprint](#live-merge-policy-fingerprint). Require
     invocation-specific merge authority, the caller's final-head gates,
@@ -189,7 +187,6 @@ is the merge request IID.
 
 | Operation | Lanes blocked |
 | --- | --- |
-| Tracker role (source, readiness, markers, claims, closure, Done) | Every tracker lane with a `gitlab` tracker |
 | Native closure through closing keywords | None; closure uses `close-after-merge` |
 | Merge requests from forks | Delivery from a fork; use project task branches |
 | Auto-merge | None; merge only through operation 10 |
@@ -213,9 +210,9 @@ Finish with the applicable validation or proposed-edit result.
 
 ## Live Merge-Policy Fingerprint
 
-At startup, before every merge, after a relevant settings or protection
-change and before resuming a parked claim, compute `sha256` over canonical
-JSON (sorted keys, compact separators, sorted set-like arrays) containing:
+Compute and recompute it as the
+[GitHub fingerprint](github-binding.md#live-merge-policy-fingerprint) does,
+with `sha256` over canonical JSON containing:
 
 - the base branch, the configured `Method` and `Squash`;
 - from `GET projects/:id`: `merge_method`, `squash_option`,
@@ -232,16 +229,13 @@ value `unavailable`. Decide endpoint availability by edition, not status code:
 when `GET version` reports `enterprise: false` (Community Edition), the
 approval endpoints are `unavailable` and are not read. Otherwise a failed or
 partial read is unknown state: stop with `stop-preserve`, never fingerprint
-it, and never read a 403 or 404 as `unavailable`. A changed
-fingerprint is global merge-policy drift (`stop-preserve`): stop and preserve all work until the
-trusted configuration and live policy are reconciled, as in the
-[GitHub fingerprint](github-binding.md#live-merge-policy-fingerprint).
+it, and never read a 403 or 404 as `unavailable`. A changed fingerprint is
+global merge-policy drift (`stop-preserve`), handled as in the GitHub binding.
 
 ## Reconciliation
 
-After a failed or ambiguous write, refetch the resulting resource (merge
-request by source branch, note by discussion, discussion `resolved` state,
-merge request `state`). If the intended state is present, continue without
-repeating it; if absence is proven under fresh preconditions, retry once and
-refetch; otherwise stop and preserve state. Never send a duplicate merge
-request, note, resolve or merge. An unknown merge blocks tracker closure.
+Apply steps 2–5 of the GitHub binding's
+[Remote reconciliation](github-binding.md#remote-reconciliation) to every
+GitLab read and write. Reconcile a failed or ambiguous write from the merge
+request by source branch, the note by discussion, the discussion's `resolved`
+state or the merge request's `state`; never send a duplicate.

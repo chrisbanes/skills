@@ -137,7 +137,7 @@ class FakeGitLab:
 
 def run(fake, **kwargs):
     client = check.Client(fake, check.Guard("RUN"), sleep=lambda _: None)
-    return check.Run(client, "RUN", sleep=lambda _: None, polls=5, interval=0, **kwargs).execute(), client
+    return check.Run(client, "RUN", polls=5, interval=0, **kwargs).execute(), client
 
 
 class GuardTest(unittest.TestCase):
@@ -179,7 +179,7 @@ class GuardTest(unittest.TestCase):
 class RunTest(unittest.TestCase):
     def test_journeys_pass_within_budget_and_cleanup_tolerates_removed_source(self):
         fake = FakeGitLab(auto_delete_source=True)
-        result, client = run(fake)
+        result, _ = run(fake)
         self.assertTrue(result["passed"], result["error"])
         self.assertLessEqual(result["writes"], 14)
         self.assertEqual([], result["guard"]["denied"])
@@ -229,7 +229,7 @@ class RunTest(unittest.TestCase):
         self.assertFalse(result["passed"])
         self.assertIn("HTTP 500", result["error"])
         self.assertEqual(0, result["writes"])
-        self.assertEqual(3, len(client.rate_limited) - 1)  # four attempts, three retries
+        self.assertEqual(4, len(client.rate_limited))  # four attempts, three retries
 
 
 class SafetyTest(unittest.TestCase):
@@ -271,6 +271,11 @@ class SafetyTest(unittest.TestCase):
         client = check.Client(type("T", (), {"request": lambda *_: (status, headers, body)})(), check.Guard("RUN"), sleep=lambda _: None)
         with self.assertRaises(check.ProviderError):
             client.get("user")  # an HTTP-date Retry-After falls back to backoff instead of crashing
+        created = check.subprocess.CompletedProcess([], 0, stdout="HTTP/2.0 201 Created\n\n{}", stderr="")
+        with patch.object(check.subprocess, "run", return_value=created) as run_glab:
+            transport.request("POST", "x", {"body": "note"})
+        self.assertEqual(["--input", "-"], run_glab.call_args.args[0][-2:])
+        self.assertEqual({"body": "note"}, json.loads(run_glab.call_args.kwargs["input"]))
         with patch.object(check.subprocess, "run", side_effect=check.subprocess.TimeoutExpired("glab", 120)):
             with self.assertRaises(check.CheckError):
                 transport.request("GET", "user")
@@ -288,18 +293,12 @@ class PreconditionTest(unittest.TestCase):
                 self.assertEqual(2, check.main(self.arguments("--live"), environ={name: SENTINEL}))
 
     def test_refuses_a_third_write_attempt(self):
-        with tempfile.TemporaryDirectory() as directory:
-            result = Path(directory) / "result.json"
-            argv = ["--live", "--result", str(result)]
-            original = check.shutil.which
-            check.shutil.which = lambda _: "/usr/bin/glab"
-            try:
-                for _ in range(check.MAX_ATTEMPTS):
-                    self.assertEqual(0, check.main(argv, environ={}, transport=FakeGitLab(), sleep=lambda _: None))
-                self.assertEqual(2, check.main(argv, environ={}, transport=FakeGitLab(), sleep=lambda _: None))
-                self.assertEqual(2, len(json.loads((Path(directory) / "gitlab-live-attempts.json").read_text())))
-            finally:
-                check.shutil.which = original
+        with tempfile.TemporaryDirectory() as directory, patch.object(check.shutil, "which", return_value="/usr/bin/glab"):
+            argv = ["--live", "--result", str(Path(directory) / "result.json")]
+            for _ in range(check.MAX_ATTEMPTS):
+                self.assertEqual(0, check.main(argv, environ={}, transport=FakeGitLab(), sleep=lambda _: None))
+            self.assertEqual(2, check.main(argv, environ={}, transport=FakeGitLab(), sleep=lambda _: None))
+            self.assertEqual(2, len(json.loads((Path(directory) / "gitlab-live-attempts.json").read_text())))
 
 
 if __name__ == "__main__":
