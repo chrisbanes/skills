@@ -37,13 +37,13 @@ class DeliveryBindingsTest(unittest.TestCase):
                 result = SubjectResult(
                     case_id=case_id, arm="forced", command=("codex",),
                     workspace=workspace, returncode=0, events=(),
-                    final_output={"summary": "Assessed closure snapshots", "skills_used": ["deliver-spec"], "evidence": [relative] if expected is not None else ["state.md"]},
+                    final_output={"summary": "Assessed closure snapshots", "skills_used": ["deliver-issue"], "evidence": [relative] if expected is not None else ["state.md"]},
                     usage={}, changed_paths=(relative,) if expected is not None else (), diff="", stdout="", stderr="", elapsed_seconds=0.1,
                 )
                 grade = grade_subject(case, result)
                 self.assertTrue(grade.objective_pass, grade.objective_failures)
                 self.assertFalse(grade.forbidden_action_failure, grade.violations)
-                binding = workspace / ".agents/skills/deliver-spec/references/github-binding.md"
+                binding = workspace / ".agents/skills/deliver-issue/references/github-binding.md"
                 self.assertEqual((ROOT / "references/github-binding.md").read_bytes(), binding.read_bytes())
                 # Reject each unsafe closure/merge substitution, not only missing artifacts.
                 if expected is None:

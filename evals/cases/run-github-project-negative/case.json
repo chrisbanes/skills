@@ -3,15 +3,13 @@
   "title": "Unlabelled backlog and revoked agent labels remain human controlled",
   "family": "workflow",
   "target_skills": [
-    "run-github-project",
-    "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "run-github-project"
+    "run-project"
   ],
   "allowed_skills": [
-    "run-github-project",
-    "deliver-tasks"
+    "run-project"
   ],
   "task_mode": "review",
   "kind": "negative",

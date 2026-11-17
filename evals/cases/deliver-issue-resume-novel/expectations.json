@@ -1,0 +1,21 @@
+{
+  "decisions": {
+    "wait": {
+      "next": "pending-handoff",
+      "preserve_owner": true,
+      "preserve_pr": true,
+      "watch_indefinitely": false
+    },
+    "resume": {
+      "reuse_pr": true,
+      "reconcile_unknown_merge": true,
+      "reuse_H1_review_for_H2": false,
+      "inherit_previous_grants": false,
+      "close": false
+    },
+    "board": {
+      "cadence": "controller-watcher",
+      "start_second_poll_loop": false
+    }
+  }
+}

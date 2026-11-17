@@ -3,10 +3,10 @@
   "title": "Preserve parent-scope stops and reconcile epic finish",
   "family": "workflow",
   "target_skills": [
-    "deliver-tasks"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-tasks"
+    "deliver-issue"
   ],
   "task_mode": "edit",
   "kind": "novel",
@@ -30,14 +30,11 @@
   "rubric": [
     {
       "id": "parent-contract",
-      "text": "Preserve parent-scope stops and reconcile epic finish; retain item-specific authority, complete graph reads, stop preservation and verified closed readback."
+      "text": "Resolve direct issue scope without a Project; use its live invocation grant, preserve human stops and existing ownership, require explicit closure authority and verified acceptance/readback."
     }
   ],
   "provenance": {
     "kind": "synthetic"
   },
-  "staged_skill_files": [
-    "run-github-project/scripts/watch_project.py"
-  ],
   "calibration": true
 }

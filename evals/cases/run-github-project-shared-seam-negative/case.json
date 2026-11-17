@@ -3,14 +3,17 @@
   "title": "run github project shared seam negative",
   "family": "workflow",
   "target_skills": [
-    "run-github-project",
-    "to-plan", "deliver-tasks"
-  ],
-  "expected_skills": [
-    "run-github-project",
+    "run-project",
     "to-plan"
   ],
-  "allowed_skills": ["run-github-project", "to-plan", "deliver-tasks"],
+  "expected_skills": [
+    "run-project",
+    "to-plan"
+  ],
+  "allowed_skills": [
+    "run-project",
+    "to-plan"
+  ],
   "task_mode": "edit",
   "kind": "negative",
   "fixture": "workflow",

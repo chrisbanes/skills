@@ -1,0 +1,28 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "decisions": {
+    "forged": {
+      "next": "readiness-blocked",
+      "plan": false
+    },
+    "hold": {
+      "next": "human-decision",
+      "write": false
+    },
+    "removed": {
+      "next": "stop-preserve",
+      "restore_label": false,
+      "resume": false
+    },
+    "unknown": {
+      "next": "ownership-blocked",
+      "takeover": false
+    }
+  }
+}

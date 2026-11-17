@@ -3,14 +3,17 @@
   "title": "run github project background owners negative",
   "family": "workflow",
   "target_skills": [
-    "run-github-project",
-    "deliver-spec", "deliver-tasks"
+    "run-project",
+    "deliver-issue"
   ],
   "expected_skills": [
-    "run-github-project",
-    "deliver-spec"
+    "run-project",
+    "deliver-issue"
   ],
-  "allowed_skills": ["run-github-project", "deliver-spec", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project",
+    "deliver-issue"
+  ],
   "task_mode": "edit",
   "kind": "negative",
   "fixture": "workflow",

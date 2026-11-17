@@ -1,0 +1,53 @@
+{
+  "id": "run-project-tree-restraint-negative",
+  "title": "Board next stays within one selected ticket",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-project-tree-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-project-tree-restraint-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "outcomes",
+      "text": "Board next stays within one selected ticket; require scoped authority, preserve work and report pending conditions precisely."
+    },
+    {
+      "id": "decisions",
+      "text": "In the response, report these scenario decisions with reasoning: {\"board\": {\"claims_owner\": \"controller\", \"close_without_grant\": false, \"merge_owner\": \"controller\", \"select_children\": false, \"selected\": [91], \"start_drain\": false}}. Make no workspace changes, including scratch artifacts."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
+}

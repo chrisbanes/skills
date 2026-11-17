@@ -3,12 +3,12 @@
   "title": "deliver spec behavioral dependency novel",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec",
+    "deliver-issue",
     "implement-with-subagents",
     "to-plan"
   ],
   "expected_skills": [
-    "deliver-spec",
+    "deliver-issue",
     "implement-with-subagents",
     "to-plan"
   ],

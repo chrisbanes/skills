@@ -1,6 +1,6 @@
-Use supplied state only; make no provider calls, remote mutations or edits except
-the requested decision artifact. Assess independent `deliver #50` snapshots.
-A: Parent has ready-for-agent. A complete graph contains an unlabelled child.
+Use supplied state only; make no provider calls, remote mutations or edits. Assess independent `deliver acme/repo#50` snapshots.
+A: Parent has ready-for-agent. A complete graph contains an unlabelled child
+with an approved plan, no blockers, no owner, no human hold or retained stop.
 Does parent scope authorize claiming that child or automatically closing root?
 B: The native subIssues connection has hasNextPage true with missing endCursor;
 the apparent page has no runnable items. Is the scope complete or successful?
@@ -16,5 +16,9 @@ For C write action (blocked-identity-ambiguity) and may_claim (boolean).
 For D write may_close (boolean). For E write active_runner_claim (boolean).
 For F write may_claim_from_wake and requires_full_refresh (booleans).
 
-Write exactly these scenario keys and fields to `.scratch/review-decisions.json`.
-Read skill references; change no other files.
+Return exactly these scenario keys and fields in your response.
+Read skill references; change no files.
+
+This is a no-change assessment: write no files, including scratch artifacts.
+
+Put only the exact decision JSON object (no Markdown fences or prose) in the final structured response's `summary` string; put supporting reasoning in `evidence`.

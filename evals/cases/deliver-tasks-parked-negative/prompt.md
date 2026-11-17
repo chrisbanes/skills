@@ -9,5 +9,9 @@ and preserve_dependencies (boolean). Determine whether any role label bypasses
 the parked gate, and retain their blocker/descendant references in the complete
 graph. These cases authorize no tracker changes, cleanup or new provider setup.
 
-Write the requested exact JSON decision fields to `.scratch/review-decisions.json`.
-Use skill references; make no provider calls or mutations except this artifact.
+Return the requested exact JSON decision fields in your response.
+Use skill references; make no provider calls or mutations.
+
+This is a no-change assessment: write no files, including scratch artifacts.
+
+Put only the exact decision JSON object (no Markdown fences or prose) in the final structured response's `summary` string; put supporting reasoning in `evidence`.

@@ -3,10 +3,10 @@
   "title": "deliver spec nested helpers novel",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "task_mode": "edit",
   "kind": "novel",

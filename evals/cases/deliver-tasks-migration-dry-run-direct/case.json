@@ -3,10 +3,10 @@
   "title": "Approval-gated legacy migration: dry-run-direct",
   "family": "workflow",
   "target_skills": [
-    "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "deliver-tasks"
+    "run-project"
   ],
   "task_mode": "edit",
   "kind": "direct",
@@ -37,7 +37,7 @@
     "kind": "synthetic"
   },
   "staged_skill_files": [
-    "run-github-project/scripts/watch_project.py"
+    "run-project/scripts/watch_project.py"
   ],
   "calibration": true
 }

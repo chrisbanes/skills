@@ -3,12 +3,14 @@
   "title": "Preserve offline delivery when live qualification lacks authority",
   "family": "workflow",
   "target_skills": [
-    "run-github-project", "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "run-github-project"
+    "run-project"
   ],
-  "allowed_skills": ["run-github-project", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project"
+  ],
   "task_mode": "edit",
   "kind": "novel",
   "fixture": "workflow",

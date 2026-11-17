@@ -1,0 +1,20 @@
+{
+  "decisions": {
+    "scope": {
+      "includes_root_work": true,
+      "includes_open_grandchild": true,
+      "ask_external_scope": true,
+      "implement_external": false,
+      "continue_issue": 70,
+      "root_done": false
+    },
+    "A": {
+      "preserve_plan": true,
+      "pr_count": 1
+    },
+    "B": {
+      "preserve_plan": true,
+      "pr_count": 2
+    }
+  }
+}

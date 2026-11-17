@@ -20,7 +20,7 @@ run" while this same drain is active: explain whether #51 may resume, what must
 be refreshed, and whether the controller asks again for each PR. Contrast a
 bare "yes" when two unrelated questions are pending and its meaning is unclear.
 
-Later, a fresh invocation is `drain; merge when ready`. #51 has
+Later, a fresh invocation is `drain; merge when ready and close fully satisfied issues`. #51 has
 a verified runner-owned authority-pause comment, unchanged exclusive ownership,
 and the same PR head. #55 has a separate verified pause asking for a stakeholder
 scope decision which has not been supplied. Its original worker returned a

@@ -3,10 +3,10 @@
   "title": "Unknown pause publication preserves capacity and independent delivery",
   "family": "workflow",
   "target_skills": [
-    "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "deliver-tasks"
+    "run-project"
   ],
   "task_mode": "edit",
   "kind": "novel",
@@ -41,6 +41,6 @@
     "kind": "synthetic"
   },
   "staged_skill_files": [
-    "run-github-project/scripts/watch_project.py"
+    "run-project/scripts/watch_project.py"
   ]
 }

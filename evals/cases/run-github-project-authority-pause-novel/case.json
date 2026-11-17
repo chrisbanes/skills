@@ -3,14 +3,17 @@
   "title": "Park one merge pause while draining unrelated work and recover it later",
   "family": "workflow",
   "target_skills": [
-    "run-github-project",
-    "deliver-spec", "deliver-tasks"
+    "run-project",
+    "deliver-issue"
   ],
   "expected_skills": [
-    "run-github-project",
-    "deliver-spec"
+    "run-project",
+    "deliver-issue"
   ],
-  "allowed_skills": ["run-github-project", "deliver-spec", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project",
+    "deliver-issue"
+  ],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow",
@@ -41,7 +44,7 @@
     },
     {
       "id": "resume-authority",
-      "text": "On the later invocation, the explicit current merge instruction, without another question, can unlock #51 and its associated configured issue closure, but cannot resolve #55 stakeholder scope or authorize unrelated epic closure. Verifies live leases and final-head gates and a resume record referencing the pause before restoring work."
+      "text": "On the later invocation, the explicit current merge and issue-closure instruction, without another question, can unlock #51 and its associated configured issue closure, but cannot resolve #55 stakeholder scope or authorize unrelated epic closure. Verifies live leases and final-head gates and a resume record referencing the pause before restoring work."
     },
     {
       "id": "external-merge-reconciliation",

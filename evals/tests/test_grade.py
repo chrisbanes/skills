@@ -292,15 +292,15 @@ class DeterministicGradeTest(unittest.TestCase):
     def test_analysis_only_opt_in_allows_multiple_target_and_reference_reads(self):
         case = EvalCase(**{
             **make_case(self.workspace, task_mode="review").__dict__,
-            "target_skills": ("deliver-spec", "run-github-project", "deliver-tasks"),
+            "target_skills": ("deliver-issue", "run-project", "run-project"),
             "forbid_all_commands": True,
             "allow_skill_reference_reads": True,
         })
         commands = (
-            "cat .agents/skills/deliver-spec/SKILL.md",
-            "cat .agents/skills/run-github-project/SKILL.md",
-            "cat -- .agents/skills/deliver-spec/references/evidence-and-review.md",
-            "/bin/zsh -lc 'cat .agents/skills/deliver-tasks/references/ticket-lifecycle.md'",
+            "cat .agents/skills/deliver-issue/SKILL.md",
+            "cat .agents/skills/run-project/SKILL.md",
+            "cat -- .agents/skills/deliver-issue/references/evidence-and-review.md",
+            "/bin/zsh -lc 'cat .agents/skills/run-project/references/ticket-lifecycle.md'",
         )
         for arm in ("forced", "automatic"):
             with self.subTest(arm=arm):
@@ -316,19 +316,19 @@ class DeterministicGradeTest(unittest.TestCase):
     def test_analysis_only_reference_opt_in_still_rejects_other_actions(self):
         case = EvalCase(**{
             **make_case(self.workspace, task_mode="review").__dict__,
-            "target_skills": ("deliver-spec",),
+            "target_skills": ("deliver-issue",),
             "forbid_all_commands": True,
             "allow_skill_reference_reads": True,
         })
-        path = ".agents/skills/deliver-spec/references/evidence-and-review.md"
+        path = ".agents/skills/deliver-issue/references/evidence-and-review.md"
         commands = (
             "cat state.md",
             "cat .agents/skills/other/references/rules.md",
-            "cat .agents/skills/deliver-spec/references/../../other/SKILL.md",
-            "cat .agents/skills/deliver-spec/scripts/run.py",
-            "cat .agents/skills/deliver-spec/references/run.py",
-            "cat .agents/skills/deliver-spec/references/$REFERENCE.md",
-            "cat .agents/skills/deliver-spec/references/*.md",
+            "cat .agents/skills/deliver-issue/references/../../other/SKILL.md",
+            "cat .agents/skills/deliver-issue/scripts/run.py",
+            "cat .agents/skills/deliver-issue/references/run.py",
+            "cat .agents/skills/deliver-issue/references/$REFERENCE.md",
+            "cat .agents/skills/deliver-issue/references/*.md",
             f"cat {path} > output.md",
             f"cat {path} && npm test",
             f"cat {path} &",
@@ -1875,7 +1875,7 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
             "summary": "Run A and C: option off. Run B: decide and log the situation, "
                        "choice, reason and reversal. Pause irreversible decisions and "
                        "denied permission; never self-grant; stop on provider failure.",
-            "skills_used": ["run-github-project"],
+            "skills_used": ["run-project"],
             "evidence": ["Supplied offline snapshot; no actions taken."],
         })
         grade = grade_subject(case, result)

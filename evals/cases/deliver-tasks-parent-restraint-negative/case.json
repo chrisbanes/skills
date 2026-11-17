@@ -3,17 +3,15 @@
   "title": "Reject partial graphs and parent authority inheritance",
   "family": "workflow",
   "target_skills": [
-    "deliver-tasks"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-tasks"
+    "deliver-issue"
   ],
-  "task_mode": "edit",
+  "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
-  "allowed_write_paths": [
-    ".scratch/review-decisions.json"
-  ],
+  "allowed_write_paths": [],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
   ],
@@ -21,8 +19,17 @@
     {
       "argv": [
         "python3",
-        "@validators/pr_review_decisions.py",
+        "@validators/text_case.py",
         "deliver-tasks-parent-restraint-negative"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-parent-restraint-negative",
+        "--response"
       ],
       "timeout_seconds": 30
     }
@@ -30,14 +37,17 @@
   "rubric": [
     {
       "id": "parent-contract",
-      "text": "Reject partial graphs and parent authority inheritance; retain item-specific authority, complete graph reads, stop preservation and verified closed readback."
+      "text": "Resolve direct issue scope without a Project; use its live invocation grant, preserve human stops and existing ownership, require explicit closure authority and verified acceptance/readback."
+    },
+    {
+      "id": "decisions",
+      "text": "In the response, report these scenario decisions with reasoning: {\"A\": {\"may_claim_child\": true, \"may_close_parent\": false}, \"B\": {\"action\": \"blocked-incomplete-graph\", \"successful_empty\": false}, \"C\": {\"action\": \"blocked-identity-ambiguity\", \"may_claim\": false}, \"D\": {\"may_close\": false}, \"E\": {\"active_runner_claim\": false}, \"F\": {\"may_claim_from_wake\": false, \"requires_full_refresh\": true}}. Make no workspace changes, including scratch artifacts."
     }
   ],
   "provenance": {
     "kind": "synthetic"
   },
-  "staged_skill_files": [
-    "run-github-project/scripts/watch_project.py"
-  ],
-  "calibration": true
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
 }

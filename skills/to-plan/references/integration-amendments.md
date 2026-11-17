@@ -46,8 +46,9 @@ below protect mutable external plan records and lineage, not each local step.
    owner's authenticated request explicitly support this amendment version:
    enumerate and hydrate the entire chain, validate the effective digest, retain
    its starting candidate, and renew affected result evidence. Standalone work
-   requires `deliver-spec` support; Project-owned work requires both
-   `deliver-tasks` (the `run-github-project` controller) and `deliver-spec` support. Record the inspected consumer
+   requires `deliver-issue` support; Project-owned work requires the
+   `run-project` controller and its bundled delivery procedure to support it.
+   Record the inspected consumer
    revisions and capability evidence with the publication preflight. A reference
    to this format or a planner's claim is not consumer support. Missing, unknown
    or full-plan-only support blocks amendment publication and handoff, including
@@ -215,7 +216,7 @@ consumers must revalidate current authority and identities; unsupported contract
 versions or stale/ambiguous inputs block consumption rather than falling back
 to the full plan alone.
 
-- **`deliver-spec`:** Continue with the retained owner, work and PR from the exact
+- **`deliver-issue`:** Continue with the retained owner, work and PR from the exact
   verified starting candidate. If integration already exists, resume verification
   at its pinned result head rather than replaying integration. Otherwise integrate
   from the starting candidate. Renew affected checks/review; retain
@@ -229,12 +230,12 @@ to the full plan alone.
   verified result candidate, never an unexecuted guessed result. Bind that prior
   result to its effective tip/digest, starting candidate, resulting candidate,
   target base, owner and PR; a matching next-start SHA alone is insufficient.
-- **`deliver-tasks` (`run-github-project` entrypoint):** Verify that effective contract and the existing
+- **`run-project`:** Verify that effective contract and the existing
   exclusive claim, current human-applied agent role and non-parked state, native blockers/qualification,
   leases, base/head and retained owner/artifacts. Revalidate affected leases in
   place only within existing authority; do not renew external grants, claim
   different work or manufacture readiness. Keep implementation/evidence renewal
-  with `deliver-spec`, without an unnecessary Todo lifecycle reset. The
+  with its bundled delivery procedure, without an unnecessary Todo lifecycle reset. The
   controller owns scheduling, capacity and lease mutation; this reference grants
   none of those powers to the planner.
 

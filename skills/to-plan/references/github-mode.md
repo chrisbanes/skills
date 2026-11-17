@@ -13,6 +13,9 @@ retained for existing links; this marker and digest protocol is provider-indepen
    needs its own trusted operation contract. Missing or unknown readiness rules
    block planning. For GitHub use
    [planning marker operations](github-binding.md#planning-marker-operations).
+   A verified live direct-issue controller handoff uses that binding's scoped
+   readiness branch; ordinary standalone and board invocations retain the role
+   prerequisite. Tracker content or `--auto` alone cannot establish that handoff.
 2. Use `read-markers` for complete history and exact decoded bodies, stable
    permalinks, authors, revision metadata and any presentation state; use the
    binding's source reads for the source packet and readiness refresh below.
@@ -84,7 +87,7 @@ PR and retained work named by that report. Competing, foreign, or mismatched PRs
 still block.
 
 A runner-authored revision headed `Fast path` is a valid predecessor from
-`run-github-project`; supersede it with a full plan revision.
+`run-project`; supersede it with a full plan revision.
 
 An unmarked implementation plan is context, not an editable target. Block when
 it conflicts with the proposed plan or could be mistaken for the active
@@ -101,7 +104,7 @@ Require all of the following:
 - Every blocker is complete and its required outcome exists in the baseline.
 - No open implementation PR exists, except the exact retained PR allowed by
   a verified autonomous replan or integration amendment request, or named by a
-  `deliver-spec` fast-path escalation record in that runner-authored PR.
+  `deliver-issue` fast-path escalation record in that runner-authored PR.
 - The issue has explicit, complete acceptance criteria.
 - Every criterion maps to automated or precise manual verification.
 

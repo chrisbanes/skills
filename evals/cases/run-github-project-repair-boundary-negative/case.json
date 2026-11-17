@@ -2,18 +2,43 @@
   "id": "run-github-project-repair-boundary-negative",
   "title": "Classify repairs by cause and stop a repeated stall",
   "family": "workflow",
-  "target_skills": ["run-github-project", "deliver-tasks" ],
-  "expected_skills": ["run-github-project"],
-  "allowed_skills": ["run-github-project", "deliver-tasks"],
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "allowed_skills": [
+    "run-project"
+  ],
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
   "allowed_write_paths": [],
-  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
-  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-repair-boundary-negative"], "timeout_seconds": 30}],
-  "rubric": [
-    {"id": "plan-mismatch", "text": "A wrong approved-plan seam whose two repair cycles are exhausted requires the replan packet, despite being a compile error"},
-    {"id": "implementation-stall", "text": "A repeated non-CI implementation defect stays with the owner and uses the available read-only evidence helper through capability-based selection despite omitted Agent Setup; it preserves an exact blocker only if no new direction appears"}
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
   ],
-  "provenance": {"kind": "synthetic"}
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-repair-boundary-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "plan-mismatch",
+      "text": "A wrong approved-plan seam whose two repair cycles are exhausted requires the replan packet, despite being a compile error"
+    },
+    {
+      "id": "implementation-stall",
+      "text": "A repeated non-CI implementation defect stays with the owner and uses the available read-only evidence helper through capability-based selection despite omitted Agent Setup; it preserves an exact blocker only if no new direction appears"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
 }

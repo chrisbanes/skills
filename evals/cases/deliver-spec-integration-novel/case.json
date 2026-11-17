@@ -3,10 +3,10 @@
   "title": "Resume a retained export candidate through a verified amendment",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "task_mode": "review",
   "kind": "novel",

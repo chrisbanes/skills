@@ -3,10 +3,10 @@
   "title": "Keep small-looking risky tickets on the full path",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "task_mode": "review",
   "kind": "negative",

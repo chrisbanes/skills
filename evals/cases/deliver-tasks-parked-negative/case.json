@@ -3,17 +3,15 @@
   "title": "Parked items stay ineligible despite every role label",
   "family": "workflow",
   "target_skills": [
-    "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "deliver-tasks"
+    "run-project"
   ],
-  "task_mode": "edit",
+  "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
-  "allowed_write_paths": [
-    ".scratch/review-decisions.json"
-  ],
+  "allowed_write_paths": [],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
   ],
@@ -21,8 +19,17 @@
     {
       "argv": [
         "python3",
-        "@validators/pr_review_decisions.py",
+        "@validators/text_case.py",
         "deliver-tasks-parked-negative"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-parked-negative",
+        "--response"
       ],
       "timeout_seconds": 30
     }
@@ -31,13 +38,19 @@
     {
       "id": "contract",
       "text": "Parked state excludes every candidate lane without dropping dependency evidence or granting authority."
+    },
+    {
+      "id": "decisions",
+      "text": "In the response, report these scenario decisions with reasoning: {\"parked-91\": {\"action\": \"leave_untouched\", \"preserve_dependencies\": true}, \"parked-92\": {\"action\": \"leave_untouched\", \"preserve_dependencies\": true}, \"parked-93\": {\"action\": \"leave_untouched\", \"preserve_dependencies\": true}, \"parked-94\": {\"action\": \"leave_untouched\", \"preserve_dependencies\": true}}. Make no workspace changes, including scratch artifacts."
     }
   ],
   "provenance": {
     "kind": "synthetic"
   },
   "staged_skill_files": [
-    "run-github-project/scripts/watch_project.py"
+    "run-project/scripts/watch_project.py"
   ],
-  "calibration": true
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
 }

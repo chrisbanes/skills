@@ -3,17 +3,15 @@
   "title": "Every ambiguous or untrusted binding blocks without repair",
   "family": "workflow",
   "target_skills": [
-    "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "deliver-tasks"
+    "run-project"
   ],
-  "task_mode": "edit",
+  "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
-  "allowed_write_paths": [
-    ".scratch/review-decisions.json"
-  ],
+  "allowed_write_paths": [],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
   ],
@@ -21,8 +19,17 @@
     {
       "argv": [
         "python3",
-        "@validators/pr_review_decisions.py",
+        "@validators/text_case.py",
         "deliver-tasks-binding-ambiguity-negative"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-tasks-binding-ambiguity-negative",
+        "--response"
       ],
       "timeout_seconds": 30
     }
@@ -31,13 +38,19 @@
     {
       "id": "binding",
       "text": "Report the exact missing/duplicate option or field, multi-label or missing role, unresolved/missing/multiple/inaccessible scope, conflicting repository/method/role mapping, legacy config and source-switch blocker. Preserve work; no guessed identity, implicit migration, phantom digest or fallback around trust checks."
+    },
+    {
+      "id": "decisions",
+      "text": "In the response, report these scenario decisions with reasoning: {\"ambiguous-merge\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Merge Policy.Method\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"conflicting-repository\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Repository\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"duplicate-field\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Status\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"duplicate-option\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Status.Todo\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"duplicate-role\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Work Roles\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"legacy-file\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"legacy-config\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"missing-label\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"role.needs-triage\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"missing-option\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Status.Done\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"missing-scope\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Scope\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"multi-label\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"role.ready-for-human\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"multiple-scope\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Scope\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"source-switch\": {\"action\": \"stop-preserve\", \"ambiguous_lookup\": \"binding-source\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"unknown-scope\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Scope\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}, \"unresolved-scope\": {\"action\": \"configuration-blocked\", \"ambiguous_lookup\": \"Scope\", \"guesses\": false, \"mutates\": false, \"preserves_work\": true}}. Make no workspace changes, including scratch artifacts."
     }
   ],
   "provenance": {
     "kind": "synthetic"
   },
   "staged_skill_files": [
-    "run-github-project/scripts/watch_project.py"
+    "run-project/scripts/watch_project.py"
   ],
-  "calibration": true
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
 }

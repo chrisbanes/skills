@@ -260,6 +260,7 @@ def _run_validator(
         completed = subprocess.run(
             argv,
             cwd=result.workspace,
+            input=json.dumps(result.final_output),
             text=True,
             capture_output=True,
             timeout=validator.timeout_seconds,

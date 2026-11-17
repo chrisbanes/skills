@@ -26,7 +26,7 @@
   "rubric": [
     {
       "id": "standalone-context",
-      "text": "Uses the standalone PR/reporting context and shepherd snapshot as the record, hydrates round/scope/head evidence from supplied verified sources, and records authorized controller W as the repair fallback only after verified checkout/head and no competing writer; does not require a deliver-spec workflow."
+      "text": "Uses the standalone PR/reporting context and shepherd snapshot as the record, hydrates round/scope/head evidence from supplied verified sources, and records authorized controller W as the repair fallback only after verified checkout/head and no competing writer; does not require a deliver-issue workflow."
     },
     {
       "id": "retained-owner-restraint",

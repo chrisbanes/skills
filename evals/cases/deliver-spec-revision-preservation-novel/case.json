@@ -3,14 +3,17 @@
   "title": "deliver spec revision preservation novel",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec",
-    "run-github-project", "deliver-tasks"
+    "deliver-issue",
+    "run-project"
   ],
   "expected_skills": [
-    "deliver-spec",
-    "run-github-project"
+    "deliver-issue",
+    "run-project"
   ],
-  "allowed_skills": ["deliver-spec", "run-github-project", "deliver-tasks"],
+  "allowed_skills": [
+    "deliver-issue",
+    "run-project"
+  ],
   "task_mode": "edit",
   "kind": "novel",
   "fixture": "workflow",

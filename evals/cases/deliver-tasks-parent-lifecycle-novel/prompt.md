@@ -1,5 +1,5 @@
 Use supplied state only; make no provider calls, remote mutations or edits except
-the requested decision artifact. Review these independent parent-scope snapshots
+the requested decision artifact. Review these independent direct-issue snapshots under a current explicit invocation
 in acme/repo with runner chris, complete verified graph/readback and no Project.
 A: An open child has ready-for-agent and agent:in-progress, assigned only to
 chris, verified plan and no blockers. It is an existing implementation claim.
@@ -9,7 +9,7 @@ C: An open root has ready-for-human. Its only open descendant is a grandchild
 under a CLOSED intermediate parent. No independent root closure authority.
 D: Every descendant and blocker is authoritatively closed, and the human has
 explicitly authorized closure of this root. Refreshed graph and ownership checks
-pass. Controller closes the root and separately refetches CLOSED.
+pass, and every root acceptance criterion is verified. Controller closes the root and separately refetches CLOSED.
 E: Same as D except close readback fails; only the child PR merge is verified.
 For A write active_claim and may_resume (booleans).
 For B write stop_writers, release_capacity, preserve_assignment,

@@ -96,7 +96,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     case, REPO_ROOT, Path(directory) / "fixture",
                     enabled_skills=case.target_skills,
                 )
-                skill_name = "deliver-tasks" if "run-github-project" in case.target_skills else case.target_skills[0]
+                skill_name = "run-project" if "run-project" in case.target_skills else case.target_skills[0]
                 skill = workspace / ".agents/skills" / skill_name
                 for caller, reference, canonical in resources:
                     source = skill / caller
@@ -109,7 +109,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_staged_skill_files_are_copied_without_a_skill_entrypoint(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         case = next(c for c in report.cases if c.id == "run-github-project-unattended-direct")
-        reference = "deliver-spec/references/qualification-failure.md"
+        reference = "deliver-issue/references/qualification-failure.md"
         self.assertEqual((reference,), case.staged_skill_files)
         for skill_dir in (".agents/skills", ".claude/skills"):
             with self.subTest(skill_dir=skill_dir), tempfile.TemporaryDirectory() as directory:
@@ -119,7 +119,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 )
                 staged = workspace / skill_dir / reference
                 self.assertEqual((REPO_ROOT / "skills" / reference).read_bytes(), staged.read_bytes())
-                self.assertFalse((workspace / skill_dir / "deliver-spec" / "SKILL.md").exists())
+                self.assertFalse((workspace / skill_dir / "deliver-issue" / "SKILL.md").exists())
         with tempfile.TemporaryDirectory() as directory:
             baseline = prepare_workspace(
                 case, REPO_ROOT, Path(directory) / "fixture", enabled_skills=(),
@@ -180,9 +180,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_subagent_handoff_reference_is_self_contained_for_each_consumer(self):
         shared = (REPO_ROOT / "references/subagent-selection.md").read_bytes()
         consumers = {
-            "deliver-spec": "references/implementation-mode.md",
+            "deliver-issue": "references/implementation-mode.md",
             "implement-with-subagents": "references/implementation-mode.md",
-            "deliver-tasks": "references/ticket-lifecycle.md",
+            "run-project": "references/ticket-lifecycle.md",
             "gradle-run": "SKILL.md",
             "shepherd": "SKILL.md",
             "subagent-delegation": "SKILL.md",
@@ -201,7 +201,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_deliver_spec_stages_its_complete_implementation_procedure_alone(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         case = next(case for case in report.cases if case.id == "deliver-spec-direct")
-        self.assertEqual(("deliver-spec",), case.target_skills)
+        self.assertEqual(("deliver-issue",), case.target_skills)
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace = prepare_workspace(
                 case, REPO_ROOT, Path(temp_dir) / "fixture",
@@ -209,10 +209,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             )
             installed = workspace / ".agents/skills"
             self.assertFalse((installed / "implement-with-subagents").exists())
-            delivery = installed / "deliver-spec"
+            delivery = installed / "deliver-issue"
             procedure = delivery / "references/implementation-mode.md"
             self.assertEqual(
-                (REPO_ROOT / "skills/deliver-spec/references/implementation-mode.md").read_bytes(),
+                (REPO_ROOT / "skills/deliver-issue/references/implementation-mode.md").read_bytes(),
                 procedure.read_bytes(),
             )
             # Follow the mandatory local resource chain in the isolated installation.
@@ -232,14 +232,14 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             self.assertIn("## Runtime requirements", procedure.read_text(encoding="utf-8"))
 
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
-        entrypoint = (REPO_ROOT / "skills/deliver-tasks/SKILL.md").read_text(
+        entrypoint = (REPO_ROOT / "skills/run-project/SKILL.md").read_text(
             encoding="utf-8"
         )
         controller = (
-            REPO_ROOT / "skills/deliver-tasks/references/execution-controller.md"
+            REPO_ROOT / "skills/run-project/references/execution-controller.md"
         ).read_text(encoding="utf-8")
         setup = (
-            REPO_ROOT / "skills/deliver-tasks/references/github-binding.md"
+            REPO_ROOT / "skills/run-project/references/github-binding.md"
         ).read_text(encoding="utf-8")
         self.assertIn(
             "`next` or `drain` | [Review and setup](references/review-and-setup.md) for binding validation",
@@ -286,13 +286,20 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(51, len(benchmark))
-        self.assertEqual(160, len(calibration))
+        self.assertEqual(167, len(calibration))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
         self.assertEqual(51, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertEqual(["router-single-item-deliver-spec"], [case.id for case in report.cases if case.kind == "routing"])
         self.assertEqual(
             {
+                "deliver-issue-tree-direct",
+                "deliver-issue-resume-novel",
+                "deliver-issue-completion-negative",
+                "run-project-tree-restraint-negative",
+                "deliver-issue-invocation-direct",
+                "deliver-issue-ownership-novel",
+                "deliver-issue-authority-negative",
                 "deliver-tasks-migration-dry-run-direct",
                 "deliver-tasks-migration-apply-direct",
                 "deliver-tasks-migration-decline-negative",
@@ -558,7 +565,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         for skill in WORKFLOWS_WRITING_SKILLS:
             kinds = {case.kind for case in benchmark if skill in case.target_skills}
             with self.subTest(skill=skill):
-                self.assertEqual({"direct", "novel", "negative", "routing"} if skill == "deliver-spec" else {"direct", "novel", "negative"}, kinds)
+                self.assertEqual({"direct", "novel", "negative", "routing"} if skill == "deliver-issue" else {"direct", "novel", "negative"}, kinds)
 
         self.assertEqual(
             {
@@ -661,14 +668,13 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
     def test_advanced_workflow_skills_require_explicit_invocation(self):
         explicit_only = (
-            "deliver-spec",
+            "deliver-issue",
             "implement-with-subagents",
-            "run-github-project",
-            "deliver-tasks",
+            "run-project",
             "shepherd",
         )
         # The Project controller chain invokes these through Claude Code's Skill tool.
-        delegated = ("deliver-spec", "shepherd")
+        delegated = ("shepherd",)
         for skill in explicit_only:
             config = REPO_ROOT / "skills" / skill / "agents" / "openai.yaml"
             entrypoint = REPO_ROOT / "skills" / skill / "SKILL.md"
@@ -1800,7 +1806,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                         case_id=case_id, arm="forced", command=(), workspace=workspace,
                         returncode=0, events=(), usage={},
                         final_output={"summary": artifact.read_text(),
-                                      "skills_used": ["run-github-project"],
+                                      "skills_used": ["run-project"],
                                       "evidence": ["Supplied offline snapshot"]},
                         changed_paths=(".scratch/decision.md",), diff="",
                         stdout="", stderr="", elapsed_seconds=0,

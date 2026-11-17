@@ -3,14 +3,17 @@
   "title": "Deliver a claimed Project ticket under one startup merge decision",
   "family": "workflow",
   "target_skills": [
-    "run-github-project",
-    "deliver-spec", "deliver-tasks"
+    "run-project",
+    "deliver-issue"
   ],
   "expected_skills": [
-    "run-github-project",
-    "deliver-spec"
+    "run-project",
+    "deliver-issue"
   ],
-  "allowed_skills": ["run-github-project", "deliver-spec", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project",
+    "deliver-issue"
+  ],
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow",
@@ -37,11 +40,11 @@
     },
     {
       "id": "automatic-handoff",
-      "text": "Keeps the ticket in deliver-spec Project-handoff mode under the existing run grant; reuses the current independently reviewed plan without another plan or test-seam approval gate."
+      "text": "Keeps the ticket in deliver-issue Project-handoff mode under the existing run grant; reuses the current independently reviewed plan without another plan or test-seam approval gate."
     },
     {
       "id": "provider-ownership",
-      "text": "Uses deliver-spec's bundled delegated implementation procedure without requiring the separate implement-with-subagents installation or an explicit orchestration request. Persistent ticket agent owns integration, acceptance and non-merge PR delivery, original implementation workers own code repairs, and descendants never mutate Project, issue, PR or merge state."
+      "text": "Uses deliver-issue's bundled delegated implementation procedure without requiring the separate implement-with-subagents installation or an explicit orchestration request. Persistent ticket agent owns integration, acceptance and non-merge PR delivery, original implementation workers own code repairs, and descendants never mutate Project, issue, PR or merge state."
     },
     {
       "id": "review-coverage",
@@ -49,7 +52,7 @@
     },
     {
       "id": "pr-and-authority",
-      "text": "Creates exactly one draft PR for the nonempty final diff only after combined review evidence covers the final head, confirms the PR head is the exact reviewed SHA, uses a non-closing issue link for close-after-merge, and leaves squash merge and associated issue closure to the Project controller under this invocation startup merge grant after all final-head gates pass."
+      "text": "Creates exactly one draft PR for the nonempty final diff only after combined review evidence covers the final head, confirms the PR head is the exact reviewed SHA, uses a non-closing issue link for close-after-merge, and leaves squash merge and associated issue closure to the Project controller under this invocation startup merge and issue-closure grants after all final-head gates pass."
     },
     {
       "id": "review-restraint",

@@ -3,14 +3,17 @@
   "title": "Escalate a fast-path ticket whose contract grows",
   "family": "workflow",
   "target_skills": [
-    "run-github-project",
-    "deliver-spec", "deliver-tasks"
+    "run-project",
+    "deliver-issue"
   ],
   "expected_skills": [
-    "run-github-project",
-    "deliver-spec"
+    "run-project",
+    "deliver-issue"
   ],
-  "allowed_skills": ["run-github-project", "deliver-spec", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project",
+    "deliver-issue"
+  ],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow",

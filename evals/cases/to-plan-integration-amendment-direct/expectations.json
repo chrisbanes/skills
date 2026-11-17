@@ -3,8 +3,8 @@
     ".scratch/decision.md"
   ],
   "must_contain": [
-    "deliver-spec",
-    "run-github-project"
+    "deliver-issue",
+    "run-project"
   ],
   "effective_contract": {
     "artifact": ".scratch/contract.json",

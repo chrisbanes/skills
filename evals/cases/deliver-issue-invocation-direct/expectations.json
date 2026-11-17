@@ -1,0 +1,20 @@
+{
+  "decisions": {
+    "direct": {
+      "next": "plan",
+      "requires_project": false,
+      "requires_ready_label": false,
+      "add_labels": false,
+      "merge": false,
+      "close": false
+    },
+    "board": {
+      "next": "backlog",
+      "claim": false
+    },
+    "local": {
+      "next": "implement",
+      "tracker_write": false
+    }
+  }
+}

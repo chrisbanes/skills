@@ -3,12 +3,14 @@
   "title": "Keep a merged worktree that still has tracked edits",
   "family": "workflow",
   "target_skills": [
-    "run-github-project", "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "run-github-project"
+    "run-project"
   ],
-  "allowed_skills": ["run-github-project", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project"
+  ],
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",

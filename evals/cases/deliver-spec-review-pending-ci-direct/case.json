@@ -3,10 +3,10 @@
   "title": "Start external review during pending CI",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "task_mode": "edit",
   "kind": "direct",

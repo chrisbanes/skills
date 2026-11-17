@@ -1,6 +1,6 @@
 """Grade offline PR decisions against evaluator-owned scenario answers.
 
-This validates a subject's decision artifact, not live provider capabilities or
+This validates a subject's decision artifact or response, not live provider capabilities or
 execution. The expected answers stay outside the subject workspace.
 """
 
@@ -35,8 +35,9 @@ def validate_decisions(actual, expected):
 
 
 def main(argv):
-    if len(argv) != 2:
-        print("usage: pr_review_decisions.py <case-id>", file=sys.stderr)
+    response_mode = len(argv) == 3 and argv[2] == "--response"
+    if len(argv) != 2 and not response_mode:
+        print("usage: pr_review_decisions.py <case-id> [--response]", file=sys.stderr)
         return 2
     cases = Path(__file__).resolve().parents[1] / "cases"
     case = cases / argv[1]
@@ -44,12 +45,16 @@ def main(argv):
         return 2
     try:
         expected = json.loads((case / "expectations.json").read_text(encoding="utf-8"))
-        actual = json.loads(
-            (Path.cwd() / ".scratch/review-decisions.json").read_text(encoding="utf-8"),
-            object_pairs_hook=unique_object,
-        )
+        if response_mode:
+            output = json.load(sys.stdin, object_pairs_hook=unique_object)
+            actual = json.loads(output["summary"], object_pairs_hook=unique_object)
+        else:
+            actual = json.loads(
+                (Path.cwd() / ".scratch/review-decisions.json").read_text(encoding="utf-8"),
+                object_pairs_hook=unique_object,
+            )
         failures = validate_decisions(actual, expected["decisions"])
-    except (OSError, ValueError, KeyError) as error:
+    except (OSError, ValueError, KeyError, TypeError) as error:
         print(f"cannot read review decisions: {error}", file=sys.stderr)
         return 1
     if failures:

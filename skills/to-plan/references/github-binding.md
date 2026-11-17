@@ -5,15 +5,18 @@
 Translate the controller's decisions into verified GitHub operations; this
 binding supplies no selection, mutation or merge authority of its own. GitHub
 Project and parent-issue scopes are supported. Resolve optional overrides and fresh
-defaults below; preserve existing marker formats and label authority.
+defaults below; preserve existing marker formats and the selected authority mode.
+Board rules below apply to run-project. Direct deliver-issue invocations enter
+[Direct issue scope](#direct-issue-scope) before any board-default or ranker operation.
+The binding supplies operations, never an invocation grant.
 
 ## Operations
 
 1. For setup or execution, validate identity, access and configuration under
    Binding validation and Setup; review uses only permitted or supplied evidence.
-2. For authorized reads, obtain complete scope/issue/PR state through Remote
-   reconciliation, then
-   normalize it under Normalized Ticket Schema for the controller ranker.
+2. For authorized board reads, obtain complete scope/issue/PR state through Remote
+   reconciliation, then normalize it under Normalized Ticket Schema for the board
+   ranker. Direct issue delivery follows Direct issue scope without board normalization.
 3. Execute only controller-authorized operations: assign the authenticated runner,
    write the scope's verified claim/completion marker, publish/refetch comments,
    perform permitted PR operations and merges, and reconcile closure/Done.
@@ -32,7 +35,10 @@ verification.
 1. **Source reads:** Resolve the exact issue/repository, authenticated GitHub
    login and permissions. Read the complete issue body/comments, linked specs,
    parents, blockers and outcomes, linked/closing PRs and current open state.
-   For planning readiness, require the open issue to carry the human-applied
+   For a verified direct-issue controller handoff, apply
+   [Direct issue planning readiness](#direct-issue-planning-readiness) instead of
+   the role prerequisite below. For ordinary standalone or board planning,
+   require the open issue to carry the human-applied
    resolved agent-work role, conventionally `ready-for-agent`, with no
    contradictory next-action roles;
    GitHub reports `parked: false`. Apply trusted role overrides without requiring
@@ -75,14 +81,15 @@ verification.
 Use the GitHub tracker and code-host roles independently. Selecting GitHub as
 code host supplies no tracker identity or authority; a Jira item linked to a
 GitHub PR stays a Jira item. These operations also support standalone
-`deliver-spec` without requiring Project configuration; controller execution
+`deliver-issue` without requiring Project configuration; controller execution
 retains its trusted configuration, leases and merge/closure policy.
 
 1. **Tracker source/readiness and markers:** Use Planning marker operations.
-   GitHub readiness uses the resolved human-applied agent-work role and stop
-   rules in Source reads, plus blocker and approval checks; a missing role
-   routes standalone delivery to `triage`. Marker publication grants no label
-   or item-closure authority.
+   Direct issue delivery verifies the live scoped invocation grant under
+   Direct issue planning readiness. Board-owned work retains the resolved
+   human-applied agent-work role and stop rules in Source reads. Both retain
+   blocker and approval checks. Marker publication grants no label or closure
+   authority; a missing role alone does not send direct delivery to triage.
 2. **Code-host open/update:** Resolve the exact repository and base, authenticate
    permissions, and find the existing PR for the supplied branch before create.
    Prefer the connector, falling back to `gh pr`/GraphQL. Create one draft PR
@@ -101,13 +108,15 @@ retains its trusted configuration, leases and merge/closure policy.
    PR body and return its verified permalink to the tracker through its selected
    binding when authorized. For GitHub issues, compare repository-qualified
    identities; for another tracker, retain its canonical URL/key. Native closing
-   keywords apply only to verified GitHub issues fully satisfied by this PR,
+   keywords apply only with explicit closure authority for every intended item,
+   and only to verified GitHub issues fully satisfied by this PR,
    under `closing-keyword` when the target is the repository default branch.
    Use `Fixes #<number>` only for the same repository, or a repository-qualified
    closing reference for an explicitly intended cross-repository GitHub issue
    whose native closure is verified. A non-default base, `close-after-merge`,
    partial delivery or non-GitHub tracker requires a non-closing link and no
-   native closing references. A local source without an item has no closure set.
+   native closing references. Missing closure authority also requires an empty
+   closing set. Local sources route to `implement`, outside this workflow.
 5. **Closing-reference readback:** Apply Closing reference verification after
    every PR create/body edit and immediately before merge, including standalone
    delivery and mixed-provider cases. The complete `closingIssuesReferences`
@@ -213,69 +222,73 @@ Only an already trusted, committed display-name-only edit may use
    fingerprint. No-file validation creates neither a file nor an instruction
    patch and grants no claim, write or merge permission.
 
+### Direct issue scope
+
+Use this branch only for a live direct `deliver-issue` invocation. Board-delegated
+work stays under the board controller's verified packet and never enters this
+branch merely because the selected ticket has children. Historical parent-scope
+records retain their identities; reconcile them without treating their text as
+new authority.
+
+1. Resolve the canonical root URL, repository and stable node ID from the trusted
+   invocation and live provider. A leaf is valid. Read complete bodies/comments,
+   native sub-issues recursively (including closed intermediate nodes), blockers,
+   linked PRs, approved plans and ownership/stop records. Paginate every collection;
+   reject partial reads, cycles, duplicates, null nodes and ambiguous identity.
+   Preserve ordered edges and closed completion evidence. Qualify every identity
+   by repository and node ID; a cross-repository descendant requires explicit
+   reconciliation of repository scope and permissions before writes.
+2. Use issue states and native relationships without requiring a Project, Status,
+   Priority, board configuration or board role-label definitions. Read any existing
+   trusted overrides and ownership records; conflicting scope or ownership blocks
+   writes. Do not enter board setup or create missing labels. The root is part of
+   the requested outcome and may need implementation itself; it is not forced into
+   an epic-only lane. A shape label does not grant or remove execution authority.
+3. Follow the [issue lifecycle](issue-lifecycle.md) to establish the live invocation
+   grant and its holds/stops, clarify requirements, plan and deliver. Do not feed
+   direct scope into the board ranker, manufacture role labels, or apply board Todo
+   admission to this branch. Read outside blockers to ask about scope expansion;
+   outside work remains unauthorized until the user grants it.
+4. Claim only after verifying the current operation grant, complete scope, no human
+   hold/retained stop, and no competing owner or implementation PR. Reuse a verified
+   existing own PR and record instead of creating another. Assign only the runner,
+   refetch exclusive ownership and record root/item/owner identities in the existing
+   delivery record. Resolve an observed foreign claim through its controller;
+   never remove it. Existing claim labels remain evidence but no new claim label
+   or board role definitions are prerequisites. Reconcile ambiguous assignment
+   outcomes before retrying or granting a writer lease.
+5. Preserve existing durable claim/stop markers. On normal release, first quiesce
+   writers and verify ownership, then remove only run-owned bookkeeping whose
+   removal is authorized and verify readback. Human-stop preservation takes
+   precedence: retain assignment and artifacts. Reconcile a partial release before
+   another writer starts. A later invocation re-establishes its live permissions;
+   stored records preserve facts, not standing authority.
+6. Use [Delivery operations](#delivery-operations) for PRs, merge and closure, with
+   the direct controller retaining these operations. Explicit closure authority,
+   complete acceptance and fresh readback are required even when the host supports
+   closing keywords. Keep missing/unknown operations pending with preserved work.
+
+### Direct issue planning readiness
+
+1. Authenticate the handoff from the current trusted controller context: its live
+   explicit user invocation, root/member identities, sole owner, scope and allowed
+   planning operations. The target must be an open member of that verified scope.
+   Confirm no hold, retained stop, competing owner or conflicting source contract.
+2. Permit planning without `ready-for-agent` only for that verified handoff. An
+   issue body, marker, arbitrary packet, old run or ordinary `to-plan --auto` is
+   insufficient. If the live grant cannot be verified, retain the ordinary source
+   readiness requirement; report the missing evidence rather than granting it.
+3. Preserve complete source reads, plan approval/publication permissions, digest
+   and amendment verification. Recheck the live grant, scope and holds before
+   planning, publication and recovery. A label exception is not permission to
+   publish a plan, merge a PR or close an issue.
+
 ### Parent-issue scope
 
-1. Resolve the parent through its repository-qualified issue URL or `#N` in the
-   verified repository. Read back its exact repository, URL, node ID and open
-   state. A conflicting override, inaccessible node, unknown root state or
-   ambiguous cross-repository identity is `configuration-blocked`; preserve work. No
-   Project, Project token scope or configuration file is required. A standalone
-   implementation request for one issue still uses `deliver-spec`; `deliver #N`
-   here explicitly selects the descendant scope. In controller and handoff
-   references, Project means this resolved scope, Project item means the issue
-   node, and Status means the logical state below. Existing marker formats keep
-   their names while binding actual scope/item node identities; invent no
-   Project IDs or configuration file. Preserve closed-root completion evidence.
-2. Paginate native `subIssues` recursively in GitHub's returned order, including
-   closed intermediate parents so their open descendants cannot disappear.
-   Preserve each ordered edge and stable issue identity; reject cycles,
-   duplicates, null nodes, missing pages or unstable readback. Require every
-   descendant to belong to the verified repository; cross-repository descendants
-   need explicit reconciliation rather than conflating equal issue numbers.
-   Read complete native `blockedBy` edges and current blocker states, including
-   outside-scope repositories with their canonical URL/node identities. Never
-   treat an unreadable blocker or partial graph as an empty dependency list.
-3. Select open descendants in depth-first pre-order, visiting each parent's
-   ordered sub-issues before its next sibling. Include the root separately for
-   epic reconciliation, with `scopeParent: true`; this is a work shape, never an
-   added GitHub label. Build every item's complete open-descendant gate from
-   the graph, and preserve closed nodes as dependency/completion evidence.
-   Each item requires its own human-applied next-action role. The parent,
-   invocation, order, claim label and runner assignment grant none.
-4. Normalize open issues using issue node IDs as `itemId`, canonical URLs as
-   `itemRef`, qualified unresolved `blockerRefs`/`openDescendants`,
-   `parked: false`, `projectPriority: null`, and the pre-order index as
-   `projectPosition`.
-   Supply logical `Todo` unless the claim marker matches, then `In progress`;
-   Done means authoritative `CLOSED`, regardless of remaining labels. Retain
-   closed issues in the graph/readback, outside the active ranker array.
-   Pass `--candidate-order scope-position` so mixed planning and implementation
-   candidates retain sub-issue order. Pass no `--priority` inputs.
-   Pass `--claim-marker` with JSON
-   `{"label":"agent:in-progress","requiresAssignment":true}`, using the resolved
-   exact live label and authenticated runner, including configured overrides.
-5. Claim implementation only after the usual plan, role, blocker, competing-PR
-   and capacity checks: assign only the runner, verify exclusive assignment,
-   add only the resolved claim label, then refetch both plus scope membership,
-   open state and all authority preconditions before granting a lease. A label
-   without assignment or assignment without that label is not an active claim.
-   Planning keeps Todo assignment until this implementation claim. Reconcile
-   ambiguous writes and lost races before retrying; never remove another owner.
-6. On human removal of `ready-for-agent`, stop writers, release capacity and
-   preserve assignment, claim label, branch, PR, plans and artifacts under the
-   label-stop gate. Only human restoration permits recovery. For ordinary
-   authorized claim release, remove only the runner-owned claim marker after
-   writer quiescence and verified ownership; verify readback and apply the
-   caller's assignment policy. Stop preservation takes precedence over release.
-7. Finish an implementation only after verified merge and separate issue-close
-   readback under Delivery operations. A claim-label removal, merged PR or
-   empty sub-issue list alone is not Done. Reconcile the root through the
-   existing Epics And Human Frontier rules: all open descendants and native
-   blockers gate closure; a bare root never auto-closes. Human-work roots stay
-   in the human frontier, triage roots need the approved closure outcome, and
-   `ready-for-agent` on the root contradicts its epic shape. Only separately
-   authorized closure with fresh graph/ownership reads may close the root;
-   refetch `CLOSED` before reporting scope completion.
+For retained parent-scope records, use [Direct issue scope](#direct-issue-scope)
+when the current invocation is direct issue delivery. Return board-owned records
+to their existing controller. This heading preserves existing reference anchors;
+it does not expose a removed skill or authorize legacy scope selection.
 
 ### Effective binding fingerprint
 
@@ -347,7 +360,7 @@ named as both planner and ticket default, plus one `read-only-evidence` profile
 when the runtime supports it. Prefer a read-only role capable of both evidence
 analysis and independent review; otherwise include a separate review-capable
 profile. Disclose a missing independent reviewer as a delivery capability
-blocker. The [repair progress gate](../../deliver-tasks/references/ticket-lifecycle.md#repair-progress-gate)
+blocker. The [repair progress gate](ticket-lifecycle.md#repair-progress-gate)
 needs that helper after a repeated non-CI failure. If the runtime has no
 eligible read-only evidence role, disclose during setup that such a stall will
 remain an exact ticket-local blocker; never invent a helper. Add other helper
@@ -621,7 +634,7 @@ this template over it. Follow the
 ```
 
 The binding specifies how merging works. Establish invocation-scoped permission
-under [run authority](../../deliver-tasks/references/authority-and-pauses.md).
+under [run authority](authority-and-pauses.md).
 
 Keep human-readable names beside IDs so startup validation can distinguish a
 rename from an ID that now identifies a different object. Preserve repository-
@@ -677,7 +690,7 @@ profile a short task description. Explicit execution models and reasoning levels
 must be supported by that runtime; `runtime-default` defers the choice to it.
 Profiles describe allowed agents, not new authority. Keep the user-selected lead
 model and explicit agent-model pins unchanged. Select agents deterministically
-under [agent routing](../../deliver-tasks/references/agent-routing.md); no routing service is used.
+under [agent routing](agent-routing.md); no routing service is used.
 Legacy `Routing` and `TypeSafe judgment model` fields are obsolete: ignore them
 at dispatch and remove them during an authorized setup edit, preserving active
 binding leases under the setup procedure.
@@ -686,7 +699,7 @@ binding leases under the setup procedure.
 
 Omit Monitoring to check every 120 seconds. When present, `Poll interval
 seconds` sets the `drain`
-[Project Watcher](../../deliver-tasks/references/drain-scheduler.md#project-watcher) interval and must be a
+[Project Watcher](drain-scheduler.md#project-watcher) interval and must be a
 positive number. It grants no authority. A mid-drain edit is ordinary
 configuration drift under the existing rules; presentation-only renewal does
 not cover it.
@@ -799,7 +812,7 @@ check, comment, PR, merge, or closure is absent.
 
 After a merge or discovery of an unexpected closure, compare actual issue
 closures with the intended set recorded under the
-[ticket lifecycle guard](../../deliver-tasks/references/ticket-lifecycle.md#pre-push-shepherd-and-merge).
+[ticket lifecycle guard](ticket-lifecycle.md#pre-push-shepherd-and-merge).
 For a controller-run PR proven to have closed an unintended issue with pending
 work, reopen it, restore its last verified pre-closure Project Status, and leave
 one explanatory comment linking the PR and remaining work. Perform and read back
@@ -807,12 +820,12 @@ each correction through the controller lane using the procedure above. Preserve
 concurrent human changes; if cause, prior Status or write authority is uncertain,
 report the exact repair needed and pause affected reconciliation rather than
 guessing. Label-stopped recovery remains read-only under the controller's
-[stop gate](../../deliver-tasks/references/authority-and-pauses.md#stop-on-label-removal); never restore its agent label. Do not report the issue Done or clean its retained work until
+[stop gate](authority-and-pauses.md#stop-on-label-removal); never restore its agent label. Do not report the issue Done or clean its retained work until
 recovery is verified.
 
 ## Normalized Ticket Schema
 
-Use the controller's [ranker invocation](../../deliver-tasks/references/normalized-ticket.md#ranker-invocation).
+Use the controller's [ranker invocation](normalized-ticket.md#ranker-invocation).
 
 Normalize the fully resolved GitHub binding before ranking. For parent scope,
 apply Parent-issue scope above; the Project-specific mapping below applies only
@@ -842,10 +855,10 @@ fingerprint from validation; absence of an override file is not missing state:
 
 Provide every field below to `scripts/rank_tickets.py` from fresh, completely
 paginated GitHub and Project reads. Before dispatch ranking, the controller
-recovers [authority pauses](../../deliver-tasks/references/authority-and-pauses.md#recover-and-resume) and
+recovers [authority pauses](authority-and-pauses.md#recover-and-resume) and
 retains active verified pauses in its separate frontier, outside the ranker's
 active claims/candidates, as for parked CI claims. Apply the controller's
-[readiness preflight](../../deliver-tasks/references/execution-controller.md#unattended-readiness) before
+[readiness preflight](execution-controller.md#unattended-readiness) before
 dispatch; the ranker does not inspect external access, host capabilities,
 qualification receipts or execution grants. Keep those observations in existing
 controller records, not invented CLI fields. Preserve unknown or unavailable
@@ -1112,7 +1125,7 @@ For compatibility, the ranker also accepts the former singular
 An integration amendment is not a synthetic implementation-plan revision or
 ranker input field. Keep the original marked plan in `implementationPlans`;
 the controller separately enforces the
-[effective-contract gate](../../deliver-tasks/references/todo-lane.md#consume-a-verified-integration-amendment)
+[effective-contract gate](todo-lane.md#consume-a-verified-integration-amendment)
 before dispatch, on recovery, observed authority changes and before external
 material writes. The verified handoff covers in-scope local edits and tests.
 Persist its verified lineage,
@@ -1150,7 +1163,7 @@ item with open native blockers or descendants as `parkedBlocked`; return an
 unblocked item as `triageCandidates`. Neither consumes an implementation slot.
 
 For other role-labelled Todo work, apply
-[Epics And Human Frontier](../../deliver-tasks/references/human-frontier.md). A bare epic is shape without a role and grants no automatic closure; keep `readyEpics` empty. Return unblocked human work as `humanActions`, and unblocked
+[Epics And Human Frontier](human-frontier.md). A bare epic is shape without a role and grants no automatic closure; keep `readyEpics` empty. Return unblocked human work as `humanActions`, and unblocked
 `ready-for-agent` work in `candidates` with action `claim` when its active
 plan is usable, or `plan` when planning is needed. Retain agent planning/handoff
 assignment leases separately; among other roles, permit an existing assignee
@@ -1212,9 +1225,9 @@ implementation ticket that requires reconciliation. Todo claims and
 `blockedPlanningClaims` preserve ownership but do not consume an implementation
 slot; both still prevent the Todo triage tail from starting. Ready epics and
 human actions consume neither slots nor agent capacity. Triage candidates are
-ordered separately and run only through [Todo Triage Lane](../../deliver-tasks/references/triage-lane.md).
+ordered separately and run only through [Todo Triage Lane](triage-lane.md).
 Process ready epics and human actions through
-[Epics And Human Frontier](../../deliver-tasks/references/human-frontier.md); Todo `parkedBlocked` items consume
+[Epics And Human Frontier](human-frontier.md); Todo `parkedBlocked` items consume
 neither a slot nor an agent. `stoppedItems` also consumes neither once writers are quiesced; it never emits cleanup or label restoration.
 
 When enabled in `next`, the ranker emits any eligible Wayfinder candidate as
@@ -1226,7 +1239,7 @@ HITL children separately in `wayfinderClaimedHitl`. A terminal recovery is
 always an assigned `resume-wayfinder-reconciliation` claim in a configured
 Todo-or-later column, including Done for interrupted terminal reconciliation.
 New Wayfinder work requires Todo. None consumes an implementation slot. Route every form through
-[Wayfinder Todo Lane](../../deliver-tasks/references/wayfinder-lane.md).
+[Wayfinder Todo Lane](wayfinder-lane.md).
 
 When `--wayfinder-ticket` is present in `next`, the output includes
 `selectedWayfinderTicket` and returns only that child as new work. The ranker
@@ -1238,7 +1251,7 @@ Every human-facing consumer must render the complete ticket as
 shape, not permitted narration.
 
 Before invoking the ranker, apply the drain scheduler's
-[Terminal Required-CI Parking](../../deliver-tasks/references/drain-scheduler.md#terminal-required-ci-parking)
+[Terminal Required-CI Parking](drain-scheduler.md#terminal-required-ci-parking)
 contract. Keep a parked implementation claim with an unchanged verified
 observation fingerprint outside the normalized array and `max-claims` count. A
 changed observation fingerprint triggers deep hydration but does not by itself
@@ -1267,9 +1280,9 @@ clear this guard.
 
 ## Project Watcher command
 
-Run `python3 <run-github-project-skill-dir>/scripts/watch_project.py`; it stays
+Run `python3 <run-project-skill-dir>/scripts/watch_project.py`; it stays
 with the GitHub binding and runs only `gh api graphql` queries. Follow the
-controller's [Project Watcher procedure](../../deliver-tasks/references/drain-scheduler.md#project-watcher)
+controller's [Project Watcher procedure](drain-scheduler.md#project-watcher)
 for scheduling, baselines, relay capacity, deadlines and report handling.
 
 ```text
@@ -1298,7 +1311,7 @@ The default interval remains 120 seconds. This command never performs writes.
    blocked operation, missing authority or decision, and an observable resume
    condition. Include current Status and assignment, source and plan
    permalink/digest, PR URL, branch, head, and the
-   [checkout ID](../../deliver-tasks/references/ticket-lifecycle.md#worktrees) when present. Explain which
+   [checkout ID](ticket-lifecycle.md#worktrees) when present. Explain which
    completed work is preserved. Use nulls for absent artifacts. Keep secrets,
    local paths, and unsanitized logs out of the comment.
 2. Refetch the comment and live ticket/artifact state. Verify the authenticated
@@ -1374,7 +1387,7 @@ instead invokes the stop gate and releases capacity once writers are quiesced.
    `<!-- to-plan:implementation-plan:v2 -->` comment with revision one,
    `Supersedes: none`, `Replan report: none`, a `## Fast path` heading, the
    planned branch and base SHA, the classification evidence, the issue
-   contract digest and the brief plan. Verify it under [Plan a Todo item](../../deliver-tasks/references/todo-lane.md#plan-a-todo-item) step 7,
+   contract digest and the brief plan. Verify it under [Plan a Todo item](todo-lane.md#plan-a-todo-item) step 7,
    reconciling an ambiguous create by exact revision and digest.
 
 ## Publish a CI parking record
@@ -1382,7 +1395,7 @@ instead invokes the stop gate and releases capacity once writers are quiesced.
 1. Publish one runner-authored issue comment containing
    `<!-- run-github-project:parked-implementation:v1 -->`, the issue and Project
    item IDs, PR URL, branch, head SHA and
-   [checkout ID](../../deliver-tasks/references/ticket-lifecycle.md#worktrees), verified base SHA, effective
+   [checkout ID](ticket-lifecycle.md#worktrees), verified base SHA, effective
    binding fingerprint, and
    [live merge-policy fingerprint](#live-merge-policy-fingerprint),
    required-check names and conclusions, sanitized failure fingerprint, and the
