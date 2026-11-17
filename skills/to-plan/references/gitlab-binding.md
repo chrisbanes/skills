@@ -113,7 +113,7 @@ is the merge request IID.
    first.
 4. **Exact head and base:** `GET projects/:id/merge_requests/:iid`; record
    `iid`, `web_url`, `sha` (head), `diff_refs.base_sha`, `target_branch`,
-   `source_branch`, `draft`, `state`, `has_conflicts`, `detailed_merge_status`,
+   `source_branch`, `draft`, `state`, `has_conflicts`, `detailed_merge_status`, `head_pipeline`,
    `source_project_id` and `target_project_id`. Both project IDs must equal
    the configured Project ID. The reviewed head must equal `sha`.
 5. **Checks:** Pipelines are checks. Read
@@ -167,6 +167,7 @@ is the merge request IID.
     merge would bypass the train or be rejected, so merge by adding the request
     with `POST projects/:id/merge_trains/merge_requests/:iid`, omitting
     `auto_merge` so it joins immediately; that is the only train interaction.
+    A 202 (scheduled for later) is unexpected: stop and reconcile.
     The delivery stays `pending` while
     `GET projects/:id/merge_trains/merge_requests/:iid` or the request's state
     shows it on the train. It is merged only after readback; a request that
