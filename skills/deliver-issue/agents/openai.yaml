@@ -1,0 +1,7 @@
+interface:
+  display_name: "Deliver issue"
+  short_description: "Deliver a named issue and its descendants"
+  default_prompt: "Use $deliver-issue for the selected scope, preserving ownership and explicit merge and closure authority."
+
+policy:
+  allow_implicit_invocation: false

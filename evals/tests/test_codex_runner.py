@@ -31,10 +31,10 @@ from evals.harness.experiment import write_subject_stdout_artifacts
 
 
 EXPLICIT_ONLY_SKILLS = (
-    "deliver-spec",
+    "deliver-issue",
     "implement-with-subagents",
-    "run-github-project",
-    "deliver-tasks",
+    "run-project",
+    "run-project",
     "shepherd",
     "to-plan",
 )

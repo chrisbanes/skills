@@ -1,0 +1,7 @@
+interface:
+  display_name: "Run project"
+  short_description: "Run an authorized project board"
+  default_prompt: "Use $run-project for the selected scope, preserving ownership and explicit merge and closure authority."
+
+policy:
+  allow_implicit_invocation: false

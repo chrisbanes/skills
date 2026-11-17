@@ -1,12 +1,12 @@
 {
   "id": "deliver-spec-novel",
-  "title": "Resume a local-spec PR with a pending required check",
+  "title": "Resume a named issue and reject a local-only source",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "task_mode": "review",
   "kind": "novel",
@@ -27,7 +27,7 @@
   "rubric": [
     {
       "id": "local-source",
-      "text": "Uses conversation-mode to-plan for the approved local source; does not mandate early independent plan review without a concrete risk or invent GitHub issue links."
+      "text": "Uses tracker-mode to-plan for the approved issue; routes the separate local-only source to implement without creating a tracker item or executing delivery."
     },
     {
       "id": "resume",

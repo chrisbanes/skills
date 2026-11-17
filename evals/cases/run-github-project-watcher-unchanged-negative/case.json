@@ -3,12 +3,14 @@
   "title": "Retain one watcher across empty host wait timeouts",
   "family": "workflow",
   "target_skills": [
-    "run-github-project", "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "run-github-project"
+    "run-project"
   ],
-  "allowed_skills": ["run-github-project", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project"
+  ],
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",

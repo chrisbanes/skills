@@ -10,18 +10,17 @@ class SyncReferencesTest(unittest.TestCase):
     def test_delivery_procedure_is_not_overwritten_by_delegated_workflow(self):
         destinations = {item for copies in COPIES.values() for item in copies}
         self.assertNotIn(
-            "skills/deliver-spec/references/implementation-mode.md", destinations
+            "skills/deliver-issue/references/implementation-mode.md", destinations
         )
         self.assertIn(
-            "skills/deliver-spec/references/subagent-selection.md", destinations
+            "skills/deliver-issue/references/subagent-selection.md", destinations
         )
 
     def test_github_binding_consumers_detect_and_repair_drift(self):
         source = "references/github-binding.md"
         consumers = (
-            "skills/deliver-spec/references/github-binding.md",
-            "skills/deliver-tasks/references/github-binding.md",
-            "skills/run-github-project/references/github-binding.md",
+            "skills/deliver-issue/references/github-binding.md",
+            "skills/run-project/references/github-binding.md",
             "skills/to-plan/references/github-binding.md",
         )
         self.assertEqual(consumers, COPIES.get(source))

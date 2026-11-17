@@ -3,12 +3,14 @@
   "title": "Choose plain Git worktrees when the runtime cannot remove its own",
   "family": "workflow",
   "target_skills": [
-    "run-github-project", "deliver-tasks"
+    "run-project"
   ],
   "expected_skills": [
-    "run-github-project"
+    "run-project"
   ],
-  "allowed_skills": ["run-github-project", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project"
+  ],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow",

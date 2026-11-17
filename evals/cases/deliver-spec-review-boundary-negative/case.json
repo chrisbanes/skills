@@ -3,10 +3,10 @@
   "title": "Reject narrowed review and stale evidence without redundant work",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "task_mode": "review",
   "kind": "negative",

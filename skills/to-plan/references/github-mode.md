@@ -84,7 +84,7 @@ PR and retained work named by that report. Competing, foreign, or mismatched PRs
 still block.
 
 A runner-authored revision headed `Fast path` is a valid predecessor from
-`run-github-project`; supersede it with a full plan revision.
+`run-project`; supersede it with a full plan revision.
 
 An unmarked implementation plan is context, not an editable target. Block when
 it conflicts with the proposed plan or could be mistaken for the active
@@ -101,7 +101,7 @@ Require all of the following:
 - Every blocker is complete and its required outcome exists in the baseline.
 - No open implementation PR exists, except the exact retained PR allowed by
   a verified autonomous replan or integration amendment request, or named by a
-  `deliver-spec` fast-path escalation record in that runner-authored PR.
+  `deliver-issue` fast-path escalation record in that runner-authored PR.
 - The issue has explicit, complete acceptance criteria.
 - Every criterion maps to automated or precise manual verification.
 

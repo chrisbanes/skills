@@ -60,18 +60,18 @@ class PrReviewTimingTest(unittest.TestCase):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
         canonical = (ROOT / "references/pr-review-timing.md").read_bytes()
         callers = {
-            "deliver-spec": (
+            "deliver-issue": (
                 "SKILL.md", "references/evidence-and-review.md",
                 "references/project-handoff.md",
             ),
-            "deliver-tasks": (
+            "run-project": (
                 "references/ticket-lifecycle.md", "references/drain-scheduler.md",
             ),
             "shepherd": ("SKILL.md", "references/provider-commands.md"),
         }
         for case_id in CASES:
             case = corpus[case_id]
-            skill_name = "deliver-tasks" if "run-github-project" in case.target_skills else case.target_skills[0]
+            skill_name = "run-project" if "run-project" in case.target_skills else case.target_skills[0]
             with self.subTest(skill=skill_name), tempfile.TemporaryDirectory() as directory:
                 workspace = prepare_workspace(
                     case, ROOT, Path(directory) / "fixture",

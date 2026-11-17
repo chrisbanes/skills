@@ -1,6 +1,0 @@
-interface:
-  display_name: "Deliver Spec"
-  short_description: "Coordinate an approved spec through a reviewed change request"
-  default_prompt: "Use $deliver-spec to deliver this approved spec through a reviewed change request."
-policy:
-  allow_implicit_invocation: false

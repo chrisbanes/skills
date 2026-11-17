@@ -3,10 +3,10 @@
   "title": "Escalate a standalone fast path into planning",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "task_mode": "review",
   "kind": "novel",

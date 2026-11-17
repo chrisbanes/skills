@@ -2,18 +2,43 @@
   "id": "run-github-project-setup-agents-no-change",
   "title": "Leave an existing Agent Setup unchanged",
   "family": "workflow",
-  "target_skills": ["run-github-project", "deliver-tasks" ],
-  "expected_skills": ["run-github-project"],
-  "allowed_skills": ["run-github-project", "deliver-tasks"],
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "allowed_skills": [
+    "run-project"
+  ],
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
   "allowed_write_paths": [],
-  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
-  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-setup-agents-no-change"], "timeout_seconds": 30}],
-  "rubric": [
-    {"id": "idempotence", "text": "The response leaves the already matching Agent Setup and trusted binding unchanged, with no duplicate section or profile"},
-    {"id": "no-overreach", "text": "Reports configuration-valid from supplied verified state while preserving the disclosed runtime limitations for repair evidence and independent review; does not invent profiles, migrate state, or edit an already matching binding."}
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
   ],
-  "provenance": {"kind": "synthetic"}
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-setup-agents-no-change"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "idempotence",
+      "text": "The response leaves the already matching Agent Setup and trusted binding unchanged, with no duplicate section or profile"
+    },
+    {
+      "id": "no-overreach",
+      "text": "Reports configuration-valid from supplied verified state while preserving the disclosed runtime limitations for repair evidence and independent review; does not invent profiles, migrate state, or edit an already matching binding."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
 }

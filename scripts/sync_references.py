@@ -7,38 +7,65 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 COPIES = {
     "references/github-binding.md": (
-        "skills/deliver-spec/references/github-binding.md",
-        "skills/deliver-tasks/references/github-binding.md",
-        "skills/run-github-project/references/github-binding.md",
+        "skills/deliver-issue/references/github-binding.md",
+        "skills/run-project/references/github-binding.md",
         "skills/to-plan/references/github-binding.md",
     ),
     "references/pr-review-timing.md": tuple(
         f"skills/{skill}/references/pr-review-timing.md"
-        for skill in ("deliver-spec", "deliver-tasks", "shepherd")
+        for skill in ("deliver-issue", "run-project", "shepherd")
     ),
     "skills/to-plan/references/boundary-validation.md": tuple(
         f"skills/{skill}/references/boundary-validation.md"
-        for skill in ("deliver-spec", "implement-with-subagents")
+        for skill in ("deliver-issue", "run-project", "implement-with-subagents")
     ),
     "references/behavioral-review.md": tuple(
         f"skills/{skill}/references/behavioral-review.md"
         for skill in (
-            "deliver-spec", "implement-with-subagents", "deliver-tasks",
+            "deliver-issue", "implement-with-subagents", "run-project",
             "shepherd",
         )
     ),
     "references/subagent-selection.md": tuple(
         f"skills/{skill}/references/subagent-selection.md"
         for skill in (
-            "deliver-spec", "implement-with-subagents", "deliver-tasks",
+            "deliver-issue", "implement-with-subagents", "run-project",
             "gradle-run", "shepherd", "subagent-delegation",
         )
     ),
     "references/checkout-lifecycle.md": tuple(
         f"skills/{skill}/references/checkout-lifecycle.md"
-        for skill in ("deliver-spec", "implement-with-subagents", "deliver-tasks")
+        for skill in ("deliver-issue", "implement-with-subagents", "run-project")
     ),
+    "skills/run-project/references/agent-routing.md": ("skills/deliver-issue/references/agent-routing.md",),
+    "skills/run-project/references/authority-and-pauses.md": ("skills/deliver-issue/references/authority-and-pauses.md",),
+    "skills/run-project/references/drain-scheduler.md": ("skills/deliver-issue/references/drain-scheduler.md",),
+    "skills/run-project/references/execution-controller.md": ("skills/deliver-issue/references/execution-controller.md",),
+    "skills/run-project/references/human-frontier.md": ("skills/deliver-issue/references/human-frontier.md",),
+    "skills/run-project/references/normalized-ticket.md": ("skills/deliver-issue/references/normalized-ticket.md",),
+    "skills/run-project/references/review-and-setup.md": ("skills/deliver-issue/references/review-and-setup.md",),
+    "skills/run-project/references/review-contracts.md": ("skills/deliver-issue/references/review-contracts.md",),
+    "skills/run-project/references/ticket-lifecycle.md": ("skills/deliver-issue/references/ticket-lifecycle.md",),
+    "skills/run-project/references/todo-lane.md": ("skills/deliver-issue/references/todo-lane.md",),
+    "skills/run-project/references/triage-lane.md": ("skills/deliver-issue/references/triage-lane.md",),
+    "skills/run-project/references/wayfinder-lane.md": ("skills/deliver-issue/references/wayfinder-lane.md",),
+    "skills/run-project/references/workflow-providers.md": ("skills/deliver-issue/references/workflow-providers.md",),
+    "skills/deliver-issue/references/evidence-and-review.md": ("skills/run-project/references/evidence-and-review.md",),
+    "skills/deliver-issue/references/fast-path.md": ("skills/run-project/references/fast-path.md",),
+    "skills/deliver-issue/references/implementation-mode.md": ("skills/run-project/references/implementation-mode.md",),
+    "skills/deliver-issue/references/project-handoff.md": ("skills/run-project/references/project-handoff.md",),
+    "skills/deliver-issue/references/provider-bindings.md": ("skills/run-project/references/provider-bindings.md",),
+    "skills/deliver-issue/references/qualification-failure.md": ("skills/run-project/references/qualification-failure.md",),
 }
+
+
+# The shared binding links to these procedures; retain its reference closure
+# when the planner is installed without either delivery entrypoint.
+for source, destinations in tuple(COPIES.items()):
+    if any("/references/" in path and ("/run-project/" in path or "/deliver-issue/" in path) for path in destinations):
+        planner_copy = "skills/to-plan/references/" + Path(source).name
+        if source != planner_copy and planner_copy not in destinations:
+            COPIES[source] = (*destinations, planner_copy)
 
 
 def synchronize(root: Path, *, check: bool) -> int:

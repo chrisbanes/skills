@@ -2,18 +2,43 @@
   "id": "run-github-project-agent-routing-direct",
   "title": "Select only a configured agent profile",
   "family": "workflow",
-  "target_skills": ["run-github-project", "deliver-tasks" ],
-  "expected_skills": ["run-github-project"],
-  "allowed_skills": ["run-github-project", "deliver-tasks"],
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "allowed_skills": [
+    "run-project"
+  ],
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow",
   "allowed_write_paths": [],
-  "forbidden_command_patterns": ["\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"],
-  "validators": [{"argv": ["python3", "@validators/text_case.py", "run-github-project-agent-routing-direct"], "timeout_seconds": 30}],
-  "rubric": [
-    {"id": "configured-choice", "text": "Selects deep-owner, the eligible configured default, ignores the stale external routing answer, and preserves the user-selected lead model."},
-    {"id": "authority-boundary", "text": "Makes no TypeSafe call, ignores obsolete routing fields during dispatch without editing the active binding, and treats profile selection as no authority to claim or merge."}
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
   ],
-  "provenance": {"kind": "synthetic"}
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-github-project-agent-routing-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "configured-choice",
+      "text": "Selects deep-owner, the eligible configured default, ignores the stale external routing answer, and preserves the user-selected lead model."
+    },
+    {
+      "id": "authority-boundary",
+      "text": "Makes no TypeSafe call, ignores obsolete routing fields during dispatch without editing the active binding, and treats profile selection as no authority to claim or merge."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
 }

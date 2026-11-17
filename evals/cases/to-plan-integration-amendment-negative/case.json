@@ -52,7 +52,7 @@
     },
     {
       "id": "consumer-capability",
-      "text": "Before live amendment publication, requires verified installed deliver-spec support and, for a Project claim, run-github-project support for complete chain hydration, effective digest and result evidence. Missing/unknown or full-plan-only support blocks publication and handoff even with approval or --auto. Offline artifact validity is not consumer adoption; preserve draft/work or use the authorized full-replan route."
+      "text": "Before live amendment publication, requires verified installed deliver-issue support and, for a Project claim, run-project support for complete chain hydration, effective digest and result evidence. Missing/unknown or full-plan-only support blocks publication and handoff even with approval or --auto. Offline artifact validity is not consumer adoption; preserve draft/work or use the authorized full-replan route."
     }
   ],
   "provenance": {

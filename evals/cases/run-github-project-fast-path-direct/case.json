@@ -3,14 +3,17 @@
   "title": "Fast-path a qualifying Todo item into implementation",
   "family": "workflow",
   "target_skills": [
-    "run-github-project",
-    "deliver-spec", "deliver-tasks"
+    "run-project",
+    "deliver-issue"
   ],
   "expected_skills": [
-    "run-github-project",
-    "deliver-spec"
+    "run-project",
+    "deliver-issue"
   ],
-  "allowed_skills": ["run-github-project", "deliver-spec", "deliver-tasks"],
+  "allowed_skills": [
+    "run-project",
+    "deliver-issue"
+  ],
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow",
@@ -41,7 +44,7 @@
     },
     {
       "id": "handoff",
-      "text": "Hands off under deliver-spec Project mode with the fast-path revision as the approved plan, without a plan-mismatch repair budget, and keeps independent review."
+      "text": "Hands off under deliver-issue Project mode with the fast-path revision as the approved plan, without a plan-mismatch repair budget, and keeps independent review."
     },
     {
       "id": "review-restraint",

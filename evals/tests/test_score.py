@@ -134,7 +134,7 @@ class ScorecardTest(unittest.TestCase):
     def test_forced_read_requires_all_targets_before_other_actions(self):
         paths = (
             ".agents/skills/to-plan/SKILL.md",
-            ".agents/skills/run-github-project/SKILL.md",
+            ".agents/skills/run-project/SKILL.md",
         )
         preflight = {"valid": True, "targets": [{
             "skill": path.split("/")[2],
@@ -144,8 +144,8 @@ class ScorecardTest(unittest.TestCase):
         } for path in paths]}
         item = record(
             "case:forced", "forced", True,
-            target=("to-plan", "run-github-project"),
-            reported=("to-plan", "run-github-project"), preflight=preflight,
+            target=("to-plan", "run-project"),
+            reported=("to-plan", "run-project"), preflight=preflight,
         )
         item["subject"] = {
             "events": [

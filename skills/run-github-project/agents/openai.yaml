@@ -1,7 +1,0 @@
-interface:
-  display_name: "Run GitHub Project"
-  short_description: "Set up, reconcile, and execute Project work"
-  default_prompt: "Use $run-github-project in next or drain mode to deliver eligible Project work; resolve merge permission once at startup with a 60-second default-no question unless already specified, and continue delivery while awaiting the answer."
-
-policy:
-  allow_implicit_invocation: false

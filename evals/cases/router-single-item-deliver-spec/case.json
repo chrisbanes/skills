@@ -1,12 +1,12 @@
 {
   "id": "router-single-item-deliver-spec",
-  "title": "One named issue routes to deliver-spec rather than a scope controller",
+  "title": "One named issue routes to deliver-issue rather than a scope controller",
   "family": "workflow",
   "target_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "deliver-spec"
+    "deliver-issue"
   ],
   "task_mode": "edit",
   "kind": "routing",
@@ -30,7 +30,7 @@
   "rubric": [
     {
       "id": "single-item",
-      "text": "Selects deliver-spec for one approved item; neither selects a scope nor invokes deliver-tasks/run-github-project. Reuses approval and plan, retains independent final review."
+      "text": "Selects deliver-issue for one approved item; neither selects a scope nor invokes run-project/run-project. Reuses approval and plan, retains independent final review."
     }
   ],
   "provenance": {

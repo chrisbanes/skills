@@ -5,9 +5,8 @@ and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
 tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
 cover six Compose skills, four Kotlin/Gradle skills, and ten workflow/writing
-skills: `android-benchmark-comparison`, `deliver-spec`, `deliver-tasks`, `grounded-writing`,
+skills: `android-benchmark-comparison`, `deliver-issue`, `run-project`, `grounded-writing`,
 `implement-with-subagents`, `subagent-delegation`, `changelog`, `release-kotlin-library`,
-`run-github-project`,
 `shepherd`, and `to-plan`. It is designed to answer three separate questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
@@ -111,12 +110,11 @@ suite-wide aggregate.
 | `kotlin-concurrency-and-flow` | 44.4% | 100.0% | 100.0% |
 | `kotlin-control-flow` | 33.3% | 100.0% | 100.0% |
 | `android-benchmark-comparison` | 33.3% | 100.0% | 100.0% |
-| `deliver-spec` | — | — | — |
-| `deliver-tasks` | — | — | — |
+| `deliver-issue` | — | — | — |
+| `run-project` | — | — | — |
 | `grounded-writing` | 0.0% | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
 | `release-kotlin-library` | 0.0% | 100.0% | 100.0% |
-| `run-github-project` | — | — | 100.0% |
 | `shepherd` | — | — | 100.0% |
 | `to-plan` | — | — | 100.0% |
 
@@ -178,12 +176,11 @@ recorded result. Run provenance and scorecards are in the
 | `kotlin-concurrency-and-flow` | 72.2% | 100.0% | 100.0% |
 | `kotlin-control-flow` | 61.1% | 94.4% | 100.0% |
 | `android-benchmark-comparison` | 33.3% | 100.0% | 100.0% |
-| `deliver-spec` | — | — | 100.0% |
-| `deliver-tasks` | — | — | — |
+| `deliver-issue` | — | — | — |
+| `run-project` | — | — | — |
 | `grounded-writing` | 0.0% | 100.0% | 100.0% |
 | `implement-with-subagents` | — | — | 100.0% |
 | `release-kotlin-library` | 16.7% | 100.0% | 100.0% |
-| `run-github-project` | — | — | 100.0% |
 | `shepherd` | — | — | 100.0% |
 | `to-plan` | 16.7% | 100.0% | 100.0% |
 
@@ -419,10 +416,10 @@ execution under caller capacity, temporary capacity versus absent worker
 capability, and the trivial-edit exception versus useful overlap and retained
 repair ownership and the clean-checkout preflight. They assess immutable state
 without live execution.
-Deterministic coverage stages `deliver-spec` alone, follows its local procedure
+Deterministic coverage stages `deliver-issue` alone, follows its local procedure
 and handoff links, and checks its bundled procedure independently of the
 orchestration skill's mode-specific procedure.
-Three Project-delivery calibrations cover automatic `deliver-spec` handoff,
+Three Project-delivery calibrations cover automatic `deliver-issue` handoff,
 one startup merge question with a 60-second default-no deadline, explicit
 instructions, nonblocking fallback, late replies and invocation expiry,
 ticket-local authority pauses with continued board progress, durable resumption,
@@ -691,16 +688,16 @@ entrypoints and Markdown files under their `references/` directories in forced
 and automatic arms. Other commands, paths and workflow actions remain forbidden;
 cases without this option retain the single forced-entrypoint-read exception.
 
-The `deliver-tasks` triad checks scoped planning/delivery, unknown pause
+The `run-project` triad checks scoped planning/delivery, unknown pause
 publication with independent progress, and unlabelled Todo and label-stop restraint through deterministic
-decision artifacts. A routing counterexample keeps one named item in `deliver-spec`.
+decision artifacts. A routing counterexample keeps one named item in `deliver-issue`.
 Existing GitHub scenarios install both the entrypoint and extracted controller;
 their prompts and decisions follow the same human-applied role and stop rules.
 Label-stop and recovery calibration fixtures cover capacity release, artifact
 preservation, human restoration, triage restraint and abandonment to human Todo;
 the existing parked counterexample keeps label authority separate from parking.
 
-The `deliver-spec` provider-closure calibration triad preserves native GitHub
+The `deliver-issue` provider-closure calibration triad preserves native GitHub
 closure and non-default-base controller closure, exercises Jira tracker/GitHub
 code-host linking and separate merge/closure recovery, and rejects closure for
 partial work, unintended host links, missing capabilities and delegated owners.

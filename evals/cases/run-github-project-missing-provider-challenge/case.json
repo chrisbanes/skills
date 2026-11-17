@@ -2,9 +2,15 @@
   "id": "run-github-project-missing-provider-challenge",
   "title": "Block only behavioral implementation when tdd is unavailable",
   "family": "workflow",
-  "target_skills": ["run-github-project", "deliver-tasks" ],
-  "expected_skills": ["run-github-project"],
-  "allowed_skills": ["run-github-project", "deliver-tasks"],
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "allowed_skills": [
+    "run-project"
+  ],
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
@@ -33,6 +39,8 @@
       "text": "Allows both authorized behavioral and documentation work with meaningful owner-driven testing and independent final review; no installation or authority expansion."
     }
   ],
-  "provenance": {"kind": "synthetic"},
+  "provenance": {
+    "kind": "synthetic"
+  },
   "calibration": true
 }
