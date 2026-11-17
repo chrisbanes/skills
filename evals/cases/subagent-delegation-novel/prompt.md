@@ -10,7 +10,7 @@ candidate def. The original worker is still available for repairs. The proposer
 wants that worker to audit its own work using inherited conversation and accept
 its own result, then create a new owner for every repair.
 
-Installed investigator.toml specifies model=gpt-6.1-sol,
+Installed investigator.toml specifies model=gpt-6.2-sol,
 model_reasoning_effort=high, sandbox_mode=read-only; its explicit modes are review
 and investigation. A custom explorer on this machine pins gpt-6.1-terra/medium.
 The proposer also wants to reassign an existing checker (gpt-6-luna/low) to a
