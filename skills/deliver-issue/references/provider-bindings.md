@@ -9,7 +9,8 @@ not authority. A code-host merge and a tracker closure are separate facts.
 
 1. Resolve the source's tracker and repository's code host from the invocation,
    trusted configuration and fresh identity reads. Record both bindings and
-   exact item/repository identities. A local source needs no tracker. For either
+   exact item/repository identities. Local sources route to `implement` before
+   delivery. For either
    GitHub role, read the applicable operations in the bundled
    [GitHub binding](github-binding.md#delivery-operations). A GitHub repository
    does not imply a GitHub tracker. For another provider, require its trusted
@@ -21,15 +22,13 @@ not authority. A code-host merge and a tracker closure are separate facts.
    merge and readback. Missing capabilities block only dependent work; continue
    safe independent validation and preserve artifacts. Required external review
    remains separate from code-host review transport and local independent review.
-3. Before planning, use tracker source/readiness and marker operations through
-   `to-plan`. Preserve the tracker's human approval gate; GitHub requires
-   `ready-for-agent` and its existing triage route. A different tracker must
-   explicitly define its readiness gate. A controller handoff retains the
-   controller's bindings, claim and authority; a ticket owner cannot replace them.
-   Keep `ready-for-agent` throughout active GitHub work. Recheck it before
-   material writes and recovery; removal invokes the binding's label-stop gate,
-   quiescing writers and releasing capacity while preserving assignment and
-   every artifact. Neither owner nor controller adds or restores the label.
+3. Before planning, verify the invocation mode under the binding. A direct-issue
+   controller uses [Direct issue planning readiness](github-binding.md#direct-issue-planning-readiness)
+   and the [issue lifecycle](issue-lifecycle.md); a board handoff retains its
+   controller's bindings, claim, role authority and grants. Ordinary standalone
+   to-plan keeps its own readiness gate. Recheck the applicable operation grant
+   and explicit holds/stops before material writes and recovery. Never add or
+   restore readiness labels to obtain permission; preserve recorded human stops.
 4. After local qualification and independent review, use code-host open/update
    to create one draft change request or reuse the existing one, verifying exact
    repository, base and reviewed head. Link the exact tracker item through the
@@ -37,7 +36,8 @@ not authority. A code-host merge and a tracker closure are separate facts.
    set and whether the change fully satisfies each item. For partial delivery or
    a local source without a tracker item, use non-closing source links only.
 5. Use closing keywords only when the selected code-host/tracker pair explicitly
-   supports native closure for this exact item and target base, the configured
+   supports native closure for this exact item and target base, explicit closure
+   authority covers every intended item, the configured
    policy selects it, and the change fully satisfies the item. Otherwise use a
    non-closing link and record `close-after-merge`. Verify the host's complete
    effective closing-reference set after every create/body edit and before

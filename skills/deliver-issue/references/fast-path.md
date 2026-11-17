@@ -9,7 +9,7 @@ Qualify only when every condition holds; otherwise use the full path. When in
 doubt, use the full path.
 
 1. The source is a verified tracker item passing its binding-defined readiness
-   gate, whose acceptance criteria are concrete
+   gate (including a verified direct invocation grant), whose acceptance criteria are concrete
    and testable as written, and
    every blocker is complete with its required outcome in the baseline.
 2. The fix location is known from the source or bounded inspection. The root

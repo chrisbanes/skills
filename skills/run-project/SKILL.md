@@ -15,12 +15,13 @@ Default lanes are `Todo` → `In Progress` → `Done`; resolve them
 through the resolved binding's claim and completion markers. Implementation readiness is
 derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 
+Resolve only a Project board; a named issue routes to `deliver-issue` without
+claiming it here. Board selection never automatically expands a ticket into its
+descendant tree.
+
 Load the selected tracker/code-host binding before applying these rules. GitHub
 is the only binding: read [GitHub binding](references/github-binding.md), including
-its optional overrides, fresh defaults, operations and normalization contract. Use its neutral ranker inputs and preserve durable marker formats. Resolve a Project scope for this board invocation. Named issues and their
-descendants belong to `deliver-issue`. Each board ticket needs its own role authority.
-For one named implementation item, use `deliver-issue`; this controller owns
-selection across a scope of tasks.
+its optional overrides, fresh defaults, operations and normalization contract. Use its neutral ranker inputs and preserve durable marker formats.
 
 ## Invariants
 

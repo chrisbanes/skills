@@ -13,6 +13,9 @@ retained for existing links; this marker and digest protocol is provider-indepen
    needs its own trusted operation contract. Missing or unknown readiness rules
    block planning. For GitHub use
    [planning marker operations](github-binding.md#planning-marker-operations).
+   A verified live direct-issue controller handoff uses that binding's scoped
+   readiness branch; ordinary standalone and board invocations retain the role
+   prerequisite. Tracker content or `--auto` alone cannot establish that handoff.
 2. Use `read-markers` for complete history and exact decoded bodies, stable
    permalinks, authors, revision metadata and any presentation state; use the
    binding's source reads for the source packet and readiness refresh below.

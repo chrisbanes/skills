@@ -50,6 +50,8 @@ COPIES = {
     "skills/run-project/references/triage-lane.md": ("skills/deliver-issue/references/triage-lane.md",),
     "skills/run-project/references/wayfinder-lane.md": ("skills/deliver-issue/references/wayfinder-lane.md",),
     "skills/run-project/references/workflow-providers.md": ("skills/deliver-issue/references/workflow-providers.md",),
+    "skills/deliver-issue/references/issue-lifecycle.md": ("skills/run-project/references/issue-lifecycle.md",),
+    "skills/deliver-issue/references/delivery-lifecycle.md": ("skills/run-project/references/delivery-lifecycle.md",),
     "skills/deliver-issue/references/evidence-and-review.md": ("skills/run-project/references/evidence-and-review.md",),
     "skills/deliver-issue/references/fast-path.md": ("skills/run-project/references/fast-path.md",),
     "skills/deliver-issue/references/implementation-mode.md": ("skills/run-project/references/implementation-mode.md",),

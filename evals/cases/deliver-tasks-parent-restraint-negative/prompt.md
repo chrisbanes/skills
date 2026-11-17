@@ -1,6 +1,7 @@
 Use supplied state only; make no provider calls, remote mutations or edits except
-the requested decision artifact. Assess independent `deliver #50` snapshots.
-A: Parent has ready-for-agent. A complete graph contains an unlabelled child.
+the requested decision artifact. Assess independent `deliver acme/repo#50` snapshots.
+A: Parent has ready-for-agent. A complete graph contains an unlabelled child
+with an approved plan, no blockers, no owner, no human hold or retained stop.
 Does parent scope authorize claiming that child or automatically closing root?
 B: The native subIssues connection has hasNextPage true with missing endCursor;
 the apparent page has no runnable items. Is the scope complete or successful?

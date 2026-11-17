@@ -16,6 +16,9 @@ from evals.validators.pr_review_decisions import validate_decisions
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = (
+    "deliver-issue-invocation-direct",
+    "deliver-issue-ownership-novel",
+    "deliver-issue-authority-negative",
     "deliver-tasks-migration-partial-failure-novel",
     "deliver-tasks-migration-apply-direct",
     "deliver-tasks-migration-dry-run-direct",

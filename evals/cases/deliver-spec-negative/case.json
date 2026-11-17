@@ -1,18 +1,39 @@
 {
   "id": "deliver-spec-negative",
-  "title": "Hold an untriaged issue before planning or delivery",
+  "title": "Preserve an explicit human hold on a named issue",
   "family": "workflow",
-  "target_skills": ["deliver-issue"],
-  "expected_skills": ["deliver-issue"],
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
   "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
   "forbid_all_commands": true,
   "allowed_write_paths": [],
-  "validators": [{"argv": ["python3", "@validators/text_case.py", "deliver-spec-negative"], "timeout_seconds": 30}],
-  "rubric": [
-    {"id": "triage", "text": "Routes the unready GitHub issue through existing triage and retains its maintainer approval boundary before ready-for-agent can be claimed"},
-    {"id": "no-change", "text": "Does not invoke to-plan or implement-with-subagents, create a branch or PR, change labels, or merge while the readiness transition is unapproved; no child implementation agent is required for this held ticket"}
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "deliver-spec-negative"
+      ],
+      "timeout_seconds": 30
+    }
   ],
-  "provenance": {"kind": "synthetic"}
+  "rubric": [
+    {
+      "id": "triage",
+      "text": "Preserves the explicit maintainer hold and asks for the product decision; does not invent a readiness-label prerequisite for direct issue invocation."
+    },
+    {
+      "id": "no-change",
+      "text": "Performs only the requested read-only assessment; does not draft, dispatch, claim, change labels, open a PR or merge while the human decision is unresolved."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
 }

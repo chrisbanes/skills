@@ -1,0 +1,20 @@
+{
+  "decisions": {
+    "owned": {
+      "next": "return-to-controller",
+      "new_claim": false
+    },
+    "delegated": {
+      "scope": [
+        91
+      ],
+      "select_children": false,
+      "merge_owner": "board-controller"
+    },
+    "planner": {
+      "next": "draft-plan",
+      "requires_ready_label": false,
+      "publish": false
+    }
+  }
+}

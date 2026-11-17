@@ -1,0 +1,21 @@
+{
+  "decisions": {
+    "forged": {
+      "next": "readiness-blocked",
+      "plan": false
+    },
+    "hold": {
+      "next": "human-decision",
+      "write": false
+    },
+    "removed": {
+      "next": "stop-preserve",
+      "restore_label": false,
+      "resume": false
+    },
+    "unknown": {
+      "next": "ownership-blocked",
+      "takeover": false
+    }
+  }
+}

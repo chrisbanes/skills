@@ -3,10 +3,10 @@
   "title": "Reject partial graphs and parent authority inheritance",
   "family": "workflow",
   "target_skills": [
-    "run-project"
+    "deliver-issue"
   ],
   "expected_skills": [
-    "run-project"
+    "deliver-issue"
   ],
   "task_mode": "edit",
   "kind": "negative",
@@ -30,14 +30,11 @@
   "rubric": [
     {
       "id": "parent-contract",
-      "text": "Reject partial graphs and parent authority inheritance; retain item-specific authority, complete graph reads, stop preservation and verified closed readback."
+      "text": "Resolve direct issue scope without a Project; use its live invocation grant, preserve human stops and existing ownership, require explicit closure authority and verified acceptance/readback."
     }
   ],
   "provenance": {
     "kind": "synthetic"
   },
-  "staged_skill_files": [
-    "run-project/scripts/watch_project.py"
-  ],
   "calibration": true
 }

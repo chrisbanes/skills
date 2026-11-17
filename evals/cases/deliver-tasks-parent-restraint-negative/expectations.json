@@ -1,7 +1,7 @@
 {
   "decisions": {
     "A": {
-      "may_claim_child": false,
+      "may_claim_child": true,
       "may_close_parent": false
     },
     "B": {
