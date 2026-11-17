@@ -1,0 +1,40 @@
+{
+  "configured": {
+    "code_host": "gitlab",
+    "host": "gitlab.example.com",
+    "repository": "acme/platform/app",
+    "project_id": 88001,
+    "credential": "glab:gitlab.example.com",
+    "tracker": "github",
+    "tracker_repository": "acme/app"
+  },
+  "merge_request": {
+    "iid": 7,
+    "web_url": "https://gitlab.example.com/acme/platform/app/-/merge_requests/7",
+    "source_branch": "agent/42-export",
+    "target_branch": "main",
+    "sha": "H1",
+    "diff_refs": {
+      "base_sha": "B1"
+    },
+    "draft": false,
+    "state": "opened",
+    "has_conflicts": false,
+    "detailed_merge_status": "mergeable",
+    "source_project_id": 88001,
+    "target_project_id": 88001,
+    "description": "Closes #42\n\nAdds the export command."
+  },
+  "closes_issues": [
+    {
+      "iid": 42,
+      "project_id": 88001,
+      "web_url": "https://gitlab.example.com/acme/platform/app/-/issues/42"
+    }
+  ],
+  "tracker_issue": {
+    "url": "https://github.com/acme/app/issues/42",
+    "state": "open"
+  },
+  "request": "Add `Closes acme/app#42` so the GitHub issue closes on merge."
+}

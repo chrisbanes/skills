@@ -1,0 +1,39 @@
+{
+  "decisions": {
+    "reply-push-ok": {
+      "cli": "glab",
+      "reply": true,
+      "resolve": true,
+      "fallback": "none",
+      "report": "none"
+    },
+    "local-only": {
+      "cli": "glab",
+      "reply": false,
+      "resolve": false,
+      "fallback": "none",
+      "report": "none"
+    },
+    "push-failed": {
+      "cli": "glab",
+      "reply": false,
+      "resolve": false,
+      "fallback": "none",
+      "report": "none"
+    },
+    "answer-only": {
+      "cli": "glab",
+      "reply": true,
+      "resolve": true,
+      "fallback": "none",
+      "report": "none"
+    },
+    "unavailable-op": {
+      "cli": "glab",
+      "reply": true,
+      "resolve": false,
+      "fallback": "none",
+      "report": "unavailable"
+    }
+  }
+}

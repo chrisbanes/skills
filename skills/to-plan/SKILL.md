@@ -23,7 +23,8 @@ review, answer that request directly and read no references.
 Accept `/to-plan <issue URL | owner/repository#number | #number>`, its `--auto`
 form, or an in-chat task. Use tracker mode only for exactly one named item (or
 one previously established implementation target with no competing inline task).
-Resolve GitHub shorthand through the checkout; reject change requests and ambiguous
+Resolve GitHub shorthand through the checkout, or through the trusted binding's
+tracker repository when the code host is another provider; reject change requests and ambiguous
 tracker or repository identity. `--auto` requires an item in the current invocation.
 Select the established tracker binding; for GitHub read
 [the GitHub binding](references/github-binding.md#planning-marker-operations).

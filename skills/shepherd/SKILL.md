@@ -18,7 +18,7 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 ## Procedure
 
 1. Detect the platform with `git remote get-url origin`: use `gh` for GitHub and
-   `glab` for GitLab. If it is ambiguous or unavailable, stop and ask. When the
+   `glab` for GitLab, never `gh`. If it is ambiguous or unavailable, stop and ask. When the
    host provides a PR monitor that wakes this session on PR events, such as
    Claude desktop's `ccd_pr` tools, load those tools first if they are listed
    but deferred, then follow

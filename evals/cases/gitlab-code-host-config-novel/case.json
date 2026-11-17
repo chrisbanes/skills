@@ -1,0 +1,48 @@
+{
+  "id": "gitlab-code-host-config-novel",
+  "title": "GitLab code-host startup handles drift, credentials and tier gaps",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "gitlab-code-host-config-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "fingerprint",
+      "text": "Treats a changed merge-policy fingerprint, an ID resolving to another project or a failed read as stop-and-preserve; records null tier fields as stable unavailable values."
+    },
+    {
+      "id": "credentials",
+      "text": "Refuses to start when a GITLAB_TOKEN-style variable would override the configured source, without printing or storing credentials."
+    },
+    {
+      "id": "scope",
+      "text": "Treats a renamed path with the same ID as repairable configuration drift, blocks only code-host lanes when glab is missing, and blocks a gitlab tracker for lack of a trusted contract."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

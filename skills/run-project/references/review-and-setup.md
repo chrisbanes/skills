@@ -26,7 +26,8 @@ For GitHub, detect legacy boards/configuration through the
 [approval-gated migration](github-binding.md#approval-gated-legacy-migration)
 before ordinary setup. Discovery and a dry run grant no mutation authority.
 Follow [GitHub setup](github-binding.md#setup), including its additive setup,
-active-lease, confirmation and finish gates. An absent override file uses
+active-lease, confirmation and finish gates. For a `gitlab` code host, also
+apply the read-only [GitLab setup](gitlab-binding.md#setup). An absent override file uses
 read-only default resolution and may finish `configuration-valid`; only requested
 file edits need the trusted committed instruction/configuration pair. Execution validates read-only; it
 never enters setup repair.

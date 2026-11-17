@@ -1,0 +1,196 @@
+{
+  "project": {
+    "id": 88001,
+    "path_with_namespace": "acme/platform/app",
+    "default_branch": "main",
+    "web_url": "https://gitlab.example.com/acme/platform/app"
+  },
+  "merge_policy": {
+    "merge_method": "merge",
+    "squash_option": "default_off",
+    "only_allow_merge_if_pipeline_succeeds": true,
+    "only_allow_merge_if_all_discussions_are_resolved": true,
+    "merge_trains_enabled": false
+  },
+  "snapshots": {
+    "mr-open": {
+      "merge_requests_for_branch": [],
+      "closes_issues": null
+    },
+    "pipeline-failed": {
+      "merge_request": {
+        "iid": 7,
+        "web_url": "https://gitlab.example.com/acme/platform/app/-/merge_requests/7",
+        "source_branch": "agent/42-export",
+        "target_branch": "main",
+        "sha": "H1",
+        "diff_refs": {
+          "base_sha": "B1"
+        },
+        "draft": false,
+        "state": "opened",
+        "has_conflicts": false,
+        "detailed_merge_status": "ci_must_pass",
+        "source_project_id": 88001,
+        "target_project_id": 88001,
+        "description": "Source: https://github.com/acme/app/issues/42"
+      },
+      "pipelines": [
+        {
+          "id": 501,
+          "sha": "H1",
+          "status": "failed"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 9001,
+          "name": "test",
+          "status": "failed",
+          "allow_failure": false
+        }
+      ],
+      "discussions": [],
+      "closes_issues": []
+    },
+    "not-mergeable": {
+      "merge_request": {
+        "iid": 7,
+        "web_url": "https://gitlab.example.com/acme/platform/app/-/merge_requests/7",
+        "source_branch": "agent/42-export",
+        "target_branch": "main",
+        "sha": "H1",
+        "diff_refs": {
+          "base_sha": "B1"
+        },
+        "draft": false,
+        "state": "opened",
+        "has_conflicts": false,
+        "detailed_merge_status": "discussions_not_resolved",
+        "source_project_id": 88001,
+        "target_project_id": 88001,
+        "description": "Source: https://github.com/acme/app/issues/42"
+      },
+      "pipelines": [
+        {
+          "id": 502,
+          "sha": "H1",
+          "status": "success"
+        }
+      ],
+      "discussions": [
+        {
+          "id": "d1",
+          "resolved": false,
+          "notes": [
+            {
+              "author": "reviewer",
+              "body": "Please rename this flag."
+            }
+          ]
+        }
+      ],
+      "closes_issues": []
+    },
+    "mergeable": {
+      "merge_request": {
+        "iid": 7,
+        "web_url": "https://gitlab.example.com/acme/platform/app/-/merge_requests/7",
+        "source_branch": "agent/42-export",
+        "target_branch": "main",
+        "sha": "H1",
+        "diff_refs": {
+          "base_sha": "B1"
+        },
+        "draft": false,
+        "state": "opened",
+        "has_conflicts": false,
+        "detailed_merge_status": "mergeable",
+        "source_project_id": 88001,
+        "target_project_id": 88001,
+        "description": "Source: https://github.com/acme/app/issues/42"
+      },
+      "pipelines": [
+        {
+          "id": 503,
+          "sha": "H1",
+          "status": "success"
+        }
+      ],
+      "discussions": [
+        {
+          "id": "d2",
+          "resolved": true
+        }
+      ],
+      "closes_issues": []
+    },
+    "merge-train": {
+      "merge_policy_override": {
+        "merge_trains_enabled": true
+      },
+      "merge_call": {
+        "request": "PUT projects/88001/merge_requests/7/merge sha=H1",
+        "status": 200
+      },
+      "merge_request": {
+        "iid": 7,
+        "web_url": "https://gitlab.example.com/acme/platform/app/-/merge_requests/7",
+        "source_branch": "agent/42-export",
+        "target_branch": "main",
+        "sha": "H1",
+        "diff_refs": {
+          "base_sha": "B1"
+        },
+        "draft": false,
+        "state": "opened",
+        "has_conflicts": false,
+        "detailed_merge_status": "mergeable",
+        "source_project_id": 88001,
+        "target_project_id": 88001,
+        "description": "Source: https://github.com/acme/app/issues/42"
+      },
+      "merge_train": {
+        "merge_request": {
+          "iid": 7
+        },
+        "status": "fresh",
+        "pipeline": {
+          "status": "running"
+        }
+      },
+      "closes_issues": []
+    },
+    "merged": {
+      "merge_request": {
+        "iid": 7,
+        "web_url": "https://gitlab.example.com/acme/platform/app/-/merge_requests/7",
+        "source_branch": "agent/42-export",
+        "target_branch": "main",
+        "sha": "H1",
+        "diff_refs": {
+          "base_sha": "B1"
+        },
+        "draft": false,
+        "state": "merged",
+        "has_conflicts": false,
+        "detailed_merge_status": "not_open",
+        "source_project_id": 88001,
+        "target_project_id": 88001,
+        "description": "Source: https://github.com/acme/app/issues/42",
+        "merge_commit_sha": "M1"
+      },
+      "base_branch": {
+        "name": "main",
+        "commit": {
+          "id": "M1"
+        }
+      },
+      "closes_issues": [],
+      "tracker_issue": {
+        "url": "https://github.com/acme/app/issues/42",
+        "state": "open"
+      }
+    }
+  }
+}

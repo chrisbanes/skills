@@ -1,0 +1,48 @@
+{
+  "id": "gitlab-code-host-delivery-direct",
+  "title": "GitLab code host delivers a GitHub-tracked item through gated merge requests",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "gitlab-code-host-delivery-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "independent-bindings",
+      "text": "Routes merge-request operations through the GitLab binding and linking and closure through the GitHub tracker; never uses gh for the code host or closing keywords."
+    },
+    {
+      "id": "merge-gates",
+      "text": "Merges only when GitLab reports the request mergeable at the expected head with passing pipeline and resolved discussions; treats failed pipelines, other merge statuses and merge-train membership as pending, never merged."
+    },
+    {
+      "id": "closure",
+      "text": "Keeps the non-closing source link with an empty closes_issues readback and closes the GitHub issue only after verified merge readback, reporting ticket completion separately."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

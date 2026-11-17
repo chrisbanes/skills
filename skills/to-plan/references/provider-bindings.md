@@ -12,10 +12,16 @@ not authority. A code-host merge and a tracker closure are separate facts.
    exact item/repository identities. Local sources route to `implement` before
    delivery. For either
    GitHub role, read the applicable operations in the bundled
-   [GitHub binding](github-binding.md#delivery-operations). A GitHub repository
-   does not imply a GitHub tracker. For a Jira Cloud tracker use the bundled
-   [Jira binding](jira-binding.md). For another provider, require its trusted
-   operation contract; do not invent a binding or substitute GitHub commands.
+   [GitHub binding](github-binding.md#delivery-operations). For a Jira Cloud
+   tracker use the bundled [Jira binding](jira-binding.md). For a GitLab code
+   host, read the bundled [GitLab binding](gitlab-binding.md#code-host-operations);
+   a `gitlab` tracker has no trusted contract and blocks. A repository on either
+   host does not imply a tracker on it. When the tracker repository differs
+   from the checkout origin, take it from the trusted `Tracker` configuration
+   and accept only canonical item URLs or repository-qualified references;
+   never resolve a bare `#N` against another host. For another provider, require
+   its trusted operation contract; do not invent a binding or substitute
+   GitHub commands.
 2. Verify the capabilities needed by the next operation. The tracker supplies
    source/readiness, durable marker reads/writes/supersession and item linking,
    closure and readback. The code host supplies change-request open/update,
@@ -46,7 +52,9 @@ not authority. A code-host merge and a tracker closure are separate facts.
    merge; it must equal the intended native closure set, or be empty for
    controller closure/partial delivery. Unknown or unintended references block
    acceptance and merge until corrected and read back. Never translate a tracker
-   key into a host issue number.
+   key into a host issue number. A GitLab code host paired with a non-GitLab
+   tracker has no native closure: use the non-closing source link, require an
+   empty `closes_issues` readback and record `close-after-merge`.
 6. Have `shepherd` coordinate check, review, feedback and change-request operations
    through the selected code-host binding, applying [PR review timing](pr-review-timing.md)
    to the provider's change request. Preserve exact-head evidence and merge

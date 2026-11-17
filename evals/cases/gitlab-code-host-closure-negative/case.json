@@ -1,0 +1,48 @@
+{
+  "id": "gitlab-code-host-closure-negative",
+  "title": "GitLab code host never uses closing keywords for a GitHub-tracked item",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|glab|git)\\s+(?:api|issue|pr|mr|project|push|fetch|pull|commit|merge)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "gitlab-code-host-closure-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "non-closing",
+      "text": "Refuses to add any closing keyword, replaces the existing one with a non-closing source link and requires an empty closes_issues readback before acceptance or merge."
+    },
+    {
+      "id": "closure",
+      "text": "Records close-after-merge: closes the GitHub issue through the tracker binding only after verified merge readback; never translates the GitHub issue into a GitLab issue number."
+    },
+    {
+      "id": "restraint",
+      "text": "Makes no provider or file changes in this assessment."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
+}
