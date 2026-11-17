@@ -1,6 +1,6 @@
 {
   "id": "run-github-project-worktree-runtime-novel",
-  "title": "Choose plain Git worktrees when the runtime cannot remove its own",
+  "title": "Use host-managed worktrees when the runtime owns their cleanup",
   "family": "workflow",
   "target_skills": [
     "run-project"
@@ -29,7 +29,7 @@
   "rubric": [
     {
       "id": "mechanism",
-      "text": "Creates #90's worktree as a plain Git worktree with `git worktree add -b cb/issue-90-<slug> <path> <verified-base-sha>` because the runtime cannot remove managed worktrees, and verifies its branch and HEAD."
+      "text": "Creates #90's worktree through the host's managed delegated-thread worktree at the verified base on branch `cb/issue-90-<slug>`, not a shell-created plain Git worktree, because the host forbids shell-created checkouts and owns their cleanup; verifies its branch and HEAD before work starts."
     },
     {
       "id": "one-per-ticket",
@@ -37,7 +37,7 @@
     },
     {
       "id": "marker",
-      "text": "Records branch, base SHA and checkout ID (null for a plain Git worktree) in the run record and markers, never the local path."
+      "text": "Records branch, base SHA and checkout ID (the host's runtime identity) in the run record and markers, never the local path."
     },
     {
       "id": "restart",

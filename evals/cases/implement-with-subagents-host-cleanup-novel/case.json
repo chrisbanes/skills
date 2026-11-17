@@ -1,0 +1,58 @@
+{
+  "id": "implement-with-subagents-host-cleanup-novel",
+  "title": "Hand host-managed checkouts to host cleanup without an exception",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|curl|wget|http)\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*(?:add|am|apply|cherry-pick|clean|clone|commit|fetch|merge|mv|pull|push|rebase|reset|restore|rm|stash|switch|init|update-ref|worktree\\s+(?:add|move|prune|remove|repair|lock|unlock))\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*branch\\s+(?:(?:-d|-D|-m|-M|-c|-C|-f|--delete|--move|--copy|--force|--set-upstream-to|--unset-upstream|--edit-description)\\b|[^-\\s])",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*tag\\s+(?:(?:-d|-D|-a|-s|-u|-f|-m|-F|--delete|--annotate|--sign|--force|--message|--file)\\b|[^-\\s])",
+    "\\b(?:rm|rmdir|Remove-Item)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-host-cleanup-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "no-exception",
+      "text": "Treats the host-managed checkouts as permitted and does not ask the user for an exception to the cleanup requirement or propose shell-created replacements"
+    },
+    {
+      "id": "host-handoff",
+      "text": "Detaches `/workspace/worker-1` at its HEAD and hands it to the host's cleanup, citing the inventory readback that attributes it to its run-created task, and lists its path in the final report"
+    },
+    {
+      "id": "orphan-gap",
+      "text": "Does not treat `/workspace/worker-2` as handed off because the host inventory no longer attributes it; marks the workflow cleanup-incomplete with code verification reported separately and does not claim overall completion"
+    },
+    {
+      "id": "no-shell-removal",
+      "text": "Does not remove either managed checkout with `git worktree remove`, shell deletion, or prune, and preserves the task branch references"
+    },
+    {
+      "id": "finish-accounting",
+      "text": "Accounts for every run-created checkout and the retained integration checkout with a disposition and reason"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
