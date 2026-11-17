@@ -101,9 +101,10 @@ task-scoped, self-reviewed commit (accepted before integration when delegated),
 all affected checks and the full required suite pass at the final integrated head, the
 joined review is current, and the integration checkout is clean. Preserve any
 unrelated user work from the starting checkout. Account for every run-created
-worker checkout as retired with verified readback or retained with a reason,
-and preserve task branch refs. Eligible retirement failure or missing cleanup
-capability leaves the workflow incomplete even when code verification passed.
+worker checkout under the checkout lifecycle's
+[account rule](references/checkout-lifecycle.md#account) and preserve task
+branch refs; a cleanup-incomplete result leaves the workflow incomplete even
+when code verification passed.
 Report the item-to-commit mapping, exact integrated head, final validation and
 review evidence, checkout dispositions, and any blocker; otherwise stop at the
 first incomplete gate. PR and tracker delivery are outside this skill.

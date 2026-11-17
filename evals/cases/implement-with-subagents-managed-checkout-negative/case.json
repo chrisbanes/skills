@@ -1,0 +1,54 @@
+{
+  "id": "implement-with-subagents-managed-checkout-negative",
+  "title": "Keep plain Git worktrees when the host neither removes nor owns its checkouts",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-subagents",
+  "allowed_write_paths": [],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|curl|wget|http)\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*(?:add|am|apply|cherry-pick|clean|clone|commit|fetch|merge|mv|pull|push|rebase|reset|restore|rm|stash|switch|init|update-ref|worktree\\s+(?:add|move|prune|remove|repair|lock|unlock))\\b",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*branch\\s+(?:(?:-d|-D|-m|-M|-c|-C|-f|--delete|--move|--copy|--force|--set-upstream-to|--unset-upstream|--edit-description)\\b|[^-\\s])",
+    "\\bgit\\s+(?:(?:-C|--git-dir|--work-tree)\\s+\\S+\\s+)*tag\\s+(?:(?:-d|-D|-a|-s|-u|-f|-m|-F|--delete|--annotate|--sign|--force|--message|--file)\\b|[^-\\s])",
+    "\\b(?:rm|rmdir|Remove-Item)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-managed-checkout-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "plain-worktree",
+      "text": "Rejects the managed worktree and creates a plain Git worktree with `git worktree add -b <task-branch> <path> <integrated-sha>`, because the host neither removes its managed checkouts nor forbids shell-created ones and owns their cleanup; verifies the branch and HEAD before work starts"
+    },
+    {
+      "id": "no-handoff",
+      "text": "Does not plan a host-cleanup handoff; retires the delivered checkout with `git worktree remove --force <path>` once after the status and artifact checks, verified absent in `git worktree list --porcelain`"
+    },
+    {
+      "id": "no-exception",
+      "text": "Does not ask the user for a cleanup exception or treat cleanup as unavailable"
+    },
+    {
+      "id": "review-restraint",
+      "text": "Provides a read-only assessment and does not create checkouts, start owners or mutate files"
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
