@@ -118,7 +118,10 @@ is the merge request IID.
    the configured Project ID. The reviewed head must equal `sha`.
 5. **Checks:** Pipelines are checks. Read
    `GET projects/:id/merge_requests/:iid/pipelines` and select the latest
-   pipeline whose `sha` equals the head; read its jobs with
+   pipeline for the head: one whose `sha` equals the head, or a merged-results
+   pipeline (`ref` `refs/merge-requests/<iid>/merge`, which tests a temporary
+   merge commit with a different `sha`) only when it is the `head_pipeline` of
+   operation 4's readback at that head. Read its jobs with
    `GET projects/:id/pipelines/:pipeline_id/jobs`. A job with
    `allow_failure: true` or a manual job is non-blocking unless the repository
    says otherwise. Report `success`, `failed`, `pending`/`running`, `canceled`
@@ -157,12 +160,14 @@ is the merge request IID.
     transient statuses (`checking`, `unchecked`, `preparing`) with bounded
     polling; a fresh draft can report `checking` rather than `draft_status`.
     Any other status refuses with zero writes and reports GitLab's status. Then
-    `PUT projects/:id/merge_requests/:iid/merge` with `sha=<expected head>`
-    and `squash` from the policy, and no other merge option. Never set
-    auto-merge.
-11. **Merge trains:** When the fingerprint shows merge trains enabled, the
-    merge call above adds the request to the train; that is the only train
-    interaction. The delivery stays `pending` while
+    send exactly one merge write with `sha=<expected head>` and `squash` from
+    the policy: `PUT projects/:id/merge_requests/:iid/merge` without merge
+    trains, or operation 11's train add with them. Never set auto-merge.
+11. **Merge trains:** When the fingerprint shows merge trains enabled, a direct
+    merge would bypass the train or be rejected, so merge by adding the request
+    with `POST projects/:id/merge_trains/merge_requests/:iid`, omitting
+    `auto_merge` so it joins immediately; that is the only train interaction.
+    The delivery stays `pending` while
     `GET projects/:id/merge_trains/merge_requests/:iid` or the request's state
     shows it on the train. It is merged only after readback; a request that
     leaves the train unmerged is `blocked` with GitLab's reason.
@@ -179,7 +184,10 @@ is the merge request IID.
     the project whose description contains the exact canonical tracker URL, or
     whose source branch is the recorded task branch. Normalize each into the
     ranker's existing `openPullRequests` entry: `number` = `iid`, `url` =
-    `web_url`, `author` = author username, `headRepository` and
+    `web_url`, `author` = the ranker's current-user identity when the MR
+    author's account ID equals the verified runner account from `GET user`,
+    otherwise `gitlab:<username>` so it never matches a tracker login,
+    `headRepository` and
     `baseRepository` = project path, `headRefName`, `headSha`, `baseRefName`,
     `isDraft`, `closesIssue: false` and `linksIssue: true`.
 
@@ -189,7 +197,7 @@ is the merge request IID.
 | --- | --- |
 | Native closure through closing keywords | None; closure uses `close-after-merge` |
 | Merge requests from forks | Delivery from a fork; use project task branches |
-| Auto-merge | None; merge only through operation 10 |
+| Auto-merge | None; merge only through operations 10–11 |
 | Approval reads on tiers without them | None by itself; record `unavailable` |
 
 Return an unavailable operation precisely. Never fall back to `gh` or another

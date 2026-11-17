@@ -25,7 +25,12 @@ merge and tracker-closure authority. The full contract is satisfied by H1.
 - `merge-train`: This snapshot's project uses merge trains (its own
   `merge_policy` replaces the top-level one, and the recorded and live
   fingerprints both match it); the authorized merge call was sent and
-  accepted, and the request is on the train.
+  accepted as a merge-train add, and the request is on the train.
+- `merged-results`: This snapshot's project runs merged-results pipelines (its
+  own `merge_policy` applies and matches the fingerprints). The only pipeline
+  tests a temporary merge commit `MR1`, not H1; it succeeded and is the merge
+  request's `head_pipeline` at H1. Every other gate passes and no merge has
+  been sent.
 - `merged`: Readback shows the request merged at H1 with its commit on `main`;
   the GitHub issue is still open.
 

@@ -256,6 +256,24 @@ class SafetyTest(unittest.TestCase):
         self.assertEqual({"main"}, set(fake.branches))
         self.assertEqual("closed", fake.mrs[1]["state"])
 
+    def test_cleanup_continues_after_a_failed_close(self):
+        class FailingClose(FakeGitLab):
+            def request(self, method, path, body=None):
+                if body == {"state_event": "close"}:
+                    return 500, {}, {"message": "boom"}
+                if method == "POST" and path.endswith("/discussions"):
+                    return 500, {}, {"message": "stop the journey early"}
+                return super().request(method, path, body)
+
+        fake = FailingClose()
+        result, _ = run(fake)
+        cleanup = result["cleanup"]
+        self.assertFalse(cleanup["verified"])
+        self.assertEqual("unknown", cleanup["outcome"]["!1"])
+        self.assertIn("HTTP 500", cleanup["failures"]["!1"])
+        self.assertEqual({"main"}, set(fake.branches))  # branches still deleted after the failed close
+        self.assertTrue(cleanup["main_unchanged"])
+
     def test_transport_keeps_only_rate_limit_headers_and_maps_timeouts(self):
         output = (
             "HTTP/2.0 429 Too Many Requests\r\nSet-Cookie: session=" + SENTINEL + "\r\n"

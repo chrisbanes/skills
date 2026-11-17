@@ -65,6 +65,17 @@
       "tracker_action": "close_and_verify",
       "ticket_complete": false,
       "delivery_state": "merged"
+    },
+    "merged-results": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": true,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
     }
   }
 }

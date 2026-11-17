@@ -404,23 +404,37 @@ class Run:
         return merged
 
     def cleanup(self):
-        outcome = {}
-        for iid in sorted(self.guard.merge_requests):
+        """Clean each resource independently and record any that still need recovery."""
+        outcome, failures = {}, {}
+
+        def attempt(name, action):
+            try:
+                outcome[name] = action()
+            except Exception as error:  # keep cleaning independent resources
+                outcome[name] = "unknown"
+                failures[name] = f"{type(error).__name__}: {error}"
+
+        def close(iid):
             mr = self.read_mr(iid)
             if mr["state"] == "opened":
                 mr = self.client.write("PUT", self.mr_path(iid), {"state_event": "close"})
-            outcome[f"!{iid}"] = mr["state"]
-        for branch in sorted(self.guard.task_branches) + [self.guard.base]:
+            return mr["state"]
+
+        def delete(branch):
             path = self.branch_path(branch)
-            status, _, _ = self.client.call("GET", path, allow=(200, 404))
-            if status == 200:
+            if self.client.call("GET", path, allow=(200, 404))[0] == 200:
                 # GitLab may already have removed a merged source branch; 404 counts as removed.
                 self.client.write("DELETE", path, allow=(204, 404))
-            status, _, _ = self.client.call("GET", path, allow=(200, 404))
-            outcome[branch] = "deleted" if status == 404 else "present"
-        main_unchanged = self.client.get(self.branch_path(PROTECTED_BASE))["commit"]["id"] == self.result.get("main_tip_before")
-        verified = main_unchanged and all(value in ("closed", "merged", "deleted") for value in outcome.values())
-        self.result["cleanup"] = {"outcome": outcome, "main_unchanged": main_unchanged, "verified": verified}
+            return "deleted" if self.client.call("GET", path, allow=(200, 404))[0] == 404 else "present"
+
+        for iid in sorted(self.guard.merge_requests):
+            attempt(f"!{iid}", lambda iid=iid: close(iid))
+        for branch in sorted(self.guard.task_branches) + [self.guard.base]:
+            attempt(branch, lambda branch=branch: delete(branch))
+        attempt("main", lambda: "unchanged" if self.client.get(self.branch_path(PROTECTED_BASE))["commit"]["id"] == self.result.get("main_tip_before") else "changed")
+        main_unchanged = outcome.pop("main") == "unchanged"
+        verified = main_unchanged and not failures and all(value in ("closed", "merged", "deleted") for value in outcome.values())
+        self.result["cleanup"] = {"outcome": outcome, "failures": failures, "main_unchanged": main_unchanged, "verified": verified}
         return verified
 
     def execute(self):
