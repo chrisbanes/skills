@@ -52,7 +52,7 @@
     },
     {
       "id": "pr-and-authority",
-      "text": "Creates exactly one draft PR for the nonempty final diff only after combined review evidence covers the final head, confirms the PR head is the exact reviewed SHA, uses a non-closing issue link for close-after-merge, and leaves squash merge and associated issue closure to the Project controller under this invocation startup merge grant after all final-head gates pass."
+      "text": "Creates exactly one draft PR for the nonempty final diff only after combined review evidence covers the final head, confirms the PR head is the exact reviewed SHA, uses a non-closing issue link for close-after-merge, and leaves squash merge and associated issue closure to the Project controller under this invocation startup merge and issue-closure grants after all final-head gates pass."
     },
     {
       "id": "review-restraint",

@@ -16,6 +16,10 @@ from evals.validators.pr_review_decisions import validate_decisions
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = (
+    "deliver-issue-tree-direct",
+    "deliver-issue-resume-novel",
+    "deliver-issue-completion-negative",
+    "run-project-tree-restraint-negative",
     "deliver-issue-invocation-direct",
     "deliver-issue-ownership-novel",
     "deliver-issue-authority-negative",
@@ -119,11 +123,11 @@ class DeliverTasksTest(unittest.TestCase):
                     cwd=workspace, capture_output=True, text=True,
                 )
                 self.assertEqual(0, result.returncode, result.stderr)
-                if "migration-" in case_id:
+                if "migration-" in case_id or case_id.startswith("deliver-issue-") or case_id == "run-project-tree-restraint-negative":
                     subject = SubjectResult(
                         case_id=case_id, arm="forced", command=("codex",),
                         workspace=workspace, returncode=0, events=(),
-                        final_output={"summary": "Assessed immutable migration state", "skills_used": ["run-project"], "evidence": [".scratch/review-decisions.json"]},
+                        final_output={"summary": "Assessed immutable migration state", "skills_used": list(case.target_skills), "evidence": [".scratch/review-decisions.json"]},
                         usage={}, changed_paths=(".scratch/review-decisions.json",),
                         diff="", stdout="", stderr="", elapsed_seconds=0.1,
                     )

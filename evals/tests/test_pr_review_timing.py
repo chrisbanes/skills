@@ -61,7 +61,7 @@ class PrReviewTimingTest(unittest.TestCase):
         canonical = (ROOT / "references/pr-review-timing.md").read_bytes()
         callers = {
             "deliver-issue": (
-                "SKILL.md", "references/evidence-and-review.md",
+                "references/delivery-lifecycle.md", "references/evidence-and-review.md",
                 "references/project-handoff.md",
             ),
             "run-project": (

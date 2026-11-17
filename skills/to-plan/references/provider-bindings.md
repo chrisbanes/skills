@@ -34,7 +34,7 @@ not authority. A code-host merge and a tracker closure are separate facts.
    repository, base and reviewed head. Link the exact tracker item through the
    bindings and refetch both sides where supported. Record the intended closure
    set and whether the change fully satisfies each item. For partial delivery or
-   a local source without a tracker item, use non-closing source links only.
+   missing closure authority, use non-closing source links only.
 5. Use closing keywords only when the selected code-host/tracker pair explicitly
    supports native closure for this exact item and target base, explicit closure
    authority covers every intended item, the configured

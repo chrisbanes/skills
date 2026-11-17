@@ -1,0 +1,25 @@
+{
+  "decisions": {
+    "children-only": {
+      "root_done": false,
+      "next": "verify-root-acceptance"
+    },
+    "merge-only": {
+      "native_closing_allowed": false,
+      "merge_before_corrected_readback": false,
+      "close": false
+    },
+    "merged-open": {
+      "root_done": false,
+      "merge_again": false
+    },
+    "unknown-close": {
+      "root_done": false,
+      "retry_before_reconciliation": false,
+      "preserve_evidence": true
+    },
+    "done": {
+      "root_done": true
+    }
+  }
+}

@@ -46,8 +46,9 @@ below protect mutable external plan records and lineage, not each local step.
    owner's authenticated request explicitly support this amendment version:
    enumerate and hydrate the entire chain, validate the effective digest, retain
    its starting candidate, and renew affected result evidence. Standalone work
-   requires `deliver-issue` support; Project-owned work requires both
-   the `run-project` controller and `deliver-issue` support. Record the inspected consumer
+   requires `deliver-issue` support; Project-owned work requires the
+   `run-project` controller and its bundled delivery procedure to support it.
+   Record the inspected consumer
    revisions and capability evidence with the publication preflight. A reference
    to this format or a planner's claim is not consumer support. Missing, unknown
    or full-plan-only support blocks amendment publication and handoff, including
@@ -234,7 +235,7 @@ to the full plan alone.
   leases, base/head and retained owner/artifacts. Revalidate affected leases in
   place only within existing authority; do not renew external grants, claim
   different work or manufacture readiness. Keep implementation/evidence renewal
-  with `deliver-issue`, without an unnecessary Todo lifecycle reset. The
+  with its bundled delivery procedure, without an unnecessary Todo lifecycle reset. The
   controller owns scheduling, capacity and lease mutation; this reference grants
   none of those powers to the planner.
 

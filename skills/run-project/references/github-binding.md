@@ -14,9 +14,9 @@ The binding supplies operations, never an invocation grant.
 
 1. For setup or execution, validate identity, access and configuration under
    Binding validation and Setup; review uses only permitted or supplied evidence.
-2. For authorized reads, obtain complete scope/issue/PR state through Remote
-   reconciliation, then
-   normalize it under Normalized Ticket Schema for the controller ranker.
+2. For authorized board reads, obtain complete scope/issue/PR state through Remote
+   reconciliation, then normalize it under Normalized Ticket Schema for the board
+   ranker. Direct issue delivery follows Direct issue scope without board normalization.
 3. Execute only controller-authorized operations: assign the authenticated runner,
    write the scope's verified claim/completion marker, publish/refetch comments,
    perform permitted PR operations and merges, and reconcile closure/Done.

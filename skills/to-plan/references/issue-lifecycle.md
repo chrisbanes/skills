@@ -63,10 +63,93 @@
    proportional checks, independent review and retained-owner repairs for each
    approved outcome. Use the same delivery record for scope and acceptance evidence.
 
-## Pending work and finish
+## Deliver the tree
 
-Keep dependency-blocked, decision-blocked and permission-blocked outcomes distinct.
-Continue independent work inside the approved scope. Without explicit merge and
-closure authority, prepare reviewed ready PRs and report the exact pending operation.
-Do not mark an issue complete on a PR result alone. Preserve its source, plan,
-owner, head, checks and resume conditions for fresh reconciliation on resume.
+1. Keep the root and all descendants in the outcome inventory, including open
+   grandchildren below closed intermediates. Preserve closed nodes as evidence.
+   Check root acceptance and its own implementation work separately from child
+   state. Never declare a successful empty scope from a partial graph or an empty
+   runnable frontier. For a closed root with unmet acceptance or open descendants,
+   report the discrepancy and obtain any needed reopening authority; do not
+   silently reopen it or declare the outcome delivered.
+2. Build the runnable frontier from verified native blockers, accepted plans and
+   explicit holds. Use native depth-first sub-issue order as a tie-break among
+   runnable outcomes, not as a reason to serialize independent work. A parent's
+   final acceptance waits for applicable descendant outcomes; separately approved
+   independent root preparation may proceed before them. Do not claim a blocked
+   item merely to record the blocker. Respect actual runtime/plan capacity and
+   preserve one owner per active outcome.
+3. For each external blocker, identify its canonical issue and affected outcomes
+   and ask whether the user wants to expand scope to deliver it. Until that answer,
+   read it only and keep dependent work pending. Continue independent in-scope
+   work. Reuse the pending question rather than asking on every refresh. Explicit
+   expansion requires its repository/ownership/permissions checks before admission;
+   it never silently includes further external dependencies.
+4. Preserve approved decomposition and PR boundaries. Otherwise choose one
+   cohesive PR for tightly coupled changes or dependency-ordered PRs for outcomes
+   that ship independently, recording the covered issues and acceptance criteria
+   in the existing delivery record. Sub-issue count does not prescribe PR count.
+   A worker's scope is its approved outcome packet, never recursive expansion by
+   default. Use the [delivery lifecycle](delivery-lifecycle.md) once per outcome;
+   one draft change request there means one per approved outcome, not one per tree.
+5. Reconcile source/plan/base and existing branches or PRs before implementing.
+   Reuse accepted work, preserve repair/qualification consumption and keep repairs
+   with the owner. A new material requirement returns to the stakeholder/replan
+   gate; routine corrections proceed with affected verification. Stop dependent
+   work on unknown or failed boundary evidence while independent work continues.
+
+## Merge, close and reconcile
+
+1. Maintain separate merge and closure grants for the current run and exact
+   intended issue set. A generic delivery request grants neither. An explicit
+   merge-only instruction does not grant closure. Ask for missing permission only
+   when needed; continue authorized delivery and report pending operations if it
+   is not granted. Never infer permission from silence or a previous invocation.
+2. Before PR publication/body edits, verify the complete native closing-reference
+   set. Only include fully satisfied issues with explicit closure authority and
+   a verified native host/tracker closure path. Otherwise use non-closing links.
+   Before merge, correct and refetch unintended closing references within authority;
+   unknown or mismatched closure sets block merge even when merging is permitted.
+3. Require checks and independent review applicable to the exact candidate head
+   and all finding dispositions before acceptance. After an authorized merge,
+   verify merged head/base and each intended tracker closure independently. A
+   merged PR with an open issue remains pending; a failed/unknown close preserves
+   merge evidence and requires reconciliation, not another merge or blind retry.
+4. Re-fetch the full root/descendant and blocker state. Verify the root's acceptance
+   criteria against delivered integrated behavior, beyond the fact that children
+   closed. Close the root only with explicit applicable authority, all required
+   descendant/blocker outcomes satisfied and authoritative acceptance evidence.
+   Verify CLOSED readback before declaring the root complete. No-change work still
+   requires completed verification and authorized closure; an initial empty diff
+   supplies no completion evidence.
+
+## Wait and resume
+
+1. Keep dependency, decision, permission and remote-check waits distinct. Work on
+   every independent authorized runnable outcome before waiting. When only human
+   decisions remain, return the exact question and preserved state without an
+   indefinite watcher. With only CI/review waits, use the runtime's supported wait
+   mechanism and hand back after about 30 minutes; honor stricter host limits.
+   Do not start another poll loop for a controller-owned ticket. A board drain
+   retains its controller watcher and finish gate instead of this bound.
+2. Before handback, settle helpers launched by this run. Preserve root/member and
+   plan/effective-contract identities, owner, branches/PRs, exact heads, check and
+   review applicability, holds, unknown mutations, consumed grants/budgets and the
+   next safe action in the existing delivery record. Distinguish ready PRs from
+   completed issues; remote waiting never justifies discarding claims or artifacts.
+3. On resume, reconstruct scope and current provider state, recover the same owner
+   where valid, and establish this invocation's permissions. Reconcile unknown
+   mutations before retrying; reuse existing PRs. Screen base/head drift, invalidate
+   affected checks/review, and preserve valid evidence and consumed allowances.
+   Re-read human stops and ownership before writers resume. Never turn a previous
+   grant recorded in a comment into current authority.
+
+## Finish gate and report
+
+Report `complete` only after the whole authorized scope's acceptance and intended
+closure have verified readback. Report `pending` for ready PRs awaiting permission,
+CI/review, closure or an external dependency, with exact artifacts and next action.
+Report `blocked` for missing decisions, access, conflicting ownership or unknown
+state, with the required resolution. Report verified per-outcome `no-change`
+separately from tracker closure. An unresolved child or unmet root criterion is
+never success. Preserve all unfinished work and its resume evidence.

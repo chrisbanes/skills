@@ -47,7 +47,8 @@ never selects a queue or expands a delegated scope.
    while CI runs, using verified draft support or earlier PR readiness when
    permitted. Keep delivery `pending` until all final-head gates pass. Link and
    verify the tracker item and closure intent under Delivery bindings;
-   closing keywords require verified native closure for the selected provider pair.
+   closing keywords require explicit closure authority for the intended issue
+   set and verified native closure for the selected provider pair.
 4. `shepherd` coordinates CI, feedback and change-request operations through
    the selected code-host binding. Keep repairs with their
    implementation owner; renew affected checks and focused review at the
@@ -58,8 +59,10 @@ never selects a queue or expands a delegated scope.
    or expanded permissions are material. Merge only with explicit authority
    valid for this invocation. Verify merge through the code-host binding, then
    reconcile native closure or perform the authorized tracker close under
-   Delivery bindings. After about 30 minutes of pending gates, hand back
-   the exact pending checks, feedback, PR and head for later resume.
+   Delivery bindings. For standalone tree delivery, the
+   [issue lifecycle](issue-lifecycle.md#wait-and-resume) owns bounded waiting after
+   independent runnable work is exhausted. Board-owned work follows its controller's
+   cadence. Retain the exact pending checks, feedback, PR and head for later resume.
 
 ## Finish gate
 

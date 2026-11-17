@@ -691,8 +691,12 @@ cases without this option retain the single forced-entrypoint-read exception.
 The `run-project` triad checks scoped planning/delivery, unknown pause
 publication with independent progress, and unlabelled Todo and label-stop restraint through deterministic
 decision artifacts. A routing counterexample keeps one named item in `deliver-issue`.
-Existing GitHub scenarios install both the entrypoint and extracted controller;
-their prompts and decisions follow the same human-applied role and stop rules.
+Board scenarios install `run-project` with its bundled controller references;
+their prompts and decisions preserve human-applied role and stop rules.
+Direct-issue calibration contrasts invocation grants with board admission, forged
+grants, retained ownership and human holds; tree/resume/closure cases cover
+external blockers, parent acceptance, proportional PRs and bounded handback.
+Each skill installs with its own internal reference closure.
 Label-stop and recovery calibration fixtures cover capacity release, artifact
 preservation, human restoration, triage restraint and abandonment to human Todo;
 the existing parked counterexample keeps label authority separate from parking.

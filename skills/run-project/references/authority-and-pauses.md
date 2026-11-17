@@ -19,8 +19,9 @@
    for eligible PRs selected or validly adopted during this invocation, within
    any narrower scope the user specifies. Follow the verified binding's merge
    method or merge queue and applicable checks and reviews at the final head.
-   Include the associated issue's configured `close-after-merge` action; grant no
-   unrelated issue or epic closure. Record the user's instruction and its scope
+   Record issue-closure authority separately; merge permission alone does not
+   grant native or manual closure. Grant no unrelated issue or epic closure.
+   Record the user's instruction and its scope
    once in the run evidence. Keep merging with the Project controller.
 4. Without merge authority, continue delivery through a reviewed, checked PR.
    Pause only that ticket at its merge gate. Do not require merge authority for
@@ -64,7 +65,8 @@ execution authority and route material decisions through the normal pause.
 
 1. In `next` or `drain`, honor a current explicit merge or no-merge instruction
    without asking again. Otherwise, ask once at startup: "May I merge eligible
-   PRs for this run when their required checks and reviews pass? No reply
+   PRs and close their fully satisfied issues for this run when their required
+   checks and reviews pass? No reply
    within 60 seconds means no merge permission." Identify the Project/base and
    configured merge method so the scope is clear. Keep merging disabled while
    the answer is pending; continue authorized claims, planning, implementation
