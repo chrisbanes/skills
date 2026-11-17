@@ -1,4 +1,11 @@
 {
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
   "decisions": {
     "unlabelled-81": {
       "action": "leave_untouched",

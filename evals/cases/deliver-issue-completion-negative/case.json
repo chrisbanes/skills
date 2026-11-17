@@ -8,12 +8,10 @@
   "expected_skills": [
     "deliver-issue"
   ],
-  "task_mode": "edit",
+  "task_mode": "review",
   "kind": "negative",
   "fixture": "workflow",
-  "allowed_write_paths": [
-    ".scratch/review-decisions.json"
-  ],
+  "allowed_write_paths": [],
   "forbidden_command_patterns": [
     "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
   ],
@@ -21,7 +19,7 @@
     {
       "argv": [
         "python3",
-        "@validators/pr_review_decisions.py",
+        "@validators/text_case.py",
         "deliver-issue-completion-negative"
       ],
       "timeout_seconds": 30
@@ -31,10 +29,16 @@
     {
       "id": "outcomes",
       "text": "Keep incomplete root and unauthorized closure pending; require scoped authority, preserve work and report pending conditions precisely."
+    },
+    {
+      "id": "decisions",
+      "text": "In the response, report these scenario decisions with reasoning: {\"children-only\": {\"next\": \"verify-root-acceptance\", \"root_done\": false}, \"done\": {\"root_done\": true}, \"merge-only\": {\"close\": false, \"merge_before_corrected_readback\": false, \"native_closing_allowed\": false}, \"merged-open\": {\"merge_again\": false, \"root_done\": false}, \"unknown-close\": {\"preserve_evidence\": true, \"retry_before_reconciliation\": false, \"root_done\": false}}. Make no workspace changes, including scratch artifacts."
     }
   ],
   "provenance": {
     "kind": "synthetic"
   },
-  "calibration": true
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
 }

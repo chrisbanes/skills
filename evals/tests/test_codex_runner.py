@@ -34,7 +34,6 @@ EXPLICIT_ONLY_SKILLS = (
     "deliver-issue",
     "implement-with-subagents",
     "run-project",
-    "run-project",
     "shepherd",
     "to-plan",
 )
@@ -597,7 +596,7 @@ class CodexRunnerTest(unittest.TestCase):
             rendered = rendered.replace(root, "<root>")
 
         self.assertEqual(
-            "b37d45a0f412f7a35f05bc013445c1f3f24b63c83c5a20ffbf6f15d61a663e64",
+            "f408003e1ab883e1823a7e5a422db95460f3edc3bed5d30f281fd92e2612579b",
             hashlib.sha256(rendered.encode()).hexdigest(),
         )
 

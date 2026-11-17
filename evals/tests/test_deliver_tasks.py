@@ -16,30 +16,58 @@ from evals.validators.pr_review_decisions import validate_decisions
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = (
-    "deliver-issue-tree-direct",
-    "deliver-issue-resume-novel",
-    "deliver-issue-completion-negative",
-    "run-project-tree-restraint-negative",
-    "deliver-issue-invocation-direct",
-    "deliver-issue-ownership-novel",
-    "deliver-issue-authority-negative",
-    "deliver-tasks-migration-partial-failure-novel",
-    "deliver-tasks-migration-apply-direct",
-    "deliver-tasks-migration-dry-run-direct",
-    "deliver-tasks-direct", "deliver-tasks-novel", "deliver-tasks-negative",
-    "router-single-item-deliver-spec",
-    "deliver-tasks-neutral-direct", "deliver-tasks-claim-marker-novel",
-    "deliver-tasks-parked-negative", "deliver-tasks-derived-handoff-novel",
-    "deliver-tasks-default-binding-direct",
-    "deliver-tasks-binding-override-novel",
-    "deliver-tasks-binding-ambiguity-negative",
-    "deliver-tasks-parent-scope-direct", "deliver-tasks-parent-lifecycle-novel",
-    "deliver-tasks-parent-restraint-negative",
-    "deliver-tasks-label-stop-direct", "deliver-tasks-label-recovery-novel",
+    'deliver-issue-tree-direct',
+    'deliver-issue-resume-novel',
+    'deliver-issue-invocation-direct',
+    'deliver-issue-ownership-novel',
+    'deliver-tasks-migration-partial-failure-novel',
+    'deliver-tasks-migration-apply-direct',
+    'deliver-tasks-migration-dry-run-direct',
+    'deliver-tasks-direct',
+    'deliver-tasks-novel',
+    'router-single-item-deliver-spec',
+    'deliver-tasks-neutral-direct',
+    'deliver-tasks-claim-marker-novel',
+    'deliver-tasks-derived-handoff-novel',
+    'deliver-tasks-default-binding-direct',
+    'deliver-tasks-binding-override-novel',
+    'deliver-tasks-parent-scope-direct',
+    'deliver-tasks-parent-lifecycle-novel',
+    'deliver-tasks-label-stop-direct',
+    'deliver-tasks-label-recovery-novel',
+)
+
+NEGATIVE_CASES = (
+    'deliver-issue-authority-negative',
+    'deliver-issue-completion-negative',
+    'deliver-tasks-binding-ambiguity-negative',
+    'deliver-tasks-negative',
+    'deliver-tasks-parent-restraint-negative',
+    'deliver-tasks-parked-negative',
+    'run-project-tree-restraint-negative',
 )
 
 
 class DeliverTasksTest(unittest.TestCase):
+    def test_negative_delivery_assessments_pass_only_without_workspace_writes(self):
+        corpus = {case.id: case for case in validate_corpus(ROOT).cases}
+        for case_id in NEGATIVE_CASES:
+            case = corpus[case_id]
+            with self.subTest(case=case_id), tempfile.TemporaryDirectory() as directory:
+                workspace = prepare_workspace(case, ROOT, Path(directory) / "fixture", enabled_skills=case.target_skills)
+                subject = SubjectResult(
+                    case_id=case_id, arm="forced", command=("codex",), workspace=workspace,
+                    returncode=0, events=(), usage={}, changed_paths=(), diff="", stdout="", stderr="", elapsed_seconds=0.1,
+                    final_output={"summary": "Assessed supplied state without actions", "skills_used": list(case.target_skills), "evidence": ["state.md"]},
+                )
+                grade = grade_subject(case, subject)
+                self.assertTrue(grade.objective_pass, grade.objective_failures)
+                self.assertFalse(grade.forbidden_action_failure)
+                for path in ("state.md", ".scratch/review-decisions.json"):
+                    changed = grade_subject(case, replace(subject, changed_paths=(path,)))
+                    self.assertFalse(changed.objective_pass)
+                    self.assertTrue(changed.forbidden_action_failure)
+
     def test_two_delivery_entrypoints_install_without_removed_skills(self):
         from evals.harness.suites import PUBLIC_SKILLS
         for removed in ("deliver-tasks", "deliver-spec", "run-github-project"):
@@ -108,7 +136,7 @@ class DeliverTasksTest(unittest.TestCase):
 
     def test_decision_fixtures_pass_cli_and_reject_each_wrong_decision(self):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
-        for case_id in CASES:
+        for case_id in CASES + NEGATIVE_CASES:
             case = corpus[case_id]
             expected = json.loads((case.directory / "expectations.json").read_text())["decisions"]
             with self.subTest(case=case_id), tempfile.TemporaryDirectory() as directory:
@@ -123,7 +151,7 @@ class DeliverTasksTest(unittest.TestCase):
                     cwd=workspace, capture_output=True, text=True,
                 )
                 self.assertEqual(0, result.returncode, result.stderr)
-                if "migration-" in case_id or case_id.startswith("deliver-issue-") or case_id == "run-project-tree-restraint-negative":
+                if case_id not in NEGATIVE_CASES and ("migration-" in case_id or case_id.startswith("deliver-issue-")):
                     subject = SubjectResult(
                         case_id=case_id, arm="forced", command=("codex",),
                         workspace=workspace, returncode=0, events=(),
