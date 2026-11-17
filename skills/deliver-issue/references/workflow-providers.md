@@ -22,9 +22,8 @@ block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
 
 For ordinary implementation, use the bundled [controller handoff](project-handoff.md)
-and `shepherd`. Follow that internal procedure without invoking another public skill. The ticket lead may implement
-solo or delegate when independent work, isolation or specialist investigation
-justifies the overhead. Keep repairs with their implementation owner and retain
+and `shepherd`. Follow that internal procedure, including implementation
+ownership preflight. Keep repairs with their implementation owner and retain
 architecture, integration and non-merge PR authority in the ticket context.
 No separate `implement-with-subagents` installation is required.
 Establish independent-review capability from runtime metadata without spawning a

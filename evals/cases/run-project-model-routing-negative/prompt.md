@@ -5,10 +5,11 @@ For each independent snapshot, a Project drain has two eligible tickets with com
 - unsupported: Delegation for A is authorized, but the only isolated, resumable implementation profile is pinned to gpt-6.1-terra/medium by the installed role. No other worker or lead meets the request.
 - unauthorized: A matching gpt-6.1-terra/high worker is available, but the invocation disallows implementation delegation on A.
 - busy: A matching worker is authorized and available in the runtime, but its slot is temporarily occupied.
+- hard_limit: A matching worker is authorized, but A's per-ticket limit can only accommodate its persistent delivery lead. The runtime cannot yield the lead's slot to the worker.
 - unset: In this separate snapshot, A's user only selected the lead in the picker. There is no implementation pin and no auto-routing opt-in. The ordinary-work policy recommendation is Terra/high.
 
 Return these exact fields for each independent snapshot:
-- unsupported, unauthorized, busy: next (pause or wait-capacity), blocker (settings, authority, or capacity), model, effort, edit_now (whether A can start edits), unrelated (continue or pause).
+- unsupported, unauthorized, busy, hard_limit: next (pause or wait-capacity), blocker (settings, authority, or capacity), model, effort, edit_now (whether A can start edits), unrelated (continue or pause).
 - unset: next (implement or pause), owner (lead or worker), model, effort, unrelated (continue or pause).
 
 In the evidence, give a concrete resume action for A in each blocked or waiting snapshot and state where the controller records the owner or blocker.

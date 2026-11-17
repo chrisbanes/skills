@@ -78,8 +78,9 @@ if delegation was optional, the caller may continue solo within its own rules.
    installed role pins when testing whether a route is possible.
 4. Record the owner, reason and exposed effective model and effort in the
    existing preflight or delivery record. If a compatible route is temporarily
-   busy, retain it and wait under the calling workflow's capacity rules. If
-   no authorized route can satisfy the request, pause affected work before
+   busy, retain it and wait under the calling workflow's capacity rules.
+   Treat a route that cannot fit the configured limits as unavailable.
+   If no authorized route can satisfy the request, pause affected work before
    edits. Record the required model and effort where resolved, the mismatch
    or missing evidence, and the supported resume action, such as selecting
    matching lead settings or authorizing a compatible worker. Ask for explicit

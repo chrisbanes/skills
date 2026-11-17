@@ -31,9 +31,11 @@ and actual authority and capacity. Resolve what the controller can establish
 before dispatch. If only the ticket context can verify its effective settings,
 have it complete preflight before implementation edits or worker dispatch.
 Carry the requirements and any verified route in the ticket handoff.
-Keep a settings or delegation blocker local to the affected ticket; preserve
-existing ownership and schedule unrelated ready work. A temporarily busy
-compatible route follows the existing capacity rules.
+Leave a ticket unclaimed when preflight establishes that no permitted route
+fits. For a claimed ticket that needs a new grant or a decision about changing
+settings or capacity, use [Pause one ticket](authority-and-pauses.md#pause-one-ticket)
+to preserve ownership and release verified capacity. Schedule unrelated ready
+work. A temporarily busy compatible route follows the existing capacity rules.
 
 For asynchronous or persistent live qualification, carry forward the
 [deliver-issue live qualification and failure recovery procedure](qualification-failure.md)

@@ -30,6 +30,14 @@
       "edit_now": false,
       "unrelated": "continue"
     },
+    "hard_limit": {
+      "next": "pause",
+      "blocker": "capacity",
+      "model": "gpt-6.1-terra",
+      "effort": "high",
+      "edit_now": false,
+      "unrelated": "continue"
+    },
     "unset": {
       "next": "implement",
       "owner": "lead",
