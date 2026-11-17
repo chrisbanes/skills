@@ -59,7 +59,19 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_delivery_rules_survive_individual_skill_installation(self):
         behavioral = "references/behavioral-review.md"
         boundary = "skills/to-plan/references/boundary-validation.md"
+        selection = "references/subagent-selection.md"
+        implementation_selection = "subagent-selection.md#implementation-ownership"
         cases = {
+            "deliver-issue-model-routing-direct": (
+                ("references/implementation-mode.md", implementation_selection, selection),
+            ),
+            "implement-with-subagents-model-routing-novel": (
+                ("SKILL.md", "references/" + implementation_selection, selection),
+                ("references/implementation-mode.md", implementation_selection, selection),
+            ),
+            "run-project-model-routing-negative": (
+                ("references/execution-controller.md", implementation_selection, selection),
+            ),
             "deliver-spec-review-convergence-direct": (
                 ("references/evidence-and-review.md", "behavioral-review.md", behavioral),
                 ("references/implementation-mode.md", "boundary-validation.md", boundary),
@@ -102,7 +114,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     source = skill / caller
                     links = re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8"))
                     self.assertIn(reference, links)
-                    target = source.parent / reference
+                    target = source.parent / reference.split("#", 1)[0]
                     self.assertFalse(target.is_symlink())
                     self.assertEqual((REPO_ROOT / canonical).read_bytes(), target.read_bytes())
 
@@ -125,6 +137,28 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 case, REPO_ROOT, Path(directory) / "fixture", enabled_skills=(),
             )
             self.assertFalse((baseline / ".agents/skills" / reference).exists())
+
+    def test_implementation_routing_rejects_owner_substitution_and_dropped_review(self):
+        case_id = "deliver-issue-model-routing-direct"
+        expected = json.loads(
+            (REPO_ROOT / "evals/cases" / case_id / "expectations.json").read_text()
+        )["decisions"]
+        validator = REPO_ROOT / "evals/validators/pr_review_decisions.py"
+        for changes, error in (
+            ({}, ""),
+            ({"owner": "lead"}, "incorrect owner"),
+            ({"final_review": False}, "incorrect final_review"),
+        ):
+            with self.subTest(changes=changes):
+                decisions = {**expected, "mismatch": {**expected["mismatch"], **changes}}
+                result = subprocess.run(
+                    [sys.executable, str(validator), case_id, "--response"],
+                    input=json.dumps({"summary": json.dumps(decisions)}),
+                    text=True, capture_output=True, check=False,
+                )
+                self.assertEqual(int(bool(error)), result.returncode, result.stderr)
+                if error:
+                    self.assertIn(error, result.stderr)
 
     def test_affected_validation_cases_preserve_decisive_facts_and_read_only_scope(self):
         case_ids = (
@@ -300,6 +334,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "deliver-issue-invocation-direct",
                 "deliver-issue-ownership-novel",
                 "deliver-issue-authority-negative",
+                "deliver-issue-model-routing-direct",
+                "implement-with-subagents-model-routing-novel",
+                "run-project-model-routing-negative",
                 "deliver-tasks-migration-dry-run-direct",
                 "deliver-tasks-migration-apply-direct",
                 "deliver-tasks-migration-decline-negative",

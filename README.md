@@ -130,7 +130,7 @@ for its lane-specific fallback and blocking behavior.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, use `changelog` for notes, prepare Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; recover run identity and bounded results by workflow ID with read-only status, and diagnose failures with optional investigation helpers.
 - [`subagent-delegation`](skills/subagent-delegation/SKILL.md) — provider-neutral delegation playbook, loaded by name or through a one-line user-level opt-in, with separate Codex and Claude Code model routing, installed-role precedence, parallel briefs, independent audits, and lead acceptance.
-- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — choose solo implementation for a single item or serial graph and worker ownership for every item in a graph with parallel work; preserve dependency-aware integration, independent final review, same-owner repair, bounded checkout reuse, and read-only orchestration review.
+- [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — default to the lead for a single item or serial graph, apply requested implementation model and effort at preflight, and use workers for every item in a graph with parallel work. Preserve dependency-aware integration, independent final review, same-owner repair, bounded checkout reuse, and read-only orchestration review.
 - [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans that prove baselines from green CI, with observable slices and consequential boundary validation before dependent work, plus authenticated integration amendments, tracker-bound markers and explicit consumer handoffs; decide separate PRs by coherent deliverable boundaries.
 - [`run-project`](skills/run-project/SKILL.md) — explicitly triage, plan and deliver eligible tickets from a Project board, using Todo / In progress / Done, human-applied role authority, preserved label stops, scheduling and review gates; use `deliver-issue` for one named item.
 - [`shepherd`](skills/shepherd/SKILL.md) — poll open PRs and MRs directly in the controller, using a read-only helper only for a bounded large failed-log question, or follow a host PR monitor's wake events (such as Claude desktop's Auto-fix) instead of polling, triage review comments, and repair CI failures with affected checks and required integrated-candidate validation; start external review during CI while retaining final-head merge gates.
@@ -152,6 +152,9 @@ Workflows that delegate agents share the [subagent selection and handoff
 reference](references/subagent-selection.md). Each workflow retains its own
 delegation trigger, authority, and acceptance rules. Each consuming skill also
 contains a copy of the reference for standalone installation.
+Implementation model and effort requests apply to the agent who edits across
+`implement-with-subagents`, `deliver-issue`, and `run-project`, including the
+delivery fast path.
 `deliver-issue` bundles its own solo-or-delegated implementation procedure;
 `implement-with-subagents` chooses solo or delegated ownership once from the
 whole task graph.

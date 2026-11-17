@@ -14,9 +14,13 @@ capabilities, not model tiers; they grant no authority.
    does not require an unresolved diagnosis.
 2. Keep an existing ticket owner and profile for feedback, repair, and base
    reconciliation. For a new assignment, filter profiles by required capability,
-   access, runtime support, and explicit user model pins. Treat `runtime-default`
-   as a match for a pin only when the runtime exposes that exact model. If none
-   qualify, report the affected capability blocker and continue unrelated work.
+   access, runtime support, and applicable user pins. Apply an implementation
+   pin to the agent that edits. Keep the settings of a distinct coordinating
+   ticket context and pass the implementation pin to ownership preflight.
+   For a worker, verify preflight's required model and effort against the
+   runtime and installed profile. Treat `runtime-default` as a match for a
+   pin only when the runtime exposes that exact setting. If none qualify,
+   report the affected capability blocker and continue unrelated work.
 3. Select the eligible planner or ticket default, otherwise the first eligible
    profile in configuration order. For helpers without a named default, use
    the first eligible profile. Wait for temporarily busy capacity rather than

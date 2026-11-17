@@ -1,0 +1,50 @@
+{
+  "id": "implement-with-subagents-model-routing-novel",
+  "title": "Keep a model-routed serial chain with one owner",
+  "family": "workflow",
+  "target_skills": [
+    "implement-with-subagents"
+  ],
+  "expected_skills": [
+    "implement-with-subagents"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "implement-with-subagents-model-routing-novel"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "implement-with-subagents-model-routing-novel",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "routing-evidence",
+      "text": "Checks the single owner against the whole-chain policy and pin, and explains per-item acceptance, integrated evidence, forward repair, and the parallel frontier and tail."
+    },
+    {
+      "id": "review-restraint",
+      "text": "Assesses the supplied state without starting agents, contacting providers or changing files, including scratch files."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

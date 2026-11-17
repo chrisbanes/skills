@@ -15,8 +15,8 @@ handoff or take over a Project claim.
    and controller-retained preservation baseline. Reconcile live state on
    resume; return gaps to the controller without selecting or claiming work.
    Establish independent-review capability from runtime metadata, without a
-   capability-only reviewer. Reconcile retained candidate evidence; solo delivery
-   is normal and delegation follows the implementation procedure. Queue temporary
+   capability-only reviewer. Reconcile retained candidate evidence and the
+   controller's implementation routing inputs. Queue temporary
    capacity limits only for capabilities actually needed. For
    asynchronous or persistent live qualification, carry its finite pass
    conditions, required offline harness result, live evidence,
@@ -35,11 +35,11 @@ handoff or take over a Project claim.
    PRs, consumed budgets and live qualification gates. The controller alone
    revalidates claims/leases and schedules continuation.
 3. Follow the bundled [implementation procedure](implementation-mode.md) for
-   solo or delegated work. Keep the persistent ticket context as delivery lead;
-   it may implement tightly coupled work directly. Delegate when justified by
-   independence, isolation or specialist investigation, fit descendants within
-   actual spare Project capacity, and preserve controller scheduling priority.
-   Reuse the existing delivery record for ownership and acceptance evidence.
+   ownership preflight. Use the persistent ticket context as delivery lead
+   and compare its actual settings to the invocation's required implementation
+   settings. Fit worker routes within authorized spare Project capacity and
+   preserve controller scheduling priority. Record the route or precise blocker
+   in the existing delivery record and return it to the controller.
    For a handoff whose active plan is a controller fast-path revision, apply
    the [fast path](fast-path.md) and return its escalation packet to the
    controller as soon as a condition fails.

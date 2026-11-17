@@ -71,8 +71,10 @@ instructions say otherwise or at the exact verified PR head. Stop on
 divergence, access ambiguity, or changed head. Start one fresh ticket-specific
 context per slot, pair it until free, and resume it for every pass. Pass
 repository/worktree/ branch/base, ticket and approved plan, authority leases,
-durable repair usage, HEAD/check/review/PR events, and worker contract. Verify
-the worker returns a clean focused final HEAD with coherent commits, current
+durable repair usage, HEAD/check/review/PR events, and worker contract. Carry
+the invocation's implementation pins and routing opt-in, preflight evidence
+and any selected route separately from the ticket context's own settings.
+Verify the worker returns a clean focused final HEAD with coherent commits, current
 verification and review evidence, and no unrelated change, or a complete replan
 packet with no later mutation.
 

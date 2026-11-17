@@ -2,10 +2,9 @@
 
 <!-- Canonical source: references/subagent-selection.md. Edit it there, then run `npm run references:sync`. -->
 
-Use this reference when a workflow has permitted or required a subagent. The
-calling workflow owns the delegation trigger, authority, and acceptance rules;
-the selected agent owns only its bounded assignment. This reference grants no
-editing, remote mutation, or further delegation authority.
+Use Implementation ownership before choosing who will edit. Use the handoff
+procedure once delegation is permitted or required. The calling workflow
+owns delegation triggers, scope, grants, and acceptance rules.
 
 1. Read the user's instructions, repository agent guidance, and the calling
    workflow's role, scope, and permission requirements. Keep the selected lead
@@ -46,6 +45,49 @@ Finish this handoff with the selected capability and actual runtime role, the
 model and reasoning level only when exposed, the bounded brief, and the result
 or blocker. If a required capability is unavailable, report it to the caller;
 if delegation was optional, the caller may continue solo within its own rules.
+
+## Implementation ownership
+
+1. Classify the approved work under the calling workflow's ownership rules
+   and the applicable runtime model and effort policy. For an otherwise
+   solo-eligible item or serial chain, assess the judgment needed for the
+   entire assignment. For parallel work, assess each worker assignment under
+   the existing graph rules. Read the lead's effective settings from exposed
+   runtime evidence, including the user's picker selection. Keep those
+   settings fixed. Use the existing runtime-specific guidance from
+   `subagent-delegation` or the caller's configured policy. If an opt-in
+   requires a policy choice that cannot be resolved, report it in step 4.
+2. Resolve required implementation settings field by field. Apply explicit
+   implementation pins first. With automatic implementation routing enabled,
+   require the applicable policy's effective choice for each unpinned field,
+   accounting for eligible configured profiles and installed role pins. With
+   a pin alone, only its specified fields constrain solo eligibility and
+   the usual worker policy fills open fields if a worker is needed. Without
+   either request, treat the policy recommendation as advisory for eligible
+   solo work. Keep the existing worker policy for work already requiring
+   delegation. A picker choice, installed worker pin or profile default
+   alone does not opt the caller into automatic implementation routing.
+3. Keep the lead when the work qualifies for solo and the lead is verified
+   to meet all required fields. Otherwise, for a solo-eligible item or chain
+   with required settings, select one authorized, isolated, resumable worker
+   that meets them. Keep the worker for every item and repair, retaining
+   per-item commit, acceptance, integration and affected-check gates. For
+   parallel work, retain the existing frontier and worker ownership rules
+   and match required settings for each assignment. Treat unavailable or
+   unverified settings as a mismatch. Use actual runtime support and preserve
+   installed role pins when testing whether a route is possible.
+4. Record the owner, reason and exposed effective model and effort in the
+   existing preflight or delivery record. If a compatible route is temporarily
+   busy, retain it and wait under the calling workflow's capacity rules.
+   Treat a route that cannot fit the configured limits as unavailable.
+   If no authorized route can satisfy the request, pause affected work before
+   edits. Record the required model and effort where resolved, the mismatch
+   or missing evidence, and the supported resume action, such as selecting
+   matching lead settings or authorizing a compatible worker. Ask for explicit
+   acceptance before using different settings. Continue unrelated ready work
+   where supported. On resume, reconcile prior work and keep the repair owner
+   under the existing recovery rules. Use the reviewer's existing policy
+   independently of implementation routing.
 
 ## Handoff brief
 

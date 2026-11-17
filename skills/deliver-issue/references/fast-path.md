@@ -36,9 +36,11 @@ recompute it; a change is a failed condition.
 1. Treat the source as the approved contract. Do not invoke `to-plan` or wait
    for plan publication approval. Standalone, the explicit request and the
    tracker readiness gate approve it.
-2. Implement solo under the [implementation procedure](implementation-mode.md),
-   with affected checks, self-review and the single independent final review
-   against the source's acceptance criteria and repository standards.
+2. Apply ownership preflight under the
+   [implementation procedure](implementation-mode.md) and use its selected
+   route. Keep affected checks, owner self-review, task acceptance when
+   delegated, and the single independent final review against the source's
+   acceptance criteria and repository standards.
 3. Put the brief plan and classification in the PR description.
 
 ## Escalate

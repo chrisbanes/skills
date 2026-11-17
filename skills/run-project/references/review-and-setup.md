@@ -14,6 +14,11 @@ push, merge, or close. Do not require execution dependencies, authority, or
 agent capacity. Finish `review-complete` with evidence, safe next action, and
 uncertainty, or `review-blocked` when permitted evidence is insufficient.
 
+For a supplied implementation routing decision, use
+[Implementation ownership](subagent-selection.md#implementation-ownership)
+with the described runtime and grants. Report the expected route or
+ticket-local blocker and the unrelated work that can proceed.
+
 ## Setup
 
 For Jira, use its [read-only setup validation](jira-binding.md#binding-validation).

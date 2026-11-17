@@ -35,13 +35,13 @@
    behavior. Preserve native blockers, resource grants and final integrated
    validation; never split an accepted task or relax its prerequisites to
    create concurrency. Route changed ordering through authorized planning.
-   Choose solo or delegated implementation once at preflight from this entire
-   validated graph. A parallel point means two plan-proven independent items
-   can be ready together, respecting dependencies and shared-write constraints.
-   With no parallel point, including a single item or strict chain, the lead
-   owns every item. With any parallel point, workers own every item, including
-   a sequential head or tail. Record and retain this choice throughout the run;
-   temporary worker capacity does not change it.
+   A parallel point means two plan-proven independent items can be ready
+   together, respecting dependencies and shared-write constraints. With any
+   parallel point, workers own every item, including a sequential head or tail.
+   Otherwise the graph is solo-eligible. Apply
+   [Implementation ownership](subagent-selection.md#implementation-ownership)
+   once to the validated graph before assigning any implementation. Record and
+   retain the selected route throughout the run.
 4. Keep the integration checkout stable and prepare the ready frontier.
    In a solo run, allocate no worker slots: the lead follows step 6, skips the
    separate acceptance in step 7, and commits each item directly on the
@@ -54,10 +54,11 @@
    routing; resume integration, review, or delivery from the verified current
    state. Resolve worker capacity before dispatching new implementation or a
    required repair. Wait until step 5 confirms capability before dispatching.
-   Assign every item to a worker, reusing a suitable worker checkout for
-   sequential heads and tails. Actively dispatch all plan-proven independent
-   ready items
-   with disjoint write sets by default. Each concurrent writer needs a distinct
+   Assign every item to a worker. On a model-routed serial run, use the same
+   owner for each item, starting it from the then-current integrated head.
+   Reuse a suitable worker checkout for sequential heads and tails. Dispatch
+   all plan-proven independent ready items with disjoint write sets by
+   default. Each concurrent writer needs a distinct
    isolated checkout based on the same current integrated `HEAD`; reuse a
    suitable idle slot before creating another. Create only when concurrency or
    isolation requires it and runtime and repository rules permit. Count every
@@ -76,10 +77,11 @@
    worker slot, and never switch a checkout used by an active owner or process.
 5. Select an implementation-capable subagent using the runtime requirements below
    and the shared [selection and handoff reference](subagent-selection.md).
-   Classify each settled worker task on its own merits under the user's model
-   and reasoning selection policy, rather than inheriting the delivery lead's
-   tier. Require workers to return newly discovered architectural or correctness
-   decisions to the lead while retaining ownership of their tasks and repairs.
+   Verify the preflight settings before dispatch. Classify individual tasks
+   under the policy for parallel work and use the preflight's whole-chain
+   settings for serial work. Require workers to return newly discovered
+   architectural or correctness decisions to the lead while retaining
+   ownership of their tasks and repairs.
    Confirm it can edit, validate, commit, and resume the same owner session for
    repairs. Honour configured agents, models, and user selections. If a
    required capability is unavailable, stop rather than implementing in the
