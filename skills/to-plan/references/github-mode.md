@@ -8,7 +8,11 @@ retained for existing links; this marker and digest protocol is provider-indepen
 ## Use the tracker binding
 
 1. Resolve the selected item's stable identity and authenticated publisher through
-   the trusted binding. For GitHub use [planning marker operations](github-binding.md#planning-marker-operations).
+   the trusted binding, including its explicit readiness gate and resolved role
+   mappings. Select the tracker independently of the code host; another provider
+   needs its own trusted operation contract. Missing or unknown readiness rules
+   block planning. For GitHub use
+   [planning marker operations](github-binding.md#planning-marker-operations).
 2. Use `read-markers` for complete history and exact decoded bodies, stable
    permalinks, authors, revision metadata and any presentation state; use the
    binding's source reads for the source packet and readiness refresh below.
@@ -90,7 +94,10 @@ execution contract.
 
 Require all of the following:
 
-- The issue is open and still has human-applied `ready-for-agent`; the binding reports it is not parked. In a task-controller handoff, label removal stops the planner and preserves its assignment, draft and worktree for human restoration. Never add or restore the label.
+- The selected tracker binding confirms current planning authority and non-parked
+  state under its readiness gate and resolved role mappings. Recheck that gate
+  before drafting, publishing and recovery; apply its stop/preservation rules
+  when authority is lost. A code-host binding supplies no tracker readiness.
 - Every blocker is complete and its required outcome exists in the baseline.
 - No open implementation PR exists, except the exact retained PR allowed by
   a verified autonomous replan or integration amendment request, or named by a

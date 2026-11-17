@@ -56,3 +56,7 @@ adoption remain unverified. Existing score tables are unchanged.
   their bodies, digests and authenticated-chain expectations unchanged.
 - Reference-sync tests cover the additional `to-plan` binding copy and drift.
   Offline checks do not prove live provider behavior; no model evaluation ran.
+
+- `to-plan-tracker-readiness-novel` starts a full plan with no existing markers
+  through a trusted non-GitHub readiness gate. It also covers parked work,
+  a GitHub role override, role removal and an unknown gate.

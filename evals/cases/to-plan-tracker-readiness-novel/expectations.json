@@ -1,0 +1,31 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state",
+    "controller owns"
+  ],
+  "file_globs": [
+    {
+      "pattern": ".scratch/decision.md",
+      "count": 1,
+      "must_match": [
+        "^Jira: draft$",
+        "^Jira-parked: blocked$",
+        "^GitHub-override: draft$",
+        "^GitHub-removed: stop-preserve$",
+        "^Unknown-gate: blocked$",
+        "^Publication: not-authorized$"
+      ],
+      "must_not_match": [
+        "^Jira: (?!draft$).*$",
+        "^Jira-parked: (?!blocked$).*$",
+        "^GitHub-override: (?!draft$).*$",
+        "^GitHub-removed: (?!stop-preserve$).*$",
+        "^Unknown-gate: (?!blocked$).*$",
+        "^Publication: (?!not-authorized$).*$"
+      ]
+    }
+  ]
+}

@@ -15,6 +15,7 @@ python3 <skill-dir>/scripts/rank_tickets.py \
   --issue-closure <closing-keyword-or-close-after-merge> \
   --planning-status <todo-name> \
   --in-progress-status <in-progress-name> \
+  [--candidate-order <action-priority-or-scope-position>] \
   --claim-marker '<binding-claim-marker-json>' \
   --done-status <done-name> \
   --agent-work-label <agent-work-label> \
@@ -63,7 +64,10 @@ stale plans require planning or base-drift screening before implementation.
    binding's status, priority and ordering values. For GitHub parent scope use
    the parent-scope normalization in the binding, including optional boolean
    `scopeParent` for the root's epic work shape, unset priority and depth-first
-   sub-issue order. Closed issues remain graph evidence outside active inputs.
+   sub-issue order. Pass `--candidate-order scope-position` for that scope; it
+   orders new candidates by position across plan states. Project scopes retain
+   the default `action-priority` ordering. Active claim precedence is unchanged.
+   Closed issues remain graph evidence outside active inputs.
 2. Supply an explicit boolean `parked` on every item. Parked items enter no
    candidate lane, regardless of labels; keep them in the dependency graph.
    A parked active implementation claim is blocked and retains its slot.

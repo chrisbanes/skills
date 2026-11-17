@@ -1,0 +1,59 @@
+{
+  "evidence": "Complete synthetic offline snapshot, not live authority",
+  "source": {
+    "item": "OPS-32",
+    "state": "Open",
+    "acceptanceCriteria": [
+      "Report the missing filename in validator errors",
+      "Preserve successful validation behavior"
+    ],
+    "blockers": [],
+    "implementationPRs": [],
+    "implementationPlans": []
+  },
+  "baseline": {
+    "inspected": true,
+    "verification": "Existing validator CLI tests exercise missing-file and success paths"
+  },
+  "trackerBinding": {
+    "provider": "Jira",
+    "trusted": true,
+    "readinessGate": "Open, status Approved for engineering, human approval recorded, not parked",
+    "status": "Approved for engineering",
+    "humanApproval": true,
+    "parked": false,
+    "labels": [],
+    "markerOperations": [
+      "read-markers",
+      "write-marker",
+      "supersede-marker"
+    ]
+  },
+  "codeHost": "GitHub",
+  "counterfactuals": {
+    "Jira-parked": {
+      "parked": true
+    },
+    "GitHub-override": {
+      "tracker": "GitHub",
+      "resolvedAgentWorkRole": "agent:approved",
+      "humanApplied": true,
+      "labels": [
+        "agent:approved"
+      ],
+      "state": "OPEN",
+      "parked": false
+    },
+    "GitHub-removed": {
+      "tracker": "GitHub",
+      "resolvedAgentWorkRole": "agent:approved",
+      "labels": [],
+      "ownedDraft": true
+    },
+    "Unknown-gate": {
+      "tracker": "Other",
+      "trusted": true,
+      "readinessGate": null
+    }
+  }
+}

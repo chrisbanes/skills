@@ -1139,9 +1139,39 @@ class RankTicketsTest(unittest.TestCase):
         items = [ticket(90, projectPosition=0, projectPriority=None, labels=[]),
                  ticket(8, projectPosition=2, projectPriority=None),
                  ticket(70, projectPosition=1, projectPriority=None)]
-        code, output = run_ranker(items)
+        code, output = run_ranker(items, "--candidate-order", "scope-position")
         self.assertEqual(0, code)
         self.assertEqual([70, 8], [x["ticket"]["number"] for x in output["candidates"]])
+
+    def test_canonical_wayfinder_example_remains_an_eligible_candidate(self):
+        guide = (SCRIPT.parents[3] / "references/github-binding.md").read_text()
+        section = guide.split("When Wayfinder is enabled, a configured Wayfinder child", 1)[1]
+        example = json.loads(section.split("```json\n", 1)[1].split("```", 1)[0])
+        child = wayfinder_ticket(307)
+        child.update(example)
+        code, output = run_ranker([child], *DEFAULT_WAYFINDER_ARGUMENTS)
+        self.assertEqual(0, code)
+        self.assertEqual([(307, "wayfind")],
+                         [(x["ticket"]["number"], x["action"]) for x in output["candidates"]])
+
+    def test_parent_scope_keeps_subissue_order_across_plan_states(self):
+        items = [ticket(8, projectPosition=1, projectPriority=None),
+                 ticket(70, projectPosition=0, projectPriority=None, implementationPlans=[])]
+        code, output = run_ranker(
+            items, "--candidate-order", "scope-position",
+            "--claim-marker", '{"label":"agent:in-progress","requiresAssignment":true}',
+        )
+        self.assertEqual(0, code)
+        self.assertEqual([(70, "plan"), (8, "claim")],
+                         [(x["ticket"]["number"], x["action"]) for x in output["candidates"]])
+
+    def test_project_scope_keeps_action_precedence_across_plan_states(self):
+        items = [ticket(70, projectPosition=0, projectPriority=None, implementationPlans=[]),
+                 ticket(8, projectPosition=1, projectPriority=None)]
+        code, output = run_ranker(items)
+        self.assertEqual(0, code)
+        self.assertEqual([(8, "claim"), (70, "plan")],
+                         [(x["ticket"]["number"], x["action"]) for x in output["candidates"]])
 
     def test_parent_label_claim_requires_runner_assignment_and_stop_preserves_it(self):
         marker = '{"label":"agent:in-progress","requiresAssignment":true}'

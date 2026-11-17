@@ -409,6 +409,33 @@ class TrackerBindingContractTest(unittest.TestCase):
         self.assertIn('### Payload digest', mode)
 
 
+    def test_tracker_readiness_case_rejects_github_gate_and_accepts_binding_decisions(self):
+        from evals.harness.cases import load_case
+        from evals.harness.runner import prepare_workspace
+        case_id = 'to-plan-tracker-readiness-novel'
+        case = load_case(self.root / 'evals/cases' / case_id / 'case.json', self.root)
+        snapshot = json.loads((case.directory / 'overlay/readback.json').read_text())
+        self.assertEqual([], snapshot['source']['implementationPlans'])
+        self.assertEqual([], snapshot['trackerBinding']['labels'])
+        fields = {'Jira': 'draft', 'Jira-parked': 'blocked', 'GitHub-override': 'draft',
+                  'GitHub-removed': 'stop-preserve', 'Unknown-gate': 'blocked',
+                  'Publication': 'not-authorized'}
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = prepare_workspace(case, self.root, Path(directory) / 'fixture',
+                                          enabled_skills=case.target_skills)
+            artifact = workspace / '.scratch/decision.md'
+            artifact.parent.mkdir(exist_ok=True)
+            command = [arg.replace('@validators/', str(self.root / 'evals/validators') + '/')
+                       for arg in case.validators[0].argv]
+            for wrong in (None, *fields):
+                answers = dict(fields)
+                if wrong:
+                    answers[wrong] = 'blocked' if wrong == 'Jira' else 'incorrect'
+                artifact.write_text('\n'.join(f'{key}: {value}' for key, value in answers.items()))
+                result = subprocess.run(command, cwd=workspace, capture_output=True, text=True)
+                with self.subTest(wrong=wrong):
+                    self.assertEqual(wrong is None, result.returncode == 0, result.stderr)
+
     def test_no_minimization_case_accepts_exact_decisions_and_rejects_wrong_fields(self):
         from evals.harness.cases import load_case
         from evals.harness.runner import prepare_workspace

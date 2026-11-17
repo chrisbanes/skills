@@ -83,6 +83,12 @@ def parse_args() -> argparse.Namespace:
         help="Configured GitHub Project status display name that marks an item active.",
     )
     parser.add_argument(
+        "--candidate-order",
+        choices=("action-priority", "scope-position"),
+        default="action-priority",
+        help="Order new candidates by action/priority or binding-supplied scope position.",
+    )
+    parser.add_argument(
         "--claim-marker",
         required=True,
         help='Binding JSON: exactly one status or label, plus requiresAssignment boolean.',
@@ -1621,8 +1627,11 @@ def main() -> int:
                 )
             ),
             key=lambda item: (
-                CANDIDATE_ACTION_RANK[item["resumeAction"]],
-                *ticket_rank(item),
+                (item["projectPosition"], item["ticket"]["number"])
+                if args.candidate_order == "scope-position" else (
+                    CANDIDATE_ACTION_RANK[item["resumeAction"]],
+                    *ticket_rank(item),
+                )
             ),
         )
 

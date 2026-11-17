@@ -25,12 +25,21 @@ defaults below; preserve existing marker formats and label authority.
 ## Planning marker operations
 
 Use these operations for `to-plan` source reads and plan/handoff markers. They
-supply transport and presentation only; the planner owns publication authority,
-payload digest, revision chain and effective-contract verification.
+supply tracker readiness, marker transport and presentation; the planner owns
+publication authority, payload digest, revision chain and effective-contract
+verification.
 
 1. **Source reads:** Resolve the exact issue/repository, authenticated GitHub
    login and permissions. Read the complete issue body/comments, linked specs,
    parents, blockers and outcomes, linked/closing PRs and current open state.
+   For planning readiness, require the open issue to carry the human-applied
+   resolved agent-work role, conventionally `ready-for-agent`, with no
+   contradictory next-action roles;
+   GitHub reports `parked: false`. Apply trusted role overrides without requiring
+   the conventional literal label as well. Recheck before planning, material
+   writes and recovery. Loss of that role stops the planner and writers, releases
+   capacity, and preserves assignment, draft, worktree and every artifact until
+   human restoration. Neither planner nor controller adds or restores the role.
    Prefer the connector; use the GitHub access fallback below when needed.
 2. **`read-markers`:** Paginate every issue comment, including minimized ones.
    Return exact API-decoded `body`, stable comment ID/permalink, author,
@@ -70,9 +79,10 @@ GitHub PR stays a Jira item. These operations also support standalone
 retains its trusted configuration, leases and merge/closure policy.
 
 1. **Tracker source/readiness and markers:** Use Planning marker operations.
-   GitHub readiness requires `ready-for-agent` and the existing contradiction,
-   blocker and approval checks; a missing label routes standalone delivery to
-   `triage`. Marker publication grants no label or item-closure authority.
+   GitHub readiness uses the resolved human-applied agent-work role and stop
+   rules in Source reads, plus blocker and approval checks; a missing role
+   routes standalone delivery to `triage`. Marker publication grants no label
+   or item-closure authority.
 2. **Code-host open/update:** Resolve the exact repository and base, authenticate
    permissions, and find the existing PR for the supplied branch before create.
    Prefer the connector, falling back to `gh pr`/GraphQL. Create one draft PR
@@ -239,7 +249,9 @@ Only an already trusted, committed display-name-only edit may use
    Supply logical `Todo` unless the claim marker matches, then `In progress`;
    Done means authoritative `CLOSED`, regardless of remaining labels. Retain
    closed issues in the graph/readback, outside the active ranker array.
-   Pass no `--priority` inputs. Pass `--claim-marker` with JSON
+   Pass `--candidate-order scope-position` so mixed planning and implementation
+   candidates retain sub-issue order. Pass no `--priority` inputs.
+   Pass `--claim-marker` with JSON
    `{"label":"agent:in-progress","requiresAssignment":true}`, using the resolved
    exact live label and authenticated runner, including configured overrides.
 5. Claim implementation only after the usual plan, role, blocker, competing-PR
@@ -282,8 +294,9 @@ record their resolved snapshot alongside that digest and revalidate both.
 Throughout controller leases, pause/parking/Wayfinder markers and normalization,
 `configurationDigest` and `--configuration-digest` mean this effective binding
 identity: the committed override digest when a file exists, the runtime
-fingerprint otherwise. In all controller prose, `ready-for-agent` denotes the
-resolved agent-work role, never an additional literal-label requirement.
+fingerprint otherwise. In controller, planner and delivery prose,
+`ready-for-agent` denotes the resolved agent-work role, never an additional
+literal-label requirement.
 Never require a phantom file digest or rewrite historical
 markers. Recompute/compare before every claim, material write, merge and recovery.
 Missing prior snapshot, changed defaults/IDs/policy, a source switch to/from a
@@ -904,7 +917,7 @@ shape above plus its direct parent and, for a task, its controller-derived mode:
     "projectStatus": "Todo",
     "labels": ["wayfinder:map"]
   },
-  "labels": ["wayfinder:research"],
+  "labels": ["ready-for-agent", "wayfinder:research"],
   "implementationPlans": [],
   "wayfinderTaskMode": null,
   "wayfinderAfkEvidence": null
