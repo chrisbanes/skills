@@ -464,8 +464,9 @@ releasing the slot:
 1. Publish the [CI parking payload](github-binding.md#publish-a-ci-parking-record)
    through the selected tracker's marker operations, with the preserved item and
    scope identities and the three-round check evidence.
-2. Refetch the comment, assignment, Project Status, PR head, and checks. Require
-   the marker author to be the authenticated runner and compute its
+2. Refetch the marker, exact claim status and assignment through the selected
+   tracker. Refetch the PR head and checks through the selected code host.
+   Require the marker author to be the authenticated runner and compute its
    [payload digest](../../to-plan/references/github-mode.md#payload-digest). Reconcile an ambiguous create before retrying. Keep
    the slot occupied when the record cannot be verified.
 3. Preserve the verified record permalink and digest with the branch, worktree,

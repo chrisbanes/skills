@@ -121,9 +121,12 @@ integrity blocker.
    change its Status, close its PR, or discard work merely because
    authority is missing. Before claim, leave it unassigned with no artifacts.
 2. In the controller lane, publish the [authority-pause payload](github-binding.md#publish-an-authority-pause)
-   using the selected tracker's marker operations.
-3. Verify its publication, runner identity, payload digest and claimed lease
-   under that procedure; reconcile ambiguous publication before retrying.
+   using the selected tracker's marker operations. For Jira use the verified
+   site, item and scope identities, with the selected code host's repository
+   and change request identities. Use the original GitHub identifiers for a
+   GitHub tracker.
+3. Verify publication, runner identity, payload digest and claimed lease
+   through the selected bindings. Reconcile ambiguous publication before retrying.
    A failed write preserves affected capacity and never counts as success.
 4. For a verified pause, quiesce any ticket/planning agent and descendants;
    reconcile processes and release held grants under the scheduler's
