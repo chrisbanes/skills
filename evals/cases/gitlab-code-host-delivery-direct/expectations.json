@@ -153,6 +153,28 @@
       "tracker_action": "none",
       "ticket_complete": false,
       "delivery_state": "pending"
+    },
+    "newer-merged-results-unverified": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "unknown-train-policy": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
     }
   }
 }

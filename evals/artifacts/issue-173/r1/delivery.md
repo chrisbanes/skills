@@ -15,3 +15,10 @@
 - Read-only three-way comparison with held #163 head `f796034e7f729d0f3d43d0b64294a54fdcfdafa3` finds no conflict in the eight files both changes touch. The new variants inherit the base snapshots' data, including any future #163 closing inventory. The held head already conflicts with the unchanged implementation base in the provider-routing paragraph of `skills/run-project/SKILL.md`. Resolve that during #163 integration. No #163 change is included here.
 - Focused tests: `python3 -m unittest -v evals.tests.test_delivery_bindings scripts.test_gitlab_code_host_live_check`. Broader checks: `npm test`, `npm run references:check`, `npm run lint`, `npm run evals:validate`, and `git diff --check` against the implementation base.
 - Independent review and remote actions remain controller-owned. Live GitLab qualification and live model evaluation were out of scope.
+
+## Review repair
+
+- Starting candidate: `056bbaa9b93323d4ff17f5417bef703c1211667d`. The controller reconfirmed the active claim and unchanged plan.
+- Both GitLab procedures select the newest plausible MR pipeline before checking status or confirming merged-results identity. A mismatch triggers a fresh MR read at the reviewed head. If the reads still disagree, keep checks pending without using older evidence. The added H1 snapshot pairs a green detached pipeline with a newer blocked merged-results pipeline and a stale `head_pipeline` on both reads, even though project policy permits merging without passing CI.
+- Standalone Shepherd now verifies current project train policy before a merge write. Explicitly disabled selects expected-SHA direct merge. Enabled or required selects the existing authorized train add and readback procedure. Unknown or contradictory policy permits neither write. The offline grader now also rejects merge permission with an unavailable train setting.
+- Both new scenarios use the existing expectation and inversion checks. The fake-transport race stays applicable. Standalone train behavior is covered by guidance inspection and the shared offline policy scenarios, with live GitLab qualification outside scope.

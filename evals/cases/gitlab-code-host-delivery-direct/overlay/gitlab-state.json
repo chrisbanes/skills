@@ -124,6 +124,94 @@
           "allow_failure": false
         }
       ]
+    },
+    "newer-merged-results-unverified": {
+      "base_snapshot": "mergeable",
+      "merge_request_overrides": {
+        "head_pipeline": {
+          "id": 503,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      },
+      "refreshed_merge_request": {
+        "iid": 7,
+        "web_url": "https://gitlab.example.com/acme/platform/app/-/merge_requests/7",
+        "source_branch": "agent/42-export",
+        "target_branch": "main",
+        "sha": "H1",
+        "diff_refs": {
+          "base_sha": "B1"
+        },
+        "draft": false,
+        "state": "opened",
+        "has_conflicts": false,
+        "detailed_merge_status": "mergeable",
+        "source_project_id": 88001,
+        "target_project_id": 88001,
+        "description": "Source: https://github.com/acme/app/issues/42",
+        "head_pipeline": {
+          "id": 503,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      },
+      "pipelines": [
+        {
+          "id": 510,
+          "sha": "MR2",
+          "ref": "refs/merge-requests/7/merge",
+          "status": "manual",
+          "project_id": 88001
+        },
+        {
+          "id": 503,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      ],
+      "jobs_by_pipeline_id": {
+        "510": [
+          {
+            "id": 9003,
+            "name": "approve",
+            "status": "manual",
+            "allow_failure": false
+          }
+        ],
+        "503": [
+          {
+            "id": 9002,
+            "name": "deploy",
+            "status": "manual",
+            "allow_failure": true
+          }
+        ]
+      },
+      "merge_policy": {
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": false,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": false,
+        "merge_pipelines_enabled": true
+      }
+    },
+    "unknown-train-policy": {
+      "base_snapshot": "mergeable",
+      "merge_policy": {
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": true,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": null
+      }
     }
   },
   "snapshots": {

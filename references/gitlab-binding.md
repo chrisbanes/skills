@@ -118,13 +118,19 @@ is the merge request IID.
    the configured Project ID. The returned IID and target branch must match
    the request, and the reviewed head must equal `sha`.
 5. **Checks:** Read every page of
-   `GET projects/:id/merge_requests/:iid/pipelines` and select the latest
-   pipeline for the verified candidate. Require its ID and an exact head
-   `sha` with the MR's source branch or `refs/merge-requests/<iid>/head`.
-   For `refs/merge-requests/<iid>/merge`, require the ID, ref and temporary
-   merge SHA to match `head_pipeline` from operation 4's MR read at the
-   reviewed head. Reject foreign refs and conflicting project IDs. Use only
-   the verified MR-scoped list for membership, never a project-wide SHA search.
+   `GET projects/:id/merge_requests/:iid/pipelines`. Reject foreign refs and
+   conflicting project IDs. Use only the verified MR-scoped list for
+   membership, never a project-wide SHA search. Consider both pipelines with
+   the exact head `sha` and either the MR's source branch or
+   `refs/merge-requests/<iid>/head`, and pipelines with
+   `refs/merge-requests/<iid>/merge`. Select the newest of these before
+   checking its status or resolving its identity. Require its ID.
+   For a merged-results pipeline, require the ID, ref and temporary merge SHA
+   to match `head_pipeline` from operation 4 at the reviewed head. If that
+   evidence is missing or disagrees, refresh the MR and reverify its identity
+   and head under operation 4. If the reads still disagree or are incomplete,
+   keep checks pending. Never fall back to an older pipeline. If the head
+   changes, requalify it.
    Read every page of `GET projects/:id/pipelines/:pipeline_id/jobs` for the
    selected ID. If the responses include project or pipeline IDs, they must
    match the request scope.
@@ -170,12 +176,15 @@ is the merge request IID.
     `has_conflicts: false` and `sha` equal to the expected head. Re-read
     transient statuses (`checking`, `unchecked`, `preparing`) with bounded
     polling; a fresh draft can report `checking` rather than `draft_status`.
-    Any other status refuses with zero writes and reports GitLab's status. Then
-    send exactly one merge write with `sha=<expected head>` and `squash` from
-    the policy: `PUT projects/:id/merge_requests/:iid/merge` without merge
-    trains, or operation 11's train add with them. Never set auto-merge. On a
-    direct merge SHA mismatch, refetch the MR and qualify the new head under
-    all applicable gates before considering another merge.
+    Any other status refuses with zero writes and reports GitLab's status.
+    Require a verified train policy before sending exactly one merge write
+    with `sha=<expected head>` and `squash` from the policy. Use
+    `PUT projects/:id/merge_requests/:iid/merge` only when trains are
+    explicitly disabled. When enabled or required, use operation 11.
+    If the policy is unknown or contradictory, report it and send no merge
+    write. Never set auto-merge. On a direct merge SHA mismatch, refetch the
+    MR and qualify the new head under all applicable gates before considering
+    another merge.
 11. **Merge trains:** When the fingerprint shows merge trains enabled, a direct
     merge would bypass the train or be rejected, so merge by adding the request
     with `POST projects/:id/merge_trains/merge_requests/:iid`, omitting

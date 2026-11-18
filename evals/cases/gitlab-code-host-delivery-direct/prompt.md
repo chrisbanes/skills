@@ -42,5 +42,8 @@ fields, and apply `merge_request_overrides` to the named MR fields, if supplied.
 Any variant's `merge_policy` replaces the top-level policy and matches both
 fingerprints. The `pipelines` and `jobs` arrays are the complete responses
 from the MR pipeline and selected pipeline jobs endpoints, respectively.
+When supplied, `refreshed_merge_request` is the response to a second MR
+read after listing pipelines, and `jobs_by_pipeline_id` gives the complete
+jobs response for each listed pipeline instead of the default `jobs`.
 
 Explain each decision briefly in your response.
