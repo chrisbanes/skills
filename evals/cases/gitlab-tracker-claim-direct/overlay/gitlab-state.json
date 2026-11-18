@@ -24,7 +24,12 @@
       "blockers": [],
       "descendants": [],
       "active_plan_verified": true,
-      "controller_claim_grant": true
+      "controller_claim_grant": true,
+      "independentRelationshipInventory": {
+        "source": "fixture administration inventory",
+        "scope": "all linked projects and confidential issues",
+        "inwardBlockers": []
+      }
     },
     "shared-assignment": {
       "iid": 43,
@@ -74,6 +79,24 @@
       "plan": "Premium",
       "plan_verified": true,
       "page_two_response": 403
+    },
+    "filtered-empty-links": {
+      "iid": 47,
+      "state": "opened",
+      "labels": [
+        "autumn",
+        "ready-for-agent"
+      ],
+      "plan": "Premium",
+      "plan_verified": true,
+      "httpStatus": 200,
+      "allPagesRead": true,
+      "links": [],
+      "runnerAccess": {
+        "sourceProject": "owner",
+        "privateLinkedProjects": "unverified"
+      },
+      "independentRelationshipInventory": null
     }
   }
 }

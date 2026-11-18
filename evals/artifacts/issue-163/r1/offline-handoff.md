@@ -10,7 +10,7 @@ qualification authority.
 - Base `3d9da4774f441854a8ff4c513487301b057053ca`
 - Plan digest `8d29832c9f15eda2250d78072b52aa5ff80dd12a35af54e3f7ccec4bf80351f5`
 - Configuration digest `cfc5e733c34d0d677ac2c387523b88a28340981c4c2825624fb1a686d8cc18e7`
-- Preservation baseline `/tmp/skills-project22.iHGKcT/evidence-baseline.txt`
+- Evidence preservation uses the controller-retained baseline tree.
 
 ## Contract coverage
 
@@ -53,7 +53,29 @@ a checked allowlist with the existing test client because the prior live guard
 is scoped to code-host operations and counts a different journey. No plan
 amendment or material scope expansion was applied.
 
-## Touched paths
+## Independent review repairs
+
+- Require independent relationship visibility before a paged successful result
+  can clear the dependency gate. The decision case covers a filtered empty
+  response. [GitLab issue-link implementation](https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/api/issue_links.rb#L17-38)
+- Require positive evidence of the effective closing set, including invisible
+  manual links, before accepting an exact or empty result. Both are covered in
+  the decision case. [GitLab manual-link semantics](https://docs.gitlab.com/user/project/issues/managing_issues/#user-responsibility-when-merging)
+- Normalize a GitHub PR author's immutable account ID against the selected
+  GitHub runner before mapping to the GitLab claim identity. The ranker test
+  covers resume and a foreign author with the same numeric ID.
+- Quarantine both issues after an ambiguous link write and retain independent
+  cleanup. Fake transport coverage uses a 503 and a separate verified receipt.
+- Use raw note bodies, an independently pinned branch, SHA and payload digest,
+  preserved trailing spaces, and a fork that prevents retry.
+- Route scheduler selection and finish and post-merge refresh through the
+  complete bound tracker scope. The separate watcher region stays with #169.
+
+These are routine repairs within revision 1. The checked protocol remains
+offline, with zero authorized fixture writes. The original paths below and
+the repair paths are part of the same delivery slice.
+
+## Original implementation paths
 
 - `README.md`
 - `evals/artifacts/issue-163/r1/offline-handoff.md`
@@ -107,3 +129,39 @@ amendment or material scope expansion was applied.
 - `skills/to-plan/references/review-and-setup.md`
 - `skills/to-plan/references/ticket-lifecycle.md`
 - `skills/to-plan/references/todo-lane.md`
+
+## Repair paths
+
+- `evals/artifacts/issue-163/r1/offline-handoff.md`
+- `evals/artifacts/issue-163/r1/qualification-protocol.md`
+- `evals/artifacts/issue-163/r1/qualification-writes.json`
+- `evals/cases/gitlab-tracker-claim-direct/case.json`
+- `evals/cases/gitlab-tracker-claim-direct/expectations.json`
+- `evals/cases/gitlab-tracker-claim-direct/overlay/gitlab-state.json`
+- `evals/cases/gitlab-tracker-claim-direct/prompt.md`
+- `evals/cases/gitlab-tracker-closure-negative/case.json`
+- `evals/cases/gitlab-tracker-closure-negative/expectations.json`
+- `evals/cases/gitlab-tracker-closure-negative/overlay/gitlab-state.json`
+- `evals/cases/gitlab-tracker-closure-negative/prompt.md`
+- `evals/cases/gitlab-tracker-notes-novel/case.json`
+- `evals/cases/gitlab-tracker-notes-novel/expectations.json`
+- `evals/cases/gitlab-tracker-notes-novel/overlay/gitlab-state.json`
+- `evals/cases/gitlab-tracker-notes-novel/prompt.md`
+- `evals/tests/test_delivery_bindings.py`
+- `evals/tests/test_workflows_writing_matrix.py`
+- `references/github-binding.md`
+- `references/gitlab-binding.md`
+- `scripts/test_gitlab_code_host_live_check.py`
+- `skills/deliver-issue/references/drain-scheduler.md`
+- `skills/deliver-issue/references/github-binding.md`
+- `skills/deliver-issue/references/gitlab-binding.md`
+- `skills/deliver-issue/references/ticket-lifecycle.md`
+- `skills/run-project/references/drain-scheduler.md`
+- `skills/run-project/references/github-binding.md`
+- `skills/run-project/references/gitlab-binding.md`
+- `skills/run-project/references/ticket-lifecycle.md`
+- `skills/run-project/scripts/test_rank_tickets.py`
+- `skills/to-plan/references/drain-scheduler.md`
+- `skills/to-plan/references/github-binding.md`
+- `skills/to-plan/references/gitlab-binding.md`
+- `skills/to-plan/references/ticket-lifecycle.md`

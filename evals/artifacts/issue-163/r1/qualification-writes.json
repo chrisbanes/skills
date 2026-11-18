@@ -31,5 +31,28 @@
     ["delete-stop", "DELETE", "issues/{stop}", null],
     ["delete-target", "DELETE", "issues/{target}", null],
     ["delete-blocker", "DELETE", "issues/{blocker}", null]
-  ]
+  ],
+  "unknownAffects": {
+    "create-target": ["target"],
+    "create-blocker": ["blocker"],
+    "link-blocker": ["target", "blocker"],
+    "close-blocker": ["target", "blocker"],
+    "create-stop": ["stop"],
+    "claim-stop": ["stop"],
+    "remove-stop-claim": ["stop"],
+    "claim-target": ["target"],
+    "publish-plan": ["target"],
+    "create-base": ["base"],
+    "create-source": ["source"],
+    "commit-source": ["source"],
+    "open-mr": ["mr", "base", "source", "target"],
+    "merge-at-head": ["mr", "base", "source", "target"],
+    "close-target": ["target"],
+    "delete-mr": ["mr", "base", "source", "target"],
+    "delete-source": ["source"],
+    "delete-base": ["base"],
+    "delete-stop": ["stop"],
+    "delete-target": ["target", "blocker"],
+    "delete-blocker": ["target", "blocker"]
+  }
 }

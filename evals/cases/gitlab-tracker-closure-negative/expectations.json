@@ -27,6 +27,20 @@
       "closingSet": [],
       "mayMerge": false,
       "trackerAfterMerge": "close-through-tracker"
+    },
+    "filtered-exact": {
+      "policy": "closing-keyword",
+      "closingSet": [
+        "gitlab.com/88001/42"
+      ],
+      "mayMerge": false,
+      "trackerAfterMerge": "verify-native-close"
+    },
+    "filtered-empty": {
+      "policy": "close-after-merge",
+      "closingSet": [],
+      "mayMerge": false,
+      "trackerAfterMerge": "close-through-tracker"
     }
   }
 }

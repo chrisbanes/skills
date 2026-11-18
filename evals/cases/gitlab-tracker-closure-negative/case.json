@@ -26,7 +26,7 @@
   "rubric": [
     {
       "id": "exact",
-      "text": "Permits native closure only for the exact eligible GitLab item and verified default-branch pairing."
+      "text": "Permits native closure only for the exact eligible GitLab item and verified default-branch pairing. An apparent exact or empty result without independent closing-set evidence blocks merge."
     },
     {
       "id": "mixed",

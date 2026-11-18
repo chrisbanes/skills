@@ -218,7 +218,11 @@ class TrackerProtocolTest(unittest.TestCase):
         if not self.granted or len(attempted) >= self.protocol["maximumAttempts"]:
             raise check.GuardDenied("missing grant or no write allowance")
         if self.cleaning:
-            rows = (row for row in self.cleanup if row[0] not in attempted)
+            effects = self.protocol["unknownAffects"]
+            quarantined = {resource for name in attempted - self.confirmed for resource in effects[name]}
+            quarantined.intersection_update(self.receipts)
+            rows = (row for row in self.cleanup
+                    if row[0] not in attempted and quarantined.isdisjoint(effects[row[0]]))
         else:
             next_row = len(attempted)
             rows = self.forward[next_row:next_row + 1] if attempted <= self.confirmed else ()
@@ -293,6 +297,7 @@ class TrackerProtocolTest(unittest.TestCase):
             self.client.write("DELETE", P + "repository/branches/main")
         for row in self.cleanup:
             self.send(row)
+            self.confirm(row)
         self.assertEqual(21, self.protocol["maximumAttempts"])
         self.assertEqual(list(range(1, 22)), [count for *_, count in self.sent])
         with self.assertRaises(check.GuardDenied):
@@ -317,6 +322,26 @@ class TrackerProtocolTest(unittest.TestCase):
         with self.assertRaises(check.GuardDenied):
             self.send(self.cleanup[-2])
         self.assertEqual(["create-target", "create-blocker", "delete-target"], self.attempts)
+
+    def test_ambiguous_link_quarantines_both_issues_and_preserves_independent_cleanup(self):
+        self.granted = True
+        self.assertEqual({row[0] for row in self.forward + self.cleanup},
+                         self.protocol["unknownAffects"].keys())
+        for row in self.forward[:2]:
+            self.send(row)
+            self.confirm(row)
+        # Seed a verified unrelated receipt to exercise cleanup isolation.
+        self.confirm(self.forward[4])
+        self.responses[P + "issues/42/links"] = (503, {}, {"message": "unknown link"})
+        with self.assertRaises(check.ProviderError):
+            self.send(self.forward[2])
+        self.cleaning = True
+        for row in self.cleanup[-2:]:
+            with self.subTest(row=row[0]), self.assertRaises(check.GuardDenied):
+                self.send(row)
+        self.send(self.cleanup[-3])
+        self.confirm(self.cleanup[-3])
+        self.assertEqual(["create-target", "create-blocker", "link-blocker", "delete-stop"], self.attempts)
 
 
 class RunTest(unittest.TestCase):

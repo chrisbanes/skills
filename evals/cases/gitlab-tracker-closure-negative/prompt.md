@@ -6,9 +6,12 @@ decision strings, booleans for yes/no and numeric IDs for provider records.
 
 For `closingSet`, use an array of issue identities as strings in
 `hostname/project-id/issue-iid` form. Report the required effective set,
-and whether the current snapshot permits merge.
+and whether the current snapshot permits merge. For `trackerAfterMerge`,
+report the policy’s follow-up if a merge is later verified.
 
 - same-project: policy, closingSet, mayMerge, trackerAfterMerge
 - same-iid-other-project: policy, closingSet, mayMerge, trackerAfterMerge
 - non-default-base: policy, closingSet, mayMerge, trackerAfterMerge
 - github-host: policy, closingSet, mayMerge, trackerAfterMerge
+- filtered-exact: policy, closingSet, mayMerge, trackerAfterMerge
+- filtered-empty: policy, closingSet, mayMerge, trackerAfterMerge

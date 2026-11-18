@@ -238,7 +238,7 @@ new-work classes in steps 7 and 8.
 2. Merge the oldest merge-ready claim, unless an explicit dependency requires a
    different order. Admit or merge only one at a time.
 3. Reconcile explicitly human-authorized epic closures, then
-   refresh the complete Project graph before taking another action.
+   refresh the complete bound tracker scope before taking another action.
 4. Resume owning ticket agents for actionable review, CI, or base-repair events
    in oldest-event order.
 5. Resume paused local implementation slots in claim order.
@@ -272,8 +272,9 @@ wait for either while any step above remains runnable.
 
 ### Refresh Gate
 
-Require one successful complete Project query and verified-base refresh before
-new selection after a merge, parked or released slot, Todo
+Use the execution controller's [bound-scope refresh](execution-controller.md#remote-state-and-queue).
+Require one successful complete read of the selected tracker scope and a
+verified-base refresh before new selection after a merge, parked or released slot, Todo
 handoff, epic closure, user prompt, controller resumption after interruption,
 or other event that
 can change capacity, dependencies, or eligibility. Rebuild and rank every class

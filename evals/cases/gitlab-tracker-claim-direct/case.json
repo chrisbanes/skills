@@ -34,7 +34,7 @@
     },
     {
       "id": "dependency",
-      "text": "Distinguishes absent tier capability from a failed required read. Both block dependent lanes."
+      "text": "Distinguishes absent tier capability from a failed required read. Both block dependent lanes. A successful empty read with unproven relationship visibility also blocks dispatch."
     }
   ],
   "provenance": {

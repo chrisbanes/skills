@@ -145,13 +145,19 @@ the run. Omit GitHub Project fields and workflow settings for this tracker.
    subscription/instance evidence. Directional blocking links require
    Premium or Ultimate. When supported, paginate
    `GET projects/:id/issues/:issue_iid/links`; use only the inward
-   `is_blocked_by` relation. Keep outside-selection blockers, and clear them
+   `is_blocked_by` relation. GitLab can omit links to issues the reader
+   cannot see. Require current, independent evidence covering every possible
+   related project and confidential issue for this exact source, such as an
+   authoritative relationship inventory reconciled with the live read or a
+   verified visibility boundary that includes every permitted link target.
+   Source-project membership, a fully paged 200, and an empty list do not
+   establish that coverage. Keep outside-selection blockers, and clear them
    only after a fresh exact-identity read verifies `closed`. A `relates_to`
    link supplies context. On a verified unsupported tier, mark blocking
    links unavailable and dependency completeness unknown. A denied, malformed,
-   failed or partial read leaves completeness unknown with the read failure
-   recorded separately. In either case block dependency-gated planning,
-   claims, delivery and closure. Keep known unresolved references; never
+   failed or partial read, or unproven relationship visibility, leaves
+   completeness unknown. Record the distinct reason and block
+   dependency-gated planning, claims, delivery and closure. Keep known unresolved references; never
    substitute an empty complete graph or invent edges. Check documented
    textual blockers as additional constraints.
 4. Apply the controller's holds, ownership, graph and plan checks. Standalone
@@ -342,10 +348,19 @@ is the merge request IID.
    and the shared closure gates select native closure. After every create or
    description edit and immediately before merge, page
    `GET projects/:id/merge_requests/:iid/closes_issues`. Resolve each entry
-   to its exact host/project/issue identity. Require equality with the
-   intended native set or an empty set for controller closure. Refuse unknown
-   or unintended references, including closure directives in commit and
-   merge text. Recheck corrected readback before proceeding.
+   to its exact host/project/issue identity. A successful read can omit
+   unreadable issues, including manually linked closures that persist after
+   access is lost. Independently establish the complete effective set for
+   this exact MR, head and base. Use an independently reconciled inventory
+   or authoritative evidence that the read covers every target and record type.
+   Include effective closing directives in the description, commits and merge
+   text, and all manual closing links, including cross-project and confidential
+   targets. An
+   apparent exact match, an empty result, and a non-default base do not
+   prove completeness. Compare the complete set to the intended native
+   set or the required empty set for controller closure. Unproven
+   completeness or unintended references block acceptance and merge.
+   Recheck corrected readback and its coverage before proceeding.
 10. **Merge:** Refresh operations 4–6 and 9 and the
     [live merge-policy fingerprint](#live-merge-policy-fingerprint). Require
     invocation-specific merge authority, the caller's final-head gates,

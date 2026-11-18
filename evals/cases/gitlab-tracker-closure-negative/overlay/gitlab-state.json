@@ -16,9 +16,20 @@
       "base": "main",
       "configuredPolicy": "closing-keyword",
       "mergeAccountCanClose": true,
-      "effectiveClosingSet": [
+      "mrId": 1,
+      "closesIssuesResponse": [
         "gitlab.com/88001/42"
-      ]
+      ],
+      "independentClosingInventory": {
+        "source": "fixture administration inventory across projects and confidential issues",
+        "mrId": 1,
+        "head": "H1",
+        "base": "main",
+        "closingDirectives": [
+          "gitlab.com/88001/42"
+        ],
+        "manualClosingLinks": []
+      }
     },
     "same-iid-other-project": {
       "host": "gitlab.com/team/mobile",
@@ -26,17 +37,38 @@
       "base": "main",
       "configuredPolicy": "closing-keyword",
       "mergeAccountCanClose": true,
-      "effectiveClosingSet": [
+      "mrId": 2,
+      "closesIssuesResponse": [
         "gitlab.com/88001/42",
         "gitlab.com/88002/42"
-      ]
+      ],
+      "independentClosingInventory": {
+        "source": "fixture administration inventory across projects and confidential issues",
+        "mrId": 2,
+        "head": "H1",
+        "base": "main",
+        "closingDirectives": [
+          "gitlab.com/88001/42",
+          "gitlab.com/88002/42"
+        ],
+        "manualClosingLinks": []
+      }
     },
     "non-default-base": {
       "host": "gitlab.com/team/mobile",
       "projectId": 88001,
       "base": "qual/test-base",
       "configuredPolicy": "close-after-merge",
-      "effectiveClosingSet": []
+      "mrId": 3,
+      "closesIssuesResponse": [],
+      "independentClosingInventory": {
+        "source": "fixture administration inventory across projects and confidential issues",
+        "mrId": 3,
+        "head": "H1",
+        "base": "qual/test-base",
+        "closingDirectives": [],
+        "manualClosingLinks": []
+      }
     },
     "github-host": {
       "host": "github.com/team/mobile",
@@ -47,6 +79,45 @@
         "github.com/99001/42"
       ],
       "requestedChange": "Add a closing keyword for GitLab issue 42"
+    },
+    "filtered-exact": {
+      "host": "gitlab.com/team/mobile",
+      "projectId": 88001,
+      "base": "main",
+      "configuredPolicy": "closing-keyword",
+      "mergeAccountCanClose": true,
+      "mrId": 4,
+      "closesIssuesResponse": [
+        "gitlab.com/88001/42"
+      ],
+      "independentClosingInventory": null,
+      "runnerAccess": {
+        "sourceProject": "owner",
+        "otherPrivateProjects": "unverified"
+      },
+      "closesIssuesHttpStatus": 200,
+      "allPagesRead": true,
+      "priorManualLinkEvent": {
+        "target": "gitlab.com/88003/19",
+        "link": "closes",
+        "currentTargetVisibility": "lost",
+        "removalReadback": "unknown"
+      }
+    },
+    "filtered-empty": {
+      "host": "gitlab.com/team/mobile",
+      "projectId": 88001,
+      "base": "qual/test-base",
+      "configuredPolicy": "close-after-merge",
+      "mrId": 5,
+      "closesIssuesResponse": [],
+      "independentClosingInventory": null,
+      "runnerAccess": {
+        "sourceProject": "owner",
+        "otherPrivateProjects": "unverified"
+      },
+      "closesIssuesHttpStatus": 200,
+      "allPagesRead": true
     }
   }
 }

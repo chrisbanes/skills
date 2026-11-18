@@ -101,6 +101,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "gitlab-tracker-claim-direct": (
                 ("SKILL.md", "references/gitlab-binding.md#tracker-operations", "references/gitlab-binding.md"),
                 ("references/execution-controller.md", "gitlab-binding.md#claim-stop-and-release", "references/gitlab-binding.md"),
+                ("references/drain-scheduler.md", "execution-controller.md#remote-state-and-queue", "skills/run-project/references/execution-controller.md"),
+                ("references/ticket-lifecycle.md", "execution-controller.md#remote-state-and-queue", "skills/run-project/references/execution-controller.md"),
             ),
             "gitlab-tracker-notes-novel": (
                 ("SKILL.md", "references/gitlab-binding.md#planning-marker-operations", "references/gitlab-binding.md"),

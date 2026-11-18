@@ -3,7 +3,8 @@
     "matching-leaf": {
       "activeNoteId": 103,
       "stripTransportFooter": true,
-      "write": false
+      "write": false,
+      "payloadSha256": "84e6487c8b18ae5143fda64a87c9ce7b65277b0b62326b0ba3ad0ab9dba93b5a"
     },
     "ambiguous-create": {
       "action": "reuse",
@@ -14,6 +15,11 @@
       "action": "presentation-warning",
       "activeNoteId": 103,
       "editPredecessor": false
+    },
+    "forked-chain": {
+      "action": "stop-preserve",
+      "activeNoteId": null,
+      "retry": false
     }
   }
 }

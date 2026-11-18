@@ -24,8 +24,9 @@ No tier, setting, label, resource or branch was changed.
 1. Refresh exact host, account, path and numeric ID, default branch and
    its SHA, namespace tier, issue visibility, directional blocking-link
    capability, configured role/selection names and IDs, and effective
-   operation and cleanup permissions. Require a verified complete blocker
-   and descendant view for the three run issues. Verify Owner cleanup scope
+   operation and cleanup permissions. Require independent relationship
+   visibility evidence and a complete blocker and descendant view for the
+   three run issues. A successful empty links response proves neither. Verify Owner cleanup scope
    for issue and MR deletion, and effective branch-create/delete authority
    for both disposable branches. Verify protection patterns, push/merge
    policy and automation. Stop before writing if any required fact is unknown.
@@ -83,7 +84,9 @@ No tier, setting, label, resource or branch was changed.
 4. Read back the created base and source, verified commit and exact MR
    head and base. Verify the canonical non-closing source link and empty
    effective closing set before merge, with the ordinary exact-head and
-   policy checks. Use a one-time expected-head merge into the created base.
+   policy checks. Require independent completeness evidence for that MR,
+   head and base, including cross-project and manual closing links. A
+   successful empty `closes_issues` response cannot satisfy this gate. Use a one-time expected-head merge into the created base.
    Read back the merge and commit reachability. Verify the target remains
    open after merge, then perform the controller-authorized close and verify
    the exact issue and new attributable close event. Preserve the distinct
@@ -95,8 +98,10 @@ Enter cleanup after success or a halted forward path. Spend at most one
 attempt on each of the six cleanup rows. Clean up only known, verified
 run-owned resources with fresh current identity, authorization and
 preconditions. An already absent source branch requires readback only.
-If an effect is unknown, preserve the affected resources and skip dependent
-deletes. Continue independent authorized cleanup. A failed or ambiguous
+For each unresolved write, quarantine all confirmed resources named by that
+row's `unknownAffects` entry, and skip deletes that can affect any of them.
+For example, a timed-out blocker-link create holds cleanup of both issues.
+Reconcile before clearing quarantine. Continue independent authorized cleanup. A failed or ambiguous
 deletion consumes its row. Read back its exact result and report any residue
 with its known IDs, without retrying the write. Verify removal of the
 relationship and note through target/blocker cleanup and authoritative

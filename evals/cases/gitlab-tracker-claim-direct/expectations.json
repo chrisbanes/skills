@@ -27,6 +27,11 @@
       "blockerCapability": "supported",
       "dependenciesComplete": false,
       "mayDispatch": false
+    },
+    "filtered-empty-links": {
+      "blockerCapability": "supported",
+      "dependenciesComplete": false,
+      "mayDispatch": false
     }
   }
 }

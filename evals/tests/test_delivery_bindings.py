@@ -1,5 +1,6 @@
 import copy
 from dataclasses import replace
+import hashlib
 import json
 import tempfile
 import unittest
@@ -35,6 +36,21 @@ RESPONSE_CASES = {
 
 
 class DeliveryBindingsTest(unittest.TestCase):
+    def test_gitlab_note_fixture_digest_preserves_trailing_spaces(self):
+        case = ROOT / "evals/cases/gitlab-tracker-notes-novel"
+        fixture = json.loads((case / "overlay/gitlab-state.json").read_text())
+        approved = fixture["approvedPlan"]
+        expected = json.loads((case / "expectations.json").read_text())["decisions"]["matching-leaf"]
+        body = next(note["body"] for note in fixture["notes"] if note["id"] == expected["activeNoteId"])
+        footer = "\n<!-- gitlab-binding:end-marker -->"
+        self.assertTrue(body.endswith(footer))
+        payload = body[body.index("## Implementation plan"):].removesuffix(footer).rstrip("\n")
+        self.assertIn(f'**Planned against:** `{approved["branch"]}` at `{approved["sha"]}`', payload)
+        self.assertTrue(payload.endswith("  "))
+        self.assertEqual(approved["payloadSha256"], hashlib.sha256(payload.encode()).hexdigest())
+        self.assertEqual(approved["payloadSha256"], expected["payloadSha256"])
+        self.assertNotEqual(approved["payloadSha256"], hashlib.sha256(payload.rstrip().encode()).hexdigest())
+
     def test_closure_decisions_use_the_existing_offline_grader(self):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
         for case_id in (*CASES, *RESPONSE_CASES):
@@ -85,7 +101,7 @@ class DeliveryBindingsTest(unittest.TestCase):
                     self.assertFalse(grade_subject(case, changed).objective_pass)
                     continue
                 for snapshot, fields in expected.items():
-                    for field in fields:
+                    for field, value in fields.items():
                         actual = copy.deepcopy(expected)
-                        actual[snapshot][field] = "unsafe"
+                        actual[snapshot][field] = not value if isinstance(value, bool) else "unsafe"
                         self.assertTrue(validate_decisions(actual, expected), (snapshot, field))

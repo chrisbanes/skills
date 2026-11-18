@@ -9,3 +9,4 @@ decision strings, booleans for yes/no and numeric IDs for provider records.
 - claim-label-removed: action, releaseSlotAfterQuiescence, write
 - free-tier: blockerCapability, dependenciesComplete, mayDispatch
 - failed-link-read: blockerCapability, dependenciesComplete, mayDispatch
+- filtered-empty-links: blockerCapability, dependenciesComplete, mayDispatch

@@ -228,8 +228,8 @@ cleanup. Use the selected tracker procedure for
 unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
 For a completed ticket, reconcile Done without archiving/removing directly, stop
 on unexpected outcomes, clean up the ticket worktree and branch under
-[Worktrees](#worktrees), discard agent, refresh other PRs, and query Project
-completely. `next` finishes one selected terminal issue,
+[Worktrees](#worktrees), discard agent, refresh other PRs, and apply the
+[complete bound-scope refresh](execution-controller.md#remote-state-and-queue). `next` finishes one selected terminal issue,
 Wayfinder child, tail triage, or ready epic; otherwise report human frontier.
 Both modes end with [Worktrees](#worktrees) step 6; `drain` then follows its
 scheduler finish gate. On blocked/ambiguous next work,

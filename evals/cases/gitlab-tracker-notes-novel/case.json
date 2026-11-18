@@ -26,11 +26,11 @@
   "rubric": [
     {
       "id": "chain",
-      "text": "Uses the verified note chain, preserving payload whitespace and ignoring presentation and timestamps."
+      "text": "Uses the verified note chain, preserving payload whitespace and ignoring presentation and timestamps. Verifies the pinned baseline and digest, including the trailing spaces."
     },
     {
       "id": "restraint",
-      "text": "Leaves the matching note and predecessor unchanged and reuses the unique reconciled create."
+      "text": "Leaves the matching note and predecessor unchanged and reuses the unique reconciled create. A fork blocks reuse and retry."
     }
   ],
   "provenance": {
