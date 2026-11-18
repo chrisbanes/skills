@@ -27,7 +27,7 @@
   "rubric": [
     {
       "id": "uncertain-owner",
-      "text": "Treats A as uncertain because it has no held owner lock or terminal record; neither a live/reused PID nor the previous successful result proves sequence 4 completed. Recommends ownership investigation without rerun or termination."
+      "text": "Treats A as uncertain because it has no held owner lock or terminal record. The potentially reused PID blocks recovery, and the successful result belongs to sequence 3. Recommends read-only ownership investigation without recover, rerun or termination."
     },
     {
       "id": "completed-failure",

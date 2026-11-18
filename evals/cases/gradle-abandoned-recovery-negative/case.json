@@ -1,0 +1,44 @@
+{
+  "id": "gradle-abandoned-recovery-negative",
+  "title": "Leave an unresolved Gradle workflow unchanged",
+  "family": "gradle",
+  "target_skills": [
+    "gradle-run"
+  ],
+  "expected_skills": [
+    "gradle-run"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "gradle-abandoned-recovery-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "unresolved",
+      "text": "Keeps sequence 2 uncertain and attributes the successful result only to sequence 1."
+    },
+    {
+      "id": "ownership-evidence",
+      "text": "Calls for read-only ownership investigation and explains why PID absence does not establish descendant absence."
+    },
+    {
+      "id": "restraint",
+      "text": "Leaves the workflow unchanged and does not give or execute a recovery command, rerun, finish, open logs, or suggest terminating processes."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

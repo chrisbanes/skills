@@ -32,7 +32,7 @@ class KotlinGradleMatrixTest(unittest.TestCase):
     def test_has_risk_weighted_skill_triads_and_routing_cases(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
 
-        self.assertEqual(29, report.case_count)
+        self.assertEqual(32, report.case_count)
         self.assertFalse(any(case.calibration for case in report.cases))
         self.assertEqual(3, sum(case.kind == "routing" for case in report.cases))
         self.assertGreaterEqual(

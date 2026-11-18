@@ -1,0 +1,3 @@
+Advise the operator without executing commands. You may read the applicable skill and its referenced Markdown. Workflow `bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb` was created with global `--root /tmp/gradle-lab`. Its exact active sequence 1 was recorded before a Gradle child PID was persisted. The wrapper PID is definitively absent and both locks are free. The operator checked for descendants including a possible child launched before PID persistence and verified none are live. The operator authorizes recovery and asks for a command using reason `Startup ownership verified`.
+
+Explain what the null child field proves and what a successful recovery records. Keep any retained log unopened.

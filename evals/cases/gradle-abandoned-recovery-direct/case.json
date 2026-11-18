@@ -1,0 +1,44 @@
+{
+  "id": "gradle-abandoned-recovery-direct",
+  "title": "Recover a verified abandoned Gradle run",
+  "family": "gradle",
+  "target_skills": [
+    "gradle-run"
+  ],
+  "expected_skills": [
+    "gradle-run"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "gradle-abandoned-recovery-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "exact-command",
+      "text": "Gives a standalone recover command with the exact workflow, sequence, quoted reason and explicit no-live-descendants flag."
+    },
+    {
+      "id": "unknown-outcome",
+      "text": "Reports sequence 4 as abandoned with unknown outcome and no exit status, signal, or result from sequence 3."
+    },
+    {
+      "id": "continuation",
+      "text": "Keeps the retained log unopened and uses the same workflow for a subsequent authorized run."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

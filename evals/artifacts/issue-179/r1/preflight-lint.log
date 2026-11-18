@@ -1,0 +1,1 @@
+PATH-only approach exited 1 because the worktree could not resolve remark-frontmatter. A local symlink to the existing dependency directory restored offline resolution.
