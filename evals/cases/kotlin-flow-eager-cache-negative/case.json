@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-flow-eager-cache-negative",
+  "title": "Keep eager sharing for an asynchronous cache",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-flow-eager-cache-negative"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "restraint", "text": "Keeps the single eagerly shared property and the existing API"},
+    {"id": "delayed-refresh", "text": "Explains why eager sharing meets the no-subscriber maintenance requirement and the asynchronous lag is allowed"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

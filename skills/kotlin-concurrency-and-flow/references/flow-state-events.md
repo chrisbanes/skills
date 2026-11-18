@@ -9,21 +9,46 @@ contract. Do not use fake domain data to satisfy a primitive's initialization.
 
 | Need | Primitive |
 |---|---|
-| Current, renderable state with synchronous `.value` | `StateFlow`; often eager when `.value` matters. |
+| Current, renderable state with synchronous `.value` | `StateFlow` for the state it owns. |
 | Hot broadcast without synchronous `.value` | Deliberately configured `SharedFlow`. |
-| Exactly-once handoff to one consumer | Buffered `Channel` exposed with `receiveAsFlow()`. |
+| Best-effort handoff to one consumer across a collector gap | Bounded `Channel` exposed with `receiveAsFlow()`. |
+| Work that must remain available until handled | Pending state with an identity and acknowledgement. |
 | Independent stream per collector | Cold `Flow`. |
 
 Before choosing `SharedFlow`, ask whether an absent collector may lose an event
-and whether every observer must receive it. A channel is fan-out, not broadcast:
-each event reaches one collector; its bounded sends can suspend and `trySend`
-can fail. Use durable state or deliberate broadcast semantics when every
-observer must see the event.
+and whether every observer must receive it. A channel distributes each event to
+at most one collector. Its buffer can hold events while no collector is active.
+Bounded `send` can suspend and `trySend` can fail, so handle failed sends.
+Cancellation after receipt can remove the event before the collector handles it,
+and a replacement collector cannot recover it from the channel. Choose
+deliberate broadcast semantics when every active observer must see the event.
 
 ```kotlin
 private val navigation = Channel<Navigation>(Channel.BUFFERED)
 val navigationEvents: Flow<Navigation> = navigation.receiveAsFlow()
 ```
+
+For work that must survive collector cancellation, expose pending state from
+the owner and acknowledge the observed ID only after handling succeeds. This
+example has one pending slot. When every request must be kept, hold a queue
+instead of replacing an unacknowledged item.
+
+```kotlin
+data class PendingNavigation(val id: Long, val destination: String)
+
+private val pending = MutableStateFlow<PendingNavigation?>(null)
+val pendingNavigation = pending.asStateFlow()
+
+fun acknowledge(id: Long) {
+    pending.update { current -> current.takeUnless { it?.id == id } }
+}
+```
+
+Use a unique ID for each item so an old acknowledgement cannot clear newer
+work. Pending state survives collector cancellation for the owner's lifetime.
+If handling succeeds just before cancellation prevents acknowledgement, the
+next collector may retry it. Use idempotent handling when retries must avoid
+duplicate effects and persistence when requests must survive process death.
 
 ## State initialization and updates
 
@@ -43,20 +68,23 @@ _state.update { current -> current.copy(details = details) }
 
 ## Sharing and derived state
 
-Expose `stateIn` as one shared property, not a function that creates another
-sharing coroutine per call. If `.value` must be fresh or initialized with no
-active collector, use `SharingStarted.Eagerly` or explicit initialization.
-`WhileSubscribed` is only for acceptable stale/cached values and primarily
-asynchronous collection.
+Expose `stateIn` as one shared property. Use `SharingStarted.Eagerly` when the
+cache should keep updating without active subscribers and callers can tolerate
+lag. Sharing runs in a separate coroutine, so reading its `.value` immediately
+after an upstream write can still return the previous cached value.
+`WhileSubscribed` can also retain a stale value while collection is stopped.
 
-`map` turns a `StateFlow` into a plain `Flow`. When callers need synchronous
-`.value`, terminate the derived stream with `stateIn`. Utilities that transform
-on each `.value` read are only suitable for fast, idempotent work.
+For an immediate read after a write, project the current upstream snapshot
+directly. Keep that projection fast and pure. Use a mapped `Flow` separately if
+callers also need to observe changes.
 
 ```kotlin
-val name: StateFlow<String> = userState
+val cachedName: StateFlow<String> = userState
     .map { it.name }
     .stateIn(viewModelScope, SharingStarted.Eagerly, userState.value.name)
+
+val currentName: String
+    get() = userState.value.name
 ```
 
 Finish by stating the consumer count, absent-collector behavior, replay, buffer,

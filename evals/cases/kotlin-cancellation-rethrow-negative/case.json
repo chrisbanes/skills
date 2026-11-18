@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-cancellation-rethrow-negative",
+  "title": "Keep an existing cancellation-preserving fallback",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "edit",
+  "kind": "negative",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-cancellation-rethrow-negative"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "restraint", "text": "Keeps the existing API and explicit rethrow with the ordinary fallback"},
+    {"id": "independent-cancellation", "text": "Explains that the caught cancellation is propagated even if the caller remains active"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

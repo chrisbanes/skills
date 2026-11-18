@@ -1,0 +1,1 @@
+Review this translation boundary. Return TimedOut only when its own deadline expires. The loader can successfully return null, run its own timeout, or be cancelled by the caller. Explain the smallest safe repair without editing files.

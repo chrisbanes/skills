@@ -1,0 +1,1 @@
+Check whether failure handling in this suspend API needs a repair. The caller must see cancellation from the separately owned deferred and ordinary exceptions should still return the fallback. Leave the code alone if it already meets both requirements.

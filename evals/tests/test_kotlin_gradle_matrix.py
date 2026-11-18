@@ -32,7 +32,7 @@ class KotlinGradleMatrixTest(unittest.TestCase):
     def test_has_risk_weighted_skill_triads_and_routing_cases(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
 
-        self.assertEqual(24, report.case_count)
+        self.assertEqual(29, report.case_count)
         self.assertFalse(any(case.calibration for case in report.cases))
         self.assertEqual(3, sum(case.kind == "routing" for case in report.cases))
         self.assertGreaterEqual(
@@ -46,12 +46,12 @@ class KotlinGradleMatrixTest(unittest.TestCase):
                 self.assertTrue(any(case.kind == "novel" for case in skill_cases))
                 self.assertTrue(any(case.kind == "negative" for case in skill_cases))
 
-    def test_default_filter_selects_all_24_scored_cases(self):
+    def test_default_filter_selects_all_scored_cases(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
 
         selected = filter_cases(report.cases, case_ids=None, skills=None)
 
-        self.assertEqual(24, len(selected))
+        self.assertEqual(report.case_count, len(selected))
 
     def test_positive_edits_and_required_command_cases_start_red(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
@@ -77,6 +77,18 @@ class KotlinGradleMatrixTest(unittest.TestCase):
                 self.assertNotIn("$", prompt)
                 for skill in case.expected_skills:
                     self.assertNotIn(skill, prompt)
+
+    def test_detached_thread_workspace_excludes_local_coroutine_probes(self):
+        report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
+        case = next(
+            case for case in report.cases if case.id == "kotlin-detached-thread-ownership-direct"
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = prepare_workspace(case, REPO_ROOT, Path(temp_dir) / "subject")
+            self.assertFalse(list(workspace.rglob("CoroutineContractsTest.kt")))
+            build = (workspace / "build.gradle.kts").read_text(encoding="utf-8")
+            self.assertNotIn("kotlinx-coroutines-test", build)
 
     def test_exhaustiveness_review_does_not_require_using_an_unused_payload(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
