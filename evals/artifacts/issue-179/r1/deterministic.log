@@ -1,0 +1,11 @@
+c288741ddbac7aa7318e73b085de967356b061f1
+
+> chrisbanes-skills@2026.11.18 evals:validate
+> python3 evals/run.py validate
+
+validated 303 cases
+
+> chrisbanes-skills@2026.11.18 references:check
+> python3 scripts/sync_references.py --check
+
+References are in sync.
