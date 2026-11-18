@@ -310,15 +310,21 @@ def fetch_checks(
     if rollup is None:
         return {"checks": None, "check_contexts": {}}
     state = rollup["state"]
-    total = rollup["contexts"]["totalCount"]
-    if not isinstance(state, str) or not state or type(total) is not int or total < 0:
+    if not isinstance(state, str) or not state:
         raise WatchError(f"PR {number}: incomplete check rollup")
+    total = None
     contexts = {}
     seen_cursors = set()
     while True:
-        if rollup is None or rollup["state"] != state or rollup["contexts"]["totalCount"] != total:
+        if rollup is None or rollup["state"] != state:
             raise WatchError(f"PR {number}: check rollup changed during pagination")
         connection = rollup["contexts"]
+        count = connection["totalCount"]
+        if type(count) is not int or count < 0:
+            raise WatchError(f"PR {number}: invalid check context count")
+        if total is not None and count != total:
+            raise WatchError(f"PR {number}: check context count changed during pagination")
+        total = count
         nodes = connection["nodes"]
         if not isinstance(nodes, list):
             raise WatchError(f"PR {number}: incomplete check contexts")
@@ -368,7 +374,7 @@ def fetch(
     """Return the complete scope graph plus watched repository records.
 
     `replacement_prs` limits a board-preserving snapshot to selected PRs.
-    `rate` aggregates the cycle: summed cost, lowest remaining, latest reset.
+    `rate` aggregates cost and remaining budget within the latest rate window.
     Returns None if the deadline arrives while waiting out the rate budget.
     """
     pr_only = replacement_prs is not None
@@ -412,11 +418,11 @@ def fetch(
             if fields is None:
                 return None
             checks[f"pr{number}"] = fields
-    rate = {
-        "cost": sum(r["cost"] for r in limits),
-        "remaining": min(r["remaining"] for r in limits),
-        "resetAt": max((r["resetAt"] for r in limits), key=parse_time),
-    }
+    reset_at = max(parse_time(r["resetAt"]) for r in limits)
+    window = [r for r in limits if parse_time(r["resetAt"]) == reset_at]
+    rate = {"cost": sum(r["cost"] for r in window),
+            "remaining": min(r["remaining"] for r in window),
+            "resetAt": reset_at.isoformat()}
     return {"pages": pages, "repository": repo, "checks": checks, "rate": rate,
             "parent": parent["records"] if parent else {}}
 
@@ -554,6 +560,8 @@ def wait(args: argparse.Namespace) -> int:
             break
         current = fingerprint(responses)
         changes = diff(baseline, current)
+        if now() >= deadline:
+            break
         if changes:
             report({"status": "changed", "changes": changes})
             return 0

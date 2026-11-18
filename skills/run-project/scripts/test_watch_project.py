@@ -37,6 +37,8 @@ with open(path, "w") as handle:
 response = state["responses"][index]
 if "__sleep__" in response:
     time.sleep(response["__sleep__"])
+if wake_at := response.pop("__sleep_until__", None):
+    time.sleep(max(0, wake_at - time.time()))
 if "__exit__" in response:
     sys.stderr.write(response.get("stderr", ""))
     sys.exit(response["__exit__"])
@@ -716,6 +718,68 @@ class WatchProjectTests(unittest.TestCase):
         self.assertEqual(wake, {"status": "deadline"})
         self.assertEqual(self.calls["calls"], 2)
 
+    def test_wait_polls_again_after_rate_window_resets_between_check_pages(self):
+        current = check_run("build")
+        optional = status_context("optional")
+        _, baseline = self.snapshot(
+            [page([]), repository(prs={7: pull_request(checks="PENDING", contexts=[current, optional])})],
+            "--pr", "7",
+        )
+        old_rate = {"cost": 10, "remaining": 0, "resetAt": iso(-1)}
+        new_rate = {"cost": 1, "remaining": 2, "resetAt": iso(3600)}
+        first = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[current], next_cursor="C1", total=2)
+        }, rate=old_rate)
+        continuation = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[optional], total=2)
+        }, rate=new_rate)
+        changed = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[check_run("build", "COMPLETED", "SUCCESS"), optional])
+        }, rate=new_rate)
+        result, wake = self.wait(baseline, [page([], rate=old_rate), first, continuation,
+                                            page([], rate=new_rate), changed],
+                                 "--pr", "7", deadline=iso(3))
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(wake, {"status": "changed", "changes": [
+            {"kind": "pullRequest", "key": "7", "fields": ["check_contexts"]}
+        ]})
+        self.assertEqual(self.calls["calls"], 5)
+
+    def test_wait_discards_check_change_completed_after_deadline(self):
+        first = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[check_run("optional")], next_cursor="C1", total=2)
+        })
+        pending = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[status_context("build")], total=2)
+        })
+        _, baseline = self.snapshot([page([]), first, pending], "--pr", "7")
+        completed = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[status_context("build", "SUCCESS")], total=2)
+        })
+        deadline = datetime.now(timezone.utc) + timedelta(seconds=2)
+        # Return the last page after the deadline, within the subprocess timeout floor.
+        first["__sleep_until__"] = deadline.timestamp() - 0.7
+        completed["__sleep_until__"] = deadline.timestamp() + 0.05
+        result, wake = self.wait(baseline, [page([]), first, completed], "--pr", "7",
+                                 deadline=deadline.isoformat())
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(wake, {"status": "deadline"})
+        self.assertEqual(self.calls["calls"], 3)
+
+    def test_check_count_requires_an_integer_on_every_page(self):
+        options = "--pr", "7"
+        for initial, continuation in ((2.0, 2), (2, 2.0), (False, 2), (2, True)):
+            with self.subTest(initial=initial, continuation=continuation):
+                first = repository(prs={
+                    7: pull_request(contexts=[check_run("first")], next_cursor="C1", total=initial)
+                })
+                second = repository(prs={
+                    7: pull_request(contexts=[status_context("second")], total=continuation)
+                })
+                result = self.run_script(["snapshot", *COMMON, *options], [page([]), first, second])
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("invalid check context count", json.loads(result.stdout)["message"])
+
     def test_new_review_is_reported_when_decision_is_unchanged(self):
         before = pull_request(review="CHANGES_REQUESTED", review_id="R1")
         _, baseline = self.snapshot([page([]), repository(prs={7: before})], "--pr", "7")
@@ -907,13 +971,14 @@ class WatchProjectTests(unittest.TestCase):
         )
 
     def test_rate_limit_sums_cost_across_the_cycle(self):
+        reset_at = iso(3600)
         responses = [
             page(
                 [item("I1", "Backlog")],
                 next_cursor="C1",
-                rate={"cost": 1, "remaining": 2, "resetAt": iso(3600)},
+                rate={"cost": 1, "remaining": 2, "resetAt": reset_at},
             ),
-            page([], rate={"cost": 1, "remaining": 1, "resetAt": iso(3600)}),
+            page([], rate={"cost": 1, "remaining": 1, "resetAt": reset_at}),
         ]
         _, baseline = self.snapshot(responses)
         _, report = self.wait(baseline, responses, deadline=iso(3), interval="0")
