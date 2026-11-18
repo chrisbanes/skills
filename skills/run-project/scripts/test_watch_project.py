@@ -37,9 +37,15 @@ with open(path, "w") as handle:
 response = state["responses"][index]
 if "__sleep__" in response:
     time.sleep(response["__sleep__"])
+if wake_at := response.pop("__sleep_until__", None):
+    time.sleep(max(0, wake_at - time.time()))
 if "__exit__" in response:
     sys.stderr.write(response.get("stderr", ""))
     sys.exit(response["__exit__"])
+for alias, history in response.pop("__commit_history__", {{}}).items():
+    query = next(arg for arg in sys.argv if arg.startswith("query="))
+    count = int(query.split("commits(last: ", 1)[1].split(")", 1)[0])
+    response["data"]["repository"][alias]["commits"]["nodes"] = history[-count:]
 print(json.dumps(response))
 """
 DEFAULT_RATE = {"cost": 1, "remaining": 4000, "resetAt": "2999-01-01T00:00:00Z"}
@@ -106,7 +112,18 @@ def pull_request(
     review_id=None,
     comment_id=None,
     base="base1",
+    contexts=(),
+    next_cursor=None,
+    total=None,
 ):
+    rollup = None if checks is None else {
+        "state": checks,
+        "contexts": {
+            "totalCount": len(contexts) if total is None else total,
+            "nodes": list(contexts),
+            "pageInfo": {"hasNextPage": next_cursor is not None, "endCursor": next_cursor},
+        },
+    }
     return {
         "baseRefOid": base,
         "reviews": {"nodes": [{"id": review_id}] if review_id else []},
@@ -115,8 +132,17 @@ def pull_request(
         "headRefOid": sha,
         "mergeable": mergeable,
         "reviewDecision": review,
-        "commits": {"nodes": [{"commit": {"statusCheckRollup": {"state": checks}}}]},
+        "commits": {"nodes": [{"commit": {"oid": sha, "statusCheckRollup": rollup}}]},
     }
+
+
+def check_run(check_id, status="IN_PROGRESS", conclusion=None, name="build"):
+    return {"__typename": "CheckRun", "id": check_id, "name": name,
+            "status": status, "conclusion": conclusion}
+
+
+def status_context(context_id, state="PENDING"):
+    return {"__typename": "StatusContext", "id": context_id, "context": "legacy", "state": state}
 
 
 def issue(comment_id="IC_1", updated="2026-10-01T00:00:00Z", title="T", body="B"):
@@ -128,7 +154,8 @@ def issue(comment_id="IC_1", updated="2026-10-01T00:00:00Z", title="T", body="B"
 
 
 def repository(*, prs=None, issues=None, rate=None):
-    records = {f"pr{number}": value for number, value in (prs or {}).items()}
+    records = {f"pr{number}": {"id": f"PR_{number}", "number": number, **value}
+               if value is not None else None for number, value in (prs or {}).items()}
     records.update({f"issue{number}": value for number, value in (issues or {}).items()})
     return {"data": {"rateLimit": rate or DEFAULT_RATE, "repository": records}}
 
@@ -308,7 +335,8 @@ class WatchProjectTests(unittest.TestCase):
             repository(prs={7: pull_request(sha="new")}),
         ]
         result = self.run_script(
-            ["snapshot", *COMMON, "--pr", "7", "--board-from", str(prior)], [fresh[1]]
+            ["snapshot", *COMMON, "--pr", "7", "--refresh-pr", "7", "--board-from", str(prior)],
+            [fresh[1]],
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.calls["calls"], 1)
@@ -329,7 +357,8 @@ class WatchProjectTests(unittest.TestCase):
             "--pr", "7", "--issue", "9",
         )
         result = self.run_script(
-            ["snapshot", *COMMON, "--pr", "7", "--issue", "9", "--board-from", str(prior)],
+            ["snapshot", *COMMON, "--pr", "7", "--refresh-pr", "7", "--issue", "9",
+             "--board-from", str(prior)],
             [repository(prs={7: pull_request(sha="new")})],
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -354,6 +383,89 @@ class WatchProjectTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout), before)
+        self.assertEqual(self.calls["calls"], 0)
+
+    def test_targeted_replacement_preserves_second_pr_change_for_next_wait(self):
+        watch_set = ("--pr", "7", "--pr", "8")
+        first = pull_request()
+        changed = pull_request(review_id="new-review")
+        before, prior = self.snapshot(
+            [page([]), repository(prs={7: first, 8: first})], *watch_set
+        )
+        _, wake = self.wait(
+            prior, [page([]), repository(prs={7: changed, 8: first})], *watch_set
+        )
+        self.assertEqual(wake["changes"], [
+            {"kind": "pullRequest", "key": "7", "fields": ["review_id"]}
+        ])
+        merged, replacement = self.snapshot(
+            [repository(prs={7: changed})], *watch_set, "--refresh-pr", "7",
+            "--board-from", str(prior),
+        )
+        self.assertEqual(merged["pullRequest"]["8"], before["pullRequest"]["8"])
+        self.assertEqual(self.calls["calls"], 1)
+        query = " ".join(self.calls["argv"][0])
+        self.assertIn("pullRequest(number: 7)", query)
+        self.assertNotIn("pullRequest(number: 8)", query)
+        self.assertNotIn("ProjectV2", query)
+        _, wake = self.wait(
+            replacement, [page([]), repository(prs={7: changed, 8: changed})], *watch_set
+        )
+        self.assertEqual(wake["changes"], [
+            {"kind": "pullRequest", "key": "8", "fields": ["review_id"]}
+        ])
+
+    def test_targeted_replacement_reads_new_pr_and_retains_removed_pr(self):
+        before, prior = self.snapshot(
+            [page([]), repository(prs={7: pull_request(), 8: pull_request()})],
+            "--pr", "7", "--pr", "8",
+        )
+        watch_set = ("--pr", "8", "--pr", "9")
+        current = pull_request(sha="new")
+        merged, replacement = self.snapshot(
+            [repository(prs={9: current})], *watch_set, "--board-from", str(prior)
+        )
+        self.assertEqual(merged["pullRequest"]["7"], before["pullRequest"]["7"])
+        self.assertEqual(merged["pullRequest"]["8"], before["pullRequest"]["8"])
+        self.assertEqual(merged["pullRequest"]["9"]["sha"], "new")
+        self.assertEqual(self.calls["calls"], 1)
+        query = " ".join(self.calls["argv"][0])
+        self.assertIn("pullRequest(number: 9)", query)
+        self.assertNotIn("pullRequest(number: 8)", query)
+        self.assertNotIn("pullRequest(number: 7)", query)
+        _, wake = self.wait(
+            replacement, [page([]), repository(prs={8: pull_request(), 9: current})], *watch_set
+        )
+        self.assertEqual(wake["changes"], [
+            {"kind": "pullRequest", "key": "7", "fields": ["removed"]}
+        ])
+
+    def test_targeted_replacement_with_empty_refresh_set_keeps_existing_pr(self):
+        before, prior = self.snapshot(
+            [page([]), repository(prs={7: pull_request()})], "--pr", "7"
+        )
+        merged, _ = self.snapshot([], "--pr", "7", "--board-from", str(prior))
+        self.assertEqual(merged, before)
+        self.assertEqual(self.calls["calls"], 0)
+
+    def test_refresh_pr_is_only_valid_for_watched_prs_in_targeted_snapshots(self):
+        _, prior = self.snapshot([page([])])
+        for options, message in (
+            (["--pr", "7", "--refresh-pr", "7"], "--refresh-pr requires --board-from"),
+            (["--pr", "7", "--board-from", str(prior), "--refresh-pr", "8"],
+             "--refresh-pr must be in the --pr watch set"),
+        ):
+            with self.subTest(options=options):
+                result = self.run_script(["snapshot", *COMMON, *options], [])
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(json.loads(result.stdout), {"status": "error", "message": message})
+                self.assertEqual(self.calls["calls"], 0)
+        result = self.run_script(
+            ["wait", *COMMON, "--baseline", str(prior), "--deadline", iso(60), "--refresh-pr", "7"],
+            [],
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("unrecognized arguments: --refresh-pr 7", result.stderr)
         self.assertEqual(self.calls["calls"], 0)
 
     def test_snapshot_board_from_rejects_a_bad_file(self):
@@ -452,6 +564,221 @@ class WatchProjectTests(unittest.TestCase):
                     report["changes"],
                     [{"kind": "pullRequest", "key": "7", "fields": [field]}],
                 )
+
+    def test_current_head_check_change_on_later_page_wakes_with_pending_aggregate(self):
+        for pending, finished in (
+            (check_run("required"), check_run("required", "COMPLETED", "SUCCESS")),
+            (status_context("required"), status_context("required", "SUCCESS")),
+        ):
+            with self.subTest(kind=pending["__typename"]):
+                first = repository(prs={
+                    7: pull_request(checks="PENDING", contexts=[check_run("optional", name="lint")],
+                                    next_cursor="C1", total=2),
+                    8: pull_request(),
+                })
+                before_page = repository(prs={7: pull_request(checks="PENDING", contexts=[pending], total=2)})
+                after_page = repository(prs={7: pull_request(checks="PENDING", contexts=[finished], total=2)})
+                watch_set = ("--pr", "7", "--pr", "8")
+                before, baseline = self.snapshot([page([]), first, before_page], *watch_set)
+                pr = before["pullRequest"]["7"]
+                self.assertEqual(pr["sha"], "abc")
+                self.assertEqual(pr["checks"], "PENDING")
+                self.assertEqual(set(pr["check_contexts"]), {"optional", "required"})
+                result, wake = self.wait(baseline, [page([]), first, after_page], *watch_set)
+                self.assertEqual(result.returncode, 0, result.stdout)
+                self.assertEqual(wake, {"status": "changed", "changes": [
+                    {"kind": "pullRequest", "key": "7", "fields": ["check_contexts"]}
+                ]})
+                self.assertEqual(self.calls["calls"], 3)
+                self.assertIn("checkAfter=C1", self.calls["argv"][2])
+                query = " ".join(self.calls["argv"][2])
+                self.assertIn("pullRequest(number: 7)", query)
+                self.assertNotIn("pullRequest(number: 8)", query)
+                self.assertNotIn("reviews(", query)
+                self.assertNotIn("isRequired", query)
+
+    def test_reordered_and_older_head_checks_stay_quiet(self):
+        required = check_run("required")
+        optional = status_context("optional")
+
+        def with_history(current, older):
+            reading = repository(prs={7: current})
+            reading["__commit_history__"] = {"pr7": older["commits"]["nodes"] + current["commits"]["nodes"]}
+            return reading
+
+        current = pull_request(checks="PENDING", contexts=[required, optional])
+        before = with_history(current, pull_request(sha="old", checks="PENDING"))
+        _, baseline = self.snapshot([page([]), before], "--pr", "7")
+        after = with_history(
+            pull_request(checks="PENDING", contexts=[optional, required]),
+            pull_request(sha="old", checks="SUCCESS", contexts=[check_run("old", "COMPLETED", "SUCCESS")]),
+        )
+        wake_after = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[required, optional], review_id="new-review")
+        })
+        result, wake = self.wait(baseline, [page([]), after, page([]), wake_after], "--pr", "7")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(wake["changes"], [
+            {"kind": "pullRequest", "key": "7", "fields": ["review_id"]}
+        ])
+        self.assertEqual(self.calls["calls"], 4)
+
+    def test_empty_and_null_check_rollups_and_old_baseline(self):
+        for aggregate in (None, "PENDING"):
+            with self.subTest(aggregate=aggregate):
+                before, baseline = self.snapshot(
+                    [page([]), repository(prs={7: pull_request(checks=aggregate)})], "--pr", "7"
+                )
+                pr = before["pullRequest"]["7"]
+                self.assertEqual(pr["checks"], aggregate)
+                self.assertEqual(pr.pop("check_contexts"), {})
+                baseline.write_text(json.dumps(before))
+                result, wake = self.wait(baseline, [
+                    page([]), repository(prs={7: pull_request(checks=aggregate)}),
+                    page([]), repository(prs={7: pull_request(checks=aggregate, review_id="new-review")}),
+                ], "--pr", "7")
+                self.assertEqual(result.returncode, 0, result.stdout)
+                self.assertEqual(wake["changes"], [
+                    {"kind": "pullRequest", "key": "7", "fields": ["review_id"]}
+                ])
+
+    def test_missing_or_ambiguous_head_commit_returns_error(self):
+        older = pull_request(sha="old")["commits"]["nodes"][0]
+        latest = pull_request()["commits"]["nodes"][0]
+        for nodes in ([], [older], [older, latest], [{"commit": {"statusCheckRollup": None}}]):
+            with self.subTest(nodes=nodes):
+                record = pull_request()
+                record["commits"]["nodes"] = nodes
+                result = self.run_script(
+                    ["snapshot", *COMMON, "--pr", "7"], [page([]), repository(prs={7: record})]
+                )
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(json.loads(result.stdout)["status"], "error")
+
+    def test_rejects_incomplete_or_inconsistent_check_pages(self):
+        first = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[check_run("optional")], next_cursor="C1", total=3)
+        })
+        _, baseline = self.snapshot([page([]), repository(prs={7: pull_request()})], "--pr", "7")
+        for failure in ("head", "commit", "id", "number", "missing-pr", "missing-page-info",
+                        "invalid-page-info", "missing-cursor", "repeated-cursor", "truncated",
+                        "duplicate", "null-rollup"):
+            with self.subTest(failure=failure):
+                second = repository(prs={
+                    7: pull_request(checks="PENDING", contexts=[status_context("legacy")],
+                                    next_cursor="C2", total=3)
+                })
+                records = second["data"]["repository"]
+                pr = records["pr7"]
+                commit = pr["commits"]["nodes"][0]["commit"]
+                connection = commit["statusCheckRollup"]["contexts"]
+                info = connection["pageInfo"]
+                if failure == "head":
+                    pr["headRefOid"] = commit["oid"] = "new"
+                elif failure == "commit":
+                    commit["oid"] = "old"
+                elif failure == "id":
+                    pr["id"] = "OTHER_PR"
+                elif failure == "number":
+                    pr["number"] = 8
+                elif failure == "missing-pr":
+                    del records["pr7"]
+                elif failure == "missing-page-info":
+                    del connection["pageInfo"]
+                elif failure == "invalid-page-info":
+                    info["hasNextPage"] = "false"
+                elif failure == "missing-cursor":
+                    info["endCursor"] = None
+                elif failure == "repeated-cursor":
+                    info["endCursor"] = "C1"
+                elif failure == "truncated":
+                    info["hasNextPage"] = False
+                elif failure == "duplicate":
+                    connection["nodes"] = [check_run("optional")]
+                else:
+                    commit["statusCheckRollup"] = None
+                result, wake = self.wait(baseline, [page([]), first, second], "--pr", "7")
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertEqual(wake["status"], "error")
+                self.assertNotIn("changes", wake)
+                self.assertEqual(self.calls["calls"], 3)
+
+    def test_check_pagination_respects_rate_budget_and_deadline(self):
+        first = repository(
+            prs={7: pull_request(contexts=[check_run("first")], next_cursor="C1", total=2)},
+            rate={"cost": 10, "remaining": 0, "resetAt": iso(3600)},
+        )
+        _, baseline = self.snapshot([page([]), repository(prs={7: pull_request()})], "--pr", "7")
+        result = self.run_script(["snapshot", *COMMON, "--pr", "7"], [page([]), first])
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("rate limit exhausted", json.loads(result.stdout)["message"])
+        self.assertEqual(self.calls["calls"], 2)
+        result, wake = self.wait(baseline, [page([]), first], "--pr", "7", deadline=iso(2))
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(wake, {"status": "deadline"})
+        self.assertEqual(self.calls["calls"], 2)
+
+    def test_wait_polls_again_after_rate_window_resets_between_check_pages(self):
+        current = check_run("build")
+        optional = status_context("optional")
+        _, baseline = self.snapshot(
+            [page([]), repository(prs={7: pull_request(checks="PENDING", contexts=[current, optional])})],
+            "--pr", "7",
+        )
+        old_rate = {"cost": 10, "remaining": 0, "resetAt": iso(-1)}
+        new_rate = {"cost": 1, "remaining": 2, "resetAt": iso(3600)}
+        first = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[current], next_cursor="C1", total=2)
+        }, rate=old_rate)
+        continuation = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[optional], total=2)
+        }, rate=new_rate)
+        changed = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[check_run("build", "COMPLETED", "SUCCESS"), optional])
+        }, rate=new_rate)
+        result, wake = self.wait(baseline, [page([], rate=old_rate), first, continuation,
+                                            page([], rate=new_rate), changed],
+                                 "--pr", "7", deadline=iso(3))
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(wake, {"status": "changed", "changes": [
+            {"kind": "pullRequest", "key": "7", "fields": ["check_contexts"]}
+        ]})
+        self.assertEqual(self.calls["calls"], 5)
+
+    def test_wait_discards_check_change_completed_after_deadline(self):
+        first = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[check_run("optional")], next_cursor="C1", total=2)
+        })
+        pending = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[status_context("build")], total=2)
+        })
+        _, baseline = self.snapshot([page([]), first, pending], "--pr", "7")
+        completed = repository(prs={
+            7: pull_request(checks="PENDING", contexts=[status_context("build", "SUCCESS")], total=2)
+        })
+        deadline = datetime.now(timezone.utc) + timedelta(seconds=2)
+        # Return the last page after the deadline, within the subprocess timeout floor.
+        first["__sleep_until__"] = deadline.timestamp() - 0.7
+        completed["__sleep_until__"] = deadline.timestamp() + 0.05
+        result, wake = self.wait(baseline, [page([]), first, completed], "--pr", "7",
+                                 deadline=deadline.isoformat())
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(wake, {"status": "deadline"})
+        self.assertEqual(self.calls["calls"], 3)
+
+    def test_check_count_requires_an_integer_on_every_page(self):
+        options = "--pr", "7"
+        for initial, continuation in ((2.0, 2), (2, 2.0), (False, 2), (2, True)):
+            with self.subTest(initial=initial, continuation=continuation):
+                first = repository(prs={
+                    7: pull_request(contexts=[check_run("first")], next_cursor="C1", total=initial)
+                })
+                second = repository(prs={
+                    7: pull_request(contexts=[status_context("second")], total=continuation)
+                })
+                result = self.run_script(["snapshot", *COMMON, *options], [page([]), first, second])
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("invalid check context count", json.loads(result.stdout)["message"])
 
     def test_new_review_is_reported_when_decision_is_unchanged(self):
         before = pull_request(review="CHANGES_REQUESTED", review_id="R1")
@@ -644,13 +971,14 @@ class WatchProjectTests(unittest.TestCase):
         )
 
     def test_rate_limit_sums_cost_across_the_cycle(self):
+        reset_at = iso(3600)
         responses = [
             page(
                 [item("I1", "Backlog")],
                 next_cursor="C1",
-                rate={"cost": 1, "remaining": 2, "resetAt": iso(3600)},
+                rate={"cost": 1, "remaining": 2, "resetAt": reset_at},
             ),
-            page([], rate={"cost": 1, "remaining": 1, "resetAt": iso(3600)}),
+            page([], rate={"cost": 1, "remaining": 1, "resetAt": reset_at}),
         ]
         _, baseline = self.snapshot(responses)
         _, report = self.wait(baseline, responses, deadline=iso(3), interval="0")
@@ -876,7 +1204,7 @@ class WatchProjectTests(unittest.TestCase):
         self.assertIn("issue B missing", json.loads(result.stdout)["message"])
 
     def test_queries_are_read_only(self):
-        self.snapshot([page([]), repository()], "--pr", "7")
+        self.snapshot([page([]), repository(prs={7: pull_request()})], "--pr", "7")
         for argv in self.calls["argv"]:
             self.assertEqual(argv[:2], ["api", "graphql"])
             self.assertNotIn("mutation", " ".join(argv))

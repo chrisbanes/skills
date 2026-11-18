@@ -1375,7 +1375,22 @@ fingerprints ordered sub-issue IDs, dependency IDs and states, labels,
 assignment, identity and latest marker-comment change. Equal dependency counts
 cannot hide replaced edges. Incomplete reads or identity ambiguity return an
 error, never an unchanged/empty graph. `--board-from` preserves the same prior
-scope graph for parent scope too; it refreshes only watched PRs.
+scope graph for parent scope too.
+
+For a targeted replacement, add `--board-from <prior baseline>` to
+`snapshot` and pass repeatable `--refresh-pr <N>` for exactly the PRs covered
+by the following authoritative read. Keep the complete watch set in `--pr`.
+The snapshot queries those refresh PRs and newly watched PRs. It preserves
+other prior PR fingerprints, including removed identities, as well as item
+and issue fingerprints. `--refresh-pr` requires `snapshot --board-from` and
+each refresh PR must be in `--pr`.
+
+The PR fingerprint includes the aggregate check status and each check run and
+status context on the observed head. The watcher reads every context page and
+returns an error if the PR/head identity changes or a page is incomplete.
+Treat check changes as a signal for an authoritative reread, where the
+controller determines requiredness and readiness.
+
 The default interval remains 120 seconds. This command never performs writes.
 
 ## Publish an authority pause
