@@ -400,6 +400,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "implement-with-subagents-dirty-checkout-negative",
                 "implement-with-subagents-worktree-reuse-direct",
                 "implement-with-subagents-worktree-repair-novel",
+                "implement-with-subagents-one-slot-repair-novel",
                 "implement-with-subagents-worktree-retirement-negative",
                 "implement-with-subagents-worktree-cleanup-failure-negative",
                 "implement-with-subagents-host-cleanup-novel",

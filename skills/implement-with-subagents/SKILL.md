@@ -56,8 +56,11 @@ checkouts when delegating.
    inspect the joined diff when cross-file interactions, changed shared
    interfaces, or merge resolutions can change meaning. Reuse a passing check
    only when inspection shows its inputs and environment unchanged at the
-   integrated head. An accepted item is complete, not assignable
-   again.
+   integrated head. Leave accepted items with passing integrated checks complete.
+   If an integrated check fails, assess how the original owner repairs forward.
+   In a solo run, the lead repairs in the integration checkout. In a delegated
+   run, assess the worker's route under the
+   [failed-check repair rules](references/checkout-lifecycle.md#repair-after-failed-integrated-checks).
 4. Report the next action, evidence, and any acceptance gap. Stop before
    implementation. Check release eligibility, safe retirement, and checkout
    dispositions without mutating them. For an invalid dependency graph or unsafe

@@ -1,0 +1,39 @@
+{
+  "id": "implement-with-subagents-one-slot-repair-novel",
+  "title": "Repair failed integration with one reserved worker checkout",
+  "family": "workflow",
+  "target_skills": ["implement-with-subagents"],
+  "expected_skills": ["implement-with-subagents"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-subagents",
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": ["python3", "@validators/text_case.py", "implement-with-subagents-one-slot-repair-novel"],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": ["python3", "@validators/pr_review_decisions.py", "implement-with-subagents-one-slot-repair-novel", "--response"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "reserved-checkout",
+      "text": "Resumes W1 in its clean idle checkout with the slot still reserved, using a fresh unique branch from the failed integrated SHA. Accounts for needed artifacts and preserves the original task branch, accepted commit, failed integrated commit and check evidence."
+    },
+    {
+      "id": "integration-gate",
+      "text": "Keeps B and further integration on hold during repair. Inspects the task-scoped repair, verifies the integration checkout is clean at the failed SHA before integrating it, and reruns affected checks on the repaired integrated SHA before releasing B or the slot."
+    },
+    {
+      "id": "occupied-checkout",
+      "text": "Pauses when a process is still using the only checkout, keeps W1 and the reservation, and checks whether the checkout is clean and idle before resuming."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

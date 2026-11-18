@@ -46,6 +46,20 @@ the exact path, branch, base, and instructions. Never reset or delete an old
 branch to reuse its checkout. A clean detached checkout, such as a planning
 checkout, is reused by detaching it at the recorded current base SHA.
 
+## Repair after failed integrated checks
+
+For a failed integrated check, resume the original owner in its retained
+checkout when it is clean, no owner or process is using it, and needed
+untracked or ignored artifacts are accounted for. Keep the slot reserved for
+that task. Record the original branch, accepted commit, and failure evidence.
+Apply the branch creation and verification steps above using the recorded
+failed integrated SHA as the base. Keep the original branch ref intact.
+If the retained checkout is unsuitable, use another available suitable
+worker checkout under the existing capacity rules. If none is available,
+pause the repair until a suitable checkout is available. After integration
+and passing affected checks at the repaired integrated SHA, apply the
+release gate above.
+
 ## Retire
 
 For a pool of worker slots, retire released surplus checkouts when remaining

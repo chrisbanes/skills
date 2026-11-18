@@ -395,11 +395,11 @@ invalidated at an integrated head. Additional orchestration calibrations cover
 direct TDD at an approved behavior seam, documentation without TDD, completed
 integration failures repaired forward, final review freshness, dirty-start
 restraint, runtime owner capability, and the accepted-item no-op behavior.
-Four worktree lifecycle cases cover bounded slot reuse, same-owner repair in a
-different slot, preservation of checkouts and artifacts that are unsafe to
-retire, and cleanup failure that blocks workflow completion despite successful
-code verification. These cases assess supplied state read-only and do not prove
-live subagent execution.
+Five worktree lifecycle cases cover bounded slot reuse, same-owner repair in a
+different slot, repair in the only reserved checkout when idle and waiting when
+it is busy, preservation of checkouts and artifacts that are unsafe to retire,
+and cleanup failure that blocks workflow completion despite successful code
+verification. These cases assess supplied state read-only.
 Five ownership calibrations cover a solo chain with integrated-head checks,
 missing final-review capability before solo implementation, worker ownership of
 an entire late-fanout graph, direct controller polling, and one bounded large-log

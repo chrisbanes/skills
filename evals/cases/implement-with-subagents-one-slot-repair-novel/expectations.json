@@ -1,0 +1,28 @@
+{
+  "files": ["state.md"],
+  "must_contain": ["Immutable evaluation state"],
+  "decisions": {
+    "idle": {
+      "owner": "W1",
+      "checkout": "/worktrees/w1",
+      "action": "repair",
+      "repair_base": "2222222",
+      "slot": "reserved",
+      "original_branch": "preserve",
+      "original_evidence": "retain",
+      "affected_check": "rerun-on-repaired-integration",
+      "dependent": "wait-for-integrated-checks"
+    },
+    "busy": {
+      "owner": "W1",
+      "checkout": null,
+      "action": "wait",
+      "repair_base": "2222222",
+      "slot": "reserved",
+      "original_branch": "preserve",
+      "original_evidence": "retain",
+      "affected_check": "rerun-on-repaired-integration",
+      "dependent": "wait-for-integrated-checks"
+    }
+  }
+}
