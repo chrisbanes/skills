@@ -19,6 +19,8 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from urllib.parse import unquote_to_bytes, urlsplit
+import uuid
 from typing import Any, Callable, Mapping, Sequence
 
 
@@ -183,9 +185,10 @@ def subprocess_command(argv: Sequence[str], *, cwd: Path, env: Mapping[str, str]
     return result.stdout
 
 
-def run_git(root: Path, args: Sequence[str], *, allow_failure: bool = False) -> str:
+def run_git(root: Path, args: Sequence[str], *, allow_failure: bool = False,
+            env: Mapping[str, str] | None = None) -> str:
     result = subprocess.run(
-        ["git", *args], cwd=root, text=True, stdout=subprocess.PIPE,
+        ["git", *args], cwd=root, env=env, text=True, stdout=subprocess.PIPE,
         stderr=subprocess.PIPE, check=False,
     )
     if result.returncode and not allow_failure:
@@ -195,7 +198,7 @@ def run_git(root: Path, args: Sequence[str], *, allow_failure: bool = False) -> 
 
 def git_status(root: Path) -> str:
     result = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=root, text=True,
+        ["git", "status", "--porcelain", "--untracked-files=all"], cwd=root, text=True,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
     )
     if result.returncode:
@@ -263,7 +266,47 @@ def release_paths(root: Path, config: Mapping[str, Any]) -> tuple[Path, Path | N
     return version_file, changelog_path, api_files
 
 
-def common_preflight(root: Path, config: Mapping[str, Any], *, require_prepared: bool) -> None:
+def push_destination(root: Path, remote: str) -> str:
+    urls = run_git(root, ["remote", "get-url", "--push", "--all", "--", remote]).splitlines()
+    if len(urls) != 1 or not urls[0]:
+        raise ValueError("release requires exactly one Git push destination")
+    url = urls[0]
+    if url.startswith("file://"):
+        parts = urlsplit(url)
+        if parts.netloc not in ("", "localhost") or not parts.path.startswith("/") or parts.query or parts.fragment:
+            raise ValueError("cannot bind a non-local or ambiguous file URL")
+        local_path = Path(os.fsdecode(unquote_to_bytes(parts.path)))
+    elif ":" not in url.split("/", 1)[0]:
+        try:
+            local_path = Path(url).expanduser()
+        except RuntimeError as error:
+            raise ValueError("cannot resolve home directory for Git push destination") from error
+    else:
+        return url
+    local_path = (root / local_path).resolve()
+    if (local_path / ".git").exists():
+        local_path = local_path / ".git"
+    git_dir = run_git(root, ["rev-parse", "--resolve-git-dir", str(local_path)])
+    return str((root / git_dir).resolve())
+
+
+def git_at_destination(root: Path, destination: str, operation: str, *args: str) -> str:
+    # Git rewrites literal URLs again, including pushInsteadOf after resolving an explicit pushurl.
+    alias = f"release-{uuid.uuid4().hex}:"
+    options = ["--no-follow-tags"] if operation == "push" else []
+    return run_git(root, [
+        f"--config-env=url.{destination}.insteadOf=RELEASE_GIT_ALIAS",
+        f"--config-env=url.{destination}.pushInsteadOf=RELEASE_GIT_ALIAS",
+        operation, *options, "--", alias, *args,
+    ], env={**os.environ, "RELEASE_GIT_ALIAS": alias})
+
+
+def destination_trailer(destination: str) -> str:
+    digest = hashlib.sha256(destination.encode("utf-8")).hexdigest()
+    return f"Release-Destination-SHA256: {digest}"
+
+
+def common_preflight(root: Path, config: Mapping[str, Any], *, require_prepared: bool) -> str:
     release, _ = validate_versions(config)
     tag = config.get("tag", release)
     if not isinstance(tag, str) or not tag:
@@ -278,13 +321,15 @@ def common_preflight(root: Path, config: Mapping[str, Any], *, require_prepared:
         raise ValueError("repository and index must be clean before release work")
     if run_git(root, ["branch", "--show-current"]) != branch:
         raise ValueError(f"release must run on configured branch {branch}")
-    run_git(root, ["remote", "get-url", remote])
+    destination = push_destination(root, remote)
     version_file, _changelog, _api_files = release_paths(root, config)
     version = get_property(require(config.get("version_key"), "version_key is required"), version_file)
     local_tag = run_git(root, ["rev-parse", "--verify", f"refs/tags/{tag}"], allow_failure=True)
     if require_prepared:
         if local_tag != run_git(root, ["rev-parse", "HEAD"]):
             raise RecoveryRequired("prepared release tag must point at HEAD")
+        if destination_trailer(destination) not in run_git(root, ["log", "-1", "--format=%B"]).splitlines():
+            raise RecoveryRequired("prepared release has a different or unverified Git push destination")
         if version != release:
             raise RecoveryRequired("prepared release commit does not contain the release version")
     else:
@@ -292,10 +337,10 @@ def common_preflight(root: Path, config: Mapping[str, Any], *, require_prepared:
             raise ValueError(f"release tag {tag} already exists locally")
         if not version.endswith("-SNAPSHOT"):
             raise ValueError("current version property must be a -SNAPSHOT version")
-    remote_tag = run_git(root, ["ls-remote", "--tags", remote, f"refs/tags/{tag}"])
+    remote_tag = git_at_destination(root, destination, "ls-remote", f"refs/tags/{tag}")
     if remote_tag:
         raise RecoveryRequired(f"release tag {tag} already exists remotely; inspect before retrying")
-    remote_branch = run_git(root, ["ls-remote", remote, f"refs/heads/{branch}"])
+    remote_branch = git_at_destination(root, destination, "ls-remote", f"refs/heads/{branch}")
     if not remote_branch:
         raise ValueError("configured remote branch is absent; resolve the release destination first")
     remote_sha = remote_branch.split()[0]
@@ -305,6 +350,7 @@ def common_preflight(root: Path, config: Mapping[str, Any], *, require_prepared:
         raise ValueError("remote branch is not a known ancestor; refresh and reconcile before release") from error
     if require_prepared and remote_sha == run_git(root, ["rev-parse", "HEAD"]):
         raise RecoveryRequired("prepared release commit already exists on remote branch; inspect before retrying")
+    return destination
 
 
 def require_config_binding(root: Path, config: Mapping[str, Any]) -> None:
@@ -358,7 +404,7 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         raise ValueError("checks must be a list of command arrays")
     for check in checks:
         command_argv(check, config)
-    common_preflight(root, config, require_prepared=False)
+    destination = common_preflight(root, config, require_prepared=False)
     release, _next = validate_versions(config)
     version_file, changelog_path, api_files = release_paths(root, config)
     version_key = require(config.get("version_key"), "version_key is required")
@@ -375,7 +421,7 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         changelog_content = updated_changelog(changelog_path.read_bytes().decode("utf-8"), config["changelog"], release, date)
     snapshots = [(api_file.parent / f"{release}.txt", api_file.read_bytes().decode("utf-8")) for api_file in api_files]
     for snapshot, _content in snapshots:
-        if snapshot.exists():
+        if snapshot.is_symlink() or snapshot.exists():
             raise ValueError(f"API snapshot already exists: {snapshot.relative_to(root)}")
     initial_sha = run_git(root, ["rev-parse", "HEAD"])
     originals = {version_file: version_file.read_bytes()}
@@ -386,11 +432,15 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     if changelog_content is not None:
         planned_files[changelog_path] = changelog_content
     planned_files.update(snapshots)
-    for path, content in planned_files.items():
-        path.write_bytes(content.encode("utf-8"))
+    written = []
     # Bind validation evidence to the exact prepared release content. Checks
     # never receive release credentials.
     try:
+        for path, content in planned_files.items():
+            mode = "xb" if originals[path] is None else "wb"
+            with path.open(mode) as handle:
+                written.append(path)
+                handle.write(content.encode("utf-8"))
         run_checks(root, config, command_runner)
         if run_git(root, ["rev-parse", "HEAD"]) != initial_sha:
             raise ValueError("release check changed HEAD")
@@ -400,9 +450,9 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         # Never reset the index or discard edits made by a check or another actor.
         staged = set(run_git(root, ["diff", "--cached", "--name-only", "-z"]).split("\0"))
         if run_git(root, ["rev-parse", "HEAD"]) == initial_sha:
-            for path, content in planned_files.items():
-                if (str(path.relative_to(root)) not in staged and path.is_file()
-                        and path.read_bytes().decode("utf-8") == content):
+            for path in written:
+                if (str(path.relative_to(root)) not in staged and not path.is_symlink() and path.is_file()
+                        and path.read_bytes() == planned_files[path].encode("utf-8")):
                     if originals[path] is None:
                         path.unlink()
                     else:
@@ -418,7 +468,7 @@ def prepare(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         root,
         [
             "commit", "-m", f"Prepare for release {release}\n\n"
-            f"Release-Config-SHA256: {config_digest(config)}",
+            f"Release-Config-SHA256: {config_digest(config)}\n{destination_trailer(destination)}",
         ],
     )
     tag = config.get("tag", release)
@@ -454,14 +504,13 @@ def credential_environment(config: Mapping[str, Any], process_env: Mapping[str, 
     return child
 
 
-def verify_remote_git(root: Path, config: Mapping[str, Any]) -> None:
+def verify_remote_git(root: Path, config: Mapping[str, Any], destination: str) -> None:
     release, _ = validate_versions(config)
     tag = config.get("tag", release)
-    remote = config["remote"]
     branch = config["branch"]
     sha = run_git(root, ["rev-parse", "HEAD"])
-    remote_branch = run_git(root, ["ls-remote", remote, f"refs/heads/{branch}"])
-    remote_tag = run_git(root, ["ls-remote", remote, f"refs/tags/{tag}"])
+    remote_branch = git_at_destination(root, destination, "ls-remote", f"refs/heads/{branch}")
+    remote_tag = git_at_destination(root, destination, "ls-remote", f"refs/tags/{tag}")
     if not remote_branch.startswith(sha) or not remote_tag.startswith(sha):
         raise RecoveryRequired("remote branch or tag does not verify the prepared release commit")
 
@@ -470,9 +519,16 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
             process_env: Mapping[str, str] | None = None) -> PublishResult:
     root = root.resolve()
     publication = publication_config(config)
-    common_preflight(root, config, require_prepared=True)
+    destination = common_preflight(root, config, require_prepared=True)
     require_config_binding(root, config)
     prepared_sha = run_git(root, ["rev-parse", "HEAD"])
+    branch_ref = f"refs/heads/{config['branch']}"
+    tag_ref = f"refs/tags/{config.get('tag', config['release_version'])}"
+
+    def push_prepared_refs() -> None:
+        for ref in (branch_ref, tag_ref):
+            git_at_destination(root, destination, "push", f"{prepared_sha}:{ref}")
+
     try:
         run_checks(root, config, command_runner, process_env)
     except Exception as error:
@@ -491,8 +547,7 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         if publication["mode"] == "local":
             command_runner(command_argv(publication["command"], config), cwd=root, env=environment)
         else:
-            run_git(root, ["push", config["remote"], f"HEAD:refs/heads/{config['branch']}"])
-            run_git(root, ["push", config["remote"], config.get("tag", config["release_version"])])
+            push_prepared_refs()
             ci = command_runner(command_argv(publication["ci_check"], config), cwd=root, env=non_publication_env(config, process_env))
             try:
                 ci_state = json.loads(ci)["state"]
@@ -513,20 +568,19 @@ def publish(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     require_prepared_intact(root, config, prepared_sha)
     if publication["mode"] == "local":
         try:
-            run_git(root, ["push", config["remote"], f"HEAD:refs/heads/{config['branch']}"])
-            run_git(root, ["push", config["remote"], config.get("tag", config["release_version"])])
+            push_prepared_refs()
         except Exception as error:
             raise RecoveryRequired("artifact published but Git push failed; inspect before retrying") from error
-    verify_remote_git(root, config)
+    verify_remote_git(root, config, destination)
     version_file, _changelog, _api_files = release_paths(root, config)
     _release, next_version = validate_versions(config)
     version_file.write_bytes(updated_property(config["version_key"], next_version, version_file).encode("utf-8"))
     try:
         run_git(root, ["add", "--", str(version_file.relative_to(root))])
         run_git(root, ["commit", "-m", "Prepare next development version"])
-        run_git(root, ["push", config["remote"], f"HEAD:refs/heads/{config['branch']}"])
         next_sha = run_git(root, ["rev-parse", "HEAD"])
-        remote_branch = run_git(root, ["ls-remote", config["remote"], f"refs/heads/{config['branch']}"])
+        git_at_destination(root, destination, "push", f"{next_sha}:{branch_ref}")
+        remote_branch = git_at_destination(root, destination, "ls-remote", branch_ref)
         if not remote_branch.startswith(next_sha):
             raise RecoveryRequired("next development branch did not verify after push")
     except Exception as error:
@@ -542,9 +596,21 @@ def recover(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
     tag = require_string(config.get("tag", release), "tag")
     remote = require_string(config.get("remote"), "remote")
     branch = require_string(config.get("branch"), "branch")
-    def remote_state(args: Sequence[str]) -> str:
+    local_tag = run_git(root, ["rev-parse", "--verify", f"refs/tags/{tag}"], allow_failure=True)
+    try:
+        destination = push_destination(root, remote)
+        if local_tag:
+            message = run_git(root, ["log", "-1", "--format=%B", local_tag])
+            if destination_trailer(destination) not in message.splitlines():
+                destination = None
+    except ValueError:
+        destination = None
+
+    def remote_state(ref: str) -> str:
+        if destination is None:
+            return "unknown"
         try:
-            return run_git(root, args) or "absent"
+            return git_at_destination(root, destination, "ls-remote", ref) or "absent"
         except ValueError:
             return "unknown"
 
@@ -554,9 +620,9 @@ def recover(root: Path, config: Mapping[str, Any], *, command_runner: CommandRun
         artifact = "unknown"
     return {
         "artifact": artifact,
-        "local_tag": run_git(root, ["rev-parse", "--verify", f"refs/tags/{tag}"], allow_failure=True) or "absent",
-        "remote_tag": remote_state(["ls-remote", "--tags", remote, f"refs/tags/{tag}"]),
-        "remote_branch": remote_state(["ls-remote", remote, f"refs/heads/{branch}"]),
+        "local_tag": local_tag or "absent",
+        "remote_tag": remote_state(f"refs/tags/{tag}"),
+        "remote_branch": remote_state(f"refs/heads/{branch}"),
     }
 
 

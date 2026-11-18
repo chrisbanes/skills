@@ -628,9 +628,7 @@ def run_command(root: Path, arguments: argparse.Namespace) -> int:
 
 def run_locked(root: Path, arguments: argparse.Namespace) -> int:
     directory = workflow_path(root, arguments.workflow)
-    ledger = read_ledger(directory)
-    if ledger.get("active_run") is not None:
-        raise ValueError("workflow has an uncertain run; inspect status before recovery")
+    ledger = require_settled_ledger(directory)
     command = list(arguments.command)
     if command[:1] == ["--"]:
         command = command[1:]
@@ -821,18 +819,8 @@ def valid_stored_result(result: Any) -> bool:
     return len(json.dumps(result, sort_keys=True, separators=(",", ":")).encode("utf-8")) < MAX_SUMMARY_BYTES // 2
 
 
-def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, Any]:
-    snapshot: dict[str, Any] = {
-        "workflow": workflow, "state": "uncertain", "run": None, "result": None
-    }
-    try:
-        ledger = read_ledger(directory)
-    except ValueError as error:
-        snapshot["reason"] = str(error)
-        return snapshot
-    active = ledger.get("active_run")
-    latest = ledger["runs"][-1] if ledger["runs"] else None
-    terminal = (
+def valid_terminal_run(ledger: dict[str, Any], latest: Any) -> bool:
+    return (
         isinstance(latest, dict)
         and type(latest.get("sequence")) is int
         and latest["sequence"] > 0
@@ -855,7 +843,37 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
                 and latest["exit_status"] in (-latest["interrupted_signal"], 128 + latest["interrupted_signal"]))
         )
     )
-    if terminal:
+
+
+def settled_state(ledger: dict[str, Any]) -> str:
+    if not ledger["runs"]:
+        return "idle" if type(ledger.get("run_count")) is int and ledger["run_count"] == 0 else "uncertain"
+    latest = ledger["runs"][-1]
+    if valid_terminal_run(ledger, latest):
+        return latest["state"]
+    return "uncertain"
+
+
+def require_settled_ledger(directory: Path) -> dict[str, Any]:
+    ledger = read_ledger(directory)
+    if ledger.get("active_run") is not None or settled_state(ledger) == "uncertain":
+        raise ValueError("workflow has an uncertain run; inspect status before recovery")
+    return ledger
+
+
+def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, Any]:
+    snapshot: dict[str, Any] = {
+        "workflow": workflow, "state": "uncertain", "run": None, "result": None
+    }
+    try:
+        ledger = read_ledger(directory)
+    except ValueError as error:
+        snapshot["reason"] = str(error)
+        return snapshot
+    active = ledger.get("active_run")
+    latest = ledger["runs"][-1] if ledger["runs"] else None
+    state = settled_state(ledger)
+    if state in ("completed", "interrupted"):
         snapshot["result"] = bounded_summary(latest["result"], MAX_SUMMARY_BYTES // 2)
         snapshot["result_sequence"] = latest["sequence"]
     run = active if active is not None else latest
@@ -886,10 +904,8 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
                 pass
     elif busy:
         snapshot["reason"] = "workflow is busy without an active run identity"
-    elif latest is None and type(ledger.get("run_count")) is int and ledger["run_count"] == 0:
-        snapshot["state"] = "idle"
-    elif terminal:
-        snapshot["state"] = latest["state"]
+    elif state != "uncertain":
+        snapshot["state"] = state
     else:
         snapshot["reason"] = "latest run has no recorded terminal result"
     return snapshot
@@ -925,8 +941,7 @@ def finish_locked(root: Path, workflow: str) -> int:
             raise ValueError("unknown workflow identifier")
         print(json.dumps({"already_finished": True, "finished": workflow}, sort_keys=True))
         return 0
-    if read_ledger(directory).get("active_run") is not None:
-        raise ValueError("workflow has an uncertain run; refusing cleanup")
+    require_settled_ledger(directory)
     write_finished(tombstone, workflow)
     try:
         shutil.rmtree(directory)

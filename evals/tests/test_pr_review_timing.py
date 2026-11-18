@@ -235,6 +235,10 @@ class PrReviewTimingTest(unittest.TestCase):
         self.assertEqual("enable", expected["verified-enforcement"]["auto_merge"])
         self.assertFalse(expected["verified-enforcement"]["merge_permitted"])
         self.assertTrue(expected["all-green"]["merge_permitted"])
+        for field, unsafe in (("merge_expected_head", None), ("merge_succeeds_after_push", True)):
+            actual = copy.deepcopy(expected)
+            actual["all-green"][field] = unsafe
+            self.assertTrue(validate_decisions(actual, expected))
         for snapshot in ("unverified-enforcement", "ci-only-enforcement"):
             actual = copy.deepcopy(expected)
             actual[snapshot]["auto_merge"] = "enable"

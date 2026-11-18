@@ -82,7 +82,7 @@ snapshots when the repository does not maintain them.
    publish during preparation.
 6. Present the prepared release for explicit user approval before publication:
    release version and tag, finalized changelog (or its absence), next development
-   version, release commit, artifact coordinates and destination, publishing
+   version, release commit, resolved Git push destination and branch (omit credentials), artifact coordinates and destination, publishing
    mechanism, and validation results. Provide the actual notes or a directly
    reviewable diff, not just a claim that they are ready. Explain that this
    approval gate is required by this skill and wait for the user's decision;

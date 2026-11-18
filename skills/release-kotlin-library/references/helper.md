@@ -39,8 +39,10 @@ only `release_version`, `tag` (or the release-version default), `remote`, `branc
 and `publication.artifact_check`, plus credential names to exclude if applicable.
 It does not require `next_version`, a publication mode or a publishing command.
 An artifact command that explicitly uses `{next_version}` still requires that
-value; use a release-only verifier to inspect an interrupted release. Preparation records a configuration digest in the commit; keep the same config
-for publication. Changing it requires inspecting and re-preparing the release.
+value; use a release-only verifier to inspect an interrupted release. Preparation binds the configuration and its single resolved Git push destination
+to the release commit. For a filesystem remote, use an explicit repository
+path (including any `.git` suffix) or a local file URL. Verify the destination when presenting the release for
+approval. Older prepared commits without this binding need manual reconciliation. Changing it requires inspecting and re-preparing the release.
 Check the outcome before advancing. `preflight` is for execution readiness, not a substitute for
 a read-only review of supplied evidence.
 
@@ -87,7 +89,7 @@ snapshot mode; use `disabled` when these Metalava files are not maintained.
 For Gradle commands, create the `gradle-run` workflow independently and place
 its `run` invocation in each argument array, including a concrete verification
 question. Finish that workflow separately after the requested commands finish,
-including a blocked run, to remove wrapper-owned sensitive logs. Do not store
+when its status permits cleanup. Preserve uncertain runs for recovery. Do not store
 raw Gradle output in release evidence or commit a workflow identifier.
 
 ## Verification adapters

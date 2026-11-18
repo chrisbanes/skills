@@ -48,7 +48,7 @@
     },
     {
       "id": "route-reasons",
-      "text": "Assess every route in the final response: foreign, unknown and stale/forked histories block; proven non-overlap uses the screened baseline; identical current plans are no-ops; material grants/privacy/qualification changes require stakeholder replan; ambiguous writes require reconciliation before retry. Explain preservation evidence and release conditions. Route correctness is rubric-scored, not proven by the unchanged-workspace objective check."
+      "text": "Assess every route in the final response: foreign, unknown and stale/forked histories block; proven non-overlap uses the screened baseline; identical current plans are no-ops; material grants/privacy/qualification changes require stakeholder replan; a timed-out write with incomplete readback leaves the tracker effect unknown and the draft preserved until reconciliation before retry. Explain preservation evidence and release conditions. Route correctness is rubric-scored, not proven by the unchanged-workspace objective check."
     },
     {
       "id": "consumer-capability",

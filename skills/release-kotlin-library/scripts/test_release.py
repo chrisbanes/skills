@@ -69,6 +69,67 @@ class ReleaseHelperTest(unittest.TestCase):
         self.assertEqual(self.git("tag", "--points-at", "HEAD"), "1.2.0")
         self.assertEqual(self.git("status", "--porcelain"), "")
 
+    def test_prepare_sees_untracked_files_hidden_by_git_configuration(self):
+        self.git("config", "status.showUntrackedFiles", "no")
+        self.write("src/main/kotlin/Extra.kt", "class Extra")
+        with self.assertRaisesRegex(ValueError, "clean"):
+            self.release.prepare(self.root, self.config())
+
+    def test_prepare_refuses_dangling_snapshot_link_before_writes(self):
+        target = self.root.parent / "outside.txt"
+        snapshot = self.root / "library/api/1.2.0.txt"
+        snapshot.symlink_to(target)
+        self.git("add", "--", str(snapshot))
+        self.git("commit", "-m", "Existing link")
+        with self.assertRaisesRegex(ValueError, "already exists"):
+            self.release.prepare(self.root, self.config())
+        self.assertFalse(target.exists())
+        self.assertTrue(snapshot.is_symlink())
+        self.assertEqual("", self.git("status", "--porcelain"))
+
+    def test_changed_push_destination_blocks_publication_and_recovery_claims(self):
+        config = self.config(publication_mode="tag-ci")
+        self.release.prepare(self.root, config)
+        second = self.root.parent / "other.git"
+        subprocess.run(["git", "clone", "--bare", self.remote, second], check=True, capture_output=True)
+        self.git("remote", "set-url", "--push", "origin", str(second))
+        with self.assertRaisesRegex(self.release.RecoveryRequired, "push destination"):
+            self.release.publish(self.root, config, command_runner=self.fail)
+        state = self.release.recover(self.root, config, command_runner=lambda *args, **kw: '{"state":"absent"}')
+        self.assertEqual("unknown", state["remote_tag"])
+        self.assertEqual("", self.git("ls-remote", str(second), "refs/tags/1.2.0"))
+
+    def test_home_relative_push_destination_for_preparation_and_recovery(self):
+        self.git("remote", "set-url", "--push", "origin", "~/remote.git")
+        with patch.dict(os.environ, {"HOME": str(self.remote.parent)}):
+            self.release.prepare(self.root, self.config())
+            state = self.release.recover(self.root, self.config(), command_runner=lambda *a, **kw: '{"state":"absent"}')
+        self.assertIn(self.git("rev-parse", "HEAD^"), state["remote_branch"])
+
+    def test_local_path_and_file_url_pin_symlink_target(self):
+        link = self.root.parent / "push:alias.git"
+        link.symlink_to(self.remote)
+        for url in ("../push:alias.git", link.as_uri()):
+            with self.subTest(url=url):
+                self.git("remote", "set-url", "--push", "origin", url)
+                self.assertEqual(str(self.remote.resolve()), self.release.push_destination(self.root, "origin"))
+
+    def test_implicit_git_suffix_requires_an_explicit_destination(self):
+        self.git("remote", "set-url", "--push", "origin", "../remote")
+        with self.assertRaises(ValueError):
+            self.release.prepare(self.root, self.config())
+
+    def test_unresolvable_home_reports_unknown_remote_state(self):
+        self.git("remote", "set-url", "--push", "origin", "~missing-release-test-user/remote.git")
+        state = self.release.recover(self.root, self.config(), command_runner=lambda *a, **kw: '{"state":"absent"}')
+        self.assertEqual(("unknown", "unknown"), (state["remote_branch"], state["remote_tag"]))
+
+    def test_prepare_refuses_multiple_push_destinations(self):
+        self.git("remote", "set-url", "--add", "--push", "origin", str(self.remote))
+        self.git("remote", "set-url", "--add", "--push", "origin", str(self.root.parent / "second.git"))
+        with self.assertRaisesRegex(ValueError, "exactly one"):
+            self.release.prepare(self.root, self.config())
+
     def test_prepare_skips_a_missing_changelog(self):
         (self.root / "CHANGELOG.md").unlink()
         self.git("add", "CHANGELOG.md")
@@ -250,6 +311,14 @@ class ReleaseHelperTest(unittest.TestCase):
         self.assertNotIn(canary, published.stdout + published.stderr)
 
     def test_tag_ci_publishes_only_by_pushing_prepared_commit_and_tag_then_verifies(self):
+        self.git("tag", "-a", "unrelated", "-m", "Keep local")
+        self.git("config", "push.followTags", "true")
+        approved = self.root.parent / "publish=library.git"
+        subprocess.run(["git", "clone", "--bare", self.remote, approved], check=True, capture_output=True)
+        self.git("remote", "set-url", "--push", "origin", str(approved))
+        # An explicit push URL takes precedence over pushInsteadOf.
+        wrong = self.root.parent / "wrong.git"
+        self.git("config", f"url.{wrong}.pushInsteadOf", str(approved))
         self.release.prepare(self.root, self.config(publication_mode="tag-ci"))
         events = []
 
@@ -263,6 +332,9 @@ class ReleaseHelperTest(unittest.TestCase):
 
         self.release.publish(self.root, self.config(publication_mode="tag-ci"), command_runner=command, process_env={})
 
+        self.assertEqual("", self.git("ls-remote", str(approved), "refs/tags/unrelated"))
+        self.assertEqual("", self.git("ls-remote", "origin", "refs/tags/1.2.0"))
+        self.assertIn(self.git("rev-parse", "1.2.0"), self.git("ls-remote", str(approved), "refs/tags/1.2.0"))
         self.assertEqual(events, [("artifact", "1.2.0"), ("ci", "1.2.0"), ("artifact", "1.2.0")])
         self.assertEqual(self.git("log", "-1", "--format=%s"), "Prepare next development version")
         self.assertEqual(self.read("gradle.properties"), "VERSION_NAME=1.3.0-SNAPSHOT\n")
