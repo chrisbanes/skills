@@ -1318,6 +1318,11 @@ class GradleRunRecoveryTest(GradleRunTestCase):
         self.assertIn(message, error)
         self.assertEqual(self.path.read_bytes(), before)
 
+    def status(self) -> dict:
+        result = self.invoke("status", "--workflow", self.workflow)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
     def test_abandonment_preserves_identity_and_log_and_allows_a_later_run(self) -> None:
         previous = self.run_gradle(self.workflow, "targeted", "Previous run?", "raise SystemExit(7)")
         self.assertEqual(previous.returncode, 7, previous.stderr)
@@ -1328,12 +1333,7 @@ class GradleRunRecoveryTest(GradleRunTestCase):
         log.write_bytes(raw_output)
         before = self.path.read_bytes(), self.path.stat().st_mtime_ns
 
-        def status() -> dict:
-            result = self.invoke("status", "--workflow", self.workflow)
-            self.assertEqual(result.returncode, 0, result.stderr)
-            return json.loads(result.stdout)
-
-        uncertain = status()
+        uncertain = self.status()
         self.assertEqual(uncertain["state"], "uncertain")
         self.assertEqual(uncertain["run"]["sequence"], 2)
         self.assertEqual(uncertain["result_sequence"], 1)
@@ -1377,7 +1377,7 @@ class GradleRunRecoveryTest(GradleRunTestCase):
         self.assertNotIn("interrupted_signal", entry)
         self.assertLessEqual(len(entry["recovery_reason"].encode()), GRADLE_RUN.MAX_RECOVERY_REASON_BYTES)
         self.assertNotIn("secret-value", self.path.read_text())
-        abandoned = status()
+        abandoned = self.status()
         self.assertEqual(abandoned["state"], "abandoned")
         self.assertEqual(abandoned["result_sequence"], 2)
         self.assertEqual(abandoned["result"], {"outcome": "unknown"})
@@ -1385,7 +1385,7 @@ class GradleRunRecoveryTest(GradleRunTestCase):
 
         subsequent = self.run_gradle(self.workflow, "targeted", "Subsequent run?", "print('BUILD SUCCESSFUL')")
         self.assertEqual(subsequent.returncode, 0, subsequent.stderr)
-        completed = status()
+        completed = self.status()
         self.assertEqual(completed["state"], "completed")
         self.assertEqual(completed["result_sequence"], 3)
         self.assertEqual(completed["result"]["exit_status"], 0)
@@ -1408,6 +1408,7 @@ class GradleRunRecoveryTest(GradleRunTestCase):
                 self.ledger = json.loads(self.path.read_text())
                 self.assertEqual(self.ledger["runs"][-1]["recovery_reason"], "Checked\ntoken=[REDACTED]")
                 self.assertEqual(first_log.exists(), sequence < 3)
+                self.assertEqual((self.directory / "0001.recovery.run.lock").exists(), sequence < 3)
         self.assertEqual(probe.call_args_list, [mock.call(1200)] * 3)
         self.assertEqual(self.ledger["runs_truncated"], 1)
         self.assertEqual([entry["sequence"] for entry in self.ledger["runs"]], [2, 3])
@@ -1464,6 +1465,85 @@ class GradleRunRecoveryTest(GradleRunTestCase):
                     probe.side_effect = outcomes
                     self.assert_refused(f"{owner} {self.ledger['active_run'][owner]} is {outcomes[-1]}")
                     self.assertEqual(probe.call_count, len(outcomes))
+
+    def test_status_during_recovery_refusal_and_success(self) -> None:
+        self.save_active()
+        before = self.path.read_bytes()
+        for presence, code, final_state in (("live", 2, "uncertain"), ("absent", 0, "abandoned")):
+            with self.subTest(presence=presence):
+                def probe(_pid):
+                    status = self.status()
+                    self.assertEqual(status["state"], "uncertain")
+                    self.assertEqual(status["run"]["sequence"], 1)
+                    self.assertIsNone(status["result"])
+                    return presence
+
+                with mock.patch.object(GRADLE_RUN, "process_presence", side_effect=probe) as check:
+                    actual, _, error = self.recover()
+                self.assertEqual(actual, code, error)
+                self.assertEqual(check.call_count, 1 if presence == "live" else 2)
+                self.assertEqual(self.status()["state"], final_state)
+                if presence == "live":
+                    self.assertEqual(self.path.read_bytes(), before)
+
+    def test_recovery_refuses_noncanonical_retained_log_without_probing_or_pruning(self) -> None:
+        previous = self.run_gradle(self.workflow, "targeted", "Previous run?", "print('previous')")
+        self.assertEqual(previous.returncode, 0, previous.stderr)
+        self.ledger = json.loads(self.path.read_text())
+        prior = self.ledger["runs"][0]
+        canonical = prior.pop("log")
+        active = self.save_active()
+        active_log = self.directory / active["log"]
+        active_log.write_bytes(b"active log")
+        prior_log = self.directory / canonical
+        before_logs = {path: path.read_bytes() for path in (prior_log, active_log)}
+        with (
+            mock.patch.object(GRADLE_RUN, "process_presence") as probe,
+            mock.patch.object(GRADLE_RUN, "prune_logs") as prune,
+        ):
+            for log in (None, "0002.log", "./0001.log"):
+                with self.subTest(log=log):
+                    if log is not None:
+                        prior["log"] = log
+                    self.save_active()
+                    self.assert_refused("expected recoverable active run", sequence="2")
+                    self.assertEqual({path: path.read_bytes() for path in before_logs}, before_logs)
+            probe.assert_not_called()
+            prune.assert_not_called()
+
+    def test_recovery_reports_committed_abandonment_when_pruning_fails(self) -> None:
+        self.save_active()
+
+        def fail_pruning(_directory, _ledger):
+            status = self.status()
+            self.assertEqual(status["state"], "abandoned")
+            self.assertEqual(status["result_sequence"], 1)
+            raise PermissionError("cannot prune old log")
+
+        with (
+            mock.patch.object(GRADLE_RUN, "process_presence", return_value="absent"),
+            mock.patch.object(GRADLE_RUN, "prune_logs", side_effect=fail_pruning),
+        ):
+            code, output, error = self.recover()
+        self.assertEqual(code, 1, error)
+        self.assertEqual(json.loads(output), {
+            "workflow": self.workflow, "state": "abandoned", "result_sequence": 1,
+            "result": {"outcome": "unknown"}, "cleanup_error": "cannot prune old log",
+        })
+        self.assertEqual(self.status()["result"], {"outcome": "unknown"})
+        self.assert_refused("expected recoverable active run")
+
+    def test_recovery_refuses_escaped_surrogate_in_identity_before_probing(self) -> None:
+        with mock.patch.object(GRADLE_RUN, "process_presence") as probe:
+            for field in ("cwd", "question", "command"):
+                with self.subTest(field=field):
+                    self.save_active(**{field: "invalid\ud800"})
+                    self.assertIn(b"\\ud800", self.path.read_bytes())
+                    self.assert_refused("expected recoverable active run")
+                    status = self.status()
+                    self.assertEqual(status["state"], "uncertain")
+                    self.assertIsNone(status["run"][field])
+            probe.assert_not_called()
 
     def test_contradictory_abandoned_result_stays_uncertain(self) -> None:
         active = self.save_active()

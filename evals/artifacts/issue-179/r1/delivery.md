@@ -20,3 +20,24 @@ assertions still set to 29 cases. The paired correction updates the matrix
 count and CLI call totals for 32 cases. The original failure is retained in
 `preflight-full-test.log`. The focused wrapper run skipped the existing
 procfs-dependent zombie test on macOS.
+
+The corrected clean candidate `cc40859367893ff3d403d5ba9b9588fb0b3861c1`
+then passed the full offline `npm test` run. Node ran 7 tests, the main Python
+suite ran 366 with one procfs skip, and the evaluation harness ran 428. This
+result superseded only the two inventory failures retained in the preflight log.
+
+## Review repairs
+
+The repair preserves both exclusive locks and marks recovery before acquiring the
+run-owner lock. Status remains uncertain during process checks and after refusal.
+It reports the committed abandonment once the ledger is replaced, including
+during pruning. Retention removes markers with their corresponding run locks.
+Recovery rejects a missing or noncanonical retained log identity or an invalid
+UTF-8 active identity before inspecting any PID. Regressions compare ledger and
+log bytes after refusal. If pruning raises an OS error after replacement,
+recovery emits the committed unknown outcome with a bounded `cleanup_error`
+and exits 1. The committed sequence cannot be recovered again.
+
+The targeted recovery suite passed all 10 tests. The earlier corpus-inventory
+failures and their corrected full (pre-review) result are recorded above.
+Windows remains simulated and direct qualification is pending.

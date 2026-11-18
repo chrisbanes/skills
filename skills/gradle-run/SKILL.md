@@ -52,9 +52,10 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    start time, working directory, command and question. `result` is the latest
    stored bounded terminal summary, identified by `result_sequence`; while a
    new run is active it may describe the previous run. Status never opens logs.
-   Poll status on `running`; a held lock specific to that run supplies activity
-   evidence, while PIDs are identity only. Unrelated workflow lock contention
-   leaves an abandoned run `uncertain`. `completed` includes failed builds and launch
+   Poll status on `running`. The run's held owner lock supplies activity
+   evidence unless recovery holds it. PIDs provide identity only.
+   Unrelated workflow lock contention leaves an abandoned run `uncertain`.
+   `completed` includes failed builds and launch
    errors: check `result.exit_status`. `interrupted` requires a recorded signal.
    `uncertain` covers active records without proven ownership, incomplete/legacy
    ledgers and transitions without sufficient evidence. Report the uncertainty.
@@ -78,7 +79,9 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    PID. If recovery refuses, leave the workflow unresolved and report why.
    After recovery, status reports `abandoned` and an `unknown` outcome for
    that sequence. Recovery keeps the log unopened under normal retention.
-   Report the outcome and use the same workflow for later authorized validation.
+   An `abandoned` result with `cleanup_error` still settles the ledger.
+   Report the outcome and any cleanup error. Use the same workflow for later
+   authorized validation.
    A new workflow is `idle`; after
    `finish` it is `finished` and its result has been removed. Unknown IDs fail
    closed. Finish only after retrieving the needed result.
