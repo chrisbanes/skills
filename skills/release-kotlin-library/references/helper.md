@@ -40,7 +40,8 @@ and `publication.artifact_check`, plus credential names to exclude if applicable
 It does not require `next_version`, a publication mode or a publishing command.
 An artifact command that explicitly uses `{next_version}` still requires that
 value; use a release-only verifier to inspect an interrupted release. Preparation binds the configuration and its single resolved Git push destination
-to the release commit. Verify the destination when presenting the release for
+to the release commit. For a filesystem remote, use an explicit repository
+path (including any `.git` suffix) or a local file URL. Verify the destination when presenting the release for
 approval. Older prepared commits without this binding need manual reconciliation. Changing it requires inspecting and re-preparing the release.
 Check the outcome before advancing. `preflight` is for execution readiness, not a substitute for
 a read-only review of supplied evidence.

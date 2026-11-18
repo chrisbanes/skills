@@ -19,6 +19,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from urllib.parse import unquote_to_bytes, urlsplit
 import uuid
 from typing import Any, Callable, Mapping, Sequence
 
@@ -270,13 +271,23 @@ def push_destination(root: Path, remote: str) -> str:
     if len(urls) != 1 or not urls[0]:
         raise ValueError("release requires exactly one Git push destination")
     url = urls[0]
-    if ":" not in url:
+    if url.startswith("file://"):
+        parts = urlsplit(url)
+        if parts.netloc not in ("", "localhost") or not parts.path.startswith("/") or parts.query or parts.fragment:
+            raise ValueError("cannot bind a non-local or ambiguous file URL")
+        local_path = Path(os.fsdecode(unquote_to_bytes(parts.path)))
+    elif ":" not in url.split("/", 1)[0]:
         try:
             local_path = Path(url).expanduser()
         except RuntimeError as error:
             raise ValueError("cannot resolve home directory for Git push destination") from error
-        return str((root / local_path).resolve())
-    return url
+    else:
+        return url
+    local_path = (root / local_path).resolve()
+    if (local_path / ".git").exists():
+        local_path = local_path / ".git"
+    git_dir = run_git(root, ["rev-parse", "--resolve-git-dir", str(local_path)])
+    return str((root / git_dir).resolve())
 
 
 def git_at_destination(root: Path, destination: str, operation: str, *args: str) -> str:

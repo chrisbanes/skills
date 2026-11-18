@@ -106,6 +106,19 @@ class ReleaseHelperTest(unittest.TestCase):
             state = self.release.recover(self.root, self.config(), command_runner=lambda *a, **kw: '{"state":"absent"}')
         self.assertIn(self.git("rev-parse", "HEAD^"), state["remote_branch"])
 
+    def test_local_path_and_file_url_pin_symlink_target(self):
+        link = self.root.parent / "push:alias.git"
+        link.symlink_to(self.remote)
+        for url in ("../push:alias.git", link.as_uri()):
+            with self.subTest(url=url):
+                self.git("remote", "set-url", "--push", "origin", url)
+                self.assertEqual(str(self.remote.resolve()), self.release.push_destination(self.root, "origin"))
+
+    def test_implicit_git_suffix_requires_an_explicit_destination(self):
+        self.git("remote", "set-url", "--push", "origin", "../remote")
+        with self.assertRaises(ValueError):
+            self.release.prepare(self.root, self.config())
+
     def test_unresolvable_home_reports_unknown_remote_state(self):
         self.git("remote", "set-url", "--push", "origin", "~missing-release-test-user/remote.git")
         state = self.release.recover(self.root, self.config(), command_runner=lambda *a, **kw: '{"state":"absent"}')
