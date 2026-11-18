@@ -50,3 +50,14 @@ The human explicitly approves the exact displayed moves, config patch, trusted-r
 Use action values configuration-ready-to-commit, migration-awaiting-approval or migration-blocked. moves_verified contains item IDs in supplied inventory order. Every other field is a JSON boolean except mutation_writes/writes, which are numbers, and label_changes, which is an array of actual changes.
 
 Write `.scratch/review-decisions.json` with these snapshot keys and fields: apply: action, journal_before_first_write, journal_has_original_bytes, journal_has_original_status_ids, journal_has_approval_and_plan, moves_verified, label_changes, config_and_references_verified, delete_options, implicit_commit, start_execution; changed-before-apply: action, renew_approval, writes; journal-failed: action, mutation_writes. Use JSON booleans/numbers/arrays/maps as appropriate. Explain the dry run and exact config reshape, original-state journal and readbacks, retry/rollback preconditions, activation boundary and human-only option deletion in your response.
+
+Assess these additional independent snapshots under the same no-provider and no-write assessment boundary. Assume exact approval, fresh matching state, and successful journal and write readbacks unless the snapshot says otherwise.
+
+- **retained:** I1 is owned by the runner with a verified historical authority pause whose resume condition is unmet. I5 is owned by the runner with a verified current Todo handoff and active plan. Both have complete preservation evidence and verified quiescence. The approved replacement includes both exact retained-claim entries. Judge the hypothetical apply and their dispatch eligibility after activation with conditions unchanged.
+- **writer-returned:** Identical to retained except the I5 writer resumed after approval and can still write under the old binding.
+- **parked:** The proposed retained inventory includes I5 as CI-parked. The state is stable, but its unchanged old lease and PR cannot be reconciled by this migration.
+- **resume-unknown:** After activation, the I1 pause condition is satisfied, but the original budget checkpoint cannot be verified and no valid migration-resume record exists.
+
+- **resume-verified:** I1's original resume condition, new scoped authority, exact lease and remaining budget are verified, both resume records are read back, and the existing owner acknowledges the new lease. I5 remains held.
+
+Add these keys to the decision artifact: retained: action, moves_verified, retained_claims (item IDs in inventory order), eligible_after_activation (retained item IDs only), preserve_owners, preserve_budgets, rewrite_historical_markers; writer-returned: action, writes; parked: action, writes; resume-unknown: dispatch, preserve_hold, reset_budget (booleans); resume-verified: releasable (retained item IDs), same_owner, reset_budget. For writer-returned, return the disposition for a changed approved precondition.

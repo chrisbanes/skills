@@ -26,6 +26,43 @@
     "journal-failed": {
       "action": "migration-blocked",
       "mutation_writes": 0
+    },
+    "retained": {
+      "action": "configuration-ready-to-commit",
+      "moves_verified": [
+        "I1",
+        "I2",
+        "I3",
+        "I4"
+      ],
+      "retained_claims": [
+        "I1",
+        "I5"
+      ],
+      "eligible_after_activation": [],
+      "preserve_owners": true,
+      "preserve_budgets": true,
+      "rewrite_historical_markers": false
+    },
+    "writer-returned": {
+      "action": "migration-awaiting-approval",
+      "writes": 0
+    },
+    "parked": {
+      "action": "migration-blocked",
+      "writes": 0
+    },
+    "resume-unknown": {
+      "dispatch": false,
+      "preserve_hold": true,
+      "reset_budget": false
+    },
+    "resume-verified": {
+      "releasable": [
+        "I1"
+      ],
+      "same_owner": true,
+      "reset_budget": false
     }
   }
 }
