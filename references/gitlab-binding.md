@@ -115,17 +115,28 @@ is the merge request IID.
    `iid`, `web_url`, `sha` (head), `diff_refs.base_sha`, `target_branch`,
    `source_branch`, `draft`, `state`, `has_conflicts`, `detailed_merge_status`, `head_pipeline`,
    `source_project_id` and `target_project_id`. Both project IDs must equal
-   the configured Project ID. The reviewed head must equal `sha`.
-5. **Checks:** Pipelines are checks. Read
+   the configured Project ID. The returned IID and target branch must match
+   the request, and the reviewed head must equal `sha`.
+5. **Checks:** Read every page of
    `GET projects/:id/merge_requests/:iid/pipelines` and select the latest
-   pipeline for the head: one whose `sha` equals the head, or a merged-results
-   pipeline (`ref` `refs/merge-requests/<iid>/merge`, which tests a temporary
-   merge commit with a different `sha`) only when it is the `head_pipeline` of
-   operation 4's readback at that head. Read its jobs with
-   `GET projects/:id/pipelines/:pipeline_id/jobs`. A job with
-   `allow_failure: true` or a manual job is non-blocking unless the repository
-   says otherwise. Report `success`, `failed`, `pending`/`running`, `canceled`
-   or unknown; no pipeline for the head is pending, not passing.
+   pipeline for the verified candidate. Require its ID and an exact head
+   `sha` with the MR's source branch or `refs/merge-requests/<iid>/head`.
+   For `refs/merge-requests/<iid>/merge`, require the ID, ref and temporary
+   merge SHA to match `head_pipeline` from operation 4's MR read at the
+   reviewed head. Reject foreign refs and conflicting project IDs. Use only
+   the verified MR-scoped list for membership, never a project-wide SHA search.
+   Read every page of `GET projects/:id/pipelines/:pipeline_id/jobs` for the
+   selected ID. If the responses include project or pipeline IDs, they must
+   match the request scope.
+
+   Pass only with a successful pipeline and no blocking jobs. For an unrun
+   manual job, use the effective API value: `allow_failure: true` leaves an
+   otherwise passing pipeline eligible unless the repository requires the job,
+   and `allow_failure: false` keeps delivery pending. A blocked or manual
+   pipeline remains pending regardless of the project's merge policy. Report
+   failed, running, canceled or unknown checks as such. Missing or incomplete
+   evidence, including unknown manual-job policy or no pipeline for the
+   reviewed head, leaves checks pending or unknown.
 6. **Reviews and feedback:** Review state is discussions plus approvals. Read
    `GET projects/:id/merge_requests/:iid/discussions` (every page) and record
    each resolvable discussion's ID, notes, author and `resolved` state. Read
@@ -162,7 +173,9 @@ is the merge request IID.
     Any other status refuses with zero writes and reports GitLab's status. Then
     send exactly one merge write with `sha=<expected head>` and `squash` from
     the policy: `PUT projects/:id/merge_requests/:iid/merge` without merge
-    trains, or operation 11's train add with them. Never set auto-merge.
+    trains, or operation 11's train add with them. Never set auto-merge. On a
+    direct merge SHA mismatch, refetch the MR and qualify the new head under
+    all applicable gates before considering another merge.
 11. **Merge trains:** When the fingerprint shows merge trains enabled, a direct
     merge would bypass the train or be rejected, so merge by adding the request
     with `POST projects/:id/merge_trains/merge_requests/:iid`, omitting

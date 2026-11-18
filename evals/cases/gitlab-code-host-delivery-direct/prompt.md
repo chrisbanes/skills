@@ -21,7 +21,9 @@ merge and tracker-closure authority. The full contract is satisfied by H1.
 - `pipeline-failed`: The head pipeline failed on a non-optional job.
 - `not-mergeable`: The pipeline passed, but GitLab reports an unresolved
   discussion requesting a code change.
-- `mergeable`: Every gate passes at H1 and no merge has been sent.
+- `mergeable`: No merge has been sent. All gates other than the candidate
+  checks pass at H1. Use the selected pipeline and job responses to decide
+  whether checks pass.
 - `merge-train`: This snapshot's project uses merge trains (its own
   `merge_policy` replaces the top-level one, and the recorded and live
   fingerprints both match it); the authorized merge call was sent and
@@ -33,5 +35,12 @@ merge and tracker-closure authority. The full contract is satisfied by H1.
   been sent.
 - `merged`: Readback shows the request merged at H1 with its commit on `main`;
   the GitHub issue is still open.
+
+Include each ID in `pipeline_variants` as a separate decision. For each
+variant, start with its `base_snapshot`, replace only the supplied top-level
+fields, and apply `merge_request_overrides` to the named MR fields, if supplied.
+Any variant's `merge_policy` replaces the top-level policy and matches both
+fingerprints. The `pipelines` and `jobs` arrays are the complete responses
+from the MR pipeline and selected pipeline jobs endpoints, respectively.
 
 Explain each decision briefly in your response.

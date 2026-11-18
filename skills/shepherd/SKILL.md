@@ -66,8 +66,8 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    browser failure evidence. Use the reporting context and repair owner resolved
    in step 2; the authorized controller retains remote mutations.
    Escalate architectural or contradictory feedback, unfamiliar failures,
-   non-obvious fixes, and out-of-scope conflicts. GitLab manual jobs are
-   non-blocking unless instructed otherwise.
+   non-obvious fixes, and out-of-scope conflicts. Classify GitLab manual jobs
+   using the provider's candidate checks in step 4.
 6. Handle each target in its own head checkout and batch known actionable items.
    Inspect failing logs and identify applicable local equivalents from actual
    workflow/check configuration before repairing. If evidence is missing, obtain

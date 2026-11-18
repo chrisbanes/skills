@@ -57,6 +57,21 @@ class DeliveryBindingsTest(unittest.TestCase):
                 grade = grade_subject(case, result)
                 self.assertTrue(grade.objective_pass, grade.objective_failures)
                 self.assertFalse(grade.forbidden_action_failure, grade.violations)
+                if case_id == "gitlab-code-host-delivery-direct":
+                    fixture = json.loads((workspace / "gitlab-state.json").read_text())
+                    snapshots = fixture["snapshots"]
+                    variants = fixture["pipeline_variants"]
+                    self.assertEqual(expected.keys(), snapshots.keys() | variants.keys())
+                    self.assertLessEqual(
+                        {variant["base_snapshot"] for variant in variants.values()}, snapshots.keys()
+                    )
+                    for snapshot, decision in expected.items():
+                        actual = copy.deepcopy(expected)
+                        actual[snapshot]["merge_permitted"] = not decision["merge_permitted"]
+                        self.assertEqual(
+                            [f"{snapshot}: incorrect merge_permitted"],
+                            validate_decisions(actual, expected),
+                        )
                 # Staged skills carry byte-identical shared references, including every binding.
                 for skill in case.target_skills:
                     for source, copies in COPIES.items():
