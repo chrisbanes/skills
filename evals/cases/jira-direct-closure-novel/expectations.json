@@ -47,6 +47,24 @@
     "unknown-visibility": {
       "action": "block",
       "write": false
+    },
+    "no-change-open": {
+      "hostAction": "none",
+      "trackerAction": "transition-and-verify",
+      "delivery": "no-change",
+      "closure": "pending"
+    },
+    "no-change-attributed": {
+      "hostAction": "none",
+      "trackerAction": "none",
+      "delivery": "no-change",
+      "closure": "verified"
+    },
+    "no-change-ambiguous": {
+      "hostAction": "none",
+      "trackerAction": "reconcile-without-retry",
+      "delivery": "no-change",
+      "closure": "pending"
     }
   }
 }

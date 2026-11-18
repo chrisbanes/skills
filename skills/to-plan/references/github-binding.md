@@ -114,6 +114,9 @@ retains its trusted configuration, leases and merge/closure policy.
    keywords apply only with explicit closure authority for every intended item,
    and only to verified GitHub issues fully satisfied by this PR,
    under `closing-keyword` when the target is the repository default branch.
+   Record the intended repository-qualified set before writing. For grouped
+   delivery, verify native eligibility, full satisfaction and closure authority
+   for each intended issue. A parent or sibling link grants no closure.
    Use `Fixes #<number>` only for the same repository, or a repository-qualified
    closing reference for an explicitly intended cross-repository GitHub issue
    whose native closure is verified. A non-default base, `close-after-merge`,
@@ -141,16 +144,21 @@ retains its trusted configuration, leases and merge/closure policy.
    intended issues are closed after merge; do not equate PR merged with issue
    closed. Under `close-after-merge`, only the authorized standalone lead or
    owning controller may close the verified issue after merge readback and
-   renewed full-contract/remaining-work checks; refetch closed state. Partial
-   delivery leaves it open. For a different tracker, return merge evidence to
-   that tracker's binding; never call a GitHub issue close with its key. Failed
-   or unknown closure preserves merged evidence and blocks ticket completion;
-   reconcile before any retry. Use Unintended Closure for authorized recovery
-   of an unintended GitHub closure, preserving concurrent human changes.
+   renewed full-contract/remaining-work checks. For
+   [verified no-change](provider-bindings.md#verified-no-change-closure), use
+   the same tracker close for the exact issue after that route's acceptance,
+   dependency and explicit tracker-grant checks, without a host merge. Refetch
+   the repository-qualified issue and require authoritative `CLOSED` readback.
+   Partial delivery leaves it open. A different tracker uses its own binding.
+   Failed or unknown closure preserves acceptance and any merge evidence and
+   blocks ticket completion. Reconcile exact issue state before any retry. Use
+   Unintended Closure for authorized recovery of an unintended GitHub closure,
+   preserving concurrent human changes.
 8. Finish with PR identity/head/base, check/review applicability, effective
    closing references, merge readback and separate tracker closure readback.
-   Controller Done/cleanup still requires its terminal reconciliation; a merged
-   PR alone cannot satisfy that finish gate.
+   For verified no-change, report acceptance evidence and tracker readback with
+   PR and merge inapplicable. Controller Done/cleanup still requires its
+   terminal reconciliation.
 
 ## Binding validation
 
@@ -1358,11 +1366,15 @@ mutation, or success claim, apply [remote reconciliation](#remote-reconciliation
 
 ## Closing reference verification
 
-After every PR creation or body edit by the
-controller or its ticket owner, read the complete `closingIssuesReferences` set
-through the connector or GraphQL/`gh pr view` fallback. Compare repository-qualified
-issue identities exactly: only the ticket for a fully closing PR under
-`closing-keyword`, and none for a non-closing partial PR or `close-after-merge`.
+After every PR creation or body edit and immediately before merge, read all
+pages of `closingIssuesReferences` for the exact PR through the connector or
+GraphQL/`gh pr view` fallback. Use paginated GraphQL if the initial read
+cannot establish completeness. Compare sets of repository-qualified issue
+identities against the recorded intent. A single-issue native closure expects
+a singleton. A grouped default-branch PR under `closing-keyword` expects
+exactly the fully satisfied, authorized issues with verified native closure.
+Partial delivery, mixed tracker/host closure, `close-after-merge`, and
+delivery without closure authority expect an empty set.
 On mismatch, correct the body and re-read before shepherding CI or merging;
 remove an unintended manual closing link through the permitted PR operation
 if a body correction cannot clear it. Unknown, partial or still-mismatched
