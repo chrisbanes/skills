@@ -1,0 +1,102 @@
+{
+  "binding": {
+    "tracker": "gitlab.com/team/mobile",
+    "project_id": 88001,
+    "runner_id": 7,
+    "scope": {
+      "label": "autumn",
+      "verified": true
+    },
+    "claim_label": "agent:in-progress",
+    "agent_work_label": "ready-for-agent",
+    "role_labels_verified": true
+  },
+  "scenarios": {
+    "claim": {
+      "iid": 42,
+      "state": "opened",
+      "labels": [
+        "autumn",
+        "ready-for-agent"
+      ],
+      "assignees": [],
+      "complete_graph": true,
+      "blockers": [],
+      "descendants": [],
+      "active_plan_verified": true,
+      "controller_claim_grant": true,
+      "independentRelationshipInventory": {
+        "source": "fixture administration inventory",
+        "scope": "all linked projects and confidential issues",
+        "inwardBlockers": []
+      }
+    },
+    "shared-assignment": {
+      "iid": 43,
+      "state": "opened",
+      "labels": [
+        "autumn",
+        "ready-for-agent",
+        "agent:in-progress"
+      ],
+      "assignees": [
+        7,
+        19
+      ],
+      "retained_implementation_claim": true
+    },
+    "claim-label-removed": {
+      "iid": 44,
+      "state": "opened",
+      "labels": [
+        "autumn",
+        "ready-for-agent"
+      ],
+      "assignees": [
+        7
+      ],
+      "retained_implementation_claim": true,
+      "writer_active": true
+    },
+    "free-tier": {
+      "iid": 45,
+      "state": "opened",
+      "labels": [
+        "autumn",
+        "ready-for-agent"
+      ],
+      "plan": "Free",
+      "plan_verified": true,
+      "links": []
+    },
+    "failed-link-read": {
+      "iid": 46,
+      "state": "opened",
+      "labels": [
+        "autumn",
+        "ready-for-agent"
+      ],
+      "plan": "Premium",
+      "plan_verified": true,
+      "page_two_response": 403
+    },
+    "filtered-empty-links": {
+      "iid": 47,
+      "state": "opened",
+      "labels": [
+        "autumn",
+        "ready-for-agent"
+      ],
+      "plan": "Premium",
+      "plan_verified": true,
+      "httpStatus": 200,
+      "allPagesRead": true,
+      "links": [],
+      "runnerAccess": {
+        "sourceProject": "owner",
+        "privateLinkedProjects": "unverified"
+      },
+      "independentRelationshipInventory": null
+    }
+  }
+}

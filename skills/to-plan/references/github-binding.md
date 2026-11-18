@@ -1170,7 +1170,14 @@ Use that same Todo shape for configured epics, human work, and
 label. The ranker derives the work shape and next action from configured label
 names; never add a synthetic role to its input.
 
-Use GitHub logins, never display names, for assignees and PR authors. Normalize `labels` to exact label names. Normalize
+Use GitHub logins, never display names, for assignees and PR authors when
+GitHub is the tracker. For a GitLab tracker, authenticate the selected GitHub
+code-host account and compare its immutable GitHub account ID with the PR
+author's ID. Map an exact match to the verified GitLab tracker runner identity
+used for assignees and `--current-user`. Keep other authors as distinct
+GitHub-host-qualified identities. Missing or unverified author identity never
+matches the runner. Preserve the original provider ID and login in the
+delivery record. Normalize `labels` to exact label names. Normalize
 `blockerRefs` and `openDescendants` entries to integer issue numbers for the
 configured repository or `owner/repository#number` strings for cross-repository
 issues; never pass GraphQL objects. Use a finite non-negative numeric Project

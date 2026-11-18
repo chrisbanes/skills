@@ -69,6 +69,20 @@
       "host_action": "none",
       "retry": false,
       "ticket_complete": false
+    },
+    "gitlab-verified": {
+      "outcome": "no-change",
+      "tracker_action": "close_and_verify",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": true
+    },
+    "gitlab-unattributed": {
+      "outcome": "no-change",
+      "tracker_action": "reconcile_closure",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
     }
   }
 }

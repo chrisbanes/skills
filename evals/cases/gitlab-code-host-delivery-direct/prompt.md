@@ -16,6 +16,10 @@ no GitLab issue counterpart. All reads in the file are complete 2xx responses,
 the merge-policy fingerprint is unchanged, the credential checks passed, local
 checks and independent review passed for head H1, and the standalone lead has
 merge and tracker-closure authority. The full contract is satisfied by H1.
+Where present, the independent closing inventory is current for the recorded
+project, MR, head, and base. It covers directives in the description, commits
+and merge text, plus all manual links across projects and confidential issues.
+A successful endpoint response on its own does not establish that coverage.
 
 - `mr-open`: No merge request exists for the task branch. Open one and link it.
 - `pipeline-failed`: The head pipeline failed on a non-optional job.

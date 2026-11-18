@@ -1,0 +1,46 @@
+{
+  "id": "gitlab-tracker-closure-negative",
+  "title": "Verify exact native GitLab closure and refuse unsafe mixed-host changes",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "gitlab-tracker-closure-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "exact",
+      "text": "Permits native closure only for the exact eligible GitLab item and verified default-branch pairing. An apparent exact or empty result without independent closing-set evidence blocks merge."
+    },
+    {
+      "id": "mixed",
+      "text": "Requires a non-closing link and empty effective GitHub set, then verified GitLab controller closure after merge."
+    },
+    {
+      "id": "restraint",
+      "text": "Makes no changes during this assessment."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
+}

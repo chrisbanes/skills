@@ -178,6 +178,174 @@ class GuardTest(unittest.TestCase):
         self.assertEqual(check.MAX_WRITES, self.guard.writes)
 
 
+class TrackerProtocolTest(unittest.TestCase):
+    """Check the issue #163 write ledger with an in-memory transport only."""
+
+    def setUp(self):
+        path = Path(__file__).resolve().parents[1] / "evals/artifacts/issue-163/r1/qualification-writes.json"
+        self.protocol = json.loads(path.read_text())
+        self.forward = self.protocol["forward"]
+        self.cleanup = self.protocol["cleanup"]
+        self.manifest = {
+            "targetTitle": "qual/test target", "blockerTitle": "qual/test blocker",
+            "stopTitle": "qual/test stop", "fixtureLabels": "autumn,ready-for-agent",
+            "claimLabel": "agent:in-progress", "runnerIds": [7],
+            "planNote": "approved plan", "baseName": "qual/test-base",
+            "sourceName": "qual/test-source", "mainSha": "MAIN", "baseSha": "MAIN",
+            "commitMessage": "Qualification sample", "reviewedSha": "H1",
+            "createFileAction": [{"action": "create", "file_path": "qualification-test", "content": "test"}],
+            "mrTitle": "Qualification", "nonClosingDescription": "Source: https://gitlab.com/banes3/Banes-project/-/issues/42",
+            "squash": False,
+        }
+        self.receipts = {}
+        self.attempts = []
+        self.confirmed = set()
+        self.granted = False
+        self.cleaning = False
+        self.responses = {}
+        self.sent = []
+        self.client = check.Client(self, self, sleep=lambda _: None)
+
+    def render(self, row):
+        _, method, path, payload = row
+        values = self.manifest | self.receipts
+        body = None if payload is None else {
+            key: values[value[1:]] if isinstance(value, str) and value.startswith("$") else value
+            for key, value in payload.items()
+        }
+        return method, P + path.format_map(self.receipts), body
+
+    def check(self, method, path, body):
+        attempted = {name for name in self.attempts}
+        if not self.granted or len(attempted) >= self.protocol["maximumAttempts"]:
+            raise check.GuardDenied("missing grant or no write allowance")
+        if self.cleaning:
+            effects = self.protocol["unknownAffects"]
+            quarantined = {resource for name in attempted - self.confirmed for resource in effects[name]}
+            quarantined.intersection_update(self.receipts)
+            rows = (row for row in self.cleanup
+                    if row[0] not in attempted and quarantined.isdisjoint(effects[row[0]]))
+        else:
+            next_row = len(attempted)
+            rows = self.forward[next_row:next_row + 1] if attempted <= self.confirmed else ()
+        for row in rows:
+            try:
+                allowed = self.render(row)
+            except KeyError:
+                continue  # an unverified creation receipt authorizes no target
+            if (method, path, body) == allowed:
+                self.attempts.append(row[0])
+                return
+        raise check.GuardDenied("request has no eligible ledger row")
+
+    def request(self, method, path, body):
+        self.sent.append((method, path, body, len(self.attempts)))
+        return self.responses.get(path, (204, {}, None))
+
+    def send(self, row):
+        return self.client.write(*self.render(row))
+
+    def confirm(self, row):
+        self.confirmed.add(row[0])
+        created = {
+            "create-target": ("target", 42), "create-blocker": ("blocker", 43),
+            "create-stop": ("stop", 44), "create-base": ("base", "qual%2Ftest-base"),
+            "create-source": ("source", "qual%2Ftest-source"), "open-mr": ("mr", 9),
+        }
+        if row[0] in created:
+            name, identity = created[row[0]]
+            self.receipts[name] = identity
+
+    def test_tracker_ledger_refuses_ungranted_and_out_of_scope_writes(self):
+        self.assertEqual((check.HOST, check.PROJECT_ID, check.PROJECT_PATH, check.PROTECTED_BASE),
+                         tuple(self.protocol[key] for key in ("host", "projectId", "projectPath", "protectedBase")))
+        self.assertEqual(0, self.protocol["authorizedWrites"])
+        with self.assertRaises(check.GuardDenied):
+            self.send(self.forward[0])
+        self.granted = True
+        for row in self.forward[:2]:
+            self.send(row)
+            self.confirm(row)
+        method, path, body = self.render(self.forward[2])
+        for request in [
+            (method, path.replace(str(check.PROJECT_ID), "1"), body),
+            (method, path.replace("/42/", "/99/"), body),
+            (method, path, body | {"target_project_id": 1}),
+            (method, path, body | {"target_issue_iid": 99}),
+        ]:
+            with self.subTest(request=request), self.assertRaises(check.GuardDenied):
+                self.client.write(*request)
+        self.assertEqual(2, len(self.sent))
+
+    def test_full_forward_ledger_reserves_cleanup_and_refuses_unsafe_merge(self):
+        self.granted = True
+        for row in self.forward:
+            if row[0] in ("open-mr", "merge-at-head"):
+                method, path, body = self.render(row)
+                if row[0] == "open-mr":
+                    extra = ({"target_branch": check.PROTECTED_BASE}, {"source_branch": "existing"})
+                else:
+                    extra = ({"auto_merge": True}, {"merge_when_pipeline_succeeds": True}, {"sha": "stale"})
+                for fields in extra:
+                    with self.subTest(fields=fields), self.assertRaises(check.GuardDenied):
+                        self.client.write(method, path, body | fields)
+            self.send(row)
+            self.confirm(row)
+        self.assertEqual(15, len(self.attempts))
+        self.assertEqual(15, self.protocol["forwardLimit"])
+        self.assertEqual(6, self.protocol["cleanupReserve"])
+        self.cleaning = True
+        with self.assertRaises(check.GuardDenied):
+            self.client.write("DELETE", P + "repository/branches/main")
+        for row in self.cleanup:
+            self.send(row)
+            self.confirm(row)
+        self.assertEqual(21, self.protocol["maximumAttempts"])
+        self.assertEqual(list(range(1, 22)), [count for *_, count in self.sent])
+        with self.assertRaises(check.GuardDenied):
+            self.send(self.cleanup[-1])
+
+    def test_ambiguous_create_halts_forward_and_failed_cleanup_is_not_retried(self):
+        self.granted = True
+        self.send(self.forward[0])
+        self.confirm(self.forward[0])
+        self.responses[P + "issues"] = (503, {}, {"message": "unknown create"})
+        with self.assertRaises(check.ProviderError):
+            self.send(self.forward[1])
+        with self.assertRaises(check.GuardDenied):
+            self.send(self.forward[1])
+        self.assertEqual(["create-target", "create-blocker"], self.attempts)
+        self.cleaning = True
+        with self.assertRaises(check.GuardDenied):
+            self.client.write("DELETE", P + "issues/43")
+        self.responses[P + "issues/42"] = (503, {}, {"message": "unknown deletion"})
+        with self.assertRaises(check.ProviderError):
+            self.send(self.cleanup[-2])
+        with self.assertRaises(check.GuardDenied):
+            self.send(self.cleanup[-2])
+        self.assertEqual(["create-target", "create-blocker", "delete-target"], self.attempts)
+
+    def test_ambiguous_link_quarantines_both_issues_and_preserves_independent_cleanup(self):
+        self.granted = True
+        self.assertEqual({row[0] for row in self.forward + self.cleanup},
+                         self.protocol["unknownAffects"].keys())
+        for row in self.forward[:2]:
+            self.send(row)
+            self.confirm(row)
+        # Seed a verified unrelated receipt to exercise cleanup isolation.
+        self.confirm(self.forward[4])
+        self.responses[P + "issues/42/links"] = (503, {}, {"message": "unknown link"})
+        with self.assertRaises(check.ProviderError):
+            self.send(self.forward[2])
+        self.cleaning = True
+        for row in self.cleanup[-2:]:
+            with self.subTest(row=row[0]), self.assertRaises(check.GuardDenied):
+                self.send(row)
+        self.send(self.cleanup[-3])
+        self.confirm(self.cleanup[-3])
+        self.assertEqual(["create-target", "create-blocker", "link-blocker", "delete-stop"], self.attempts)
+
+
 class RunTest(unittest.TestCase):
     def test_direct_merge_refuses_a_push_after_final_read(self):
         class ConcurrentPush(FakeGitLab):

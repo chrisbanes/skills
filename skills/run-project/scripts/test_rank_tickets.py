@@ -300,6 +300,32 @@ class NeutralContractTest(unittest.TestCase):
         self.assertEqual(0, code)
         self.assertEqual("resume-pr", output["claims"][0]["action"])
 
+    def test_gitlab_claim_resumes_only_verified_github_runner_pr(self):
+        runner = "gitlab.com:7"
+        source = "https://gitlab.com/team/mobile/-/issues/42"
+        item = ticket(
+            42, itemRef=source, itemId="gitlab.com:560",
+            projectStatus="In progress", labels=["ready-for-agent", "agent:in-progress"],
+            assignees=[runner],
+            implementationPlans=[implementation_plan(42, author=runner, permalink=source + "#note_101")],
+        )
+        for author, owned in ((runner, True), ("github:github.com:7", False)):
+            with self.subTest(author=author):
+                item["openPullRequests"] = [
+                    pull_request(100, author=author, closesIssue=False, linksIssue=True),
+                ]
+                code, output = run_ranker(
+                    [item], "--current-user", runner, "--issue-closure", "close-after-merge",
+                    "--claim-marker", '{"label":"agent:in-progress","requiresAssignment":true}',
+                )
+                self.assertEqual(0, code)
+                if owned:
+                    self.assertEqual(["resume-pr"], [claim["action"] for claim in output["claims"]])
+                    self.assertEqual([], output["blockedClaims"])
+                else:
+                    self.assertEqual([], output["claims"])
+                    self.assertEqual([42], [claim["number"] for claim in output["blockedClaims"]])
+
     def test_invalid_binding_markers_fail_closed(self):
         for marker in ("null", "[]", "{", "{}", '{"status":"Working"}',
                        '{"status":"","requiresAssignment":true}',

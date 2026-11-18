@@ -245,7 +245,7 @@ new-work classes in steps 7 and 8.
 2. Merge the oldest merge-ready claim, unless an explicit dependency requires a
    different order. Admit or merge only one at a time.
 3. Reconcile explicitly human-authorized epic closures, then
-   refresh the complete Project graph before taking another action.
+   refresh the complete bound tracker scope before taking another action.
 4. Resume owning ticket agents for actionable review, CI, or base-repair events
    in oldest-event order.
 5. Resume paused local implementation slots in claim order.
@@ -279,8 +279,9 @@ wait for either while any step above remains runnable.
 
 ### Refresh Gate
 
-Require one successful complete Project query and verified-base refresh before
-new selection after a merge, parked or released slot, Todo
+Use the execution controller's [bound-scope refresh](execution-controller.md#remote-state-and-queue).
+Require one successful complete read of the selected tracker scope and a
+verified-base refresh before new selection after a merge, parked or released slot, Todo
 handoff, epic closure, user prompt, controller resumption after interruption,
 or other event that
 can change capacity, dependencies, or eligibility. Rebuild and rank every class
@@ -320,9 +321,10 @@ parent/descendant/dependency graph read; Status means its logical claim state.
 For the GitHub parent watcher use `--parent-id`, without a Project ID or Status
 field. Every wake still requires the full Refresh Gate and each item's own role authority.
 
-In `drain`, use the selected tracker binding's change signal. For Jira,
-apply its [unavailable wait lane](jira-binding.md#unavailable-lanes-and-finish-gate)
-and use the [finish gate](#failure-isolation-and-finish-gate) when eligible
+In `drain`, use the selected tracker binding's change signal. For Jira
+or GitLab, apply the binding's unavailable wait lane
+([Jira](jira-binding.md#unavailable-lanes-and-finish-gate),
+[GitLab](gitlab-binding.md#tracker-availability-and-finish-gate)) and use the [finish gate](#failure-isolation-and-finish-gate) when eligible
 work is exhausted. The watcher steps below apply only to GitHub.
 
 For GitHub, use the read-only
@@ -566,7 +568,8 @@ their final-head applicability, terminal-green CI, and mergeability.
 
 After a merge:
 
-1. Reconcile the issue and Project item.
+1. Reconcile terminal issue and bound-scope state through the selected tracker.
+   Verify the Project item's terminal state when the scope is a GitHub Project.
 2. Refresh mergeability for every other PR.
 3. Shared files alone require neither a branch update nor a CI rerun. Use
    `git merge-tree` against the verified new base to check conflicts without

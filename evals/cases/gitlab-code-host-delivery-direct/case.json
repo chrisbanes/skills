@@ -38,7 +38,7 @@
     },
     {
       "id": "closure",
-      "text": "Keeps the non-closing source link with an empty closes_issues readback and closes the GitHub issue only after verified merge readback, reporting ticket completion separately."
+      "text": "Keeps the non-closing source link and verifies an empty effective closing set using independent completeness evidence and closes the GitHub issue only after verified merge readback, reporting ticket completion separately."
     }
   ],
   "provenance": {

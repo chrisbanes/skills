@@ -1,0 +1,59 @@
+{
+  "issue": "https://gitlab.com/team/mobile/-/issues/42",
+  "runner_id": 7,
+  "notes_complete": true,
+  "notes": [
+    {
+      "id": 101,
+      "author_id": 7,
+      "updated_at": "2026-11-18T15:00:00Z",
+      "body": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 1\n**Supersedes:** none\n**Replan report:** none\n\n## Implementation plan\n\n**Issue:** https://gitlab.com/team/mobile/-/issues/42\n**Planned against:** `main` at `a7c64f66a5206ed4244e81f6ba7081d630eb4398`\n**Publication mode:** Reviewed\n**Local state:** Clean\n**Epoch closure:** null\n\n### Approach\n\nCheck the build.\n\n### Final validation\n\nRun the existing offline build checks.  \n<!-- gitlab-binding:end-marker -->",
+      "created_at": "2026-11-18T13:00:00Z"
+    },
+    {
+      "id": 103,
+      "author_id": 7,
+      "updated_at": "2026-11-18T14:00:00Z",
+      "body": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n**Supersedes:** https://gitlab.com/team/mobile/-/issues/42#note_101\n**Replan report:** none\n\n## Implementation plan\n\n**Issue:** https://gitlab.com/team/mobile/-/issues/42\n**Planned against:** `main` at `a7c64f66a5206ed4244e81f6ba7081d630eb4398`\n**Publication mode:** Reviewed\n**Local state:** Clean\n**Epoch closure:** null\n\n### Approach\n\nCheck the build and read the trace.\n\n### Final validation\n\nRun the existing offline build checks.  \n<!-- gitlab-binding:end-marker -->",
+      "created_at": "2026-11-18T14:00:00Z"
+    },
+    {
+      "id": 105,
+      "author_id": 22,
+      "system": true,
+      "updated_at": "2026-11-18T16:00:00Z",
+      "body": "assigned to @runner"
+    }
+  ],
+  "scenarios": {
+    "matching-leaf": {
+      "localDraftBody": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n**Supersedes:** https://gitlab.com/team/mobile/-/issues/42#note_101\n**Replan report:** none\n\n## Implementation plan\n\n**Issue:** https://gitlab.com/team/mobile/-/issues/42\n**Planned against:** `main` at `a7c64f66a5206ed4244e81f6ba7081d630eb4398`\n**Publication mode:** Reviewed\n**Local state:** Clean\n**Epoch closure:** null\n\n### Approach\n\nCheck the build and read the trace.\n\n### Final validation\n\nRun the existing offline build checks.  "
+    },
+    "ambiguous-create": {
+      "sentBody": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n**Supersedes:** https://gitlab.com/team/mobile/-/issues/42#note_101\n**Replan report:** none\n\n## Implementation plan\n\n**Issue:** https://gitlab.com/team/mobile/-/issues/42\n**Planned against:** `main` at `a7c64f66a5206ed4244e81f6ba7081d630eb4398`\n**Publication mode:** Reviewed\n**Local state:** Clean\n**Epoch closure:** null\n\n### Approach\n\nCheck the build and read the trace.\n\n### Final validation\n\nRun the existing offline build checks.  \n<!-- gitlab-binding:end-marker -->",
+      "sentAt": "2026-11-18T13:59:59Z",
+      "response": "timeout"
+    },
+    "presentation": {
+      "requestedPresentationChange": true
+    },
+    "forked-chain": {
+      "sentBody": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n**Supersedes:** https://gitlab.com/team/mobile/-/issues/42#note_101\n**Replan report:** none\n\n## Implementation plan\n\n**Issue:** https://gitlab.com/team/mobile/-/issues/42\n**Planned against:** `main` at `a7c64f66a5206ed4244e81f6ba7081d630eb4398`\n**Publication mode:** Reviewed\n**Local state:** Clean\n**Epoch closure:** null\n\n### Approach\n\nCheck the build and read the trace.\n\n### Final validation\n\nRun the existing offline build checks.  \n<!-- gitlab-binding:end-marker -->",
+      "response": "timeout",
+      "additionalNotes": [
+        {
+          "id": 106,
+          "author_id": 7,
+          "created_at": "2026-11-18T14:01:00Z",
+          "updated_at": "2026-11-18T14:01:00Z",
+          "body": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n**Supersedes:** https://gitlab.com/team/mobile/-/issues/42#note_101\n**Replan report:** none\n\n## Implementation plan\n\n**Issue:** https://gitlab.com/team/mobile/-/issues/42\n**Planned against:** `main` at `a7c64f66a5206ed4244e81f6ba7081d630eb4398`\n**Publication mode:** Reviewed\n**Local state:** Clean\n**Epoch closure:** null\n\n### Approach\n\nUse a competing trace procedure.\n\n### Final validation\n\nRun the existing offline build checks.  \n<!-- gitlab-binding:end-marker -->"
+        }
+      ]
+    }
+  },
+  "approvedPlan": {
+    "branch": "main",
+    "sha": "a7c64f66a5206ed4244e81f6ba7081d630eb4398",
+    "payloadSha256": "84e6487c8b18ae5143fda64a87c9ce7b65277b0b62326b0ba3ad0ab9dba93b5a"
+  }
+}

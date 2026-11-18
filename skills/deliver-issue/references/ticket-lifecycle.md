@@ -243,8 +243,8 @@ Follow configured merge/queue, serialize oldest ready slot
 unless dependency requires otherwise, and reconcile exact merge. Enforce closure
 policy and reconcile unintended tracker closure before Done automation or
 cleanup. Use the selected tracker procedure for
-[GitHub](github-binding.md#unintended-closure) or
-[Jira](jira-binding.md#link-and-close). A partial merge retains the open issue,
+[GitHub](github-binding.md#unintended-closure),
+[Jira](jira-binding.md#link-and-close) or [GitLab](gitlab-binding.md#link-and-close). A partial merge retains the open issue,
 unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
 For a completed merge outcome, continue to
 [Done and checkout accounting](#reconcile-done-and-account-for-the-checkout).
@@ -252,17 +252,18 @@ For a completed merge outcome, continue to
 ## Reconcile Done and account for the checkout
 
 1. After verified tracker closure, reconcile Done under the selected scope.
-   For a board, read back the exact Project item and wait for and verify
+   For a GitHub Project, read back the exact item and wait for and verify
    applicable configured automation. If Status automation is absent and the
    grant permits it, set and verify Status Done under the binding. Never
-   directly archive or remove the item. For a parent-issue scope, use the
-   binding's logical Done mapping. Stop on missing or unexpected readback
+   directly archive or remove the item. For other scopes, use the selected
+   tracker's logical Done mapping. Stop on missing or unexpected readback
    and preserve artifacts.
 2. Apply the outcome's worktree and branch rule under [Worktrees](#worktrees).
    Record the exact disposition and readback under
    [checkout accounting](checkout-lifecycle.md#account). Keep cleanup
    incomplete until the retirement or host handoff is verified. Then discard
-   the ticket agent, refresh other PRs, and query Project completely.
+   the ticket agent, refresh other PRs, and apply the
+   [complete bound-scope refresh](execution-controller.md#remote-state-and-queue).
 
 `next` finishes one selected terminal issue,
 Wayfinder child, tail triage, or ready epic; otherwise report human frontier.

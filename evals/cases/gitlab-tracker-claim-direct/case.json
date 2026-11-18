@@ -1,0 +1,46 @@
+{
+  "id": "gitlab-tracker-claim-direct",
+  "title": "Claim, stop and dependency gates in a GitLab issue selection",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "gitlab-tracker-claim-direct",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "claim",
+      "text": "Requires the existing claim label and exclusive runner assignment with fresh issue readback."
+    },
+    {
+      "id": "stop",
+      "text": "Stops after claim-label removal even while the human-applied role stays present."
+    },
+    {
+      "id": "dependency",
+      "text": "Distinguishes absent tier capability from a failed required read. Both block dependent lanes. A successful empty read with unproven relationship visibility also blocks dispatch."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
+}

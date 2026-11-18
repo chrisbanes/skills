@@ -1,0 +1,42 @@
+{
+  "id": "gitlab-tracker-notes-novel",
+  "title": "Resolve the active GitLab issue-note revision using the complete chain",
+  "family": "workflow",
+  "target_skills": [
+    "to-plan"
+  ],
+  "expected_skills": [
+    "to-plan"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "gitlab-tracker-notes-novel",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "chain",
+      "text": "Uses the verified note chain, preserving payload whitespace and ignoring presentation and timestamps. Verifies the pinned baseline and digest, including the trailing spaces."
+    },
+    {
+      "id": "restraint",
+      "text": "Leaves the matching note and predecessor unchanged and reuses the unique reconciled create. A fork blocks reuse and retry."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true,
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true
+}

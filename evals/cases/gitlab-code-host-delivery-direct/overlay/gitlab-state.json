@@ -340,7 +340,17 @@
           "resolved": true
         }
       ],
-      "closes_issues": []
+      "closes_issues": [],
+      "independentClosingInventory": {
+        "source": "Fixture administrator's verified inventory, including cross-project and confidential targets",
+        "projectId": 88001,
+        "mrIid": 7,
+        "head": "H1",
+        "base": "main",
+        "baseSha": "B1",
+        "closingDirectives": [],
+        "manualClosingLinks": []
+      }
     },
     "merge-train": {
       "merge_call": {
@@ -380,6 +390,16 @@
         "only_allow_merge_if_pipeline_succeeds": true,
         "only_allow_merge_if_all_discussions_are_resolved": true,
         "merge_trains_enabled": true
+      },
+      "independentClosingInventory": {
+        "source": "Fixture administrator's verified inventory, including cross-project and confidential targets",
+        "projectId": 88001,
+        "mrIid": 7,
+        "head": "H1",
+        "base": "main",
+        "baseSha": "B1",
+        "closingDirectives": [],
+        "manualClosingLinks": []
       }
     },
     "merged": {
@@ -411,6 +431,16 @@
       "tracker_issue": {
         "url": "https://github.com/acme/app/issues/42",
         "state": "open"
+      },
+      "independentClosingInventory": {
+        "source": "Fixture administrator's verified inventory, including cross-project and confidential targets",
+        "projectId": 88001,
+        "mrIid": 7,
+        "head": "H1",
+        "base": "main",
+        "baseSha": "B1",
+        "closingDirectives": [],
+        "manualClosingLinks": []
       }
     },
     "merged-results": {
@@ -462,7 +492,17 @@
           "resolved": true
         }
       ],
-      "closes_issues": []
+      "closes_issues": [],
+      "independentClosingInventory": {
+        "source": "Fixture administrator's verified inventory, including cross-project and confidential targets",
+        "projectId": 88001,
+        "mrIid": 7,
+        "head": "H1",
+        "base": "main",
+        "baseSha": "B1",
+        "closingDirectives": [],
+        "manualClosingLinks": []
+      }
     }
   }
 }
