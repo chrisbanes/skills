@@ -55,6 +55,8 @@
       "retained_evidence": []
     },
     "all-green": {
+      "merge_expected_head": "H1",
+      "merge_succeeds_after_push": false,
       "head": "H1",
       "review_action": "none",
       "delivery_ready": true,

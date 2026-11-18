@@ -1174,11 +1174,17 @@ class GradleRunStatusTest(GradleRunTestCase):
                 orphan = path.parent / "9999.run.lock"
                 orphan.write_bytes(b"\0")
                 result = self.run_gradle(workflow, "targeted", "Can valid work follow incomplete history?", "print('ok')")
+                if not prior_success:
+                    self.assertIn("uncertain run", result.stderr)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertTrue(orphan.exists())
+                    self.assertEqual(json.loads(path.read_text()), ledger)
+                    continue
                 self.assertEqual(result.returncode, 0, result.stderr)
                 status = self.status(workflow)
                 self.assertEqual(status["state"], "completed")
                 self.assertEqual(status["result"], json.loads(result.stdout))
-                self.assertEqual(status["result_sequence"], 2 if prior_success else 1)
+                self.assertEqual(status["result_sequence"], 2)
                 self.assertFalse(orphan.exists())
                 self.assertTrue((path.parent / "0001.run.lock").is_file())
 
@@ -1246,6 +1252,9 @@ class GradleRunStatusTest(GradleRunTestCase):
             with self.subTest(content=content):
                 path.write_text(content)
                 self.assertEqual(self.status(workflow)["state"], "uncertain")
+                result = self.run_gradle(workflow, "targeted", "May this run?", "raise AssertionError")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertNotEqual(self.invoke("finish", "--workflow", workflow).returncode, 0)
                 self.assertEqual(path.read_text(), content)
         lock = self.root / f"{workflow}.lock"
         lock.unlink()

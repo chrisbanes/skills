@@ -92,13 +92,12 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    active repair every 30–60 seconds, and after three or more unchanged cycles
    every 10+ minutes. Two unchanged cycles remain on the normal 2–5 minute
    cadence. Under host-managed monitoring, end the turn after the push instead.
-8. Refresh the exact head; merge only when all required checks, reviews and
-   finding dispositions pass and apply to that head, conflicts are absent, and
-   the user granted explicit or standing merge authority. Do not infer authority from
-   approval. Under host-managed monitoring, green CI never wakes the session, so
-   use PR review timing's verified enforcement rule for pending remote gates,
-   and disable
-   auto-merge this controller enabled when escalating.
+8. Merge only with explicit or standing authority, no conflicts, and passing
+   checks, reviews and finding dispositions for the refreshed head. Require
+   the provider to match that reviewed SHA at merge; requalify on mismatch.
+   For queue or auto-merge, verify final-head enforcement. Host-managed green
+   CI never wakes the session: follow PR review timing for pending gates and
+   disable controller-enabled auto-merge on escalation.
 
 ## Finish or escalate
 

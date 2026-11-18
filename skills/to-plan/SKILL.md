@@ -94,7 +94,7 @@ remains.
 Finish in exactly one state: **Awaiting approval** (validated tracker draft only),
 **Published** (verified active plan or effective amended contract, applicable
 predecessor presentation attempted, draft deleted, and handoff returned), **No-op** (current effective contract returned),
-**Blocked** (one actionable report, tracker unchanged, draft preserved), or
+**Blocked** (one actionable report, tracker effects reported as observed or unknown, draft preserved until reconciliation), or
 **Conversation handoff** (validated marked scratch plan and handoff, tracker
 unchanged). The shared workflow defines the exact handoff and bounded mechanical
 repair contract.

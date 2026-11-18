@@ -127,7 +127,10 @@ retains its trusted configuration, leases and merge/closure policy.
 6. **Code-host merge:** Refresh exact head/base, applicable checks, reviews,
    finding dispositions, merge-policy fingerprint and closure references.
    Require invocation-specific merge authority and the caller's final-head
-   gates. Use the selected merge method or queue; verify GitHub merged state,
+   gates. Bind the merge operation itself to the reviewed head SHA (GitHub
+   REST `sha`, GraphQL `expectedHeadOid`, or `gh pr merge --match-head-commit`).
+   On mismatch, refresh and requalify the new head before retrying. Use a queue
+   only with verified enforcement of every gate on the final head; verify GitHub merged state,
    merged head/commit and refreshed target base. Queue admission or auto-merge
    enablement is pending, not a completed merge. Reconcile an ambiguous merge
    before retrying or asking any tracker to close.
