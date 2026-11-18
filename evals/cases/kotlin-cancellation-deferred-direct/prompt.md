@@ -1,0 +1,1 @@
+Review this suspend API. The deferred belongs to a separate owner and can be cancelled while the caller remains active. Keep the existing fallback for ordinary failures. Explain the smallest correction without editing files.

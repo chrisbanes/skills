@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-flow-synchronous-read-direct",
+  "title": "Read a projection immediately after updating its source",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-flow-synchronous-read-direct"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "cache-timing", "text": "Explains that eager start keeps a producer active without subscribers but its derived cache can lag behind an upstream write"},
+    {"id": "projection", "text": "Reads and trims the current upstream value directly for the synchronous API while preserving the existing observable cache"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

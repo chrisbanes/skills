@@ -12,8 +12,9 @@
     {"argv": ["python3", "@validators/text_case.py", "kotlin-flow-state-events-novel"], "timeout_seconds": 30}
   ],
   "rubric": [
-    {"id": "state-event-split", "text": "The review keeps replayable screen state distinct from non-replayable navigation work"},
-    {"id": "delivery-semantics", "text": "The recommendation explicitly reasons about absent collectors and one-consumer versus broadcast delivery before choosing Channel, SharedFlow, or durable state"}
+    {"id": "state-event-split", "text": "Keeps current screen state distinct from pending navigation work and identifies loss across a collector gap with the current replay-zero SharedFlow"},
+    {"id": "delivery-semantics", "text": "Explains why a one-consumer channel can lose a received event before successful handling and models pending work by ID until acknowledgement after handling"},
+    {"id": "retry-limits", "text": "Accounts for multiple outstanding requests and the possibility of retry after successful handling but before acknowledgement, within the owner lifetime"}
   ],
   "provenance": {
     "kind": "historical",

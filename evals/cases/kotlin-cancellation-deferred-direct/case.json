@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-cancellation-deferred-direct",
+  "title": "Preserve cancellation from an awaited dependency",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-cancellation-deferred-direct"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "active-caller", "text": "Explains why checking only caller activity can miss cancellation from a separately cancelled Deferred"},
+    {"id": "rethrow", "text": "Rethrows the caught CancellationException and preserves the fallback for ordinary failures"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

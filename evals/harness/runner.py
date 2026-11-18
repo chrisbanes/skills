@@ -349,7 +349,10 @@ def prepare_workspace(
     shutil.copytree(
         fixture,
         destination,
-        ignore=shutil.ignore_patterns(*_GRADLE_OUTPUT_DIRECTORIES),
+        # Local coroutine probes include solutions to the evaluated prompts.
+        ignore=shutil.ignore_patterns(
+            *_GRADLE_OUTPUT_DIRECTORIES, "CoroutineContractsTest.kt"
+        ),
     )
     subject_gradlew = destination / "subject-gradlew"
     if subject_gradlew.is_file():

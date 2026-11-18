@@ -25,9 +25,8 @@ Most repositories, managers, use cases, and data sources should expose
    may register, but must not launch.
 5. Keep a non-suspending launch only at the UI/state-holder boundary described
    below. Otherwise make the API suspend.
-6. Re-throw `CancellationException` from any broad catch around suspension.
-   A narrow timeout converted close to its own `withTimeout` is the exception;
-   catches of non-cancellation subtypes are also safe.
+6. Rethrow `CancellationException` from any broad catch around suspension.
+   Use `withTimeoutOrNull` when a boundary should translate its own timeout.
 7. Replace application `runBlocking` with suspension or a lifecycle-bound
    boundary. Use `runTest` in tests; use `runBlocking` only at a true blocking
    edge and keep it small.
@@ -78,9 +77,22 @@ try {
 }
 ```
 
-`currentCoroutineContext().ensureActive()` is suitable when ordinary failure is
-handled locally. `runCatching` needs the same guard, or a terminal
-`getOrThrow()`. Do not turn arbitrary cancellation into success.
+Inspect the caught exception before handling an ordinary failure. A caller
+awaiting an independently cancelled `Deferred` can still be active, so
+`currentCoroutineContext().ensureActive()` alone can miss that cancellation.
+With `runCatching`, rethrow a caught `CancellationException` before mapping a
+failure to a fallback, or propagate every failure with `getOrThrow()`.
+
+Use `withTimeoutOrNull` to translate only the timeout owned by that boundary.
+Cancellation from the caller or an uncaught nested timeout still propagates.
+Wrap a nullable success in a non-null value to distinguish it from timeout.
+
+```kotlin
+data class Loaded(val value: String?)
+
+suspend fun loadWithin(timeoutMillis: Long, load: suspend () -> String?): Loaded? =
+    withTimeoutOrNull(timeoutMillis) { Loaded(load()) }
+```
 
 ## Blocking boundaries
 
