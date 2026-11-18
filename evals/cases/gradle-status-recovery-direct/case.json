@@ -27,7 +27,7 @@
   "rubric": [
     {
       "id": "status-command",
-      "text": "Uses gradle_run.py status --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa as the standalone recovery command and retains the original workflow rather than creating or running another build."
+      "text": "Gives gradle_run.py status --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa as the standalone read-only command. An inspection request does not authorize recover or a new run."
     },
     {
       "id": "bounded-result",
@@ -35,7 +35,7 @@
     },
     {
       "id": "state-evidence",
-      "text": "Waits or polls status on running, checks exit_status for completed including failures, uses recorded signal evidence for interrupted, and reports uncertain without inferring completion from PID existence or absence."
+      "text": "Waits or polls on running, checks exit_status for completed including failures, uses recorded signal evidence for interrupted, reports abandoned as unknown, and investigates ownership on uncertain without inferring completion or descendant absence from the recorded PIDs."
     }
   ],
   "provenance": {

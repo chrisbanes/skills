@@ -11,7 +11,7 @@ Treat complete Gradle output as a temporary, sensitive artifact. Every
 agent-initiated Gradle command runs through the compact-output wrapper; never
 stream, `tee`, paste, or reopen a full build log.
 
-Every `create`, `run`, `status`, and `finish` invocation is the entire shell command for
+Every `create`, `run`, `status`, `recover`, and `finish` invocation is the entire shell command for
 that tool call. Prefixes, assignments, conditionals, pipes, command chains, and
 follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
 
@@ -32,10 +32,8 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    python3 <skill-dir>/scripts/gradle_run.py create
    ```
 
-   Run `create`, each `run`, and `finish` as standalone shell commands. Do not
-   combine one with `ls`, `test`, variable setup, `git`, `rg`, `&&`, `;`, a
-   pipe, or a newline containing another command. If `create` fails, retry a fresh
-   standalone `create` before any `run`. Use the wrapper exclusively; it
+   If `create` fails, retry a fresh standalone `create` before any `run`.
+   Use the wrapper exclusively. It
    supplies `--console=plain` and `--no-scan` unless console behavior was
    selected or the user authorized `--scan`. Add `--warning-mode all` only for
    warning discovery or an explicit request. If `run` or `finish` reports
@@ -58,11 +56,30 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    evidence, while PIDs are identity only. Unrelated workflow lock contention
    leaves an abandoned run `uncertain`. `completed` includes failed builds and launch
    errors: check `result.exit_status`. `interrupted` requires a recorded signal.
-   `uncertain` covers abandoned active records, missing locks, incomplete/legacy
-   ledgers and transitions without sufficient evidence. Report that uncertainty;
-   the next action is an ownership investigation, not completion inferred from
-   a PID, a rerun (even conditional or later), cleanup, `finish`, or process
-   termination. A new workflow is `idle`; after
+   `uncertain` covers active records without proven ownership, incomplete/legacy
+   ledgers and transitions without sufficient evidence. Report the uncertainty.
+   Investigate the recorded wrapper, child, and any descendants using read-only
+   ownership evidence. PID absence alone gives no evidence about descendants.
+   Keep the workflow unresolved if any recorded PID is live, possibly reused,
+   or unverifiable, or if descendant ownership is unclear. While unresolved,
+   do not rerun, create a replacement workflow, clean up, finish, or terminate
+   processes to try to recover it.
+
+   When recovery is authorized and the investigation confirms no live
+   descendants remain, run this standalone with the same workflow ID, active
+   sequence, and global `--root` if supplied originally:
+
+   ```sh
+   python3 <skill-dir>/scripts/gradle_run.py recover --workflow <id> \
+     --sequence <n> --reason "<ownership evidence>" --no-live-descendants
+   ```
+
+   The wrapper requires both locks and definitive absence of each recorded
+   PID. If recovery refuses, leave the workflow unresolved and report why.
+   After recovery, status reports `abandoned` and an `unknown` outcome for
+   that sequence. Recovery keeps the log unopened under normal retention.
+   Report the outcome and use the same workflow for later authorized validation.
+   A new workflow is `idle`; after
    `finish` it is `finished` and its result has been removed. Unknown IDs fail
    closed. Finish only after retrieving the needed result.
 4. For incidental validation, stay in the current agent and run the narrowest

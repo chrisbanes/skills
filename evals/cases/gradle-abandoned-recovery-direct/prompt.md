@@ -1,0 +1,3 @@
+Prepare the exact standalone Gradle wrapper recovery command without executing it. You may read the applicable skill and its referenced Markdown. The authorized operator has investigated workflow `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` under the default root. Its active sequence 4 is uncertain. Both locks are free. The wrapper and child PIDs are definitively absent, and the investigation found no live descendants. Sequence 3 previously succeeded.
+
+Use the reason `Ownership verified; no live descendants`. Explain what status will report for sequence 4 and where an authorized subsequent managed run belongs.
