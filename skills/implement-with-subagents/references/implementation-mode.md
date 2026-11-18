@@ -151,9 +151,9 @@
    original owner or owners. If attribution is unclear, investigate read-only
    first; assign a new bounded implementation owner only when no prior owner
    fits. Retain the applicable owner handle and give the repair owner the failed
-   head SHA, failing output, affected scope, and an idle suitable worker
-   checkout under the lifecycle rules below. Have that owner create a fresh
-   unique branch from the failed head and repair forward with a task-scoped
+   head SHA, failing output, affected scope, and a checkout under the
+   [failed-check repair rules](checkout-lifecycle.md#repair-after-failed-integrated-checks).
+   Have that owner repair forward on the fresh branch and return a task-scoped
    commit. Apply step 7 to the repair commit, verify the integration branch
    remains at the failed SHA and clean, then integrate the repair and rerun
    affected checks. Stop if that failed-head state was lost. Keep unrelated

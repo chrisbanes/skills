@@ -79,9 +79,12 @@
 7. If completed integration fails checks, preserve the failed integrated `HEAD`,
    pause dependents and repair forward. Never reset or discard it. Investigate
    unclear attribution read-only, retain unaffected owner branches, and have the
-   responsible owner repair from the failed head. Account for dirty validation
-   artifacts before continuing. Inspect and integrate the repair, then rerun
-   affected checks; stop if the failed state cannot be preserved or repaired.
+   responsible owner repair from the failed head. For delegated work, apply the
+   [failed-check repair rules](checkout-lifecycle.md#repair-after-failed-integrated-checks)
+   to select the checkout. Account for dirty validation artifacts before
+   continuing. Inspect and integrate the repair, then rerun affected checks
+   before releasing dependents. Stop if the failed state cannot be preserved
+   or repaired.
 8. Apply [Evidence and review](evidence-and-review.md), complete lifecycle
    accounting at completion, interruption and blockers, and satisfy the
    entrypoint's finish gate.
