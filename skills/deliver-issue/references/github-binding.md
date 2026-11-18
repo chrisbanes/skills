@@ -46,6 +46,9 @@ verification.
    writes and recovery. Loss of that role stops the planner and writers, releases
    capacity, and preserves assignment, draft, worktree and every artifact until
    human restoration. Neither planner nor controller adds or restores the role.
+   Before planning writes for an issue named by a trusted GitHub Project binding's
+   retained migration table, verify its release under
+   [retained claims](#retain-claims-across-legacy-migration).
    Prefer the connector; use the GitHub access fallback below when needed.
 2. **`read-markers`:** Paginate every issue comment, including minimized ones.
    Return exact API-decoded `body`, stable comment ID/permalink, author,
@@ -248,9 +251,12 @@ new authority.
 2. Use issue states and native relationships without requiring a Project, Status,
    Priority, board configuration or board role-label definitions. Read any existing
    trusted overrides and ownership records; conflicting scope or ownership blocks
-   writes. Do not enter board setup or create missing labels. The root is part of
-   the requested outcome and may need implementation itself; it is not forced into
-   an epic-only lane. A shape label does not grant or remove execution authority.
+   writes. When a trusted GitHub Project binding names the issue in a retained
+   migration table, verify its release under
+   [retained claims](#retain-claims-across-legacy-migration) before writing.
+   Leave release to the Project controller. Direct delivery includes the root
+   in the requested outcome. A shape label does not grant or remove execution
+   authority. Keep board setup and label creation outside this lane.
 3. Follow the [issue lifecycle](issue-lifecycle.md) to establish the live invocation
    grant and its holds/stops, clarify requirements, plan and deliver. Do not feed
    direct scope into the board ranker, manufacture role labels, or apply board Todo
@@ -398,7 +404,8 @@ binding. If no separate checkout is available, present the proposed patch
 without writing it; setup does not create worktrees. Existing owners may finish
 their claims against the old digest, including feedback and repair. Defer
 committing the new configuration to verified base and activating it until all
-old-digest claims finish. If validation passes, report
+old-digest claims finish. The only exception for legacy migration is the
+[retained-claim procedure](#retain-claims-across-legacy-migration). If validation passes, report
 `configuration-ready-to-commit` with application or activation pending as
 appropriate; do not change existing owners or leases. New routing and other
 configuration changes apply only after activation.
@@ -443,9 +450,10 @@ alone authorizes discovery and a dry run, not migration or execution.
    repeated approval; reconcile any prior journal before declaring completion.
    Missing, ambiguous, inaccessible
    or partial identities block migration; ask the human to resolve missing
-   target options instead of creating/renaming them. Require zero In Progress
-   items, no active/paused/parked old-binding leases, and quiesced writers before
-   applying; otherwise present the dry run with those exact blockers.
+   target options instead of creating/renaming them. Require quiesced writers,
+   zero In Progress items and no old-binding leases unless each such item or
+   lease qualifies under [retained claims](#retain-claims-across-legacy-migration).
+   Report every ineligible item or lease as a dry-run blocker.
 2. **Present the complete dry run.** Enumerate every item in Backlog or Ready to
    implement, including identity/reference, old option ID/name, target Todo
    ID/name, exact current label IDs/names and unchanged labels. Include zero
@@ -465,12 +473,13 @@ alone authorizes discovery and a dry run, not migration or execution.
    each trusted exact-file reference in `AGENTS.md`/`CLAUDE.md` in the same patch.
    An existing destination, conflicting references or local edits require a
    reconciled patch preserving both, never overwrite. Show the journal location,
-   rollback plan and activation/commit boundary. Leave every Status option intact.
+   rollback plan and activation/commit boundary. Include the retained claims
+   and their treatment under the new binding. Leave every Status option intact.
    Finish `migration-awaiting-approval` with no board or repository writes,
    including no journal file, until explicit approval of this exact plan. A
    decline finishes `migration-declined` with no changes; silence is not approval.
 3. **Journal before applying.** Refresh the whole plan and preconditions after
-   approval; changed membership, labels, files or identities require a revised
+   approval; changes to membership, labels, files, claims or writer state require a revised
    dry run and renewed approval. Persist a durable local migration record at
    the approved location before the first write and verify it can be read back.
    Include migration/operation IDs, approval evidence, repository/Project/field/
@@ -482,7 +491,7 @@ alone authorizes discovery and a dry run, not migration or execution.
    attempted/verified/unknown/conflicted results and authoritative readbacks
    durably after it. If journaling fails, stop before the next write.
 4. **Apply and reconcile one operation at a time.** Recheck each original-state
-   precondition immediately before its write. Change only Status for a listed
+   precondition and the writer fence immediately before its write. Change only Status for a listed
    item, using the verified Project/item/field/option IDs; refetch and verify
    Status, labels, membership, assignment and archive state after every write.
    Preserve labels verbatim; migration never adds/restores `ready-for-agent`.
@@ -518,6 +527,64 @@ alone authorizes discovery and a dry run, not migration or execution.
    board-only migration finishes `configuration-valid` only after fresh binding
    validation. Human option deletion is a separate action once old options are
    empty; setup never deletes options, even after approval or rollback.
+
+### Retain claims across legacy migration
+
+Use this exception only when migrating a trusted legacy file to a committed
+replacement on the same Project and repository. Board-only migrations still
+require zero In Progress items and no old leases.
+
+1. **Verify each claim at cutover.** Carry a verified authority pause or a
+   quiesced Todo handoff with a verified active plan leaf and exclusive
+   assignment. Verify the old binding and claim identity, original marker
+   author and digest, current membership/lane and owner, and checkpoint or
+   owner evidence that all writers and in-flight mutations are settled. An
+   In Progress item qualifies only with a verified authority pause. An active
+   writer, unmatched In Progress item, CI-parked lease or unverified claim
+   blocks application. Preserve uncertain artifact or budget evidence as
+   unknown and require it to be resolved before resume.
+2. **Specify the preservation in the approved patch.** Add a
+   `## Retained migration claims` table to the replacement binding. List each
+   issue URL and node ID, Project item ID, assignee, pre/post Status option IDs,
+   kind (`authority-pause` or `todo-handoff`), and original committed binding
+   identity and digest. Pin the immutable pause or active plan permalink
+   and [payload digest](../../to-plan/references/github-mode.md#payload-digest).
+   Journal the same entries and the preserved source,
+   branches, heads, PRs, checkpoints, qualification evidence and consumed or
+   remaining budgets. Use null for verified absence and mark unknowns explicitly.
+   Keep local paths and private evidence out of the committed table. Move a
+   retained Backlog/Ready item only via its listed Status operation. Preserve
+   the labels, owner, dependency edges, historical markers and artifacts.
+   Keep excluded labelled items out of the dry run's newly eligible list.
+3. **Fence dispatch through activation.** Keep old and new controllers and
+   ticket writers quiesced from the first mutation through readback and
+   activation. Activate only once the complete journal reconciles, the trusted
+   replacement containing the approved table is committed on verified base,
+   and fresh reads confirm the migration and its retained items. Before
+   ranking and on refresh, match table entries by stable IDs and check the
+   current owner, marker and Status. Keep unresolved entries in the frontier
+   outside ranking and capacity, with their dependency edges, even when a
+   checkpoint is unavailable. Mismatched entries block their own writes and
+   stay excluded. An incomplete or ambiguous table blocks dispatch until all
+   its protected identities are known. An old binding cannot issue a new
+   grant after activation.
+4. **Resume under the current binding.** Observe the original pause's resume
+   condition or obtain an explicit scoped continuation for a Todo handoff.
+   Apply label-stop and revalidate ownership, source/plan, worktree, PR/head,
+   base, budget, and applicable checks, reviews and grants. Publish and refetch
+   one runner-authored `<!-- run-github-project:migration-resume:v1 -->`
+   record linking the committed table entry and original marker permalink and
+   digest, old/new binding digests, verified resume evidence, and the new
+   lease identity. Apply the normal authority-resume protocol for paused
+   work. Reconstruct the transition from both records on later runs. Require
+   owner acknowledgement before writes and keep the same owner, artifacts and
+   counters. A missing or ambiguous record preserves the hold. Neither
+   migration nor the table supplies execution authority or qualification.
+5. **Rollback before release.** Apply the ordinary journal rollback only
+   after fencing writers and checking that no retained claim changed or
+   acquired a lease under the new binding. If a claim resumed or activation
+   admitted other work, preserve it and reconcile the affected binding and
+   ownership before any inverse operation.
 
 ## GitHub Project Configuration
 
