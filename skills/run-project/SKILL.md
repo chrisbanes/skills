@@ -23,9 +23,9 @@ to descendants.
 Select the tracker and code host independently under
 [Delivery bindings](references/provider-bindings.md). For Jira Cloud JQL boards
 read the [Jira tracker binding](references/jira-binding.md) for validation,
-scope, normalization and operations. For GitHub read the
-[GitHub binding](references/github-binding.md); for a GitLab code host, the
-[GitLab binding](references/gitlab-binding.md). Preserve durable marker formats.
+scope, normalization and operations. Read the [GitHub binding](references/github-binding.md)
+for GitHub scope and the [GitLab binding](references/gitlab-binding.md)
+for GitLab code hosting. Preserve durable marker formats.
 
 ## Invariants
 

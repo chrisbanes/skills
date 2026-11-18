@@ -56,6 +56,20 @@
       "mutates": false,
       "preserves_work": true
     },
+    "multiple-linked": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Scope",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
+    "partial-linked": {
+      "action": "configuration-blocked",
+      "ambiguous_lookup": "Scope",
+      "guesses": false,
+      "mutates": false,
+      "preserves_work": true
+    },
     "multiple-scope": {
       "action": "configuration-blocked",
       "ambiguous_lookup": "Scope",

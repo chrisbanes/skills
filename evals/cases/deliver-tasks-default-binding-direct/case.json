@@ -1,6 +1,6 @@
 {
   "id": "deliver-tasks-default-binding-direct",
-  "title": "Project invocation resolves fresh defaults without a configuration file",
+  "title": "Explicit or uniquely linked GitHub Project resolves defaults without a configuration file",
   "family": "workflow",
   "target_skills": [
     "run-project"
@@ -30,7 +30,7 @@
   "rubric": [
     {
       "id": "defaults",
-      "text": "Resolves Project scope, git repository and live repository defaults, fresh unique columns/labels and runtime fingerprint without creating files or granting authority. Recovery compares the preserved runtime snapshot; no phantom committed digest is required."
+      "text": "Uses explicit Project scope without querying linked Projects. With omitted scope, reads the complete supplied linked-Project result and selects the sole open non-template Project 7. Validates repository defaults, fresh unique columns/labels and runtime fingerprint without creating files or granting authority. Recovery compares the preserved runtime snapshot."
     }
   ],
   "provenance": {

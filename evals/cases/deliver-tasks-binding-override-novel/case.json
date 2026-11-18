@@ -30,7 +30,7 @@
   "rubric": [
     {
       "id": "binding",
-      "text": "Partial trusted overrides replace defaults; correct pins work while wrong IDs, same-ID name drift, untrusted or uncommitted files stop. Do not silently fall back, migrate or rewrite pins."
+      "text": "Partial trusted overrides replace defaults. When Scope alone is absent, infer Project 8 while preserving the base, role and Status overrides and the committed digest. Wrong IDs, same-ID name drift, untrusted or uncommitted files stop even when discovery could find a Project. Do not silently fall back, migrate or rewrite pins."
     }
   ],
   "provenance": {

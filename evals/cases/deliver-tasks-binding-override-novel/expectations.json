@@ -11,6 +11,17 @@
       "identity_source": "committed-override-digest",
       "requires_file": true
     },
+    "implicit-scope": {
+      "action": "configuration-valid",
+      "scope": "project-8",
+      "base": "release",
+      "planning_status": "Planning",
+      "agent_role": "agent:ready",
+      "human_role": "human:next",
+      "closure": "close-after-merge",
+      "identity_source": "committed-override-digest",
+      "requires_file": true
+    },
     "wrong-id": {
       "action": "configuration-blocked",
       "falls_back_to_defaults": false,

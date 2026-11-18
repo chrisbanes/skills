@@ -142,6 +142,10 @@ The delivery skills support Jira Cloud as a tracker for JQL boards, direct
 issue delivery and planning markers. Select the code host separately.
 See the [Jira binding](references/jira-binding.md) for setup and supported operations.
 
+When `run-project` has no explicit GitHub Project scope, it selects the sole
+visible open, non-template Project linked to the verified repository. Supply a
+Project URL when discovery is inconclusive.
+
 Delivery workflow migration: `run-github-project` is replaced by `run-project`;
 `deliver-tasks` is split into board execution and `deliver-issue`; `deliver-spec`
 is folded into their internal delivery procedures. All three old skill names are
