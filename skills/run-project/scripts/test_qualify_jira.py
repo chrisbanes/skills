@@ -32,6 +32,7 @@ class JiraFixture:
         self.ambiguous_create = ambiguous_create
         self.ambiguous_delete = ambiguous_delete
         self.issues = {}
+        self.hidden_issues = set()
         self.comments = {}
         self.histories = {}
         self.writes = []
@@ -82,7 +83,7 @@ class JiraFixture:
                 return {"issues": issues[:1], "nextPageToken": "second-page", "isLast": False}
             return {"issues": issues, "isLast": True}
         _, _, issue_id, *tail = path.split("/")
-        if issue_id not in self.issues:
+        if issue_id not in self.issues or issue_id in self.hidden_issues:
             raise RequestFailed(404)
         if tail == ["transitions"]:
             workflow = STATUSES if issue_id == "21" else (STATUSES[0], CHILD_DONE)
@@ -93,7 +94,13 @@ class JiraFixture:
         if tail == ["comment", "88"]:
             return self.comments[issue_id]
         assert not tail, path
-        return self.issues[issue_id]
+        issue = self.issues[issue_id]
+        if self.hidden_issues:
+            issue = deepcopy(issue)
+            issue["fields"]["subtasks"] = [
+                child for child in issue["fields"]["subtasks"] if child["id"] not in self.hidden_issues
+            ]
+        return issue
 
     def write(self, method, path, query, body):
         if method == "POST" and path == "/issue":
@@ -119,6 +126,9 @@ class JiraFixture:
         if method == "DELETE":
             assert query == {"deleteSubtasks": "false"} and not fields["subtasks"]
             if self.ambiguous_delete == "still-present":
+                raise RequestFailed()
+            if self.ambiguous_delete == "hidden":
+                self.hidden_issues.add(issue_id)
                 raise RequestFailed()
             if fields.get("parent"):
                 parent = self.issues[fields["parent"]["id"]]["fields"]
@@ -207,7 +217,7 @@ class QualificationTests(unittest.TestCase):
             run.send("DELETE", f"/issue/{issue_id}", query={"deleteSubtasks": "false"})
 
     def test_unknown_create_recovers_visible_issue_without_sending_again(self):
-        fixture = JiraFixture(sub_tasks=False, ambiguous_create="persisted", ambiguous_delete="deleted")
+        fixture = JiraFixture(sub_tasks=False, ambiguous_create="persisted")
         run = self.set_up_run(fixture)
         self.assertTrue(run.run(), self.events)
         self.assertEqual(1, fixture.writes.count(("POST", "/issue")))
@@ -249,6 +259,24 @@ class QualificationTests(unittest.TestCase):
         self.assertNotIn(("DELETE", "/issue/21"), fixture.writes)
         self.assertEqual(RECONCILE_READS, sum(event == "reconcile-delete" for event, _ in self.events))
         self.assertEqual(["21", "22"], self.events[-1][1]["unresolved_ids"])
+
+    def test_delete_timeout_followed_by_404_remains_unverified(self):
+        for outcome, sub_tasks, unresolved, remaining in (
+            ("hidden", True, ["21", "22"], {"21", "22"}),
+            ("deleted", False, ["21"], set()),
+        ):
+            with self.subTest(outcome=outcome):
+                fixture = JiraFixture(sub_tasks=sub_tasks, ambiguous_delete=outcome)
+                self.assertFalse(self.set_up_run(fixture).run(), self.events)
+                self.assertEqual(remaining, set(fixture.issues))
+                event, info = self.events[-1]
+                self.assertEqual("finish", event)
+                self.assertTrue(info["journey"])
+                self.assertFalse(info["cleanup"])
+                self.assertEqual(unresolved, info["unresolved_ids"])
+                self.assertNotIn("deleted", [event for event, _ in self.events])
+                deletes = [path for method, path in fixture.writes if method == "DELETE"]
+                self.assertEqual([f"/issue/{unresolved[-1]}"], deletes)
 
 
 if __name__ == "__main__":

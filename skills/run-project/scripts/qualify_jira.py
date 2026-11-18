@@ -412,29 +412,37 @@ class Qualification:
         for issue_id in reversed(self.owned):
             try:
                 current = self.read_issue(issue_id)
-                require(issue_id != self.pending_parent and not current["subtasks"],
+                known_child_unresolved = any(
+                    parent == issue_id and child_id not in self.deleted
+                    for child_id, (_, parent, _) in self.owned.items()
+                )
+                require(issue_id != self.pending_parent and not current["subtasks"]
+                        and not known_child_unresolved,
                         "delete held for remaining or unreconciled sub-tasks")
                 self.check_permissions(issueId=issue_id)
                 self.record("cleanup-authority-verified", id=issue_id)
+                delete_acknowledged = True
                 try:
                     self.send("DELETE", f"/issue/{issue_id}", query={"deleteSubtasks": "false"})
                 except RequestFailed as error:
                     if error.status is not None and error.status < 500 and error.status not in (408, 429):
                         raise
-                self.confirm_deleted(issue_id)
+                    delete_acknowledged = False
+                self.confirm_deleted(issue_id, delete_acknowledged=delete_acknowledged)
             except (Failure, KeyError, TypeError, ValueError) as error:
                 clean = False
                 message = str(error) if isinstance(error, Failure) else "invalid Jira response shape"
                 self.record("cleanup-unverified", id=issue_id, reason=message)
         return clean
 
-    def confirm_deleted(self, issue_id):
+    def confirm_deleted(self, issue_id, *, delete_acknowledged):
         for attempt in range(1, RECONCILE_READS + 1):
             self.record("reconcile-delete", id=issue_id, attempt=attempt)
             try:
                 self.read_issue(issue_id)
             except RequestFailed as error:
                 if error.status == 404:
+                    require(delete_acknowledged, "404 after unacknowledged delete cannot verify deletion")
                     self.deleted.add(issue_id)
                     self.record("deleted", id=issue_id, readback=404)
                     return
