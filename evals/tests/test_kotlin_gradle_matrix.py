@@ -78,18 +78,17 @@ class KotlinGradleMatrixTest(unittest.TestCase):
                 for skill in case.expected_skills:
                     self.assertNotIn(skill, prompt)
 
-    def test_coroutine_contract_probes_are_not_exposed_to_subjects(self):
+    def test_detached_thread_workspace_excludes_local_coroutine_probes(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
         case = next(
-            case for case in report.cases if case.id == "kotlin-cancellation-timeout-novel"
+            case for case in report.cases if case.id == "kotlin-detached-thread-ownership-direct"
         )
-        probe_path = Path("src/test/kotlin/example/CoroutineContractsTest.kt")
-        self.assertTrue((REPO_ROOT / "evals/fixtures/kotlin-jvm" / probe_path).is_file())
 
         with tempfile.TemporaryDirectory() as temp_dir:
             workspace = prepare_workspace(case, REPO_ROOT, Path(temp_dir) / "subject")
-            self.assertFalse((workspace / probe_path).exists())
-            self.assertTrue((workspace / "src/main/kotlin/example/Subject.kt").is_file())
+            self.assertFalse(list(workspace.rglob("CoroutineContractsTest.kt")))
+            build = (workspace / "build.gradle.kts").read_text(encoding="utf-8")
+            self.assertNotIn("kotlinx-coroutines-test", build)
 
     def test_exhaustiveness_review_does_not_require_using_an_unused_payload(self):
         report = validate_corpus(REPO_ROOT, suite="kotlin-gradle")
