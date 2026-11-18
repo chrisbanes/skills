@@ -1,0 +1,52 @@
+{
+  "tracker": "gitlab.com/team/mobile",
+  "trackerProjectId": 88001,
+  "trackerIid": 42,
+  "trackerIssueOpen": true,
+  "trackerContractFulfilled": true,
+  "closureGrant": true,
+  "defaultBranch": "main",
+  "autoclose_referenced_issues": true,
+  "head": "H1",
+  "checksAndIndependentReviewAtHead": "pass",
+  "scenarios": {
+    "same-project": {
+      "host": "gitlab.com/team/mobile",
+      "projectId": 88001,
+      "base": "main",
+      "configuredPolicy": "closing-keyword",
+      "mergeAccountCanClose": true,
+      "effectiveClosingSet": [
+        "gitlab.com/88001/42"
+      ]
+    },
+    "same-iid-other-project": {
+      "host": "gitlab.com/team/mobile",
+      "projectId": 88001,
+      "base": "main",
+      "configuredPolicy": "closing-keyword",
+      "mergeAccountCanClose": true,
+      "effectiveClosingSet": [
+        "gitlab.com/88001/42",
+        "gitlab.com/88002/42"
+      ]
+    },
+    "non-default-base": {
+      "host": "gitlab.com/team/mobile",
+      "projectId": 88001,
+      "base": "qual/test-base",
+      "configuredPolicy": "close-after-merge",
+      "effectiveClosingSet": []
+    },
+    "github-host": {
+      "host": "github.com/team/mobile",
+      "base": "main",
+      "configuredPolicy": "close-after-merge",
+      "description": "Closes #42",
+      "effectiveClosingSet": [
+        "github.com/99001/42"
+      ],
+      "requestedChange": "Add a closing keyword for GitLab issue 42"
+    }
+  }
+}

@@ -3,16 +3,18 @@
 ## Preconditions
 
 Read trusted repository instructions and validate the binding read-only through
-[GitHub validation](github-binding.md#binding-validation) or
-[Jira validation](jira-binding.md#binding-validation), resolving optional
+[GitHub](github-binding.md#binding-validation),
+[Jira](jira-binding.md#binding-validation) or
+[GitLab](gitlab-binding.md#scope-and-readiness), resolving optional
 overrides and defaults without entering setup repair. Resolve lane-specific dependencies under [workflow providers](workflow-providers.md)
 before their relevant action; follow its affected-lane blocker rules when a
 provider is unavailable. Read [human frontier](human-frontier.md),
 [Todo](todo-lane.md), [triage](triage-lane.md), and, when enabled,
 [Wayfinder](wayfinder-lane.md), plus [review contracts](review-contracts.md)
 before ticket acceptance. Confirm the binding's
-execution prerequisites for [GitHub](github-binding.md#execution-prerequisites)
-or [Jira](jira-binding.md#unavailable-lanes-and-finish-gate).
+execution prerequisites for [GitHub](github-binding.md#execution-prerequisites),
+[Jira](jira-binding.md#unavailable-lanes-and-finish-gate) or
+[GitLab](gitlab-binding.md#tracker-availability-and-finish-gate).
 
 For `next`/`drain`, establish invocation authority through
 [run authority and ticket pauses](authority-and-pauses.md), checking grants at
@@ -98,12 +100,13 @@ access or configuration failure. Do not repeatedly probe unchanged blockers.
 ## Remote state and queue
 
 Before retry, mutation or a success claim, use the tracker binding's
-reconciliation procedure ([GitHub](github-binding.md#remote-reconciliation) or
-[Jira](jira-binding.md#claim-release-and-status)). Use
+reconciliation procedure ([GitHub](github-binding.md#remote-reconciliation),
+[Jira](jira-binding.md#claim-release-and-status) or
+[GitLab](gitlab-binding.md#reconciliation)). Use
 [GitHub access](github-binding.md#github-access) for a selected GitHub role.
 
-Query complete live scope state at start and after merges: Project state or
-the parent binding’s complete descendant/dependency graph. Parent scope
+Query complete live scope state at start and after merges: Project state,
+the parent binding’s descendant/dependency graph, or the tracker’s verified selection and graph. Parent scope
 requires no Project configuration; apply its logical claim/Done mapping. In `drain`, obey the
 scheduler Refresh Gate and include new Todo implementation/planning work plus Todo
 needs-triage until the first complete empty executable-and-triage query; leave
@@ -157,13 +160,14 @@ under `closing-keyword`; it does not waive missing qualification or authority.
 ## Claim and revalidate
 
 Before claim, verify unattended readiness for the selected operation, effective
-binding fingerprint and refetch selected issue
-and Project item. Require the lane's current Status, its human-applied role label and `parked: false`. Status and assignment supply no role authority. Never add or restore `ready-for-agent`; never fetch transition history to prove permission.
+binding fingerprint and refetch the exact issue and its scope membership.
+Require the lane's current logical Status, its human-applied role label and `parked: false`. Status and assignment supply no role authority. Never add or restore `ready-for-agent`; never fetch transition history to prove permission.
 Route planning and Wayfinder modes through their lanes; a
 `next` planning selection stays the same issue through terminal reconciliation.
 For Todo work with a verified usable active plan, perform the binding's
-implementation claim operation for [GitHub](github-binding.md#claim-implementation-work)
-or [Jira](jira-binding.md#claim-release-and-status).
+implementation claim operation for [GitHub](github-binding.md#claim-implementation-work),
+[Jira](jira-binding.md#claim-release-and-status) or
+[GitLab](gitlab-binding.md#claim-stop-and-release).
 Record its verified lease; ambiguity after the claim transition preserves a
 blocked slot.
 

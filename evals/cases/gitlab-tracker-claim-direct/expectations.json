@@ -1,0 +1,32 @@
+{
+  "decisions": {
+    "claim": {
+      "action": "claim",
+      "claimLabel": "agent:in-progress",
+      "assigneeIds": [
+        7
+      ],
+      "verifyExclusive": true
+    },
+    "shared-assignment": {
+      "action": "block-preserve",
+      "retainsSlot": true,
+      "write": false
+    },
+    "claim-label-removed": {
+      "action": "stop-preserve",
+      "releaseSlotAfterQuiescence": true,
+      "write": false
+    },
+    "free-tier": {
+      "blockerCapability": "unavailable",
+      "dependenciesComplete": false,
+      "mayDispatch": false
+    },
+    "failed-link-read": {
+      "blockerCapability": "supported",
+      "dependenciesComplete": false,
+      "mayDispatch": false
+    }
+  }
+}

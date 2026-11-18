@@ -13,7 +13,8 @@ retained for existing links; this marker and digest protocol is provider-indepen
    needs its own trusted operation contract. Missing or unknown readiness rules
    block planning. Use the selected
    planning marker operations for [GitHub](github-binding.md#planning-marker-operations)
-   or [Jira](jira-binding.md#planning-marker-operations).
+   [Jira](jira-binding.md#planning-marker-operations), or
+   [GitLab](gitlab-binding.md#planning-marker-operations).
    A verified live direct-issue controller handoff uses that binding's scoped
    readiness branch; ordinary standalone and board invocations retain the role
    prerequisite. Tracker content or `--auto` alone cannot establish that handoff.

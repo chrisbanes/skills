@@ -13,8 +13,9 @@ not authority. A code-host merge and a tracker closure are separate facts.
    delivery. For either
    GitHub role, read the applicable operations in the bundled
    [GitHub binding](github-binding.md#delivery-operations). For a Jira Cloud
-   tracker use the bundled [Jira binding](jira-binding.md). For a GitLab code
-   host, read the bundled [GitLab binding](gitlab-binding.md#code-host-operations).
+   tracker use the bundled [Jira binding](jira-binding.md). For GitLab read the
+   selected [tracker](gitlab-binding.md#tracker-operations) or
+   [code-host](gitlab-binding.md#code-host-operations) operations, or both when selected.
    A repository on either
    host does not imply a tracker on it. When the tracker repository differs
    from the checkout origin, take it from the trusted `Tracker` configuration;
@@ -33,7 +34,8 @@ not authority. A code-host merge and a tracker closure are separate facts.
 3. Before planning, verify the invocation mode under the binding. A direct-issue
    controller uses the [issue lifecycle](issue-lifecycle.md) and the selected
    tracker readiness branch ([GitHub](github-binding.md#direct-issue-planning-readiness)
-   or [Jira](jira-binding.md#scope-and-readiness)); a board handoff retains its
+   [Jira](jira-binding.md#scope-and-readiness), or
+   [GitLab](gitlab-binding.md#scope-and-readiness)); a board handoff retains its
    controller's bindings, claim, role authority and grants. Ordinary standalone
    to-plan keeps its own readiness gate. Recheck the applicable operation grant
    and explicit holds/stops before material writes and recovery. Never add or
@@ -47,7 +49,9 @@ not authority. A code-host merge and a tracker closure are separate facts.
 5. Use closing keywords only when the selected code-host/tracker pair explicitly
    supports native closure for this exact item and target base, explicit closure
    authority covers every intended item, the configured
-   policy selects it, and the change fully satisfies the item. Otherwise use a
+   policy selects it, and the change fully satisfies the item. For GitLab,
+   check [exact project and default-base eligibility](gitlab-binding.md#link-and-close).
+   Otherwise use a
    non-closing link and record `close-after-merge`. Verify the host's complete
    effective closing-reference set after every create/body edit and before
    merge; it must equal the intended native closure set, or be empty for
@@ -60,7 +64,11 @@ not authority. A code-host merge and a tracker closure are separate facts.
    authority; host readiness is distinct from delivery `ready`. Return unsupported
    operations precisely rather than falling back to a different host.
 7. Immediately before authorized merge, refresh head/base, gates, authority,
-   closure intent and linkage. Merge through the code-host binding and verify
+   closure intent and linkage. Fingerprint the verified host merge policy and
+   selected tracker's Done automation independently, including verified absence
+   where applicable. Compare both at preflight, before merge, on relevant
+   policy changes and before resuming parked work. Unknown required inputs or
+   policy drift stop and preserve all work. Merge through the code-host binding and verify
    merged state, merged head/commit and target base before any controller close.
    For native closure, read back the exact tracker item's terminal state. For
    `close-after-merge`, the authorized standalone lead or owning controller

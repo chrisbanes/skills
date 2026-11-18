@@ -1,0 +1,19 @@
+{
+  "decisions": {
+    "matching-leaf": {
+      "activeNoteId": 103,
+      "stripTransportFooter": true,
+      "write": false
+    },
+    "ambiguous-create": {
+      "action": "reuse",
+      "noteId": 103,
+      "retry": false
+    },
+    "presentation": {
+      "action": "presentation-warning",
+      "activeNoteId": 103,
+      "editPredecessor": false
+    }
+  }
+}

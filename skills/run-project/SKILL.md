@@ -20,12 +20,10 @@ parent tree explicitly. A named issue routes to `deliver-issue` without
 claiming it here. Selecting one board candidate does not broaden its authority
 to descendants.
 
-Select the tracker and code host independently under
-[Delivery bindings](references/provider-bindings.md). For Jira Cloud JQL boards
-read the [Jira tracker binding](references/jira-binding.md) for validation,
-scope, normalization and operations. For GitHub read the
-[GitHub binding](references/github-binding.md); for a GitLab code host, the
-[GitLab binding](references/gitlab-binding.md). Preserve durable marker formats.
+Select roles independently under [Delivery bindings](references/provider-bindings.md).
+Read the selected [GitHub](references/github-binding.md), [Jira](references/jira-binding.md),
+or GitLab [tracker](references/gitlab-binding.md#tracker-operations) and
+[code-host](references/gitlab-binding.md#code-host-operations) operations.
 
 ## Invariants
 

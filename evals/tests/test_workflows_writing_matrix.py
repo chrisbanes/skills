@@ -98,6 +98,16 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "to-plan-fixture-calibration-novel": (
                 ("SKILL.md", "references/workflow.md", "skills/to-plan/references/workflow.md"),
             ),
+            "gitlab-tracker-claim-direct": (
+                ("SKILL.md", "references/gitlab-binding.md#tracker-operations", "references/gitlab-binding.md"),
+                ("references/execution-controller.md", "gitlab-binding.md#claim-stop-and-release", "references/gitlab-binding.md"),
+            ),
+            "gitlab-tracker-notes-novel": (
+                ("SKILL.md", "references/gitlab-binding.md#planning-marker-operations", "references/gitlab-binding.md"),
+            ),
+            "gitlab-tracker-closure-negative": (
+                ("references/provider-bindings.md", "gitlab-binding.md#link-and-close", "references/gitlab-binding.md"),
+            ),
         }
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         by_id = {case.id: case for case in report.cases}
@@ -361,6 +371,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "gitlab-code-host-delivery-direct",
                 "gitlab-code-host-config-novel",
                 "gitlab-code-host-closure-negative",
+                "gitlab-tracker-claim-direct",
+                "gitlab-tracker-notes-novel",
+                "gitlab-tracker-closure-negative",
                 "shepherd-gitlab-discussions-novel",
                 "grounded-writing-response-draft-novel",
                 "grounded-writing-short-reply-direct",
@@ -776,6 +789,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "subagent-delegation-claude-novel",
                 "subagent-delegation-claude-negative",
                 "subagent-delegation-no-opt-in-negative",
+                "gitlab-tracker-notes-novel",
                 "to-plan-authorized-draft-direct",
                 "to-plan-boundary-validation-direct",
                 "to-plan-direct",

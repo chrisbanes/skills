@@ -23,13 +23,15 @@ review, answer that request directly and read no references.
 Accept `/to-plan <issue URL | owner/repository#number | #number>`, its `--auto`
 form, or an in-chat task. Use tracker mode only for exactly one named item (or
 one previously established implementation target with no competing inline task).
-Resolve GitHub shorthand through the checkout, or through the trusted binding's
-tracker repository when the code host is another provider; reject change requests and ambiguous
+Resolve GitHub shorthand through the checkout only for a GitHub tracker when
+that identity is established. Otherwise use the trusted tracker repository; reject change requests and ambiguous
 tracker or repository identity. `--auto` requires an item in the current invocation.
 Select the established tracker binding; for GitHub read
 [the GitHub binding](references/github-binding.md#planning-marker-operations).
 For Jira Cloud read [scope and readiness](references/jira-binding.md#scope-and-readiness)
 and [planning marker operations](references/jira-binding.md#planning-marker-operations).
+For GitLab read [scope and readiness](references/gitlab-binding.md#scope-and-readiness)
+and [planning marker operations](references/gitlab-binding.md#planning-marker-operations).
 For another tracker, require its trusted binding to define source reads, identity,
 permissions and marker operations before provider access; an absent or incomplete
 binding blocks tracker mode rather than falling back to GitHub commands.

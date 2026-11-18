@@ -1,0 +1,42 @@
+{
+  "issue": "https://gitlab.com/team/mobile/-/issues/42",
+  "runner_id": 7,
+  "notes_complete": true,
+  "approved_baseline_matches_note": 103,
+  "notes": [
+    {
+      "id": 101,
+      "author_id": 7,
+      "updated_at": "2026-11-18T15:00:00Z",
+      "body": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 1\n**Supersedes:** none\n\n## Implementation plan\n\nCheck the build.\n<!-- gitlab-binding:end-marker -->"
+    },
+    {
+      "id": 103,
+      "author_id": 7,
+      "updated_at": "2026-11-18T14:00:00Z",
+      "body": "<!-- to-plan:implementation-plan:v2 -->\n\n**Revision:** 2\n**Supersedes:** https://gitlab.com/team/mobile/-/issues/42#note_101\n\n## Implementation plan\n\nCheck the build and read the trace.  \n<!-- gitlab-binding:end-marker -->"
+    },
+    {
+      "id": 105,
+      "author_id": 22,
+      "system": true,
+      "updated_at": "2026-11-18T16:00:00Z",
+      "body": "assigned to @runner"
+    }
+  ],
+  "scenarios": {
+    "matching-leaf": {
+      "both_notes_visible": true,
+      "candidate_matches_approved_baseline_and_decoded_payload": true
+    },
+    "ambiguous-create": {
+      "post_timed_out": true,
+      "full_read_verified_one_matching_author_body_revision_and_predecessor": 103
+    },
+    "presentation": {
+      "successor_verified": 103,
+      "predecessor_digest_unchanged": true,
+      "requested_presentation_change": true
+    }
+  }
+}

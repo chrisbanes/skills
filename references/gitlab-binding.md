@@ -2,19 +2,10 @@
 
 ## Core principle
 
-Translate the controller's decisions into verified GitLab code-host operations;
-this binding supplies no selection, mutation, merge or closure authority of its
-own. GitLab is supported only as the **code host**. A GitLab repository never
-implies a GitLab tracker: pair it with a supported tracker binding, such as the
-[GitHub binding](github-binding.md#delivery-operations), selected independently
-under [Delivery bindings](provider-bindings.md).
-
-## Tracker role
-
-A `gitlab` tracker has no trusted operation contract yet. Block every tracker
-lane (source/readiness, markers, claims, linking, closure, Done) with
-`configuration-blocked`, naming the missing contract. Do not substitute
-GitHub commands or invent GitLab issue operations.
+Translate the controller's decisions into verified GitLab operations. Select
+the tracker and code host independently under [Delivery bindings](provider-bindings.md).
+Each role uses its own verified project and account. Binding selection grants
+no authority to claim, write, merge or close.
 
 ## Configuration
 
@@ -66,8 +57,43 @@ Done automation fields a GitHub Project board needs):
 - `Squash` must be permitted by the project's `squash_option` (`always`
   requires `true`, `never` requires `false`). Omitted, use `true` for
   `default_on` and `false` for `default_off`.
-- `Issue closure` is always `close-after-merge` while GitLab is only the code
-  host.
+- Select `closing-keyword` only for the eligible pair and base in
+  [Link and close](#link-and-close). Use `close-after-merge` for mixed roles,
+  different projects or non-default bases.
+
+For a GitLab tracker, set the existing `Tracker` section independently:
+
+```markdown
+## Tracker
+
+- Provider: `gitlab`
+- Host: `<gitlab.com or self-managed host>`
+- Repository: `<full project path, group/subgroup/project>`
+- Project ID: `<numeric project ID>`
+- Credential: `<glab:<host> or env:<VARIABLE>>`
+
+## Scope
+
+- Type: `<label or milestone>`
+- Name: `<exact label name or milestone title>`
+- ID: `<label or milestone ID>`
+
+## Claim
+
+- Label: `<agent:in-progress or trusted override>`
+- Label ID: `<resolved label ID>`
+```
+
+For board runs require one configured selection. For direct and standalone
+planning resolve a canonical issue URL or qualified reference against the
+trusted tracker identity. Resolve a bare IID only against the bound tracker
+project. Keep scope, claim and role names beside IDs. Apply the project drift
+rules above to the tracker independently of the checkout. Use the existing
+`Triage` and `Work Roles` label mappings, including the human-applied
+`ready-for-agent` default. Record the effective tracker identity, selection,
+resolved labels and account ID in the binding fingerprint used by leases.
+A rename requires configuration reconciliation. An identity substitution stops
+the run. Omit GitHub Project fields and workflow settings for this tracker.
 
 ## Transport and credentials
 
@@ -84,12 +110,179 @@ Done automation fields a GitHub Project board needs):
    bodies, checkpoints or evidence. Report only the source name.
 4. Verify `GET user` succeeds with the selected source before any write, and
    record the account ID and username.
-5. A missing `glab` executable is a capability gap, not invalid
-   configuration: it blocks only the code-host lanes. Tracker reads, planning
-   and local validation continue.
+5. A missing `glab` executable blocks the selected GitLab role's remote lanes.
+   Keep independent work through the other binding and local validation.
+   Resolve each role's identity with its own credential and reject credentials
+   on foreign hosts. Keep both role preflights separate in a mixed pairing.
 6. Treat any non-2xx response, timeout, malformed JSON or incomplete pagination
    as unknown state, never as absence. Retry reads and reconcile writes under
    [Reconciliation](#reconciliation).
+
+## Tracker operations
+
+### Scope and readiness
+
+1. Verify the configured project by numeric ID and encoded path with
+   `GET projects/:id` and `GET projects/<encoded path>`. Match the ID, path
+   and host, require issues enabled, and establish the authenticated account,
+   effective membership, visibility and operation-specific permissions.
+   Validate all configured label IDs and names from fully paginated
+   `GET projects/:id/labels?include_ancestor_groups=true`. Require the
+   claim label to exist and differ from every selection and work-role label.
+   Refuse ambiguous names, which issue updates address by name. For a milestone,
+   resolve the selected title and ID through the project or inherited group
+   milestone inventory (`GET projects/:id/milestones?include_ancestors=true`).
+2. Page `GET projects/:id/issues?scope=all&state=all&issue_type=issue`.
+   Match exact label name or `milestone.id` locally against the verified
+   selection. Include visible closed issues as graph evidence. Read an exact
+   issue via `GET projects/:id/issues/:issue_iid` and match host, project ID,
+   IID, immutable issue ID, type and canonical `web_url`; an IID alone is
+   project-local. Read its full description, notes, linked specifications,
+   parent context, blockers and their outcomes, and linked delivery records.
+   A paginated inventory covers only items visible to the runner. An unknown
+   selection or relevant visibility gap blocks the affected action.
+3. For dependencies, establish the tier and link capability from trusted
+   subscription/instance evidence. Directional blocking links require
+   Premium or Ultimate. When supported, paginate
+   `GET projects/:id/issues/:issue_iid/links`; use only the inward
+   `is_blocked_by` relation. Keep outside-selection blockers, and clear them
+   only after a fresh exact-identity read verifies `closed`. A `relates_to`
+   link supplies context. On a verified unsupported tier, mark blocking
+   links unavailable and dependency completeness unknown. A denied, malformed,
+   failed or partial read leaves completeness unknown with the read failure
+   recorded separately. In either case block dependency-gated planning,
+   claims, delivery and closure. Keep known unresolved references; never
+   substitute an empty complete graph or invent edges. Check documented
+   textual blockers as additional constraints.
+4. Apply the controller's holds, ownership, graph and plan checks. Standalone
+   and board planning require an open issue with its own human-applied
+   agent-work role and no contradictory role. The direct-issue controller
+   may accept the named open root and verified scope without an initial
+   agent-work label if its invocation grants that branch. Preserve all
+   explicit stops and observed role removals. A handoff inherits exactly one
+   claim and its grant. Neither planner nor controller adds or restores
+   the agent-work role.
+5. Normalize to the shared ticket interface. Use the bound host and immutable
+   issue ID for `itemId`, canonical issue URL for `itemRef`, IID for
+   `number`, and authenticated host-qualified numeric identities for
+   assignees and the runner. Use `parked: false`, null priority and stable
+   IID order for positions. Closed maps to Done; open without a claim label
+   maps to Todo, including an assignment-only planning lease. An open issue
+   with the claim label requires exclusive runner assignment for In Progress.
+   Preserve raw labels and pass
+   `--claim-marker '{"label":"<resolved name>","requiresAssignment":true}'`.
+   A foreign or non-exclusive assignment blocks the claim. Keep unknown-graph
+   items out of runnable ranker input, accounting for their retained claims
+   against capacity and preserving them in controller reconciliation. Only
+   pass complete blocker and descendant data as such.
+
+### Claim, stop and release
+
+1. Before any material write or recovery, refresh the bound configuration,
+   exact issue, graph, scope membership, state, labels, account/assignees and
+   applicable grant. For an owned claim that disappears from selection, read
+   the exact issue separately. Loss of the claim label on an owned open
+   implementation issue or loss of its required agent-work role is
+   `stop-preserve`: stop writers before releasing capacity, preserve the
+   assignment, plan and all artifacts, and keep a durable stop receipt.
+   Never recreate the claim or restore the role to continue. A verified
+   scope departure with both labels intact, changed assignment or unknown
+   read blocks and preserves the claim and slot. Check stops before hydrating
+   plans or interpreting assignment as a new lease.
+2. Within the controller's serialized claim lane, require open state,
+   complete graph, applicable role/plan gates, an absent claim label and
+   either no assignee or exactly the runner under its verified lease.
+   Use one `PUT projects/:id/issues/:issue_iid` with `add_labels` set to
+   the verified claim name and `assignee_ids: [<runner ID>]`. A planning
+   reservation uses only the assignment under its separate grant. Refetch
+   the exact issue and verify the intended label and exclusive assignment
+   before dispatch. GitLab does not offer a conditional assignment update
+   here. Refuse a stale or conflicting snapshot; if a concurrent change or
+   partial effect is observed, preserve it and reconcile before dispatch.
+3. For an explicitly authorized release of a verified, still-owned lease,
+   remove only its claim label with `remove_labels` and clear only the
+   verified exclusive assignment owned by the lease using `assignee_ids: []`.
+   Never run release as a response to a human stop. Verify the resulting state;
+   retained planning assignments need their own disposition. Reconcile
+   ambiguous effects through a fresh issue read before any retry.
+
+### Planning marker operations
+
+1. For `read-markers`, paginate `GET projects/:id/issues/:issue_iid/notes`.
+   Return exact decoded marker bodies, immutable note IDs, permalinks
+   (`<issue web_url>#note_<id>`), author IDs and timestamps. Exclude system
+   notes from marker candidates; retain other notes as source evidence.
+   Authenticate marker authors and verify the shared revision/predecessor
+   and digest protocol, including handoffs and amendments. Pagination
+   order, timestamps and presentation cannot choose the active leaf.
+2. For `write-marker`, POST one `body` to the issue notes endpoint under the
+   specific grant. GitLab executes and removes quick actions and normalizes
+   CR and trailing whitespace on save. Require LF text, refuse quick-action
+   command lines, and append exactly one LF followed by
+   `<!-- gitlab-binding:end-marker -->`. Reject a payload containing that
+   reserved footer. Strip that exact suffix on readback before hashing or
+   comparing; this protects trailing payload whitespace. Read unframed
+   historical markers as stored and require their recorded digest to verify.
+   Refetch through `read-markers` and verify exact decoded body, author,
+   permalink, digest and unique revision/sequence and predecessor. For
+   ambiguous creation, reconcile by those facts and reuse only a unique
+   authorized result. A competing leaf or changed payload blocks handoff.
+3. For `supersede-marker`, verify the successor and unchanged predecessor
+   digest through the complete chain, then leave the predecessor visible.
+   This binding has no supported presentation-only mutation. Return a
+   presentation warning if supersession requested one; the new verified
+   leaf owns authority without editing historical notes.
+
+### Link and close
+
+1. Read related and closing GitLab MRs through the issue's paginated
+   `related_merge_requests` and `closed_by` endpoints. For delivery,
+   verify the exact source URL and recorded change request through the
+   selected host. With tracker note authority, create one issue note with
+   the canonical PR/MR URL as a plain delivery link and refetch it by note
+   ID, author and exact link. Reuse the verified runner-owned match on
+   resume. An unknown link outcome blocks any operation that requires it.
+2. Use native closure only when both roles resolve to the same GitLab host
+   and project ID as the exact eligible issue, the MR targets the verified
+   default branch, the tracker project's `autoclose_referenced_issues` is
+   verified true, and all shared closure gates hold. Verify the merge account
+   can close that issue. Use an exact issue reference such as `Closes #<iid>`
+   in that project's MR. On GitHub or another host, a different GitLab
+   project, a non-default base, partial delivery or absent authority, use a
+   non-closing source link and `close-after-merge`. Never translate a
+   GitLab IID to a code-host issue number. Verify the host's complete
+   closing set using the shared procedure.
+3. Read back native closure from the exact issue and its paginated
+   `resource_state_events`, comparing the intended closure set and
+   reconciling attribution against the verified merge. For controller
+   closure, require the owning controller's fresh tracker grant, verified
+   merge/head/base, open issue and complete fulfilled item contract with
+   no remaining blockers or open descendants. Capture the pre-write state
+   event boundary, then send only `state_event: close` in
+   `PUT projects/:id/issues/:issue_iid`. Require fresh `closed` readback and
+   one matching new close event attributable to this write. External or
+   ambiguous closure stays pending reconciliation. For a proven unintended
+   closure, only the authorized owner may reopen using `state_event: reopen`
+   against verified unchanged state, then verify the issue and event. If
+   attribution, grant or preconditions are unknown, preserve and report it.
+
+### Tracker availability and finish gate
+
+- Verified lack of directional blocking links blocks all dependency-gated
+  lanes. Continue independent read-only discovery and local checks.
+- This REST binding does not establish a complete work-item hierarchy. Block
+  operations requiring descendant completeness unless a trusted, current
+  complete inventory verifies the graph for the exact item. Never infer
+  an empty hierarchy from a paginated issue or relation list.
+- Native closure is unavailable outside the verified pair and default base.
+  Use controller closure only within its separate grant and readback gates.
+- Unattended tracker wake, GitHub Project migration, Project-field Wayfinder
+  writes and applied triage without a verified GitLab operation contract are unavailable. Finish eligible work and return the
+  pending refresh or unsupported lane; never run the GitHub watcher.
+
+Finish with exact identities, last verified state, effects, preserved claims
+and the next reconciliation condition. Report verified merge separately from
+verified tracker Done.
 
 ## Code-host operations
 
@@ -144,14 +337,15 @@ is the merge request IID.
    removing that prefix, then read back `draft: false`. Return to draft by
    restoring the prefix. Change readiness only within caller authority under
    [PR review timing](pr-review-timing.md).
-9. **Source link and closing references:** Put the tracker's canonical URL in
-   the description as plain non-closing text (`Source: <URL>`). Never write
-   GitLab closing patterns (`Closes`, `Fixes`, `Resolves`, `Implements` and
-   their variants) while GitLab is only the code host. After every create or
-   description edit and immediately before merge, read
-   `GET projects/:id/merge_requests/:iid/closes_issues` as the host's effective
-   closing-reference set; with no native closure it must be empty under
-   [Delivery bindings](provider-bindings.md) step 5.
+9. **Source link and closing references:** Put the exact tracker URL in the
+   description as non-closing text unless [Link and close](#link-and-close)
+   and the shared closure gates select native closure. After every create or
+   description edit and immediately before merge, page
+   `GET projects/:id/merge_requests/:iid/closes_issues`. Resolve each entry
+   to its exact host/project/issue identity. Require equality with the
+   intended native set or an empty set for controller closure. Refuse unknown
+   or unintended references, including closure directives in commit and
+   merge text. Recheck corrected readback before proceeding.
 10. **Merge:** Refresh operations 4–6 and 9 and the
     [live merge-policy fingerprint](#live-merge-policy-fingerprint). Require
     invocation-specific merge authority, the caller's final-head gates,
@@ -178,8 +372,8 @@ is the merge request IID.
     (`GET projects/:id/repository/branches/<base>`). A fast-forward merge
     (`ff` without squash) has neither; require the expected head itself to be
     reachable from the base instead. Then return merge
-    evidence to the tracker binding for `close-after-merge`; GitLab closes
-    nothing. GitLab may delete the source branch on merge; treat a missing
+    evidence to the tracker binding for terminal readback or authorized
+    `close-after-merge`. GitLab may delete the source branch on merge; treat a missing
     source branch after verified merge as cleaned up.
 13. **Linked merge requests for the board ranker:** Discover open requests in
     the project whose description contains the exact canonical tracker URL, or
@@ -190,13 +384,14 @@ is the merge request IID.
     otherwise `gitlab:<username>` so it never matches a tracker login,
     `headRepository` and
     `baseRepository` = project path, `headRefName`, `headSha`, `baseRefName`,
-    `isDraft`, `closesIssue: false` and `linksIssue: true`.
+    `isDraft`, and `closesIssue` from the verified effective set for the
+    exact tracker item. Set `linksIssue` from the exact canonical URL or a
+    verified delivery record binding this task branch to the exact item.
 
 ## Unavailable operations
 
 | Operation | Lanes blocked |
 | --- | --- |
-| Native closure through closing keywords | None; closure uses `close-after-merge` |
 | Merge requests from forks | Delivery from a fork; use project task branches |
 | Auto-merge | None; merge only through operations 10–11 |
 | Approval reads on tiers without them | None by itself; record `unavailable` |
@@ -206,8 +401,11 @@ host for a GitLab target.
 
 ## Setup
 
-`setup` supports a GitLab code host and makes no GitLab writes. Apply the
-credential checks above, then read `GET projects/:id` (or the path when the ID
+`setup` makes no GitLab writes. For a GitLab tracker, run the read-only
+identity, account, scope and role validation, resolve capabilities and read the
+tracker Done inputs below. Propose missing values through additive setup;
+report missing labels or unavailable capabilities without creating labels.
+For a GitLab code host, apply the credential checks above, then read `GET projects/:id` (or the path when the ID
 is not yet known), the default and base branches
 (`GET projects/:id/repository/branches/<branch>`), merge settings,
 `GET projects/:id/protected_branches`, `GET version` and, unless it reports
@@ -231,14 +429,23 @@ with `sha256` over canonical JSON containing:
 - the protected-branch rules matching the base, reduced to push and merge
   access levels, `allow_force_push` and `code_owner_approval_required`; and
 - approval rules (name, type, `approvals_required`, eligible approver IDs) and
-  approval settings where the tier exposes them.
+  approval settings where the tier exposes them;
+- the selected tracker's verified Done policy, even for a mixed pairing.
+  For GitLab, include tracker host/project ID, live `default_branch`,
+  `autoclose_referenced_issues` and any configured Done workflow's identity
+  and live enabled state. Closed already maps to Done without a board
+  transition. Record `none` for other Done automation only when its absence
+  is verified against the trusted binding and applicable automation
+  inventory. An unknown required setting or workflow is never an absence.
 
 A field that is `null` or absent in a complete 2xx read records the stable
 value `unavailable`. Decide endpoint availability by edition, not status code:
 when `GET version` reports `enterprise: false` (Community Edition), the
 approval endpoints are `unavailable` and are not read. Otherwise a failed or
 partial read is unknown state: stop with `stop-preserve`, never fingerprint
-it, and never read a 403 or 404 as `unavailable`. A changed fingerprint is
+it, and never read a 403 or 404 as `unavailable`. Required tracker Done
+inputs follow the same unknown-read rule. Recompute on relevant policy changes,
+before merge and before resuming a parked claim. A changed fingerprint is
 global merge-policy drift (`stop-preserve`), handled as in the GitHub binding.
 
 ## Reconciliation
@@ -246,5 +453,7 @@ global merge-policy drift (`stop-preserve`), handled as in the GitHub binding.
 Apply steps 2–5 of the GitHub binding's
 [Remote reconciliation](github-binding.md#remote-reconciliation) to every
 GitLab read and write. Reconcile a failed or ambiguous write from the merge
-request by source branch, the note by discussion, the discussion's `resolved`
-state or the merge request's `state`; never send a duplicate.
+request by source branch, the note by discussion or exact issue marker/link,
+the discussion's `resolved` state, the issue's labels, assignees and state
+events, or the merge request's `state`. An unknown result stops the dependent
+lane; never send a duplicate.

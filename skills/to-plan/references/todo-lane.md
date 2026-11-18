@@ -38,7 +38,8 @@ deliver-issue's [fast path](fast-path.md).
 3. In the controller lane, publish the [fast-path plan payload](github-binding.md#publish-a-fast-path-plan)
    through the selected tracker. GitHub uses a GitHub comment. Jira uses
    [write-marker and read-markers](jira-binding.md#planning-marker-operations)
-   with the same payload in its ADF comment. Verify the readback and reconcile
+   with the same payload in its ADF comment. GitLab uses an
+   [issue note](gitlab-binding.md#planning-marker-operations). Verify the readback and reconcile
    an ambiguous create before retrying.
 4. In `next`, or when an implementation slot is free, move the item directly
    to `In progress` and verify the authority lease, including the contract
@@ -52,7 +53,10 @@ deliver-issue's [fast path](fast-path.md).
 
 ## Plan a Todo item
 
-1. In the controller lane, use the binding's Todo claim operation ([GitHub](github-binding.md#claim-todo-work) or [Jira](jira-binding.md#claim-release-and-status)), retaining exclusive assignment through planning and implementation.
+1. In the controller lane, use the binding's Todo claim operation
+   ([GitHub](github-binding.md#claim-todo-work), [Jira](jira-binding.md#claim-release-and-status)
+   or [GitLab](gitlab-binding.md#claim-stop-and-release)), retaining exclusive
+   assignment through planning and implementation.
 2. Use one dedicated planning worktree per run, created outside the checkout
    under the [checkout lifecycle](checkout-lifecycle.md) and detached at the
    configured base. Reuse it within the run, refresh it only between tickets,
@@ -87,8 +91,9 @@ deliver-issue's [fast path](fast-path.md).
    chain, authenticated-runner author, [payload digest](../../to-plan/references/github-mode.md#payload-digest), permalink, planned
    branch, planned SHA, replan-report link, and timestamps. After verifying the
    leaf, use the selected binding's supersede-marker operation for
-   [GitHub](github-binding.md#planning-marker-operations) or
-   [Jira](jira-binding.md#planning-marker-operations). Preserve the semantic
+   [GitHub](github-binding.md#planning-marker-operations),
+   [Jira](jira-binding.md#planning-marker-operations) or
+   [GitLab](gitlab-binding.md#planning-marker-operations). Preserve the semantic
    payload and record a presentation warning where required. Treat missing
    `to-plan` as an issue-local planning blocker; it must not block
    implementation items with current plans.

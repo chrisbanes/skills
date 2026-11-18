@@ -313,9 +313,10 @@ parent/descendant/dependency graph read; Status means its logical claim state.
 For the GitHub parent watcher use `--parent-id`, without a Project ID or Status
 field. Every wake still requires the full Refresh Gate and each item's own role authority.
 
-In `drain`, use the selected tracker binding's change signal. For Jira,
-apply its [unavailable wait lane](jira-binding.md#unavailable-lanes-and-finish-gate)
-and use the [finish gate](#failure-isolation-and-finish-gate) when eligible
+In `drain`, use the selected tracker binding's change signal. For Jira
+or GitLab, apply the binding's unavailable wait lane
+([Jira](jira-binding.md#unavailable-lanes-and-finish-gate),
+[GitLab](gitlab-binding.md#tracker-availability-and-finish-gate)) and use the [finish gate](#failure-isolation-and-finish-gate) when eligible
 work is exhausted. The watcher steps below apply only to GitHub.
 
 For GitHub, use the read-only

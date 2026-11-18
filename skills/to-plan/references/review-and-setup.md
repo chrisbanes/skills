@@ -1,8 +1,9 @@
 # Review and setup lanes
 
 For binding validation or configuration, read the selected
-[GitHub](github-binding.md#binding-validation) or
-[Jira](jira-binding.md#binding-validation) binding before acting.
+[GitHub](github-binding.md#binding-validation),
+[Jira](jira-binding.md#binding-validation) or
+[GitLab](gitlab-binding.md#scope-and-readiness) binding before acting.
 
 ## Review
 
@@ -25,9 +26,9 @@ For Jira, use its [read-only setup validation](jira-binding.md#binding-validatio
 For GitHub, detect legacy boards/configuration through the
 [approval-gated migration](github-binding.md#approval-gated-legacy-migration)
 before ordinary setup. Discovery and a dry run grant no mutation authority.
-Follow [GitHub setup](github-binding.md#setup), including its additive setup,
-active-lease, confirmation and finish gates. For a `gitlab` code host, also
-apply the read-only [GitLab setup](gitlab-binding.md#setup). An absent override file uses
+Use [GitHub setup](github-binding.md#setup) for the GitHub role and
+[GitLab setup](gitlab-binding.md#setup) for each GitLab role. Preserve the
+common additive setup, active-lease, confirmation and finish gates. An absent override file uses
 read-only default resolution and may finish `configuration-valid`; only requested
 file edits need the trusted committed instruction/configuration pair. Execution validates read-only; it
 never enters setup repair.

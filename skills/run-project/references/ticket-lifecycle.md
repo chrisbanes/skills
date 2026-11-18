@@ -223,8 +223,8 @@ Follow configured merge/queue, serialize oldest ready slot
 unless dependency requires otherwise, and reconcile exact merge. Enforce closure
 policy and reconcile unintended tracker closure before Done automation or
 cleanup. Use the selected tracker procedure for
-[GitHub](github-binding.md#unintended-closure) or
-[Jira](jira-binding.md#link-and-close). A partial merge retains the open issue,
+[GitHub](github-binding.md#unintended-closure),
+[Jira](jira-binding.md#link-and-close) or [GitLab](gitlab-binding.md#link-and-close). A partial merge retains the open issue,
 unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
 For a completed ticket, reconcile Done without archiving/removing directly, stop
 on unexpected outcomes, clean up the ticket worktree and branch under

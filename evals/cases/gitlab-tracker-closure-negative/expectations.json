@@ -1,0 +1,32 @@
+{
+  "decisions": {
+    "same-project": {
+      "policy": "closing-keyword",
+      "closingSet": [
+        "gitlab.com/88001/42"
+      ],
+      "mayMerge": true,
+      "trackerAfterMerge": "verify-native-close"
+    },
+    "same-iid-other-project": {
+      "policy": "closing-keyword",
+      "closingSet": [
+        "gitlab.com/88001/42"
+      ],
+      "mayMerge": false,
+      "trackerAfterMerge": "verify-native-close"
+    },
+    "non-default-base": {
+      "policy": "close-after-merge",
+      "closingSet": [],
+      "mayMerge": true,
+      "trackerAfterMerge": "close-through-tracker"
+    },
+    "github-host": {
+      "policy": "close-after-merge",
+      "closingSet": [],
+      "mayMerge": false,
+      "trackerAfterMerge": "close-through-tracker"
+    }
+  }
+}

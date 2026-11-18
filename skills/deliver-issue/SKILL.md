@@ -29,7 +29,8 @@ permissions; one controller retains ownership from clarification through closure
    [Direct issue scope](references/github-binding.md#direct-issue-scope).
    For a Jira Cloud key read [Scope and readiness](references/jira-binding.md#scope-and-readiness)
    and the Jira tracker operations.
-   For a GitLab code host read the [GitLab binding](references/gitlab-binding.md#code-host-operations).
+   For GitLab read the selected [tracker](references/gitlab-binding.md#tracker-operations)
+   or [code-host](references/gitlab-binding.md#code-host-operations) operations.
    Resolve the complete root/descendant graph, holds, ownership, approved plans,
    pending outcomes and invocation grants before planning or writing.
 4. Follow the issue lifecycle for clarification, planning, dependencies and
