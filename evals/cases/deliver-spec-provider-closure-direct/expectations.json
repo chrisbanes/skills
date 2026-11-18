@@ -33,6 +33,26 @@
       "tracker_action": "close_and_verify",
       "ticket_complete": false,
       "delivery_state": "merged"
+    },
+    "no-change-open": {
+      "tracker": "github",
+      "code_host": "github",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "close_and_verify",
+      "ticket_complete": false,
+      "delivery_state": "no-change"
+    },
+    "no-change-closed": {
+      "tracker": "github",
+      "code_host": "github",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "tracker_action": "none",
+      "ticket_complete": true,
+      "delivery_state": "no-change"
     }
   }
 }

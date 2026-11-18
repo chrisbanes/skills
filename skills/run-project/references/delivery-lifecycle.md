@@ -39,9 +39,12 @@ never selects a queue or expands a delegated scope.
    coverage. Return findings to the implementation owner; at the repaired head,
    renew affected checks and review changed ranges and interactions. Broaden only when impact cannot
    be bounded or an explicit requirement demands it. Confirm combined coverage
-   of the final clean head before pushing. If finished, verified work leaves
-   the final diff empty, report `no-change`; a starting empty diff is not
-   `no-change`. Otherwise open or update one draft change request through the
+   of the final clean head before pushing. If current verification establishes
+   full acceptance and the final diff is empty, report `no-change` and route to
+   [verified no-change closure](provider-bindings.md#verified-no-change-closure)
+   before any PR operation. The delegated owner returns evidence to the
+   controller. A starting empty diff alone supplies no acceptance evidence.
+   For a nonempty diff, open or update one draft change request through the
    code-host binding and verify its head is the reviewed head. Apply
    [PR review timing](pr-review-timing.md): start applicable external review
    while CI runs, using verified draft support or earlier PR readiness when

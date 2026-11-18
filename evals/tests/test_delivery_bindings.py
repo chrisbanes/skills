@@ -17,6 +17,7 @@ CASES = (
     "deliver-spec-provider-closure-direct",
     "deliver-spec-provider-closure-novel",
     "deliver-spec-provider-closure-negative",
+    "deliver-issue-no-change-closure-negative",
     "jira-board-scope-direct",
     "jira-direct-closure-novel",
     "jira-transition-marker-negative",
@@ -39,7 +40,9 @@ class DeliveryBindingsTest(unittest.TestCase):
                 )
                 relative = ".scratch/review-decisions.json"
                 artifact = workspace / relative
-                response_mode = case_id == "jira-transition-marker-negative"
+                response_mode = any(
+                    "--response" in validator.argv for validator in case.validators
+                )
                 writes_artifact = expected is not None and not response_mode
                 if writes_artifact:
                     artifact.parent.mkdir()
@@ -50,7 +53,7 @@ class DeliveryBindingsTest(unittest.TestCase):
                     final_output={
                         "summary": json.dumps(expected) if response_mode else "Assessed tracker snapshots",
                         "skills_used": list(case.target_skills),
-                        "evidence": [relative] if writes_artifact else ["jira-state.md" if response_mode else "state.md"],
+                        "evidence": [relative] if writes_artifact else ["Supplied offline snapshot"],
                     },
                     usage={}, changed_paths=(relative,) if writes_artifact else (), diff="", stdout="", stderr="", elapsed_seconds=0.1,
                 )
@@ -69,8 +72,17 @@ class DeliveryBindingsTest(unittest.TestCase):
                     if state.is_file():
                         self.assertTrue((workspace / state.relative_to(overlay)).is_file())
                 if response_mode:
-                    changed = replace(result, changed_paths=("jira-state.md",))
+                    changed = replace(result, changed_paths=("state.md",))
                     self.assertFalse(grade_subject(case, changed).objective_pass)
+                if case_id == "deliver-issue-no-change-closure-negative":
+                    retry = copy.deepcopy(expected)
+                    retry["unknown-close"]["retry"] = True
+                    changed = replace(result, final_output={
+                        **result.final_output, "summary": json.dumps(retry),
+                    })
+                    rejected = grade_subject(case, changed)
+                    self.assertFalse(rejected.objective_pass)
+                    self.assertIn("unknown-close: incorrect retry", rejected.validators[0].stderr)
                 # Reject each unsafe closure/merge substitution, not only missing artifacts.
                 if expected is None:
                     changed = replace(result, changed_paths=("state.md",))

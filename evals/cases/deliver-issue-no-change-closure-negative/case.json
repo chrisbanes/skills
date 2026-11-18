@@ -1,0 +1,42 @@
+{
+  "id": "deliver-issue-no-change-closure-negative",
+  "title": "Withhold or reconcile unqualified no-change closure",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-issue-no-change-closure-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "eligibility",
+      "text": "Requires current full acceptance, refreshed required dependencies, explicit closure authority, rightful owner and verified tracker capability before a no-change close."
+    },
+    {
+      "id": "reconciliation",
+      "text": "Separates verified no-change from terminal tracker state, reconciles failed or ambiguous close before retry and never manufactures a PR or merge."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

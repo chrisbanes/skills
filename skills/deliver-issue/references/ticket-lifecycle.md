@@ -196,6 +196,12 @@ report incomplete evidence. Permit one reported rerun of a plausibly load-driven
 failure in untouched code, preserving both results and the load evidence;
 repetition or uncertainty remains a failure.
 
+Before PR operations, reconcile an owner's verified `no-change` evidence
+through [verified no-change closure](provider-bindings.md#verified-no-change-closure).
+Skip PR and merge gates for this route. Require verified tracker closure before
+reconciling Done. Preserve the claim and artifacts on pending or unknown closure,
+and account for the checkout under [Worktrees](#worktrees).
+
 PRs include the configured closing or non-closing issue link, rationale,
 validation, and residual risks. For partial PRs, include and verify the
 [partial recovery metadata](github-binding.md#partial-pr-recovery) in the

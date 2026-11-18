@@ -15,3 +15,5 @@ Use the scenario IDs as object keys, and exactly these fields for each scenario.
 - plain-key: action
 - closing-keyword: action, write
 - smart-commit: action, write
+- no-change-open, no-change-attributed, no-change-ambiguous: hostAction,
+  trackerAction, delivery, closure

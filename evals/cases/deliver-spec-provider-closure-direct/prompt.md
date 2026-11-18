@@ -19,3 +19,10 @@ closure authority unless stated. All reads are complete unless stated.
   integration (not default), close-after-merge policy. Host closing set empty,
   full outcome in base verified, issue open. Next close via tracker and refetch;
   ticket completion still awaits that readback.
+- `no-change-open`: GitHub issue chrisbanes/app#44 is open. Current acceptance
+  checks verify every criterion on integrated main. The complete fresh
+  descendant and blocker reads confirm all required outcomes are satisfied.
+  The standalone lead has explicit tracker closure authority only, and the
+  tracker supports close and readback. There is no PR or new merge.
+- `no-change-closed`: Same outcome after authorized close and authoritative
+  repository-qualified CLOSED readback. There is no further operation.

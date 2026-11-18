@@ -18,7 +18,13 @@
         "^Partial\\-read: block$",
         "^Recovery: reopen\\-restore\\-comment\\-readback$",
         "^Human\\-change: preserve\\-and\\-report$",
-        "^Partial\\-merge: retain\\-unfinished\\-claim$"
+        "^Partial\\-merge: retain\\-unfinished\\-claim$",
+        "^Grouped\\-exact: accept$",
+        "^Grouped\\-missing: block$",
+        "^Grouped\\-extra: block$",
+        "^Grouped\\-wrong\\-repo: block$",
+        "^Grouped\\-incomplete: block$",
+        "^Mixed\\-provider\\-set: empty$"
       ],
       "must_not_match": [
         "^Extra\\-reference: (?!correct\\-and\\-recheck$).*$",
@@ -28,7 +34,13 @@
         "^Partial\\-read: (?!block$).*$",
         "^Recovery: (?!reopen\\-restore\\-comment\\-readback$).*$",
         "^Human\\-change: (?!preserve\\-and\\-report$).*$",
-        "^Partial\\-merge: (?!retain\\-unfinished\\-claim$).*$"
+        "^Partial\\-merge: (?!retain\\-unfinished\\-claim$).*$",
+        "^Grouped\\-exact: (?!accept$).*$",
+        "^Grouped\\-missing: (?!block$).*$",
+        "^Grouped\\-extra: (?!block$).*$",
+        "^Grouped\\-wrong\\-repo: (?!block$).*$",
+        "^Grouped\\-incomplete: (?!block$).*$",
+        "^Mixed\\-provider\\-set: (?!empty$).*$"
       ]
     }
   ]
