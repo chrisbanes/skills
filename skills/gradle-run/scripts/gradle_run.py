@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
+from ctypes import wintypes
 import errno
 from collections import deque
 from dataclasses import dataclass
@@ -33,6 +35,10 @@ MAX_FAILED_TASK_BYTES = 512
 MAX_EXCERPT_LINES = 12
 MAX_EXCERPT_LINE_BYTES = 512
 MAX_FAILURE_BLOCK_LINES = 64
+MAX_RECOVERY_REASON_BYTES = 1024
+RUN_IDENTITY_FIELDS = (
+    "sequence", "wrapper_pid", "child_pid", "started_at", "cwd", "scope", "question", "command", "log",
+)
 HEARTBEAT_DELAYS = (30.0, 60.0, 120.0, 300.0)
 WORKFLOW_ID = re.compile(r"[a-z0-9]{32}\Z")
 ANSI_ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
@@ -439,11 +445,12 @@ def prune_logs(directory: Path, ledger: dict[str, Any]) -> None:
         if log.is_file() and log.name not in retained:
             log.unlink(missing_ok=True)
     retained_locks = {
-        f"{run['sequence']:04d}.run.lock"
+        f"{run['sequence']:04d}.{suffix}"
         for run in ledger["runs"]
         if isinstance(run, dict)
         and type(run.get("sequence")) is int
         and run["sequence"] > 0
+        for suffix in ("run.lock", "recovery.run.lock")
     }
     for run_lock in directory.glob("*.run.lock"):
         if run_lock.name not in retained_locks:
@@ -820,13 +827,24 @@ def valid_stored_result(result: Any) -> bool:
 
 
 def valid_terminal_run(ledger: dict[str, Any], latest: Any) -> bool:
-    return (
+    if not (
         isinstance(latest, dict)
         and type(latest.get("sequence")) is int
         and latest["sequence"] > 0
         and type(ledger.get("run_count")) is int
         and latest["sequence"] == ledger.get("run_count")
-        and latest.get("state") in ("completed", "interrupted")
+    ):
+        return False
+    if latest.get("state") == "abandoned":
+        reason = latest.get("recovery_reason")
+        return (
+            latest.keys() == {*RUN_IDENTITY_FIELDS, "state", "result", "recovery_reason"}
+            and valid_run_identity(latest)
+            and valid_bounded_text(reason, MAX_RECOVERY_REASON_BYTES)
+            and latest.get("result") == {"outcome": "unknown"}
+        )
+    return (
+        latest.get("state") in ("completed", "interrupted")
         and valid_stored_result(latest.get("result"))
         and type(latest.get("exit_status")) is int
         and latest["result"]["exit_status"] == latest["exit_status"]
@@ -861,6 +879,194 @@ def require_settled_ledger(directory: Path) -> dict[str, Any]:
     return ledger
 
 
+def valid_pid(pid: Any) -> bool:
+    maximum = 0xFFFFFFFF if os.name == "nt" else 0x7FFFFFFF
+    return type(pid) is int and 0 < pid <= maximum
+
+
+def valid_bounded_text(value: Any, max_bytes: int) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return False
+    try:
+        return len(value.encode("utf-8")) <= max_bytes
+    except UnicodeEncodeError:
+        return False
+
+
+def valid_run_identity(run: dict[str, Any]) -> bool:
+    sequence = run.get("sequence")
+    started = run.get("started_at")
+    child = run.get("child_pid")
+    return (
+        type(sequence) is int and sequence > 0
+        and valid_pid(run.get("wrapper_pid"))
+        and "child_pid" in run
+        and (child is None or (valid_pid(child) and child != run["wrapper_pid"]))
+        and type(started) in (int, float) and 0 < started <= sys.float_info.max
+        and run.get("scope") in ("targeted", "broad")
+        and all(valid_bounded_text(run.get(key), 1024) for key in ("cwd", "question", "command"))
+        and run.get("log") == f"{sequence:04d}.log"
+    )
+
+
+def valid_recovery_history(ledger: dict[str, Any]) -> bool:
+    count = ledger.get("run_count")
+    truncated = ledger.get("runs_truncated", 0)
+    runs = ledger["runs"]
+    return (
+        type(ledger.get("version")) is int and ledger["version"] == 1
+        and type(count) is int and type(truncated) is int and truncated >= 0
+        and len(runs) == min(count, MAX_LEDGER_RUNS) and count == truncated + len(runs)
+        and all(
+            valid_terminal_run({"run_count": sequence}, entry)
+            and entry.get("log") == f"{sequence:04d}.log"
+            for sequence, entry in enumerate(runs, start=truncated + 1)
+        )
+    )
+
+
+def windows_process_presence(pid: int) -> str:
+    query_limited_information = 0x1000
+    invalid_parameter = 87
+    still_active = 259
+    try:
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+        kernel.OpenProcess.restype = wintypes.HANDLE
+        kernel.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
+        kernel.GetExitCodeProcess.restype = wintypes.BOOL
+        kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+        kernel.CloseHandle.restype = wintypes.BOOL
+        handle = kernel.OpenProcess(query_limited_information, False, pid)
+        if not handle:
+            return "absent" if ctypes.get_last_error() == invalid_parameter else "unverifiable"
+        exit_code = wintypes.DWORD()
+        try:
+            if kernel.GetExitCodeProcess(handle, ctypes.byref(exit_code)) and exit_code.value == still_active:
+                return "live"
+            # An exited handle can still refer to a process object for this PID.
+            return "unverifiable"
+        finally:
+            kernel.CloseHandle(handle)
+    except (AttributeError, OSError):
+        return "unverifiable"
+
+
+def process_presence(pid: int) -> str:
+    if not valid_pid(pid):
+        return "unverifiable"
+    if os.name == "nt":
+        return windows_process_presence(pid)
+    if os.name != "posix":
+        return "unverifiable"
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return "absent"
+    except OSError:
+        return "unverifiable"
+    return "live"
+
+
+def recovery_marker(directory: Path, sequence: int) -> Path:
+    return directory / f"{sequence:04d}.recovery.run.lock"
+
+
+def recover_workflow(root: Path, arguments: argparse.Namespace) -> int:
+    workflow = arguments.workflow
+    sequence = arguments.sequence
+    reason = arguments.reason.strip()
+    if sequence <= 0 or not reason or not arguments.no_live_descendants:
+        raise ValueError("recovery requires a positive sequence, a reason and confirmation of no live descendants")
+    try:
+        recovery_reason = shortened(redact(reason), MAX_RECOVERY_REASON_BYTES)
+    except UnicodeEncodeError as error:
+        raise ValueError("recovery reason must be valid UTF-8") from error
+    directory = workflow_path(root, workflow)
+    if directory.is_symlink() or not directory.is_dir():
+        raise ValueError("unknown or invalid workflow identifier")
+    workflow_lock = lock_path(root, workflow)
+    if workflow_lock.is_symlink():
+        raise ValueError("workflow lock is invalid")
+    with WorkflowLock(workflow_lock):
+        ledger = read_ledger(directory)
+        active = ledger.get("active_run")
+        if (
+            not isinstance(active, dict) or active.keys() != set(RUN_IDENTITY_FIELDS)
+            or not valid_run_identity(active) or not valid_recovery_history(ledger)
+            or active["sequence"] != sequence or sequence != ledger["run_count"] + 1
+        ):
+            raise ValueError("workflow does not have the expected recoverable active run")
+        owner_lock = directory / f"{sequence:04d}.run.lock"
+        if owner_lock.is_symlink():
+            raise ValueError("run-owner lock is invalid")
+        # Retain the marker through refusal and settlement so a status reader
+        # can distinguish recovery even after the owner lock is released.
+        try:
+            with recovery_marker(directory, sequence).open("xb"):
+                pass
+        except FileExistsError:
+            pass
+        except OSError as error:
+            raise ValueError("could not mark recovery ownership") from error
+        with WorkflowLock(owner_lock):
+            for owner in ("wrapper_pid", "child_pid"):
+                pid = active[owner]
+                if pid is not None:
+                    presence = process_presence(pid)
+                    if presence != "absent":
+                        raise ValueError(f"recovery refused: {owner} {pid} is {presence}")
+            result = {"outcome": "unknown"}
+            append_run(ledger, {
+                **active, "state": "abandoned", "result": result, "recovery_reason": recovery_reason,
+            })
+            del ledger["active_run"]
+            write_ledger(directory, ledger)
+            summary = {
+                "workflow": workflow, "state": "abandoned", "result_sequence": sequence, "result": result,
+            }
+            try:
+                prune_logs(directory, ledger)
+            except OSError as error:
+                summary["cleanup_error"] = shortened(redact(str(error)), 1024)
+            emit_summary(summary)
+            if "cleanup_error" in summary:
+                return 1
+    return 0
+
+
+def status_identity_value(value: Any) -> Any:
+    if isinstance(value, str):
+        try:
+            return shortened(redact(value), 128)
+        except UnicodeEncodeError:
+            return None
+    return value if type(value) in (int, float) else None
+
+
+def owner_lock_proves_running(directory: Path, active: dict[str, Any]) -> bool:
+    sequence = active["sequence"]
+    try:
+        with WorkflowLock(directory / f"{sequence:04d}.run.lock", read_only=True):
+            return False
+    except WorkflowBusy:
+        pass
+    except ValueError:
+        return False
+    try:
+        recovery_marker(directory, sequence).lstat()
+    except FileNotFoundError:
+        # A marker can disappear after retention or finish. Verify the
+        # observed identity is still active before classifying the held lock.
+        try:
+            return read_ledger(directory).get("active_run") == active
+        except ValueError:
+            return False
+    except OSError:
+        return False
+    return False
+
+
 def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, Any]:
     snapshot: dict[str, Any] = {
         "workflow": workflow, "state": "uncertain", "run": None, "result": None
@@ -876,14 +1082,14 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
     if state in ("completed", "interrupted"):
         snapshot["result"] = bounded_summary(latest["result"], MAX_SUMMARY_BYTES // 2)
         snapshot["result_sequence"] = latest["sequence"]
+    elif state == "abandoned":
+        snapshot["result"] = latest["result"]
+        snapshot["result_sequence"] = latest["sequence"]
+        snapshot["recovery_reason"] = redact(latest["recovery_reason"])
     run = active if active is not None else latest
     if isinstance(run, dict):
         snapshot["run"] = {
-            key: shortened(redact(run[key]), 128) if isinstance(run.get(key), str)
-            else run.get(key) if type(run.get(key)) in (int, float) else None
-            for key in (
-                "sequence", "wrapper_pid", "child_pid", "started_at", "cwd", "scope", "question", "command", "log"
-            )
+            key: status_identity_value(run.get(key)) for key in RUN_IDENTITY_FIELDS
         }
     if active is not None:
         snapshot["reason"] = "active run is incomplete or its owner lock is not held"
@@ -893,15 +1099,11 @@ def status_snapshot(directory: Path, workflow: str, *, busy: bool) -> dict[str, 
         ) and "child_pid" in active and (
             active["child_pid"] is None
             or type(active["child_pid"]) is int and active["child_pid"] > 0
-        ) and type(active.get("started_at")) in (int, float):
-            try:
-                with WorkflowLock(directory / f"{active['sequence']:04d}.run.lock", read_only=True):
-                    pass
-            except WorkflowBusy:
-                snapshot["state"] = "running"
-                snapshot.pop("reason")
-            except ValueError:
-                pass
+        ) and type(active.get("started_at")) in (int, float) and owner_lock_proves_running(directory, active):
+            snapshot["state"] = "running"
+            snapshot.pop("reason")
+    elif state == "abandoned":
+        snapshot["state"] = state
     elif busy:
         snapshot["reason"] = "workflow is busy without an active run identity"
     elif state != "uncertain":
@@ -966,6 +1168,11 @@ def parser() -> argparse.ArgumentParser:
     finish.add_argument("--workflow", required=True)
     status = commands.add_parser("status")
     status.add_argument("--workflow", required=True)
+    recover = commands.add_parser("recover")
+    recover.add_argument("--workflow", required=True)
+    recover.add_argument("--sequence", type=int, required=True)
+    recover.add_argument("--reason", required=True)
+    recover.add_argument("--no-live-descendants", action="store_true", required=True)
     return result
 
 
@@ -978,6 +1185,8 @@ def main() -> int:
             return run_command(arguments.root, arguments)
         if arguments.operation == "status":
             return status_workflow(arguments.root, arguments.workflow)
+        if arguments.operation == "recover":
+            return recover_workflow(arguments.root, arguments)
         return finish_workflow(arguments.root, arguments.workflow)
     except ValueError as error:
         print(str(error), file=sys.stderr)

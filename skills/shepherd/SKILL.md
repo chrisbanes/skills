@@ -66,8 +66,8 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    browser failure evidence. Use the reporting context and repair owner resolved
    in step 2; the authorized controller retains remote mutations.
    Escalate architectural or contradictory feedback, unfamiliar failures,
-   non-obvious fixes, and out-of-scope conflicts. GitLab manual jobs are
-   non-blocking unless instructed otherwise.
+   non-obvious fixes, and out-of-scope conflicts. Classify GitLab manual jobs
+   using the provider's candidate checks in step 4.
 6. Handle each target in its own head checkout and batch known actionable items.
    Inspect failing logs and identify applicable local equivalents from actual
    workflow/check configuration before repairing. If evidence is missing, obtain
@@ -93,8 +93,8 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    every 10+ minutes. Two unchanged cycles remain on the normal 2–5 minute
    cadence. Under host-managed monitoring, end the turn after the push instead.
 8. Merge only with explicit or standing authority, no conflicts, and passing
-   checks, reviews and finding dispositions for the refreshed head. Require
-   the provider to match that reviewed SHA at merge; requalify on mismatch.
+   checks, reviews and finding dispositions for the refreshed head. Follow
+   the merge routing in step 4 and require that SHA; requalify on mismatch.
    For queue or auto-merge, verify final-head enforcement. Host-managed green
    CI never wakes the session: follow PR review timing for pending gates and
    disable controller-enabled auto-merge on escalation.

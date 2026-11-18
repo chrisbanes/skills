@@ -1,0 +1,44 @@
+{
+  "id": "gradle-abandoned-recovery-novel",
+  "title": "Recover an investigated pre-launch Gradle record",
+  "family": "gradle",
+  "target_skills": [
+    "gradle-run"
+  ],
+  "expected_skills": [
+    "gradle-run"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "gradle-abandoned-recovery-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "explicit-root",
+      "text": "Uses the original global root before recover, the exact active sequence and workflow, the quoted reason and explicit no-live-descendants flag."
+    },
+    {
+      "id": "ownership-evidence",
+      "text": "Explains that the null child field does not establish descendant absence and relies on the operator's investigation."
+    },
+    {
+      "id": "unknown-outcome",
+      "text": "Identifies abandonment with unknown outcome and retained unopened logs."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

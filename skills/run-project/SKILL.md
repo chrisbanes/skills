@@ -21,9 +21,10 @@ claiming it here. Selecting one board candidate does not broaden its authority
 to descendants.
 
 Select roles independently under [Delivery bindings](references/provider-bindings.md).
-Read the selected [GitHub](references/github-binding.md), [Jira](references/jira-binding.md),
-or GitLab [tracker](references/gitlab-binding.md#tracker-operations) and
-[code-host](references/gitlab-binding.md#code-host-operations) operations.
+Use the [GitHub](references/github-binding.md), [Jira](references/jira-binding.md)
+(including JQL boards), or GitLab [tracker](references/gitlab-binding.md#tracker-operations)
+and [code-host](references/gitlab-binding.md#code-host-operations) procedures.
+Preserve durable marker formats.
 
 ## Invariants
 

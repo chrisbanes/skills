@@ -43,7 +43,13 @@ handoff or take over a Project claim.
    For a handoff whose active plan is a controller fast-path revision, apply
    the [fast path](fast-path.md) and return its escalation packet to the
    controller as soon as a condition fails.
-4. Before any push, satisfy the Project's
+4. After local verification and any review required for the outcome, return
+   `no-change` with the exact integrated base, clean HEAD, acceptance and
+   validation evidence when full acceptance is proven with an empty final diff.
+   End the pass before push, PR creation/update, or `shepherd`. The controller
+   owns [no-change reconciliation](ticket-lifecycle.md#reconcile-verified-no-change).
+   An empty diff alone is insufficient. Report missing proof and preserve
+   the checkout. For a nonempty diff, satisfy the Project's
    [review contracts](review-contracts.md).
    Give the single independent reviewer the
    [delivery record](evidence-and-review.md) and all applicable contracts.
@@ -64,8 +70,7 @@ handoff or take over a Project claim.
    applicable external review while CI runs, preferring verified draft review and otherwise
    permitting earlier PR readiness. Verify that state separately from delivery
    `ready`, which requires all required checks, reviews and finding dispositions
-   applicable to the final head. For an empty diff, return `no-change` and
-   verification evidence for controller reconciliation.
+   applicable to the final head.
 6. Use `shepherd` for feedback and PR operations, with code repairs through
    the implementation owner, coordinating any necessary reassignment only after
    the previous writer is quiescent. Apply Project verification,
@@ -92,5 +97,5 @@ handoff or take over a Project claim.
 
 Return the current head, effective source/plan/amendment identities, validation
 provenance and applicability, findings/dispositions, review coverage, PR identity
-and exact pending/blocking operation. Preserve artifacts on pending
+when applicable, and exact pending/blocking operation. Preserve artifacts on pending
 or blocked results. The controller's finish gate owns the board outcome.

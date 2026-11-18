@@ -61,7 +61,30 @@ PR_FIELDS = """
   reviewDecision
   reviews(last: 1) { nodes { id } }
   comments(last: 1) { nodes { id } }
-  commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
+"""
+PR_CHECK_FIELDS = """
+  id
+  number
+  headRefOid
+  commits(last: 1) {
+    nodes {
+      commit {
+        oid
+        statusCheckRollup {
+          state
+          contexts(first: 100, after: $checkAfter) {
+            totalCount
+            pageInfo { hasNextPage endCursor }
+            nodes {
+              __typename
+              ... on CheckRun { id name status conclusion }
+              ... on StatusContext { id context state }
+            }
+          }
+        }
+      }
+    }
+  }
 """
 ISSUE_FIELDS = "comments(last: 1) { nodes { id updatedAt } }"
 KINDS = ("item", "pullRequest", "issue")
@@ -71,11 +94,13 @@ class WatchError(RuntimeError):
     """Raised when the watcher cannot obtain a trustworthy reading."""
 
 
-def repository_query(prs: list[int], issues: list[int]) -> str:
-    aliases = [f"pr{n}: pullRequest(number: {n}) {{ {PR_FIELDS} }}" for n in prs]
+def repository_query(prs: list[int], issues: list[int], *, checks_only: bool = False) -> str:
+    fields = PR_CHECK_FIELDS if checks_only else PR_FIELDS + PR_CHECK_FIELDS
+    aliases = [f"pr{n}: pullRequest(number: {n}) {{ {fields} }}" for n in prs]
     aliases += [f"issue{n}: issue(number: {n}) {{ {ISSUE_FIELDS} }}" for n in issues]
+    cursor = ", $checkAfter: String" if prs else ""
     return (
-        "query($owner: String!, $name: String!) {"
+        f"query($owner: String!, $name: String!{cursor}) {{"
         " rateLimit { cost remaining resetAt }"
         f" repository(owner: $owner, name: $name) {{ {' '.join(aliases)} }} }}"
     )
@@ -259,15 +284,101 @@ def fetch_parent(args: argparse.Namespace, deadline: datetime | None) -> dict[st
     return {"records": records, "limits": limits}
 
 
+def check_rollup(record: Any, number: int, pr_id: Any, head: Any) -> dict[str, Any] | None:
+    """Validate the PR and selected commit before accepting a page."""
+    if (not isinstance(record, dict) or record.get("number") != number
+            or not isinstance(pr_id, str) or not pr_id or record.get("id") != pr_id
+            or not isinstance(head, str) or not head or record.get("headRefOid") != head):
+        raise WatchError(f"PR {number}: missing or changed PR/head identity")
+    commits = record["commits"]["nodes"]
+    if not isinstance(commits, list) or len(commits) != 1:
+        raise WatchError(f"PR {number}: missing or ambiguous head commit")
+    commit = commits[0]["commit"]
+    if commit["oid"] != head:
+        raise WatchError(f"PR {number}: selected commit does not match PR head")
+    return commit["statusCheckRollup"]
+
+
+def fetch_checks(
+    number: int, record: Any, owner: str, name: str,
+    limits: list[dict[str, Any]], deadline: datetime | None,
+) -> dict[str, Any] | None:
+    """Collect every check context on one observed head, or stop at the deadline."""
+    pr_id = record.get("id") if isinstance(record, dict) else None
+    head = record.get("headRefOid") if isinstance(record, dict) else None
+    rollup = check_rollup(record, number, pr_id, head)
+    if rollup is None:
+        return {"checks": None, "check_contexts": {}}
+    state = rollup["state"]
+    if not isinstance(state, str) or not state:
+        raise WatchError(f"PR {number}: incomplete check rollup")
+    total = None
+    contexts = {}
+    seen_cursors = set()
+    while True:
+        if rollup is None or rollup["state"] != state:
+            raise WatchError(f"PR {number}: check rollup changed during pagination")
+        connection = rollup["contexts"]
+        count = connection["totalCount"]
+        if type(count) is not int or count < 0:
+            raise WatchError(f"PR {number}: invalid check context count")
+        if total is not None and count != total:
+            raise WatchError(f"PR {number}: check context count changed during pagination")
+        total = count
+        nodes = connection["nodes"]
+        if not isinstance(nodes, list):
+            raise WatchError(f"PR {number}: incomplete check contexts")
+        for node in nodes:
+            context_id = node["id"]
+            kind = node["__typename"]
+            if not isinstance(context_id, str) or not context_id or context_id in contexts:
+                raise WatchError(f"PR {number}: missing or duplicate check context identity")
+            if kind == "CheckRun":
+                fields = ("name", "status")
+            elif kind == "StatusContext":
+                fields = ("context", "state")
+            else:
+                raise WatchError(f"PR {number}: unknown check context type")
+            if any(not isinstance(node[field], str) or not node[field] for field in fields):
+                raise WatchError(f"PR {number}: incomplete check context")
+            context = {"type": kind, **{field: node[field] for field in fields}}
+            if kind == "CheckRun":
+                conclusion = node["conclusion"]
+                if conclusion is not None and (not isinstance(conclusion, str) or not conclusion):
+                    raise WatchError(f"PR {number}: invalid check run conclusion")
+                context["conclusion"] = conclusion
+            contexts[context_id] = context
+        info = connection["pageInfo"]
+        cursor = info["endCursor"]
+        more = info["hasNextPage"]
+        if cursor is not None and (not isinstance(cursor, str) or not cursor or cursor in seen_cursors):
+            raise WatchError(f"PR {number}: invalid check context cursor")
+        if more is False and len(contexts) == total:
+            return {"checks": state, "check_contexts": contexts}
+        if more is not True or not nodes or len(contexts) >= total or cursor is None:
+            raise WatchError(f"PR {number}: incomplete check context pagination")
+        seen_cursors.add(cursor)
+        if (deadline is not None and now() >= deadline) or not await_budget(limits[-1], deadline):
+            return None
+        data = graphql(repository_query([number], [], checks_only=True), deadline,
+                       owner=owner, name=name, checkAfter=cursor)
+        limits.append(data["rateLimit"])
+        records = data.get("repository")
+        record = records.get(f"pr{number}") if isinstance(records, dict) else None
+        rollup = check_rollup(record, number, pr_id, head)
+
+
 def fetch(
-    args: argparse.Namespace, deadline: datetime | None = None, *, pr_only: bool = False
+    args: argparse.Namespace, deadline: datetime | None = None, *, replacement_prs: list[int] | None = None
 ) -> dict[str, Any] | None:
     """Return the complete scope graph plus watched repository records.
 
-    `pr_only` fetches just watched PRs for a board-preserving snapshot.
-    `rate` aggregates the cycle: summed cost, lowest remaining, latest reset.
+    `replacement_prs` limits a board-preserving snapshot to selected PRs.
+    `rate` aggregates cost and remaining budget within the latest rate window.
     Returns None if the deadline arrives while waiting out the rate budget.
     """
+    pr_only = replacement_prs is not None
+    prs = replacement_prs if pr_only else args.pr
     pages: list[dict[str, Any]] = []
     parent = fetch_parent(args, deadline) if args.parent_id and not pr_only else None
     if args.parent_id and not pr_only and parent is None:
@@ -288,25 +399,31 @@ def fetch(
             break
         after = items["pageInfo"]["endCursor"]
     repo = None
+    checks = {}
+    limits = [*(parent["limits"] if parent else []), *(page["rateLimit"] for page in pages)]
     issues = [] if pr_only else args.issue
-    if args.pr or issues:
+    if prs or issues:
         owner, _, name = args.repository.partition("/")
-        prior_rate = parent["limits"][-1] if parent else pages[-1]["rateLimit"] if pages else None
-        if prior_rate and not await_budget(prior_rate, deadline):
+        if limits and not await_budget(limits[-1], deadline):
             return None
         repo = graphql(
-            repository_query(args.pr, issues), deadline, owner=owner, name=name
+            repository_query(prs, issues), deadline, owner=owner, name=name
         )
-        if repo.get("repository") is None:
+        records = repo.get("repository")
+        if not isinstance(records, dict):
             raise WatchError(f"repository {args.repository} not found")
-    limits = [*(parent["limits"] if parent else []),
-              *(r["rateLimit"] for r in (*pages, *([repo] if repo else [])))]
-    rate = {
-        "cost": sum(r["cost"] for r in limits),
-        "remaining": min(r["remaining"] for r in limits),
-        "resetAt": max((r["resetAt"] for r in limits), key=parse_time),
-    }
-    return {"pages": pages, "repository": repo, "rate": rate,
+        limits.append(repo["rateLimit"])
+        for number in dict.fromkeys(prs):
+            fields = fetch_checks(number, records.get(f"pr{number}"), owner, name, limits, deadline)
+            if fields is None:
+                return None
+            checks[f"pr{number}"] = fields
+    reset_at = max(parse_time(r["resetAt"]) for r in limits)
+    window = [r for r in limits if parse_time(r["resetAt"]) == reset_at]
+    rate = {"cost": sum(r["cost"] for r in window),
+            "remaining": min(r["remaining"] for r in window),
+            "resetAt": reset_at.isoformat()}
+    return {"pages": pages, "repository": repo, "checks": checks, "rate": rate,
             "parent": parent["records"] if parent else {}}
 
 
@@ -336,13 +453,11 @@ def fingerprint(responses: dict[str, Any]) -> dict[str, Any]:
         if record is None:
             raise WatchError(f"{alias} not found")
         if alias.startswith("pr"):
-            commits = record["commits"]["nodes"]
-            rollup = commits[0]["commit"]["statusCheckRollup"] if commits else None
             prs[alias[2:]] = {
                 "state": record["state"],
                 "sha": record["headRefOid"],
                 "base": record["baseRefOid"],
-                "checks": rollup["state"] if rollup else None,
+                **responses["checks"][alias],
                 "review": record["reviewDecision"],
                 "review_id": (record["reviews"]["nodes"] or [{}])[-1].get("id"),
                 "comment_id": (record["comments"]["nodes"] or [{}])[-1].get("id"),
@@ -370,11 +485,14 @@ def diff(baseline: dict[str, Any], current: dict[str, Any]) -> list[dict[str, An
             elif key not in before:
                 fields = ["added"]
             else:
+                prior = before[key]
+                if kind == "pullRequest" and "check_contexts" not in prior:
+                    prior = {"check_contexts": {}, **prior}
                 fields = [
                     field
                     for field in sorted(after[key])
-                    if before[key].get(field) != after[key][field]
-                    and not recomputing(field, before[key].get(field), after[key][field])
+                    if prior.get(field) != after[key][field]
+                    and not recomputing(field, prior.get(field), after[key][field])
                 ]
             if fields:
                 changes.append({"kind": kind, "key": key, "fields": fields})
@@ -402,7 +520,7 @@ def parse_args() -> argparse.Namespace:
     scope.add_argument("--parent-id", help="Resolved parent issue node ID")
     common.add_argument("--repository", required=True, help="owner/name")
     common.add_argument("--status-field", default="Status")
-    common.add_argument("--pr", type=int, action="append", default=[])
+    common.add_argument("--pr", type=int, action="append", default=[], help="PR in the complete watch set")
     common.add_argument("--issue", type=int, action="append", default=[])
     commands = parser.add_subparsers(dest="command", required=True)
     snapshot_command = commands.add_parser(
@@ -410,7 +528,11 @@ def parse_args() -> argparse.Namespace:
     )
     snapshot_command.add_argument(
         "--board-from",
-        help="keep item and issue sections from this prior baseline; only pullRequest is fresh",
+        help="preserve prior fingerprints outside the targeted PR refresh",
+    )
+    snapshot_command.add_argument(
+        "--refresh-pr", type=int, action="append", default=[],
+        help="watched PR covered by the following targeted read (requires --board-from)",
     )
     wait_command = commands.add_parser(
         "wait", parents=[common], help="exit on the first difference from --baseline, or at --deadline"
@@ -438,6 +560,8 @@ def wait(args: argparse.Namespace) -> int:
             break
         current = fingerprint(responses)
         changes = diff(baseline, current)
+        if now() >= deadline:
+            break
         if changes:
             report({"status": "changed", "changes": changes})
             return 0
@@ -454,11 +578,18 @@ def main() -> int:
     args = parse_args()
     try:
         if args.command == "snapshot":
+            refresh = set(args.refresh_pr)
+            if refresh and not args.board_from:
+                raise WatchError("--refresh-pr requires --board-from")
+            if refresh.difference(args.pr):
+                raise WatchError("--refresh-pr must be in the --pr watch set")
             prior = load_baseline(args.board_from) if args.board_from else None
             if prior is not None:
-                # Board drift since `prior` must still differ on the next wait.
-                prs = fingerprint(fetch(args, pr_only=True))["pullRequest"] if args.pr else {}
-                current = {**prior, "pullRequest": prs}
+                old_prs = prior["pullRequest"]
+                selected = sorted({n for n in args.pr if n in refresh or str(n) not in old_prs})
+                fresh = fingerprint(fetch(args, replacement_prs=selected))["pullRequest"] if selected else {}
+                # Keep unrefreshed and removed PRs visible as drift on the next wait.
+                current = {**prior, "pullRequest": {**old_prs, **fresh}}
             else:
                 current = fingerprint(fetch(args))
             report(current)

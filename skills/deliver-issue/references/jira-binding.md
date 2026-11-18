@@ -183,8 +183,11 @@ Scope selects items. Only the invocation and live authority authorize writes.
    commands associated with a key in that text, including `#done`,
    `#close`, `#comment`, `#time` and custom transition commands. Verify
    the host's complete effective native closing set is empty.
-2. Close only after verified host merge, explicit tracker grant and full
-   contract fulfillment. Read all descendants afresh and require every one
+2. Require explicit tracker grant and full contract fulfillment. For
+   `close-after-merge`, require verified host merge. For
+   [verified no-change](provider-bindings.md#verified-no-change-closure), require
+   current acceptance and satisfied blocker evidence through that route.
+   For either route, read all descendants afresh and require every one
    to be in a Done-category status. Capture current status and the complete
    paginated status changelog boundary (GET `/issue/{id}/changelog`) before
    the transition. Write only the mapped Done ID through the status
@@ -194,7 +197,8 @@ Scope selects items. Only the invocation and live authority authorize writes.
    same-account ambiguity blocks attribution. Done without this evidence is
    external or unresolved closure; preserve and reconcile it without
    crediting a controller close or reversing the human action. A skipped or
-   unknown close leaves the merge intact and tracker closure pending.
+   unknown close preserves acceptance and any merge evidence and leaves tracker
+   closure pending. Reconcile exact issue state and its changelog before retry.
 3. Verify closure through fresh issue/changelog readback. Generic automatic
    reversal of external Done or unintended close is unavailable; affected
    reconciliation needs a fresh authorized human decision. No native Jira

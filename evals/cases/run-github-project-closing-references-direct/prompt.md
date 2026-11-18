@@ -14,6 +14,15 @@ readback after creation contains #31 and #32. A body correction produces exactly
 #31. Later a body edit reintroduces #32, while all checks are green. Explain the
 readbacks and acceptance decisions after each write and immediately before merge.
 
+In a separate approved grouped PR on the default branch, the selected GitHub
+tracker and host support native closure for both acme/widget#41 and
+acme/widget#42. The PR fully satisfies both children and the current grant
+explicitly covers both. The complete read returns both issues in reverse
+order. Assess that read, then assess variants returning only #41, both plus
+the parent, and #41 with acme/other#42. Also assess a read showing both children
+when the next page is unavailable. For the same grouped PR linked to Jira
+items instead, assess the required native set even with tracker closure authority.
+
 In separate variants: a partial PR intentionally completes neither issue; a
 fully implemented PR uses close-after-merge on a release branch; a partial PR
 has merged but its ticket has remaining accepted work; and a readback
@@ -27,6 +36,12 @@ Fields:
 
 - Extra-reference: correct-and-recheck | accept-green-ci
 - Before-merge: recheck-exact-set | reuse-old-read
+- Grouped-exact: accept | require-singleton
+- Grouped-missing: block | accept-subset
+- Grouped-extra: block | accept-superset
+- Grouped-wrong-repo: block | compare-numbers
+- Grouped-incomplete: block | accept-visible-set
+- Mixed-provider-set: empty | translate-keys
 - Partial-set: empty | ticket
 - Partial-merge: retain-unfinished-claim | finish-ticket
 - Release-set: empty | ticket

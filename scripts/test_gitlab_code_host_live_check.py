@@ -125,7 +125,9 @@ class FakeGitLab:
         if method == "GET" and tail == "/discussions":
             return 200, {}, list(self.discussions.values())
         if method == "PUT" and tail == "/merge":
-            if self.status(mr) != "mergeable" or body["sha"] != mr["sha"]:
+            if body["sha"] != mr["sha"]:
+                return 409, {}, {"message": "SHA does not match HEAD of source branch"}
+            if self.status(mr) != "mergeable":
                 return 405, {}, {"message": "405 Method Not Allowed"}
             mr.update(state="merged", merge_commit_sha="M1")
             self.branches[mr["target_branch"]] = "M1"
@@ -345,6 +347,59 @@ class TrackerProtocolTest(unittest.TestCase):
 
 
 class RunTest(unittest.TestCase):
+    def test_direct_merge_refuses_a_push_after_final_read(self):
+        class ConcurrentPush(FakeGitLab):
+            def merge_request(self, method, iid, tail, body):
+                mr = self.mrs[iid]
+                if method == "PUT" and tail == "/merge" and mr["sha"] == "C1":
+                    mr["sha"] = self.branches[mr["source_branch"]] = "H2"
+                if method == "GET" and tail == "/pipelines" and mr["sha"] == "H2":
+                    return 200, {}, list(self.candidate_pipelines)
+                return super().merge_request(method, iid, tail, body)
+
+        fake = ConcurrentPush(pipeline_ready_after=0)
+        fake.candidate_pipelines = [{"id": 501, "sha": "C1", "status": "success"}]
+        client = check.Client(fake, check.Guard("RUN"), sleep=lambda _: None)
+        attempt = check.Run(client, "RUN", polls=1, interval=0)
+        fake.branches[client.guard.base] = "MAIN0"
+        path = attempt.mr_path(1, "/merge")
+
+        with self.assertRaisesRegex(check.ProviderError, "HTTP 409: SHA does not match HEAD"):
+            attempt.journey_b()
+        self.assertEqual(
+            [
+                ("GET", attempt.mr_path(1), None),
+                ("GET", attempt.mr_path(1, "/closes_issues?per_page=100&page=1"), None),
+                ("PUT", path, {"sha": "C1", "squash": False}),
+            ],
+            fake.log[-3:],
+        )
+        self.assertEqual("opened", fake.mrs[1]["state"])
+        self.assertEqual("MAIN0", fake.branches[client.guard.base])
+
+        # The previous guard permits one merge write. Qualify again with a fresh
+        # guard for this offline attempt, keeping the same verified MR/base.
+        fresh = check.Client(fake, check.Guard("RUN"), sleep=lambda _: None)
+        fresh.guard.merge_requests.add(1)
+        next_attempt = check.Run(fresh, "RUN", polls=1, interval=0)
+        mr = next_attempt.read_mr(1)
+        self.assertEqual("H2", mr["sha"])
+        with self.assertRaisesRegex(check.CheckError, "timed out waiting for pipeline"):
+            next_attempt.pipeline(mr)
+        self.assertEqual(1, sum(entry[:2] == ("PUT", path) for entry in fake.log))
+        self.assertEqual("opened", next_attempt.read_mr(1)["state"])
+
+        fake.candidate_pipelines.insert(0, {"id": 502, "sha": "H2", "status": "success"})
+        mr = next_attempt.read_mr(1)
+        source, pipeline = next_attempt.pipeline(mr)
+        self.assertEqual(("merge_request", "H2", "success"), (source, pipeline["sha"], pipeline["status"]))
+        self.assertIsNone(check.merge_refusal(mr))
+        next_attempt.check_no_closures(1)
+        fresh.write("PUT", path, {"sha": mr["sha"], "squash": False})
+        self.assertEqual(("PUT", path, {"sha": "H2", "squash": False}), fake.log[-1])
+        merged = next_attempt.read_mr(1)
+        self.assertEqual(("merged", "H2"), (merged["state"], merged["sha"]))
+
     def test_journeys_pass_within_budget_and_cleanup_tolerates_removed_source(self):
         fake = FakeGitLab(auto_delete_source=True)
         result, _ = run(fake)

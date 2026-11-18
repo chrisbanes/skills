@@ -97,7 +97,7 @@ SUITES = {
         id="kotlin-gradle",
         title="Kotlin and Gradle",
         skills=KOTLIN_GRADLE_SKILLS,
-        benchmark_cases=24,
+        benchmark_cases=32,
         routing_cases=3,
         require_skill_triads=True,
         historical_minimum=3,
@@ -108,7 +108,7 @@ SUITES = {
         skills=WORKFLOWS_WRITING_SKILLS,
         benchmark_cases=51,
         routing_cases=1,
-        calibration_cases=181,
+        calibration_cases=182,
         require_skill_triads=True,
     ),
 }

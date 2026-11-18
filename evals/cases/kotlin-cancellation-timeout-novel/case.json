@@ -1,0 +1,19 @@
+{
+  "id": "kotlin-cancellation-timeout-novel",
+  "title": "Translate only the timeout owned by the outer boundary",
+  "family": "kotlin-concurrency",
+  "target_skills": ["kotlin-concurrency-and-flow"],
+  "expected_skills": ["kotlin-concurrency-and-flow"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "kotlin-jvm",
+  "allowed_write_paths": [],
+  "validators": [
+    {"argv": ["python3", "@validators/text_case.py", "kotlin-cancellation-timeout-novel"], "timeout_seconds": 30}
+  ],
+  "rubric": [
+    {"id": "owned-timeout", "text": "Uses withTimeoutOrNull at the translating boundary and explains why the nested timeout and caller cancellation propagate"},
+    {"id": "nullable-success", "text": "Wraps nullable success in Loaded inside the timeout block so success with null stays distinguishable from timeout"}
+  ],
+  "provenance": {"kind": "synthetic"}
+}

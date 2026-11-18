@@ -13,8 +13,9 @@
     {"argv": ["./gradlew-real", "--offline", "--no-scan", "test"], "timeout_seconds": 180}
   ],
   "rubric": [
-    {"id": "one-consumer", "text": "The stream models an exactly-once handoff to one UI consumer instead of lossy default SharedFlow broadcast"},
-    {"id": "bounded-buffer", "text": "The repair uses an explicit bounded Channel and exposes only its receiveAsFlow view"}
+    {"id": "one-consumer", "text": "A bounded channel holds events across a collector gap and distributes each event to one collector at most"},
+    {"id": "handling-limit", "text": "Explains possible loss after receipt on collector cancellation and rejects an exactly-once handling guarantee"},
+    {"id": "bounded-buffer", "text": "The repair uses an explicit bounded Channel with send backpressure and exposes only its receiveAsFlow view"}
   ],
   "allowed_skills": ["kotlin-concurrency-and-flow", "gradle-run"],
   "provenance": {"kind": "synthetic"}

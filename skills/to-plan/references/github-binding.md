@@ -114,6 +114,9 @@ retains its trusted configuration, leases and merge/closure policy.
    keywords apply only with explicit closure authority for every intended item,
    and only to verified GitHub issues fully satisfied by this PR,
    under `closing-keyword` when the target is the repository default branch.
+   Record the intended repository-qualified set before writing. For grouped
+   delivery, verify native eligibility, full satisfaction and closure authority
+   for each intended issue. A parent or sibling link grants no closure.
    Use `Fixes #<number>` only for the same repository, or a repository-qualified
    closing reference for an explicitly intended cross-repository GitHub issue
    whose native closure is verified. A non-default base, `close-after-merge`,
@@ -141,16 +144,21 @@ retains its trusted configuration, leases and merge/closure policy.
    intended issues are closed after merge; do not equate PR merged with issue
    closed. Under `close-after-merge`, only the authorized standalone lead or
    owning controller may close the verified issue after merge readback and
-   renewed full-contract/remaining-work checks; refetch closed state. Partial
-   delivery leaves it open. For a different tracker, return merge evidence to
-   that tracker's binding; never call a GitHub issue close with its key. Failed
-   or unknown closure preserves merged evidence and blocks ticket completion;
-   reconcile before any retry. Use Unintended Closure for authorized recovery
-   of an unintended GitHub closure, preserving concurrent human changes.
+   renewed full-contract/remaining-work checks. For
+   [verified no-change](provider-bindings.md#verified-no-change-closure), use
+   the same tracker close for the exact issue after that route's acceptance,
+   dependency and explicit tracker-grant checks, without a host merge. Refetch
+   the repository-qualified issue and require authoritative `CLOSED` readback.
+   Partial delivery leaves it open. A different tracker uses its own binding.
+   Failed or unknown closure preserves acceptance and any merge evidence and
+   blocks ticket completion. Reconcile exact issue state before any retry. Use
+   Unintended Closure for authorized recovery of an unintended GitHub closure,
+   preserving concurrent human changes.
 8. Finish with PR identity/head/base, check/review applicability, effective
    closing references, merge readback and separate tracker closure readback.
-   Controller Done/cleanup still requires its terminal reconciliation; a merged
-   PR alone cannot satisfy that finish gate.
+   For verified no-change, report acceptance evidence and tracker readback with
+   PR and merge inapplicable. Controller Done/cleanup still requires its
+   terminal reconciliation.
 
 ## Binding validation
 
@@ -177,22 +185,38 @@ Only an already trusted, committed display-name-only edit may use
    defaults; execution returns `configuration-blocked` and never migrates.
 2. Select **Tracker** and **Code host** independently (default `github` for
    each; a `gitlab` code host uses the [GitLab binding](gitlab-binding.md);
-   other providers need their own supported binding), then **Scope** from
-   the explicit override or invocation: a Project URL selects a board;
-   `deliver #N` or an explicit parent issue URL selects its open descendants.
-   Resolve exactly one canonical URL, repository identity and stable node ID;
-   resolve a short `#N` only against the verified checkout repository in step 3.
-   Validate any identity pins against Scope; contradictory fields block.
-   A missing, inaccessible, unresolved or multiply resolved scope blocks the run.
-   Never guess from linked Projects or named views. Scope selection supplies no
-   item authority. Follow Parent-issue scope below for graph and lifecycle reads.
-3. Resolve repository host and `owner/repository` from the current checkout's
-   git remote and verify its live identity. When the code host is not GitHub,
+   other providers need their own supported binding). Resolve repository host
+   and `owner/repository` from the current checkout's git remote and verify its
+   live identity. When the code host is not GitHub,
    resolve the tracker repository under [Delivery bindings](provider-bindings.md)
-   step 1 (labels and short `#N` use it) and take code-host identity, base and
-   merge policy from that host's binding. Use explicit repository overrides
-   first; without them, conflicting remotes or an unclear repository block.
-   Obtain the default branch from live repository settings and use it as base
+   step 1 (labels and short `#N` use it). Use explicit repository overrides first;
+   without them, conflicting remotes or an unclear repository block.
+3. Resolve **Scope** from the trusted override when present, otherwise from the
+   invocation. A Project URL selects a board; route a named issue to
+   [Direct issue scope](#direct-issue-scope) via `deliver-issue`. Use the
+   verified tracker repository for a short `#N`.
+   Validate explicit selectors and identity pins against exactly one canonical
+   URL and stable node ID. Invalid, inaccessible or conflicting explicit scope
+   blocks the run without discovery.
+   - With no explicit scope for `run-project`, read all Projects linked to the
+     verified GitHub tracker repository. Use the GitHub connector or the
+     [repository's `projectsV2` GraphQL connection](https://docs.github.com/en/graphql/reference/repos#repository)
+     via `gh api graphql` on that host. Paginate without a name filter and read
+     `id`, `url`, `title`, `closed` and `template`, using supplied complete state
+     when available. Follow [remote reconciliation](#remote-reconciliation) for
+     all live reads.
+   - Select the sole visible open, non-template Project from a complete read.
+     With zero or multiple candidates, or incomplete or unavailable evidence,
+     report `configuration-blocked` for Scope (in review, `review-blocked`),
+     list the known candidate URLs and the reason, and ask for the Project URL
+     or the access needed to validate it. Use repository links as the only
+     discovery signal.
+   - Report the inferred Project URL and repository. Continue with normal
+     binding validation and repository filtering, and record the resolved
+     Project ID in the effective binding. Discovery is read-only and grants no
+     item authority. Keep the resolved Project for the run and check it against
+     any retained binding before recovery.
+4. Obtain the default branch from live code-host repository settings and use it as base
    unless overridden. Resolve a merge queue when required by live policy;
    otherwise use the sole permitted repository merge method. Multiple permitted
    methods without an explicit repository preference or override block; do not
@@ -201,7 +225,7 @@ Only an already trusted, committed display-name-only edit may use
    `close-after-merge`; default Done automation to `set-status` without archive.
    For Project scope read actual workflows and reject conflicting automation;
    parent scope uses closed issues as Done and no Project automation.
-4. Overlay only supplied override fields on these defaults. For parent scope,
+5. Overlay only supplied override fields on these defaults. For parent scope,
    resolve the existing `agent:in-progress` claim label by the same unique-name/ID
    rules as role labels, requiring a distinct ID from every role label. It is
    agent-owned bookkeeping, never a role grant.
@@ -213,7 +237,7 @@ Only an already trusted, committed display-name-only edit may use
    selects its ID instead, but must still resolve to the intended object in the
    correct Project/field/repository with the stored name. A name change on the
    same ID is drift requiring reconciliation; an ID resolving elsewhere stops.
-5. Paginate repository labels and resolve the conventional role names
+6. Paginate repository labels and resolve the conventional role names
    `ready-for-agent`, `ready-for-human`, `needs-triage`, and `epic` freshly.
    Match names case-insensitively for discovery, then retain the exact live name
    and ID. Require exactly one label per role; missing labels or multiple
@@ -222,7 +246,7 @@ Only an already trusted, committed display-name-only edit may use
    Never create/rename labels, infer roles from prose, or add/restore agent
    authority. Optional Wayfinder stays disabled unless explicitly enabled with
    complete mappings. Agent Setup defaults to runtime capabilities.
-6. For Project scope resolve optional Priority if present: require one `Priority` field, unique
+7. For Project scope resolve optional Priority if present: require one `Priority` field, unique
    option names and its complete live option order; absence means all items
    have unset priority and no `--priority` arguments. Explicit Priority mappings
    override order/names/IDs and are validated. Parent scope uses sub-issue order,
@@ -1349,11 +1373,15 @@ mutation, or success claim, apply [remote reconciliation](#remote-reconciliation
 
 ## Closing reference verification
 
-After every PR creation or body edit by the
-controller or its ticket owner, read the complete `closingIssuesReferences` set
-through the connector or GraphQL/`gh pr view` fallback. Compare repository-qualified
-issue identities exactly: only the ticket for a fully closing PR under
-`closing-keyword`, and none for a non-closing partial PR or `close-after-merge`.
+After every PR creation or body edit and immediately before merge, read all
+pages of `closingIssuesReferences` for the exact PR through the connector or
+GraphQL/`gh pr view` fallback. Use paginated GraphQL if the initial read
+cannot establish completeness. Compare sets of repository-qualified issue
+identities against the recorded intent. A single-issue native closure expects
+a singleton. A grouped default-branch PR under `closing-keyword` expects
+exactly the fully satisfied, authorized issues with verified native closure.
+Partial delivery, mixed tracker/host closure, `close-after-merge`, and
+delivery without closure authority expect an empty set.
 On mismatch, correct the body and re-read before shepherding CI or merging;
 remove an unintended manual closing link through the permitted PR operation
 if a body correction cannot clear it. Unknown, partial or still-mismatched
@@ -1382,7 +1410,22 @@ fingerprints ordered sub-issue IDs, dependency IDs and states, labels,
 assignment, identity and latest marker-comment change. Equal dependency counts
 cannot hide replaced edges. Incomplete reads or identity ambiguity return an
 error, never an unchanged/empty graph. `--board-from` preserves the same prior
-scope graph for parent scope too; it refreshes only watched PRs.
+scope graph for parent scope too.
+
+For a targeted replacement, add `--board-from <prior baseline>` to
+`snapshot` and pass repeatable `--refresh-pr <N>` for exactly the PRs covered
+by the following authoritative read. Keep the complete watch set in `--pr`.
+The snapshot queries those refresh PRs and newly watched PRs. It preserves
+other prior PR fingerprints, including removed identities, as well as item
+and issue fingerprints. `--refresh-pr` requires `snapshot --board-from` and
+each refresh PR must be in `--pr`.
+
+The PR fingerprint includes the aggregate check status and each check run and
+status context on the observed head. The watcher reads every context page and
+returns an error if the PR/head identity changes or a page is incomplete.
+Treat check changes as a signal for an authoritative reread, where the
+controller determines requiredness and readiness.
+
 The default interval remains 120 seconds. This command never performs writes.
 
 ## Publish an authority pause

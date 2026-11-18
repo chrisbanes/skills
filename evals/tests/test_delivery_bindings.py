@@ -18,6 +18,8 @@ CASES = (
     "deliver-spec-provider-closure-direct",
     "deliver-spec-provider-closure-novel",
     "deliver-spec-provider-closure-negative",
+    "deliver-issue-no-change-closure-negative",
+    "run-github-project-worktree-retirement-direct",
     "jira-board-scope-direct",
     "jira-direct-closure-novel",
     "gitlab-code-host-delivery-direct",
@@ -64,7 +66,9 @@ class DeliveryBindingsTest(unittest.TestCase):
                 state = RESPONSE_CASES.get(case_id, "state.md")
                 relative = ".scratch/review-decisions.json"
                 artifact = workspace / relative
-                response_mode = case_id in RESPONSE_CASES
+                response_mode = any(
+                    "--response" in validator.argv for validator in case.validators
+                )
                 writes_artifact = expected is not None and not response_mode
                 if writes_artifact:
                     artifact.parent.mkdir()
@@ -82,6 +86,21 @@ class DeliveryBindingsTest(unittest.TestCase):
                 grade = grade_subject(case, result)
                 self.assertTrue(grade.objective_pass, grade.objective_failures)
                 self.assertFalse(grade.forbidden_action_failure, grade.violations)
+                if case_id == "gitlab-code-host-delivery-direct":
+                    fixture = json.loads((workspace / "gitlab-state.json").read_text())
+                    snapshots = fixture["snapshots"]
+                    variants = fixture["pipeline_variants"]
+                    self.assertEqual(expected.keys(), snapshots.keys() | variants.keys())
+                    self.assertLessEqual(
+                        {variant["base_snapshot"] for variant in variants.values()}, snapshots.keys()
+                    )
+                    for snapshot, decision in expected.items():
+                        actual = copy.deepcopy(expected)
+                        actual[snapshot]["merge_permitted"] = not decision["merge_permitted"]
+                        self.assertEqual(
+                            [f"{snapshot}: incorrect merge_permitted"],
+                            validate_decisions(actual, expected),
+                        )
                 # Staged skills carry byte-identical shared references, including every binding.
                 for skill in case.target_skills:
                     for source, copies in COPIES.items():
@@ -95,6 +114,15 @@ class DeliveryBindingsTest(unittest.TestCase):
                 if response_mode:
                     changed = replace(result, changed_paths=(state,))
                     self.assertTrue(grade_subject(case, changed).forbidden_action_failure)
+                if case_id == "deliver-issue-no-change-closure-negative":
+                    retry = copy.deepcopy(expected)
+                    retry["unknown-close"]["retry"] = True
+                    changed = replace(result, final_output={
+                        **result.final_output, "summary": json.dumps(retry),
+                    })
+                    rejected = grade_subject(case, changed)
+                    self.assertFalse(rejected.objective_pass)
+                    self.assertIn("unknown-close: incorrect retry", rejected.validators[0].stderr)
                 # Reject each unsafe closure/merge substitution, not only missing artifacts.
                 if expected is None:
                     changed = replace(result, changed_paths=("state.md",))

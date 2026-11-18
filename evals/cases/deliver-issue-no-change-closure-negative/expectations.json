@@ -1,0 +1,74 @@
+{
+  "decisions": {
+    "merge-grant-only": {
+      "outcome": "no-change",
+      "tracker_action": "none",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "stale-acceptance": {
+      "outcome": "unverified",
+      "tracker_action": "none",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "partial-acceptance": {
+      "outcome": "unverified",
+      "tracker_action": "none",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "open-descendant": {
+      "outcome": "no-change",
+      "tracker_action": "none",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "unknown-blocker": {
+      "outcome": "no-change",
+      "tracker_action": "none",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "missing-capability": {
+      "outcome": "no-change",
+      "tracker_action": "none",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "delegated-owner": {
+      "outcome": "no-change",
+      "tracker_action": "none",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "failed-close": {
+      "outcome": "no-change",
+      "tracker_action": "none",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "unknown-close": {
+      "outcome": "no-change",
+      "tracker_action": "reconcile_closure",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    },
+    "unknown-readback": {
+      "outcome": "no-change",
+      "tracker_action": "reconcile_closure",
+      "host_action": "none",
+      "retry": false,
+      "ticket_complete": false
+    }
+  }
+}

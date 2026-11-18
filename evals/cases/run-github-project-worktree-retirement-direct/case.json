@@ -1,6 +1,6 @@
 {
   "id": "run-github-project-worktree-retirement-direct",
-  "title": "Retire a merged ticket worktree with untracked scratch files",
+  "title": "Retire delivered Project checkouts after merge or verified no-change",
   "family": "workflow",
   "target_skills": [
     "run-project"
@@ -20,8 +20,9 @@
     {
       "argv": [
         "python3",
-        "@validators/text_case.py",
-        "run-github-project-worktree-retirement-direct"
+        "@validators/pr_review_decisions.py",
+        "run-github-project-worktree-retirement-direct",
+        "--response"
       ],
       "timeout_seconds": 30
     }
@@ -42,6 +43,10 @@
     {
       "id": "branch",
       "text": "Deletes only the skill-created local `cb/issue-80-cache-key` branch; never runs `git clean`, `git reset`, a double force or a global prune."
+    },
+    {
+      "id": "no-change",
+      "text": "Returns verified no-change before any host write or shepherding, then requires exact tracker closure and Done readbacks before retirement. Verifies the checkout's clean HEAD against the recorded integrated base, preserves the local branch, and accounts for the checkout with readback. Missing proof or unknown cleanup transport prevents completion."
     },
     {
       "id": "review-restraint",

@@ -40,7 +40,7 @@ Box(
 fun Modifier.decorateMeasureConstraints(
     decorate: (Constraints) -> Constraints,
 ): Modifier = layout { measurable, incoming ->
-    val constraints = decorate(incoming).constrain(incoming)
+    val constraints = incoming.constrain(decorate(incoming))
     val placeable = measurable.measure(constraints)
     layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
 }

@@ -1,6 +1,6 @@
 ---
 name: compose-animations
-description: "Use when writing or reviewing Jetpack Compose motion: visibility enter/exit, animating one property toward a target, color or size transitions, multiple properties from one state, switching composable content, or choosing between AnimatedVisibility, animate*AsState, rememberTransition, AnimatedContent, and Crossfade."
+description: "Use when writing or reviewing Jetpack Compose motion: visibility enter/exit, animating one property toward a target, color or size transitions, multiple properties from one state, switching composable content, or choosing between AnimatedVisibility, animate*AsState, updateTransition, rememberTransition, AnimatedContent, and Crossfade."
 ---
 
 # Compose: animations
@@ -35,7 +35,8 @@ Pick the smallest API that expresses the motion and its lifecycle.
 |---|---|
 | Show/hide a subtree with enter/exit semantics | [`AnimatedVisibility`](https://developer.android.com/develop/ui/compose/animation/composables-modifiers#animatedvisibility) |
 | One value follows state | `animate*AsState` |
-| Several values follow one boolean, enum, or sealed state | `rememberTransition` plus child animations |
+| Several values follow one boolean, enum, or sealed target value | `updateTransition` plus child animations |
+| Several values follow an explicit `TransitionState` | `rememberTransition` plus child animations |
 | Child size changes | `Modifier.animateContentSize()` |
 | Different composable trees fill one region | `AnimatedContent`, or `Crossfade` for the simple case |
 | Drag, fling, interruption, or imperative control | [`Animatable`](https://developer.android.com/reference/kotlin/androidx/compose/animation/core/Animatable) |
@@ -53,7 +54,7 @@ val width by animateDpAsState(
 For values that must remain synchronized, define them on one transition rather than several independent `animate*AsState` calls:
 
 ```kotlin
-val transition = rememberTransition(targetState = phase, label = "phase")
+val transition = updateTransition(targetState = phase, label = "phase")
 val alpha by transition.animateFloat(label = "alpha") { target ->
     if (target == Phase.Visible) 1f else 0f
 }

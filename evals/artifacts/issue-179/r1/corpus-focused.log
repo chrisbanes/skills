@@ -1,0 +1,18 @@
+.........live execution requires explicit subject and judge per-call cost assumptions
+.usage: python3 -m unittest plan [-h] [--runtime {codex,claude}] --model MODEL
+                                --reasoning REASONING
+                                [--judge-runtime {codex,claude}]
+                                --judge-model JUDGE_MODEL
+                                --judge-reasoning JUDGE_REASONING
+                                [--case CASE_IDS] [--skill SKILLS]
+                                [--suite {compose,kotlin-gradle,workflows-writing}]
+                                [--arm {none,forced,automatic}]
+                                [--repetitions REPETITIONS] [--json]
+                                [--subject-cost-per-call-usd SUBJECT_COST_PER_CALL_USD]
+                                [--judge-cost-per-call-usd JUDGE_COST_PER_CALL_USD]
+python3 -m unittest plan: error: the following arguments are required: --model, --reasoning, --judge-model, --judge-reasoning
+.........................................................................
+----------------------------------------------------------------------
+Ran 83 tests in 15.769s
+
+OK

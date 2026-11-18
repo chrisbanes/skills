@@ -5,13 +5,69 @@ Use these read commands when the platform-specific API is otherwise unclear.
 | Platform | Target and feedback | Checks and logs |
 | --- | --- | --- |
 | GitHub | `gh pr list`; `gh pr view <number> --json comments,reviews,reviewDecision,statusCheckRollup`; query `reviewThreads` with `gh api graphql` during every poll to discover inline feedback and resolution state | `gh pr checks <number>`; `gh run view <run-id> --log-failed` |
-| GitLab | `glab mr list --source-branch $(git branch --show-current) --output json`; `glab mr view <iid> --comments` | `glab ci list --mr <iid>`; `glab ci trace <job-id>` |
+| GitLab | `glab mr list --source-branch $(git branch --show-current) --output json`; `glab mr view <iid> --comments` | [Candidate checks](#gitlab-candidate-checks); `glab ci trace <job-id>` |
 
 For an authorized direct GitHub merge, pass `--match-head-commit <reviewed-sha>`
 to `gh pr merge`, or use the equivalent API precondition. If the head differs,
 refresh the PR and renew the applicable checks and review before retrying.
 
 Use `glab ci retry <job-id>` only for the one permitted suspected-flake retry.
+
+## GitLab candidate checks
+
+Use the same candidate checks as the GitLab code-host binding.
+
+1. Read the project with `glab api --hostname <host> projects/<id>` and
+   verify its ID and namespace path against the target. Read
+   `glab api --hostname <host> projects/<id>/merge_requests/<iid>`. Require
+   the expected IID and target branch, both project IDs equal to the verified
+   project, and the MR `sha` equal to the reviewed head.
+2. Read `glab api --hostname <host> --paginate projects/<id>/merge_requests/<iid>/pipelines`
+   and reject foreign refs and conflicting project IDs. Use only the
+   verified MR-scoped list for membership, never a project-wide SHA search.
+   Consider both pipelines with the exact head `sha` and either the MR's
+   source branch or `refs/merge-requests/<iid>/head`, and pipelines with
+   `refs/merge-requests/<iid>/merge`. Select the newest of these before
+   checking its status or resolving its identity. Require its ID.
+   For a merged-results pipeline, require the ID, ref and temporary merge SHA
+   to match `head_pipeline` from step 1 at the reviewed head. If that
+   evidence is missing or disagrees, refresh the MR and reverify its identity
+   and head under step 1. If the reads still disagree or are incomplete,
+   keep checks pending. Never fall back to an older pipeline. If the head
+   changes, requalify it.
+3. Read `glab api --hostname <host> --paginate projects/<id>/pipelines/<pipeline-id>/jobs`
+   for the selected ID. Any project or pipeline IDs returned must match the
+   request scope. Pass only with a successful pipeline and no blocking jobs.
+   An unrun manual job with effective API `allow_failure: true` leaves an
+   otherwise passing pipeline eligible unless the repository requires the job.
+   With `allow_failure: false`, keep delivery pending. A blocked or manual
+   pipeline stays pending regardless of the project's merge policy. Report
+   failed, running, canceled or unknown checks as such. Missing or incomplete
+   evidence, including unknown manual-job policy or no pipeline for the
+   reviewed head, leaves checks pending or unknown.
+
+## GitLab merge routing
+
+Omit auto-merge options from all GitLab merge requests sent by this procedure.
+
+1. After the merge gates pass and before an authorized merge, refresh
+   `glab api --hostname <host> projects/<id>` and verify project identity
+   and train policy. Use the live `merge_trains_enabled` value. If it is
+   absent, null, unreadable or conflicts with verified policy, report the
+   gap and send no merge write.
+2. With trains explicitly disabled, submit `sha=<reviewed-sha>` with
+   `PUT projects/<id>/merge_requests/<iid>/merge`. If GitLab rejects a SHA
+   mismatch, refetch the MR and requalify the new head under all applicable
+   gates before considering another merge.
+3. With trains enabled or required, follow the GitLab binding's train
+   procedure. With authority for that operation, submit the reviewed SHA
+   with `POST projects/<id>/merge_trains/merge_requests/<iid>` and omit
+   `auto_merge`. Reconcile an unexpected 202 before taking further action.
+   Read back train membership with
+   `GET projects/<id>/merge_trains/merge_requests/<iid>` and keep delivery
+   pending until MR readback confirms a merge at the reviewed head. If the
+   request leaves the train unmerged, report GitLab's reason. Never bypass
+   the train with a direct merge.
 
 ## GitLab feedback operations
 

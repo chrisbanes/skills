@@ -1,0 +1,1 @@
+Review this display-name cache. It should update even with no collectors on displayName. Consumers accept a previous value during propagation and never rely on an immediate read after update. Leave the code alone if it already meets this contract.

@@ -17,7 +17,7 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    verified SHA, remote-wait deadline, and fix-round count.
    Start unrelated ticket agents concurrently by default when agent capacity
    permits.
-3. Keep every implementation claim `In progress` until merge reconciliation. Derive
+3. Keep every implementation claim `In progress` until terminal reconciliation. Derive
    operational state from its slot, PR, checks, and reviews; require no extra
    Project Status values. A claim in [Remote Waiting](#remote-waiting) keeps
    its status, idle agent, worktree and PR but frees its slot. Cap waiting
@@ -82,9 +82,16 @@ closure, and Done reconciliation. Serialize those actions and reconcile every
 ambiguous remote mutation before the next controller mutation. Ticket agents
 never mutate another slot or the controller-owned Project state.
 
-For each ticket pass, continue through implementation, verification, review
-coverage under the [review evidence rule](review-contracts.md), a focused
-commit, and a reconciled push plus PR creation or update.
+For each ticket pass, continue through implementation and local verification.
+When full acceptance is verified at the integrated base with an empty final
+diff, return `no-change` with the handoff evidence before push, PR creation/update
+or shepherding. Yield to the controller for
+[no-change reconciliation](ticket-lifecycle.md#reconcile-verified-no-change).
+Preserve the claim and report any missing proof for a proposed no-change outcome.
+
+For a nonempty candidate, continue through review coverage under the
+[review evidence rule](review-contracts.md), a focused commit, and a
+reconciled push plus PR creation or update.
 Apply [PR review timing](pr-review-timing.md) to request applicable external review before
 yielding, while CI runs; record the trigger/readback, non-applicability, or exact capability or
 repository gate that prevents it. Do not idle a locally qualified PR merely
@@ -343,11 +350,13 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
    paused, parked, label-stopped, or authority-paused ticket, and `--issue` for every parked
    claim, paused or label-stopped ticket, human-frontier issue, Wayfinder human-frontier item, and
-   assigned Wayfinder HITL attention item. For the targeted refetch, add
-   `--board-from <reporting watcher's baseline file>` and write a new file, so
-   board and issue-comment drift missed since that watcher's last poll still
-   reports; this snapshot queries only PRs and retains the prior item and issue
-   sections. A non-zero `snapshot` is an `error` under step 6: discard its
+   assigned Wayfinder HITL attention item. For a targeted Project board refetch, add
+   `--board-from <reporting watcher's baseline file>` and a `--refresh-pr` for
+   each PR the following authoritative read will refresh. Keep the complete
+   `--pr` watch set and write a new file. The snapshot queries only those PRs
+   and newly watched PRs, preserving all other prior PR, item, and issue
+   fingerprints for the next wait. For a complete read, take a full snapshot.
+   A non-zero `snapshot` is an `error` under step 6: discard its
    output, launch no `wait`, and retake the snapshot before repeating the read
    it precedes.
 3. After a read preceded by a successful `snapshot` completes, retain any
@@ -407,10 +416,12 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
 6. Read the one-line report; treat a non-zero exit or any other output as
    `error`. A confirmed cancellation under step 3 is neither a report nor a
    failure; an already completed report still requires handling.
-   - `changed` naming only occupied-slot PRs: refetch only those tickets' PR,
-     head, check, review, and authority records; run no Refresh Gate.
-   - Any other `changed`, including a preserved PR of a paused or parked ticket:
-     pass the Refresh Gate before any selection or claim.
+   - For a Project board, if `changed` names only occupied-slot PRs still in the
+     watch set, refetch only those tickets' PR, head, check, review, and authority
+     records. Skip the Refresh Gate for this targeted refetch.
+   - For any other `changed`, including every parent-scope change and changes to
+     preserved PRs of paused or parked tickets, pass the Refresh Gate before any
+     selection or claim.
    - `error`: a wake, never "no change". Pass the Refresh Gate and count one
      consecutive failure; `changed` and `deadline` reset the count. After three,
      stop watching. Once no local or controller action remains, apply the

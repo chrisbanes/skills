@@ -1,9 +1,47 @@
 {
-  "files": [
-    "state.md"
-  ],
-  "must_contain": [
-    "Immutable evaluation state",
-    "controller owns"
-  ]
+  "decisions": {
+    "merged": {
+      "porcelain": [
+        "?? scratch/notes.md",
+        "?? build-debug.log"
+      ],
+      "checkout": "retire",
+      "branch": "delete",
+      "checkout_readback": "inventory-absent"
+    },
+    "no-change-worker": {
+      "return": "no-change",
+      "push": false,
+      "open_pr": false,
+      "shepherd": false
+    },
+    "no-change-controller": {
+      "tracker": "close-and-verify",
+      "done": "verified",
+      "checkout": "retire",
+      "branch": "keep",
+      "checkout_readback": "inventory-absent",
+      "complete": true
+    },
+    "unknown-done": {
+      "checkout": "retain",
+      "branch": "keep",
+      "complete": false
+    },
+    "different-head": {
+      "checkout": "retain",
+      "branch": "keep",
+      "complete": false
+    },
+    "unknown-transport": {
+      "checkout": "retain",
+      "branch": "keep",
+      "complete": false
+    },
+    "unknown-retirement": {
+      "checkout": "reconcile-before-retry",
+      "branch": "keep",
+      "complete": false
+    }
+  }
 }

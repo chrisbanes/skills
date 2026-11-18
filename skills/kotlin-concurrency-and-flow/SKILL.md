@@ -27,10 +27,11 @@ the product contract.
    receive it. A `Channel` hands each event to one consumer; a configured
    `SharedFlow` broadcasts to active consumers. If that consumer contract is
    unknown, state both options and the decision needed before choosing one.
-   For a one-consumer navigation handoff that must survive a collector gap,
-   choose a bounded `Channel(Channel.BUFFERED)` (not `UNLIMITED`) exposed as
-   `receiveAsFlow()`; do not preserve a
-   replay-zero `SharedFlow` after identifying event loss as the defect.
+   For a one-consumer navigation handoff that must survive a collector gap
+   but can lose an event after receipt, expose a bounded
+   `Channel(Channel.BUFFERED)` through `receiveAsFlow()`. For work that must
+   survive cancellation before handling completes, keep it pending until
+   the owner receives an acknowledgement.
 5. Choose Flow sharing and buffering semantics from the producer and consumer
    lifetimes rather than from a default.
 6. Read the focused reference for the material concern below.

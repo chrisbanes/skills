@@ -144,7 +144,11 @@ class DeterministicGradeTest(unittest.TestCase):
                     self.assertTrue(ClaudeRuntime().skill_texts(events))
             return replace(make_result(self.workspace, arm=arm, output=explanation), runtime=runtime, events=tuple(events))
 
-        for case_id in ("gradle-status-recovery-direct", "gradle-status-uncertain-novel"):
+        for case_id in (
+            "gradle-status-recovery-direct", "gradle-status-uncertain-novel",
+            "gradle-abandoned-recovery-direct", "gradle-abandoned-recovery-novel",
+            "gradle-abandoned-recovery-negative",
+        ):
             case = load_case(repo_root / "evals/cases" / case_id / "case.json", repo_root)
             # Isolate action grading from the cases' content validators.
             case = replace(case, validators=(Validator(("python3", "-c", "pass"), 5),))
@@ -156,7 +160,10 @@ class DeterministicGradeTest(unittest.TestCase):
                 status = ("Bash", {"command": "python3 gradle_run.py status --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})
                 permitted = ((), (read,), (read, ("Bash", {"command": f"cat {reference}"})))
                 forbidden = tuple((("Bash", {"command": command}),) for command in (
-                    status[1]["command"], "./gradlew --offline --no-scan test", "python3 -c 'print(1)'",
+                    status[1]["command"],
+                    "python3 gradle_run.py recover --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa "
+                    "--sequence 4 --reason 'Investigation complete' --no-live-descendants",
+                    "./gradlew --offline --no-scan test", "python3 -c 'print(1)'",
                     "cat state.md", f"cat {entry} && {status[1]['command']}",
                     f"cat {entry} > output.md", f"cat {entry} $(python3 -c 'print(1)')",
                     "cat .agents/skills/other/SKILL.md",

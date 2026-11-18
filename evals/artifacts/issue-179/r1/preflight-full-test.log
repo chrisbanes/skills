@@ -1,0 +1,97 @@
+
+> chrisbanes-skills@2026.11.18 test
+> node --test .opencode/tests/*.test.js && python3 -m unittest scripts/test_release.py scripts/test_sync_references.py scripts/test_gitlab_code_host_live_check.py skills/run-project/scripts/test_rank_tickets.py skills/run-project/scripts/test_watch_project.py skills/run-project/scripts/test_qualify_jira.py skills/gradle-run/scripts/test_gradle_run.py skills/release-kotlin-library/scripts/test_release.py && python3 -m unittest discover -s evals/tests -p 'test_*.py'
+
+✔ the package exposes separate V1 and V2 entrypoints (0.432458ms)
+✔ V1 registers the skills directory once and retains user guidance (0.629ms)
+✔ V2 registers every repository skill with decoded metadata and exact source paths (17.038416ms)
+✔ V2 adds guidance once per request without changing conversation messages (1.511625ms)
+✔ V2 handles quoted and multiline YAML and captures files before transform replay (7.573583ms)
+✔ a missing skills directory warns without advertising unavailable skills (3.254916ms)
+✔ malformed metadata fails setup before any partial registration (3.908208ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 86.106791
+...................................refusing to run: 2 write attempts already recorded in /var/folders/k6/qdrr06ls5zv2cp7076j6qnmw0000gn/T/tmpc17j4y41/gitlab-live-attempts.json
+.refusing to run without --live (requires maintainer authorization)
+--result must be an absolute path
+refusing to run: GITLAB_TOKEN would override the glab:gitlab.com login
+refusing to run: GITLAB_ACCESS_TOKEN would override the glab:gitlab.com login
+refusing to run: OAUTH_TOKEN would override the glab:gitlab.com login
+refusing to run: GLAB_CONFIG_DIR would override the glab:gitlab.com login
+..................................................................................................................................................................................................................................................................................................s.......................................
+----------------------------------------------------------------------
+Ran 366 tests in 100.873s
+
+OK (skipped=1)
+References out of sync:
+stale.md
+nested/missing.md
+linked.md
+Run npm run references:sync and commit the updated copies.
+Updated 3 reference copies.
+References are in sync.
+Updated 0 reference copies.
+Refusing symlinked or outside-checkout reference path: /private/var/folders/k6/qdrr06ls5zv2cp7076j6qnmw0000gn/T/tmp99ej1_dy/checkout/source.md
+Refusing symlinked or outside-checkout reference path: /private/var/folders/k6/qdrr06ls5zv2cp7076j6qnmw0000gn/T/tmpzfeos7i8/checkout/source.md
+Refusing symlinked or outside-checkout reference path: /private/var/folders/k6/qdrr06ls5zv2cp7076j6qnmw0000gn/T/tmp0t1b03a8/checkout/sources/source.md
+Refusing symlinked or outside-checkout reference path: /private/var/folders/k6/qdrr06ls5zv2cp7076j6qnmw0000gn/T/tmprpxq_p_v/checkout/sources/source.md
+Refusing symlinked or outside-checkout reference path: /private/var/folders/k6/qdrr06ls5zv2cp7076j6qnmw0000gn/T/tmp56x01mi5/checkout/copies
+Refusing symlinked or outside-checkout reference path: /private/var/folders/k6/qdrr06ls5zv2cp7076j6qnmw0000gn/T/tmpmg7zuynh/checkout/copies
+References out of sync:
+skills/deliver-issue/references/github-binding.md
+skills/run-project/references/github-binding.md
+skills/to-plan/references/github-binding.md
+Run npm run references:sync and commit the updated copies.
+Updated 3 reference copies.
+References are in sync.
+References out of sync:
+skills/deliver-issue/references/jira-binding.md
+skills/run-project/references/jira-binding.md
+skills/to-plan/references/jira-binding.md
+Run npm run references:sync and commit the updated copies.
+Updated 3 reference copies.
+References are in sync.
+{"run_id": "20261118165021-9461", "passed": true, "writes": 13, "error": null}
+{"run_id": "20261118165021-60fa", "passed": true, "writes": 13, "error": null}
+...............................................................................................................................Flive execution requires explicit subject and judge per-call cost assumptions
+.usage: python3 -m unittest plan [-h] [--runtime {codex,claude}] --model MODEL
+                                --reasoning REASONING
+                                [--judge-runtime {codex,claude}]
+                                --judge-model JUDGE_MODEL
+                                --judge-reasoning JUDGE_REASONING
+                                [--case CASE_IDS] [--skill SKILLS]
+                                [--suite {compose,kotlin-gradle,workflows-writing}]
+                                [--arm {none,forced,automatic}]
+                                [--repetitions REPETITIONS] [--json]
+                                [--subject-cost-per-call-usd SUBJECT_COST_PER_CALL_USD]
+                                [--judge-cost-per-call-usd JUDGE_COST_PER_CALL_USD]
+python3 -m unittest plan: error: the following arguments are required: --model, --reasoning, --judge-model, --judge-reasoning
+................................................................................................................................F..........................................................................................................................................................................
+======================================================================
+FAIL: test_kotlin_gradle_plan_uses_its_own_29_case_suite (test_cli.EvaluationCliTest.test_kotlin_gradle_plan_uses_its_own_29_case_suite)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/chris/.t3/worktrees/skills/cb-8553d347-2298a30bccfbb4d6/evals/tests/test_cli.py", line 61, in test_kotlin_gradle_plan_uses_its_own_29_case_suite
+    self.assertEqual(29, plan["case_count"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 29 != 32
+
+======================================================================
+FAIL: test_has_risk_weighted_skill_triads_and_routing_cases (test_kotlin_gradle_matrix.KotlinGradleMatrixTest.test_has_risk_weighted_skill_triads_and_routing_cases)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/chris/.t3/worktrees/skills/cb-8553d347-2298a30bccfbb4d6/evals/tests/test_kotlin_gradle_matrix.py", line 35, in test_has_risk_weighted_skill_triads_and_routing_cases
+    self.assertEqual(29, report.case_count)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 29 != 32
+
+----------------------------------------------------------------------
+Ran 428 tests in 73.987s
+
+FAILED (failures=2)
