@@ -73,3 +73,17 @@ Before considering any skill addition or edit complete, verify:
   asked. Skill-local scripts are allowed when they are part of an explicitly
   requested skill and provide deterministic behavior; test them.
 - Don't reorganise existing skills "for consistency" without a concrete reason; renames break user references.
+
+## Agent skills
+
+### Issue tracker
+
+Use GitHub Issues for tickets and specs in `chrisbanes/skills`. Read [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md) when fetching, publishing, or updating tickets.
+
+### Triage labels
+
+Read [docs/agents/triage-labels.md](docs/agents/triage-labels.md) when interpreting or applying a triage role.
+
+### Domain docs
+
+This repo uses a single-context layout. Read [docs/agents/domain.md](docs/agents/domain.md) for the glossary and ADR rules when exploring the repo with an engineering skill.
