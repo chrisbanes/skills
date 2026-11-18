@@ -54,9 +54,18 @@ ticket worktree to another ticket.
    - merged: HEAD is contained in the reconciled merged PR;
    - not merged (PR closed unmerged or verified abandonment): the PR's remote head ref still exists and equals local HEAD. A
      deleted remote branch keeps the worktree and reports it.
+   - verified no-change: require the exact run-created checkout and branch,
+     a quiescent owner and processes, and fresh proof that its clean HEAD is
+     the verified integrated base SHA used for full acceptance. Require exact
+     tracker closure and applicable Done automation readback, and reconcile
+     any retained PR or uncertain host write. This outcome needs no merge or
+     remote head. A different HEAD or missing proof means retain and report.
+     Apply the shared retire steps and record removal or host-handoff readback.
+     If transport, ownership or readback is unknown, retain what remains,
+     report cleanup-incomplete and reconcile before any retry.
 5. After a merge, also delete the skill-created local ticket branch, including
    after a host-cleanup handoff, which detaches the worktree first. After an
-   unmerged retirement, keep the local branch ref.
+   unmerged or no-change retirement, keep the local branch ref.
 6. Whenever a `next` or `drain` run finishes, waits for humans or stops,
    retain every label-stopped planning or ticket worktree, including clean ones;
    retire only the reusable [planning worktree](todo-lane.md) and delivered research
@@ -167,6 +176,17 @@ gates. Otherwise resume only with a new diagnostic direction or explicit
 authority for one focused investigation. A new run ID alone does not reset the
 count; never repeat an unchanged rerun to reset it.
 
+## Reconcile verified no-change
+
+When the owner returns verified `no-change`, the controller checks acceptance
+evidence against the current integrated base and applies
+[verified no-change closure](provider-bindings.md#verified-no-change-closure).
+Keep the claim and artifacts while tracker closure is pending or unknown.
+After authoritative closure readback, use
+[Done and checkout accounting](#reconcile-done-and-account-for-the-checkout)
+and the no-change retirement rule under [Worktrees](#worktrees).
+Keep this route outside push, PR, shepherd and merge operations.
+
 ## Pre-push, shepherd, and merge
 
 Before the first push, give every review contract on the frozen candidate to
@@ -195,12 +215,6 @@ equivalent configuration and preserved suite-wide setup/teardown; otherwise
 report incomplete evidence. Permit one reported rerun of a plausibly load-driven
 failure in untouched code, preserving both results and the load evidence;
 repetition or uncertainty remains a failure.
-
-Before PR operations, reconcile an owner's verified `no-change` evidence
-through [verified no-change closure](provider-bindings.md#verified-no-change-closure).
-Skip PR and merge gates for this route. Require verified tracker closure before
-reconciling Done. Preserve the claim and artifacts on pending or unknown closure,
-and account for the checkout under [Worktrees](#worktrees).
 
 PRs include the configured closing or non-closing issue link, rationale,
 validation, and residual risks. For partial PRs, include and verify the
@@ -232,10 +246,25 @@ cleanup. Use the selected tracker procedure for
 [GitHub](github-binding.md#unintended-closure) or
 [Jira](jira-binding.md#link-and-close). A partial merge retains the open issue,
 unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
-For a completed ticket, reconcile Done without archiving/removing directly, stop
-on unexpected outcomes, clean up the ticket worktree and branch under
-[Worktrees](#worktrees), discard agent, refresh other PRs, and query Project
-completely. `next` finishes one selected terminal issue,
+For a completed merge outcome, continue to
+[Done and checkout accounting](#reconcile-done-and-account-for-the-checkout).
+
+## Reconcile Done and account for the checkout
+
+1. After verified tracker closure, reconcile Done under the selected scope.
+   For a board, read back the exact Project item and wait for and verify
+   applicable configured automation. If Status automation is absent and the
+   grant permits it, set and verify Status Done under the binding. Never
+   directly archive or remove the item. For a parent-issue scope, use the
+   binding's logical Done mapping. Stop on missing or unexpected readback
+   and preserve artifacts.
+2. Apply the outcome's worktree and branch rule under [Worktrees](#worktrees).
+   Record the exact disposition and readback under
+   [checkout accounting](checkout-lifecycle.md#account). Keep cleanup
+   incomplete until the retirement or host handoff is verified. Then discard
+   the ticket agent, refresh other PRs, and query Project completely.
+
+`next` finishes one selected terminal issue,
 Wayfinder child, tail triage, or ready epic; otherwise report human frontier.
 Both modes end with [Worktrees](#worktrees) step 6; `drain` then follows its
 scheduler finish gate. On blocked/ambiguous next work,

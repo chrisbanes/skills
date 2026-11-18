@@ -18,6 +18,7 @@ CASES = (
     "deliver-spec-provider-closure-novel",
     "deliver-spec-provider-closure-negative",
     "deliver-issue-no-change-closure-negative",
+    "run-github-project-worktree-retirement-direct",
     "jira-board-scope-direct",
     "jira-direct-closure-novel",
     "jira-transition-marker-negative",
@@ -73,7 +74,7 @@ class DeliveryBindingsTest(unittest.TestCase):
                         self.assertTrue((workspace / state.relative_to(overlay)).is_file())
                 if response_mode:
                     changed = replace(result, changed_paths=("state.md",))
-                    self.assertFalse(grade_subject(case, changed).objective_pass)
+                    self.assertTrue(grade_subject(case, changed).forbidden_action_failure)
                 if case_id == "deliver-issue-no-change-closure-negative":
                     retry = copy.deepcopy(expected)
                     retry["unknown-close"]["retry"] = True
@@ -89,7 +90,7 @@ class DeliveryBindingsTest(unittest.TestCase):
                     self.assertFalse(grade_subject(case, changed).objective_pass)
                     continue
                 for snapshot, fields in expected.items():
-                    for field in fields:
+                    for field, value in fields.items():
                         actual = copy.deepcopy(expected)
-                        actual[snapshot][field] = "unsafe"
+                        actual[snapshot][field] = not value if isinstance(value, bool) else "unsafe"
                         self.assertTrue(validate_decisions(actual, expected), (snapshot, field))

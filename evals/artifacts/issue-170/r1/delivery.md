@@ -32,6 +32,18 @@ Node 24.22.1, npm 11.19.1, Python 3.14.4. Locked dependencies installed from cac
 
 Routine fixture corrections updated the calibration count and checked the retry rejection against validator stderr, where the harness exposes the specific diagnostic. The affected gates were rerun on the final implementation.
 
+## Review repair pass 1
+
+The independent review of `2b6f873e79c190c9a57a4e9e6ff3a831c7733bf7` returned fix-first for correctness and standards, and ship for reuse and complexity. The original owner repaired its two P2 findings under the same revision and verified Project claim.
+
+- The canonical Project handoff still placed push before the no-change return after sync overwrote the edit to a generated copy. The drain scheduler also assumed every pass had a PR. Both now end a verified no-change pass with local evidence before push, PR creation/update or shepherding. The controller reconciles tracker closure and Done.
+- The previous retirement rule required a merged PR or verified remote PR head. A run-created no-change checkout now requires proof of exact clean HEAD at the verified acceptance base, a quiescent owner and processes, and authoritative tracker and applicable Done readback. It then uses the shared retirement and inventory readback, retaining its local branch. Missing proof or transport leaves it retained or cleanup-incomplete. An ambiguous removal is reconciled before any retry.
+- The existing Project worktree fixture now exercises a verified early handoff and a no-PR closure through Done and checkout accounting. It also exercises unknown Done, a different HEAD with the same tree, unknown managed cleanup transport and ambiguous removal. The response grader verifies the decisions and rejects workspace writes. The focused test uses the harness's forbidden-action result for direct review cases.
+
+The repair diff from `2b6f873e79c190c9a57a4e9e6ff3a831c7733bf7`, excluding this evidence file, has binary Git diff SHA-256 `1336e38d4f8ddcae2ed5c92883b33507a79c50412e5af49c8bce506cad2472da`. On that staged source, 49 focused tests passed. Full `npm test` passed with 7 Node tests, 358 helper tests with one procfs-only skip, and 427 evaluation tests. Lint, reference sync, validation of 296 cases and diff checks passed.
+
+A read-only three-way comparison against main at `bafa65e7b78a422b8467482f1bf59e9671e478de` found only disjoint GitHub board inference edits in the overlapping files, with no conflicts. The branch retains its original base. #163 remains excluded. Its eventual integration must also preserve the bound-scope refresh in the shared Done accounting procedure, in addition to reconciling the previously noted evaluation overlaps. This repair changed no watcher or provider binding region. The controller baseline still matches all evidence outside this revision folder.
+
 ## Controller handoff
 
-Independent exact-head review remains pending. There is no PR or remote mutation from this implementation pass. No live model evaluations ran. The only new committed evidence path is `evals/artifacts/issue-170/r1/delivery.md`.
+Independent re-review of the repaired head remains with the controller. Validation used offline fixtures and did not exercise live tracker closure or checkout retirement. There was no push, PR, provider mutation, delegation or live model evaluation. The only evidence path updated is `evals/artifacts/issue-170/r1/delivery.md`.

@@ -17,7 +17,7 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    verified SHA, remote-wait deadline, and fix-round count.
    Start unrelated ticket agents concurrently by default when agent capacity
    permits.
-3. Keep every implementation claim `In progress` until merge reconciliation. Derive
+3. Keep every implementation claim `In progress` until terminal reconciliation. Derive
    operational state from its slot, PR, checks, and reviews; require no extra
    Project Status values. A claim in [Remote Waiting](#remote-waiting) keeps
    its status, idle agent, worktree and PR but frees its slot. Cap waiting
@@ -82,9 +82,16 @@ closure, and Done reconciliation. Serialize those actions and reconcile every
 ambiguous remote mutation before the next controller mutation. Ticket agents
 never mutate another slot or the controller-owned Project state.
 
-For each ticket pass, continue through implementation, verification, review
-coverage under the [review evidence rule](review-contracts.md), a focused
-commit, and a reconciled push plus PR creation or update.
+For each ticket pass, continue through implementation and local verification.
+When full acceptance is verified at the integrated base with an empty final
+diff, return `no-change` with the handoff evidence before push, PR creation/update
+or shepherding. Yield to the controller for
+[no-change reconciliation](ticket-lifecycle.md#reconcile-verified-no-change).
+Preserve the claim and report any missing proof for a proposed no-change outcome.
+
+For a nonempty candidate, continue through review coverage under the
+[review evidence rule](review-contracts.md), a focused commit, and a
+reconciled push plus PR creation or update.
 Apply [PR review timing](pr-review-timing.md) to request applicable external review before
 yielding, while CI runs; record the trigger/readback, non-applicability, or exact capability or
 repository gate that prevents it. Do not idle a locally qualified PR merely
