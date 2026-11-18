@@ -102,9 +102,10 @@ Use this route before PR creation. Step 7 applies to the merge route.
    evidence to the controller. Missing or unknown prerequisites leave closure
    pending or blocked with the exact reason.
 3. Use the selected tracker's verified close and terminal-readback operation
-   ([GitHub](github-binding.md#delivery-operations) or
-   [Jira](jira-binding.md#link-and-close)). No new change request, native
-   closing reference, merge or merge grant is required. If the tracker lacks
+   ([GitHub](github-binding.md#delivery-operations),
+   [Jira](jira-binding.md#link-and-close) or [GitLab](gitlab-binding.md#link-and-close)).
+   This route needs no change request, native closing reference, merge or merge
+   grant. If the tracker lacks
    verified capability for this route, preserve evidence and report the gap.
    Reconcile ambiguous writes under step 8 before any retry. Report
    closure as verified only after authoritative readback of the intended

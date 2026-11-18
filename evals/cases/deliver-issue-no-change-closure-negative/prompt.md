@@ -31,3 +31,13 @@ explicit closure authority, and the tracker supports close and readback.
 - `unknown-readback`: The close returned success, but the fresh issue read
   cannot verify the repository identity. Assess ticket completion and the next
   action for that write.
+- `gitlab-verified`: The owning Project controller uses a GitLab label scope
+  with GitHub as code host and holds tracker closure authority only. A current
+  trusted complete inventory verifies blockers and descendants for the exact
+  issue. If the controller sends `state_event: close`, fresh issue readback
+  reports closed and a new matching state event attributes the close to
+  this write. That issue state is the selected scope's Done readback.
+- `gitlab-unattributed`: Start with the same accepted GitLab issue and grant.
+  A close was already attempted. The exact issue reads closed, but the only
+  newer close event belongs to a different actor. Decide how to handle that
+  outstanding write and whether to report Done.

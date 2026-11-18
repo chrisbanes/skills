@@ -260,11 +260,14 @@ the run. Omit GitHub Project fields and workflow settings for this tracker.
    closing set using the shared procedure.
 3. Read back native closure from the exact issue and its paginated
    `resource_state_events`, comparing the intended closure set and
-   reconciling attribution against the verified merge. For controller
-   closure, require the owning controller's fresh tracker grant, verified
-   merge/head/base, open issue and complete fulfilled item contract with
-   no remaining blockers or open descendants. Capture the pre-write state
-   event boundary, then send only `state_event: close` in
+   reconciling attribution against the verified merge. For a tracker close,
+   require the owning controller or authorized standalone lead to verify the
+   fresh tracker grant, open issue and full acceptance, with complete blocker
+   and descendant evidence and no remaining work. Apply the verified merge,
+   head and base gates for `close-after-merge`, or the shared
+   [verified no-change closure](provider-bindings.md#verified-no-change-closure)
+   gates for already-satisfied work. Capture the pre-write
+   state event boundary, then send only `state_event: close` in
    `PUT projects/:id/issues/:issue_iid`. Require fresh `closed` readback and
    one matching new close event attributable to this write. External or
    ambiguous closure stays pending reconciliation. For a proven unintended
