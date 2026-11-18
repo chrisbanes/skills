@@ -8,7 +8,7 @@ Mutable local UI state must survive recomposition and notify Compose when it cha
 
 1. For a mutable value in a composable scope, use `remember { mutableStateOf(...) }` (or `rememberSaveable` when recreation must preserve it). A bare local `var` resets on recomposition and does not invalidate UI.
 2. Use `mutableStateListOf`/`mutableStateMapOf` for in-place observable collection changes. With `mutableStateOf(List)`, replace the list rather than mutating it.
-3. Do not mutate snapshot state from the composable body to rebuild derived data. Use `remember(keys) { ... }` for a read-only result; events and effects own mutations.
+3. Derive read-only results by reading snapshot collection contents during composition. Use `remember(keys) { ... }` for immutable inputs that change by replacement. Keep snapshot mutations in events and effects.
 4. Route layout measurement consumed by sibling composition to [Compose performance](../../compose-performance/SKILL.md), and effect capture/lifecycle to [Side effects](side-effects.md).
 5. Finish when local state has one composable owner, survives the required lifecycle, and changes invalidate the correct UI.
 
@@ -21,11 +21,12 @@ fun Counter() {
 ```
 
 ```kotlin
-// Read-only derived state; no composition-time back-writing.
-val merged = remember(parent, overlay) {
-    if (overlay.isEmpty()) parent else parent + overlay
-}
+val merged = parent + overlay
 ```
+
+This reads both maps during composition, including when either is a snapshot
+map mutated in place. Pass immutable maps by replacement and let overlay
+entries take precedence on matching keys.
 
 ## Exceptions
 

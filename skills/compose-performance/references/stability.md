@@ -33,7 +33,7 @@ Never annotate to silence a report: a false promise can show stale UI. If visibl
 
 ```kotlin
 items(list, key = { it.id }) { item ->
-    val onClick = remember(item.id) { { onItemClick(item.id) } }
+    val onClick = remember(item.id, onItemClick) { { onItemClick(item.id) } }
     RowCard(onClick = onClick)
 }
 ```

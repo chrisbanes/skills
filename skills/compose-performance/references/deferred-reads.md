@@ -8,7 +8,7 @@ State invalidates the phase that reads it. Read frame-rate state in layout or dr
 
 1. Confirm that scroll, animation, drag, or measured-size state is changing frequently and identify where it is read.
 2. Keep a `State<T>` or provider lambda across composition, then read it in a block-form layout or draw modifier. Keep the read in composition only when it decides which composables exist.
-3. Do not rebuild snapshot lists or maps from the composable body. Derive immutable values with `remember(keys) { ... }`; mutate snapshot state from events or effects instead.
+3. Derive read-only values from snapshot collections by reading their contents during composition. Use `remember(keys) { ... }` for immutable inputs that change by replacement. Mutate snapshot state from events or effects.
 4. When one item measures and another consumes the result, capture the measurement in layout and apply it during measure. Do not read that measurement in a sibling composable body.
 5. Re-measure the same transition. Finish when the required phase alone invalidates and derived state cannot become stale.
 
@@ -27,11 +27,12 @@ Box(Modifier.offset { IntOffset(offsetX.value.roundToPx(), 0) })
 Suffix a cross-boundary lambda with `Provider` when that makes its deferred-read contract clear. `drawBehind`, `drawWithContent`, `layout`, `offset {}`, and `graphicsLayer {}` are suitable consumers.
 
 ```kotlin
-// Do not back-write during composition.
-val merged = remember(parent, overlay) {
-    if (overlay.isEmpty()) parent else parent + overlay
-}
+val merged = parent + overlay
 ```
+
+This reads both maps during composition, including when either is a snapshot
+map mutated in place. Pass immutable maps by replacement and let overlay
+entries take precedence on matching keys.
 
 For cross-row measurement, use a measure-phase helper such as [`decorateMeasureConstraints`](../../compose-component-design/references/modifier-layout.md), keep a fixed fallback while size is unknown, and compare before writing the captured size. This avoids a layout-to-composition cascade in sibling lazy items.
 
