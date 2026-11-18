@@ -12,6 +12,208 @@
     "only_allow_merge_if_all_discussions_are_resolved": true,
     "merge_trains_enabled": false
   },
+  "pipeline_variants": {
+    "blocking-manual": {
+      "base_snapshot": "mergeable",
+      "pipelines": [
+        {
+          "id": 503,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "manual",
+          "project_id": 88001
+        }
+      ],
+      "jobs": [
+        {
+          "id": 9002,
+          "name": "deploy",
+          "status": "manual",
+          "allow_failure": false
+        }
+      ],
+      "merge_policy": {
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": false,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": false
+      }
+    },
+    "blocked-pipeline": {
+      "base_snapshot": "mergeable",
+      "pipelines": [
+        {
+          "id": 503,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "manual",
+          "project_id": 88001
+        },
+        {
+          "id": 500,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      ]
+    },
+    "unknown-manual-policy": {
+      "base_snapshot": "mergeable",
+      "jobs": [
+        {
+          "id": 9002,
+          "name": "deploy",
+          "status": "manual"
+        }
+      ]
+    },
+    "stale-and-foreign": {
+      "base_snapshot": "mergeable",
+      "pipelines": [
+        {
+          "id": 509,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88002
+        },
+        {
+          "id": 508,
+          "sha": "H1",
+          "ref": "refs/merge-requests/8/head",
+          "status": "success",
+          "project_id": 88001
+        },
+        {
+          "id": 507,
+          "sha": "H0",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      ],
+      "jobs": []
+    },
+    "merged-results-missing-head-pipeline": {
+      "base_snapshot": "merged-results",
+      "merge_request_overrides": {
+        "head_pipeline": null
+      }
+    },
+    "merged-results-mismatched-head-pipeline": {
+      "base_snapshot": "merged-results",
+      "merge_request_overrides": {
+        "head_pipeline": {
+          "id": 505,
+          "sha": "MR1",
+          "ref": "refs/merge-requests/7/merge",
+          "status": "success",
+          "project_id": 88001
+        }
+      }
+    },
+    "blocking-job-with-successful-pipeline": {
+      "base_snapshot": "mergeable",
+      "jobs": [
+        {
+          "id": 9002,
+          "name": "deploy",
+          "status": "manual",
+          "allow_failure": false
+        }
+      ]
+    },
+    "newer-merged-results-unverified": {
+      "base_snapshot": "mergeable",
+      "merge_request_overrides": {
+        "head_pipeline": {
+          "id": 503,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      },
+      "refreshed_merge_request": {
+        "iid": 7,
+        "web_url": "https://gitlab.example.com/acme/platform/app/-/merge_requests/7",
+        "source_branch": "agent/42-export",
+        "target_branch": "main",
+        "sha": "H1",
+        "diff_refs": {
+          "base_sha": "B1"
+        },
+        "draft": false,
+        "state": "opened",
+        "has_conflicts": false,
+        "detailed_merge_status": "mergeable",
+        "source_project_id": 88001,
+        "target_project_id": 88001,
+        "description": "Source: https://github.com/acme/app/issues/42",
+        "head_pipeline": {
+          "id": 503,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      },
+      "pipelines": [
+        {
+          "id": 510,
+          "sha": "MR2",
+          "ref": "refs/merge-requests/7/merge",
+          "status": "manual",
+          "project_id": 88001
+        },
+        {
+          "id": 503,
+          "sha": "H1",
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      ],
+      "jobs_by_pipeline_id": {
+        "510": [
+          {
+            "id": 9003,
+            "name": "approve",
+            "status": "manual",
+            "allow_failure": false
+          }
+        ],
+        "503": [
+          {
+            "id": 9002,
+            "name": "deploy",
+            "status": "manual",
+            "allow_failure": true
+          }
+        ]
+      },
+      "merge_policy": {
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": false,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": false,
+        "merge_pipelines_enabled": true
+      }
+    },
+    "unknown-train-policy": {
+      "base_snapshot": "mergeable",
+      "merge_policy": {
+        "merge_method": "merge",
+        "squash_option": "default_off",
+        "only_allow_merge_if_pipeline_succeeds": true,
+        "only_allow_merge_if_all_discussions_are_resolved": true,
+        "merge_trains_enabled": null
+      }
+    }
+  },
   "snapshots": {
     "mr-open": {
       "merge_requests_for_branch": [],
@@ -39,7 +241,9 @@
         {
           "id": 501,
           "sha": "H1",
-          "status": "failed"
+          "ref": "refs/merge-requests/7/head",
+          "status": "failed",
+          "project_id": 88001
         }
       ],
       "jobs": [
@@ -75,9 +279,12 @@
         {
           "id": 502,
           "sha": "H1",
-          "status": "success"
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
         }
       ],
+      "jobs": [],
       "discussions": [
         {
           "id": "d1",
@@ -114,7 +321,17 @@
         {
           "id": 503,
           "sha": "H1",
-          "status": "success"
+          "ref": "refs/merge-requests/7/head",
+          "status": "success",
+          "project_id": 88001
+        }
+      ],
+      "jobs": [
+        {
+          "id": 9002,
+          "name": "deploy",
+          "status": "manual",
+          "allow_failure": true
         }
       ],
       "discussions": [
@@ -225,7 +442,8 @@
           "id": 504,
           "sha": "MR1",
           "ref": "refs/merge-requests/7/merge",
-          "status": "success"
+          "status": "success",
+          "project_id": 88001
         }
       },
       "pipelines": [
@@ -233,9 +451,11 @@
           "id": 504,
           "sha": "MR1",
           "ref": "refs/merge-requests/7/merge",
-          "status": "success"
+          "status": "success",
+          "project_id": 88001
         }
       ],
+      "jobs": [],
       "discussions": [
         {
           "id": "d3",

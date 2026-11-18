@@ -76,6 +76,105 @@
       "tracker_action": "none",
       "ticket_complete": false,
       "delivery_state": "pending"
+    },
+    "blocking-manual": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "blocked-pipeline": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "unknown-manual-policy": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "stale-and-foreign": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "merged-results-missing-head-pipeline": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "merged-results-mismatched-head-pipeline": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "blocking-job-with-successful-pipeline": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "newer-merged-results-unverified": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
+    },
+    "unknown-train-policy": {
+      "tracker": "github",
+      "code_host": "gitlab",
+      "change_action": "none",
+      "closing_keywords": false,
+      "expected_host_closures": [],
+      "merge_permitted": false,
+      "tracker_action": "none",
+      "ticket_complete": false,
+      "delivery_state": "pending"
     }
   }
 }
