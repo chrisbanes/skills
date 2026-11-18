@@ -99,6 +99,18 @@ class ReleaseHelperTest(unittest.TestCase):
         self.assertEqual("unknown", state["remote_tag"])
         self.assertEqual("", self.git("ls-remote", str(second), "refs/tags/1.2.0"))
 
+    def test_home_relative_push_destination_for_preparation_and_recovery(self):
+        self.git("remote", "set-url", "--push", "origin", "~/remote.git")
+        with patch.dict(os.environ, {"HOME": str(self.remote.parent)}):
+            self.release.prepare(self.root, self.config())
+            state = self.release.recover(self.root, self.config(), command_runner=lambda *a, **kw: '{"state":"absent"}')
+        self.assertIn(self.git("rev-parse", "HEAD^"), state["remote_branch"])
+
+    def test_unresolvable_home_reports_unknown_remote_state(self):
+        self.git("remote", "set-url", "--push", "origin", "~missing-release-test-user/remote.git")
+        state = self.release.recover(self.root, self.config(), command_runner=lambda *a, **kw: '{"state":"absent"}')
+        self.assertEqual(("unknown", "unknown"), (state["remote_branch"], state["remote_tag"]))
+
     def test_prepare_refuses_multiple_push_destinations(self):
         self.git("remote", "set-url", "--add", "--push", "origin", str(self.remote))
         self.git("remote", "set-url", "--add", "--push", "origin", str(self.root.parent / "second.git"))

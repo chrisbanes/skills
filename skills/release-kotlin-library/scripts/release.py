@@ -271,7 +271,11 @@ def push_destination(root: Path, remote: str) -> str:
         raise ValueError("release requires exactly one Git push destination")
     url = urls[0]
     if ":" not in url:
-        return str((root / url).resolve())
+        try:
+            local_path = Path(url).expanduser()
+        except RuntimeError as error:
+            raise ValueError("cannot resolve home directory for Git push destination") from error
+        return str((root / local_path).resolve())
     return url
 
 
