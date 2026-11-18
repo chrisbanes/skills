@@ -557,7 +557,8 @@ their final-head applicability, terminal-green CI, and mergeability.
 
 After a merge:
 
-1. Reconcile the issue and Project item.
+1. Reconcile terminal issue and bound-scope state through the selected tracker.
+   Verify the Project item's terminal state when the scope is a GitHub Project.
 2. Refresh mergeability for every other PR.
 3. Shared files alone require neither a branch update nor a CI rerun. Use
    `git merge-tree` against the verified new base to check conflicts without
