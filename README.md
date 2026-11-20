@@ -42,6 +42,12 @@ Or install as an OpenCode V2 plugin (2.0.22 or newer):
 OpenCode V1 1.18.29 or newer uses `plugin` instead of `plugins`.
 See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) for details.
 
+Or install as an Antigravity plugin:
+
+```
+agy plugin install https://github.com/chrisbanes/skills
+```
+
 ### External skill providers
 
 Most skills in this repository are self-contained. The workflows below compose
