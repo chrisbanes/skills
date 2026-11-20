@@ -21,8 +21,8 @@ Use this reference when Codex is the active runtime.
 | Purely mechanical: exact checks, simple extraction, no judgment | Luna / low |
 | Computer use or visual interpretation with a defined outcome: navigating screens, matching images, interpreting screenshots or drawings | Terra / medium |
 | Concise drafting or editing from supplied material, with clear audience and factual requirements | Terra / medium |
-| Ordinary bounded implementation, fixes, refactoring, and UI fixes with settled requirements and interactions (default) | Terra / high |
-| Substantial synthesis across several sources, clear constraints | Terra / xhigh |
+| Ordinary bounded implementation, fixes, refactoring, and UI fixes with settled requirements and interactions (default) | Sol / medium |
+| Substantial synthesis across several sources, clear constraints | Sol / high |
 | Complex or ambiguous: judgment across interacting components | Sol / medium |
 | Difficult correctness investigations or independent correctness reviews: competing paths, ownership, ordering, cancellation, security, data integrity | Sol / high |
 | Conflicting evidence, or demanding deliverables needing cross-component polish | Sol / xhigh |

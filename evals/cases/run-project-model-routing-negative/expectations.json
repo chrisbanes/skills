@@ -42,7 +42,7 @@
       "next": "implement",
       "owner": "lead",
       "model": "gpt-6.2-sol",
-      "effort": "medium",
+      "effort": "high",
       "unrelated": "continue"
     }
   }
