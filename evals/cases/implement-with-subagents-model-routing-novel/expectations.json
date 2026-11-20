@@ -8,7 +8,7 @@
   "decisions": {
     "chain": {
       "valid": true,
-      "model": "gpt-6.1-terra",
+      "model": "gpt-6.2-sol",
       "effort": "high",
       "owner": "W1",
       "next": "dispatch",

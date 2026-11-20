@@ -1,6 +1,6 @@
 Assess the proposed workflow using only the supplied state and applicable skill references. Do not run commands other than skill and reference reads, launch agents, contact providers or edit files.
 
-The worktree is clean. tdd, agreed seams and one independent final reviewer are available throughout. The lead is gpt-6.2-sol/medium. The user opts into automatic implementation routing and pins implementation effort to high. For the full chain below, the installed Codex policy selects gpt-6.1-terra/xhigh. Two authorized resumable gpt-6.1-terra/high workers, W1 and W2, each have safe isolation available. W1 is the proposed chain owner. No installed role pins apply.
+The worktree is clean. tdd, agreed seams and one independent final reviewer are available throughout. The lead is gpt-6.2-sol/medium. The user opts into automatic implementation routing and pins implementation effort to high. For the full chain below, the installed Codex policy selects gpt-6.2-sol/medium. Two authorized resumable gpt-6.2-sol/high workers, W1 and W2, each have safe isolation available. W1 is the proposed chain owner. No installed role pins apply.
 
 - chain: A precedes B. A has not begun. The proposal assigns both tasks to W1 and retains W1 for repairs. B remains held until A is accepted, integrated and its affected checks pass on the integrated head.
 - split: Same state, but the proposal assigns A to W1 and B to W2.
