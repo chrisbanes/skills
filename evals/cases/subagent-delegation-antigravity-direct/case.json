@@ -1,0 +1,45 @@
+{
+  "id": "subagent-delegation-antigravity-direct",
+  "title": "Choose Antigravity tiers and Gemini slugs by bounded assignment",
+  "family": "workflow",
+  "calibration": true,
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-antigravity-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "routing",
+      "text": "Chooses gemini-4-hydrogen-low, gemini-4-hydrogen-medium, gemini-4-hydrogen-medium, gemini-4-neon-medium, gemini-4-neon-high, gemini-4-neon-medium, gemini-4-neon-high, and gemini-4-neon-xhigh on the concrete-slug surface (and flash_lite, flash, flash, flash/inherit, pro, pro, pro, pro on invoke_subagent) in assignment order. Treats these as policy defaults, not claims of cross-provider model equivalence."
+    },
+    {
+      "id": "runtime",
+      "text": "Distinguishes concrete Gemini slug surfaces (agy/swarm) from invoke_subagent abstract tiers without per-call effort, never passes Codex (fork_turns, reasoning_effort, GPT IDs) or Claude (haiku/sonnet/opus/fable, run_in_background) parameters, confirms tool capability separately from model choice, and reserves gemini-4-argon-* and max effort for justified exceptions beyond gemini-4-neon-xhigh."
+    },
+    {
+      "id": "brief",
+      "text": "Matches roles by capability, gives ownership, exact state, constraints, expected checks and acceptance criteria, forbids unintended nesting on self, preserves other workers' edits, keeps root authorization and final acceptance, and launches independent assignments concurrently with reactive wakeup."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

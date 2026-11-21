@@ -33,8 +33,11 @@ the lead. Installed agent definitions are authoritative for pinned settings.
      and effort routing, and fresh-context calls.
    - [Claude Code](references/claude-code.md): agent definitions, model and
      effort routing, invocation overrides, and owner/reviewer lifecycle.
+   - [Antigravity](references/antigravity.md): exposed `invoke_subagent` tiers,
+     concrete Gemini slugs (`agy` / `swarm`), installed agent pins, and
+     reactive/workspace lifecycle.
    - Other runtimes: inspect their exposed capabilities and installed policy;
-     preserve configured choices rather than translating either provider's
+     preserve configured choices rather than translating any provider's
      model identifiers or effort values. Resolve missing required settings
      before dispatch.
 5. Reassess capability and judgment for every new assignment, including
@@ -47,7 +50,8 @@ the lead. Installed agent definitions are authoritative for pinned settings.
    assignment category in the brief and justify departures from the default
    row. For investigations, name the unresolved question; for reviews,
    identify the correctness checks; for synthesis, identify the evidence or
-   deliverable demands. At opus or fable (Claude Code), Sol (Codex), or an equivalent
+   deliverable demands. At opus or fable (Claude Code), Sol (Codex),
+   `gemini-4-neon`/`gemini-4-argon` or `pro` (Antigravity), or an equivalent
    tier with high effort or above, make that question or those checks
    concrete; touching a risky area alone does not qualify. If work stalls,
    diagnose missing inputs, tool failures, or routine test repairs before

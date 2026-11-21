@@ -151,3 +151,32 @@ log.
 Verify runtime mechanics against [Claude Code subagent
 documentation](https://code.claude.com/docs/en/sub-agents); session mode and
 exposed tool capabilities govern result delivery.
+
+## Antigravity
+
+- Resume an owner with `send_message` using its returned `conversationId`;
+  inspect or stop subagents with `manage_subagents`.
+- Subagents (`invoke_subagent`) and background commands (`run_command`) deliver
+  completions via reactive wakeup: end the turn with no tool calls to wait; do
+  not poll, sleep, or call a nonexistent `wait_agent`.
+- `invoke_subagent` exposes abstract `Model` tiers (`inherit`, `flash_lite`,
+  `flash`, `pro`) and no per-call effort parameter. Use built-in `research`
+  (read-only, no network access) or a custom type created with `define_subagent`
+  (`EnableWriteTools: false`, `EnableSubagentTools: false`) for fresh
+  independent read-only reviews. Built-in `self` inherits full parent write and
+  subagent tools, so forbid further delegation in the brief unless the caller
+  explicitly grants it.
+- `invoke_subagent` and `swarm` support `workspace: "inherit"`, `"share"`, and
+  `"branch"`. Killing a subagent (`manage_subagents`) or swarm worker (`swarm`
+  `kill`) permanently deletes its `share` or `branch` workspace. Prefer `share`
+  (shared repository metadata) over `branch` (isolated clone) when task branch
+  refs must remain in the parent repository, and land or verify required commits
+  and branch refs before killing the worker.
+- On `swarm`, CLI (`agy`), or ACP/host orchestration surfaces that expose
+  concrete model slugs (`agy models` or `swarm` `models`), apply concrete Gemini
+  model and effort selections directly rather than translating Codex or Claude
+  names.
+
+Verify runtime mechanics against [Antigravity CLI
+documentation](https://antigravity.google/docs/cli/features); exposed tool
+capabilities govern model selection, workspace isolation, and result delivery.

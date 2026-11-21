@@ -40,7 +40,7 @@
     },
     "disable-model-invocation": {
       "type": "boolean",
-      "description": "Claude Code extension that restricts a skill to explicit invocation"
+      "description": "Extension that restricts a skill to explicit invocation (supported by Claude Code and Antigravity)"
     }
   },
   "required": ["name", "description"],

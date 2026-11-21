@@ -461,7 +461,7 @@ This is the only exception to humans placing legacy items. Setup permission
 alone authorizes discovery and a dry run, not migration or execution.
 
 1. **Discover read-only.** Read the working and committed configuration and its
-   closest trusted `AGENTS.md`/`CLAUDE.md` references, plus complete paginated
+   closest trusted `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` references, plus complete paginated
    Project fields/options, items (including drafts and archived items), labels,
    assignments, workflows and active leases. Detect the old five-column schema
    (`Backlog`, `Todo`, `Ready to implement`, `In progress`, `Done`) by verified
@@ -494,7 +494,7 @@ alone authorizes discovery and a dry run, not migration or execution.
    comments and unrelated content. Remove only legacy Backlog/Ready name/ID
    fields and explicitly shown obsolete fields under additive setup. Add any
    missing required role mappings only from verified live identities. Update
-   each trusted exact-file reference in `AGENTS.md`/`CLAUDE.md` in the same patch.
+   each trusted exact-file reference in `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` in the same patch.
    An existing destination, conflicting references or local edits require a
    reconciled patch preserving both, never overwrite. Show the journal location,
    rollback plan and activation/commit boundary. Include the retained claims
@@ -616,7 +616,7 @@ Use `docs/agents/deliver-tasks.md` for optional overrides in the repository
 that owns the queue. Include only sections/fields being overridden; the following
 is a field catalogue, not a required complete file. Resolve omitted fields from
 fresh defaults. Replace included placeholders with live verified data. The
-closest trusted `AGENTS.md` or `CLAUDE.md` must reference that exact file.
+closest trusted `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` must reference that exact file.
 For parent scope, use Scope type `parent-issue` and the canonical parent issue
 URL; omit Project, Status, Priority and Done automation sections. Optional
 `Claim` overrides are `Label` and `Label ID`, defaulting to the existing

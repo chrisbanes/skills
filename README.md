@@ -135,7 +135,7 @@ for its lane-specific fallback and blocking behavior.
 - [`deliver-issue`](skills/deliver-issue/SKILL.md) — coordinate a named tracker issue and its descendants, or a verified board-controller handoff through solo or justified delegated implementation, a planning-free fast path for small well-understood tickets, CI-supplied full-suite evidence, concurrent external review with verified draft support or earlier PR readiness, reusable scope approval and revision-isolated evidence with preservation checks, independent integrated-candidate review and focused repair review, and PR shepherding, delivering to GitHub or GitLab code hosts; validate applicable live-qualification harness paths offline (isolated production stores for persistent paths, fake runtimes for asynchronous paths), then reconcile failures under bounded approved allowances.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, use `changelog` for notes, prepare Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; recover run identity and bounded results by workflow ID with read-only status, and diagnose failures with optional investigation helpers.
-- [`subagent-delegation`](skills/subagent-delegation/SKILL.md) — provider-neutral delegation playbook, loaded by name or through a one-line user-level opt-in, with separate Codex and Claude Code model routing, installed-role precedence, parallel briefs, independent audits, and lead acceptance.
+- [`subagent-delegation`](skills/subagent-delegation/SKILL.md) — provider-neutral delegation playbook, loaded by name or through a one-line user-level opt-in, with separate Codex, Claude Code, and Antigravity/Gemini model routing, installed-role precedence, parallel briefs, independent audits, and lead acceptance.
 - [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) — default to the lead for a single item or serial graph, apply requested implementation model and effort at preflight, and use workers for every item in a graph with parallel work. Preserve dependency-aware integration, independent final review, same-owner repair, bounded checkout reuse, and read-only orchestration review.
 - [`to-plan`](skills/to-plan/SKILL.md) — create risk-scaled implementation plans that prove baselines from green CI, with observable slices and consequential boundary validation before dependent work, plus authenticated integration amendments, tracker-bound markers and explicit consumer handoffs; decide separate PRs by coherent deliverable boundaries.
 - [`run-project`](skills/run-project/SKILL.md) — explicitly triage, plan and deliver eligible tickets from a Project board, using Todo / In progress / Done, human-applied role authority, preserved label stops, scheduling and review gates, with a GitHub or GitLab code host; use `deliver-issue` for one named item.
@@ -191,21 +191,23 @@ request diffs; a test keeps that list in step with the sync script.
 ### Delegation on another machine
 
 Install a revision of `chrisbanes-skills` containing `subagent-delegation`, then
-opt in by adding this line to `~/.codex/AGENTS.md` (or `~/.claude/CLAUDE.md`
-for Claude Code):
+opt in by adding this line to `~/.codex/AGENTS.md` (Codex), `~/.claude/CLAUDE.md`
+(Claude Code), or your global Antigravity rules under `~/.gemini/config/` (or
+project `GEMINI.md`/`AGENTS.md`):
 
 ```markdown
 Use `chrisbanes-skills:subagent-delegation` before delegating work or deciding whether to delegate.
 ```
 
 Without that line, the skill loads only when invoked by name
-(`$chrisbanes-skills:subagent-delegation` in Codex or
-`/chrisbanes-skills:subagent-delegation` in Claude Code); its description keeps
-it from loading merely because a task involves subagents. No custom Codex or
-Claude agent definitions are required, and existing custom agent pins remain
-authoritative. Verify available roles, model aliases, effort controls, and
-permissions on each machine. `implement-with-subagents` continues to own
-implementation orchestration.
+(`$chrisbanes-skills:subagent-delegation` in Codex,
+`/chrisbanes-skills:subagent-delegation` in Claude Code, or invoking
+`subagent-delegation` by name in Antigravity); its description keeps
+it from loading merely because a task involves subagents. No custom Codex,
+Claude, or Antigravity agent definitions are required, and existing custom agent
+pins remain authoritative. Verify available roles, model aliases, effort
+controls, and permissions on each machine. `implement-with-subagents` continues
+to own implementation orchestration.
 
 ### Migration from pre-cluster skills
 
@@ -225,7 +227,7 @@ Skills live at `skills/<skill-name>/SKILL.md`, flat (no language nesting). The `
 
 Frontmatter is validated against [`skills.schema.json`](skills.schema.json), which
 tracks the core [Agent Skills specification](https://agentskills.io/specification)
-and permits `disable-model-invocation` for Claude Code compatibility.
+and permits `disable-model-invocation` for Claude Code and Antigravity compatibility.
 `name` and `description` are required; portable optional fields are `license`,
 `compatibility`, `metadata`, and `allowed-tools`. Explicit-only workflow skills
 also mirror that policy in Codex's `agents/openai.yaml`.

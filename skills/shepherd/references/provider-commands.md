@@ -1,6 +1,8 @@
 # Provider Commands
 
 Use these read commands when the platform-specific API is otherwise unclear.
+For standalone polling waits, use the host's native timer tool (such as
+Antigravity's `schedule`) instead of shell `sleep` when available.
 
 | Platform | Target and feedback | Checks and logs |
 | --- | --- | --- |
@@ -90,7 +92,10 @@ or unknown read), report it with the target and leave the thread as it is.
 
 Use this when the host wakes the session on PR events. Claude desktop's Code
 tab is one: its `ccd_pr` tools bind a GitHub PR to the session, and its CI
-monitor sends `<ci-monitor-event>` messages. Without such a monitor, poll as the
+monitor sends `<ci-monitor-event>` messages. Other hosts exposing a native PR
+watch tool (such as T3 Code's `watch_pull_request`) follow the same
+single-read-per-wake, no-self-polling, and final-head merge-gate discipline
+using their own watch and unwatch tools. Without such a monitor, poll as the
 procedure describes.
 
 1. Call `get_status`. For a one-off inspection, report it and stop. If no PR is
@@ -118,7 +123,7 @@ procedure describes.
 2. A session binds one PR. Monitor only the bound PR. Report other targets,
    including GitLab MRs, as unmonitored and suggest one session per PR; do not
    poll them.
-3. Never schedule wakes or poll: no `ScheduleWakeup`, `CronCreate`, `/loop`,
+3. Never schedule wakes or poll: no `ScheduleWakeup`, `CronCreate`, `schedule`, `/loop`,
    `Monitor`, or repeated provider reads.
 4. On every wake, from a monitor event or the user, call `get_status`, then read
    review threads, checks, and failed logs once with the GitHub commands above
