@@ -358,14 +358,15 @@ The workflows/writing benchmark contains 51 scored cases: direct, novel, and
 no-change coverage for each of its eleven skills, plus additional workflow
 scenarios. The surrounding corpus also contains the two calibration-only
 missing-provider challenges described above.
-The `subagent-delegation` Codex and Claude triads cover assignment-level model
+The `subagent-delegation` Codex and Claude benchmark triads—and the
+calibration-only Antigravity triad—cover assignment-level model
 routing, parallel briefs, installed custom-role precedence, fresh independent
-audits, runtime-specific result delivery, task-wide invocation, and solo-work
-restraint with evidence reuse. Each prompt supplies the user-level opt-in, and
-a calibration-only automatic control checks that the skill stays inactive
-without it. These are supplied-state, read-only cases with deterministic
-fixture-integrity checks and semantic rubrics; no live model results are
-claimed.
+audits, runtime-specific result delivery and workspace lifecycle, task-wide
+invocation, and solo-work restraint with evidence reuse. Each prompt supplies
+the user-level opt-in, and a calibration-only automatic control checks that the
+skill stays inactive without it. These are supplied-state, read-only cases with
+deterministic fixture-integrity checks and semantic rubrics; no live model
+results are claimed.
 The changelog triad checks stable-cycle coverage, incremental Unreleased
 maintenance and missing-file restraint across non-Kotlin repositories. The
 release triad checks the changelog handoff, uncertain prerelease recovery,

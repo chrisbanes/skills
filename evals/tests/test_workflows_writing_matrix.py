@@ -384,6 +384,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "grounded-writing-personal-gap-negative",
                 "grounded-writing-tutorial-detail-negative",
                 "grounded-writing-assistant-reply-negative",
+                "subagent-delegation-antigravity-direct",
+                "subagent-delegation-antigravity-novel",
+                "subagent-delegation-antigravity-negative",
                 "subagent-delegation-no-opt-in-negative",
                 "implement-with-subagents-missing-provider-challenge",
                 "run-github-project-missing-provider-challenge",
@@ -791,6 +794,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "subagent-delegation-claude-direct",
                 "subagent-delegation-claude-novel",
                 "subagent-delegation-claude-negative",
+                "subagent-delegation-antigravity-direct",
+                "subagent-delegation-antigravity-novel",
+                "subagent-delegation-antigravity-negative",
                 "subagent-delegation-no-opt-in-negative",
                 "gitlab-tracker-notes-novel",
                 "to-plan-authorized-draft-direct",
@@ -2197,6 +2203,68 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         self.assertEqual(1, completed.returncode)
         self.assertIn("expected 1 files, found 2", completed.stderr)
+
+    def test_antigravity_and_gemini_support_is_wired_across_workflows(self):
+        delegation_skill = (
+            REPO_ROOT / "skills/subagent-delegation/SKILL.md"
+        ).read_text(encoding="utf-8")
+        antigravity_ref = (
+            REPO_ROOT / "skills/subagent-delegation/references/antigravity.md"
+        ).read_text(encoding="utf-8")
+        selection_ref = (REPO_ROOT / "references/subagent-selection.md").read_text(
+            encoding="utf-8"
+        )
+        github_binding = (REPO_ROOT / "references/github-binding.md").read_text(
+            encoding="utf-8"
+        )
+        drain_scheduler = (
+            REPO_ROOT / "skills/run-project/references/drain-scheduler.md"
+        ).read_text(encoding="utf-8")
+        shepherd_commands = (
+            REPO_ROOT / "skills/shepherd/references/provider-commands.md"
+        ).read_text(encoding="utf-8")
+        shepherd_skill = (REPO_ROOT / "skills/shepherd/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("references/antigravity.md", delegation_skill)
+        for token in (
+            "invoke_subagent",
+            "flash_lite",
+            "gemini-4-hydrogen-low",
+            "gemini-4-hydrogen-medium",
+            "gemini-4-neon-medium",
+            "gemini-4-neon-high",
+            "gemini-4-neon-xhigh",
+            "gemini-4-argon-*",
+            "subagent-selection.md#antigravity",
+        ):
+            self.assertIn(token, antigravity_ref)
+
+        self.assertIn("## Antigravity", selection_ref)
+        self.assertIn("send_message", selection_ref)
+        self.assertIn("manage_subagents", selection_ref)
+        self.assertIn("reactive wakeup", selection_ref)
+        self.assertIn("GEMINI.md", github_binding)
+        self.assertIn("`schedule`", drain_scheduler)
+        self.assertIn("reactive-wakeup host", drain_scheduler)
+        self.assertIn("`schedule`", shepherd_commands)
+        _, claude_monitoring = shepherd_commands.split("### Claude Desktop\n", 1)
+        claude_monitoring, native_watches = claude_monitoring.split(
+            "### Other hosts with native PR watches\n", 1
+        )
+        self.assertIn("`watch_pull_request`", native_watches)
+        self.assertIn("check which events the active monitor wakes on", shepherd_skill)
+        self.assertIn("the push to continue watching and end the turn", shepherd_skill)
+        for token in (
+            "`get_status`",
+            "`bind_pr`",
+            "`set_monitor`",
+            "`set_auto_merge`",
+            "conflict wakes are unreliable",
+        ):
+            self.assertIn(token, claude_monitoring)
+            self.assertNotIn(token, native_watches)
 
 
 if __name__ == "__main__":

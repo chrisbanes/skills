@@ -339,7 +339,7 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    authority/decision pause, Wayfinder human-frontier item, or assigned Wayfinder
    HITL attention item exists. With none, start none, stop a running one, and
    wait for agent notifications. Do not add controller polling, sleeps,
-   `ScheduleWakeup`, `CronCreate`, `/loop`, or the single-PR host monitor.
+   `ScheduleWakeup`, `CronCreate`, `schedule`, `/loop`, or the single-PR host monitor.
    Retain the running watcher and its relay/session across unrelated agent
    events and authoritative reads when its project, repository, status field,
    PR/issue watch set, interval and deadline remain unchanged. Those events
@@ -385,7 +385,10 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
    delivered reports and ticket-agent completions before waiting again and
    continues runnable work while monitoring runs.
 
-   When idle, wait with the host's agent-wait call (`wait_agent`). Use the
+   When idle on a reactive-wakeup host (such as Antigravity, where background
+   commands and subagents notify automatically), end the turn with no tool calls
+   to await the next notification instead of polling or calling a wait tool.
+   Otherwise, wait with the host's agent-wait call (`wait_agent`). Use the
    longest timeout allowed by its current schema and higher-priority
    responsiveness rules; choose a shorter valid wait for a nearer controller
    deadline. A wait returns early on a notification. Handle a due controller

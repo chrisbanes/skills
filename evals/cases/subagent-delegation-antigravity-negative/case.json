@@ -1,0 +1,45 @@
+{
+  "id": "subagent-delegation-antigravity-negative",
+  "title": "Restrain Antigravity routing when work or surface capability does not warrant it",
+  "family": "workflow",
+  "calibration": true,
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-antigravity-negative"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "restraint",
+      "text": "Keeps trivial tightly coupled work solo, makes audit proportional, reuses adequate unchanged evidence after lead inspection, and fixes missing inputs rather than escalating to gemini-4-argon or max effort."
+    },
+    {
+      "id": "capability",
+      "text": "Reports an invoke_subagent capability mismatch when a caller requires a concrete model/effort that abstract tiers cannot enforce; does not fabricate Codex/Claude parameters or aliases, silently downgrade an unavailable model, overwrite installed pins, or kill a branch workspace before its commits are preserved."
+    },
+    {
+      "id": "authority",
+      "text": "Makes no edits, launches, installations, or permission changes; leaves authorization, architecture, integration, and final acceptance with the lead."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

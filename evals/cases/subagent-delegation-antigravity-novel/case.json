@@ -1,0 +1,45 @@
+{
+  "id": "subagent-delegation-antigravity-novel",
+  "title": "Preserve Antigravity pins, reactive wakeup, and workspace refs before kill",
+  "family": "workflow",
+  "calibration": true,
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-antigravity-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "pins",
+      "text": "Preserves the installed .agents/agents/ reviewer pin (gemini-4-hydrogen-high, read-only) by omitting pinned overrides, and requires a fresh read-only independent audit (research or read-only define_subagent) without implementation conversation history, with original requirements, plan, exact candidate/base, concrete correctness checks, and evidenced ship/fix-first/rethink verdict."
+    },
+    {
+      "id": "continuity",
+      "text": "Keeps task-wide delegation authority effective without demanding reinvocation. Resumes the original worker via send_message with its conversationId for repairs, rechecks model/tools/workspace state before reassigning it to a new assignment, and keeps final acceptance with the lead."
+    },
+    {
+      "id": "lifecycle",
+      "text": "Uses reactive wakeup (ending the turn without polling or calling wait_agent), forbids unintended nesting on self, prefers workspace share over branch when task branch refs must remain in the parent repo, and requires landing/verifying commits and branch refs before calling manage_subagents kill because kill permanently deletes share/branch workspaces."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}
