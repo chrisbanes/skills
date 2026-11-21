@@ -24,7 +24,7 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    but deferred, then follow
    [host-managed monitoring](references/provider-commands.md#host-managed-monitoring)
    instead of polling. Project controllers and their ticket agents keep the
-   Project waiting rules instead, because a session binds only one PR.
+   Project waiting rules instead.
 2. Establish targets and a handled-ID snapshot. Every external comment, review,
    or thread absent from that snapshot is new, including pre-session feedback.
    After each poll record feedback IDs, CI state, and this controller's comments.
@@ -91,13 +91,14 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    changes; report a second failure. Poll pending checks every 2–5 minutes,
    active repair every 30–60 seconds, and after three or more unchanged cycles
    every 10+ minutes. Two unchanged cycles remain on the normal 2–5 minute
-   cadence. Under host-managed monitoring, end the turn after the push instead.
+   cadence. Under host-managed monitoring, follow the host procedure after
+   the push to continue watching and end the turn.
 8. Merge only with explicit or standing authority, no conflicts, and passing
    checks, reviews and finding dispositions for the refreshed head. Follow
    the merge routing in step 4 and require that SHA; requalify on mismatch.
-   For queue or auto-merge, verify final-head enforcement. Host-managed green
-   CI never wakes the session: follow PR review timing for pending gates and
-   disable controller-enabled auto-merge on escalation.
+   For queue or auto-merge, verify final-head enforcement. For pending gates,
+   follow PR review timing and check which events the active monitor wakes on.
+   Disable controller-enabled auto-merge on escalation.
 
 ## Finish or escalate
 

@@ -2223,6 +2223,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         shepherd_commands = (
             REPO_ROOT / "skills/shepherd/references/provider-commands.md"
         ).read_text(encoding="utf-8")
+        shepherd_skill = (REPO_ROOT / "skills/shepherd/SKILL.md").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn("references/antigravity.md", delegation_skill)
         for token in (
@@ -2246,7 +2249,22 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertIn("`schedule`", drain_scheduler)
         self.assertIn("reactive-wakeup host", drain_scheduler)
         self.assertIn("`schedule`", shepherd_commands)
-        self.assertIn("watch_pull_request", shepherd_commands)
+        _, claude_monitoring = shepherd_commands.split("### Claude Desktop\n", 1)
+        claude_monitoring, native_watches = claude_monitoring.split(
+            "### Other hosts with native PR watches\n", 1
+        )
+        self.assertIn("`watch_pull_request`", native_watches)
+        self.assertIn("check which events the active monitor wakes on", shepherd_skill)
+        self.assertIn("the push to continue watching and end the turn", shepherd_skill)
+        for token in (
+            "`get_status`",
+            "`bind_pr`",
+            "`set_monitor`",
+            "`set_auto_merge`",
+            "conflict wakes are unreliable",
+        ):
+            self.assertIn(token, claude_monitoring)
+            self.assertNotIn(token, native_watches)
 
 
 if __name__ == "__main__":
