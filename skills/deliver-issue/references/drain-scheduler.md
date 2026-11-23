@@ -30,6 +30,8 @@ Use this scheduler only for `drain`. Keep `next` single-ticket.
    [ticket authority pauses](authority-and-pauses.md), using binding
    claims and marker records plus worktrees located by branch under
    [Worktrees](ticket-lifecycle.md#worktrees). Use local caches only as hints.
+   Recover controller-owned batches separately under
+   [Batched Post-Merge Updates](#batched-post-merge-updates).
 5. Recover verified authority pauses outside capacity before ranking. Preserve
    invalid current-user claims as blocked slots, classify waiting claims
    (those beyond the waiting cap occupy slots), resume every other valid
@@ -137,6 +139,11 @@ For planned or discovered overlap, the later-claimed slot is the younger one:
    claim, revoke merge eligibility and apply the older-first base/review
    procedure below. Neither a free lock nor completed preparation clears an
    unresolved behavioral dependency.
+
+Exclude an edit from the overlap check only when the controller has verified
+that it will be deferred under
+[Batched Post-Merge Updates](#batched-post-merge-updates). Keep other edits in
+the same file and any declared file lock in the gate.
 
 Do not claim a ticket just to wait when it has no safe runnable slice. Keep
 native dependencies at whole-ticket admission and qualification gates at their
@@ -265,7 +272,9 @@ new-work classes in steps 7 and 8.
    research uses the required `research` subagent. Resume a marked Wayfinder
    reconciliation before new Todo work. Surface unassigned Wayfinder HITL
    frontier work and assigned HITL attention without dispatching either.
-9. Use the selected tracker's [remote wait procedure](#project-watcher) for
+9. Check [Batched Post-Merge Updates](#batched-post-merge-updates) for work
+   before waiting or starting tail triage. Use the selected tracker's
+   [remote wait procedure](#project-watcher) for
    remote claims and human-gated items. Continue handling agent notifications
    while local or controller actions remain.
 10. After the authoritative execution-clear predicate in
@@ -335,10 +344,10 @@ claim, merge, or close, replaces a complete Project query, or serves as a
 resumption signal for a [parked claim](#terminal-required-ci-parking). Waiting
 grants nothing; run grants stay invocation-scoped and lapse when the run returns.
 
-1. Run exactly one watcher whenever any claim is in remote wait or a human action,
-   authority/decision pause, Wayfinder human-frontier item, or assigned Wayfinder
-   HITL attention item exists. With none, start none, stop a running one, and
-   wait for agent notifications. Do not add controller polling, sleeps,
+1. Run exactly one watcher whenever any claim or batch PR is in remote wait,
+   or a human action, authority/decision pause, Wayfinder human-frontier item,
+   or assigned Wayfinder HITL attention item exists. With none, start none,
+   stop a running one, and wait for agent notifications. Do not add controller polling, sleeps,
    `ScheduleWakeup`, `CronCreate`, `schedule`, `/loop`, or the single-PR host monitor.
    Retain the running watcher and its relay/session across unrelated agent
    events and authoritative reads when its project, repository, status field,
@@ -347,8 +356,9 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
 2. When starting or replacing a watcher, write a baseline immediately before
    the complete Project query or targeted refetch that will arm it:
    use the binding's `snapshot` command and baseline arguments.
-   Pass `--pr` for every in-flight PR in remote wait and every preserved PR of a
-   paused, parked, label-stopped, or authority-paused ticket, and `--issue` for every parked
+   Pass `--pr` for every in-flight ticket or batch PR in remote wait and every
+   preserved PR of a paused, parked, label-stopped, or authority-paused ticket,
+   and `--issue` for every parked
    claim, paused or label-stopped ticket, human-frontier issue, Wayfinder human-frontier item, and
    assigned Wayfinder HITL attention item. For a targeted Project board refetch, add
    `--board-from <reporting watcher's baseline file>` and a `--refresh-pr` for
@@ -431,7 +441,8 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
      [finish gate](#failure-isolation-and-finish-gate)'s monitoring-unavailable
      rule.
    - `deadline`: pass the Refresh Gate, apply [Remote Waiting](#remote-waiting)
-     timeout handling to any PR whose own deadline has passed, and take any
+     or [batch](#batched-post-merge-updates) timeout handling to each PR whose
+     own deadline has passed, and take any
      newly runnable action. If the drain's no-progress deadline has passed, the
      [finish gate](#failure-isolation-and-finish-gate) now returns
      `waiting-for-human` if only human-gated work remains. Otherwise relaunch
@@ -585,6 +596,88 @@ After a merge:
 4. Clean up the merged claim's worktree and branch under
    [Worktrees](ticket-lifecycle.md#worktrees).
 
+### Batched Post-Merge Updates
+
+In `drain`, defer only repository-approved updates that can land after an
+independently deliverable ticket. Use the ordinary PR flow for `next`, direct
+delivery and human PRs.
+
+1. Read opt-in rules in the trusted repository instructions at the verified
+   base. Each rule names repository-relative paths or globs, the allowed update,
+   and how to apply and verify it. Match each proposed path individually. Defer
+   the update only when the rules agree and evidence shows the ticket still
+   builds, passes its required checks and ships correctly with the file
+   unchanged. Keep build inputs, same-PR requirements, ambiguous matches and
+   changes that are themselves the ticket deliverable in the ticket PR. For
+   example, a repository may opt in Unreleased entries in `CHANGELOG.md` and
+   regenerated indexes under `docs/indexes/*.md` when neither affects the main
+   build or delivery.
+2. Verify planned deferrals before conflict admission and record them in the
+   ticket packet. Have the owner leave the deferred edit out of the ticket
+   diff and put the target path and intended update in a `Deferred updates`
+   section of the PR body. Record the content or name the repository's
+   regeneration procedure and inputs for the changes delivered by that PR.
+   A decision to contribute nothing needs a reason. At PR handoff, confirm
+   the section is complete, the planned edit is
+   absent from the diff and the rule still applies. Persist the verified content,
+   rule, scope, ticket, source PR and head in the existing delivery checkpoint
+   before remote wait, pause or handback. Revalidate affected evidence on head,
+   body or policy changes before merging. Resume the owner when evidence is
+   incomplete or an edit belongs in the ticket PR.
+3. Make an update eligible only on authoritative source merge readback, including
+   external-merge reconciliation. Bind it to the verified merged head, target
+   branch and exact recorded intent. On restart, recover outstanding updates
+   from the durable delivery records and reconcile their source PRs, including
+   terminal tickets. Use an identity derived from the source PR, merged head,
+   path and recorded intent to avoid duplicate application. Preserve and report
+   updates whose evidence cannot be verified. Keep unmerged updates out of the
+   batch and list them in the report.
+4. Pass the [Refresh Gate](#refresh-gate) and check after any event that can
+   leave no occupied, remote-waiting or runnable ticket, including a pause or
+   release, and again at the finish gate. If eligible updates remain, resume
+   the existing batch for the repository and target branch or prepare one.
+5. Keep one pending batch per code-host repository and target branch, across
+   drain invocations. Derive a stable, reserved batch branch from that identity.
+   Before creating or retrying, read the checkpoint, reserved branch and exact
+   host PRs. Recover one verified batch, including a pushed branch without a
+   confirmed PR, by verifying owner, membership, head and target. Revalidate
+   current authority and exclude concurrent writers before resuming writes.
+   Preserve and report foreign, competing or ambiguous records. Retain a
+   closed-unmerged batch and its entries when retry needs a human decision.
+6. Before editing, record batch ID, owner, binding, target, base, branch and
+   member update identities in the controller's durable checkpoint. Use the
+   shared [checkout lifecycle](checkout-lifecycle.md) to create and record this
+   controller-owned worktree. Recheck each rule against the latest verified base
+   and apply the recorded intent there. If an update is already present, record
+   the evidence and skip the edit. Preserve and report updates whose rules drift
+   or whose application or verification is uncertain. Open a PR only for a
+   nonempty verified diff.
+7. Keep edits and repairs with the controller. Freeze membership when independent
+   review starts. Queue later merges for a subsequent batch. Record batch
+   identity and membership in the pushed commit and PR body. Create the remote
+   branch only if absent and condition later pushes on the verified prior head.
+   Reconcile an uncertain push or PR creation through the
+   [code-host binding](provider-bindings.md). Use non-closing links to the
+   verified source PRs and check the batch has no effective closing references.
+   Require independent review, applicable external reviews, required checks
+   and finding dispositions for the exact final head. Include a pending batch
+   in the [watch set](#project-watcher) even when it is the only PR awaiting a
+   signal. Use the PR deadline in [Remote Waiting](#remote-waiting) and route
+   review, CI and timeout events to the controller without a ticket slot or
+   ticket parking. If monitoring is unavailable or the deadline expires,
+   preserve and report the pending PR and the exact reconciliation needed.
+   Once a batch timeout is handled, remove its expired deadline from watcher
+   inputs. Keep the PR in the watch set while other monitored work remains.
+8. Serialize merge with other controller merges. Verify the current binding,
+   grant, target, head, checks, reviews, closing references and mergeability
+   before merging. Without a merge grant, hand back the checked, reviewed batch
+   as ready and retain it for recovery. After verified merge readback, record
+   its delivered member identities, retire the checkout under the shared
+   lifecycle and release the reserved branch only after verifying it still
+   points at the delivered head. Reconcile cleanup before reusing the branch.
+   Refresh other PRs and the scope. Batch delivery never changes source ticket
+   status or closure. Account for the checkout and remaining updates at handback.
+
 ## Failure Isolation And Finish Gate
 
 Preserve a ticket-local blocker in its occupied slot while repair remains
@@ -603,6 +696,15 @@ claims when the same collision or infrastructure failure affects two slots or
 the verified base.
 
 If `ready-for-agent` is removed, apply [Stop on label removal](authority-and-pauses.md#stop-on-label-removal) before any recovery or write. Stop writers, release verified capacity, and retain assignment, worktree, dirty draft, branch, PR and artifacts without cleanup. Later runs stay stopped until a human restores the label; the controller never restores it. Keep these items and unlabelled Todo in the native dependency graph and report stopped work in the human frontier.
+
+Before a drain returns success, `partial-drain` or `waiting-for-human`, or
+starts the human-gated watcher wait, apply
+[Batched Post-Merge Updates](#batched-post-merge-updates) and re-pass the
+refresh gate after batch mutations. Success requires all eligible updates
+verified on the target or in a ready batch handed back without merge authority.
+Report pending batch PRs, blocked or not-yet-batched merged updates, and the
+recorded updates of unmerged tickets. For an integrity stop, preserve existing
+batches and report outstanding updates without further batch mutations.
 
 Whenever a drain finishes, waits for humans or stops, apply
 [Worktrees](ticket-lifecycle.md#worktrees) step 6.
@@ -633,7 +735,7 @@ case, the `waiting-for-human` return, which names each preserved PR in remote
 wait, applies only when nothing but human-gated work and PRs in remote wait
 remains; any other blocker still produces the partial-drain report below. If no
 runnable work remains but a parked implementation claim, blocked or timed-out
-slot, unknown/unavailable execution or qualification prerequisite, or incomplete
-eligible triage item remains, stop with a partial-drain
+slot, blocked or timed-out batch, unknown/unavailable execution or qualification
+prerequisite, or incomplete eligible triage item remains, stop with a partial-drain
 report, preserve every affected worktree, branch, PR, assignment, and
 `In progress` Status, and never report success.

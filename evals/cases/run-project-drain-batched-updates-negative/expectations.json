@@ -1,0 +1,38 @@
+{
+  "files": [
+    "state.md"
+  ],
+  "must_contain": [
+    "Immutable evaluation state"
+  ],
+  "decisions": {
+    "next": {
+      "edit_in_ticket_pr": true,
+      "defer_update": false
+    },
+    "named-issue": {
+      "edit_in_ticket_pr": true,
+      "defer_update": false
+    },
+    "no-opt-in": {
+      "edit_in_ticket_pr": true,
+      "defer_update": false
+    },
+    "build-input": {
+      "edit_in_ticket_pr": true,
+      "defer_update": false
+    },
+    "conflicting-rules": {
+      "edit_in_ticket_pr": true,
+      "defer_update": false
+    },
+    "same-pr": {
+      "edit_in_ticket_pr": true,
+      "defer_update": false
+    },
+    "standalone": {
+      "edit_in_ticket_pr": true,
+      "defer_update": false
+    }
+  }
+}

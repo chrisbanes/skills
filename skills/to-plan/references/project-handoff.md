@@ -34,6 +34,11 @@ handoff or take over a Project claim.
    contract and retained candidate under that reference. Preserve owners, work,
    PRs, consumed budgets and live qualification gates. The controller alone
    revalidates claims/leases and schedules continuation.
+   When the packet marks a verified deferral, follow
+   [Batched Post-Merge Updates](drain-scheduler.md#batched-post-merge-updates)
+   from the start. Leave the deferred edit out of this PR and record its
+   intended update in the PR body's `Deferred updates` section. Return the
+   section with the PR handoff evidence, even if the PR is still pending.
 3. Follow the bundled [implementation procedure](implementation-mode.md) for
    ownership preflight. Use the persistent ticket context as delivery lead
    and compare its actual settings to the invocation's required implementation

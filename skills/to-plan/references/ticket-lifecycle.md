@@ -217,7 +217,9 @@ failure in untouched code, preserving both results and the load evidence;
 repetition or uncertainty remains a failure.
 
 PRs include the configured closing or non-closing issue link, rationale,
-validation, and residual risks. For partial PRs, include and verify the
+validation, and residual risks. In `drain`, include intended updates marked
+for deferral under [Batched Post-Merge Updates](drain-scheduler.md#batched-post-merge-updates).
+For partial PRs, include and verify the
 [partial recovery metadata](github-binding.md#partial-pr-recovery) in the
 original creation body. After every PR creation or body edit, apply the binding's
 [closing reference verification](github-binding.md#closing-reference-verification). Keep claim/agent while open; drain follows

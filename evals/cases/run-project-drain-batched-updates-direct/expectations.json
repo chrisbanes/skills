@@ -1,0 +1,19 @@
+{
+  "decisions": {
+    "handoff-202": {
+      "edit_in_ticket_pr": false,
+      "record_intent_in_pr_body": true,
+      "controller_records_at_handoff": true
+    },
+    "idle": {
+      "open_batch": true,
+      "writer": "controller",
+      "paths": [
+        "CHANGELOG.md",
+        "docs/indexes/components.md"
+      ],
+      "independent_review": true,
+      "merge_under_grant": true
+    }
+  }
+}

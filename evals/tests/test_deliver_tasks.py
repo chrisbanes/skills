@@ -35,6 +35,8 @@ CASES = (
     'deliver-tasks-parent-lifecycle-novel',
     'deliver-tasks-label-stop-direct',
     'deliver-tasks-label-recovery-novel',
+    'run-project-drain-batched-updates-direct',
+    'run-project-drain-batched-updates-novel',
 )
 
 NEGATIVE_CASES = (
@@ -45,6 +47,7 @@ NEGATIVE_CASES = (
     'deliver-tasks-parent-restraint-negative',
     'deliver-tasks-parked-negative',
     'run-project-tree-restraint-negative',
+    'run-project-drain-batched-updates-negative',
 )
 
 

@@ -1,0 +1,41 @@
+{
+  "decisions": {
+    "last-ticket-pauses": {
+      "open_batch_now": true,
+      "include": [
+        301
+      ],
+      "report_unmerged": [
+        302
+      ]
+    },
+    "restart": {
+      "resume_pr": 900,
+      "watch_pr": true,
+      "open_another": false,
+      "queued": [
+        313
+      ]
+    },
+    "external-merge": {
+      "include": [
+        321
+      ],
+      "merge_batch": false,
+      "hand_back_ready_after_checks": true
+    },
+    "integrity-stop": {
+      "open_batch": false,
+      "report_outstanding": [
+        331
+      ]
+    },
+    "none-merged": {
+      "open_batch": false,
+      "report_unmerged": [
+        341,
+        342
+      ]
+    }
+  }
+}
