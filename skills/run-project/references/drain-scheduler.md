@@ -591,22 +591,33 @@ In `drain`, batch changelog or release-notes entries so one merge never makes
 the other open ticket PRs conflict in that file. `next`, direct `deliver-issue`
 runs and human PRs keep the repository's normal entry flow.
 
-1. When trusted repository instructions explicitly require the entry in the
-   same PR as its change, follow them and skip this section.
+1. Apply this section only when the repository keeps a changelog or
+   release-notes file that ticket PRs would edit. When trusted repository
+   instructions explicitly require the entry in the same PR as its change,
+   follow them and skip this section.
 2. Otherwise mark changelog batching in every ticket packet. The owner leaves
-   the changelog or release-notes file unchanged and writes the proposed entry,
-   following the repository's changelog rules, in a `Changelog entry` section
-   of the PR body. Record that text with the ticket's delivery evidence.
-3. When the last ticket of the drain has merged, or at the finish gate after at
-   least one ticket merged, whichever comes first, the controller alone opens
-   one changelog PR. It adds the recorded entry of every ticket merged in this
-   drain and not yet batched, following the repository's changelog
-   instructions; omit entries for tickets that did not merge. Verify each issue
-   or PR link against its merged ticket.
-4. Give the changelog PR the usual independent review and required checks, then
-   merge it under the run's merge grant through the serialized merge above.
-   Without merge authority, deliver it as a ready PR. Tickets merged after this
-   PR go in a later batch.
+   the file unchanged and writes the proposed entry, following the
+   repository's changelog rules, in a `Changelog entry` section of the PR body,
+   or `none` with a reason. The marker supersedes a plan's changelog task
+   without a replan, and the
+   [Conflict Admission Gate](#conflict-admission-gate) ignores that file.
+3. Before merging a ticket PR, verify that the section exists and the file is
+   unchanged; otherwise resume the owner to fix the PR. Record the entry with
+   the ticket's delivery evidence.
+4. When a merge leaves no occupied, remote-waiting or runnable claim (only
+   human-gated, parked or stopped work remains), or at the finish gate,
+   whichever comes first, and at least one merged ticket's entry is unbatched,
+   the controller alone opens one changelog PR from its own worktree under
+   [Worktrees](ticket-lifecycle.md#worktrees). It adds the recorded entry of
+   every ticket merged in this drain and not yet batched, following the
+   repository's changelog instructions; omit entries for tickets that did not
+   merge. Use non-closing links and verify each against its merged ticket.
+5. The controller alone writes, repairs and merges the changelog PR. Give it
+   the usual independent review, track it in [Remote Waiting](#remote-waiting)
+   like a claim's PR, and merge it under the run's merge grant through the
+   serialized merge above, revalidating head, checks, reviews and
+   mergeability. Without merge authority, deliver it as a ready PR. Tickets
+   merged after it go in a later batch.
 
 ## Failure Isolation And Finish Gate
 
@@ -627,10 +638,13 @@ the verified base.
 
 If `ready-for-agent` is removed, apply [Stop on label removal](authority-and-pauses.md#stop-on-label-removal) before any recovery or write. Stop writers, release verified capacity, and retain assignment, worktree, dirty draft, branch, PR and artifacts without cleanup. Later runs stay stopped until a human restores the label; the controller never restores it. Keep these items and unlabelled Todo in the native dependency graph and report stopped work in the human frontier.
 
-Before a drain returns success, `partial-drain` or `waiting-for-human`, apply
-[Batched Changelog](#batched-changelog) and report the changelog PR. When the
-drain stops for an integrity problem, report the unbatched recorded entries
-instead of opening that PR.
+Before a drain returns success, `partial-drain` or `waiting-for-human`, or
+starts the human-gated watcher wait, apply
+[Batched Changelog](#batched-changelog), then re-pass the refresh gate.
+Success requires the changelog PR merged, or delivered ready without merge
+authority; otherwise report it as a pending PR. Report the recorded entries of
+unmerged tickets. When the drain stops for an integrity problem, report the
+unbatched recorded entries instead of opening that PR.
 
 Whenever a drain finishes, waits for humans or stops, apply
 [Worktrees](ticket-lifecycle.md#worktrees) step 6.

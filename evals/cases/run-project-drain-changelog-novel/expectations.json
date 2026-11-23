@@ -13,6 +13,12 @@
       "changelog_in_ticket_pr": true,
       "batch_pr": false
     },
+    "integrity-stop": {
+      "batch_pr": false,
+      "report_entries": [
+        331
+      ]
+    },
     "none-merged": {
       "batch_pr": false
     }

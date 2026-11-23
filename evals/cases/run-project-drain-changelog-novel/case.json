@@ -30,7 +30,7 @@
   "rubric": [
     {
       "id": "scope",
-      "text": "Batches only merged tickets' entries at a waiting-for-human finish, keeps the parked ticket's entry out, opens no batch when nothing merged, and follows an explicit same-PR repository requirement instead of batching."
+      "text": "Batches only merged tickets' entries at a waiting-for-human finish, keeps the parked ticket's entry out, reports unbatched entries instead of opening a batch on an integrity stop, opens no batch when nothing merged, and follows an explicit same-PR repository requirement instead of batching."
     }
   ],
   "provenance": {

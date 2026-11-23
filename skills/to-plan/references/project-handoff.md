@@ -34,6 +34,11 @@ handoff or take over a Project claim.
    contract and retained candidate under that reference. Preserve owners, work,
    PRs, consumed budgets and live qualification gates. The controller alone
    revalidates claims/leases and schedules continuation.
+   When the packet marks changelog batching, apply
+   [Batched Changelog](drain-scheduler.md#batched-changelog) from the start:
+   leave the changelog or release-notes file unchanged, even where the plan
+   lists it, and put the proposed entry in the PR body's `Changelog entry`
+   section.
 3. Follow the bundled [implementation procedure](implementation-mode.md) for
    ownership preflight. Use the persistent ticket context as delivery lead
    and compare its actual settings to the invocation's required implementation
@@ -66,10 +71,6 @@ handoff or take over a Project claim.
    provider pair. Use closing keywords only for verified native tracker closure
    under `closing-keyword`; otherwise use a non-closing link for
    `close-after-merge`. Verify the complete effective closing-reference set.
-   When the packet marks changelog batching, leave the changelog or
-   release-notes file unchanged and put the proposed entry in the PR body's
-   `Changelog entry` section under
-   [Batched Changelog](drain-scheduler.md#batched-changelog).
    Apply [PR review timing](pr-review-timing.md) to start
    applicable external review while CI runs, preferring verified draft review and otherwise
    permitting earlier PR readiness. Verify that state separately from delivery
