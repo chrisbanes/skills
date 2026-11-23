@@ -331,10 +331,9 @@ The Compose benchmark remains 38 scored cases and comprises:
 Case IDs retain their focused concern names even when several concerns route to
 the same clustered public skill.
 
-Four calibration-only performance challenge cases are also validated with the
-corpus. They are excluded from default plans and published scorecards; select
-them explicitly with `--case` when deciding whether they should graduate into
-the benchmark.
+The corpus also validates four performance challenges and three cases on when
+Compose UI tests give way to device tests. These calibration cases are excluded
+from default plans and published scorecards. Select them explicitly with `--case`.
 
 Two calibration-only workflow challenges exercise actionable failure behavior
 when a required external `tdd` provider is unavailable. They

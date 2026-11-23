@@ -1,0 +1,4 @@
+{
+  "files": ["test-plan.md"],
+  "must_contain": ["rememberSaveable", "StateRestorationTester", "emulateSavedInstanceStateRestore", "assertIsSelected"]
+}

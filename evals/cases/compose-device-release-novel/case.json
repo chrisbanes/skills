@@ -1,0 +1,19 @@
+{
+  "id": "compose-device-release-novel",
+  "title": "Verify startup on the R8-optimized build",
+  "family": "testing",
+  "target_skills": ["compose-ui-testing-patterns"],
+  "expected_skills": ["compose-ui-testing-patterns"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "compose-device-release-novel"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "build-boundary", "text": "Explains that startup depends on the R8-optimized artifact and a passing debug rule does not exercise that artifact even though startup stays in one app"},
+    {"id": "release-smoke", "text": "Recommends a focused device smoke test that launches the installed R8-optimized release build and checks that the home screen becomes visible"},
+    {"id": "scope", "text": "Keeps the existing debug integration test for its current purpose without moving unrelated coverage into the release test"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

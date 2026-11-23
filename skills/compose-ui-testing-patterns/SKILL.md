@@ -33,6 +33,10 @@ Test the smallest UI contract that proves the behavior. Prefer plain state-drive
 | State holder updates UI correctly | State holder/unit test plus one wiring smoke test |
 | Hover, pressed, focused, dragged interaction state | Plain UI test with MutableInteractionSource |
 | Navigation, lifecycle, DI integration | Integration test |
+| Critical flow that depends on the installed build or crosses an app, process, or OS boundary | Focused device smoke test or end-to-end test, outside this skill |
+
+Use device coverage for a few critical flows where a narrower test cannot
+exercise and verify the behavior under test.
 
 ## Prefer plain UI tests
 

@@ -1,0 +1,6 @@
+{
+  "files": ["test-plan.md"],
+  "must_contain": ["manual entry", "createComposeRule"],
+  "must_match": ["(?i)\\b(?:device|emulator|end-to-end)\\b"],
+  "must_not_contain": ["fakes a denied permission"]
+}

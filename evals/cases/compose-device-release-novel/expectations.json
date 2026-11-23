@@ -1,0 +1,4 @@
+{
+  "files": ["test-plan.md"],
+  "must_contain": ["R8-optimized release build", "existing debug activity integration", "Compose home screen"]
+}
