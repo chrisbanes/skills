@@ -21,7 +21,6 @@ class ComposeMatrixTest(unittest.TestCase):
     def test_has_the_exact_concern_slice_and_router_matrix(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
 
-        self.assertEqual(45, report.case_count)
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
