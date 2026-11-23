@@ -1,6 +1,6 @@
 {
-  "id": "run-project-drain-changelog-direct",
-  "title": "Drain owners defer changelog entries to one controller batch",
+  "id": "run-project-drain-batched-updates-novel",
+  "title": "Drain recovers one batch and records updates through pauses and external merges",
   "family": "workflow",
   "target_skills": [
     "run-project"
@@ -9,7 +9,7 @@
     "run-project"
   ],
   "task_mode": "edit",
-  "kind": "direct",
+  "kind": "novel",
   "fixture": "workflow",
   "allowed_write_paths": [
     ".scratch/review-decisions.json"
@@ -22,15 +22,15 @@
       "argv": [
         "python3",
         "@validators/pr_review_decisions.py",
-        "run-project-drain-changelog-direct"
+        "run-project-drain-batched-updates-novel"
       ],
       "timeout_seconds": 30
     }
   ],
   "rubric": [
     {
-      "id": "batching",
-      "text": "Ticket owners leave CHANGELOG.md unchanged and put the proposed entry in a marked PR-body section; the controller records it, then opens one changelog PR with every merged ticket's entry, verifies issue links, gets independent review and merges it under the run's grant."
+      "id": "scope",
+      "text": "Starts the batch when the last ticket pauses, reports unmerged intents, watches and recovers a batch without ticket claims, queues later merges separately, and applies merge authority and integrity gates."
     }
   ],
   "provenance": {

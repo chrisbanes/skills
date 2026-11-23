@@ -1,6 +1,6 @@
 {
-  "id": "run-project-drain-changelog-negative",
-  "title": "Changelog batching stays within drain mode",
+  "id": "run-project-drain-batched-updates-negative",
+  "title": "Only explicitly eligible incidental updates can be deferred in drain",
   "family": "workflow",
   "target_skills": [
     "run-project"
@@ -19,7 +19,7 @@
       "argv": [
         "python3",
         "@validators/text_case.py",
-        "run-project-drain-changelog-negative"
+        "run-project-drain-batched-updates-negative"
       ],
       "timeout_seconds": 30
     },
@@ -27,7 +27,7 @@
       "argv": [
         "python3",
         "@validators/pr_review_decisions.py",
-        "run-project-drain-changelog-negative",
+        "run-project-drain-batched-updates-negative",
         "--response"
       ],
       "timeout_seconds": 30
@@ -36,7 +36,7 @@
   "rubric": [
     {
       "id": "restraint",
-      "text": "Keeps the repository's normal same-PR changelog entry for board next and for a named issue routed to direct delivery; opens no batch changelog PR. Makes no workspace changes, including scratch artifacts."
+      "text": "Keeps changes in the ticket PR for next, direct delivery, missing opt-in, build inputs, conflicting rules, same-PR requirements and standalone file deliverables. Makes no workspace changes."
     }
   ],
   "provenance": {

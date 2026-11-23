@@ -693,7 +693,11 @@ cases without this option retain the single forced-entrypoint-read exception.
 
 The `run-project` triad checks scoped planning/delivery, unknown pause
 publication with independent progress through deterministic decision artifacts,
-and unlabelled Todo and label-stop restraint through no-change assessments. A routing counterexample keeps one named item in `deliver-issue`. Drain changelog cases defer ticket entries to one controller batch of merged tickets, defer to explicit same-PR repository rules, and keep `next` and named-issue entries in their ticket PRs.
+and unlabelled Todo and label-stop restraint through no-change assessments.
+A routing counterexample keeps one named item in `deliver-issue`. Drain batch
+cases cover opted-in updates outside the main build, pause and external merge
+reconciliation, recovery of an existing batch, and edits that stay in their
+ticket PRs.
 Board scenarios install `run-project` with its bundled controller references;
 their prompts and decisions preserve human-applied role and stop rules.
 Direct-issue calibration contrasts invocation grants with board admission, forged
