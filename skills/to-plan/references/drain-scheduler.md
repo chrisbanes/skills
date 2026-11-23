@@ -585,6 +585,29 @@ After a merge:
 4. Clean up the merged claim's worktree and branch under
    [Worktrees](ticket-lifecycle.md#worktrees).
 
+### Batched Changelog
+
+In `drain`, batch changelog or release-notes entries so one merge never makes
+the other open ticket PRs conflict in that file. `next`, direct `deliver-issue`
+runs and human PRs keep the repository's normal entry flow.
+
+1. When trusted repository instructions explicitly require the entry in the
+   same PR as its change, follow them and skip this section.
+2. Otherwise mark changelog batching in every ticket packet. The owner leaves
+   the changelog or release-notes file unchanged and writes the proposed entry,
+   following the repository's changelog rules, in a `Changelog entry` section
+   of the PR body. Record that text with the ticket's delivery evidence.
+3. When the last ticket of the drain has merged, or at the finish gate after at
+   least one ticket merged, whichever comes first, the controller alone opens
+   one changelog PR. It adds the recorded entry of every ticket merged in this
+   drain and not yet batched, following the repository's changelog
+   instructions; omit entries for tickets that did not merge. Verify each issue
+   or PR link against its merged ticket.
+4. Give the changelog PR the usual independent review and required checks, then
+   merge it under the run's merge grant through the serialized merge above.
+   Without merge authority, deliver it as a ready PR. Tickets merged after this
+   PR go in a later batch.
+
 ## Failure Isolation And Finish Gate
 
 Preserve a ticket-local blocker in its occupied slot while repair remains
@@ -603,6 +626,11 @@ claims when the same collision or infrastructure failure affects two slots or
 the verified base.
 
 If `ready-for-agent` is removed, apply [Stop on label removal](authority-and-pauses.md#stop-on-label-removal) before any recovery or write. Stop writers, release verified capacity, and retain assignment, worktree, dirty draft, branch, PR and artifacts without cleanup. Later runs stay stopped until a human restores the label; the controller never restores it. Keep these items and unlabelled Todo in the native dependency graph and report stopped work in the human frontier.
+
+Before a drain returns success, `partial-drain` or `waiting-for-human`, apply
+[Batched Changelog](#batched-changelog) and report the changelog PR. When the
+drain stops for an integrity problem, report the unbatched recorded entries
+instead of opening that PR.
 
 Whenever a drain finishes, waits for humans or stops, apply
 [Worktrees](ticket-lifecycle.md#worktrees) step 6.

@@ -1,0 +1,46 @@
+{
+  "id": "run-project-drain-changelog-negative",
+  "title": "Changelog batching stays within drain mode",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "run-project-drain-changelog-negative"
+      ],
+      "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-project-drain-changelog-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "restraint",
+      "text": "Keeps the repository's normal same-PR changelog entry for board next and for a named issue routed to direct delivery; opens no batch changelog PR. Makes no workspace changes, including scratch artifacts."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

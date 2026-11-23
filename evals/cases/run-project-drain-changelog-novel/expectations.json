@@ -1,0 +1,20 @@
+{
+  "decisions": {
+    "parked": {
+      "batch_pr": true,
+      "writer": "controller",
+      "entries": [
+        301,
+        303
+      ],
+      "merge_batch": true
+    },
+    "same-pr": {
+      "changelog_in_ticket_pr": true,
+      "batch_pr": false
+    },
+    "none-merged": {
+      "batch_pr": false
+    }
+  }
+}

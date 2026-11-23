@@ -1,0 +1,40 @@
+{
+  "id": "run-project-drain-changelog-novel",
+  "title": "Changelog batch covers only merged tickets and yields to repository rules",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "edit",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-project-drain-changelog-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "scope",
+      "text": "Batches only merged tickets' entries at a waiting-for-human finish, keeps the parked ticket's entry out, opens no batch when nothing merged, and follows an explicit same-PR repository requirement instead of batching."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

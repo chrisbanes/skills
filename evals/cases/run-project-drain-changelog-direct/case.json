@@ -1,0 +1,40 @@
+{
+  "id": "run-project-drain-changelog-direct",
+  "title": "Drain owners defer changelog entries to one controller batch",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [
+    ".scratch/review-decisions.json"
+  ],
+  "forbidden_command_patterns": [
+    "\\b(?:gh|git)\\s+(?:api|issue|pr|project|push|fetch|pull)\\b"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-project-drain-changelog-direct"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "batching",
+      "text": "Ticket owners leave CHANGELOG.md unchanged and put the proposed entry in a marked PR-body section; the controller records it, then opens one changelog PR with every merged ticket's entry, verifies issue links, gets independent review and merges it under the run's grant."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

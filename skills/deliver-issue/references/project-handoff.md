@@ -66,6 +66,10 @@ handoff or take over a Project claim.
    provider pair. Use closing keywords only for verified native tracker closure
    under `closing-keyword`; otherwise use a non-closing link for
    `close-after-merge`. Verify the complete effective closing-reference set.
+   When the packet marks changelog batching, leave the changelog or
+   release-notes file unchanged and put the proposed entry in the PR body's
+   `Changelog entry` section under
+   [Batched Changelog](drain-scheduler.md#batched-changelog).
    Apply [PR review timing](pr-review-timing.md) to start
    applicable external review while CI runs, preferring verified draft review and otherwise
    permitting earlier PR readiness. Verify that state separately from delivery
