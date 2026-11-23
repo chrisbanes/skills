@@ -1,0 +1,19 @@
+{
+  "id": "compose-device-restoration-negative",
+  "title": "Keep local Compose restoration coverage at the UI seam",
+  "family": "testing",
+  "target_skills": ["compose-ui-testing-patterns"],
+  "expected_skills": ["compose-ui-testing-patterns"],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "text",
+  "allowed_write_paths": [],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "compose-device-restoration-negative"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "local-contract", "text": "Recognizes that the existing StateRestorationTester test proves the requested local rememberSaveable round trip"},
+    {"id": "no-escalation", "text": "Keeps the existing test and recommends no device test for this contract"},
+    {"id": "evidence-limit", "text": "Does not claim the simulated restore proves behavior after Android kills the app process"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

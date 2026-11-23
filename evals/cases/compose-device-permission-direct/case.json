@@ -1,0 +1,19 @@
+{
+  "id": "compose-device-permission-direct",
+  "title": "Verify a system permission decision in the installed app",
+  "family": "testing",
+  "target_skills": ["compose-ui-testing-patterns"],
+  "expected_skills": ["compose-ui-testing-patterns"],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "text",
+  "allowed_write_paths": ["test-plan.md"],
+  "validators": [{"argv": ["python3", "@validators/text_case.py", "compose-device-permission-direct"], "timeout_seconds": 30}],
+  "rubric": [
+    {"id": "system-boundary", "text": "Identifies the real Android permission dialog and its result as the boundary the fake callback cannot exercise"},
+    {"id": "focused-device-test", "text": "Recommends a focused device test that denies the system prompt and verifies the installed app shows its fallback"},
+    {"id": "retain-ui-test", "text": "Retains the existing Compose test for rendering the denied state and limits the recommendation to the permission flow"}
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

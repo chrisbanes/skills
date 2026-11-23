@@ -21,12 +21,14 @@ class ComposeMatrixTest(unittest.TestCase):
     def test_has_the_exact_concern_slice_and_router_matrix(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
 
-        self.assertEqual(42, report.case_count)
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
         self.assertEqual(38, len(benchmark))
-        self.assertEqual(4, len(calibration))
-        self.assertTrue(all(case.family == "performance" for case in calibration))
+        self.assertEqual(4, sum(case.family == "performance" for case in calibration))
+        self.assertEqual(
+            {"direct", "novel", "negative"},
+            {case.kind for case in calibration if case.family == "testing"},
+        )
         standalone = [case for case in benchmark if case.kind != "routing"]
         routing = [case for case in benchmark if case.kind == "routing"]
         self.assertEqual(33, len(standalone))

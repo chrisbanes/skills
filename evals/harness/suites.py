@@ -90,7 +90,7 @@ SUITES = {
         skills=COMPOSE_SKILLS,
         benchmark_cases=38,
         routing_cases=5,
-        calibration_cases=4,
+        calibration_cases=7,
         topic_triads=COMPOSE_TOPICS,
     ),
     "kotlin-gradle": SuitePolicy(
