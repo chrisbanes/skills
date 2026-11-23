@@ -354,6 +354,28 @@ class CounterState {
 
             self.assertTrue(grade_subject(case, result).objective_pass)
 
+    def test_permission_plan_can_explain_the_old_fake_callback(self):
+        report = validate_corpus(REPO_ROOT, suite="compose")
+        case = next(case for case in report.cases if case.id == "compose-device-permission-direct")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workspace = prepare_workspace(case, REPO_ROOT, Path(temp_dir) / case.id)
+            plan = workspace / "test-plan.md"
+            plan.write_text(
+                """# Camera permission
+
+The proposed test fakes a denied permission callback, which skips the Android
+system dialog. Keep the `createComposeRule` test for rendering the denied state.
+
+Add a focused device test that taps Scan, denies the real system permission
+dialog, and verifies that the app offers manual entry.
+""",
+                encoding="utf-8",
+            )
+            result = make_result(workspace, paths=("test-plan.md",))
+            grade = grade_subject(case, result)
+            self.assertTrue(grade.objective_pass, grade.objective_failures)
+
     def test_direct_validators_accept_semantic_equivalents_seen_in_live_runs(self):
         report = validate_corpus(REPO_ROOT, suite="compose")
         replacements = (
