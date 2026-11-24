@@ -1,8 +1,7 @@
 ---
 name: implement-with-subagents
-description: Use when implementing supplied tickets or plan tasks with solo or worker-owned implementation selected from the task graph, or when reviewing that orchestration.
-compatibility: "Review mode has no external skill dependency. Implementation mode uses Matt Pocock's separately installed `tdd` for behavior changes and one fresh independent read-only reviewer for the final joined branch."
-disable-model-invocation: true
+description: Use when implementing supplied tickets or plan tasks, resuming a delivery handoff for a triaged repair, or reviewing implementation orchestration.
+compatibility: "Implementation requires independent read-only review. Use the installed tdd skill when user or repository policy requires it."
 ---
 
 # Implement with subagents
@@ -43,9 +42,9 @@ checkouts when delegating.
    depending on unintegrated code independent. Treat supplied readiness,
    independence and capacity as authoritative: in delegated runs, dispatch the
    eligible ready frontier concurrently within capacity. Report any required
-   routing mismatch and the safe resume action. Treat test seams, `tdd`
-   and reviewer capability as execution-time checks unless the supplied
-   state shows they are missing. Check reuse-first allocation,
+   routing mismatch and the safe resume action. Assess testing prerequisites
+   against the supplied user and repository policy.
+   Check reviewer capability before implementation. Check reuse-first allocation,
    distinct slots for active writers, and existing-checkout access for
    read-only helpers.
 3. Release a dependent only after each prerequisite's task commit is
@@ -72,46 +71,37 @@ checkouts when delegating.
 
 ### Prerequisites
 
-Identify the behavior-changing items and their user-approved test seams before
-implementation.
-Their owners use the separately installed [`tdd`](https://github.com/mattpocock/skills)
-skill directly. If a behavior item has no approved seam, obtain agreement
-before implementing that item; if `tdd` is unavailable, stop before behavior work.
-Documentation and other items without a meaningful test seam use focused
-validation instead. Never install a dependency implicitly.
+Follow user and repository testing policy. Choose meaningful behavioral tests at
+established boundaries. When the user or repository requires the [`tdd` skill](https://github.com/mattpocock/skills),
+use its agreed seam and red-before-green procedure. If that provider or required
+agreement is missing, hold the affected item and report what it needs. Never
+install a provider implicitly. Use focused validation for documentation and
+configuration changes.
 
-Establish independent read-only review capability before implementation in either
-path; do not launch a capability-only reviewer. For final review, use a fresh
-agent that makes no writes and does not inherit the implementation
-conversation, with a self-contained brief: approved source, plan, repository standards, fixed base,
-and exact candidate head. Require findings with evidence and a `ship`, `fix-first`, or `rethink` verdict
-against both requirements and standards, with the coverage account under
-[Behavioral review and repair](references/behavioral-review.md). Apply that
-reference during implementation for related boundary repairs and browser failure
-diagnostics; PR feedback remains outside this workflow. No external review skill
-or tracker setup is required. If independent review cannot run, report the missing
-capability; never waive final review. Add reviewers only for distinct risks or
-substantial scope that justify separate assignments.
+Verify independent read-only review capability from runtime metadata before
+implementation. Hold implementation if review cannot run. Use a fresh reviewer
+without inherited implementation context. Supply the approved source, plan,
+repository standards, applicable review contracts, fixed base and exact head.
+Require evidence-backed findings and a `ship`, `fix-first` or `rethink` verdict.
+Apply [Behavioral review and repair](references/behavioral-review.md) for
+boundary repairs, browser diagnostics and review coverage. Add reviewers only
+for distinct risks or substantial scope.
 
-Before implementation, read
-[the implementation-mode procedure](references/implementation-mode.md)
-completely. It owns preflight, dispatch, owner packets, task acceptance,
-integration, repairs, and final validation. Stop when a dependency, task-scoped
-commit, or capability gate cannot be satisfied. In a delegated run, wait for
-worker capacity rather than switching to lead implementation.
+Read the [implementation procedure](references/implementation-mode.md) before
+starting. For a triaged PR finding, use its
+[repair procedure](references/implementation-mode.md#resume-a-delivery-repair).
 
 ## Finish gate
 
-In `review`, finish only with the non-mutating assessment, evidence, and any
-acceptance gap. In `implement`, finish only when every queued item has a
-task-scoped, self-reviewed commit (accepted before integration when delegated),
-all affected checks and the full required suite pass at the final integrated head, the
-joined review is current, and the integration checkout is clean. Preserve any
-unrelated user work from the starting checkout. Account for every run-created
-worker checkout under the checkout lifecycle's
-[account rule](references/checkout-lifecycle.md#account) and preserve task
-branch refs; a cleanup-incomplete result leaves the workflow incomplete even
-when code verification passed.
-Report the item-to-commit mapping, exact integrated head, final validation and
-review evidence, checkout dispositions, and any blocker; otherwise stop at the
-first incomplete gate. PR and tracker delivery are outside this skill.
+In `review`, return the read-only assessment, evidence and acceptance gaps.
+
+In `implement`, return the fixed base, clean integrated head, item-to-commit
+and repair-owner mapping, validation and independent review covering that head.
+Every changed item needs a self-reviewed commit, accepted before integration
+when delegated. Preserve user work and task branches, and
+[account for each worker checkout](references/checkout-lifecycle.md#account).
+Report incomplete cleanup or another unmet gate as a blocker.
+
+For delivery, identify each required suite that equivalent PR CI will run on
+that commit. The controller takes the reviewed candidate and pending checks
+through publication. Direct runs require the full suite before completion.

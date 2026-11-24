@@ -39,7 +39,7 @@ Preserve durable marker formats.
 9. **No escape hatch:** renewal or amendment never resumes parked CI, grants live turns or resets qualification. Unknown or stale evidence blocks dependants; material architecture changes need full replan and review; changed authority or qualification needs a stakeholder or source decision.
 
 A verified handoff covers in-scope implementation, tests and repairs under
-the bundled [controller handoff](references/project-handoff.md), with one independent integrated-candidate review. Replans keep
+the bundled [controller handoff](references/project-handoff.md), which uses `implement-with-subagents` for implementation, independent review and repair. Replans keep
 verified plan state; true human work returns to a decision pause. `drain` parks
 verified authority pauses and qualifying terminal required-CI claims outside
 capacity before refreshing; in `next`, a required-CI stall keeps its slot. A

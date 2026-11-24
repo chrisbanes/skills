@@ -335,8 +335,8 @@ The corpus also validates four performance challenges and three cases on when
 Compose UI tests give way to device tests. These calibration cases are excluded
 from default plans and published scorecards. Select them explicitly with `--case`.
 
-Two calibration-only workflow challenges exercise actionable failure behavior
-when a required external `tdd` provider is unavailable. They
+Two calibration-only workflow challenges cover a missing external `tdd`
+provider under explicit and optional testing policies. They
 are likewise excluded from default plans and published scorecards.
 
 The Kotlin/Gradle benchmark contains 29 scored cases:
@@ -373,8 +373,8 @@ and read-only readiness restraint without live publication or credentials.
 Its GitHub-style cases use supplied immutable state and rubric plus
 forbidden-action grading; they do not contact a provider. The
 `implement-with-subagents` review-mode cases have no external fixture
-dependency. Its missing-provider challenge supplies a behavior ticket without
-`tdd` and checks that implementation does not start.
+dependency. Its missing-provider challenge checks both a ticket that explicitly
+requires `tdd` and one that can proceed with repository testing.
 
 The workflows/writing corpus includes calibration-only cases covering
 the two missing-provider challenges. Select them
@@ -418,9 +418,9 @@ execution under caller capacity, temporary capacity versus absent worker
 capability, and the trivial-edit exception versus useful overlap and retained
 repair ownership and the clean-checkout preflight. They assess immutable state
 without live execution.
-Deterministic coverage stages `deliver-issue` alone, follows its local procedure
-and handoff links, and checks its bundled procedure independently of the
-orchestration skill's mode-specific procedure.
+Deterministic coverage checks the shared executor handoff for standalone and
+board delivery, a missing executor before implementation, pending PR checks,
+and resuming the original owner after CI feedback.
 Three Project-delivery calibrations cover automatic `deliver-issue` handoff,
 one startup merge question with a 60-second default-no deadline, explicit
 instructions, nonblocking fallback, late replies and invocation expiry,

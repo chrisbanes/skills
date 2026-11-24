@@ -62,7 +62,6 @@ class PrReviewTimingTest(unittest.TestCase):
         callers = {
             "deliver-issue": (
                 "references/delivery-lifecycle.md", "references/evidence-and-review.md",
-                "references/project-handoff.md",
             ),
             "run-project": (
                 "references/ticket-lifecycle.md", "references/drain-scheduler.md",

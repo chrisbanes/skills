@@ -1,6 +1,6 @@
 {
   "id": "deliver-spec-worker-capacity-negative",
-  "title": "Do not bypass required workers when capacity or capability is missing",
+  "title": "Distinguish a missing worker from a missing implementation skill",
   "family": "workflow",
   "target_skills": [
     "deliver-issue"
@@ -21,6 +21,15 @@
         "deliver-spec-worker-capacity-negative"
       ],
       "timeout_seconds": 30
+    },
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-spec-worker-capacity-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
     }
   ],
   "rubric": [
@@ -39,10 +48,15 @@
     {
       "id": "restraint",
       "text": "Starts no worker or implementation and makes no commands or mutations during this supplied-state assessment; final independent review remains required."
+    },
+    {
+      "id": "missing-executor",
+      "text": "Holds only implementation when the executor skill is missing. Identifies the dependency, preserves the approved work and continues authorized planning without installing anything."
     }
   ],
   "provenance": {
     "kind": "synthetic"
   },
-  "calibration": true
+  "calibration": true,
+  "allow_skill_reference_reads": true
 }

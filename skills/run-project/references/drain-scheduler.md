@@ -222,8 +222,9 @@ Reconcile any named resource grant before reconstructing or resuming a lost
 ticket agent.
 Descendant agents at any depth use only currently spare agent capacity.
 Discovery and review helpers are read-only at immutable SHAs and route findings
-to their owning ticket or planning agent. `deliver-issue` owns implementation
-assignment, integration, acceptance, and same-owner repair; workers write only
+to their owning ticket or planning agent. Through the ticket handoff,
+`implement-with-subagents` owns assignment, integration, task acceptance and
+same-owner repairs. Workers write only
 their task worktrees and branches and return commits to their ticket delivery
 lead. Count every active descendant against actual spare capacity. Task
 implementation and review descendants never mutate Project, issue, or PR

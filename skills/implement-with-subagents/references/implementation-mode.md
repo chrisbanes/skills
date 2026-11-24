@@ -1,20 +1,22 @@
 # Implementation-mode procedure
 
-1. Read repository instructions and record the starting branch, exact `HEAD`,
-   and worktree status. Stop before implementation if the starting checkout has
-   unrelated uncommitted changes. Identify or create a clean integration branch
-   from that `HEAD`, and record its base SHA. Do not stash, reset, or absorb
-   user work.
+1. Read repository instructions. Record the starting branch, exact `HEAD` and
+   worktree status. For delivery, use the supplied checkout, branch and fixed
+   base. Verify them against the delivery record on entry and resume, including
+   the current candidate, accepted commits, owner handles and prior allowances.
+   If current delivery evidence accounts for every accepted requirement on a
+   clean, unchanged baseline, go to step 10 to verify the no-change result.
+   An empty starting diff alone does not satisfy the requirements.
+   For direct implementation, identify or create a clean integration branch
+   from the starting head and record that base. Stop on unrelated uncommitted
+   changes in the starting checkout. Preserve user work.
    Before allocating workers, inventory available checkouts through their
    owning runtime and establish the lifecycle record described below. Record
    each exact path and runtime identity, classifying the integration checkout,
    pre-existing or adopted checkouts, and run-created worker slots; never infer
    ownership from a directory name.
-2. Resolve the implementation prerequisites in the entrypoint. For each
-   behavior-changing item, identify user-approved test seams in the supplied
-   spec or tickets. If a seam is missing, obtain agreement before implementing
-   that item. Read the installed `tdd` skill and give its path to the owner;
-   stop before behavior work when it is unavailable. Identify the final review
+2. Resolve the testing policy in the entrypoint and pass required test seams
+   and provider instructions to the affected owners. Identify the final review
    capability before implementation in either path: one fresh independent
    read-only reviewer
    against the approved source and repository standards under the entrypoint's
@@ -75,6 +77,11 @@
    Do not start it from a prerequisite's unintegrated branch.
    Give read-only helpers access to an existing checkout without allocating a
    worker slot, and never switch a checkout used by an active owner or process.
+   When several owners need the same unresolved fact, reuse current evidence or
+   investigate once. Use a read-only helper only within available capacity and
+   Project priority. Record source, base, findings and limits in the existing
+   record or authorized notes. Share them with affected owners and let other
+   ready work proceed.
 5. Select an implementation-capable subagent using the runtime requirements below
    and the shared [selection and handoff reference](subagent-selection.md).
    Verify the preflight settings before dispatch. Classify individual tasks
@@ -93,11 +100,8 @@
    spec, approved test seams where applicable, and repository instructions.
    State that other agents may be editing independently, and require preservation of unrelated
    changes. Dispatch the ready frontier only after this capability check passes.
-6. Have each owner (the lead in solo runs) implement only its item. For behavior
-   changes, invoke `tdd`
-   directly at the approved test seams and follow its red-green loop. For
-   documentation or configuration without a meaningful test seam, use focused
-   validation and record why TDD does not apply. Require focused checks, owner
+6. Have each owner (the lead in solo runs) implement only its item. Follow
+   the supplied testing policy and exercise the affected behavior. Require focused checks, owner
    self-review against the task and repository standards, a task-scoped commit,
    and record each command's exit code, tested SHA, output tail and complete-log
    path, plus relevant input and environment identity. Delegated owners return
@@ -160,24 +164,28 @@
    completed owner branches intact for later integration. Stop if the failed
    state cannot be preserved or a repair cannot pass; never discard the failed
    integrated commit.
-10. After all items are integrated, run the full user- and repository-required
-    suite on the final integrated HEAD. If it fails, preserve that exact
-    integrated head, pause further integration, and repair forward under step 9.
-    Give the approved source, repository standards, and joined diff from the
-    recorded starting base to one fresh independent read-only reviewer under
-    the entrypoint's review contract.
-    Return findings to the relevant original owners (the lead when solo). For
-    delegated repairs, apply step 7 acceptance; integrate under steps 8-9. After
-    any repair,
-    rerun affected checks and renew review of the changed range and its
-    interactions. Apply [Behavioral review and repair](behavioral-review.md) for
-    affected-scope renewal and broadening conditions; preserve the required
-    final integrated suite above. Verify
-    that combined evidence covers the new final head. Apply the checkout lifecycle
-    rules below at completion,
-    blockers, and interruption. Finish only when the integration worktree is
-    clean, unrelated starting work is preserved, checkout accounting is
-    complete, and the entrypoint's finish gate is met.
+10. Validate the final integrated HEAD. Run affected checks and all mandatory
+    pre-push checks. Run the required full suite locally unless the delivery
+    controller identifies required PR CI that runs the equivalent suite on
+    this commit and no user, repo or provider rule requires it before push.
+    Record those exact pending checks for the caller. Repair local failures
+    forward from the failed head under step 9.
+    Obtain independent review under the entrypoint’s contract. Reuse applicable
+    coverage on resume. For an empty final diff, establish full acceptance on
+    the clean baseline before returning no-change.
+    Return findings to their owners. After repair, accept delegated commits
+    under step 7, integrate under steps 8–9, and renew affected checks and
+    review of the changed range and its interactions. Check combined coverage
+    and pending CI against the new head. Account for worker checkouts at
+    completion, interruption and blockers.
+
+## Resume a delivery repair
+
+Verify the finding, PR head and base against the retained checkout and delivery
+record. Return scope changes for replanning. Resume the original owner for an
+in-scope repair. If unavailable, reconcile its work and verify its writer has
+stopped before recording an authorized replacement. Apply steps 6–10 to the
+repair and return the reviewed head to delivery.
 
 ## Runtime requirements
 

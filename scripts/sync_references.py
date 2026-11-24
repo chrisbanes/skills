@@ -27,9 +27,8 @@ COPIES = {
         f"skills/{skill}/references/pr-review-timing.md"
         for skill in ("deliver-issue", "run-project", "shepherd")
     ),
-    "skills/to-plan/references/boundary-validation.md": tuple(
-        f"skills/{skill}/references/boundary-validation.md"
-        for skill in ("deliver-issue", "run-project", "implement-with-subagents")
+    "skills/to-plan/references/boundary-validation.md": (
+        "skills/implement-with-subagents/references/boundary-validation.md",
     ),
     "references/behavioral-review.md": tuple(
         f"skills/{skill}/references/behavioral-review.md"
@@ -41,20 +40,19 @@ COPIES = {
     "references/subagent-selection.md": tuple(
         f"skills/{skill}/references/subagent-selection.md"
         for skill in (
-            "deliver-issue", "implement-with-subagents", "run-project",
+            "implement-with-subagents", "run-project",
             "gradle-run", "shepherd", "subagent-delegation",
         )
     ),
     "references/checkout-lifecycle.md": tuple(
         f"skills/{skill}/references/checkout-lifecycle.md"
-        for skill in ("deliver-issue", "implement-with-subagents", "run-project")
+        for skill in ("implement-with-subagents", "run-project")
     ),
     "skills/run-project/references/review-contracts.md": ("skills/deliver-issue/references/review-contracts.md",),
     "skills/deliver-issue/references/issue-lifecycle.md": ("skills/run-project/references/issue-lifecycle.md",),
     "skills/deliver-issue/references/delivery-lifecycle.md": ("skills/run-project/references/delivery-lifecycle.md",),
     "skills/deliver-issue/references/evidence-and-review.md": ("skills/run-project/references/evidence-and-review.md",),
     "skills/deliver-issue/references/fast-path.md": ("skills/run-project/references/fast-path.md",),
-    "skills/deliver-issue/references/implementation-mode.md": ("skills/run-project/references/implementation-mode.md",),
     "skills/deliver-issue/references/project-handoff.md": ("skills/run-project/references/project-handoff.md",),
     "skills/deliver-issue/references/provider-bindings.md": ("skills/run-project/references/provider-bindings.md",),
     "skills/deliver-issue/references/qualification-failure.md": ("skills/run-project/references/qualification-failure.md",),

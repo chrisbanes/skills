@@ -5,5 +5,19 @@
   "must_contain": [
     "Immutable evaluation state",
     "controller owns"
-  ]
+  ],
+  "decisions": {
+    "A": {
+      "owner": "lead"
+    },
+    "B": {
+      "owner": "lead"
+    },
+    "C": {
+      "edit": false,
+      "missing_skill": "implement-with-subagents",
+      "install": false,
+      "draft_plan": true
+    }
+  }
 }

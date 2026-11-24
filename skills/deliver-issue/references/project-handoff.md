@@ -14,43 +14,20 @@ state, merge, closure and checkout retirement throughout the handoff.
    implementation settings, capacity and consumed repair allowances. Resume
    the same owner, candidate and PR. Only the controller renews a lease. Return
    missing or conflicting evidence to the controller before writing.
-2. Follow the [implementation procedure](implementation-mode.md) in the
-   supplied checkout. Keep the persistent ticket lead and repair owners.
-   Verify independent-review capability from runtime metadata and fit any
-   delegation within granted capacity. Use the [delivery record](evidence-and-review.md)
-   for validation, routine repairs and verified integration amendments.
-   For required [live qualification](qualification-failure.md), verify the
-   finite pass conditions, offline result, live evidence, recovery checkpoint
-   and remaining allowance before dependent work. The handoff authorizes
-   in-scope implementation and repairs. For a factual mismatch in the plan,
-   use only the controller-reserved diagnosis and repair allowance. Return
-   ownership extensions, changed contracts and exhausted allowances to the controller.
-3. Apply the [fast path](fast-path.md) only for a controller fast-path
-   revision. Stop writes if a condition fails and return the
-   [replan packet](#return-a-replan-packet). For an approved drain deferral,
-   omit the deferred edit. Put its path and intended content or regeneration
-   procedure and inputs in the PR body's `Deferred updates` section. Explain
-   any empty contribution. At handoff verify the rule still applies, the diff
-   omits the edit and the section matches this head. Return that evidence
-   even for a pending PR. Report a deferral that would break this ticket.
-4. For an empty final diff, verify full acceptance, the integrated base,
-   clean head and applicable validation and review. Return `no-change` with
-   that evidence before push, PR operations or shepherding. The controller
-   reconciles tracker closure. Preserve the checkout if proof is missing.
-   For a nonempty diff give one fresh independent read-only reviewer the
-   [review contracts](review-contracts.md), source and delivery record.
-   Honor explicitly invoked review providers. Reuse applicable coverage,
-   return repairs to their owner and verify coverage of the final clean head
-   before push. Report missing coverage as a blocker.
-5. Push the reviewed head and reuse the verified PR, or create one draft if
-   absent. Link the tracker item under the selected bindings and verify the
-   complete closing-reference set against controller-authorized closure intent.
-   Follow [PR review timing](pr-review-timing.md) for external review during
-   CI. Use `shepherd` for actionable PR events and feedback. Quiesce the
-   previous writer before any reassignment. Report verification, repair
-   rounds, repeated failures and capacity waits to the controller, which
-   applies its repair limits and CI parking policy. In drain, use its remote
-   snapshot and yield between actionable events. It owns polling and resume.
+2. For a controller fast-path revision, verify the [fast-path conditions](fast-path.md)
+   before writes and on resume. Return a [replan packet](#return-a-replan-packet)
+   if a condition fails. For a factual plan mismatch, use only the reserved
+   diagnosis and repair allowance. Return scope changes and exhausted allowances
+   to the controller.
+3. If the controller approved a drain deferral, omit that edit. Include its path,
+   intended content or regeneration steps and inputs in the PR’s `Deferred updates`
+   section. Explain an empty contribution, flag any deferral that breaks the
+   ticket, and verify the section against the diff even when the PR is pending.
+4. Follow [Deliver an approved outcome](delivery-lifecycle.md) in the supplied
+   checkout with the board’s [review contracts](review-contracts.md), qualification
+   limits and closure intent. Return verification, repair rounds, repeated
+   failures and capacity waits to the controller. In drain, use its remote
+   snapshot and yield between actionable events.
 
 ## Return a replan packet
 
@@ -83,11 +60,9 @@ applying this rule.
 
 ## Finish gate
 
-Finish launched reviews and helpers. Return `ready` only after the final head
-passes required checks and reviews with findings resolved. Use `pending` for
-remote or controller-owned gates, `blocked` for a missing decision or capability,
-and `no-change` for a verified satisfied outcome. Return the source, plan and
-amendment identities, branch, PR and head, validation applicability, findings
-and dispositions, review coverage, phase timings, and next operation or resume
-condition. Include the [revision folder and written paths](evidence-and-review.md#isolate-plan-revision-evidence)
-for the controller’s preservation check. Preserve unfinished work.
+Finish launched reviews and helpers. Return the delivery outcome, source and
+plan/amendment identities, branch, PR and head, applicable checks and reviews,
+finding dispositions, phase timings and next action. Include the
+[revision folder and written paths](evidence-and-review.md#isolate-plan-revision-evidence)
+for the controller’s preservation check. Retain the checkout and evidence
+for pending or blocked work.

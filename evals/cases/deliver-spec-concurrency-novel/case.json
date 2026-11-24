@@ -3,15 +3,18 @@
   "title": "Use one delivery procedure for manual and Project callers",
   "family": "workflow",
   "target_skills": [
-    "deliver-issue"
+    "deliver-issue",
+    "implement-with-subagents"
   ],
   "expected_skills": [
-    "deliver-issue"
+    "deliver-issue",
+    "implement-with-subagents"
   ],
   "task_mode": "review",
   "kind": "novel",
   "fixture": "workflow",
   "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
   "allowed_write_paths": [],
   "validators": [
     {
@@ -26,19 +29,19 @@
   "rubric": [
     {
       "id": "common-procedure",
-      "text": "Uses the same solo-or-delegated implementation procedure in manual and Project delivery; delegation is justified here by independent A/B work rather than universally required."
+      "text": "Both callers hand the complete graph to implement-with-subagents once. Its parallel A/B frontier selects worker ownership for every task."
     },
     {
       "id": "ready-frontier",
-      "text": "May dispatch independent A/B in distinct clean checkouts when overhead is justified, or work solo. Serializes A/C writes, releases C only after A integration and affected checks, and D only after prerequisites pass at the integrated head."
+      "text": "Dispatches independent A/B in distinct clean checkouts within granted capacity. Serializes A/C writes, releases C only after A integration and affected checks, and D only after prerequisites pass at the integrated head."
     },
     {
       "id": "project-capacity",
-      "text": "If delegating, honors descendant capacity and across-ticket priority; does not take capacity reserved for another ticket, exceed limits or redesign scheduling. May implement solo or serialize while preserving ownership."
+      "text": "Honors descendant capacity and across-ticket priority; does not take capacity reserved for another ticket, exceed limits or redesign scheduling. Serializes worker dispatch when only one slot is available."
     },
     {
       "id": "useful-overlap",
-      "text": "If workers are chosen, advances independent delivery preparation without touching their owned implementation or duplicating valid checks. Uses supported waits and verifies actual capacity; a solo lead may perform the task implementation."
+      "text": "Advances independent delivery preparation without touching their owned implementation or duplicating valid checks. Uses supported waits and verifies actual capacity."
     },
     {
       "id": "ownership-and-evidence",

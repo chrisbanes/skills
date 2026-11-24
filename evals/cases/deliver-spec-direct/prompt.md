@@ -10,7 +10,7 @@ reviewer is available through runtime metadata. The lead can prepare delivery ev
 implements. No separate request for parallel execution was made.
 The implementation branch currently matches its base, and this invocation
 grants no merge authority. Explain the gates and ownership using only this
-supplied state. Do not run a delivery, contact GitHub, or change files.
+supplied state. The implementation executor is installed. Do not run a delivery, contact GitHub, or change files.
 
 Separately, a second standalone delivery has finished planning and is awaiting
 stakeholder approval. Its local plan will add a CSV export action to the

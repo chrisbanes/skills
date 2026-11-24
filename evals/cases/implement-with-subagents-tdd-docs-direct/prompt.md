@@ -1,5 +1,5 @@
 Review the next owner handoffs for two ready, independent tickets. `ENCODE`
-changes behavior; the user has approved testing the public `CsvEncoder.encode`
+changes behavior; the user explicitly requested `tdd` and approved testing the public `CsvEncoder.encode`
 seam, and the `tdd` skill is available. `DOC` changes only a Markdown guide and
 has a focused link check, with no meaningful behavioral test seam. Both tickets
 have isolated worktrees and enough owner capacity. A proposed handoff says to

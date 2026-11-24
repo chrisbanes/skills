@@ -56,7 +56,7 @@ install them, and the workflows never install them implicitly.
 
 | Consumer | Requirement | Provider | Source and install |
 |---|---|---|---|
-| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) behavior tasks | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
+| [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) when the user or repository requires TDD | Conditional | `tdd` at approved test seams | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | [`run-project`](skills/run-project/SKILL.md) explicit/repository-required test-first work | Conditional | `tdd` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill tdd` |
 | `run-project` Todo triage | Conditional | `triage` | [Matt Pocock's skills](https://github.com/mattpocock/skills): `npx skills add mattpocock/skills --skill triage` |
 | `run-project` Wayfinder lane | Conditional | `wayfinder`, `research` | [Matt Pocock's skills](https://github.com/mattpocock/skills): use `--skill wayfinder` or `--skill research`; see the [workflow provider matrix](skills/run-project/references/workflow-providers.md) |
@@ -132,7 +132,7 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
-- [`deliver-issue`](skills/deliver-issue/SKILL.md) — coordinate a named tracker issue and its descendants, or a verified board-controller handoff through solo or justified delegated implementation, diagnosis before planning for unresolved bugs in direct delivery, a planning-free fast path for small well-understood tickets, CI-supplied full-suite evidence, concurrent external review with verified draft support or earlier PR readiness, reusable scope approval and revision-isolated evidence with preservation checks, independent integrated-candidate review and focused repair review, and PR shepherding, delivering to GitHub or GitLab code hosts; validate applicable live-qualification harness paths offline (isolated production stores for persistent paths, fake runtimes for asynchronous paths), then reconcile failures under bounded approved allowances.
+- [`deliver-issue`](skills/deliver-issue/SKILL.md) — coordinate a named tracker issue and its descendants, or a verified board-controller handoff using the installed `implement-with-subagents` executor for each approved PR, diagnosis before planning for unresolved bugs in direct delivery, a planning-free fast path for small well-understood tickets, CI-supplied full-suite evidence, concurrent external review with verified draft support or earlier PR readiness, reusable scope approval and revision-isolated evidence with preservation checks, independent integrated-candidate review and focused repair review, and PR shepherding, delivering to GitHub or GitLab code hosts; validate applicable live-qualification harness paths offline (isolated production stores for persistent paths, fake runtimes for asynchronous paths), then reconcile failures under bounded approved allowances.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, use `changelog` for notes, prepare Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; recover run identity and bounded results by workflow ID with read-only status, and diagnose failures with optional investigation helpers.
 - [`subagent-delegation`](skills/subagent-delegation/SKILL.md) — provider-neutral delegation playbook, loaded by name or through a one-line user-level opt-in, with separate Codex, Claude Code, and Antigravity/Gemini model routing, installed-role precedence, parallel briefs, independent audits, and lead acceptance.
@@ -169,9 +169,12 @@ contains a copy of the reference for standalone installation.
 Implementation model and effort requests apply to the agent who edits across
 `implement-with-subagents`, `deliver-issue`, and `run-project`, including the
 delivery fast path.
-`deliver-issue` bundles its own solo-or-delegated implementation procedure;
-`implement-with-subagents` chooses solo or delegated ownership once from the
-whole task graph.
+Direct issue delivery and board-dispatched tickets both require the installed
+[`implement-with-subagents`](skills/implement-with-subagents/SKILL.md) skill at implementation.
+The executor receives one approved PR's task graph, chooses ownership, and
+returns a reviewed commit with validation evidence and any named checks that
+PR CI will run. Delivery opens the PR and waits for those checks. In-scope CI
+or review findings resume the same executor and implementation owners.
 
 Planning and drain admission distinguish behavioral prerequisites, shared-file
 mutation conflicts and final integration requirements. Plan-proven independent
@@ -179,8 +182,7 @@ preparation needs explicit slice ownership, permitted paths/resources, focused
 checks and a stop before shared edits; native blockers, accepted-plan ordering,
 resource grants and final integrated validation still apply.
 
-Workflows that create worktrees (`deliver-issue`, `implement-with-subagents`
-and `run-project`) likewise share the
+Workflows that create worktrees (`implement-with-subagents` and `run-project`) likewise share the
 [checkout lifecycle](references/checkout-lifecycle.md).
 
 Edit `references/subagent-selection.md` or `references/checkout-lifecycle.md`,
