@@ -92,7 +92,7 @@ Scope selects items. Only the invocation and live authority authorize writes.
 
 ## Normalize and reconcile
 
-1. Supply the [normalized ticket interface](normalized-ticket.md), with
+1. For board ranking, supply the controller’s normalized ticket interface with
    stable Jira ID, canonical site-qualified browse URL, authenticated
    assignee account IDs, explicit parked state, full blockerRefs and
    openDescendants. Use a unique numeric local selection key derived from

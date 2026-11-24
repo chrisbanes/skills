@@ -9,9 +9,7 @@ no authority to claim, write, merge or close.
 
 ## Configuration
 
-Use the existing `docs/agents/deliver-tasks.md` shape from the
-[GitHub Project configuration](github-binding.md#github-project-configuration);
-there is no GitLab-only section. Add these fields to the existing sections for
+Use the existing sections of the controller’s trusted `docs/agents/deliver-tasks.md`. Add these fields to the existing sections for
 a GitLab code host, keeping every other field (including the `Merge Policy`
 Done automation fields a GitHub Project board needs):
 
@@ -456,13 +454,14 @@ is not yet known), the default and base branches
 Community Edition, `GET projects/:id/approval_rules` and
 `GET projects/:id/approvals`. Propose `Repository`, `Project ID`,
 `Credential`, branches and `Merge Policy` values from those reads under the
-GitHub binding's [additive setup](github-binding.md#additive-setup-for-an-existing-repository).
+board controller’s additive setup procedure.
+If bounded access retries end during setup, report `configuration-blocked`.
 Finish with the applicable validation or proposed-edit result.
 
 ## Live Merge-Policy Fingerprint
 
 Compute and recompute it as the
-[GitHub fingerprint](github-binding.md#live-merge-policy-fingerprint) does,
+[GitHub fingerprint](github-delivery.md#live-merge-policy-fingerprint) does,
 with `sha256` over canonical JSON containing:
 
 - the base branch, the configured `Method` and `Squash`;
@@ -495,7 +494,7 @@ global merge-policy drift (`stop-preserve`), handled as in the GitHub binding.
 ## Reconciliation
 
 Apply steps 2–5 of the GitHub binding's
-[Remote reconciliation](github-binding.md#remote-reconciliation) to every
+[Remote reconciliation](github-delivery.md#remote-reconciliation) to every
 GitLab read and write. Reconcile a failed or ambiguous write from the merge
 request by source branch, the note by discussion or exact issue marker/link,
 the discussion's `resolved` state, the issue's labels, assignees and state
