@@ -26,7 +26,7 @@
   "rubric": [
     {
       "id": "full-path",
-      "text": "Routes A, B and C to normal to-plan planning because of unknown root cause, design artifact and public contract, regardless of their small diff size."
+      "text": "Routes A to pre-plan diagnosis and withholds implementation while the intermittent failure is unexplained. Routes B and C to normal to-plan planning because of the design artifact and public contract, regardless of their small diff size."
     },
     {
       "id": "existing-plan",

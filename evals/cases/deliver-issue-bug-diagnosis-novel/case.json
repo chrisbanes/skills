@@ -1,0 +1,42 @@
+{
+  "id": "deliver-issue-bug-diagnosis-novel",
+  "title": "Use local diagnosis and distinguish causal evidence from symptoms",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-issue-bug-diagnosis-novel",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "optional-provider",
+      "text": "Proceeds with local diagnosis when the provider is absent, without installation or a new owner."
+    },
+    {
+      "id": "evidence",
+      "text": "Accepts equivalent causal evidence when it supports verification, holds symptom-only fixes with a specific resume condition, and continues independent work."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

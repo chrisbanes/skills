@@ -36,14 +36,18 @@ permissions; one controller retains ownership from clarification through closure
    Resolve the complete root/descendant graph, holds, ownership, approved plans,
    pending outcomes and invocation grants before planning or writing.
 4. Follow the issue lifecycle for clarification, planning, dependencies and
-   scheduling. For each approved outcome follow the bundled
+   scheduling. After verifying readiness in standalone delivery, use
+   [Bug diagnosis](references/bug-diagnosis.md) for a bug with clear expected
+   behavior and no current plan when the evidence leaves the fix speculative.
+   Do this before choosing the fast path or drafting an implementation plan.
+5. For each approved outcome follow the bundled
    [delivery lifecycle](references/delivery-lifecycle.md),
    [implementation procedure](references/implementation-mode.md) and
    [evidence and review](references/evidence-and-review.md).
    Preserve existing plans and use the PR boundaries in the
    [tree delivery procedure](references/issue-lifecycle.md#deliver-the-tree).
    Keep repairs with their owner.
-5. Reconcile exact-head checks/reviews and explicit merge/closure grants through
+6. Reconcile exact-head checks/reviews and explicit merge/closure grants through
    the binding. Follow the issue lifecycle's bounded waiting and resume procedure;
    board handoffs follow their controller's cadence instead.
 

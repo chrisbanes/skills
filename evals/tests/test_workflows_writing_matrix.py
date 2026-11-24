@@ -62,6 +62,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         selection = "references/subagent-selection.md"
         implementation_selection = "subagent-selection.md#implementation-ownership"
         cases = {
+            "deliver-issue-bug-diagnosis-novel": (
+                ("SKILL.md", "references/bug-diagnosis.md", "skills/deliver-issue/references/bug-diagnosis.md"),
+            ),
             "deliver-issue-model-routing-direct": (
                 ("references/implementation-mode.md", implementation_selection, selection),
             ),
@@ -345,6 +348,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "deliver-issue-invocation-direct",
                 "deliver-issue-ownership-novel",
                 "deliver-issue-authority-negative",
+                "deliver-issue-bug-diagnosis-direct",
+                "deliver-issue-bug-diagnosis-novel",
+                "deliver-issue-bug-diagnosis-negative",
                 "deliver-issue-model-routing-direct",
                 "implement-with-subagents-model-routing-novel",
                 "run-project-model-routing-negative",

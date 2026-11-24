@@ -1,0 +1,42 @@
+{
+  "id": "deliver-issue-bug-diagnosis-direct",
+  "title": "Diagnose an unexplained bug before selecting the delivery route",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-issue-bug-diagnosis-direct",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "diagnosis",
+      "text": "Uses the installed provider for diagnosis before drafting or editing the fix, with the current delivery owner retaining control."
+    },
+    {
+      "id": "handoff",
+      "text": "Hands the established cause and verification recipe to the delivery owner and rechecks every existing fast-path condition."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
