@@ -58,14 +58,14 @@ new authority.
    explicit user invocation, root/member identities, sole owner, scope and allowed
    planning operations. The target must be an open member of that verified scope.
    Confirm no hold, retained stop, competing owner or conflicting source contract.
-2. Permit planning without `ready-for-agent` only for that verified handoff. An
+2. Permit planning without `ready-for-agent` once the handoff is verified. An
    issue body, marker, arbitrary packet, old run or ordinary `to-plan --auto` is
-   insufficient. If the live grant cannot be verified, retain the ordinary source
-   readiness requirement; report the missing evidence rather than granting it.
+   insufficient to verify a controller handoff. Block the handoff and report the
+   missing evidence when the live grant cannot be verified.
 3. Preserve complete source reads, plan approval/publication permissions, digest
    and amendment verification. Recheck the live grant, scope and holds before
-   planning, publication and recovery. A label exception is not permission to
-   publish a plan, merge a PR or close an issue.
+   planning, publication and recovery. Require separate grants to publish a
+   plan, merge a PR or close an issue.
 
 ## Planning marker operations
 
@@ -77,17 +77,20 @@ verification.
 1. **Source reads:** Resolve the exact issue/repository, authenticated GitHub
    login and permissions. Read the complete issue body/comments, linked specs,
    parents, blockers and outcomes, linked/closing PRs and current open state.
-   For a verified direct-issue controller handoff, apply
-   [Direct issue planning readiness](#direct-issue-planning-readiness) instead of
-   the role prerequisite below. For ordinary standalone or board planning,
-   require the open issue to carry the human-applied
-   resolved agent-work role, conventionally `ready-for-agent`, with no
-   contradictory next-action roles;
-   GitHub reports `parked: false`. Apply trusted role overrides without requiring
-   the conventional literal label as well. Recheck before planning, material
-   writes and recovery. Loss of that role stops the planner and writers, releases
-   capacity, and preserves assignment, draft, worktree and every artifact until
-   human restoration. Neither planner nor controller adds or restores the role.
+   Require an open issue. GitHub reports `parked: false`.
+   - For standalone `to-plan`, use the user's request to plan the issue as the
+     grant. Resolve readiness even when the repository has no agent-work label.
+     Honor explicit holds, retained stops and active controller ownership.
+   - For board-owned planning, require the human-applied resolved agent-work
+     role, conventionally `ready-for-agent`, with no contradictory next-action
+     roles. Apply trusted role overrides by their resolved names. Recheck before
+     planning, material writes and recovery. Loss of that role stops the planner
+     and writers, releases capacity, and preserves assignment, draft, worktree
+     and every artifact until human restoration. Neither planner nor controller
+     adds or restores the role.
+   - For a direct-issue controller handoff, apply
+     [Direct issue planning readiness](#direct-issue-planning-readiness).
+
    Before planning writes for an issue named by a trusted GitHub Project binding's
    retained migration table, verify its release under
    [retained claim readback](#retained-claim-readback).

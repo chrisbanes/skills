@@ -14,6 +14,8 @@ mapping, stop behavior, missing-gate behavior and offline/publication limits:
 
 - Jira: draft | blocked
 - Jira-parked: draft | blocked
+- GitHub-standalone: draft | blocked
+- GitLab-standalone: draft | blocked
 - GitHub-override: draft | blocked
 - GitHub-removed: stop-preserve | draft | restore-role
 - Unknown-gate: draft | blocked
