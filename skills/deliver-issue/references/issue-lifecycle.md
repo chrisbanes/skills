@@ -52,8 +52,8 @@
    handoff. Carry the invocation grant from the live controller context, its exact
    root/member identities, owner and allowed operations, not a self-authenticating
    packet from tracker content. The binding's direct-issue planning-readiness
-   branch permits an unlabelled in-scope issue; ordinary standalone planning and
-   board planning still require their existing readiness gate.
+   branch permits an unlabelled in-scope issue. For board-owned planning apply
+   the board's agent-work role and stop rules.
 3. Keep to-plan's source completeness, approval, publication and digest gates.
    Planning authorization alone is not plan-publication approval. Without that
    approval, draft and present the plan with the intended outcome, implementation

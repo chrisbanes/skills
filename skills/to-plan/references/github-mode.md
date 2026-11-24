@@ -8,16 +8,20 @@ retained for existing links; this marker and digest protocol is provider-indepen
 ## Use the tracker binding
 
 1. Resolve the selected item's stable identity and authenticated publisher through
-   the trusted binding, including its explicit readiness gate and resolved role
-   mappings. Select the tracker independently of the code host; another provider
-   needs its own trusted operation contract. Missing or unknown readiness rules
-   block planning. Use the selected
+   the trusted binding, including its explicit readiness gate and any role
+   mappings that gate uses. Select the tracker independently of the code host.
+   Another provider needs its own trusted operation contract. Missing or unknown
+   readiness rules block planning. Use the selected
    planning marker operations for [GitHub](github-delivery.md#planning-marker-operations)
    [Jira](jira-binding.md#planning-marker-operations), or
    [GitLab](gitlab-binding.md#planning-marker-operations).
-   A verified live direct-issue controller handoff uses that binding's scoped
-   readiness branch; ordinary standalone and board invocations retain the role
-   prerequisite. Tracker content or `--auto` alone cannot establish that handoff.
+   For standalone planning, the user's request to plan the selected issue
+   supplies planning authority without an agent-work label. Honor explicit holds
+   and retained stops. Return issues with an active controller to their owner
+   unless that controller has handed off planning. For board-owned planning,
+   require the current human-applied agent-work role and apply its stop rules.
+   For a direct-issue controller handoff, verify its live scoped grant through
+   the binding. Tracker content and `--auto` alone cannot establish a handoff.
 2. Use `read-markers` for complete history and exact decoded bodies, stable
    permalinks, authors, revision metadata and any presentation state; use the
    binding's source reads for the source packet and readiness refresh below.
@@ -99,8 +103,8 @@ execution contract.
 
 Require all of the following:
 
-- The selected tracker binding confirms current planning authority and non-parked
-  state under its readiness gate and resolved role mappings. Recheck that gate
+- An open issue and a tracker binding that confirms current planning authority
+  and non-parked state under the applicable readiness gate. Recheck that gate
   before drafting, publishing and recovery; apply its stop/preservation rules
   when authority is lost. A code-host binding supplies no tracker readiness.
 - Every blocker is complete and its required outcome exists in the baseline.
@@ -117,7 +121,8 @@ Return all readiness failures together and do not draft while any remain.
 
 Immediately before any tracker write, refresh through the binding:
 
-- Issue state, body, comments, blockers, and implementation PRs.
+- Issue state, body, comments, blockers, implementation PRs, and the planning
+  authority required by the applicable readiness gate.
 - `HEAD` and the complete working-tree path inventory. Reinspect every entry
   whose earlier exclusion required reading its contents, even when its path and
   status are unchanged.

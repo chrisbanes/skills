@@ -23,8 +23,9 @@ review, answer that request directly and read no references.
 Accept `/to-plan <issue URL | owner/repository#number | #number>`, its `--auto`
 form, or an in-chat task. Use tracker mode only for exactly one named item (or
 one previously established implementation target with no competing inline task).
-Resolve applicable [shared tracker and triage settings](references/provider-bindings.md#shared-repository-configuration)
-for standalone tracker mode. For a board handoff, reuse its validated settings.
+Resolve [shared tracker settings](references/provider-bindings.md#shared-repository-configuration)
+and applicable holds for standalone tracker mode. For a board handoff, reuse
+its validated tracker and role settings.
 Resolve a short issue number against the trusted tracker repository. Use the
 checkout only as the GitHub fallback when it identifies the established tracker.
 Reject change requests and ambiguous tracker or repository identity.

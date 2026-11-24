@@ -87,11 +87,13 @@ For board runs require one configured selection. For direct and standalone
 planning resolve a canonical issue URL or qualified reference against the
 trusted tracker identity. Resolve a bare IID only against the bound tracker
 project. Keep scope, claim and role names beside IDs. Apply the project drift
-rules above to the tracker independently of the checkout. Use the existing
-`Triage` and `Work Roles` label mappings together with the shared triage guide
-under [shared repository configuration](provider-bindings.md#shared-repository-configuration).
-Fall back to the conventional names for undeclared roles. Record the effective tracker identity, selection,
-resolved labels and account ID in the binding fingerprint used by leases.
+rules above to the tracker independently of the checkout. For controller runs,
+resolve the `Triage` and `Work Roles` names under
+[shared repository configuration](provider-bindings.md#shared-repository-configuration).
+Fall back to the conventional names for undeclared roles. Record the effective
+tracker identity, selection, resolved labels and account ID in the binding
+fingerprint used by leases. Standalone `to-plan` uses the exact issue and any
+mapped holds. It requires no board selection, claim label or agent-work label.
 A rename requires configuration reconciliation. An identity substitution stops
 the run. Omit GitHub Project fields and workflow settings for this tracker.
 
@@ -126,13 +128,14 @@ the run. Omit GitHub Project fields and workflow settings for this tracker.
    `GET projects/:id` and `GET projects/<encoded path>`. Match the ID, path
    and host, require issues enabled, and establish the authenticated account,
    effective membership, visibility and operation-specific permissions.
-   Validate all configured label IDs and names from fully paginated
-   `GET projects/:id/labels?include_ancestor_groups=true`. Require the
+   For controller runs validate all configured label IDs and names from fully
+   paginated `GET projects/:id/labels?include_ancestor_groups=true`. Require the
    claim label to exist and differ from every selection and work-role label.
    Refuse ambiguous names, which issue updates address by name. For a milestone,
    resolve the selected title and ID through the project or inherited group
    milestone inventory (`GET projects/:id/milestones?include_ancestors=true`).
-2. Page `GET projects/:id/issues?scope=all&state=all&issue_type=issue`.
+2. For board scope page
+   `GET projects/:id/issues?scope=all&state=all&issue_type=issue`.
    Match exact label name or `milestone.id` locally against the verified
    selection. Include visible closed issues as graph evidence. Read an exact
    issue via `GET projects/:id/issues/:issue_iid` and match host, project ID,
@@ -160,17 +163,18 @@ the run. Omit GitHub Project fields and workflow settings for this tracker.
    dependency-gated planning, claims, delivery and closure. Keep known unresolved references; never
    substitute an empty complete graph or invent edges. Check documented
    textual blockers as additional constraints.
-4. Apply the controller's holds, ownership, graph and plan checks. Standalone
-   and board planning require an open issue with its own human-applied
-   agent-work role and no contradictory role. The direct-issue controller
-   may accept the named open root and verified scope without an initial
-   agent-work label if its invocation grants that branch. Preserve all
-   explicit stops and observed role removals. A handoff inherits exactly one
-   claim and its grant. Neither planner nor controller adds or restores
-   the agent-work role.
-5. Normalize to the shared ticket interface. Use the bound host and immutable
-   issue ID for `itemId`, canonical issue URL for `itemRef`, IID for
-   `number`, and authenticated host-qualified numeric identities for
+4. Apply the holds, ownership, graph and plan checks. For standalone `to-plan`,
+   accept the selected open issue under the user's planning request without
+   requiring an agent-work label. Board planning requires the open issue's own
+   human-applied agent-work role and no contradictory role. The direct-issue
+   controller may accept the named open root and verified scope without an
+   initial agent-work label if its invocation grants that branch. Preserve
+   explicit stops in every mode and observed role removals for controller-owned
+   work. A handoff inherits exactly one claim and its grant. Neither planner
+   nor controller adds or restores the agent-work role.
+5. For controller ranking, normalize to the shared ticket interface. Use the
+   bound host and immutable issue ID for `itemId`, canonical issue URL for
+   `itemRef`, IID for `number`, and authenticated host-qualified numeric identities for
    assignees and the runner. Use `parked: false`, null priority and stable
    IID order for positions. Closed maps to Done; open without a claim label
    maps to Todo, including an assignment-only planning lease. An open issue

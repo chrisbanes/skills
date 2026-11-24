@@ -54,7 +54,9 @@ verified integration branch when authorized.
 Use the delivery binding's normal blocked result for affected operations.
 Finish configuration validation only after the sources agree and live
 identity checks pass. Board handoffs reuse the controller's validated
-settings. Direct issue delivery retains its scoped readiness rules.
+settings. Standalone tracker planning uses the selected issue and applicable
+holds. It requires no board role mapping or agent-work label. Direct issue
+delivery retains its scoped readiness rules.
 
 ## Procedure
 

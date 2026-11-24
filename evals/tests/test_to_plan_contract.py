@@ -417,9 +417,12 @@ class TrackerBindingContractTest(unittest.TestCase):
         snapshot = json.loads((case.directory / 'overlay/readback.json').read_text())
         self.assertEqual([], snapshot['source']['implementationPlans'])
         self.assertEqual([], snapshot['trackerBinding']['labels'])
-        fields = {'Jira': 'draft', 'Jira-parked': 'blocked', 'GitHub-override': 'draft',
-                  'GitHub-removed': 'stop-preserve', 'Unknown-gate': 'blocked',
-                  'Publication': 'not-authorized'}
+        fields = {
+            'Jira': 'draft', 'Jira-parked': 'blocked',
+            'GitHub-standalone': 'draft', 'GitLab-standalone': 'draft',
+            'GitHub-override': 'draft', 'GitHub-removed': 'stop-preserve',
+            'Unknown-gate': 'blocked', 'Publication': 'not-authorized',
+        }
         with tempfile.TemporaryDirectory() as directory:
             workspace = prepare_workspace(case, self.root, Path(directory) / 'fixture',
                                           enabled_skills=case.target_skills)
@@ -430,7 +433,7 @@ class TrackerBindingContractTest(unittest.TestCase):
             for wrong in (None, *fields):
                 answers = dict(fields)
                 if wrong:
-                    answers[wrong] = 'blocked' if wrong == 'Jira' else 'incorrect'
+                    answers[wrong] = 'blocked' if answers[wrong] == 'draft' else 'draft'
                 artifact.write_text('\n'.join(f'{key}: {value}' for key, value in answers.items()))
                 result = subprocess.run(command, cwd=workspace, capture_output=True, text=True)
                 with self.subTest(wrong=wrong):
