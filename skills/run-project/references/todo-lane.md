@@ -268,33 +268,9 @@ it stops the ticket's writes and asks the owning ticket agent for the packet.
 Classify it under the rules below, taking the current `ready-for-agent` issue,
 including any edited contract text, as the accepted contract.
 
-When repository evidence invalidates the approved plan or the required
-adjustment exceeds its accepted contract, require the owning ticket agent to
-stop writes and return one packet containing:
-
-- disposition: `autonomous-replan` or `human-required`;
-- active plan permalink and payload digest;
-- exact evidence and invalid assumption;
-- current accepted stakeholder contract, upstream policy, and risk posture;
-- recommended direction;
-- verified base SHA, branch and PR heads, and retained dirty-work summary.
-
-Classify the packet as:
-
-- `autonomous-replan` when accepted behavior, scope, acceptance criteria,
-  upstream policy, and risk posture remain unchanged and repository evidence
-  supports a contract-realizing resolution, even when it affects a public
-  interface, schema, persisted representation, seam, or testing contract;
-- `human-required` only when the accepted stakeholder contract or upstream
-  policy must change, new security, privacy, or permission policy must be
-  established, an unsupported compatibility commitment or irreversible
-  migration must be approved, or credible data-loss risk must be accepted.
-
-For `autonomous-replan`, require the evidence supporting that classification.
-For `human-required`, require the exact decision plus the authoritative issue,
-specification, or ADR that must change. Return no packet when the ticket is
-already implemented, superseded, contradicts an ADR, or remains ambiguous after
-applying this rule.
+Require the owner’s [replan packet](project-handoff.md#return-a-replan-packet)
+before dispatching a replan. Check its evidence and classification against the
+accepted contract.
 
 ### Re-plan A Contract-Preserving Inconsistency
 

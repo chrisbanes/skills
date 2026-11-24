@@ -6,8 +6,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COPIES = {
+    "references/github-delivery.md": tuple(
+        f"skills/{skill}/references/github-delivery.md"
+        for skill in ("deliver-issue", "run-project", "to-plan")
+    ),
     "references/github-binding.md": (
-        "skills/deliver-issue/references/github-binding.md",
         "skills/run-project/references/github-binding.md",
         "skills/to-plan/references/github-binding.md",
     ),
@@ -46,19 +49,7 @@ COPIES = {
         f"skills/{skill}/references/checkout-lifecycle.md"
         for skill in ("deliver-issue", "implement-with-subagents", "run-project")
     ),
-    "skills/run-project/references/agent-routing.md": ("skills/deliver-issue/references/agent-routing.md",),
-    "skills/run-project/references/authority-and-pauses.md": ("skills/deliver-issue/references/authority-and-pauses.md",),
-    "skills/run-project/references/drain-scheduler.md": ("skills/deliver-issue/references/drain-scheduler.md",),
-    "skills/run-project/references/execution-controller.md": ("skills/deliver-issue/references/execution-controller.md",),
-    "skills/run-project/references/human-frontier.md": ("skills/deliver-issue/references/human-frontier.md",),
-    "skills/run-project/references/normalized-ticket.md": ("skills/deliver-issue/references/normalized-ticket.md",),
-    "skills/run-project/references/review-and-setup.md": ("skills/deliver-issue/references/review-and-setup.md",),
     "skills/run-project/references/review-contracts.md": ("skills/deliver-issue/references/review-contracts.md",),
-    "skills/run-project/references/ticket-lifecycle.md": ("skills/deliver-issue/references/ticket-lifecycle.md",),
-    "skills/run-project/references/todo-lane.md": ("skills/deliver-issue/references/todo-lane.md",),
-    "skills/run-project/references/triage-lane.md": ("skills/deliver-issue/references/triage-lane.md",),
-    "skills/run-project/references/wayfinder-lane.md": ("skills/deliver-issue/references/wayfinder-lane.md",),
-    "skills/run-project/references/workflow-providers.md": ("skills/deliver-issue/references/workflow-providers.md",),
     "skills/deliver-issue/references/issue-lifecycle.md": ("skills/run-project/references/issue-lifecycle.md",),
     "skills/deliver-issue/references/delivery-lifecycle.md": ("skills/run-project/references/delivery-lifecycle.md",),
     "skills/deliver-issue/references/evidence-and-review.md": ("skills/run-project/references/evidence-and-review.md",),
@@ -68,6 +59,15 @@ COPIES = {
     "skills/deliver-issue/references/provider-bindings.md": ("skills/run-project/references/provider-bindings.md",),
     "skills/deliver-issue/references/qualification-failure.md": ("skills/run-project/references/qualification-failure.md",),
 }
+
+
+# The planner still bundles the Project binding and its board procedures.
+for name in (
+    "agent-routing", "authority-and-pauses", "drain-scheduler", "execution-controller",
+    "human-frontier", "normalized-ticket", "review-and-setup", "ticket-lifecycle",
+    "todo-lane", "triage-lane", "wayfinder-lane", "workflow-providers",
+):
+    COPIES[f"skills/run-project/references/{name}.md"] = (f"skills/to-plan/references/{name}.md",)
 
 
 # The shared binding links to these procedures; retain its reference closure

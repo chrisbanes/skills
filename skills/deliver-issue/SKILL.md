@@ -27,8 +27,8 @@ permissions; one controller retains ownership from clarification through closure
    controller returns to it without claiming or launching another scheduler.
 3. Otherwise read [Issue lifecycle](references/issue-lifecycle.md) completely,
    then [Delivery bindings](references/provider-bindings.md) and the selected
-   binding's issue operations. On GitHub read
-   [Direct issue scope](references/github-binding.md#direct-issue-scope).
+   binding's issue operations. For a GitHub tracker read
+   [Direct issue scope](references/github-delivery.md#direct-issue-scope).
    For a Jira Cloud key read [Scope and readiness](references/jira-binding.md#scope-and-readiness)
    and the Jira tracker operations.
    For GitLab read the selected [tracker](references/gitlab-binding.md#tracker-operations)

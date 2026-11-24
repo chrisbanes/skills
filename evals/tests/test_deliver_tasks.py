@@ -51,6 +51,14 @@ NEGATIVE_CASES = (
 )
 
 
+def markdown_heading_ids(path):
+    body = re.sub(r"```.*?```", "", path.read_text(), flags=re.S)
+    return {
+        re.sub(r"[^\w\- ]", "", heading.lower()).replace(" ", "-")
+        for heading in re.findall(r"^#+ (.*)$", body, re.M)
+    }
+
+
 class DeliverTasksTest(unittest.TestCase):
     def test_negative_delivery_assessments_pass_only_without_workspace_writes(self):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
@@ -94,12 +102,19 @@ class DeliverTasksTest(unittest.TestCase):
                 workspace = prepare_workspace(case, ROOT, Path(directory) / "fixture", enabled_skills=(skill,))
                 entry = workspace / ".agents/skills" / skill
                 self.assertTrue((entry / "SKILL.md").is_file())
+                if skill == "deliver-issue":
+                    for board_procedure in ("drain-scheduler", "todo-lane", "ticket-lifecycle", "github-binding"):
+                        self.assertFalse((entry / f"references/{board_procedure}.md").exists())
                 for source in entry.rglob("*.md"):
                     for link in re.findall(r"\]\(([^)]+)\)", source.read_text()):
-                        path = link.split("#")[0]
-                        if not path.endswith(".md") or ":" in path or path.startswith("../../to-plan/"):
+                        path, _, anchor = link.partition("#")
+                        if ":" in path or path.startswith("../../to-plan/") or (path and not path.endswith(".md")):
                             continue
-                        self.assertTrue((source.parent / path).is_file(), (skill, source.name, link))
+                        target = source.parent / path if path else source
+                        with self.subTest(skill=skill, source=source.name, link=link):
+                            self.assertTrue(target.is_file())
+                            if skill == "deliver-issue" and anchor:
+                                self.assertIn(anchor, markdown_heading_ids(target))
 
     def test_github_entry_loads_controller_and_both_binding_copies_resolve_core_links(self):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
@@ -122,12 +137,7 @@ class DeliverTasksTest(unittest.TestCase):
                             self.assertTrue(target.is_file())
                             anchor = link.partition("#")[2]
                             if anchor:
-                                body = re.sub(r"```.*?```", "", target.read_text(), flags=re.S)
-                                headings = {
-                                    re.sub(r"[^\w\- ]", "", heading.lower()).replace(" ", "-")
-                                    for heading in re.findall(r"^#+ (.*)$", body, re.M)
-                                }
-                                self.assertIn(anchor, headings)
+                                self.assertIn(anchor, markdown_heading_ids(target))
             self.assertTrue((installed / "run-project/scripts/rank_tickets.py").is_file())
             self.assertTrue((installed / "run-project/scripts/watch_project.py").is_file())
 
