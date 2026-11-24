@@ -21,7 +21,7 @@ claiming they match the default delivery contract.
 block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
 
-For ordinary implementation, follow the [controller handoff](project-handoff.md)
+For ordinary implementation, follow the [controller handoff](../../deliver-issue/references/project-handoff.md)
 to the installed `implement-with-subagents` skill. A missing executor blocks
 only affected implementation or repair. Retain the claim, evidence and owner
 and continue independent work. Use `shepherd` for CI and PR feedback.

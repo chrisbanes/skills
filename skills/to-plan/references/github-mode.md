@@ -12,9 +12,9 @@ retained for existing links; this marker and digest protocol is provider-indepen
    mappings that gate uses. Select the tracker independently of the code host.
    Another provider needs its own trusted operation contract. Missing or unknown
    readiness rules block planning. Use the selected
-   planning marker operations for [GitHub](github-delivery.md#planning-marker-operations)
-   [Jira](jira-binding.md#planning-marker-operations), or
-   [GitLab](gitlab-binding.md#planning-marker-operations).
+   planning marker operations for [GitHub](../../deliver-issue/references/github-delivery.md#planning-marker-operations)
+   [Jira](../../deliver-issue/references/jira-binding.md#planning-marker-operations), or
+   [GitLab](../../deliver-issue/references/gitlab-binding.md#planning-marker-operations).
    For standalone planning, the user's request to plan the selected issue
    supplies planning authority without an agent-work label. Honor explicit holds
    and retained stops. Return issues with an active controller to their owner

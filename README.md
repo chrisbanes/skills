@@ -11,13 +11,16 @@ and the immediate skill directories under [`skills/`](skills/).
 
 ## Install
 
-With the [skills CLI](https://skills.sh):
+Install all skills together with the skills CLI:
 
-```
-npx skills add chrisbanes/skills
+```sh
+npx skills add chrisbanes/skills --skill '*'
 ```
 
-Or install as a Claude Code plugin:
+Shared references live in the skills that own them. Selecting all skills keeps
+those links available. You can also install the complete plugin for your client.
+
+For Claude Code:
 
 ```
 /plugin marketplace add chrisbanes/skills
@@ -65,13 +68,11 @@ Delivery and parallel implementation use one fresh independent read-only reviewe
 against the approved source and repository standards; no external review skill
 or issue-tracker setup is required. Reviews include the production paths and
 boundary cases examined and material uncertainty. The authoritative
-[behavioral review and repair procedure](references/behavioral-review.md) covers
+[behavioral review and repair procedure](skills/implement-with-subagents/references/behavioral-review.md) covers
 related boundary repairs, sensitive fixture calibration before expansion,
 rendering-consumer tracing, repeated external findings and browser diagnostics.
-`npm run references:sync` supplies identical local copies to its consumers;
-edit the authoritative source, not the copies. The same mechanism supplies
-[to-plan's boundary-validation rule](skills/to-plan/references/boundary-validation.md)
-to implementation consumers.
+Planning and implementation also share
+[the boundary-validation rule](skills/to-plan/references/boundary-validation.md).
 
 Delivery and planning select affected existing tests through shared-structure
 consumers and structural audits. Unsettled fixtures establish one sensitive case
@@ -141,13 +142,10 @@ for its lane-specific fallback and blocking behavior.
 - [`run-project`](skills/run-project/SKILL.md) — explicitly triage, plan and deliver eligible tickets from a Project board, using Todo / In progress / Done, human-applied role authority, preserved label stops, scheduling and review gates, with a GitHub or GitLab code host; use `deliver-issue` for one named item.
 - [`shepherd`](skills/shepherd/SKILL.md) — poll open PRs and MRs directly in the controller, using a read-only helper only for a bounded large failed-log question, or follow a host PR monitor's wake events (such as Claude desktop's Auto-fix) instead of polling, triage review comments (including GitLab discussion reply, resolve and approval reads), and repair CI failures with affected checks and required integrated-candidate validation; start external review during CI while retaining final-head merge gates.
 
-Both delivery skills bundle their internal references for selective installation.
-Install `changelog` alongside `release-kotlin-library`.
-
 The delivery skills support Jira Cloud JQL boards and GitLab issue selections by
 label or milestone, as well as direct issue delivery and planning markers.
-Select the code host separately. See the [Jira binding](references/jira-binding.md)
-and [GitLab binding](references/gitlab-binding.md) for setup and capabilities.
+Select the code host separately. See the [Jira binding](skills/deliver-issue/references/jira-binding.md)
+and [GitLab binding](skills/deliver-issue/references/gitlab-binding.md) for setup and capabilities.
 
 When `run-project` has no explicit GitHub Project scope, it selects the sole
 visible open, non-template Project linked to the verified repository. Supply a
@@ -158,8 +156,8 @@ with the delivery skills through `docs/agents/issue-tracker.md` and
 `docs/agents/triage-labels.md`. Reference those files from trusted repository
 instructions. Keep Project and delivery overrides in `docs/agents/deliver-tasks.md`.
 Existing duplicate settings can coexist when they agree. See the
-[shared configuration rules](skills/run-project/references/provider-bindings.md#shared-repository-configuration)
-and [setup procedure](references/github-binding.md#additive-setup-for-an-existing-repository)
+[shared configuration rules](skills/deliver-issue/references/provider-bindings.md#shared-repository-configuration)
+and [setup procedure](skills/run-project/references/github-binding.md#additive-setup-for-an-existing-repository)
 before removing duplicate fields from an active binding.
 
 Delivery workflow migration: `run-github-project` is replaced by `run-project`;
@@ -172,9 +170,8 @@ then use [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md)
 to execute it. When authorized, open one MR from the verified integration branch.
 
 Workflows that delegate agents share the [subagent selection and handoff
-reference](references/subagent-selection.md). Each workflow retains its own
-delegation trigger, authority, and acceptance rules. Each consuming skill also
-contains a copy of the reference for standalone installation.
+reference](skills/subagent-delegation/references/subagent-selection.md). Each workflow retains its own
+delegation trigger, authority, and acceptance rules.
 Implementation model and effort requests apply to the agent who edits across
 `implement-with-subagents`, `deliver-issue`, and `run-project`, including the
 delivery fast path.
@@ -191,16 +188,8 @@ preparation needs explicit slice ownership, permitted paths/resources, focused
 checks and a stop before shared edits; native blockers, accepted-plan ordering,
 resource grants and final integrated validation still apply.
 
-Workflows that create worktrees (`implement-with-subagents` and `run-project`) likewise share the
-[checkout lifecycle](references/checkout-lifecycle.md).
-
-Edit `references/subagent-selection.md` or `references/checkout-lifecycle.md`,
-then run `npm run references:sync` and include the updated bundled copies in
-the change.
-Run `npm run references:check` to check that all copies are regular files matching their
-sources; it fails on drift without rewriting files.
-`.gitattributes` marks every copy as generated so GitHub collapses it in pull
-request diffs; a test keeps that list in step with the sync script.
+Workflows that create worktrees (`implement-with-subagents` and `run-project`) share the
+[checkout lifecycle](skills/implement-with-subagents/references/checkout-lifecycle.md).
 
 ### Delegation on another machine
 

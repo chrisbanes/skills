@@ -26,7 +26,7 @@ capabilities, not model tiers; they grant no authority.
    the first eligible profile. Wait for temporarily busy capacity rather than
    changing an existing owner. Do not use an external service to select agents.
 4. Give the selected agent a bounded brief under
-   [subagent selection](subagent-selection.md). Preserve explicit model pins;
+   [subagent selection](../../subagent-delegation/references/subagent-selection.md). Preserve explicit model pins;
    resolve unspecified model and reasoning settings through the user's
    selection policy for that bounded assignment before dispatch. Profile
    selection alone does not resolve those settings. Record the assignment, actual

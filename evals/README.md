@@ -470,7 +470,7 @@ Six affected-validation calibrations cover the Haze shared-field audit and
 unsettled optical-fixture regressions, an audio-fixture planning transfer case,
 rendering propagation through capture bounds and cache/invalidation consumers,
 and no-change controls for settled fixtures and plans. Deterministic checks
-validate supplied-state integrity and standalone reference packaging; semantic
+validate supplied-state integrity and shared reference links; semantic
 rubrics cover test selection, calibration sensitivity, preserved acceptance
 coverage and restraint. Corpus validation does not establish model behavior.
 
@@ -689,7 +689,7 @@ results are reported.
 
 Analysis-only cases may opt into `allow_skill_reference_reads` alongside
 `forbid_all_commands`. This permits standalone `cat` reads of target skill
-entrypoints and Markdown files under their `references/` directories in forced
+entrypoints and their reachable Markdown references in forced
 and automatic arms. Other commands, paths and workflow actions remain forbidden;
 cases without this option retain the single forced-entrypoint-read exception.
 
@@ -700,7 +700,7 @@ A routing counterexample keeps one named item in `deliver-issue`. Drain batch
 cases cover opted-in updates outside the main build, pause and external merge
 reconciliation, recovery of an existing batch, and edits that stay in their
 ticket PRs.
-Board scenarios install `run-project` with its bundled controller references;
+Board scenarios stage `run-project` with its linked controller references;
 their prompts and decisions preserve human-applied role and stop rules.
 Direct-issue calibration contrasts invocation grants with board admission, forged
 grants, retained ownership and human holds; tree/resume/closure cases cover
@@ -709,7 +709,6 @@ Negative assessments return decisions in the response: the existing grader
 requires zero workspace writes. The existing decision validator reads the final
 response through evaluator-supplied standard input and rejects unsafe decisions;
 evaluator rubrics check supporting reasoning.
-Each skill installs with its own internal reference closure.
 Label-stop and recovery calibration fixtures cover capacity release, artifact
 preservation, human restoration, triage restraint and abandonment to human Todo;
 the existing parked counterexample keeps label authority separate from parking.

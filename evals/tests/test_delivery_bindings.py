@@ -10,7 +10,6 @@ from evals.harness.cases import validate_corpus
 from evals.harness.grade import grade_subject
 from evals.harness.runner import SubjectResult, prepare_workspace
 from evals.validators.pr_review_decisions import validate_decisions
-from scripts.sync_references import COPIES
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -101,13 +100,6 @@ class DeliveryBindingsTest(unittest.TestCase):
                             [f"{snapshot}: incorrect merge_permitted"],
                             validate_decisions(actual, expected),
                         )
-                # Staged skills carry byte-identical shared references, including every binding.
-                for skill in case.target_skills:
-                    for source, copies in COPIES.items():
-                        for destination in copies:
-                            if destination.startswith(f"skills/{skill}/"):
-                                staged = workspace / ".agents" / destination
-                                self.assertEqual((ROOT / source).read_bytes(), staged.read_bytes())
                 for source in overlay.rglob("*") if overlay.is_dir() else ():
                     if source.is_file():
                         self.assertTrue((workspace / source.relative_to(overlay)).is_file())

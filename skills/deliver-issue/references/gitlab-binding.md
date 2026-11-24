@@ -366,7 +366,7 @@ is the merge request IID.
    title prefix. Mark ready with `PUT projects/:id/merge_requests/:iid`
    removing that prefix, then read back `draft: false`. Return to draft by
    restoring the prefix. Change readiness only within caller authority under
-   [PR review timing](pr-review-timing.md).
+   [PR review timing](../../shepherd/references/pr-review-timing.md).
 9. **Source link and closing references:** Put the exact tracker URL in the
    description as non-closing text unless [Link and close](#link-and-close)
    and the shared closure gates select native closure. After every create or

@@ -7,10 +7,9 @@
   "repository": "https://github.com/chrisbanes/skills",
   "license": "Apache-2.0",
   "scripts": {
-    "references:check": "python3 scripts/sync_references.py --check",
-    "references:sync": "python3 scripts/sync_references.py",
+    "references:check": "python3 -m unittest evals.tests.test_plugin_references",
     "lint": "remark --frail skills/ README.md evals/README.md",
-    "test": "node --test .opencode/tests/*.test.js && python3 -m unittest scripts/test_release.py scripts/test_sync_references.py scripts/test_gitlab_code_host_live_check.py skills/run-project/scripts/test_rank_tickets.py skills/run-project/scripts/test_watch_project.py skills/run-project/scripts/test_qualify_jira.py skills/gradle-run/scripts/test_gradle_run.py skills/release-kotlin-library/scripts/test_release.py && python3 -m unittest discover -s evals/tests -p 'test_*.py'",
+    "test": "node --test .opencode/tests/*.test.js && python3 -m unittest scripts/test_release.py scripts/test_gitlab_code_host_live_check.py skills/run-project/scripts/test_rank_tickets.py skills/run-project/scripts/test_watch_project.py skills/run-project/scripts/test_qualify_jira.py skills/gradle-run/scripts/test_gradle_run.py skills/release-kotlin-library/scripts/test_release.py && python3 -m unittest discover -s evals/tests -p 'test_*.py'",
     "evals:validate": "python3 evals/run.py validate",
     "evals:plan": "python3 evals/run.py plan --model gpt-6-luna --reasoning high --judge-model gpt-6-sol --judge-reasoning high"
   },

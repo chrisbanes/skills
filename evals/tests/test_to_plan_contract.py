@@ -397,8 +397,8 @@ class TrackerBindingContractTest(unittest.TestCase):
         skill = (self.root / 'skills/to-plan/SKILL.md').read_text()
         mode = (self.root / 'skills/to-plan/references/github-mode.md').read_text()
         amendments = (self.root / 'skills/to-plan/references/integration-amendments.md').read_text()
-        binding = (self.root / 'references/github-delivery.md').read_text()
-        self.assertIn('references/github-delivery.md', skill)
+        binding = (self.root / 'skills/deliver-issue/references/github-delivery.md').read_text()
+        self.assertIn('../deliver-issue/references/github-delivery.md', skill)
         for operation in ('read-markers', 'write-marker', 'supersede-marker'):
             self.assertIn(f'`{operation}`', mode)
             self.assertIn(f'`{operation}`', binding)

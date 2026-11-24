@@ -56,6 +56,7 @@ Before considering any skill addition or edit complete, verify:
 - Skills live at `skills/<skill-name>/SKILL.md`. **Flat** — never nest by language or topic. Encode the topic in the directory name instead (e.g. `kotlin-structured-concurrency`, not `kotlin/structured-concurrency`).
 - The `name:` in the SKILL.md frontmatter **must match the directory name** exactly.
 - Use lowercase kebab-case for directory and `name:` values.
+- Keep shared references under the skill that owns them. Use relative links across sibling skills so installing all skills with `npx skills` includes every shared reference.
 
 ## Manifests
 

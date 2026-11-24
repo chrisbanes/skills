@@ -41,7 +41,7 @@
    together, respecting dependencies and shared-write constraints. With any
    parallel point, workers own every item, including a sequential head or tail.
    Otherwise the graph is solo-eligible. Apply
-   [Implementation ownership](subagent-selection.md#implementation-ownership)
+   [Implementation ownership](../../subagent-delegation/references/subagent-selection.md#implementation-ownership)
    once to the validated graph before assigning any implementation. Record and
    retain the selected route throughout the run.
 4. Keep the integration checkout stable and prepare the ready frontier.
@@ -73,7 +73,7 @@
    to lead implementation when a worker is required. A dependent is ready only
    when every prerequisite is integrated and its affected checks pass at that
    integrated head, including planned boundary evidence under
-   [to-plan's boundary-validation rule](boundary-validation.md).
+   [to-plan's boundary-validation rule](../../to-plan/references/boundary-validation.md).
    Do not start it from a prerequisite's unintegrated branch.
    Give read-only helpers access to an existing checkout without allocating a
    worker slot, and never switch a checkout used by an active owner or process.
@@ -83,7 +83,7 @@
    record or authorized notes. Share them with affected owners and let other
    ready work proceed.
 5. Select an implementation-capable subagent using the runtime requirements below
-   and the shared [selection and handoff reference](subagent-selection.md).
+   and the shared [selection and handoff reference](../../subagent-delegation/references/subagent-selection.md).
    Verify the preflight settings before dispatch. Classify individual tasks
    under the policy for parallel work and use the preflight's whole-chain
    settings for serial work. Require workers to return newly discovered
@@ -105,7 +105,7 @@
    self-review against the task and repository standards, a task-scoped commit,
    and record each command's exit code, tested SHA, output tail and complete-log
    path, plus relevant input and environment identity. Delegated owners return
-   that evidence in the [selection and handoff reference](subagent-selection.md)
+   that evidence in the [selection and handoff reference](../../subagent-delegation/references/subagent-selection.md)
    report format; solo work needs no separate acceptance receipt. Run a
    broader check here only when the user or repository requires it. Do not
    invoke the separate `/implement` skill.

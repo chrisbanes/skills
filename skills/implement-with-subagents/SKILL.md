@@ -29,7 +29,7 @@ checkouts when delegating.
    agent, edit, commit, change branches, perform worktree lifecycle operations,
    or contact a remote service.
 2. Assess the whole task graph and its recorded preflight choice using
-   [Implementation ownership](references/subagent-selection.md#implementation-ownership)
+   [Implementation ownership](../subagent-delegation/references/subagent-selection.md#implementation-ownership)
    and the supplied policy, effective settings, authority and capacity.
    Flag an unnecessary serial worker or a split serial handoff. Accept one
    capable worker for a serial run with required settings the lead cannot meet

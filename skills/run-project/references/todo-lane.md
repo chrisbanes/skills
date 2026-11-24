@@ -29,7 +29,7 @@ replan report determines when a replacement revision is needed.
 ## Fast-path a Todo item
 
 Use this instead of planning when an item has no plan chain and qualifies under
-deliver-issue's [fast path](fast-path.md).
+deliver-issue's [fast path](../../deliver-issue/references/fast-path.md).
 
 1. Apply step 1 of [Plan a Todo item](#plan-a-todo-item) to claim the item.
 2. In the controller context, classify it from the issue and bounded read-only
@@ -37,9 +37,9 @@ deliver-issue's [fast path](fast-path.md).
    When in doubt, plan it normally.
 3. In the controller lane, publish the [fast-path plan payload](github-binding.md#publish-a-fast-path-plan)
    through the selected tracker. GitHub uses a GitHub comment. Jira uses
-   [write-marker and read-markers](jira-binding.md#planning-marker-operations)
+   [write-marker and read-markers](../../deliver-issue/references/jira-binding.md#planning-marker-operations)
    with the same payload in its ADF comment. GitLab uses an
-   [issue note](gitlab-binding.md#planning-marker-operations). Verify the readback and reconcile
+   [issue note](../../deliver-issue/references/gitlab-binding.md#planning-marker-operations). Verify the readback and reconcile
    an ambiguous create before retrying.
 4. In `next`, or when an implementation slot is free, move the item directly
    to `In progress` and verify the authority lease, including the contract
@@ -54,11 +54,11 @@ deliver-issue's [fast path](fast-path.md).
 ## Plan a Todo item
 
 1. In the controller lane, use the binding's Todo claim operation
-   ([GitHub](github-binding.md#claim-todo-work), [Jira](jira-binding.md#claim-release-and-status)
-   or [GitLab](gitlab-binding.md#claim-stop-and-release)), retaining exclusive
+   ([GitHub](github-binding.md#claim-todo-work), [Jira](../../deliver-issue/references/jira-binding.md#claim-release-and-status)
+   or [GitLab](../../deliver-issue/references/gitlab-binding.md#claim-stop-and-release)), retaining exclusive
    assignment through planning and implementation.
 2. Use one dedicated planning worktree per run, created outside the checkout
-   under the [checkout lifecycle](checkout-lifecycle.md) and detached at the
+   under the [checkout lifecycle](../../implement-with-subagents/references/checkout-lifecycle.md) and detached at the
    configured base. Reuse it within the run, refresh it only between tickets,
    and never discard ignored build state while reusing it.
 3. Start a fresh ephemeral planning agent using the default-owner capability
@@ -92,8 +92,8 @@ deliver-issue's [fast path](fast-path.md).
    branch, planned SHA, replan-report link, and timestamps. After verifying the
    leaf, use the selected binding's supersede-marker operation for
    [GitHub](github-binding.md#planning-marker-operations),
-   [Jira](jira-binding.md#planning-marker-operations) or
-   [GitLab](gitlab-binding.md#planning-marker-operations). Preserve the semantic
+   [Jira](../../deliver-issue/references/jira-binding.md#planning-marker-operations) or
+   [GitLab](../../deliver-issue/references/gitlab-binding.md#planning-marker-operations). Preserve the semantic
    payload and record a presentation warning where required. Treat missing
    `to-plan` as an issue-local planning blocker; it must not block
    implementation items with current plans.
@@ -268,7 +268,7 @@ it stops the ticket's writes and asks the owning ticket agent for the packet.
 Classify it under the rules below, taking the current `ready-for-agent` issue,
 including any edited contract text, as the accepted contract.
 
-Require the owner’s [replan packet](project-handoff.md#return-a-replan-packet)
+Require the owner’s [replan packet](../../deliver-issue/references/project-handoff.md#return-a-replan-packet)
 before dispatching a replan. Check its evidence and classification against the
 accepted contract.
 

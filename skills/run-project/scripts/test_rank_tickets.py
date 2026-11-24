@@ -1170,7 +1170,7 @@ class RankTicketsTest(unittest.TestCase):
         self.assertEqual([70, 8], [x["ticket"]["number"] for x in output["candidates"]])
 
     def test_canonical_wayfinder_example_remains_an_eligible_candidate(self):
-        guide = (SCRIPT.parents[3] / "references/github-binding.md").read_text()
+        guide = (SCRIPT.parents[1] / "references/github-binding.md").read_text()
         section = guide.split("When Wayfinder is enabled, a configured Wayfinder child", 1)[1]
         example = json.loads(section.split("```json\n", 1)[1].split("```", 1)[0])
         child = wayfinder_ticket(307)

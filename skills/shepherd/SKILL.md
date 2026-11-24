@@ -7,24 +7,18 @@ description: "Use when asked to shepherd, babysit, monitor, or poll open pull re
 
 ## Core principle
 
-Keep an authorized PR or MR moving with evidence, not noise: poll, act on new
-actionable items, batch each target's local fixes into one push, then resolve
-addressed threads. Use affected local checks during repairs and required full
-checks on meaningful integrated candidates; use CI as confirmation. Never merge without explicit
-authority.
-
-Do not start persistent polling for a one-off inspection, no open targets, or an action requiring human judgment; report the state and stop.
+Batch each target's actionable feedback into one verified push. Resolve
+addressed threads after replying and pushing. Merge only with authority.
 
 ## Procedure
 
-1. Detect the platform with `git remote get-url origin`: use `gh` for GitHub and
-   `glab` for GitLab, never `gh`. If it is ambiguous or unavailable, stop and ask. When the
-   host provides a PR monitor that wakes this session on PR events, such as
-   Claude desktop's `ccd_pr` tools, load those tools first if they are listed
-   but deferred, then follow
-   [host-managed monitoring](references/provider-commands.md#host-managed-monitoring)
-   instead of polling. Project controllers and their ticket agents keep the
-   Project waiting rules instead.
+1. Identify the platform from `git remote get-url origin`. Use `gh` for GitHub
+   or `glab` for GitLab. Escalate ambiguous targets or platforms. For a one-off
+   inspection or no open targets, report the state and stop. Project controllers
+   and ticket agents follow Project waiting rules. Otherwise, when the host
+   offers PR event wakes, load its monitor tools (including deferred tools such
+   as Claude Desktop's `ccd_pr`) and follow
+   [host-managed monitoring](references/provider-commands.md#host-managed-monitoring).
 2. Establish targets and a handled-ID snapshot. Every external comment, review,
    or thread absent from that snapshot is new, including pre-session feedback.
    After each poll record feedback IDs, CI state, and this controller's comments.
@@ -43,46 +37,39 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    Reconcile applicable current-head review initiation under
    [PR review timing](references/pr-review-timing.md) on acquisition and relevant
    wakes, even without repairs; one-off inspections stay read-only.
-3. Read routine PR/MR evidence in the controller. Use a read-only helper only
-   for one specific diagnostic question about a large failed CI log. Select and
-   brief it using the shared
-   [selection and handoff reference](references/subagent-selection.md).
-   Give it the exact target, head, failed job and log, the question, and a bounded
-   result format: diagnosis, supporting log references, and uncertainty. It
-   never mutates or takes over polling. Keep triage, replies, pushes,
-   resolution, retries, and merging with the authorized controller.
-4. Poll with the platform CLI using [provider commands](references/provider-commands.md),
-   then compare complete review, comment, and CI state with the snapshot. Inspect
-   failed logs only when needed. Do not reprocess old feedback or post a status-only
-   update. Under host-managed monitoring, read once per wake; never start a
-   timer, loop, or repeated poll.
+3. Read routine evidence in the controller. Delegate only a specific diagnostic
+   question about a large failed CI log to a read-only helper. Use the
+   [handoff reference](../subagent-delegation/references/subagent-selection.md).
+   Supply the target, head, failed job, log and question. Request a diagnosis
+   with log references and uncertainty. Keep monitoring and remote actions
+   with the authorized controller.
+4. Compare complete reviews, comments and checks against the snapshot using
+   [provider commands](references/provider-commands.md). Under host monitoring,
+   read once per wake. Act only on new evidence and skip status-only comments.
 5. Triage new evidence before remote mutation. Fix clear requests and narrow
    formatting, lint, compile, or test failures; answer clear questions in-thread.
-   Apply [Behavioral review and repair](references/behavioral-review.md) for
+   Apply [Behavioral review and repair](../implement-with-subagents/references/behavioral-review.md) for
    related boundary cases, the two-round convergence audit, review coverage and
    browser failure evidence. Use the reporting context and repair owner resolved
    in step 2; the authorized controller retains remote mutations.
    Escalate architectural or contradictory feedback, unfamiliar failures,
    non-obvious fixes, and out-of-scope conflicts. Classify GitLab manual jobs
    using the provider's candidate checks in step 4.
-6. Handle each target in its own head checkout and batch known actionable items.
-   Inspect failing logs and identify applicable local equivalents from actual
-   workflow/check configuration before repairing. If evidence is missing, obtain
-   it before guessing a fix; report checks unavailable on this host honestly.
-   Run focused checks during repair, reusing still-valid evidence, and required full checks on the meaningful
-   integrated candidate before pushing, except where the PR's required CI runs
-   the same full suite and no repository or provider rule requires a local run;
-   then CI on the pushed head supplies that evidence before delivery acceptance
-   or merge. Obtain or renew applicable independent review under PR review timing
-   before push. Preserve stricter repository/provider rules; renew affected checks
-   or broaden when impact is unknown.
-   Do not use CI as an iterative test runner or require full checks per slice
-   commit. Hold the push while checks required before push fail or lack evidence; a
-   CI-supplied full suite gates acceptance or merge instead. Reassess evidence
-   after each head change under PR review timing; renew affected independent
-   review before pushing repairs.
-   Reply after an addressed change or answer; resolve its thread only after the reply and required push succeed.
-   Do not combine heads, push after every comment, resolve a local-only fix, or comment when nothing changed.
+6. Repair each target in its own head checkout, in this order:
+
+   - Inspect the failed log and identify local equivalents from the check
+     configuration. If evidence is missing, request the exact check name, log,
+     PR diff, head and configuration. Identify unavailable or unknown checks.
+   - Batch the fix with that target's clear review requests. Run affected
+     CI-equivalent checks on the required host and reuse still-valid evidence.
+     Broaden checks when impact is unknown.
+   - Run required full checks on the integrated candidate. Required CI on
+     the pushed head may supply the same suite when repository and provider
+     rules allow it. That CI gates acceptance and merge.
+   - Renew affected checks and independent review on each changed head under
+     PR review timing. Push once all pre-push requirements pass. Use CI to
+     confirm the repair. Reply to the finding and resolve only after the reply
+     and any required push succeed.
 7. Recheck CI after the verified repair push; return to step 6 on another
    code-related failure. Retry a suspected flaky GitLab job once without code
    changes; report a second failure. Poll pending checks every 2–5 minutes,
@@ -99,17 +86,12 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 
 ## Finish or escalate
 
-Continue until the user stops monitoring, every target is merged or closed, or
-an escalation is needed. Report the target, current CI/review state, actions
-taken, checks actually run (say none when none ran), checks unavailable or
-unknown, and the next required human decision. Under host-managed monitoring,
-also name the events that monitor does not wake on. When describing a repair
-cycle, give this order: inspect the failed log (if missing, request the exact
-check name, log, PR diff, head and check configuration, and say which local
-equivalents are unidentified); batch the fix with that PR's clear review
-requests; run affected CI-equivalent checks on the required host; reuse
-still-valid evidence; complete integrated-candidate checks per step 6; push
-once; use CI as confirmation. Do not claim unrun steps happened. Escalate immediately for ambiguous platform/target selection, an
-unresolved conflict,
-material human judgment, conflicting reviewer direction, or a failure that
-remains after three repair cycles.
+Continue until the user stops monitoring, all targets merge or close, or
+escalation is needed. Escalate immediately for an unresolved conflict, a
+material human decision, contradictory reviews, or a failure still present
+after three repair cycles.
+
+Report each target's current CI and review state, actions taken, checks run
+(say when none ran), unavailable evidence and the next required human decision.
+Describe repairs in step 6 order. For host monitoring, name the events that
+will not wake the session.

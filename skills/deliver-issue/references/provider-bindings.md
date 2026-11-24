@@ -114,7 +114,7 @@ delivery retains its scoped readiness rules.
    acceptance and merge until corrected and read back. Never translate a tracker
    key into a host issue number.
 6. Have `shepherd` coordinate check, review, feedback and change-request operations
-   through the selected code-host binding, applying [PR review timing](pr-review-timing.md)
+   through the selected code-host binding, applying [PR review timing](../../shepherd/references/pr-review-timing.md)
    to the provider's change request. Preserve exact-head evidence and merge
    authority; host readiness is distinct from delivery `ready`. Return unsupported
    operations precisely rather than falling back to a different host.

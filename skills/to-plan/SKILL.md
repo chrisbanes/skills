@@ -23,7 +23,7 @@ review, answer that request directly and read no references.
 Accept `/to-plan <issue URL | owner/repository#number | #number>`, its `--auto`
 form, or an in-chat task. Use tracker mode only for exactly one named item (or
 one previously established implementation target with no competing inline task).
-Resolve [shared tracker settings](references/provider-bindings.md#shared-repository-configuration)
+Resolve [shared tracker settings](../deliver-issue/references/provider-bindings.md#shared-repository-configuration)
 and applicable holds for standalone tracker mode. For a board handoff, reuse
 its validated tracker and role settings.
 Resolve a short issue number against the trusted tracker repository. Use the
@@ -31,11 +31,11 @@ checkout only as the GitHub fallback when it identifies the established tracker.
 Reject change requests and ambiguous tracker or repository identity.
 `--auto` requires an item in the current invocation.
 Select the established tracker binding; for GitHub read
-[the GitHub binding](references/github-delivery.md#planning-marker-operations).
-For Jira Cloud read [scope and readiness](references/jira-binding.md#scope-and-readiness)
-and [planning marker operations](references/jira-binding.md#planning-marker-operations).
-For GitLab read [scope and readiness](references/gitlab-binding.md#scope-and-readiness)
-and [planning marker operations](references/gitlab-binding.md#planning-marker-operations).
+[the GitHub binding](../deliver-issue/references/github-delivery.md#planning-marker-operations).
+For Jira Cloud read [scope and readiness](../deliver-issue/references/jira-binding.md#scope-and-readiness)
+and [planning marker operations](../deliver-issue/references/jira-binding.md#planning-marker-operations).
+For GitLab read [scope and readiness](../deliver-issue/references/gitlab-binding.md#scope-and-readiness)
+and [planning marker operations](../deliver-issue/references/gitlab-binding.md#planning-marker-operations).
 For another tracker, require its trusted binding to define source reads, identity,
 permissions and marker operations before provider access; an absent or incomplete
 binding blocks tracker mode rather than falling back to GitHub commands.

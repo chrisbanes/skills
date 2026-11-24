@@ -36,55 +36,12 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    Use the wrapper exclusively. It
    supplies `--console=plain` and `--no-scan` unless console behavior was
    selected or the user authorized `--scan`. Add `--warning-mode all` only for
-   warning discovery or an explicit request. If `run` or `finish` reports
-   `workflow is busy`, inspect status and wait for the owner; keep one execution
-   owner and avoid a duplicate build.
+   warning discovery or an explicit request. On `workflow is busy`, wait for the execution owner.
 
-   If a tool session disappears or the run's outcome is unknown, use the same
-   workflow ID (and the same global `--root` if one was supplied):
-
-   ```sh
-   python3 <skill-dir>/scripts/gradle_run.py status --workflow <id>
-   ```
-
-   Status is read-only and returns immediately with at most 16 KiB of JSON.
-   `run` identifies the active or latest run by sequence, wrapper/child PIDs,
-   start time, working directory, command and question. `result` is the latest
-   stored bounded terminal summary, identified by `result_sequence`; while a
-   new run is active it may describe the previous run. Status never opens logs.
-   Poll status on `running`. The run's held owner lock supplies activity
-   evidence unless recovery holds it. PIDs provide identity only.
-   Unrelated workflow lock contention leaves an abandoned run `uncertain`.
-   `completed` includes failed builds and launch
-   errors: check `result.exit_status`. `interrupted` requires a recorded signal.
-   `uncertain` covers active records without proven ownership, incomplete/legacy
-   ledgers and transitions without sufficient evidence. Report the uncertainty.
-   Investigate the recorded wrapper, child, and any descendants using read-only
-   ownership evidence. PID absence alone gives no evidence about descendants.
-   Keep the workflow unresolved if any recorded PID is live, possibly reused,
-   or unverifiable, or if descendant ownership is unclear. While unresolved,
-   do not rerun, create a replacement workflow, clean up, finish, or terminate
-   processes to try to recover it.
-
-   When recovery is authorized and the investigation confirms no live
-   descendants remain, run this standalone with the same workflow ID, active
-   sequence, and global `--root` if supplied originally:
-
-   ```sh
-   python3 <skill-dir>/scripts/gradle_run.py recover --workflow <id> \
-     --sequence <n> --reason "<ownership evidence>" --no-live-descendants
-   ```
-
-   The wrapper requires both locks and definitive absence of each recorded
-   PID. If recovery refuses, leave the workflow unresolved and report why.
-   After recovery, status reports `abandoned` and an `unknown` outcome for
-   that sequence. Recovery keeps the log unopened under normal retention.
-   An `abandoned` result with `cleanup_error` still settles the ledger.
-   Report the outcome and any cleanup error. Use the same workflow for later
-   authorized validation.
-   A new workflow is `idle`; after
-   `finish` it is `finished` and its result has been removed. Unknown IDs fail
-   closed. Finish only after retrieving the needed result.
+   For a lost session, busy workflow, unknown outcome or status review, follow
+   [status and recovery](references/status-and-recovery.md) with the original
+   workflow ID and `--root`. Keep uncertain work unresolved until ownership
+   is established. Hold reruns, replacement workflows, cleanup and `finish`.
 4. For incidental validation, stay in the current agent and run the narrowest
    task that answers a non-empty verification question:
 
@@ -103,7 +60,7 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    execution with the current implementation owner by default. Delegate a
    bounded read-only investigation only when it offers useful independent
    analysis. Select and brief an optional helper using the shared
-   [selection and handoff reference](references/subagent-selection.md).
+   [selection and handoff reference](../subagent-delegation/references/subagent-selection.md).
    Keep one wrapper execution owner at a time; a helper reports evidence and
    recommendations to that owner. Continue directly when no helper is available.
 6. Reuse actionable summaries, group warnings/failures by
@@ -116,9 +73,7 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
    focused inspection as the next action; do not claim a source fix before it.
    A new question does not permit a blind repeat: rerunning an unchanged task
    under a relabeled question is still a repeat.
-7. Treat the full log as raw sensitive material even though summaries and
-   ledgers redact common credentials. Never expose it in model-visible context.
-   On interruption, use the wrapper's recorded signal and bounded partial
+7. On interruption, use the wrapper's recorded signal and bounded partial
    diagnostics; it owns process-group/process-tree cleanup and durable ledger
    updates. Only logs still represented by the bounded recent-run ledger remain.
    If a bounded result reports cache access denied before Gradle starts, report
