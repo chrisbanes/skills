@@ -356,13 +356,17 @@ grants nothing; run grants stay invocation-scoped and lapse when the run returns
 2. When starting or replacing a watcher, write a baseline immediately before
    the complete Project query or targeted refetch that will arm it:
    use the binding's `snapshot` command and baseline arguments.
-   Pass `--pr` for every in-flight ticket or batch PR in remote wait and every
-   preserved PR of a paused, parked, label-stopped, or authority-paused ticket,
+   Use the tracker repository for the watcher. If the change request belongs
+   to a different repository or code host, use that host's change-request
+   evidence and supported wait path. If the host cannot supply a wait signal,
+   report the missing signal for the affected claim. Pass `--pr` for every
+   in-flight ticket or batch PR in the watched repository in remote wait and every
+   preserved PR there of a paused, parked, label-stopped, or authority-paused ticket,
    and `--issue` for every parked
    claim, paused or label-stopped ticket, human-frontier issue, Wayfinder human-frontier item, and
    assigned Wayfinder HITL attention item. For a targeted Project board refetch, add
    `--board-from <reporting watcher's baseline file>` and a `--refresh-pr` for
-   each PR the following authoritative read will refresh. Keep the complete
+   each watched PR the following authoritative read will refresh. Keep the complete
    `--pr` watch set and write a new file. The snapshot queries only those PRs
    and newly watched PRs, preserving all other prior PR, item, and issue
    fingerprints for the next wait. For a complete read, take a full snapshot.

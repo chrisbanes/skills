@@ -1,0 +1,19 @@
+{
+  "decisions": {
+    "prose": {
+      "result": "binding-unchanged",
+      "rewrite_old_digest": false,
+      "cleanup_active": false
+    },
+    "retained": {
+      "result": "defer-activation",
+      "rewrite_old_digest": false,
+      "cleanup_active": false
+    },
+    "released": {
+      "result": "configuration-ready-to-commit",
+      "rewrite_old_digest": false,
+      "cleanup_active": false
+    }
+  }
+}

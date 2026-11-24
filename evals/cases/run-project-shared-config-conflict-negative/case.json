@@ -1,0 +1,38 @@
+{
+  "id": "run-project-shared-config-conflict-negative",
+  "title": "Block conflicting shared values and preserve legacy configs",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-project-shared-config-conflict-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "binding",
+      "text": "Block both committed conflicts and the referenced uncommitted guide. Ignore the unreferenced draft and preserve the validated legacy binding."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

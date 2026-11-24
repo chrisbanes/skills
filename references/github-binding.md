@@ -56,14 +56,17 @@ Only an already trusted, committed display-name-only edit may use
    required, not as an absent file. Setup must inspect the
    [legacy migration](#approval-gated-legacy-migration) gate before resolving
    defaults; execution returns `configuration-blocked` and never migrates.
-2. Select **Tracker** and **Code host** independently (default `github` for
+2. Resolve the [shared repository settings](provider-bindings.md#shared-repository-configuration)
+   before applying tracker and role defaults.
+   Select **Tracker** and **Code host** independently (default `github` for
    each; a `gitlab` code host uses the [GitLab binding](gitlab-binding.md);
    other providers need their own supported binding). Resolve repository host
    and `owner/repository` from the current checkout's git remote and verify its
-   live identity. When the code host is not GitHub,
-   resolve the tracker repository under [Delivery bindings](provider-bindings.md)
-   step 1 (labels and short `#N` use it). Use explicit repository overrides first;
-   without them, conflicting remotes or an unclear repository block.
+   live identity. Use explicit code-host repository overrides first.
+   Without them, conflicting remotes or an unclear repository block.
+   Resolve the tracker repository independently under
+   [Delivery bindings](provider-bindings.md) step 1. Use it for labels, short
+   `#N`, and Project discovery and filtering.
 3. Resolve **Scope** from the trusted override when present, otherwise from the
    invocation. A Project URL selects a board; route a named issue to
    [Direct issue scope](#direct-issue-scope) via `deliver-issue`. Use the
@@ -111,11 +114,12 @@ Only an already trusted, committed display-name-only edit may use
    correct Project/field/repository with the stored name. A name change on the
    same ID is drift requiring reconciliation; an ID resolving elsewhere stops.
 6. Paginate repository labels and resolve the conventional role names
-   `ready-for-agent`, `ready-for-human`, `needs-triage`, and `epic` freshly.
+   `ready-for-agent`, `ready-for-human`, `needs-triage`, and `epic` freshly,
+   using configured names from the shared resolver or delivery binding where supplied.
    Match names case-insensitively for discovery, then retain the exact live name
    and ID. Require exactly one label per role; missing labels or multiple
-   matches (including case variants) block. Explicit role names/IDs override
-   discovery; validate their identity and require distinct role mappings.
+   matches (including case variants) block. Validate explicit IDs against
+   the intended role and repository and require distinct role mappings.
    Never create/rename labels, infer roles from prose, or add/restore agent
    authority. Optional Wayfinder stays disabled unless explicitly enabled with
    complete mappings. Agent Setup defaults to runtime capabilities.
@@ -257,6 +261,17 @@ Write after confirmation, preserving unrelated text; do not commit implicitly.
 Pause new claims until the pair is committed on verified base and freshly
 validated. A user-authorized configuration commit may contain only that pair.
 Absent a request for overrides, keep the no-file binding and create nothing.
+
+When asked to consolidate with the shared tracker and triage guides, resolve
+the binding before and after the proposed removal. Remove only duplicate
+tracker or role-name fields whose shared values resolve to the same live
+identities. Keep ID pins and delivery-specific fields. Compare the complete
+effective settings, including the selected scope and policies. A changed file
+digest still changes the lease identity. Follow the existing old-digest claim
+gate above, including retained migration claims: reconcile and finish them
+under their verified binding before activating this cleanup. Preserve the
+original digests and checkpoints. Use the normal fresh validation finish gate
+after the cleanup is committed.
 
 Treat a legacy `Execution approver logins` entry as obsolete configuration.
 Remove one shown in the binding during an otherwise authorized setup edit when no old-digest claim
@@ -432,7 +447,9 @@ require zero In Progress items and no old leases.
 Use `docs/agents/deliver-tasks.md` for optional overrides in the repository
 that owns the queue. Include only sections/fields being overridden; the following
 is a field catalogue, not a required complete file. Resolve omitted fields from
-fresh defaults. Replace included placeholders with live verified data. The
+the shared tracker and triage guides where applicable, then fresh defaults.
+Keep shared values in those guides when writing a new configuration. Replace
+included placeholders with live verified data. The
 closest trusted `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` must reference that exact file.
 For parent scope, use Scope type `parent-issue` and the canonical parent issue
 URL; omit Project, Status, Priority and Done automation sections. Optional
@@ -450,7 +467,7 @@ this template over it. Follow the
 ## Tracker
 
 - Provider: `github`
-- Repository: `<owner>/<repository; required when Code host is not github>`
+- Repository: `<owner>/<repository; explicit when the tracker differs from the checkout>`
 
 ## Code host
 

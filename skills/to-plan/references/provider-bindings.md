@@ -14,10 +14,53 @@ When already in `to-plan`, stay in conversation mode and hand off one validated
 plan to `implement-with-subagents`. The caller opens one MR from the executor's
 verified integration branch when authorized.
 
+## Shared repository configuration
+
+1. Read the closest trusted repository instructions on the verified base.
+   Use `docs/agents/issue-tracker.md` for the tracker provider and repository,
+   and `docs/agents/triage-labels.md` for the tracker labels mapped to
+   `needs-triage`, `ready-for-agent`, and `ready-for-human`, when those
+   instructions reference the exact files. Use only applicable files and
+   their committed contents. A referenced file that is missing, invalid or
+   has uncommitted edits blocks dependent work. A file without a trusted
+   reference supplies no settings. These docs are optional for existing
+   bindings and repositories without Matt Pocock's setup.
+2. Read the declared tracker provider and explicit tracker repository from
+   the tracker guide and the actual tracker label strings from the triage
+   table's local-label column. Resolve only fields the current operation
+   uses. Bind the labels to the resolved tracker repository or project.
+   Leave code host, provider-specific IDs and credentials, board scope,
+   Status, Priority, epic, claim and merge policy to the existing delivery
+   binding. A shared guide's prose supplies no operation grant or alternate
+   provider implementation.
+3. Compare shared values with explicitly configured delivery values for the
+   same tracker or role. Accept matching declarations as one setting and
+   retain any delivery ID pins. Use a lone declaration when the other source
+   omits it, and existing defaults when neither declares it. Resolve tracker
+   repository names to the same provider-qualified identity. If a declared
+   value is ambiguous, unsupported or conflicts, name the affected field
+   and both sources and stop before dependent work. Never choose one source
+   or fall back to defaults to bypass a conflict.
+4. Verify the resolved tracker and role identities through the selected
+   provider binding. Compare effective values and IDs on refresh and
+   recovery as usual. Keep the existing delivery digest when its file and
+   effective binding are unchanged. Include shared values used for delivery
+   in the existing fields of the resolved snapshot or fingerprint, without
+   hashing the shared Markdown or recording its path as a new identity input.
+   A prose-only edit that leaves these values unchanged does not
+   invalidate a claim. Use the existing binding drift and lease rules for
+   any effective change.
+
+Use the delivery binding's normal blocked result for affected operations.
+Finish configuration validation only after the sources agree and live
+identity checks pass. Board handoffs reuse the controller's validated
+settings. Direct issue delivery retains its scoped readiness rules.
+
 ## Procedure
 
 1. Resolve the source's tracker and repository's code host from the invocation,
-   trusted configuration and fresh identity reads. Record both bindings and
+   [shared repository configuration](#shared-repository-configuration),
+   trusted delivery settings and fresh identity reads. Record both bindings and
    exact item/repository identities. For either GitHub role, read the applicable
    operations in the bundled
    [GitHub binding](github-delivery.md#delivery-operations). For a Jira Cloud
@@ -26,7 +69,7 @@ verified integration branch when authorized.
    [code-host](gitlab-binding.md#code-host-operations) operations, or both when selected.
    A repository on either
    host does not imply a tracker on it. When the tracker repository differs
-   from the checkout origin, take it from the trusted `Tracker` configuration;
+   from the checkout origin, take it from the resolved tracker configuration;
    resolve a bare `#N` only against that tracker repository, never against the
    code host, and without it accept only canonical item URLs or
    repository-qualified references. For another provider, require

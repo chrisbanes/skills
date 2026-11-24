@@ -1,0 +1,15 @@
+{
+  "decisions": {
+    "shared": {
+      "result": "configuration-valid",
+      "tracker": "acme/intake",
+      "code_host": "acme/product",
+      "triage_label": "triage:review",
+      "agent_label": "agent:approved",
+      "human_label": "human:queue",
+      "agent_label_id": "LA_AGENT",
+      "identity_source": "committed-override-digest",
+      "can_claim": false
+    }
+  }
+}
