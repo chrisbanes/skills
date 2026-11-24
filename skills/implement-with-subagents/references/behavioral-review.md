@@ -1,7 +1,5 @@
 # Behavioral review and repair
 
-<!-- Canonical source: references/behavioral-review.md. Edit it there, then run `npm run references:sync`. -->
-
 ## Core principle
 
 Review production behavior and repair demonstrated failures as a coherent batch.

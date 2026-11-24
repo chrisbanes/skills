@@ -9,21 +9,20 @@ disable-model-invocation: true
 
 ## Core principle
 
-The bound scope is the live control plane: fresh board state and this run's
-operation-specific grants decide every claim, write and finish.
-Default lanes are `Todo` → `In Progress` → `Done`; resolve them
-through the resolved binding's claim and completion markers. Implementation readiness is
-derived from Todo, `ready-for-agent`, and a verified active plan leaf.
+Use fresh board state and operation-specific grants for every claim, write and
+finish. Resolve `Todo` → `In Progress` → `Done` through the binding's claim and
+completion markers. Implementation requires Todo, `ready-for-agent` and a
+verified active plan leaf.
 
-Check [Delivery bindings](references/provider-bindings.md) for source routing
+Check [Delivery bindings](../deliver-issue/references/provider-bindings.md) for source routing
 and shared settings before resolving board scope. Route named issues to
 `deliver-issue` without claiming them. A Jira board can explicitly select a
 parent tree. Selecting one candidate grants no authority over its descendants.
 
 Select tracker and code-host roles independently.
-Use the [GitHub](references/github-binding.md), [Jira](references/jira-binding.md)
-(including JQL boards), or GitLab [tracker](references/gitlab-binding.md#tracker-operations)
-and [code-host](references/gitlab-binding.md#code-host-operations) procedures.
+Use the [GitHub](references/github-binding.md), [Jira](../deliver-issue/references/jira-binding.md)
+(including JQL boards), or GitLab [tracker](../deliver-issue/references/gitlab-binding.md#tracker-operations)
+and [code-host](../deliver-issue/references/gitlab-binding.md#code-host-operations) procedures.
 Preserve durable marker formats.
 
 ## Invariants
@@ -38,8 +37,9 @@ Preserve durable marker formats.
 8. **Supplied state:** decide review, setup or analysis from supplied complete state without another Project or repository read (still read references); judge the described environment, not providers missing from this workspace. A validated proposed diff is `configuration-ready-to-commit` even unwritten and uncommitted. Profile selection calls no routing service and grants no claim or merge authority; ignore legacy routing fields without editing them.
 9. **No escape hatch:** renewal or amendment never resumes parked CI, grants live turns or resets qualification. Unknown or stale evidence blocks dependants; material architecture changes need full replan and review; changed authority or qualification needs a stakeholder or source decision.
 
-A verified handoff covers in-scope implementation, tests and repairs under
-the bundled [controller handoff](references/project-handoff.md), which uses `implement-with-subagents` for implementation, independent review and repair. Replans keep
+The [controller handoff](../deliver-issue/references/project-handoff.md) uses
+`implement-with-subagents` for in-scope implementation, testing, independent
+review and repairs. Replans keep
 verified plan state; true human work returns to a decision pause. `drain` parks
 verified authority pauses and qualifying terminal required-CI claims outside
 capacity before refreshing; in `next`, a required-CI stall keeps its slot. A
@@ -50,11 +50,9 @@ else reports the exact blocker.
 
 ## Procedure
 
-1. Resolve the selected binding and mode below.
-2. Read every mandatory reference for that mode before acting.
-3. Apply the invariants, lane and scheduler procedures through the binding;
-   keep shared state and merge authority with the controller.
-4. Answer every item and pass the final report gate below.
+1. Resolve the binding and select a mode below.
+2. Read that mode's mandatory references and apply its lane and scheduler rules.
+3. Report each item under the finish gate.
 
 ## Select the mode
 

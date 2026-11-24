@@ -26,8 +26,7 @@ Test the smallest UI contract that proves the behavior. Prefer plain state-drive
 
 | What you need to prove | Test shape |
 |---|---|
-| Text, button, loading/error branch, conditional content | Plain UI Compose test |
-| Callback wiring from click/input | Plain UI Compose test |
+| Text, buttons, conditional content, loading/error states, click/input callbacks | Plain UI Compose test |
 | Focus navigation or keyboard behavior | Compose test with key input |
 | Visual layout, clipping, elevation, typography, image composition | Screenshot test |
 | State holder updates UI correctly | State holder/unit test plus one wiring smoke test |
@@ -35,45 +34,12 @@ Test the smallest UI contract that proves the behavior. Prefer plain state-drive
 | Navigation, lifecycle, DI integration | Integration test |
 | Critical flow that depends on the installed build or crosses an app, process, or OS boundary | Focused device smoke test or end-to-end test, outside this skill |
 
-Use device coverage for a few critical flows where a narrower test cannot
-exercise and verify the behavior under test.
+## Plain UI and callback tests
 
-## Prefer plain UI tests
-
-If the screen has a state holder/UI split, test the plain UI composable:
-
-```kotlin
-composeTestRule.setContent {
-    ProfileScreen(
-        state = ProfileUiState(name = "Ada", canSave = true),
-        onNameChange = {},
-        onSaveClick = { saved = true },
-        onBackClick = {},
-    )
-}
-
-composeTestRule.onNodeWithText("Ada").assertIsDisplayed()
-composeTestRule.onNodeWithText("Save").performClick()
-
-assertThat(saved).isTrue()
-```
-
-This avoids constructing ViewModels, components, repositories, navigation, and dependency graphs for layout behavior.
-
-## Semantics first
-
-Assert semantics when behavior is semantic:
-
-- Text exists: `onNodeWithText`.
-- Button is enabled/disabled: `assertIsEnabled`, `assertIsNotEnabled`.
-- Content is selected/focused/toggled: use semantics assertions.
-- Content is absent: `assertDoesNotExist`.
-
-Use test tags for nodes that have no stable user-visible text or where multiple nodes share text. Do not use tags as the first choice for all assertions; user-visible semantics are usually stronger.
-
-## Callback testing
-
-Use simple counters or captured values:
+Render the plain composable with controlled state and callbacks. Find nodes by
+visible text or semantics. Use a tag when text is absent or ambiguous. Assert
+enabled, selected, focused or toggled semantics directly, and use
+`assertDoesNotExist` for absence. Capture callback arguments to prove wiring:
 
 ```kotlin
 var selectedId: String? = null
@@ -90,76 +56,38 @@ composeTestRule.onNodeWithText("Movie").performClick()
 assertThat(selectedId).isEqualTo("movie-1")
 ```
 
-For plain captured callback values, a direct assertion after the action is usually enough. Use `runOnIdle` when the assertion needs Compose to finish applying snapshot state, recomposition, or queued UI work before reading the result.
+Assert a plain captured value immediately after the action. Use `runOnIdle`
+when the result depends on snapshot state, recomposition or queued work.
+Use `waitForIdle` or a bounded `waitUntil` for a real asynchronous condition.
+Leave clock auto-advance on unless testing a particular frame. With
+`mainClock.autoAdvance = false`, advance to that frame once before its
+assertions. Avoid `Thread.sleep`.
 
-## Keep UI tests deterministic
+## Interaction, keyboard and focus
 
-For layout, branch, and callback behavior, render controlled state with `setContent` instead of constructing the production app graph. Production DI, repositories, lifecycle observers, and background effects add asynchronous work that is irrelevant to a plain UI contract and can make the test flaky.
+For hover, press, focus or drag **interaction state**, read the
+[interaction-state procedure](references/interaction-state.md) before writing
+or reviewing the test. It uses direct, injected interactions.
 
-Do not use `Thread.sleep` to wait for Compose. Drive the UI to a known state, then use semantic assertions and Compose synchronization (`waitForIdle`, `runOnIdle`, or a bounded `waitUntil` for a real asynchronous condition). If you set `mainClock.autoAdvance = false`, advance the clock (`mainClock.advanceTimeBy`) to the time you intend to observe before asserting, not between checks of one frame; otherwise leave auto-advance on. Reserve full-app integration for behavior that actually depends on navigation, lifecycle, DI, or platform wiring.
+For **keyboard or D-pad navigation**, send keys and assert focused semantics.
+If the composable has no input surface that can change the state, identify the
+missing host or parent before proposing a test. For focus graphs, restoration
+and key handlers, see [focus navigation](../compose-focus-navigation/SKILL.md).
 
-## Interaction state with MutableInteractionSource
+## Screenshots and images
 
-When interaction state is the concern, read
-[the interaction-state procedure](references/interaction-state.md) completely
-before writing or reviewing the test. It requires direct, injected interaction
-state rather than fragile pointer simulation.
+Use screenshots for visual contracts such as spacing, clipping, typography,
+image composition or focus highlights. Fix data, time and animation progress.
+Use a local painter or bitmap when appearance matters. When testing which
+image was requested, use a fake loader and assert the requested model.
 
-## Keyboard and focus
+When a named preset or default intentionally changes, keep it in the test and
+update its baseline. Keep an explicit fixed value when that geometry is the
+contract. Preserve assertions and tolerances unless a separate change justifies
+altering them.
 
-For keyboard, TV, and desktop UI, drive navigation with the same input model users use (keys/D-pad), not clicks alone. Assert focused semantics, not colors or scale; reserve screenshots for visual focus treatment.
-If the inspected composable exposes no input surface that can change the state,
-name the missing host or parent interaction seam before proposing a key-driven
-test; do not assume a selector or control exists in the supplied UI.
-
-Details—focus graph, `FocusRequester`, restoration, key handlers, and test patterns: [`compose-focus-navigation`](../compose-focus-navigation/SKILL.md).
-
-## Screenshot tests
-
-Use screenshots for visual contracts that semantics cannot prove:
-
-- Layout spacing/alignment.
-- Themed colors, typography, elevation, shadows.
-- Image composition, gradients, overlays.
-- Focus highlight appearance.
-- Loading skeletons or dense visual states.
-
-Keep screenshot state deterministic:
-
-- Use fixed state data.
-- Freeze clocks or animation progress when possible.
-- Replace network/image loading with fake or preview handlers.
-- Avoid asserting dynamic text such as current time unless controlled.
-
-### When screenshot defaults change
-
-- Keep an intentionally changed named preset or default in the test and update
-  its baseline. Do not substitute a raw value to retain the old image; preserve
-  assertions and tolerances unless independently justified.
-- Keep an explicit fixed value when that fixed resolution or geometry is the
-  contract.
-- Verify recording separately from comparison: inspect the expected artifact
-  paths and intentional baseline diff. Read the exact output path from the test,
-  confirm that artifact exists, and name that literal path in the verification
-  evidence. When a verification log reports a pass, state what passed and then
-  check recording independently; a passing comparison does not prove that
-  recording wrote the artifact. If the artifact or baseline diff is
-  unavailable, report that gap rather than claiming recording succeeded. Keep
-  tool-specific commands in the repository runbook. In a findings-only review,
-  state what evidence is missing; do not add remediation or rerun steps.
-
-## Fake images and platform services
-
-When image content is irrelevant, fake the loader and assert the requested model if that is the behavior. The exact hook depends on your image library; a project helper might look like this:
-
-```kotlin
-val requestedModels = mutableListOf<Any?>()
-
-// Example helper, not a Compose API.
-setContentWithFakeImageLoader { request ->
-    requestedModels += request.data
-    errorPainter()
-}
-```
-
-When image appearance matters, provide a deterministic local painter/bitmap instead of network data.
+Report comparison and recording separately. State what passed, read the exact
+output path from the test, verify the file exists and inspect the intentional
+baseline diff. Name the literal path and any missing evidence. For a
+findings-only review, stop at the evidence gap. Keep tool-specific commands
+in the repository runbook.

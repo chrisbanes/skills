@@ -3,9 +3,11 @@ from __future__ import annotations
 import difflib
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Protocol
@@ -333,6 +335,30 @@ def _run_git(workspace: Path, *args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def local_markdown_targets(source: Path) -> Iterator[Path]:
+    for link in re.findall(r"\]\(([^()\s#]+\.md)(?=[)#])", source.read_text(encoding="utf-8")):
+        if ":" not in link:
+            yield (source.parent / link).resolve()
+
+
+def skill_references(repo_root: Path, skill: str) -> set[Path]:
+    """Follow reference links without enabling the skills that own them."""
+    root = (repo_root / "skills").resolve()
+    directory = root / skill
+    pending = [directory / "SKILL.md", *(directory / "references").rglob("*.md")]
+    visited = set()
+    while pending:
+        source = pending.pop()
+        if source in visited:
+            continue
+        visited.add(source)
+        for target in local_markdown_targets(source):
+            parts = target.relative_to(root).parts
+            if len(parts) >= 3 and parts[1] == "references":
+                pending.append(target)
+    return {p.relative_to(root) for p in visited if p.name != "SKILL.md"}
+
+
 def prepare_workspace(
     case: EvalCase,
     repo_root: Path,
@@ -373,6 +399,13 @@ def prepare_workspace(
         )
         if edit_skill is not None:
             edit_skill(destination / skill_dir / skill / "SKILL.md")
+    for skill in enabled_skills:
+        for reference in skill_references(repo_root, skill):
+            if reference.parts[0] in enabled_skills:
+                continue  # Already staged with its owner.
+            target = destination / skill_dir / reference
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(repo_root / "skills" / reference, target)
     # Only with a target skill enabled: the no-skill baseline must not see its procedures.
     for staged in case.staged_skill_files if set(case.target_skills) & set(enabled_skills) else ():
         target = destination / skill_dir / staged

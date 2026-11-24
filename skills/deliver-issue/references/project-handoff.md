@@ -24,7 +24,7 @@ state, merge, closure and checkout retirement throughout the handoff.
    section. Explain an empty contribution, flag any deferral that breaks the
    ticket, and verify the section against the diff even when the PR is pending.
 4. Follow [Deliver an approved outcome](delivery-lifecycle.md) in the supplied
-   checkout with the board’s [review contracts](review-contracts.md), qualification
+   checkout with the board’s [review contracts](../../run-project/references/review-contracts.md), qualification
    limits and closure intent. Return verification, repair rounds, repeated
    failures and capacity waits to the controller. In drain, use its remote
    snapshot and yield between actionable events.

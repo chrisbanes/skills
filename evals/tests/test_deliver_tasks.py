@@ -117,10 +117,10 @@ class DeliverTasksTest(unittest.TestCase):
                 for source in entry.rglob("*.md"):
                     for link in re.findall(r"\]\(([^)]+)\)", source.read_text()):
                         path, _, anchor = link.partition("#")
-                        if ":" in path or path.startswith("../../to-plan/") or (path and not path.endswith(".md")):
-                            continue
                         if path == "../../implement-with-subagents/SKILL.md":
                             self.assertFalse((source.parent / path).exists())
+                            continue
+                        if ":" in path or path.endswith("/SKILL.md") or (path and not path.endswith(".md")):
                             continue
                         target = source.parent / path if path else source
                         with self.subTest(skill=skill, source=source.name, link=link):
@@ -128,7 +128,7 @@ class DeliverTasksTest(unittest.TestCase):
                             if skill == "deliver-issue" and anchor:
                                 self.assertIn(anchor, markdown_heading_ids(target))
 
-    def test_github_entry_loads_controller_and_both_binding_copies_resolve_core_links(self):
+    def test_github_controller_resolves_shared_binding_and_core_links(self):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
         case = corpus["run-github-project-direct"]
         with tempfile.TemporaryDirectory() as directory:
@@ -138,18 +138,17 @@ class DeliverTasksTest(unittest.TestCase):
             installed = workspace / ".agents/skills"
             entry = installed / "run-project/SKILL.md"
             self.assertIn("references/execution-controller.md", entry.read_text())
-            for skill in ("run-project",):
-                binding = installed / skill / "references/github-binding.md"
-                self.assertEqual((ROOT / "references/github-binding.md").read_bytes(), binding.read_bytes())
-                for link in re.findall(r"\]\(([^)]+)\)", binding.read_text()):
-                    path = link.split("#")[0]
-                    if path.endswith(".md") and not path.startswith(("https:", "../../to-plan/")):
-                        with self.subTest(skill=skill, link=link):
-                            target = binding.parent / path
-                            self.assertTrue(target.is_file())
-                            anchor = link.partition("#")[2]
-                            if anchor:
-                                self.assertIn(anchor, markdown_heading_ids(target))
+            binding = installed / "run-project/references/github-binding.md"
+            self.assertEqual((ROOT / "skills/run-project/references/github-binding.md").read_bytes(), binding.read_bytes())
+            for link in re.findall(r"\]\(([^)]+)\)", binding.read_text()):
+                path = link.split("#")[0]
+                if path.endswith(".md") and ":" not in path:
+                    with self.subTest(link=link):
+                        target = binding.parent / path
+                        self.assertTrue(target.is_file())
+                        anchor = link.partition("#")[2]
+                        if anchor:
+                            self.assertIn(anchor, markdown_heading_ids(target))
             self.assertTrue((installed / "run-project/scripts/rank_tickets.py").is_file())
             self.assertTrue((installed / "run-project/scripts/watch_project.py").is_file())
 

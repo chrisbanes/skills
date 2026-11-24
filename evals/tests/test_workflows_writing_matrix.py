@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import subprocess
 import sys
@@ -56,76 +57,76 @@ def plan_artifact(dependency: str = "none") -> str:
 
 
 class WorkflowsWritingMatrixTest(unittest.TestCase):
-    def test_delivery_rules_survive_individual_skill_installation(self):
-        behavioral = "references/behavioral-review.md"
+    def test_delivery_rules_link_to_canonical_plugin_references(self):
+        behavioral = "skills/implement-with-subagents/references/behavioral-review.md"
         boundary = "skills/to-plan/references/boundary-validation.md"
-        selection = "references/subagent-selection.md"
-        implementation_selection = "subagent-selection.md#implementation-ownership"
-        executor = ("references/delivery-lifecycle.md", "../../implement-with-subagents/SKILL.md",
-                    "skills/implement-with-subagents/SKILL.md")
+        selection = "skills/subagent-delegation/references/subagent-selection.md"
+        implementation_selection = selection + "#implementation-ownership"
+        executor = ("references/delivery-lifecycle.md", "skills/implement-with-subagents/SKILL.md")
         cases = {
             "deliver-issue-tree-direct": (
-                ("SKILL.md", "references/github-delivery.md#direct-issue-scope", "references/github-delivery.md"),
-                ("references/provider-bindings.md", "github-delivery.md#delivery-operations", "references/github-delivery.md"),
+                ("SKILL.md", "skills/deliver-issue/references/github-delivery.md#direct-issue-scope"),
+                ("references/provider-bindings.md", "skills/deliver-issue/references/github-delivery.md#delivery-operations"),
             ),
             "deliver-issue-ownership-novel": (
-                ("references/fast-path.md", "project-handoff.md#return-a-replan-packet", "skills/deliver-issue/references/project-handoff.md"),
-                ("references/project-handoff.md", "review-contracts.md", "skills/run-project/references/review-contracts.md"),
+                ("references/fast-path.md", "skills/deliver-issue/references/project-handoff.md#return-a-replan-packet"),
+                ("references/project-handoff.md", "skills/run-project/references/review-contracts.md"),
             ),
             "deliver-issue-bug-diagnosis-novel": (
-                ("SKILL.md", "references/bug-diagnosis.md", "skills/deliver-issue/references/bug-diagnosis.md"),
+                ("SKILL.md", "skills/deliver-issue/references/bug-diagnosis.md"),
             ),
             "deliver-issue-model-routing-direct": (
-                ("references/fast-path.md", "delivery-lifecycle.md#executor-handoff", "skills/deliver-issue/references/delivery-lifecycle.md"),
+                ("references/fast-path.md", "skills/deliver-issue/references/delivery-lifecycle.md#executor-handoff"),
                 executor,
             ),
             "run-github-project-delivery-direct": (
-                ("references/project-handoff.md", "delivery-lifecycle.md", "skills/deliver-issue/references/delivery-lifecycle.md"),
-                executor,
+                ("SKILL.md", "skills/deliver-issue/references/project-handoff.md"),
+                ("../deliver-issue/references/project-handoff.md", "skills/deliver-issue/references/delivery-lifecycle.md"),
+                ("../deliver-issue/" + executor[0], executor[1]),
             ),
             "implement-with-subagents-model-routing-novel": (
-                ("SKILL.md", "references/" + implementation_selection, selection),
-                ("references/implementation-mode.md", implementation_selection, selection),
+                ("SKILL.md", implementation_selection),
+                ("references/implementation-mode.md", implementation_selection),
             ),
             "run-project-model-routing-negative": (
-                ("references/execution-controller.md", implementation_selection, selection),
+                ("references/execution-controller.md", implementation_selection),
             ),
             "deliver-spec-review-convergence-direct": (
-                ("references/evidence-and-review.md", "behavioral-review.md", behavioral),
+                ("references/evidence-and-review.md", behavioral),
             ),
             "shepherd-boundary-diagnostics-novel": (
-                ("SKILL.md", "references/behavioral-review.md", behavioral),
+                ("SKILL.md", behavioral),
             ),
             "run-github-project-review-convergence-negative": (
-                ("references/review-contracts.md", "behavioral-review.md", behavioral),
+                ("references/review-contracts.md", behavioral),
             ),
             "implement-with-subagents-direct": (
-                ("SKILL.md", "references/behavioral-review.md", behavioral),
-                ("references/implementation-mode.md", "boundary-validation.md", boundary),
+                ("SKILL.md", behavioral),
+                ("references/implementation-mode.md", boundary),
             ),
             "to-plan-boundary-validation-direct": (
-                ("references/workflow.md", "boundary-validation.md", boundary),
+                ("references/workflow.md", boundary),
             ),
             "deliver-spec-fixture-calibration-direct": (
-                ("references/evidence-and-review.md", "behavioral-review.md", behavioral),
+                ("references/evidence-and-review.md", behavioral),
             ),
             "shepherd-rendering-consumers-novel": (
-                ("SKILL.md", "references/behavioral-review.md", behavioral),
+                ("SKILL.md", behavioral),
             ),
             "to-plan-fixture-calibration-novel": (
-                ("SKILL.md", "references/workflow.md", "skills/to-plan/references/workflow.md"),
+                ("SKILL.md", "skills/to-plan/references/workflow.md"),
             ),
             "gitlab-tracker-claim-direct": (
-                ("SKILL.md", "references/gitlab-binding.md#tracker-operations", "references/gitlab-binding.md"),
-                ("references/execution-controller.md", "gitlab-binding.md#claim-stop-and-release", "references/gitlab-binding.md"),
-                ("references/drain-scheduler.md", "execution-controller.md#remote-state-and-queue", "skills/run-project/references/execution-controller.md"),
-                ("references/ticket-lifecycle.md", "execution-controller.md#remote-state-and-queue", "skills/run-project/references/execution-controller.md"),
+                ("SKILL.md", "skills/deliver-issue/references/gitlab-binding.md#tracker-operations"),
+                ("references/execution-controller.md", "skills/deliver-issue/references/gitlab-binding.md#claim-stop-and-release"),
+                ("references/drain-scheduler.md", "skills/run-project/references/execution-controller.md#remote-state-and-queue"),
+                ("references/ticket-lifecycle.md", "skills/run-project/references/execution-controller.md#remote-state-and-queue"),
             ),
             "gitlab-tracker-notes-novel": (
-                ("SKILL.md", "references/gitlab-binding.md#planning-marker-operations", "references/gitlab-binding.md"),
+                ("SKILL.md", "skills/deliver-issue/references/gitlab-binding.md#planning-marker-operations"),
             ),
             "gitlab-tracker-closure-negative": (
-                ("references/provider-bindings.md", "gitlab-binding.md#link-and-close", "references/gitlab-binding.md"),
+                ("references/provider-bindings.md", "skills/deliver-issue/references/gitlab-binding.md#link-and-close"),
             ),
         }
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
@@ -139,19 +140,21 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 )
                 skill_name = "run-project" if "run-project" in case.target_skills else case.target_skills[0]
                 skill = workspace / ".agents/skills" / skill_name
-                for caller, reference, canonical in resources:
+                for caller, reference in resources:
+                    canonical, _, fragment = reference.partition("#")
                     source = skill / caller
                     links = re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8"))
-                    self.assertIn(reference, links)
-                    target = source.parent / reference.split("#", 1)[0]
+                    target = workspace / ".agents" / canonical
+                    link = os.path.relpath(target, source.parent)
+                    self.assertIn(f"{link}#{fragment}" if fragment else link, links)
                     self.assertFalse(target.is_symlink())
                     self.assertEqual((REPO_ROOT / canonical).read_bytes(), target.read_bytes())
 
-    def test_staged_skill_files_are_copied_without_a_skill_entrypoint(self):
+    def test_linked_references_are_staged_without_enabling_their_owner(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
         case = next(c for c in report.cases if c.id == "run-github-project-unattended-direct")
         reference = "deliver-issue/references/qualification-failure.md"
-        self.assertEqual((reference,), case.staged_skill_files)
+        self.assertFalse(case.staged_skill_files)
         for skill_dir in (".agents/skills", ".claude/skills"):
             with self.subTest(skill_dir=skill_dir), tempfile.TemporaryDirectory() as directory:
                 workspace = prepare_workspace(
@@ -166,6 +169,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 case, REPO_ROOT, Path(directory) / "fixture", enabled_skills=(),
             )
             self.assertFalse((baseline / ".agents/skills" / reference).exists())
+            self.assertFalse((baseline / ".agents/skills/subagent-delegation/references").exists())
 
     def test_affected_validation_cases_preserve_decisive_facts_and_read_only_scope(self):
         case_ids = (
@@ -218,8 +222,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 state_file.write_text(original, encoding="utf-8")
                 self.assertEqual(0, validate().returncode)
 
-    def test_subagent_handoff_reference_is_self_contained_for_each_consumer(self):
-        shared = (REPO_ROOT / "references/subagent-selection.md").read_bytes()
+    def test_each_consumer_links_to_shared_handoff_reference(self):
+        shared = REPO_ROOT / "skills/subagent-delegation/references/subagent-selection.md"
         consumers = {
             "implement-with-subagents": "references/implementation-mode.md",
             "run-project": "references/ticket-lifecycle.md",
@@ -230,13 +234,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         for skill, caller in consumers.items():
             with self.subTest(skill=skill):
                 directory = REPO_ROOT / "skills" / skill
-                reference = directory / "references/subagent-selection.md"
-                self.assertFalse(reference.is_symlink())
-                self.assertEqual(shared, reference.read_bytes())
-                self.assertIn(
-                    "subagent-selection.md",
-                    (directory / caller).read_text(encoding="utf-8"),
-                )
+                source = directory / caller
+                self.assertIn(os.path.relpath(shared, source.parent), source.read_text())
 
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
         entrypoint = (REPO_ROOT / "skills/run-project/SKILL.md").read_text(
@@ -663,24 +662,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     (workspace / ".agents/skills/implement/SKILL.md").exists()
                 )
                 if arm == "automatic":
-                    self.assertNotIn(
-                        str(
-                            workspace
-                            / ".agents"
-                            / "skills"
-                            / "implement-with-subagents"
-                            / "SKILL.md"
-                        ),
-                        rendered,
-                    )
-                    self.assertFalse(
-                        (
-                            workspace
-                            / ".agents"
-                            / "skills"
-                            / "implement-with-subagents"
-                        ).exists()
-                    )
+                    owner = workspace / ".agents/skills/implement-with-subagents"
+                    self.assertNotIn(str(owner / "SKILL.md"), rendered)
+                    self.assertFalse((owner / "SKILL.md").exists())
+                    self.assertFalse((owner / "references/implementation-mode.md").exists())
 
     def test_missing_tdd_challenge_has_no_provider_fixture(self):
         report = validate_corpus(REPO_ROOT, suite="workflows-writing")
@@ -2181,14 +2166,14 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         antigravity_ref = (
             REPO_ROOT / "skills/subagent-delegation/references/antigravity.md"
         ).read_text(encoding="utf-8")
-        selection_ref = (REPO_ROOT / "references/subagent-selection.md").read_text(
+        selection_ref = (REPO_ROOT / "skills/subagent-delegation/references/subagent-selection.md").read_text(
             encoding="utf-8"
         )
-        github_binding = (REPO_ROOT / "references/github-binding.md").read_text(
+        github_binding = (REPO_ROOT / "skills/run-project/references/github-binding.md").read_text(
             encoding="utf-8"
         )
-        drain_scheduler = (
-            REPO_ROOT / "skills/run-project/references/drain-scheduler.md"
+        github_watcher = (
+            REPO_ROOT / "skills/run-project/references/github-project-watcher.md"
         ).read_text(encoding="utf-8")
         shepherd_commands = (
             REPO_ROOT / "skills/shepherd/references/provider-commands.md"
@@ -2216,8 +2201,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         self.assertIn("manage_subagents", selection_ref)
         self.assertIn("reactive wakeup", selection_ref)
         self.assertIn("GEMINI.md", github_binding)
-        self.assertIn("`schedule`", drain_scheduler)
-        self.assertIn("reactive-wakeup host", drain_scheduler)
+        self.assertIn("`schedule`", github_watcher)
+        self.assertIn("reactive-wakeup host", github_watcher)
         self.assertIn("`schedule`", shepherd_commands)
         _, claude_monitoring = shepherd_commands.split("### Claude Desktop\n", 1)
         claude_monitoring, native_watches = claude_monitoring.split(

@@ -6,15 +6,16 @@ import re
 import shlex
 import subprocess
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path, PurePosixPath
 
 from evals.harness.cases import EvalCase, Validator
 from evals.harness.runner import (
-    FIXTURE_SKILL_DIR,
     CommandRecord,
     Events,
     SubjectResult,
     get_runtime,
+    skill_references,
     subject_output_valid,
 )
 
@@ -349,7 +350,7 @@ def _is_bare_or_system_executable(token: str, executable: str) -> bool:
 
 
 def _is_target_skill_entrypoint_read(
-    case: EvalCase, command: str, skill_dir: str = FIXTURE_SKILL_DIR
+    case: EvalCase, command: str, skill_dir: str, workspace: Path
 ) -> bool:
     """Allow standalone cat reads of target entrypoints and opted-in references."""
     if _command_substitutions(command) or _ends_with_background_operator(command):
@@ -390,25 +391,34 @@ def _is_target_skill_entrypoint_read(
         or not _is_bare_or_system_executable(invocation[0], "cat")
     ):
         return False
-    return _is_target_skill_path(case, invocation[1], skill_dir)
+    return _is_target_skill_path(case, invocation[1], skill_dir, workspace)
 
 
-def _is_target_skill_path(case: EvalCase, value: str, skill_dir: str) -> bool:
-    """Match a target entrypoint, or an opted-in reference, under `skill_dir`."""
+@lru_cache(maxsize=None)
+def _reference_paths(skill: str) -> set[Path]:
+    return skill_references(Path(__file__).resolve().parents[2], skill)
+
+
+def _is_target_skill_path(case: EvalCase, value: str, skill_dir: str, workspace: Path) -> bool:
     path = PurePosixPath(value)
-    if (
-        str(path) != value
-        or ".." in path.parts
-        or any(character in value for character in "$`*?[]{}~")
-    ):
+    if str(path) != value or any(character in value for character in "$`*?[]{}~"):
         return False
+    if any(value == f"{skill_dir}/{skill}/SKILL.md" for skill in case.target_skills):
+        return True
+    installed = PurePosixPath(skill_dir)
+    if not case.allow_skill_reference_reads or not path.is_relative_to(installed):
+        return False
+    if ".." in path.parts:
+        # Follow a skill's relative link to a staged shared reference.
+        try:
+            path = (workspace / path).resolve(strict=True).relative_to(workspace.resolve())
+        except (OSError, ValueError, RuntimeError):
+            return False
+        if not path.is_relative_to(installed):
+            return False
     return any(
-        value == f"{skill_dir}/{skill}/SKILL.md"
-        or (
-            case.allow_skill_reference_reads
-            and path.is_relative_to(f"{skill_dir}/{skill}/references")
-            and path.suffix == ".md"
-        )
+        (path.suffix == ".md" and path.is_relative_to(f"{skill_dir}/{skill}/references"))
+        or path.relative_to(installed) in _reference_paths(skill)
         for skill in case.target_skills
     )
 
@@ -1249,7 +1259,7 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
             return False
         command = _command_text(item, shlex.join)
         return isinstance(command, str) and _is_target_skill_entrypoint_read(
-            case, command, adapter.skill_dir
+            case, command, adapter.skill_dir, result.workspace
         )
 
     def is_allowed_skill_file_read(item: CommandRecord) -> bool:
@@ -1259,7 +1269,7 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
             skill_reads_allowed
             and tool == "Read"
             and relative is not None
-            and _is_target_skill_path(case, relative, adapter.skill_dir)
+            and _is_target_skill_path(case, relative, adapter.skill_dir, result.workspace)
         )
 
     # Claude file tools act like commands for the analysis-only boundary.

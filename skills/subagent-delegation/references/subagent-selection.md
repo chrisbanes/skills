@@ -1,7 +1,5 @@
 # Subagent selection and handoff
 
-<!-- Canonical source: references/subagent-selection.md. Edit it there, then run `npm run references:sync`. -->
-
 Use Implementation ownership before choosing who will edit. Use the handoff
 procedure once delegation is permitted or required. The calling workflow
 owns delegation triggers, scope, grants, and acceptance rules.

@@ -25,7 +25,7 @@ operation grants.
 
 1. Open or update one draft PR for the reviewed head. Verify its head, tracker
    links and closure intent through the [provider bindings](provider-bindings.md).
-   Apply [PR review timing](pr-review-timing.md) to start external review while CI runs.
+   Apply [PR review timing](../../shepherd/references/pr-review-timing.md) to start external review while CI runs.
 2. Use `shepherd` for CI and PR feedback. For an in-scope repair, resume the
    executor with the finding, current head and delivery record. Verify the
    returned repair before pushing. Route changes to scope, qualification or

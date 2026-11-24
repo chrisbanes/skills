@@ -1,7 +1,5 @@
 # Boundary validation
 
-<!-- Canonical source: skills/to-plan/references/boundary-validation.md. Edit it there, then run `npm run references:sync`. -->
-
 Validate consequential boundaries before dependent work relies on them.
 
 1. For consequential persistence, privacy or asynchronous boundaries in the

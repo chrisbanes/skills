@@ -47,10 +47,10 @@ claims still count toward this limit; planner/handoff claims and drain claims in
 
 Read the common field, plan/recovery and output shapes in
 [GitHub normalization](github-binding.md#normalized-ticket-schema).
-For Jira apply the [Jira field mapping](jira-binding.md#normalize-and-reconcile)
+For Jira apply the [Jira field mapping](../../deliver-issue/references/jira-binding.md#normalize-and-reconcile)
 and use its account identities and ordered positions. For GitLab apply
-[scope normalization](gitlab-binding.md#scope-and-readiness) and reconcile
-[claim-label loss](gitlab-binding.md#claim-stop-and-release) before ranking.
+[scope normalization](../../deliver-issue/references/gitlab-binding.md#scope-and-readiness) and reconcile
+[claim-label loss](../../deliver-issue/references/gitlab-binding.md#claim-stop-and-release) before ranking.
 The ranker lives in `run-project/scripts/rank_tickets.py`. Preserve its output
 collections while supplying the neutral fields below. Todo plus `ready-for-agent`
 and a verified usable active plan leaf produces an implementation candidate;
@@ -102,8 +102,8 @@ stale plans require planning or base-drift screening before implementation.
 
 Validate the selected binding before normalization
 ([GitHub](github-binding.md#resolve-defaults-and-overrides),
-[Jira](jira-binding.md#binding-validation) or
-[GitLab](gitlab-binding.md#scope-and-readiness)). Use its effective binding fingerprint
+[Jira](../../deliver-issue/references/jira-binding.md#binding-validation) or
+[GitLab](../../deliver-issue/references/gitlab-binding.md#scope-and-readiness)). Use its effective binding fingerprint
 for `--configuration-digest` and every lease/marker `configurationDigest`.
 No-file runs supply the verified runtime fingerprint; trusted override runs
 retain their committed digest and resolved snapshot. Exact historical comparisons

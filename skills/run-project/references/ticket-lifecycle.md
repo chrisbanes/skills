@@ -3,7 +3,7 @@
 ## Route agents by task
 
 Apply the shared
-[selection and handoff reference](subagent-selection.md)
+[selection and handoff reference](../../subagent-delegation/references/subagent-selection.md)
 when available. The Project-specific routing and authority rules below remain
 binding. If the trusted configuration has Agent Setup, follow
 [agent routing](agent-routing.md) for eligible runtime profiles; keep the
@@ -31,7 +31,7 @@ merge, or mutate Project state; the owner reconciles their evidence.
 
 ## Worktrees
 
-Apply the [checkout lifecycle](checkout-lifecycle.md) to every worktree this
+Apply the [checkout lifecycle](../../implement-with-subagents/references/checkout-lifecycle.md) to every worktree this
 skill creates. Give each claimed ticket its own worktree; never pool or hand a
 ticket worktree to another ticket.
 
@@ -47,7 +47,7 @@ ticket worktree to another ticket.
    claim's PR head or recorded base. A worktree whose branch has no live claim
    or verified marker is foreign: report it and never adopt, reuse or remove it.
 4. Retire it with the lifecycle's per-checkout
-   [retire steps](checkout-lifecycle.md#retire) only once its work is
+   [retire steps](../../implement-with-subagents/references/checkout-lifecycle.md#retire) only once its work is
    delivered; until then keep it, including in remote wait, parking, pause or a label stop.
    Label-stopped worktrees and branches are always retained until human restoration;
    PR closure alone never authorizes their retirement:
@@ -69,7 +69,7 @@ ticket worktree to another ticket.
 6. Whenever a `next` or `drain` run finishes, waits for humans or stops,
    retain every label-stopped planning or ticket worktree, including clean ones;
    retire only the reusable [planning worktree](todo-lane.md) and delivered research
-   worktree, then [account](checkout-lifecycle.md#account) for every worktree
+   worktree, then [account](../../implement-with-subagents/references/checkout-lifecycle.md#account) for every worktree
    the run created, retaining with its claim and reason where applicable. A cleanup-incomplete run never reports success.
 
 ## Implement in ticket context
@@ -106,10 +106,10 @@ verified source/plan/amendment lineage, retained starting candidate and affected
 evidence to the delivery owner; implementation and evidence renewal stay there.
 For every ordinary implementation
 ticket, follow the bundled delivery procedure with this verified packet under its
-[Project handoff procedure](project-handoff.md).
+[Project handoff procedure](../../deliver-issue/references/project-handoff.md).
 Before dispatch or resume, bind the marker's active revision and evidence
 folder and retain a controller-owned preservation baseline under
-[revision evidence isolation](evidence-and-review.md#isolate-plan-revision-evidence).
+[revision evidence isolation](../../deliver-issue/references/evidence-and-review.md#isolate-plan-revision-evidence).
 Require the folder and written paths in every returned handoff; independently
 compare the evidence tree outside that folder with the retained baseline before
 acceptance. Changed or unknown preservation blocks that handoff and further
@@ -118,12 +118,12 @@ When the accepted source requires asynchronous or persistent live
 qualification, include the finite qualification contract, offline harness
 result, exact execution and recovery checkpoint, remaining approved allowance,
 and any unresolved outcome in that packet; follow the [shared qualification failure
-procedure](qualification-failure.md). Preserve
+procedure](../../deliver-issue/references/qualification-failure.md). Preserve
 unknown execution state and stop only affected dependent dispatch while
 independent tickets continue.
 Keep the persistent ticket context as delivery lead and integration owner.
 The ticket lead follows `deliver-issue`’s handoff to `implement-with-subagents`;
-pass its [checkpoint feedback and validation rules](evidence-and-review.md)
+pass its [checkpoint feedback and validation rules](../../deliver-issue/references/evidence-and-review.md)
 through implementation and repair handoffs. Preserve its same-owner repair rule
 and fit all descendants within the controller's actual spare capacity. Return observed implementation, repair,
 review, and CI phase boundaries, plus capacity or resource waits, with the
@@ -137,7 +137,7 @@ In implementation briefs, require a search across every test suite for affected
 assertions when changing shared presentation such as labels, copy or action
 names; the plan's suite list does not bound that search. For every delegated
 brief, make result delivery explicit: in Claude Code, include the
-[nested-agent launch rule](subagent-selection.md#claude-code) whenever further
+[nested-agent launch rule](../../subagent-delegation/references/subagent-selection.md#claude-code) whenever further
 delegation is allowed and the owner needs its results before returning. End
 every brief with: "after returning your report, stop; do not wait on background work".
 Relay a misrouted completion to its owner
@@ -180,7 +180,7 @@ count; never repeat an unchanged rerun to reset it.
 
 When the owner returns verified `no-change`, the controller checks acceptance
 evidence against the current integrated base and applies
-[verified no-change closure](provider-bindings.md#verified-no-change-closure).
+[verified no-change closure](../../deliver-issue/references/provider-bindings.md#verified-no-change-closure).
 Keep the claim and artifacts while tracker closure is pending or unknown.
 After authoritative closure readback, use
 [Done and checkout accounting](#reconcile-done-and-account-for-the-checkout)
@@ -196,12 +196,12 @@ disposition except for explicitly very low priority findings. If a repair
 changes the reviewed candidate, rerun affected checks and review the changed
 range plus its interaction with the previously reviewed effective diff. Apply
 `deliver-issue`'s
-[evidence invalidation rule](evidence-and-review.md#implementation-and-validation)
+[evidence invalidation rule](../../deliver-issue/references/evidence-and-review.md#implementation-and-validation)
 to each affected check and review contract, including its broadening conditions.
 Before every push, verify
 that the combined evidence covers the exact final HEAD and that no actionable
 finding remains; never treat unchanged prior checks as proof for changed code.
-Apply [PR review timing](pr-review-timing.md) after local qualification: start
+Apply [PR review timing](../../shepherd/references/pr-review-timing.md) after local qualification: start
 applicable external review while CI runs, preferring demonstrably supported draft review
 and otherwise permitting earlier PR readiness under existing ticket-agent PR
 authority. Preserve stricter explicit repository requirements. CI-supplied
@@ -244,7 +244,7 @@ unless dependency requires otherwise, and reconcile exact merge. Enforce closure
 policy and reconcile unintended tracker closure before Done automation or
 cleanup. Use the selected tracker procedure for
 [GitHub](github-binding.md#unintended-closure),
-[Jira](jira-binding.md#link-and-close) or [GitLab](gitlab-binding.md#link-and-close). A partial merge retains the open issue,
+[Jira](../../deliver-issue/references/jira-binding.md#link-and-close) or [GitLab](../../deliver-issue/references/gitlab-binding.md#link-and-close). A partial merge retains the open issue,
 unfinished Status, claim and owner for the remaining plan; skip terminal cleanup.
 For a completed merge outcome, continue to
 [Done and checkout accounting](#reconcile-done-and-account-for-the-checkout).
@@ -260,7 +260,7 @@ For a completed merge outcome, continue to
    and preserve artifacts.
 2. Apply the outcome's worktree and branch rule under [Worktrees](#worktrees).
    Record the exact disposition and readback under
-   [checkout accounting](checkout-lifecycle.md#account). Keep cleanup
+   [checkout accounting](../../implement-with-subagents/references/checkout-lifecycle.md#account). Keep cleanup
    incomplete until the retirement or host handoff is verified. Then discard
    the ticket agent, refresh other PRs, and apply the
    [complete bound-scope refresh](execution-controller.md#remote-state-and-queue).

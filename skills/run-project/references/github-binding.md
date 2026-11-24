@@ -27,11 +27,11 @@ The binding supplies operations, never an invocation grant.
 
 ## Planning marker operations
 
-See [Planning marker operations](github-delivery.md#planning-marker-operations) in the shared issue and PR binding.
+See [Planning marker operations](../../deliver-issue/references/github-delivery.md#planning-marker-operations) in the shared issue and PR binding.
 
 ## Delivery operations
 
-See [Delivery operations](github-delivery.md#delivery-operations) in the shared issue and PR binding.
+See [Delivery operations](../../deliver-issue/references/github-delivery.md#delivery-operations) in the shared issue and PR binding.
 
 ## Binding validation
 
@@ -56,16 +56,16 @@ Only an already trusted, committed display-name-only edit may use
    required, not as an absent file. Setup must inspect the
    [legacy migration](#approval-gated-legacy-migration) gate before resolving
    defaults; execution returns `configuration-blocked` and never migrates.
-2. Resolve the [shared repository settings](provider-bindings.md#shared-repository-configuration)
+2. Resolve the [shared repository settings](../../deliver-issue/references/provider-bindings.md#shared-repository-configuration)
    before applying tracker and role defaults.
    Select **Tracker** and **Code host** independently (default `github` for
-   each; a `gitlab` code host uses the [GitLab binding](gitlab-binding.md);
+   each; a `gitlab` code host uses the [GitLab binding](../../deliver-issue/references/gitlab-binding.md);
    other providers need their own supported binding). Resolve repository host
    and `owner/repository` from the current checkout's git remote and verify its
    live identity. Use explicit code-host repository overrides first.
    Without them, conflicting remotes or an unclear repository block.
    Resolve the tracker repository independently under
-   [Delivery bindings](provider-bindings.md) step 1. Use it for labels, short
+   [Delivery bindings](../../deliver-issue/references/provider-bindings.md) step 1. Use it for labels, short
    `#N`, and Project discovery and filtering.
 3. Resolve **Scope** from the trusted override when present, otherwise from the
    invocation. A Project URL selects a board; route a named issue to
@@ -135,11 +135,11 @@ Only an already trusted, committed display-name-only edit may use
 
 ### Direct issue scope
 
-See [Direct issue scope](github-delivery.md#direct-issue-scope) in the shared issue and PR binding.
+See [Direct issue scope](../../deliver-issue/references/github-delivery.md#direct-issue-scope) in the shared issue and PR binding.
 
 ### Direct issue planning readiness
 
-See [Direct issue planning readiness](github-delivery.md#direct-issue-planning-readiness) in the shared issue and PR binding.
+See [Direct issue planning readiness](../../deliver-issue/references/github-delivery.md#direct-issue-planning-readiness) in the shared issue and PR binding.
 
 ### Parent-issue scope
 
@@ -692,11 +692,11 @@ parking or retry signal.
 
 ## Live Merge-Policy Fingerprint
 
-See [Live Merge-Policy Fingerprint](github-delivery.md#live-merge-policy-fingerprint) in the shared issue and PR binding.
+See [Live Merge-Policy Fingerprint](../../deliver-issue/references/github-delivery.md#live-merge-policy-fingerprint) in the shared issue and PR binding.
 
 ## Remote Reconciliation
 
-Use [Remote reconciliation](github-delivery.md#remote-reconciliation) for
+Use [Remote reconciliation](../../deliver-issue/references/github-delivery.md#remote-reconciliation) for
 every logical read and authorized write. For Project operations missing from
 the connector, use `gh project` or ProjectV2 GraphQL. Ordinary setup uses
 the read steps only and returns `configuration-blocked` on exhausted access.
@@ -707,7 +707,7 @@ and ambiguous writes never qualify for parking.
 
 ## Unintended Closure
 
-See [Unintended Closure](github-delivery.md#unintended-closure) in the shared issue and PR binding.
+See [Unintended Closure](../../deliver-issue/references/github-delivery.md#unintended-closure) in the shared issue and PR binding.
 
 ## Normalized Ticket Schema
 
@@ -1160,7 +1160,7 @@ mutation, or success claim, apply [remote reconciliation](#remote-reconciliation
 
 ## Closing reference verification
 
-See [Closing reference verification](github-delivery.md#closing-reference-verification) in the shared issue and PR binding.
+See [Closing reference verification](../../deliver-issue/references/github-delivery.md#closing-reference-verification) in the shared issue and PR binding.
 
 ## Project Watcher command
 

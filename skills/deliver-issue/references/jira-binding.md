@@ -1,7 +1,5 @@
 # Jira Cloud tracker binding
 
-<!-- Canonical source: references/jira-binding.md. Edit it there, then run npm run references:sync. -->
-
 ## Core principle
 
 Bind Jira tracker operations to the exact site, item and authenticated account.

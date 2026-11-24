@@ -56,9 +56,9 @@ class PrReviewTimingTest(unittest.TestCase):
                 self.assertTrue(grade.objective_pass, grade.objective_failures)
                 self.assertFalse(grade.forbidden_action_failure, grade.violations)
 
-    def test_each_standalone_skill_ships_and_routes_the_same_contract(self):
+    def test_each_consumer_routes_to_the_shared_review_contract(self):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
-        canonical = (ROOT / "references/pr-review-timing.md").read_bytes()
+        canonical = (ROOT / "skills/shepherd/references/pr-review-timing.md").read_bytes()
         callers = {
             "deliver-issue": (
                 "references/delivery-lifecycle.md", "references/evidence-and-review.md",
@@ -77,7 +77,7 @@ class PrReviewTimingTest(unittest.TestCase):
                     enabled_skills=case.target_skills,
                 )
                 skill = workspace / ".agents/skills" / skill_name
-                reference = skill / "references/pr-review-timing.md"
+                reference = workspace / ".agents/skills/shepherd/references/pr-review-timing.md"
                 self.assertEqual(canonical, reference.read_bytes())
                 self.assertFalse(reference.is_symlink())
                 for relative in callers[skill_name]:

@@ -4,8 +4,8 @@
 
 Read trusted repository instructions and validate the binding read-only through
 [GitHub](github-binding.md#binding-validation),
-[Jira](jira-binding.md#binding-validation) or
-[GitLab](gitlab-binding.md#scope-and-readiness), resolving optional
+[Jira](../../deliver-issue/references/jira-binding.md#binding-validation) or
+[GitLab](../../deliver-issue/references/gitlab-binding.md#scope-and-readiness), resolving optional
 overrides and defaults without entering setup repair. Resolve lane-specific dependencies under [workflow providers](workflow-providers.md)
 before their relevant action; follow its affected-lane blocker rules when a
 provider is unavailable. Read [human frontier](human-frontier.md),
@@ -13,8 +13,8 @@ provider is unavailable. Read [human frontier](human-frontier.md),
 [Wayfinder](wayfinder-lane.md), plus [review contracts](review-contracts.md)
 before ticket acceptance. Confirm the binding's
 execution prerequisites for [GitHub](github-binding.md#execution-prerequisites),
-[Jira](jira-binding.md#unavailable-lanes-and-finish-gate) or
-[GitLab](gitlab-binding.md#tracker-availability-and-finish-gate).
+[Jira](../../deliver-issue/references/jira-binding.md#unavailable-lanes-and-finish-gate) or
+[GitLab](../../deliver-issue/references/gitlab-binding.md#tracker-availability-and-finish-gate).
 
 For `next`/`drain`, establish invocation authority through
 [run authority and ticket pauses](authority-and-pauses.md), checking grants at
@@ -29,7 +29,7 @@ Before dispatch, use the complete eligible-column inventory to preflight likely
 runnable tickets and their required qualification. Repeat affected checks when
 their evidence changes; do not deeply hydrate unchanged blocked work.
 For approved implementation, including the fast path, apply
-[Implementation ownership](subagent-selection.md#implementation-ownership)
+[Implementation ownership](../../subagent-delegation/references/subagent-selection.md#implementation-ownership)
 using the approved work, invocation settings, verified ticket-context settings
 and actual authority and capacity. Resolve what the controller can establish
 before dispatch. If only the ticket context can verify its effective settings,
@@ -42,7 +42,7 @@ to preserve ownership and release verified capacity. Schedule unrelated ready
 work. A temporarily busy compatible route follows the existing capacity rules.
 
 For asynchronous or persistent live qualification, carry forward the
-[deliver-issue live qualification and failure recovery procedure](qualification-failure.md)
+[deliver-issue live qualification and failure recovery procedure](../../deliver-issue/references/qualification-failure.md)
 through preflight and ticket handoff. It applies only when the accepted source
 requires that kind of live work; do not add it to unrelated tickets.
 
@@ -101,8 +101,8 @@ access or configuration failure. Do not repeatedly probe unchanged blockers.
 
 Before retry, mutation or a success claim, use the tracker binding's
 reconciliation procedure ([GitHub](github-binding.md#remote-reconciliation),
-[Jira](jira-binding.md#claim-release-and-status) or
-[GitLab](gitlab-binding.md#reconciliation)). Use
+[Jira](../../deliver-issue/references/jira-binding.md#claim-release-and-status) or
+[GitLab](../../deliver-issue/references/gitlab-binding.md#reconciliation)). Use
 [GitHub access](github-binding.md#github-access) for a selected GitHub role.
 
 Query complete live scope state at start and after merges: Project state,
@@ -166,8 +166,8 @@ Route planning and Wayfinder modes through their lanes; a
 `next` planning selection stays the same issue through terminal reconciliation.
 For Todo work with a verified usable active plan, perform the binding's
 implementation claim operation for [GitHub](github-binding.md#claim-implementation-work),
-[Jira](jira-binding.md#claim-release-and-status) or
-[GitLab](gitlab-binding.md#claim-stop-and-release).
+[Jira](../../deliver-issue/references/jira-binding.md#claim-release-and-status) or
+[GitLab](../../deliver-issue/references/gitlab-binding.md#claim-stop-and-release).
 Record its verified lease; ambiguity after the claim transition preserves a
 blocked slot.
 

@@ -218,8 +218,7 @@ def load_case(manifest_path: Path, repo_root: Path) -> EvalCase:
             "constant_skills must exactly declare fixture .agents/skills dependencies"
         )
 
-    # Reference files of other skills that the target skill links to; staged as plain
-    # files (no SKILL.md) so a dangling link is not mistaken for a missing prerequisite.
+    # Extra case resources, such as a sibling skill's helper script.
     staged_skill_files = (
         _require_string_list(data, "staged_skill_files") if "staged_skill_files" in data else ()
     )

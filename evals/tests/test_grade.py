@@ -155,7 +155,7 @@ class DeterministicGradeTest(unittest.TestCase):
             for runtime in ("codex", "claude"):
                 skill_dir = ".agents" if runtime == "codex" else ".claude"
                 entry = f"{skill_dir}/skills/gradle-run/SKILL.md"
-                reference = f"{skill_dir}/skills/gradle-run/references/subagent-selection.md"
+                reference = f"{skill_dir}/skills/subagent-delegation/references/subagent-selection.md"
                 read = ("Bash", {"command": f"cat {entry}"})
                 status = ("Bash", {"command": "python3 gradle_run.py status --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})
                 permitted = ((), (read,), (read, ("Bash", {"command": f"cat {reference}"})))
@@ -164,6 +164,7 @@ class DeterministicGradeTest(unittest.TestCase):
                     "python3 gradle_run.py recover --workflow aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa "
                     "--sequence 4 --reason 'Investigation complete' --no-live-descendants",
                     "./gradlew --offline --no-scan test", "python3 -c 'print(1)'",
+                    f"cat {skill_dir}/skills/run-project/references/github-binding.md",
                     "cat state.md", f"cat {entry} && {status[1]['command']}",
                     f"cat {entry} > output.md", f"cat {entry} $(python3 -c 'print(1)')",
                     "cat .agents/skills/other/SKILL.md",
@@ -303,9 +304,14 @@ class DeterministicGradeTest(unittest.TestCase):
             "forbid_all_commands": True,
             "allow_skill_reference_reads": True,
         })
+        shared = self.workspace / ".agents/skills/deliver-issue/references/github-delivery.md"
+        shared.parent.mkdir(parents=True)
+        shared.write_text("Shared procedure")
+        (self.workspace / ".agents/skills/run-project").mkdir(parents=True)
         commands = (
             "cat .agents/skills/deliver-issue/SKILL.md",
             "cat .agents/skills/run-project/SKILL.md",
+            "cat .agents/skills/run-project/../deliver-issue/references/github-delivery.md",
             "cat -- .agents/skills/deliver-issue/references/evidence-and-review.md",
             "/bin/zsh -lc 'cat .agents/skills/run-project/references/ticket-lifecycle.md'",
         )
