@@ -27,7 +27,7 @@ Resolve GitHub shorthand through the checkout only for a GitHub tracker when
 that identity is established. Otherwise use the trusted tracker repository; reject change requests and ambiguous
 tracker or repository identity. `--auto` requires an item in the current invocation.
 Select the established tracker binding; for GitHub read
-[the GitHub binding](references/github-binding.md#planning-marker-operations).
+[the GitHub binding](references/github-delivery.md#planning-marker-operations).
 For Jira Cloud read [scope and readiness](references/jira-binding.md#scope-and-readiness)
 and [planning marker operations](references/jira-binding.md#planning-marker-operations).
 For GitLab read [scope and readiness](references/gitlab-binding.md#scope-and-readiness)

@@ -20,7 +20,7 @@ verified integration branch when authorized.
    trusted configuration and fresh identity reads. Record both bindings and
    exact item/repository identities. For either GitHub role, read the applicable
    operations in the bundled
-   [GitHub binding](github-binding.md#delivery-operations). For a Jira Cloud
+   [GitHub binding](github-delivery.md#delivery-operations). For a Jira Cloud
    tracker use the bundled [Jira binding](jira-binding.md). For GitLab read the
    selected [tracker](gitlab-binding.md#tracker-operations) or
    [code-host](gitlab-binding.md#code-host-operations) operations, or both when selected.
@@ -41,7 +41,7 @@ verified integration branch when authorized.
    remains separate from code-host review transport and local independent review.
 3. Before planning, verify the invocation mode under the binding. A direct-issue
    controller uses the [issue lifecycle](issue-lifecycle.md) and the selected
-   tracker readiness branch ([GitHub](github-binding.md#direct-issue-planning-readiness)
+   tracker readiness branch ([GitHub](github-delivery.md#direct-issue-planning-readiness)
    [Jira](jira-binding.md#scope-and-readiness), or
    [GitLab](gitlab-binding.md#scope-and-readiness)); a board handoff retains its
    controller's bindings, claim, role authority and grants. Ordinary standalone
@@ -110,7 +110,7 @@ Use this route before PR creation. Step 7 applies to the merge route.
    evidence to the controller. Missing or unknown prerequisites leave closure
    pending or blocked with the exact reason.
 3. Use the selected tracker's verified close and terminal-readback operation
-   ([GitHub](github-binding.md#delivery-operations),
+   ([GitHub](github-delivery.md#delivery-operations),
    [Jira](jira-binding.md#link-and-close) or [GitLab](gitlab-binding.md#link-and-close)).
    This route needs no change request, native closing reference, merge or merge
    grant. If the tracker lacks

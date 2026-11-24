@@ -62,6 +62,14 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         selection = "references/subagent-selection.md"
         implementation_selection = "subagent-selection.md#implementation-ownership"
         cases = {
+            "deliver-issue-tree-direct": (
+                ("SKILL.md", "references/github-delivery.md#direct-issue-scope", "references/github-delivery.md"),
+                ("references/provider-bindings.md", "github-delivery.md#delivery-operations", "references/github-delivery.md"),
+            ),
+            "deliver-issue-ownership-novel": (
+                ("references/fast-path.md", "project-handoff.md#return-a-replan-packet", "skills/deliver-issue/references/project-handoff.md"),
+                ("references/project-handoff.md", "review-contracts.md", "skills/run-project/references/review-contracts.md"),
+            ),
             "deliver-issue-bug-diagnosis-novel": (
                 ("SKILL.md", "references/bug-diagnosis.md", "skills/deliver-issue/references/bug-diagnosis.md"),
             ),

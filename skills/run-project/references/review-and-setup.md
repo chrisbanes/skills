@@ -28,7 +28,8 @@ For GitHub, detect legacy boards/configuration through the
 before ordinary setup. Discovery and a dry run grant no mutation authority.
 Use [GitHub setup](github-binding.md#setup) for the GitHub role and
 [GitLab setup](gitlab-binding.md#setup) for each GitLab role. Preserve the
-common additive setup, active-lease, confirmation and finish gates. An absent override file uses
+common [additive setup](github-binding.md#additive-setup-for-an-existing-repository),
+[configuration format](github-binding.md#github-project-configuration), active-lease, confirmation and finish gates. An absent override file uses
 read-only default resolution and may finish `configuration-valid`; only requested
 file edits need the trusted committed instruction/configuration pair. Execution validates read-only; it
 never enters setup repair.

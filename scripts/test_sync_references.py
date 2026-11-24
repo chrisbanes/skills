@@ -17,14 +17,13 @@ class SyncReferencesTest(unittest.TestCase):
         )
 
     def test_tracker_binding_consumers_detect_and_repair_drift(self):
-        for binding in ("github", "jira"):
-            with self.subTest(binding=binding):
-                source = f"references/{binding}-binding.md"
-                consumers = (
-                    f"skills/deliver-issue/references/{binding}-binding.md",
-                    f"skills/run-project/references/{binding}-binding.md",
-                    f"skills/to-plan/references/{binding}-binding.md",
+        for reference in ("github-binding", "github-delivery", "jira-binding"):
+            with self.subTest(reference=reference):
+                source = f"references/{reference}.md"
+                skills = ("run-project", "to-plan") if reference == "github-binding" else (
+                    "deliver-issue", "run-project", "to-plan"
                 )
+                consumers = tuple(f"skills/{skill}/{source}" for skill in skills)
                 self.assertEqual(consumers, COPIES.get(source))
                 with tempfile.TemporaryDirectory() as directory:
                     root = Path(directory)
