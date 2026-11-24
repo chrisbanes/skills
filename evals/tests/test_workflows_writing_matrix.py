@@ -291,10 +291,10 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
 
         benchmark = [case for case in report.cases if not case.calibration]
         calibration = [case for case in report.cases if case.calibration]
-        self.assertEqual(51, len(benchmark))
+        self.assertEqual(54, len(benchmark))
         self.assertIn("grounded-writing", PUBLIC_SKILLS)
         self.assertNotIn("implement", PUBLIC_SKILLS)
-        self.assertEqual(51, len(filter_cases(report.cases, case_ids=None, skills=None)))
+        self.assertEqual(54, len(filter_cases(report.cases, case_ids=None, skills=None)))
         self.assertEqual(["router-single-item-deliver-spec"], [case.id for case in report.cases if case.kind == "routing"])
         self.assertEqual(
             {
@@ -740,6 +740,9 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 "changelog-direct",
                 "changelog-novel",
                 "changelog-negative",
+                "simplify-direct",
+                "simplify-novel",
+                "simplify-negative",
                 "release-kotlin-library-direct",
                 "release-kotlin-library-novel",
                 "release-kotlin-library-negative",

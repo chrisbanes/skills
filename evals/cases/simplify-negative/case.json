@@ -1,0 +1,35 @@
+{
+  "id": "simplify-negative",
+  "title": "Keep separate helpers with distinct empty-string behavior",
+  "family": "workflow",
+  "target_skills": [
+    "simplify"
+  ],
+  "expected_skills": [
+    "simplify"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "restraint",
+      "text": "Closes the review in one sentence with no worthwhile reuse finding. Keeps the None versus empty-string distinction and leaves both public contracts intact. Does not propose adding a helper flag, expanding into other concerns, or editing code."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}

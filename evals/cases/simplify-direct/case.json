@@ -1,0 +1,42 @@
+{
+  "id": "simplify-direct",
+  "title": "Remove repeated work in a label export",
+  "family": "workflow",
+  "target_skills": [
+    "simplify"
+  ],
+  "expected_skills": [
+    "simplify"
+  ],
+  "task_mode": "edit",
+  "kind": "direct",
+  "fixture": "label-export",
+  "allowed_write_paths": [
+    "labels.py"
+  ],
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "-B",
+        "-m",
+        "unittest",
+        "test_labels"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "cleanup",
+      "text": "Edits display_labels to trim each row once. Preserves order, duplicates, blank filtering and one-pass iterable support."
+    },
+    {
+      "id": "verification",
+      "text": "Uses four parallel read-only reviewers for reuse, logic, efficiency and abstraction when available; otherwise covers all four concerns with the available capacity and briefly discloses the fallback. The lead inspects the edit, runs the focused label tests and accurately reports the result."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}
