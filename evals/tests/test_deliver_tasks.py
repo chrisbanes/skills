@@ -50,6 +50,12 @@ NEGATIVE_CASES = (
     'run-project-drain-batched-updates-negative',
 )
 
+SHARED_CONFIG_CASES = (
+    'run-project-shared-config-direct',
+    'run-project-shared-config-retained-novel',
+    'run-project-shared-config-conflict-negative',
+)
+
 
 def markdown_heading_ids(path):
     body = re.sub(r"```.*?```", "", path.read_text(), flags=re.S)
@@ -60,9 +66,9 @@ def markdown_heading_ids(path):
 
 
 class DeliverTasksTest(unittest.TestCase):
-    def test_negative_delivery_assessments_pass_only_without_workspace_writes(self):
+    def test_read_only_delivery_assessments_pass_only_without_workspace_writes(self):
         corpus = {case.id: case for case in validate_corpus(ROOT).cases}
-        for case_id in NEGATIVE_CASES:
+        for case_id in NEGATIVE_CASES + SHARED_CONFIG_CASES:
             case = corpus[case_id]
             expected = json.loads((case.directory / "expectations.json").read_text())["decisions"]
             with self.subTest(case=case_id), tempfile.TemporaryDirectory() as directory:
@@ -85,10 +91,11 @@ class DeliverTasksTest(unittest.TestCase):
                 for summary in ("not JSON", "{}"):
                     invalid = replace(subject, final_output={**subject.final_output, "summary": summary})
                     self.assertFalse(grade_subject(case, invalid).objective_pass)
-                for path in ("state.md", ".scratch/review-decisions.json"):
+                for path in ("state.md", ".scratch/review-decisions.json", "docs/agents/deliver-tasks.md"):
                     changed = grade_subject(case, replace(subject, changed_paths=(path,)))
-                    self.assertFalse(changed.objective_pass)
                     self.assertTrue(changed.forbidden_action_failure)
+                    if case.kind == "negative":
+                        self.assertFalse(changed.objective_pass)
 
     def test_two_delivery_entrypoints_install_without_removed_skills(self):
         from evals.harness.suites import PUBLIC_SKILLS

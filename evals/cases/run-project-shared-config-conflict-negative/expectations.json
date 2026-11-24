@@ -1,0 +1,28 @@
+{
+  "decisions": {
+    "tracker-conflict": {
+      "result": "configuration-blocked",
+      "lookup": "tracker-repository",
+      "uses_legacy_binding": false,
+      "edits_config": false
+    },
+    "role-conflict": {
+      "result": "configuration-blocked",
+      "lookup": "agent-work-label",
+      "uses_legacy_binding": false,
+      "edits_config": false
+    },
+    "uncommitted": {
+      "result": "configuration-blocked",
+      "lookup": "shared-config-trust",
+      "uses_legacy_binding": false,
+      "edits_config": false
+    },
+    "legacy": {
+      "result": "configuration-valid",
+      "lookup": "none",
+      "uses_legacy_binding": true,
+      "edits_config": false
+    }
+  }
+}

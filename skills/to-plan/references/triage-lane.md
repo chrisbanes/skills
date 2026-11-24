@@ -75,7 +75,8 @@ reuse merge or issue-close authority.
 Resume the same triage context with the maintainer's decision. Serialize and
 reconcile each approved label, comment, or close mutation before continuing.
 Recheck the effective binding fingerprint and refetch the issue immediately
-before dispatch and before every approved mutation.
+before dispatch and before every approved mutation. Recheck any shared
+`needs-info` or `wontfix` mapping used in the approved decision.
 If the recommendation needs grilling, domain-model or ADR edits, checkout
 mutation, external access, or another material decision, stop the lane and
 hand the issue back to the maintainer without changing it.
@@ -85,8 +86,10 @@ hand the issue back to the maintainer without changing it.
 Use the batched post-mutation read to reconcile the approved outcome:
 
 - For a `ready-for-agent` recommendation, publish only the approved durable agent brief and other authorized non-agent-label changes. The controller never adds or restores `ready-for-agent`, even after triage approval. Ask the human to apply it and reconcile that live observation before the next ranker pass; leave the item in Todo and defer this triage attempt while awaiting the human action.
-- For the configured human-work label, `needs-info`, or `wontfix`, require the
-  provider's approved comment, label, and closure result as applicable. Leave
+- For `ready-for-human`, `needs-info`, or `wontfix`, use the tracker label
+  mapped by the trusted triage guide or the configured human-work label where
+  applicable. Verify the provider's approved comment, label, and closure
+  result as applicable. Leave
   open human work in Todo for the human frontier.
 - For `needs-triage`, a rejected recommendation, or a deferred decision, leave
   the item unchanged and mark it deferred for this invocation so it cannot

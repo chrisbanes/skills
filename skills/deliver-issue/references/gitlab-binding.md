@@ -43,8 +43,9 @@ Done automation fields a GitHub Project board needs):
 - Required approvals: `<rule summary, none or unavailable>`
 ```
 
-- `Tracker` `Repository` is required when the tracker is `github`, because the
-  GitLab checkout origin cannot identify the tracker repository.
+- Resolve a GitHub tracker repository from the
+  [shared tracker guide or delivery binding](provider-bindings.md#shared-repository-configuration).
+  The GitLab checkout origin cannot identify it.
 - `Project ID` is operator-supplied; setup may propose it from a read. Keep
   names beside IDs: the same Project ID under a new path is repairable drift
   (`configuration-blocked` for the whole run until setup reconciles the path);
@@ -87,11 +88,12 @@ planning resolve a canonical issue URL or qualified reference against the
 trusted tracker identity. Resolve a bare IID only against the bound tracker
 project. Keep scope, claim and role names beside IDs. Apply the project drift
 rules above to the tracker independently of the checkout. For controller runs,
-use the existing `Triage` and `Work Roles` label mappings, including the
-human-applied `ready-for-agent` default. Record the effective tracker identity,
-selection, resolved labels and account ID in the binding fingerprint used by
-leases. Standalone `to-plan` uses the exact issue and any mapped holds. It
-requires no board selection, claim label or agent-work label.
+resolve the `Triage` and `Work Roles` names under
+[shared repository configuration](provider-bindings.md#shared-repository-configuration).
+Fall back to the conventional names for undeclared roles. Record the effective
+tracker identity, selection, resolved labels and account ID in the binding
+fingerprint used by leases. Standalone `to-plan` uses the exact issue and any
+mapped holds. It requires no board selection, claim label or agent-work label.
 A rename requires configuration reconciliation. An identity substitution stops
 the run. Omit GitHub Project fields and workflow settings for this tracker.
 

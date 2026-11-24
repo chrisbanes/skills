@@ -153,6 +153,15 @@ When `run-project` has no explicit GitHub Project scope, it selects the sole
 visible open, non-template Project linked to the verified repository. Supply a
 Project URL when discovery is inconclusive.
 
+Repositories using Matt Pocock's setup can share tracker and triage settings
+with the delivery skills through `docs/agents/issue-tracker.md` and
+`docs/agents/triage-labels.md`. Reference those files from trusted repository
+instructions. Keep Project and delivery overrides in `docs/agents/deliver-tasks.md`.
+Existing duplicate settings can coexist when they agree. See the
+[shared configuration rules](skills/run-project/references/provider-bindings.md#shared-repository-configuration)
+and [setup procedure](references/github-binding.md#additive-setup-for-an-existing-repository)
+before removing duplicate fields from an active binding.
+
 Delivery workflow migration: `run-github-project` is replaced by `run-project`;
 `deliver-tasks` is split into board execution and `deliver-issue`; `deliver-spec`
 is folded into their internal delivery procedures. All three old skill names are

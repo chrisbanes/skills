@@ -23,9 +23,10 @@ Scope selects items. Only the invocation and live authority authorize writes.
    using a saved lease.
 3. Resolve a trusted board JQL selection, a configured parent key, or an
    explicitly selected issue key for standalone planning or direct delivery.
-   Board JQL comes from trusted configuration.
-   Resolve human-applied role label names from trusted config or the existing
-   conventional names. Configure project-wide To Do, In Progress and Done
+   Board JQL comes from trusted configuration. For board planning, resolve
+   human-applied role labels under
+   [shared repository configuration](provider-bindings.md#shared-repository-configuration).
+   Configure project-wide To Do, In Progress and Done
    status IDs with optional per-issue-type overrides by issue-type ID. Verify
    mappings against the project's per-type status metadata
    (GET `/project/{project}/statuses`). Resolve an optional Backlog status ID.

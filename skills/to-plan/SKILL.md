@@ -23,9 +23,13 @@ review, answer that request directly and read no references.
 Accept `/to-plan <issue URL | owner/repository#number | #number>`, its `--auto`
 form, or an in-chat task. Use tracker mode only for exactly one named item (or
 one previously established implementation target with no competing inline task).
-Resolve GitHub shorthand through the checkout only for a GitHub tracker when
-that identity is established. Otherwise use the trusted tracker repository; reject change requests and ambiguous
-tracker or repository identity. `--auto` requires an item in the current invocation.
+Resolve [shared tracker settings](references/provider-bindings.md#shared-repository-configuration)
+and applicable holds for standalone tracker mode. For a board handoff, reuse
+its validated tracker and role settings.
+Resolve a short issue number against the trusted tracker repository. Use the
+checkout only as the GitHub fallback when it identifies the established tracker.
+Reject change requests and ambiguous tracker or repository identity.
+`--auto` requires an item in the current invocation.
 Select the established tracker binding; for GitHub read
 [the GitHub binding](references/github-delivery.md#planning-marker-operations).
 For Jira Cloud read [scope and readiness](references/jira-binding.md#scope-and-readiness)

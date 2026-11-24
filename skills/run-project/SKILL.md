@@ -16,9 +16,9 @@ through the resolved binding's claim and completion markers. Implementation read
 derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 
 Check [Delivery bindings](references/provider-bindings.md) for source routing
-before resolving board scope. Route named issues to `deliver-issue` without
-claiming them. A Jira board can explicitly select a parent tree. Selecting one
-candidate grants no authority over its descendants.
+and shared settings before resolving board scope. Route named issues to
+`deliver-issue` without claiming them. A Jira board can explicitly select a
+parent tree. Selecting one candidate grants no authority over its descendants.
 
 Select tracker and code-host roles independently.
 Use the [GitHub](references/github-binding.md), [Jira](references/jira-binding.md)

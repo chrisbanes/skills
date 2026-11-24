@@ -1,0 +1,38 @@
+{
+  "id": "run-project-shared-config-retained-novel",
+  "title": "Keep the delivery digest until retained claims finish",
+  "family": "workflow",
+  "target_skills": [
+    "run-project"
+  ],
+  "expected_skills": [
+    "run-project"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "run-project-shared-config-retained-novel",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "binding",
+      "text": "Keep prose edits out of the binding digest, defer duplicate cleanup while a retained claim depends on it, and distinguish a validated patch from committed activation."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
