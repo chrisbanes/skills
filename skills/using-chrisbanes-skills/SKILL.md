@@ -53,7 +53,7 @@ only when its independent behavior changes the same work.
 | One ready GitHub issue or in-chat task needs repository-aware planning | [`to-plan`](../to-plan/SKILL.md) |
 | Explicit delivery of a named tracker issue and its descendants | [`deliver-issue`](../deliver-issue/SKILL.md) |
 | Explicit setup, review, next-ticket execution or drain of a project board | [`run-project`](../run-project/SKILL.md) |
-| Implementation of a local specification without a tracker issue | External `implement` workflow |
+| Implementation of a local specification without a tracker issue | [`to-plan`](../to-plan/SKILL.md) in conversation mode, then [`implement-with-subagents`](../implement-with-subagents/SKILL.md) for one MR |
 | Polling PRs/MRs, review comments, CI failures, or routine follow-up | [`shepherd`](../shepherd/SKILL.md) |
 
 ## Combination boundaries

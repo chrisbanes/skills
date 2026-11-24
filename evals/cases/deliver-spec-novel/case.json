@@ -1,6 +1,6 @@
 {
   "id": "deliver-spec-novel",
-  "title": "Resume a named issue and reject a local-only source",
+  "title": "Resume a named issue and route a local spec",
   "family": "workflow",
   "target_skills": [
     "deliver-issue"
@@ -27,7 +27,7 @@
   "rubric": [
     {
       "id": "local-source",
-      "text": "Uses tracker-mode to-plan for the approved issue; routes the separate local-only source to implement without creating a tracker item or executing delivery."
+      "text": "Uses tracker-mode to-plan for the approved issue. For the local spec, returns to-plan in conversation mode for one validated plan followed by implement-with-subagents for one MR. Creates no tracker item and begins no delivery."
     },
     {
       "id": "resume",

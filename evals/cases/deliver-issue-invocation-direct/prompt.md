@@ -6,4 +6,4 @@ Required output fields (choose values from the facts and workflow):
 
 - direct: next, requires_project, requires_ready_label, add_labels, merge, close
 - board: next, claim
-- local: next, tracker_write
+- local: next, planning_mode, executor, tracker_write, delivery_started

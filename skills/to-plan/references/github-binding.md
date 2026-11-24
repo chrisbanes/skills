@@ -122,7 +122,8 @@ retains its trusted configuration, leases and merge/closure policy.
    whose native closure is verified. A non-default base, `close-after-merge`,
    partial delivery or non-GitHub tracker requires a non-closing link and no
    native closing references. Missing closure authority also requires an empty
-   closing set. Local sources route to `implement`, outside this workflow.
+   closing set. For local specs, follow the
+   [conversation-mode route](provider-bindings.md#local-sources).
 5. **Closing-reference readback:** Apply Closing reference verification after
    every PR create/body edit and immediately before merge, including standalone
    delivery and mixed-provider cases. The complete `closingIssuesReferences`

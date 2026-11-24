@@ -37,6 +37,10 @@
     {
       "id": "recovery-authority",
       "text": "Preserves controller-owned operations, partial work and missing capability boundaries; reconciles unknown mutations without duplicate merges or closes."
+    },
+    {
+      "id": "local-source",
+      "text": "Returns the conversation-mode to-plan route and implement-with-subagents handoff while preserving the existing PR. Does not create another PR or tracker item, add a tracker link, or merge."
     }
   ],
   "provenance": {

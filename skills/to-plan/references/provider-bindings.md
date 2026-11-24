@@ -5,13 +5,21 @@
 Select tracker and code host independently; their bindings supply operations,
 not authority. A code-host merge and a tracker closure are separate facts.
 
+## Local sources
+
+For a spec without a tracker item, skip tracker lookup and issue creation.
+From `deliver-issue` or `run-project`, return the route and stop. The route
+starts with `to-plan` in conversation mode, then uses `implement-with-subagents`.
+When already in `to-plan`, stay in conversation mode and hand off one validated
+plan to `implement-with-subagents`. The caller opens one MR from the executor's
+verified integration branch when authorized.
+
 ## Procedure
 
 1. Resolve the source's tracker and repository's code host from the invocation,
    trusted configuration and fresh identity reads. Record both bindings and
-   exact item/repository identities. Local sources route to `implement` before
-   delivery. For either
-   GitHub role, read the applicable operations in the bundled
+   exact item/repository identities. For either GitHub role, read the applicable
+   operations in the bundled
    [GitHub binding](github-binding.md#delivery-operations). For a Jira Cloud
    tracker use the bundled [Jira binding](jira-binding.md). For GitLab read the
    selected [tracker](gitlab-binding.md#tracker-operations) or

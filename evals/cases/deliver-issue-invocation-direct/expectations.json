@@ -13,8 +13,11 @@
       "claim": false
     },
     "local": {
-      "next": "implement",
-      "tracker_write": false
+      "next": "to-plan",
+      "planning_mode": "conversation",
+      "executor": "implement-with-subagents",
+      "tracker_write": false,
+      "delivery_started": false
     }
   }
 }

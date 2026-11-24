@@ -157,7 +157,10 @@ Delivery workflow migration: `run-github-project` is replaced by `run-project`;
 `deliver-tasks` is split into board execution and `deliver-issue`; `deliver-spec`
 is folded into their internal delivery procedures. All three old skill names are
 removed without aliases. Existing configuration paths and durable records retain
-their identities. Local specs use the external `implement` workflow.
+their identities. For a local spec without a tracker issue, use
+[`to-plan`](skills/to-plan/SKILL.md) in conversation mode to prepare one plan,
+then use [`implement-with-subagents`](skills/implement-with-subagents/SKILL.md)
+to execute it. When authorized, open one MR from the verified integration branch.
 
 Workflows that delegate agents share the [subagent selection and handoff
 reference](references/subagent-selection.md). Each workflow retains its own

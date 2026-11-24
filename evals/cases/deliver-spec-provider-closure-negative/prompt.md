@@ -23,4 +23,5 @@ closing-reference readback. Jira closure is never native to GitHub.
 - `delegated`: Jira APP-42, GitHub PR qualified but unmerged; controller owns
   merge and close. Return ready evidence to controller, perform neither operation.
 - `local-no-tracker`: Approved local spec, no tracker item, GitHub PR qualified
-  and unmerged; no merge authority. Route to implement without continuing delivery, inventing a ticket, closure or tracker link.
+  and unmerged; no merge authority. Return the appropriate route and preserve
+  the existing PR without continuing delivery or inventing a tracker link.
