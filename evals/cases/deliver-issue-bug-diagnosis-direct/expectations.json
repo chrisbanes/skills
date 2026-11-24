@@ -1,0 +1,14 @@
+{
+  "decisions": {
+    "intake": {
+      "next": "diagnose",
+      "method": "provider",
+      "fix_during_diagnosis": false
+    },
+    "diagnosed": {
+      "next": "fast-path",
+      "retain_cause_and_verification": true,
+      "regression_test_owner": "implementation"
+    }
+  }
+}

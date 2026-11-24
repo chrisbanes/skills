@@ -441,6 +441,9 @@ CI-supplied full-suite evidence versus explicit local rules and checks CI
 cannot run; and `to-plan` baselines proven from green CI on the exact base SHA
 while keeping focused checks CI cannot answer. They use immutable synthetic
 state.
+Three direct-delivery diagnosis calibrations cover diagnosis before planning,
+fast-path requalification, local fallback, equivalent causal evidence, blocked
+reproduction and restraint when an existing plan or verified outcome applies.
 Three nested-agent calibrations check that a delegated owner waits for its
 own reviewer, helpers and slice workers before returning, keeps independent
 launches parallel, and that the top-level controller keeps background launches.

@@ -1,0 +1,17 @@
+{
+  "decisions": {
+    "intake": {
+      "next": "diagnose",
+      "method": "local"
+    },
+    "causal-trace": {
+      "next": "plan",
+      "retain_cause_and_verification": true
+    },
+    "symptom-only": {
+      "next": "blocked",
+      "resume_with": "paired-cache-trace",
+      "continue_independent_child": true
+    }
+  }
+}

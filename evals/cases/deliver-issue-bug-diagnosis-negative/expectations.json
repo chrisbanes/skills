@@ -1,0 +1,24 @@
+{
+  "decisions": {
+    "known-fix": {
+      "next": "fast-path",
+      "start_new_diagnosis": false
+    },
+    "approved-plan": {
+      "next": "reuse-plan",
+      "start_new_diagnosis": false
+    },
+    "board-owned": {
+      "next": "board-handoff",
+      "start_new_diagnosis": false
+    },
+    "unclear-outcome": {
+      "next": "clarify",
+      "start_new_diagnosis": false
+    },
+    "already-fixed": {
+      "next": "no-change",
+      "start_new_diagnosis": false
+    }
+  }
+}

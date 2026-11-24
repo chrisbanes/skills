@@ -1,0 +1,42 @@
+{
+  "id": "deliver-issue-bug-diagnosis-negative",
+  "title": "Skip new diagnosis when the current route already applies",
+  "family": "workflow",
+  "target_skills": [
+    "deliver-issue"
+  ],
+  "expected_skills": [
+    "deliver-issue"
+  ],
+  "task_mode": "review",
+  "kind": "negative",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/pr_review_decisions.py",
+        "deliver-issue-bug-diagnosis-negative",
+        "--response"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "restraint",
+      "text": "Skips new diagnosis for a known fix, a current approved plan, a verified board handoff, and a fully accepted no-change outcome."
+    },
+    {
+      "id": "readiness",
+      "text": "Resolves missing product behavior before attempting diagnosis and keeps verified no-change distinct from speculation."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}
