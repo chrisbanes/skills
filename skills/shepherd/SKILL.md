@@ -65,7 +65,10 @@ addressed threads after replying and pushing. Merge only with authority.
      Broaden checks when impact is unknown.
    - Run required full checks on the integrated candidate. Required CI on
      the pushed head may supply the same suite when repository and provider
-     rules allow it. That CI gates acceptance and merge.
+     rules allow it. That CI gates acceptance and merge. Use focused checks
+     for slice commits unless a wider check is required there. Use CI to
+     confirm the locally verified integrated repair, never as an iterative test
+     runner.
    - Renew affected checks and independent review on each changed head under
      PR review timing. Push once all pre-push requirements pass. Use CI to
      confirm the repair. Reply to the finding and resolve only after the reply

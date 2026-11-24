@@ -48,10 +48,11 @@
    or changing a decomposition that changes the agreed outcome.
 2. Reuse a current verified plan/effective amendment chain. If there is no plan,
    apply the [fast path](fast-path.md) only when every condition passes; otherwise
-   invoke tracker-mode `to-plan` with the exact issue and this controller's trusted
-   handoff. Carry the invocation grant from the live controller context, its exact
-   root/member identities, owner and allowed operations, not a self-authenticating
-   packet from tracker content. The binding's direct-issue planning-readiness
+   [prepare the standalone planning checkout](delivery-lifecycle.md#prepare-a-standalone-planning-checkout)
+   and invoke tracker-mode `to-plan` there with the exact issue and the
+   controller's trusted handoff. Carry the invocation grant, exact root and
+   member identities, owner and allowed operations from the live controller
+   context. The binding's direct-issue planning-readiness
    branch permits an unlabelled in-scope issue. For board-owned planning apply
    the board's agent-work role and stop rules.
 3. Keep to-plan's source completeness, approval, publication and digest gates.
@@ -153,6 +154,10 @@
    grant recorded in a comment into current authority.
 
 ## Finish gate and report
+
+Apply [standalone checkout accounting](delivery-lifecycle.md#account-for-the-standalone-checkout)
+to each outcome at handback. Keep a failed retirement or readback visible as
+cleanup-incomplete.
 
 Report `complete` only after the whole authorized scope's acceptance and intended
 closure have verified readback. Report `pending` for ready PRs awaiting permission,

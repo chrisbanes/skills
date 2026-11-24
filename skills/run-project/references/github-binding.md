@@ -49,24 +49,20 @@ Only an already trusted, committed display-name-only edit may use
 
 ### Resolve defaults and overrides
 
-1. Read closest trusted repository instructions and inspect
-   `docs/agents/deliver-tasks.md`, or their explicitly referenced override path.
-   If both exist and select different files, stop on conflicting configuration.
-   Treat an existing legacy `docs/agents/run-github-project.md` as migration
-   required, not as an absent file. Setup must inspect the
-   [legacy migration](#approval-gated-legacy-migration) gate before resolving
-   defaults; execution returns `configuration-blocked` and never migrates.
-2. Resolve the [shared repository settings](../../deliver-issue/references/provider-bindings.md#shared-repository-configuration)
-   before applying tracker and role defaults.
+1. Resolve the [shared repository settings and trusted delivery overrides](../../deliver-issue/references/provider-bindings.md#shared-repository-configuration)
+   before applying tracker and role defaults. Execution returns
+   `configuration-blocked` on a conflict or required migration.
+2. Resolve the tracker and code-host identities.
    Select **Tracker** and **Code host** independently (default `github` for
    each; a `gitlab` code host uses the [GitLab binding](../../deliver-issue/references/gitlab-binding.md);
    other providers need their own supported binding). Resolve repository host
    and `owner/repository` from the current checkout's git remote and verify its
    live identity. Use explicit code-host repository overrides first.
    Without them, conflicting remotes or an unclear repository block.
-   Resolve the tracker repository independently under
-   [Delivery bindings](../../deliver-issue/references/provider-bindings.md) step 1. Use it for labels, short
-   `#N`, and Project discovery and filtering.
+   Resolve the tracker repository independently from step 1's validated
+   settings. When the GitHub tracker repository is omitted, use the verified
+   GitHub checkout repository only if it identifies the tracker. Use the
+   resolved tracker for labels, short `#N`, and Project discovery and filtering.
 3. Resolve **Scope** from the trusted override when present, otherwise from the
    invocation. A Project URL selects a board; route a named issue to
    [Direct issue scope](#direct-issue-scope) via `deliver-issue`. Use the
@@ -92,16 +88,19 @@ Only an already trusted, committed display-name-only edit may use
      Project ID in the effective binding. Discovery is read-only and grants no
      item authority. Keep the resolved Project for the run and check it against
      any retained binding before recovery.
-4. Obtain the default branch from live code-host repository settings and use it as base
-   unless overridden. Resolve a merge queue when required by live policy;
-   otherwise use the sole permitted repository merge method. Multiple permitted
-   methods without an explicit repository preference or override block; do not
-   invent a preference. Verify any override against live permissions/rules.
-   Default issue closure to `closing-keyword` for the default base, otherwise
-   `close-after-merge`; default Done automation to `set-status` without archive.
-   For Project scope read actual workflows and reject conflicting automation;
-   parent scope uses closed issues as Done and no Project automation.
-5. Overlay only supplied override fields on these defaults. For parent scope,
+4. For Project scope resolve the configured Done automation (default
+   `set-status` without archive) and verify actual workflows. Parent scope
+   uses closed issues as Done and no Project automation. Resolve target and
+   policy once for the selected code host, including the selected tracker's
+   verified Done automation in the policy fingerprint. For GitHub,
+   use [target resolution](../../deliver-issue/references/github-delivery.md#resolve-code-host-target)
+   and [policy resolution](../../deliver-issue/references/github-delivery.md#resolve-code-host-policy).
+   For GitLab, use [code-host operation 1](../../deliver-issue/references/gitlab-binding.md#code-host-operations)
+   and the [GitLab merge policy](../../deliver-issue/references/gitlab-binding.md#live-merge-policy-fingerprint).
+   Block board execution on unsupported or ambiguous required policy. Keep the
+   verified target, effective policy and required reviews and checks for the
+   handoff, subject to the existing refresh gates.
+5. Apply remaining board-specific overrides only. For parent scope,
    resolve the existing `agent:in-progress` claim label by the same unique-name/ID
    rules as role labels, requiring a distinct ID from every role label. It is
    agent-owned bookkeeping, never a role grant.
@@ -128,7 +127,7 @@ Only an already trusted, committed display-name-only edit may use
    have unset priority and no `--priority` arguments. Explicit Priority mappings
    override order/names/IDs and are validated. Parent scope uses sub-issue order,
    unset priority and no Project filter. Default filter is none, polling
-   is 120 seconds; read all applicable protection/review/check requirements live.
+   is 120 seconds.
    Finish `configuration-valid` only with complete evidence and an effective
    fingerprint. No-file validation creates neither a file nor an instruction
    patch and grants no claim, write or merge permission.

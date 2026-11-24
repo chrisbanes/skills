@@ -596,7 +596,7 @@ class CodexRunnerTest(unittest.TestCase):
             rendered = rendered.replace(root, "<root>")
 
         self.assertEqual(
-            "17ee9068102e29542e36f747f2f22f9c6da0e662754ba4251ade9dba9db280d9",
+            "ec6198789b1f4ce9e56ffe5bd24ad84f79362c893212b783324a6e805555e8e9",
             hashlib.sha256(rendered.encode()).hexdigest(),
         )
 

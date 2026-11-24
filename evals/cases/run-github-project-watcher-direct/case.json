@@ -29,11 +29,11 @@
   "rubric": [
     {
       "id": "stay-alive",
-      "text": "With nothing runnable in `drain` and a decision pause (#41) and an authority pause (#42) remaining, the controller does not return `waiting-for-human` yet; it stays alive and waits until 24 hours pass without a productive wake (one that led to a claim, merge, or dispatched work)."
+      "text": "Uses the watcher for either sole remaining item, an authority pause (#42) or a label stop (#43). With monitoring available, neither scenario returns waiting-for-human before 24 hours without a productive wake (one that led to a claim, merge, or dispatched work)."
     },
     {
       "id": "launch-watcher",
-      "text": "Starts one read-only watcher using a fresh baseline taken immediately before the complete refresh, the configured poll interval, and a deadline of the last productive wake (or drain start) plus 24 hours, rather than sleep-based polling, ScheduleWakeup, CronCreate, /loop, or the single-PR host monitor."
+      "text": "Starts one read-only watcher per scenario using a fresh pre-refresh baseline, the 120-second default interval, and the last productive wake (or drain start) plus 24 hours. Passes --issue 42 for the authority pause and --issue 43 for the label stop. Keeps all periodic monitoring in the watcher."
     },
     {
       "id": "read-only",

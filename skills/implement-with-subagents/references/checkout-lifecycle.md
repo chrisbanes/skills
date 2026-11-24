@@ -12,11 +12,13 @@ checkouts are created, recorded, reused and retired.
    and owns their cleanup. If the runtime forbids shell-created checkouts but
    its managed checkout has neither a removal operation nor host-owned cleanup,
    stop and report the blocker before creating one. Otherwise create a plain
-   Git worktree with `git worktree add -b <task-branch> <path> <exact-sha>`.
-2. Verify the new checkout's branch and HEAD SHA before work starts in it,
-   then hand off or record its exact path, branch, base and instructions. If
-   the runtime starts the owner with its checkout, the owner runs this check
-   first: it switches to an absent task branch created at the exact SHA
+   Git worktree with `git worktree add -b <task-branch> <path> <exact-sha>`,
+   or `git worktree add --detach <path> <exact-sha>` for detached planning.
+2. Verify the new checkout's branch or detached state and its HEAD SHA before
+   work starts in it, then hand off or record its exact path, branch, base and
+   instructions. If the runtime starts the owner with its checkout, the owner
+   runs this check first. For a branched checkout it switches to an absent task
+   branch created at the exact SHA
    (`git switch -c <task-branch> <exact-sha>`), and stops and reports when
    HEAD or an existing branch differs. Confirm the owner's reported branch and
    HEAD before accepting its work.

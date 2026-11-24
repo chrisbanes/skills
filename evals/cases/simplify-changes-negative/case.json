@@ -1,12 +1,12 @@
 {
-  "id": "simplify-negative",
+  "id": "simplify-changes-negative",
   "title": "Keep separate helpers with distinct empty-string behavior",
   "family": "workflow",
   "target_skills": [
-    "simplify"
+    "simplify-changes"
   ],
   "expected_skills": [
-    "simplify"
+    "simplify-changes"
   ],
   "task_mode": "review",
   "kind": "negative",

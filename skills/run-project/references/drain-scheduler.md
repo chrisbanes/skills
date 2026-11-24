@@ -329,10 +329,9 @@ release an active planner for delivery; occupied ticket owners are not preempted
 In parent scope, a Project query reads the complete parent, descendant and
 dependency graph, and Status means the logical claim state.
 
-For a GitHub `drain`, follow the [GitHub watcher procedure](github-project-watcher.md)
-when a claim or batch PR waits remotely, or a human action, decision pause or
-Wayfinder human-frontier or assigned HITL item exists. Read it before reserving
-relay capacity or taking the pre-read baseline, and on watcher wakes or deadlines.
+For a GitHub `drain`, use the [GitHub watcher procedure](github-project-watcher.md)
+to decide whether a watcher is needed before reserving relay capacity or taking
+the pre-read baseline. Follow it on watcher wakes or deadlines.
 `next` never starts a watcher. For Jira or GitLab, follow the binding's
 unavailable wait lane ([Jira](../../deliver-issue/references/jira-binding.md#unavailable-lanes-and-finish-gate),
 [GitLab](../../deliver-issue/references/gitlab-binding.md#tracker-availability-and-finish-gate))

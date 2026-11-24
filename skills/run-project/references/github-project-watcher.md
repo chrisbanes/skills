@@ -14,9 +14,10 @@ resumption signal for a [parked claim](drain-scheduler.md#terminal-required-ci-p
 grants nothing; run grants stay invocation-scoped and lapse when the run returns.
 
 1. Run exactly one watcher whenever any claim or batch PR is in remote wait,
-   or a human action, authority/decision pause, Wayfinder human-frontier item,
-   or assigned Wayfinder HITL attention item exists. With none, start none,
-   stop a running one, and wait for agent notifications. Do not add controller polling, sleeps,
+   or a human action, verified authority or decision pause, label-stopped item,
+   Wayfinder human-frontier item, or assigned Wayfinder HITL attention item
+   exists. When nothing qualifies, stop any running watcher and wait for
+   agent notifications. Do not add controller polling, sleeps,
    `ScheduleWakeup`, `CronCreate`, `schedule`, `/loop`, or the single-PR host monitor.
    Retain the running watcher and its relay/session across unrelated agent
    events and authoritative reads when its project, repository, status field,

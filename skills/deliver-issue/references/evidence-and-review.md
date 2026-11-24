@@ -60,10 +60,17 @@ the selected mode retains its approval, authority and finish gates.
    and provider validation. Repeat checks only when changes invalidate evidence,
    impact cannot be bounded, or an explicit repository/provider rule requires it.
    A commit, handoff or acceptance step alone does not require a full rerun.
-   When the PR's required CI checks run the same full suite on the pushed
-   head, do not duplicate it locally: push after affected checks and independent
-   review, and use CI results on that exact head before delivery acceptance or
-   merge. Apply [PR review timing](../../shepherd/references/pr-review-timing.md) for concurrent external
+   Before invoking the executor, use the current required check policy for the
+   selected base. Reuse the board controller's verified policy when still
+   applicable, or read it through the code-host binding. Match exact check
+   names and sources to the trusted CI workflow or pipeline configuration.
+   Record which checks run the equivalent full suite on the PR head, including
+   applicable triggers and filters. Pass those check names and covered checks to the executor as
+   pending CI. Run the required full suite locally if coverage or applicability
+   cannot be verified. Push after affected checks, mandatory pre-push checks
+   and independent review. Require the named CI results on the exact final head
+   before delivery acceptance or merge.
+   Apply [PR review timing](../../shepherd/references/pr-review-timing.md) for concurrent external
    review, verified draft support and earlier readiness, including when CI only
    starts after leaving draft. Run the full suite locally when a repository or
    provider rule requires it, or run checks CI cannot supply, such as device,

@@ -168,8 +168,9 @@
     pre-push checks. Run the required full suite locally unless the delivery
     controller identifies required PR CI that runs the equivalent suite on
     this commit and no user, repo or provider rule requires it before push.
-    Record those exact pending checks for the caller. Repair local failures
-    forward from the failed head under step 9.
+    If this diff changes CI inputs, revalidate that coverage with the controller
+    before deferring the suite. Record those exact pending checks for the
+    caller. Repair local failures forward from the failed head under step 9.
     Obtain independent review under the entrypoint’s contract. Reuse applicable
     coverage on resume. For an empty final diff, establish full acceptance on
     the clean baseline before returning no-change.

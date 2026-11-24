@@ -28,7 +28,7 @@
   "rubric": [
     {
       "id": "binding",
-      "text": "Read the shared values, retain the live ID pin, keep the tracker separate from the code host, and make no claim."
+      "text": "Read all five mapped triage roles, retain the live ID pin, keep the tracker separate from the code host, and make no claim. Use GitLab's live default branch when the override omits the base, and preserve the required GitHub merge queue over a direct method preference."
     }
   ],
   "provenance": {

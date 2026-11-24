@@ -30,6 +30,9 @@ CASES = (
 
 RESPONSE_CASES = {
     "jira-transition-marker-negative": "jira-state.md",
+    "deliver-issue-shared-config-direct": "state.md",
+    "to-plan-shared-config-novel": "state.md",
+    "run-project-shared-config-direct": "state.md",
     "gitlab-tracker-claim-direct": "gitlab-state.json",
     "gitlab-tracker-notes-novel": "gitlab-state.json",
     "gitlab-tracker-closure-negative": "gitlab-state.json",

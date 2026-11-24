@@ -24,7 +24,7 @@ PUBLIC_SKILLS = (
     "changelog",
     "release-kotlin-library",
     "shepherd",
-    "simplify",
+    "simplify-changes",
     "to-plan",
     ROUTER_SKILL,
 )
@@ -80,7 +80,7 @@ WORKFLOWS_WRITING_SKILLS = (
     "changelog",
     "release-kotlin-library",
     "shepherd",
-    "simplify",
+    "simplify-changes",
     "to-plan",
 )
 
@@ -110,7 +110,7 @@ SUITES = {
         skills=WORKFLOWS_WRITING_SKILLS,
         benchmark_cases=54,
         routing_cases=1,
-        calibration_cases=194,
+        calibration_cases=196,
         require_skill_triads=True,
     ),
 }

@@ -10,6 +10,12 @@ authorized title for conversation mode. Use `.scratch/to-plan/<item-id>.md`
 in tracker mode (the issue number for GitHub; use a binding-resolved safe local
 identifier for another tracker); conversation paths are defined by its mode contract.
 
+For a verified direct-issue controller handoff, verify the supplied planning
+checkout path and detached `HEAD` against the controller's bound target branch
+and exact base SHA before inspecting code or running checks. Stop on a missing
+or mismatched checkout. Record the supplied target branch and the verified SHA
+in the plan's `Planned against` field.
+
 Inventory tracked and untracked changes. Exclude only paths that cannot affect
 planned behavior, files, symbols, seams, contracts, or validation; inspect
 contents only when overlap is plausible. Stop on overlap or uncertainty and
