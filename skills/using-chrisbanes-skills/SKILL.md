@@ -50,6 +50,7 @@ only when its independent behavior changes the same work.
 | Comparing physical Android benchmark configurations, reversed rankings, or an Android default | [`android-benchmark-comparison`](../android-benchmark-comparison/SKILL.md) |
 | Unreleased changelog maintenance or specified-release notes | [`changelog`](../changelog/SKILL.md) |
 | Kotlin library release preparation, publication, or readiness | [`release-kotlin-library`](../release-kotlin-library/SKILL.md) |
+| Behavior-preserving cleanup or a simplification review of changed code | [`simplify-changes`](../simplify-changes/SKILL.md) |
 | One ready GitHub issue or in-chat task needs repository-aware planning | [`to-plan`](../to-plan/SKILL.md) |
 | Explicit delivery of a named tracker issue and its descendants | [`deliver-issue`](../deliver-issue/SKILL.md) |
 | Explicit setup, review, next-ticket execution or drain of a project board | [`run-project`](../run-project/SKILL.md) |

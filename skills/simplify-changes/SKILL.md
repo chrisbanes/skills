@@ -1,13 +1,13 @@
 ---
-name: simplify
+name: simplify-changes
 description: Use when the user asks to simplify changed code, clean up a specific implementation, or identify worthwhile simplifications.
 ---
 
-# Simplify
+# Simplify changes
 
 Keep cleanups that preserve behavior and have a concrete benefit.
 
-1. **Read the request.** Report by default, including for bare `$simplify`,
+1. **Read the request.** Report by default, including for bare `$simplify-changes`,
    requests for ideas or a focus alone. “Simplify this diff” or “clean this
    up” authorizes local edits. “Report only” always wins.
 2. **Select the target.** Honor a supplied path, diff, commit range, PR or MR.

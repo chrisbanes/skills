@@ -1,0 +1,21 @@
+{
+  "decisions": {
+    "fresh": {
+      "base_sha": "1111111111111111111111111111111111111111",
+      "merge_method": "squash",
+      "checkout": "create-isolated",
+      "pending_ci": ["linux-full"],
+      "full_suite_local": false
+    },
+    "unknown-ci": {"pending_ci": [], "full_suite_local": true},
+    "needs-plan": {
+      "planning_checkout": "isolated-detached",
+      "planned_branch": "stable",
+      "planned_sha": "1111111111111111111111111111111111111111",
+      "may_publish": false
+    },
+    "path-conflict": {"result": "configuration-blocked"},
+    "label-removed": {"result": "stop-preserve", "may_resume_writes": false},
+    "merged": {"retire_checkout": true, "remove_local_branch": true}
+  }
+}

@@ -21,9 +21,10 @@ Scope selects items. Only the invocation and live authority authorize writes.
    using a saved lease.
 3. Resolve a trusted board JQL selection, a configured parent key, or an
    explicitly selected issue key for standalone planning or direct delivery.
-   Board JQL comes from trusted configuration. For board planning, resolve
-   human-applied role labels under
+   Board JQL comes from trusted configuration. For board and direct delivery,
+   resolve the applicable human-applied role labels under
    [shared repository configuration](provider-bindings.md#shared-repository-configuration).
+   Standalone planning resolves only the labels it needs to detect holds.
    Configure project-wide To Do, In Progress and Done
    status IDs with optional per-issue-type overrides by issue-type ID. Verify
    mappings against the project's per-type status metadata
@@ -73,8 +74,11 @@ Scope selects items. Only the invocation and live authority authorize writes.
    authenticated direct-issue invocation accept the root and verified open
    descendants without requiring that label at initial discovery. Honor explicit
    holds, prior stops, existing controller ownership and all blocker and plan
-   requirements in every mode. Honor observed label removals for controller-owned
-   work. A delegated board handoff inherits one item and its existing authority.
+   requirements in every mode. Record the observed mapped agent-work label for
+   an active direct or board claim. Recheck current labels before writes and on
+   resume; if that observed label was removed, apply
+   [stop and preserve](issue-lifecycle.md#establish-scope-and-authority).
+   A delegated board handoff inherits one item and its existing authority.
    Never add or restore the agent-work label.
 5. Read complete descriptions, comments, parent, linked specifications,
    dependencies and their outcomes, and resolve linked delivery records and

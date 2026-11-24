@@ -1,12 +1,12 @@
 {
-  "id": "simplify-direct",
+  "id": "simplify-changes-direct",
   "title": "Remove repeated work in a label export",
   "family": "workflow",
   "target_skills": [
-    "simplify"
+    "simplify-changes"
   ],
   "expected_skills": [
-    "simplify"
+    "simplify-changes"
   ],
   "task_mode": "edit",
   "kind": "direct",

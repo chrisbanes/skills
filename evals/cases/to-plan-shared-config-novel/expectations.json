@@ -1,0 +1,8 @@
+{
+  "decisions": {
+    "agreement": {"tracker": "acme/intake", "result": "plan", "may_publish": false},
+    "conflict": {"tracker": "unresolved", "result": "configuration-blocked", "may_publish": false},
+    "local-draft": {"tracker": "acme/intake", "result": "plan", "may_publish": false},
+    "human-hold": {"tracker": "acme/intake", "result": "hold", "may_publish": false}
+  }
+}

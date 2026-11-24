@@ -1,0 +1,31 @@
+{
+  "id": "deliver-issue-shared-config-direct",
+  "title": "Resolve direct Jira delivery with a separate GitHub code host",
+  "family": "workflow",
+  "target_skills": ["deliver-issue"],
+  "expected_skills": ["deliver-issue"],
+  "task_mode": "review",
+  "kind": "direct",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": ["python3", "@validators/pr_review_decisions.py", "deliver-issue-shared-config-direct", "--response"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "binding",
+      "text": "Honors the trusted GitHub target and merge preference, detects conflicting override paths, and preserves a mapped Jira role removal without imposing a label requirement at initial discovery."
+    },
+    {
+      "id": "delivery",
+      "text": "Plans in an isolated checkout at the bound target and keeps the publication gate. Chooses the implementation checkout from the approved base, hands proven CI coverage to the executor, requires local validation when that coverage is uncertain, and retires the owned implementation checkout and branch only after verified delivery."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

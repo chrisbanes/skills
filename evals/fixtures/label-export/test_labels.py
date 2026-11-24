@@ -1,7 +1,15 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import patch
 
 from labels import display_labels
+
+
+class CountedLabel(str):
+    strip_calls = 0
+
+    def strip(self, *args, **kwargs):
+        self.strip_calls += 1
+        return super().strip(*args, **kwargs)
 
 
 class DisplayLabelsTest(unittest.TestCase):
@@ -13,6 +21,9 @@ class DisplayLabelsTest(unittest.TestCase):
         self.assertEqual(display_labels([]), [])
 
     def test_trims_each_row_once(self):
-        row = Mock(wraps=" beta ")
-        self.assertEqual(display_labels([row]), ["beta"])
-        row.strip.assert_called_once_with()
+        row = CountedLabel(" beta ")
+        # Route explicit str.strip and map(str.strip, ...) through the same
+        # counter as row.strip for this real string subtype.
+        with patch("labels.str", CountedLabel, create=True):
+            self.assertEqual(display_labels([row]), ["beta"])
+        self.assertEqual(row.strip_calls, 1)

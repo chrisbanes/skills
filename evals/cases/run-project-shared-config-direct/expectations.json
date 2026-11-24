@@ -7,9 +7,21 @@
       "triage_label": "triage:review",
       "agent_label": "agent:approved",
       "human_label": "human:queue",
+      "needs_info_label": "triage:clarify",
+      "wontfix_label": "triage:declined",
       "agent_label_id": "LA_AGENT",
       "identity_source": "committed-override-digest",
       "can_claim": false
+    },
+    "gitlab-default": {
+      "target_branch": "trunk",
+      "target_sha": "2222222222222222222222222222222222222222",
+      "merge_policy": "ff"
+    },
+    "github-queue": {
+      "target_branch": "stable",
+      "target_sha": "3333333333333333333333333333333333333333",
+      "merge_policy": "merge-queue"
     }
   }
 }

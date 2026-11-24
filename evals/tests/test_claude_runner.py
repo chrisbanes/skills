@@ -24,12 +24,24 @@ from evals.harness.runner import (
     run_subject,
 )
 from evals.harness.score import forced_integrity_status, is_behavioral_evidence
+from evals.harness.suites import PUBLIC_SKILLS
 from evals.tests import test_codex_runner
 from evals.tests.test_codex_runner import sample_case
 from evals.tests.test_grade import make_case
 
 
 FIXTURE = Path(__file__).parent / "data" / "claude_stream_subject.jsonl"
+
+
+class ClaudeBuiltinCompatibilityTest(unittest.TestCase):
+    def test_public_skill_names_do_not_collide_with_known_claude_builtins(self):
+        with FIXTURE.open(encoding="utf-8") as events:
+            init = json.loads(next(events))
+        # The fixture includes one injected skill alongside the actual built-ins.
+        builtins = set(init["skills"]) - {"probe-skill"}
+        self.assertEqual(set(), set(PUBLIC_SKILLS) & builtins)
+
+
 def hidden_paths(root):
     """Installed skill copies and the source checkout are unreadable to subjects."""
     home = Path.home()

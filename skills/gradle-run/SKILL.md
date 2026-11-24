@@ -11,6 +11,11 @@ Treat complete Gradle output as a temporary, sensitive artifact. Every
 agent-initiated Gradle command runs through the compact-output wrapper; never
 stream, `tee`, paste, or reopen a full build log.
 
+The wrapper masks common credentials in bounded summaries and ledgers.
+Unfamiliar formats can survive. Check before quoting or sharing those outputs
+and replace any remaining secret with `[REDACTED]`, including in handoffs and
+the final response.
+
 Every `create`, `run`, `status`, `recover`, and `finish` invocation is the entire shell command for
 that tool call. Prefixes, assignments, conditionals, pipes, command chains, and
 follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.

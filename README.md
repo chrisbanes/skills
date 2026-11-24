@@ -20,6 +20,37 @@ npx skills add chrisbanes/skills --skill '*'
 Shared references live in the skills that own them. Selecting all skills keeps
 those links available. You can also install the complete plugin for your client.
 
+### Upgrade and selective installation
+
+The repository's cleanup skill is now `simplify-changes`. Update saved prompts
+to use `$simplify-changes` or the plugin-qualified command in Claude Code.
+Claude Code's built-in `/simplify` remains available.
+
+If you install individual skills, include the skill directories that own the
+references and workflow steps you use. The table lists direct dependencies.
+Follow the dependencies of each installed skill for the workflows you use.
+
+| Selected skill | Companion skills |
+|---|---|
+| `compose-animations` | `compose-performance`, `compose-state-and-effects` |
+| `compose-component-design` | `compose-animations`, `compose-performance`, `compose-state-and-effects`, `compose-ui-testing-patterns` |
+| `compose-focus-navigation`, `compose-ui-testing-patterns` | Each links to the other |
+| `compose-performance` | `compose-component-design`, `compose-state-and-effects`, `gradle-run` |
+| `compose-state-and-effects` | `compose-focus-navigation`, `compose-performance`, `compose-ui-testing-patterns` |
+| `kotlin-api-design` | `compose-component-design`, `compose-performance`, `compose-state-and-effects`, `kotlin-control-flow` |
+| `kotlin-concurrency-and-flow` | `compose-state-and-effects`, `gradle-run`, `kotlin-control-flow` |
+| `kotlin-control-flow` | `gradle-run`, `kotlin-api-design`, `kotlin-concurrency-and-flow` |
+| `deliver-issue` | `implement-with-subagents` for implementation and repair, `shepherd` for PRs, `to-plan` for planning, `run-project` for shared binding and board references |
+| `gradle-run`, `simplify-changes` | `subagent-delegation` for delegation |
+| `implement-with-subagents` | `subagent-delegation` for routing and handoffs, `to-plan` for boundary validation |
+| `release-kotlin-library` | `changelog`, `gradle-run` |
+| `run-project` | `deliver-issue`, `implement-with-subagents`, `shepherd`, `subagent-delegation`, `to-plan` |
+| `shepherd` | `implement-with-subagents` for repair guidance, `subagent-delegation` for log helpers |
+| `to-plan` | `deliver-issue` for tracker mode |
+| `using-chrisbanes-skills` | The skill for the selected [route](skills/using-chrisbanes-skills/SKILL.md#common-routes) |
+
+### Plugin installation
+
 For Claude Code:
 
 ```
@@ -133,7 +164,7 @@ for its lane-specific fallback and blocking behavior.
 
 ### Workflows
 
-- [`simplify`](skills/simplify/SKILL.md) — review changed code for reuse, simpler logic, efficiency, and appropriate abstractions. A bare invocation reports findings. “Clean this up” applies and checks worthwhile edits.
+- [`simplify-changes`](skills/simplify-changes/SKILL.md) — review changed code for reuse, simpler logic, efficiency, and appropriate abstractions. A bare invocation reports findings. “Clean this up” applies and checks worthwhile edits.
 - [`deliver-issue`](skills/deliver-issue/SKILL.md) — coordinate a named tracker issue and its descendants, or a verified board-controller handoff using the installed `implement-with-subagents` executor for each approved PR, diagnosis before planning for unresolved bugs in direct delivery, a planning-free fast path for small well-understood tickets, CI-supplied full-suite evidence, concurrent external review with verified draft support or earlier PR readiness, reusable scope approval and revision-isolated evidence with preservation checks, independent integrated-candidate review and focused repair review, and PR shepherding, delivering to GitHub or GitLab code hosts; validate applicable live-qualification harness paths offline (isolated production stores for persistent paths, fake runtimes for asynchronous paths), then reconcile failures under bounded approved allowances.
 - [`release-kotlin-library`](skills/release-kotlin-library/SKILL.md) — assess readiness, prepare, and verify Kotlin library releases; check the `gradle-maven-publish-plugin` prerequisite, use `changelog` for notes, prepare Metalava API snapshots, and follow repository checks and publication gates.
 - [`gradle-run`](skills/gradle-run/SKILL.md) — run every agent-initiated Gradle command through a compact-output wrapper; recover run identity and bounded results by workflow ID with read-only status, and diagnose failures with optional investigation helpers.

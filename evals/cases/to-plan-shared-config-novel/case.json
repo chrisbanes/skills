@@ -1,0 +1,31 @@
+{
+  "id": "to-plan-shared-config-novel",
+  "title": "Resolve standalone planning against the configured tracker",
+  "family": "workflow",
+  "target_skills": ["to-plan"],
+  "expected_skills": ["to-plan"],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": ["python3", "@validators/pr_review_decisions.py", "to-plan-shared-config-novel", "--response"],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "tracker",
+      "text": "Resolves the short reference against the trusted tracker, ignores an unreferenced draft, and blocks both conflicting declarations and applicable human holds."
+    },
+    {
+      "id": "authority",
+      "text": "Allows eligible standalone planning without an agent-work label or board mapping and preserves the plan publication approval gate."
+    }
+  ],
+  "provenance": {"kind": "synthetic"},
+  "calibration": true
+}

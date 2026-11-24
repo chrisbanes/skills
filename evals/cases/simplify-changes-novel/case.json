@@ -1,12 +1,12 @@
 {
-  "id": "simplify-novel",
+  "id": "simplify-changes-novel",
   "title": "Review the local changes with an allocation focus on a solo host",
   "family": "workflow",
   "target_skills": [
-    "simplify"
+    "simplify-changes"
   ],
   "expected_skills": [
-    "simplify"
+    "simplify-changes"
   ],
   "task_mode": "review",
   "kind": "novel",

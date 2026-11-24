@@ -7,7 +7,7 @@ outcomes, allowed-write boundaries, and no-change controls. The committed suites
 cover six Compose skills, four Kotlin/Gradle skills, and eleven workflow/writing
 skills: `android-benchmark-comparison`, `deliver-issue`, `run-project`, `grounded-writing`,
 `implement-with-subagents`, `subagent-delegation`, `changelog`, `release-kotlin-library`,
-`shepherd`, `simplify`, and `to-plan`. It is designed to answer three separate questions:
+`shepherd`, `simplify-changes`, and `to-plan`. It is designed to answer three separate questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
 2. Does automatic activation report the expected implicitly invokable public skill entrypoints?
@@ -368,7 +368,7 @@ deterministic fixture-integrity checks and semantic rubrics; no live model
 results are claimed.
 The changelog triad checks stable-cycle coverage, incremental Unreleased
 maintenance and missing-file restraint across non-Kotlin repositories. The
-three `simplify` cases cover a verified cleanup, a report on local changes
+three `simplify-changes` cases cover a verified cleanup, a report on local changes
 with limited reviewer capacity, and a no-change control for unsafe helper reuse. The
 release triad checks the changelog handoff, uncertain prerelease recovery,
 and read-only readiness restraint without live publication or credentials.
@@ -388,6 +388,8 @@ and unchanged-plan restraint, two-round external-review convergence with same-ow
 related retention/pagination cases, review coverage and browser diagnostics,
 early consequential boundary validation and restraint on unchanged evidence,
 unresolved decisions, label-free GitHub readiness with retained contract gates,
+shared tracker configuration for standalone planning and delivery, mapped Jira
+label stops, isolated delivery checkouts and verified CI deferral,
 proof-gated report publication, implementation-plan specificity for complex work with a one-function counterexample, and verification
 evidence reuse versus missing, stale, failed, or explicitly required fresh
 evidence. Six additional cases cover accessible context-pointer handoffs and

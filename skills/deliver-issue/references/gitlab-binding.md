@@ -306,7 +306,11 @@ is the merge request IID.
    `GET projects/<url-encoded path>` must return the same project, with
    `path_with_namespace` equal to `Repository` and the live `default_branch`.
    The checkout's `origin` (https or ssh form) must name `Host` and
-   `Repository`. Any mismatch blocks under the drift rules above.
+   `Repository`. Match any configured `Default branch` to the live value.
+   Use the trusted `Base branch` when supplied and the live `default_branch`
+   otherwise. Verify the selected branch and its exact tip SHA through
+   `GET projects/:id/repository/branches/<url-encoded branch>` before planning or choosing
+   a checkout. Any mismatch blocks under the drift rules above.
 2. **Find or open a merge request:** Merge requests come only from task
    branches in the configured project, never forks. Before create, list
    `GET projects/:id/merge_requests?source_branch=<branch>&target_branch=<base>&state=all`
@@ -461,6 +465,12 @@ If bounded access retries end during setup, report `configuration-blocked`.
 Finish with the applicable validation or proposed-edit result.
 
 ## Live Merge-Policy Fingerprint
+
+Use the verified base from code-host operation 1. Use the configured
+`Method` when it matches the project's live `merge_method`, or the live
+method when omitted. Resolve `Squash` under [Configuration](#configuration)
+and closure under [Link and close](#link-and-close). Record the resolved
+policy and applicable gates for the controller.
 
 Compute and recompute it as the
 [GitHub fingerprint](github-delivery.md#live-merge-policy-fingerprint) does,

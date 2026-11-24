@@ -138,12 +138,10 @@ retains its trusted configuration, leases and merge/closure policy.
    human-applied agent-work role and stop rules in Source reads. Both retain
    blocker and approval checks. Marker publication grants no label or closure
    authority; a missing role alone does not send direct delivery to triage.
-2. **Code-host open/update:** Resolve the exact repository and base, authenticate
-   permissions, and find the existing PR for the supplied branch before create.
-   Verify the default branch live and use it as the base unless the trusted
-   binding specifies another.
-   Default issue closure to `closing-keyword` only for eligible GitHub issues
-   on the default base. Use `close-after-merge` otherwise.
+2. **Code-host open/update:** Use the verified [target branch](#resolve-code-host-target)
+   and the closure rules below,
+   authenticate permissions, and find the existing PR for the supplied branch
+   before creating one.
    Prefer the connector, falling back to `gh pr`/GraphQL. Create one draft PR
    for the reviewed nonempty diff or update the verified existing PR; refetch
    repository, URL/node ID, base, head SHA, draft state and complete body. After
@@ -211,6 +209,32 @@ retains its trusted configuration, leases and merge/closure policy.
    For verified no-change, report acceptance evidence and tracker readback with
    PR and merge inapplicable. Controller Done/cleanup still requires its
    terminal reconciliation.
+
+## Resolve code-host target
+
+Before planning a delivery candidate or choosing its checkout base, verify
+the exact code-host repository and live default branch. Check any
+`Repository` host, repository and default-branch pins against live identity.
+Use the default branch as base unless the
+[trusted override](provider-bindings.md#trusted-delivery-overrides)
+supplies a `Base branch`. Verify that branch and record its exact tip SHA.
+
+## Resolve code-host policy
+
+1. Use the verified [target branch](#resolve-code-host-target). Read its
+   applicable protections, rulesets, repository permissions and
+   merge-queue settings for the selected base. A required queue governs merge.
+   Otherwise use the permitted `Merge Policy` / `Method` from the trusted
+   override or an explicit repository preference. If neither is set, require
+   a sole permitted method. Block a disallowed or ambiguous method before
+   merge and report the conflict or missing preference.
+2. Resolve the configured issue closure policy subject to native eligibility.
+   Default to `closing-keyword` for eligible GitHub issues on the default
+   base and `close-after-merge` otherwise. Recheck the invocation grant and
+   actual closure set before any closing reference is written.
+3. Record the effective base, merge and closure policy, applicable required
+   reviews and checks, and the [fingerprint](#live-merge-policy-fingerprint).
+   Reuse verified policy evidence within its refresh and recovery gates.
 
 ## Closing reference verification
 
