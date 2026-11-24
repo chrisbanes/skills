@@ -34,7 +34,7 @@
     },
     {
       "id": "binding-authority",
-      "text": "Uses the selected tracker independently of GitHub code host. Blocks parked Jira work; accepts the human-applied configured GitHub agent:approved role; stops on removal, preserving artifacts and requiring human restoration."
+      "text": "Uses the selected tracker independently of GitHub code host. Blocks parked Jira work. Allows explicit standalone GitHub and GitLab planning without a mapped agent-work label. Accepts the human-applied GitHub agent:approved role for board-owned planning and stops that board-owned work on removal, preserving artifacts and requiring human restoration."
     },
     {
       "id": "limits",

@@ -34,8 +34,25 @@
     "Jira-parked": {
       "parked": true
     },
+    "GitHub-standalone": {
+      "tracker": "GitHub",
+      "invocation": "explicit request for a standalone plan for the selected issue",
+      "resolvedAgentWorkRole": null,
+      "labels": [],
+      "state": "OPEN",
+      "parked": false
+    },
+    "GitLab-standalone": {
+      "tracker": "GitLab",
+      "invocation": "explicit request for a standalone plan for the selected issue",
+      "resolvedAgentWorkRole": null,
+      "labels": [],
+      "state": "opened",
+      "parked": false
+    },
     "GitHub-override": {
       "tracker": "GitHub",
+      "invocation": "board controller planning dispatch with a verified grant",
       "resolvedAgentWorkRole": "agent:approved",
       "humanApplied": true,
       "labels": [
@@ -46,6 +63,7 @@
     },
     "GitHub-removed": {
       "tracker": "GitHub",
+      "invocation": "board controller planning resume for its issue after role removal",
       "resolvedAgentWorkRole": "agent:approved",
       "labels": [],
       "ownedDraft": true
