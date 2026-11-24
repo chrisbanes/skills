@@ -4,10 +4,10 @@ This directory contains a reproducible, advisory evaluator with a shared core
 and suite-specific catalogs, fixtures, coverage rules, and safety policies. It
 tests concrete scenarios modelled on real-world coding work, with expected
 outcomes, allowed-write boundaries, and no-change controls. The committed suites
-cover six Compose skills, four Kotlin/Gradle skills, and ten workflow/writing
+cover six Compose skills, four Kotlin/Gradle skills, and eleven workflow/writing
 skills: `android-benchmark-comparison`, `deliver-issue`, `run-project`, `grounded-writing`,
 `implement-with-subagents`, `subagent-delegation`, `changelog`, `release-kotlin-library`,
-`shepherd`, and `to-plan`. It is designed to answer three separate questions:
+`shepherd`, `simplify`, and `to-plan`. It is designed to answer three separate questions:
 
 1. Does a skill improve the correctness and restraint of the resulting work?
 2. Does automatic activation report the expected implicitly invokable public skill entrypoints?
@@ -224,8 +224,8 @@ Each eligible `case × arm` condition runs three times by default. A case that
 targets no implicitly invokable skill is excluded from the automatic arm before
 execution. The 38-case Compose suite schedules 342 subject calls and 342
 blinded judge calls. The 29-case Kotlin/Gradle suite schedules 261 subject calls
-and 261 blinded judge calls. The 51-case workflows/writing suite schedules 369
-subject calls and 369 blinded judge calls.
+and 261 blinded judge calls. The 54-case workflows/writing suite schedules 396
+subject calls and 396 blinded judge calls.
 
 Codex subject and judge processes use `--ignore-user-config`, explicit
 `skills.config` entries, network-disabled sandboxes, disabled hosted web search,
@@ -353,7 +353,7 @@ The Kotlin/Gradle benchmark contains 29 scored cases:
 - three immutable public-source snapshots across API, Flow, and control-flow
   concerns.
 
-The workflows/writing benchmark contains 51 scored cases: direct, novel, and
+The workflows/writing benchmark contains 54 scored cases: direct, novel, and
 no-change coverage for each of its eleven skills, plus additional workflow
 scenarios. The surrounding corpus also contains the two calibration-only
 missing-provider challenges described above.
@@ -368,6 +368,8 @@ deterministic fixture-integrity checks and semantic rubrics; no live model
 results are claimed.
 The changelog triad checks stable-cycle coverage, incremental Unreleased
 maintenance and missing-file restraint across non-Kotlin repositories. The
+three `simplify` cases cover a verified cleanup, a report on local changes
+with limited reviewer capacity, and a no-change control for unsafe helper reuse. The
 release triad checks the changelog handoff, uncertain prerelease recovery,
 and read-only readiness restraint without live publication or credentials.
 Its GitHub-style cases use supplied immutable state and rubric plus

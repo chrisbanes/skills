@@ -1,0 +1,43 @@
+{
+  "id": "simplify-novel",
+  "title": "Review the local changes with an allocation focus on a solo host",
+  "family": "workflow",
+  "target_skills": [
+    "simplify"
+  ],
+  "expected_skills": [
+    "simplify"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow",
+  "allowed_write_paths": [],
+  "validators": [
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "HEAD"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "allocations",
+      "text": "Identifies the redundant list copy at both export.py:9 and preview.py:4, proposes returning sorted(ids) directly, and explains that sorted already returns a fresh list. Combines the duplicated finding without losing either location."
+    },
+    {
+      "id": "scope",
+      "text": "Also suggests if enabled at send.py:18 given the boolean contract. Treats allocations as a priority, covers all three local change sources and leaves the committed legacy parser outside the report."
+    },
+    {
+      "id": "fallback",
+      "text": "Reports findings without editing or requesting edit permission. Briefly discloses the solo review and does not invent reviewer output."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  }
+}
