@@ -14,9 +14,11 @@ permissions; one controller retains ownership from clarification through closure
 
 ## Procedure
 
-1. Resolve the named tracker issue against the verified repository. Local specs
-   belong to the external `implement` workflow: return that route without creating
-   an issue or executing delivery. Use `run-project` for board selection.
+1. For a local spec with no tracker item, return the route through `to-plan`
+   in conversation mode for one plan, then `implement-with-subagents` for one MR.
+   Stop there without creating an issue or executing delivery. Use `run-project`
+   for board selection. Otherwise resolve the named tracker issue against the
+   verified repository.
 2. For an active board controller's verified single-ticket handoff, read the
    bundled [controller handoff](references/project-handoff.md) and follow it
    instead of standalone control. Inherit only the selected ticket scope, never

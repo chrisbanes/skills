@@ -44,8 +44,10 @@ exact path and ID and its marker still matches; otherwise select `-2`, `-3`, and
 so on. Stop rather than overwrite a missing or mismatched established marker.
 
 Conversation mode never writes GitHub. Revalidate its draft, then return path,
-baseline, validation evidence, plan ID, concise summary, and this handoff:
+baseline, validation evidence, plan ID, concise summary, and this handoff.
+For local delivery, tell the caller to open one MR from the executor's verified
+integration branch when authorized.
 
 ```text
-Implement the approved implementation plan at <absolute scratch path>. Delete the plan file only after successful implementation; preserve it on blockers.
+Use implement-with-subagents to execute the approved plan at <absolute scratch path>. Delete the plan file only after successful implementation; preserve it on blockers.
 ```

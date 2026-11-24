@@ -15,12 +15,12 @@ Default lanes are `Todo` → `In Progress` → `Done`; resolve them
 through the resolved binding's claim and completion markers. Implementation readiness is
 derived from Todo, `ready-for-agent`, and a verified active plan leaf.
 
-Resolve the requested board scope. A Jira board configuration can select a
-parent tree explicitly. A named issue routes to `deliver-issue` without
-claiming it here. Selecting one board candidate does not broaden its authority
-to descendants.
+Check [Delivery bindings](references/provider-bindings.md) for source routing
+before resolving board scope. Route named issues to `deliver-issue` without
+claiming them. A Jira board can explicitly select a parent tree. Selecting one
+candidate grants no authority over its descendants.
 
-Select roles independently under [Delivery bindings](references/provider-bindings.md).
+Select tracker and code-host roles independently.
 Use the [GitHub](references/github-binding.md), [Jira](references/jira-binding.md)
 (including JQL boards), or GitLab [tracker](references/gitlab-binding.md#tracker-operations)
 and [code-host](references/gitlab-binding.md#code-host-operations) procedures.

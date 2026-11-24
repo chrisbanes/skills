@@ -16,4 +16,5 @@ proposal is to build a generic replay platform and inspect model outputs to
 help settle labels. Explain the smallest credible path and what must wait.
 No live calls or extra spend is authorized.
 
-Separately, a request supplies only a local spec file and no tracker item. Route it to implement; do not create an issue or begin delivery.
+Separately, a request supplies only a local spec file and no tracker item.
+Return the workflow for that source without creating an issue or beginning delivery.
