@@ -28,21 +28,18 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
 2. Establish targets and a handled-ID snapshot. Every external comment, review,
    or thread absent from that snapshot is new, including pre-session feedback.
    After each poll record feedback IDs, CI state, and this controller's comments.
-   Resolve reporting and repair ownership per target. Reuse a supplied delivery
-   record and retained implementation owner. For a standalone PR without a
-   delivery record, use its existing PR/reporting context and shepherd snapshot;
-   hydrate source scope, base/head, prior verdicts, findings and dispositions
-   from verified PR and repository evidence, marking missing evidence unknown.
-   When no retained workflow owner exists, the authorized controller may own
-   in-scope repairs after verifying the target checkout/head and absence of a
-   competing writer; record that fallback before code writes or an implementation
-   repair handoff. A read-only audit may inspect the verified frozen candidate
-   while ownership or writer state is unresolved; report those gaps as material
-   uncertainty, without granting write authority or clearing publication gates.
-   Do not infer an owner handle from commit authorship. Preserve recorded owners;
-   an unavailable owner, uncertain existing claim or unknown writer state holds
-   code writes until reconciled, with writers quiescent before any explicit
-   reassignment. This fallback supplies neither missing scope nor extra grants.
+   For a `deliver-issue` PR, send the finding, current head and delivery record
+   to delivery to resume `implement-with-subagents`. Use the reviewed repair
+   for the next push. Return scope changes for replanning.
+   For other PRs, retain the implementation owner and reuse the delivery
+   record or PR snapshot. Verify scope, base/head, prior verdicts, findings
+   and dispositions. Mark missing evidence unknown. Only when no workflow
+   owner exists may the authorized controller take a repair. Verify the target
+   checkout, head and absence of competing writers, then record that decision
+   before edits or handoff. Never infer ownership from commit authorship.
+   Hold writes on an unresolved claim or unavailable owner until prior work is
+   reconciled and writers are quiescent. A read-only audit can inspect the
+   frozen candidate meanwhile. Report uncertainty and preserve publication gates.
    Reconcile applicable current-head review initiation under
    [PR review timing](references/pr-review-timing.md) on acquisition and relevant
    wakes, even without repairs; one-off inspections stay read-only.
@@ -52,7 +49,7 @@ Do not start persistent polling for a one-off inspection, no open targets, or an
    [selection and handoff reference](references/subagent-selection.md).
    Give it the exact target, head, failed job and log, the question, and a bounded
    result format: diagnosis, supporting log references, and uncertainty. It
-   never mutates or takes over polling. Keep triage, repairs, replies, pushes,
+   never mutates or takes over polling. Keep triage, replies, pushes,
    resolution, retries, and merging with the authorized controller.
 4. Poll with the platform CLI using [provider commands](references/provider-commands.md),
    then compare complete review, comment, and CI state with the snapshot. Inspect

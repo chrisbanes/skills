@@ -13,7 +13,9 @@
       "next": "implement",
       "plan": false,
       "task_acceptance": false,
-      "final_review": true
+      "final_review": true,
+      "executor": "implement-with-subagents",
+      "item_count": 1
     },
     "matching": {
       "owner": "lead",
@@ -22,7 +24,9 @@
       "next": "implement",
       "plan": false,
       "task_acceptance": false,
-      "final_review": true
+      "final_review": true,
+      "executor": "implement-with-subagents",
+      "item_count": 1
     },
     "mismatch": {
       "owner": "worker",
@@ -31,7 +35,21 @@
       "next": "implement",
       "plan": false,
       "task_acceptance": true,
-      "final_review": true
+      "final_review": true,
+      "executor": "implement-with-subagents",
+      "item_count": 1
+    },
+    "candidate": {
+      "next": "open_draft",
+      "pending_check": "linux-full",
+      "repeat_review": false,
+      "ready": false
+    },
+    "repair": {
+      "executor": "implement-with-subagents",
+      "owner": "original_worker",
+      "resume_head": "H1",
+      "renew_affected_review": true
     }
   }
 }

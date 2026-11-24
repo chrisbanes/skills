@@ -12,8 +12,7 @@ explain how the original startup decision settles before handback, without
 restarting its deadline, starting a watcher or waiting indefinitely.
 The candidate below belongs to the branch where the user answered yes.
 
-The binding and exclusive claim are verified. The bundled spec-delivery and
-PR-monitoring workflows are installed; the separate orchestration skill is not.
+The binding and exclusive claim are verified. The delivery, implementation and PR-monitoring skills are installed.
 Issue #42 is ready-for-agent and
 In progress with a current approved `to-plan --auto` plan at digest `plan42`.
 The plan has already passed independent review against these exact inputs.

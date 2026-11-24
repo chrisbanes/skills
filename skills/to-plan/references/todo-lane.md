@@ -221,8 +221,8 @@ or infer support from an issue proposing it.
    stops dependent work; no local draft or old-SHA evidence can stand in for
    the verified effective contract.
 4. Hand the retained owner and artifacts plus verified effective contract to
-   `deliver-issue`. It owns integration, affected verification/review and final
-   exact-head evidence. Retain grant consumption and repair history; an amendment
+   `deliver-issue` to resume its executor for integration, affected checks and
+   review of the final head. Retain grant consumption and repair history; an amendment
    neither authorizes additional live turns nor resets a qualification gate.
 5. On recovery, observed authority changes and before external material writes,
    repeat effective-contract integrity, current authority and artifact-head

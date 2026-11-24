@@ -122,7 +122,7 @@ procedure](qualification-failure.md). Preserve
 unknown execution state and stop only affected dependent dispatch while
 independent tickets continue.
 Keep the persistent ticket context as delivery lead and integration owner.
-`deliver-issue` owns solo or delegated implementation and integration;
+The ticket lead follows `deliver-issue`’s handoff to `implement-with-subagents`;
 pass its [checkpoint feedback and validation rules](evidence-and-review.md)
 through implementation and repair handoffs. Preserve its same-owner repair rule
 and fit all descendants within the controller's actual spare capacity. Return observed implementation, repair,
@@ -189,10 +189,9 @@ Keep this route outside push, PR, shepherd and merge operations.
 
 ## Pre-push, shepherd, and merge
 
-Before the first push, give every review contract on the frozen candidate to
-one fresh independent read-only reviewer. Reuse `deliver-issue`'s review for each
-contract it explicitly covered at that head; run only missing contracts, not a
-duplicate correctness pass. Fix every actionable finding or give an evidence-based
+Before the first push verify the executor's independent review against every
+required contract on the frozen candidate. Return only missing coverage through
+the same delivery handoff. Fix every actionable finding or give an evidence-based
 disposition except for explicitly very low priority findings. If a repair
 changes the reviewed candidate, rerun affected checks and review the changed
 range plus its interaction with the previously reviewed effective diff. Apply
@@ -225,9 +224,8 @@ original creation body. After every PR creation or body edit, apply the binding'
 [closing reference verification](github-binding.md#closing-reference-verification). Keep claim/agent while open; drain follows
 Remote Waiting and terminal-CI parking,
 next shepherds directly through `deliver-issue`'s Project mode. For feedback,
-invoke `shepherd` for triage and PR actions. Keep code repairs with the ticket
-owner or original delegated implementation owners, integrating delegated commits
-in the same ticket worktree. Apply owner-driven behavioral testing and repeat affected
+invoke `shepherd` for triage and PR actions. Resume the same executor through
+the ticket handoff for code repairs. Apply owner-driven behavioral testing and repeat affected
 validation and review against the new final HEAD, reply inline where possible,
 and resolve only after reply
 and required fix. Address every comment unless explicitly

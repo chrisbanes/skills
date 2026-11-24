@@ -61,6 +61,8 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
         boundary = "skills/to-plan/references/boundary-validation.md"
         selection = "references/subagent-selection.md"
         implementation_selection = "subagent-selection.md#implementation-ownership"
+        executor = ("references/delivery-lifecycle.md", "../../implement-with-subagents/SKILL.md",
+                    "skills/implement-with-subagents/SKILL.md")
         cases = {
             "deliver-issue-tree-direct": (
                 ("SKILL.md", "references/github-delivery.md#direct-issue-scope", "references/github-delivery.md"),
@@ -74,7 +76,12 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 ("SKILL.md", "references/bug-diagnosis.md", "skills/deliver-issue/references/bug-diagnosis.md"),
             ),
             "deliver-issue-model-routing-direct": (
-                ("references/implementation-mode.md", implementation_selection, selection),
+                ("references/fast-path.md", "delivery-lifecycle.md#executor-handoff", "skills/deliver-issue/references/delivery-lifecycle.md"),
+                executor,
+            ),
+            "run-github-project-delivery-direct": (
+                ("references/project-handoff.md", "delivery-lifecycle.md", "skills/deliver-issue/references/delivery-lifecycle.md"),
+                executor,
             ),
             "implement-with-subagents-model-routing-novel": (
                 ("SKILL.md", "references/" + implementation_selection, selection),
@@ -85,7 +92,6 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             ),
             "deliver-spec-review-convergence-direct": (
                 ("references/evidence-and-review.md", "behavioral-review.md", behavioral),
-                ("references/implementation-mode.md", "boundary-validation.md", boundary),
             ),
             "shepherd-boundary-diagnostics-novel": (
                 ("SKILL.md", "references/behavioral-review.md", behavioral),
@@ -161,28 +167,6 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             )
             self.assertFalse((baseline / ".agents/skills" / reference).exists())
 
-    def test_implementation_routing_rejects_owner_substitution_and_dropped_review(self):
-        case_id = "deliver-issue-model-routing-direct"
-        expected = json.loads(
-            (REPO_ROOT / "evals/cases" / case_id / "expectations.json").read_text()
-        )["decisions"]
-        validator = REPO_ROOT / "evals/validators/pr_review_decisions.py"
-        for changes, error in (
-            ({}, ""),
-            ({"owner": "lead"}, "incorrect owner"),
-            ({"final_review": False}, "incorrect final_review"),
-        ):
-            with self.subTest(changes=changes):
-                decisions = {**expected, "mismatch": {**expected["mismatch"], **changes}}
-                result = subprocess.run(
-                    [sys.executable, str(validator), case_id, "--response"],
-                    input=json.dumps({"summary": json.dumps(decisions)}),
-                    text=True, capture_output=True, check=False,
-                )
-                self.assertEqual(int(bool(error)), result.returncode, result.stderr)
-                if error:
-                    self.assertIn(error, result.stderr)
-
     def test_affected_validation_cases_preserve_decisive_facts_and_read_only_scope(self):
         case_ids = (
             "implement-with-subagents-solo-chain-direct",
@@ -237,7 +221,6 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
     def test_subagent_handoff_reference_is_self_contained_for_each_consumer(self):
         shared = (REPO_ROOT / "references/subagent-selection.md").read_bytes()
         consumers = {
-            "deliver-issue": "references/implementation-mode.md",
             "implement-with-subagents": "references/implementation-mode.md",
             "run-project": "references/ticket-lifecycle.md",
             "gradle-run": "SKILL.md",
@@ -254,39 +237,6 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                     "subagent-selection.md",
                     (directory / caller).read_text(encoding="utf-8"),
                 )
-
-    def test_deliver_spec_stages_its_complete_implementation_procedure_alone(self):
-        report = validate_corpus(REPO_ROOT, suite="workflows-writing")
-        case = next(case for case in report.cases if case.id == "deliver-spec-direct")
-        self.assertEqual(("deliver-issue",), case.target_skills)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            workspace = prepare_workspace(
-                case, REPO_ROOT, Path(temp_dir) / "fixture",
-                enabled_skills=case.target_skills,
-            )
-            installed = workspace / ".agents/skills"
-            self.assertFalse((installed / "implement-with-subagents").exists())
-            delivery = installed / "deliver-issue"
-            procedure = delivery / "references/implementation-mode.md"
-            self.assertEqual(
-                (REPO_ROOT / "skills/deliver-issue/references/implementation-mode.md").read_bytes(),
-                procedure.read_bytes(),
-            )
-            # Follow the mandatory local resource chain in the isolated installation.
-            for source, target in (
-                (delivery / "SKILL.md", "references/implementation-mode.md"),
-                (delivery / "references/project-handoff.md", "implementation-mode.md"),
-                (procedure, "subagent-selection.md"),
-            ):
-                with self.subTest(source=source.name):
-                    links = re.findall(r"\]\(([^)]+)\)", source.read_text(encoding="utf-8"))
-                    self.assertIn(target, links)
-                    self.assertTrue((source.parent / target).is_file())
-            self.assertEqual(
-                (REPO_ROOT / "references/subagent-selection.md").read_bytes(),
-                (procedure.parent / "subagent-selection.md").read_bytes(),
-            )
-            self.assertIn("## Runtime requirements", procedure.read_text(encoding="utf-8"))
 
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
         entrypoint = (REPO_ROOT / "skills/run-project/SKILL.md").read_text(
@@ -757,7 +707,7 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
             "shepherd",
         )
         # The Project controller chain invokes these through Claude Code's Skill tool.
-        delegated = ("shepherd",)
+        delegated = ("implement-with-subagents", "shepherd")
         for skill in explicit_only:
             config = REPO_ROOT / "skills" / skill / "agents" / "openai.yaml"
             entrypoint = REPO_ROOT / "skills" / skill / "SKILL.md"

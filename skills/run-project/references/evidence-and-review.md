@@ -109,10 +109,8 @@ the selected mode retains its approval, authority and finish gates.
    universal prerequisite. Do not revert useful implementation to reconstruct a
    test-first history. Where useful, prove sensitivity with a bounded baseline
    check or intentional fault, restore the candidate and report the actual order.
-2. If explicitly invoking the separately installed `tdd` skill, read its contract.
-   Its mandatory user-confirmed seams and red-before-green order conflict with
-   this workflow's default. Identify that exact conflict and follow the user's
-   direction; do not silently edit the provider or claim TDD was performed.
+2. When user or repository policy requires the installed `tdd` skill, follow
+   its confirmed-seam and red-before-green requirements. Record actual evidence.
 3. Record routine implementation, fixture and mechanical plan corrections briefly
    in the same record and continue when requirements, coverage, architecture and
    authority are unchanged. Renew affected evidence without a plan-publication

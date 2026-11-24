@@ -2,12 +2,13 @@
   "id": "deliver-spec-shared-discovery-direct",
   "title": "Reuse bounded discovery for a shared unknown",
   "family": "workflow",
-  "target_skills": ["deliver-issue"],
-  "expected_skills": ["deliver-issue"],
+  "target_skills": ["deliver-issue", "implement-with-subagents"],
+  "expected_skills": ["deliver-issue", "implement-with-subagents"],
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow",
   "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
   "allowed_write_paths": [],
   "validators": [
     {

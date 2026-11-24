@@ -25,7 +25,11 @@
   "rubric": [
     {
       "id": "provider-guidance",
-      "text": "The response identifies the missing tdd skill for the behavior ticket, provides actionable setup guidance from mattpocock/skills, and does not require or recommend installing implement"
+      "text": "The response identifies the missing tdd skill for the ticket whose repository requires it, provides actionable setup guidance from mattpocock/skills, and does not require or recommend installing implement"
+    },
+    {
+      "id": "ordinary-behavior",
+      "text": "Allows the second item to proceed with owner-selected behavioral checks and independent review, without a TDD provider or separate test-seam approval."
     },
     {
       "id": "restraint",

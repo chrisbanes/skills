@@ -16,6 +16,7 @@ from evals.validators.pr_review_decisions import validate_decisions
 
 ROOT = Path(__file__).resolve().parents[2]
 CASES = (
+    'deliver-issue-model-routing-direct',
     'deliver-issue-tree-direct',
     'deliver-issue-resume-novel',
     'deliver-issue-invocation-direct',
@@ -40,6 +41,7 @@ CASES = (
 )
 
 NEGATIVE_CASES = (
+    'deliver-spec-worker-capacity-negative',
     'deliver-issue-authority-negative',
     'deliver-issue-completion-negative',
     'deliver-tasks-binding-ambiguity-negative',
@@ -117,6 +119,9 @@ class DeliverTasksTest(unittest.TestCase):
                         path, _, anchor = link.partition("#")
                         if ":" in path or path.startswith("../../to-plan/") or (path and not path.endswith(".md")):
                             continue
+                        if path == "../../implement-with-subagents/SKILL.md":
+                            self.assertFalse((source.parent / path).exists())
+                            continue
                         target = source.parent / path if path else source
                         with self.subTest(skill=skill, source=source.name, link=link):
                             self.assertTrue(target.is_file())
@@ -182,7 +187,7 @@ class DeliverTasksTest(unittest.TestCase):
                     cwd=workspace, capture_output=True, text=True,
                 )
                 self.assertEqual(0, result.returncode, result.stderr)
-                if case_id not in NEGATIVE_CASES and ("migration-" in case_id or case_id.startswith("deliver-issue-")):
+                if case.task_mode == "edit" and ("migration-" in case_id or case_id.startswith("deliver-issue-")):
                     subject = SubjectResult(
                         case_id=case_id, arm="forced", command=("codex",),
                         workspace=workspace, returncode=0, events=(),

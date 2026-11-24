@@ -4,20 +4,24 @@
   "family": "workflow",
   "target_skills": [
     "run-project",
-    "deliver-issue"
+    "deliver-issue",
+    "implement-with-subagents"
   ],
   "expected_skills": [
     "run-project",
-    "deliver-issue"
+    "deliver-issue",
+    "implement-with-subagents"
   ],
   "allowed_skills": [
     "run-project",
-    "deliver-issue"
+    "deliver-issue",
+    "implement-with-subagents"
   ],
   "task_mode": "review",
   "kind": "direct",
   "fixture": "workflow",
   "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
   "allowed_write_paths": [],
   "validators": [
     {
@@ -44,7 +48,7 @@
     },
     {
       "id": "provider-ownership",
-      "text": "Uses deliver-issue's bundled delegated implementation procedure without requiring the separate implement-with-subagents installation or an explicit orchestration request. Persistent ticket agent owns integration, acceptance and non-merge PR delivery, original implementation workers own code repairs, and descendants never mutate Project, issue, PR or merge state."
+      "text": "Uses the shared implement-with-subagents executor through the verified ticket handoff, preserving accepted work. Persistent ticket agent owns integration, acceptance and non-merge PR delivery, original implementation workers own code repairs, and descendants never mutate Project, issue, PR or merge state."
     },
     {
       "id": "review-coverage",

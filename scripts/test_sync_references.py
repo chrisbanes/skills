@@ -7,13 +7,11 @@ from scripts.sync_references import COPIES, synchronize
 
 
 class SyncReferencesTest(unittest.TestCase):
-    def test_delivery_procedure_is_not_overwritten_by_delegated_workflow(self):
-        destinations = {item for copies in COPIES.values() for item in copies}
-        self.assertNotIn(
-            "skills/deliver-issue/references/implementation-mode.md", destinations
-        )
-        self.assertIn(
-            "skills/deliver-issue/references/subagent-selection.md", destinations
+    def test_only_executor_ships_implementation_procedure(self):
+        skills = Path(__file__).resolve().parents[1] / "skills"
+        self.assertEqual(
+            [skills / "implement-with-subagents/references/implementation-mode.md"],
+            list(skills.glob("*/references/implementation-mode.md")),
         )
 
     def test_tracker_binding_consumers_detect_and_repair_drift(self):

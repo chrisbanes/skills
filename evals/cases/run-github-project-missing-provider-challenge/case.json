@@ -1,6 +1,6 @@
 {
   "id": "run-github-project-missing-provider-challenge",
-  "title": "Block only behavioral implementation when tdd is unavailable",
+  "title": "Continue implementation when optional TDD is unavailable",
   "family": "workflow",
   "target_skills": [
     "run-project"

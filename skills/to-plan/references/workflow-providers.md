@@ -21,15 +21,10 @@ claiming they match the default delivery contract.
 block those planning items locally and continue implementation items whose
 marker-owned plans and handoffs are current.
 
-For ordinary implementation, use the bundled [controller handoff](project-handoff.md)
-and `shepherd`. Follow that internal procedure, including implementation
-ownership preflight. Keep repairs with their implementation owner and retain
-architecture, integration and non-merge PR authority in the ticket context.
-No separate `implement-with-subagents` installation is required.
-Establish independent-review capability from runtime metadata without spawning a
-capability-only reviewer. Review the integrated candidate once, then affected
-repairs; reuse valid coverage. If review cannot run, block that ticket's delivery
-without waiving final review. No external review skill or tracker is required.
+For ordinary implementation, follow the [controller handoff](project-handoff.md)
+to the installed `implement-with-subagents` skill. A missing executor blocks
+only affected implementation or repair. Retain the claim, evidence and owner
+and continue independent work. Use `shepherd` for CI and PR feedback.
 
 `triage` is required only while processing an unblocked Todo
 `needs-triage` item. If it is unavailable, block only the triage lane, continue

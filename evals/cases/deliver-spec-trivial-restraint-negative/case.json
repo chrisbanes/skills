@@ -30,7 +30,7 @@
     },
     {
       "id": "concurrent-benefit",
-      "text": "Considers delegation for B when independent work justifies its overhead; availability alone does not mandate a worker."
+      "text": "Uses the executor’s solo route for B. Independent PR preparation outside the one-item implementation graph does not create a parallel implementation task."
     },
     {
       "id": "repair-continuity",

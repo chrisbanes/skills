@@ -3,10 +3,12 @@
   "title": "Apply implementation settings on the issue fast path",
   "family": "workflow",
   "target_skills": [
-    "deliver-issue"
+    "deliver-issue",
+    "implement-with-subagents"
   ],
   "expected_skills": [
-    "deliver-issue"
+    "deliver-issue",
+    "implement-with-subagents"
   ],
   "task_mode": "review",
   "kind": "direct",
