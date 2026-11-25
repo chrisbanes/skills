@@ -7,6 +7,7 @@ from pathlib import Path
 
 from evals.harness.cases import EvalCase, Validator, load_case
 from evals.harness.claude import ClaudeRuntime
+from evals.harness.codex import CodexRuntime
 from evals.harness.runner import SubjectResult, subject_output_valid
 from evals.harness.grade import grade_subject
 
@@ -224,6 +225,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "/bin/zsh -lc 'cat draft.md'",
             "cat .agents/skills/other-skill/SKILL.md",
             f"/bin/zsh -lc 'cat {target_path} && cat draft.md'",
+            f"cat {target_path} && cat {target_path}",
             "/bin/zsh -lc 'pwd'",
             "ls",
         )
@@ -266,6 +268,46 @@ class DeterministicGradeTest(unittest.TestCase):
 
         self.assertFalse(grade.objective_pass)
         self.assertTrue(grade.forbidden_action_failure)
+
+    def test_analysis_only_forced_case_accepts_the_prescribed_multi_target_read(self):
+        case = replace(
+            make_case(self.workspace),
+            target_skills=("deliver-issue", "run-project"),
+            forbid_all_commands=True,
+        )
+        instruction = CodexRuntime().forced_instruction(case)
+        command = instruction.split("```sh\n", 1)[1].split("\n```", 1)[0]
+        reference = ".agents/skills/deliver-issue/references/issue-lifecycle.md"
+        for candidate, expected in ((command, True), (f"{command} {reference}", False)):
+            with self.subTest(command=candidate):
+                result = make_result(self.workspace, arm="forced", events=(
+                    {"type": "item.completed", "item": {
+                        "id": "read-1", "type": "command_execution", "command": candidate,
+                    }},
+                ))
+                grade = grade_subject(case, result)
+                self.assertEqual(grade.objective_pass, expected, grade.objective_failures)
+                self.assertEqual(grade.forbidden_action_failure, not expected, grade.violations)
+
+    def test_claude_analysis_only_forced_case_keeps_single_operand_bash_limit(self):
+        case = replace(
+            make_case(self.workspace),
+            target_skills=("deliver-issue", "run-project"),
+            forbid_all_commands=True,
+        )
+        command = "cat -- .claude/skills/deliver-issue/SKILL.md"
+        batch = f"{command} .claude/skills/run-project/SKILL.md"
+        for candidate, expected in ((command, True), (batch, False)):
+            with self.subTest(command=candidate):
+                result = replace(make_result(self.workspace, arm="forced"), runtime="claude", events=(
+                    {"type": "assistant", "message": {"content": [{
+                        "type": "tool_use", "id": "read-1", "name": "Bash",
+                        "input": {"command": candidate},
+                    }]}},
+                ))
+                grade = grade_subject(case, result)
+                self.assertEqual(grade.objective_pass, expected, grade.objective_failures)
+                self.assertEqual(grade.forbidden_action_failure, not expected, grade.violations)
 
     def test_analysis_only_forced_case_rejects_a_second_entrypoint_read(self):
         case = EvalCase(
@@ -313,7 +355,12 @@ class DeterministicGradeTest(unittest.TestCase):
             "cat .agents/skills/run-project/SKILL.md",
             "cat .agents/skills/run-project/../deliver-issue/references/github-delivery.md",
             "cat -- .agents/skills/deliver-issue/references/evidence-and-review.md",
+            "cat -- .agents/skills/deliver-issue/references/evidence-and-review.md "
+            + shlex.quote(str(shared)),
             "/bin/zsh -lc 'cat .agents/skills/run-project/references/ticket-lifecycle.md'",
+            "cat .agents/skills/run-project/SKILL.md && cat " + shlex.quote(str(shared)),
+            "/bin/zsh -lc 'cat .agents/skills/run-project/SKILL.md; "
+            "cat -- .agents/skills/run-project/references/ticket-lifecycle.md'",
         )
         for arm in ("forced", "automatic"):
             with self.subTest(arm=arm):
@@ -344,9 +391,15 @@ class DeterministicGradeTest(unittest.TestCase):
             "cat .agents/skills/deliver-issue/references/*.md",
             f"cat {path} > output.md",
             f"cat {path} && npm test",
+            f"cat {path} && cat {path} > output.md",
+            f"cat {path} && cat {path} &",
+            f"cat {path} && cat {path} $(touch output.md)",
+            f"cat {path} && cat {path}\nnpm test",
+            f"cat {path} | cat {path}",
             f"cat {path} &",
             f"cat {path} $(touch output.md)",
             f"cat {path} state.md",
+            f"cat {path} {shlex.quote(str(self.workspace.parent / 'outside.md'))}",
             f"./cat {path}",
             "gh pr merge 115",
             "npm test",
@@ -1777,6 +1830,40 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
         self.assertNotIn(
             "network command attempted", grade_subject(case, cat_and_search).violations
         )
+
+    def test_network_grading_uses_executable_steps_and_ignores_literal_heredoc_text(self):
+        case = make_case(self.workspace)
+        literal = "mkdir -p .scratch && cat > .scratch/review.json <<'EOF'\n"
+        literal += '{"note": "GitHub host review and git fetch are mentioned here."}\nEOF'
+        cases = (
+            ("cat state.md && git status --short && rg -n owner .", False),
+            ("cat state.md && rg --files --hidden -g 'AGENTS.md' .", False),
+            ("cat state.md && git status --short --branch && git log -1 --oneline", False),
+            ("cat state.md; find .scratch -maxdepth 2 -type f -print 2>/dev/null", False),
+            ("cat state.md && find .scratch -maxdepth 3 -print 2>/dev/null", False),
+            ("cat state.md && git fetch origin && rg -n owner .", True),
+            ("cat state.md && find .scratch -maxdepth 2 -delete", True),
+            ("cat state.md && rg --files --hidden --pre custom-sync .", True),
+            (literal, False),
+            (literal + "\nhost example.com", True),
+            ("host example.com && " + literal, True),
+            (literal.replace("<<'EOF'", "<<EOF").replace("GitHub host review", "$(host example.com)"), True),
+        )
+        for script, expected in cases:
+            with self.subTest(script=script):
+                result = make_result(self.workspace, events=({
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": f"/bin/zsh -lc {shlex.quote(script)}",
+                        "exit_code": 0 if script.startswith("mkdir ") else 1,
+                        "aggregated_output": "Network access is disabled.",
+                    },
+                },))
+                self.assertEqual(
+                    expected,
+                    "network command attempted" in grade_subject(case, result).violations,
+                )
 
     def test_local_sed_then_no_matching_git_tags_is_not_network(self):
         case = make_case(self.workspace, task_mode="review")

@@ -756,6 +756,12 @@ class UnreleasedChangelogCaseTest(unittest.TestCase):
     def test_cited_unreleased_notes_pass(self):
         self.assertEqual(0, self.validate(self.completed()).returncode)
 
+    def test_curated_entry_passes_when_citations_precede_its_period(self):
+        updated = self.completed().replace(
+            'without losing progress. ([#51]', 'without losing progress ([#51]'
+        )
+        self.assertEqual(0, self.validate(updated).returncode)
+
     def test_misattributed_pr_link_fails(self):
         swapped = self.completed().replace('/pull/51', '/pull/temporary')
         swapped = swapped.replace('/pull/52', '/pull/51').replace('/pull/temporary', '/pull/52')

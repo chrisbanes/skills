@@ -8,7 +8,11 @@ A reusable component owns layout structure; callers provide unconstrained visual
 
 1. Confirm the component is reusable and identify the regions that vary by caller.
 2. Replace unconstrained primitive content and shape flags with named `@Composable` slots. Retain parameters that enforce semantic, design-system, constrained-type, or measured fast-path contracts.
-3. Make an optional slot nullable with a `null` default so its container and spacing can disappear.
+3. For optional content, compare absent content with an empty composable.
+   Use a nullable slot with a `null` default when absence suppresses a
+   container, spacing, or another contract. Use an empty lambda default
+   when absence simply emits zero nodes in the same layout. Explain the
+   concrete difference for each optional region in a review.
 4. Add a `RowScope`, `ColumnScope`, or `BoxScope` receiver only when caller control of that region's child layout is a public contract; an internal layout alone is not enough.
 5. Put repeated composable defaults and tokens in `XxxDefaults`.
 6. Pair this with [Modifier and layout](modifier-layout.md) only when root placement is in scope.

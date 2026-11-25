@@ -31,9 +31,11 @@ checkouts when delegating.
 2. Assess the whole task graph and its recorded preflight choice using
    [Implementation ownership](../subagent-delegation/references/subagent-selection.md#implementation-ownership)
    and the supplied policy, effective settings, authority and capacity.
-   Flag an unnecessary serial worker or a split serial handoff. Accept one
-   capable worker for a serial run with required settings the lead cannot meet
-   when the worker is authorized and meets them. Solo runs use self-review.
+   For a serial graph, keep one lead owner for all items and repairs unless
+   the caller requires a worker or required implementation settings rule out
+   solo work. In the solo path, self-review and commit each task directly, with
+   no worker slot or separate task acceptance. If a worker is required, use
+   one authorized resumable worker that meets the effective settings.
    A graph with any parallel point assigns every item to workers, including
    sequential heads and tails. For delegated runs, assess task-scoped commits,
    owner self-review, focused validation, and controller acceptance before
@@ -60,7 +62,11 @@ checkouts when delegating.
    In a solo run, the lead repairs in the integration checkout. In a delegated
    run, assess the worker's route under the
    [failed-check repair rules](references/checkout-lifecycle.md#repair-after-failed-integrated-checks).
-4. Report the next action, evidence, and any acceptance gap. Stop before
+4. Check that a fresh independent read-only reviewer is available before
+   implementation, including for a solo run. Require that review of the
+   exact final integrated head and its validation evidence before final
+   acceptance. Keep repairs with the implementation owner.
+5. Report the next action, evidence, and any acceptance gap. Stop before
    implementation. Check release eligibility, safe retirement, and checkout
    dispositions without mutating them. For an invalid dependency graph or unsafe
    overlap, hold dispatch and return the specific defects to the plan owner; do

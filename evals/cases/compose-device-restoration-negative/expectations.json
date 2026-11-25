@@ -1,4 +1,4 @@
 {
   "files": ["test-plan.md"],
-  "must_contain": ["rememberSaveable", "StateRestorationTester", "emulateSavedInstanceStateRestore", "assertIsSelected"]
+  "must_contain": ["rememberSaveable", "StateRestorationTester", "assertIsNotSelected", "emulateSavedInstanceStateRestore", "assertIsSelected"]
 }

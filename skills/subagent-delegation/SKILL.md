@@ -28,7 +28,8 @@ the lead. Installed agent definitions are authoritative for pinned settings.
    repair ownership, or independent read-only analysis. For analysis, state
    the mode: review against requirements, or investigation of a concrete
    unresolved question. Establish concrete evidence before an investigation.
-4. Load only the active runtime's reference:
+4. Follow reference links relative to this loaded `SKILL.md` in its actual
+   skill directory. Use the active runtime's reference:
    - [Codex](references/codex.md): exposed roles, installed TOML pins, model
      and effort routing, and fresh-context calls.
    - [Claude Code](references/claude-code.md): agent definitions, model and
@@ -56,12 +57,12 @@ the lead. Installed agent definitions are authoritative for pinned settings.
    concrete; touching a risky area alone does not qualify. If work stalls,
    diagnose missing inputs, tool failures, or routine test repairs before
    considering a higher tier.
-6. Give each agent a self-contained brief that fills every field of the
-   [handoff brief](references/subagent-selection.md#handoff-brief). Tell
-   workers they share the codebase, must preserve others' edits, and must
-   accommodate concurrent changes. Further delegation
-   requires the lead's explicit authority. Keep remote mutations with the
-   root task holding the user's authorization, with one mutation owner.
+6. Write the worker-facing text using the fields in the
+   [handoff brief](references/subagent-selection.md#handoff-brief). Give it
+   enough context to stand alone. For a proposed dispatch, pair the brief
+   with its selected role, effective model and effort, and the runtime's
+   fresh-context settings. Before dispatch or reply, check the brief itself
+   for the workspace, remote writes and further delegation fields.
 7. Launch independent assignments in parallel. Queue work behind another agent
    only for a stated dependency, such as shared files, a contract, or ordering;
    name that dependency. Separate worktrees alone do not remove dependencies.

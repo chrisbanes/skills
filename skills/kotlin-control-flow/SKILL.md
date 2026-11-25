@@ -1,6 +1,6 @@
 ---
 name: kotlin-control-flow
-description: "Use when writing or reviewing Kotlin branching and control flow: when expressions, guard conditions, sealed type exhaustiveness, smart casts, nullable branching, early returns, or replacing complex if/else chains."
+description: "Use when writing or reviewing Kotlin branching and control flow: when expressions, nested checks in a when branch, guard conditions, sealed type exhaustiveness, smart casts, nullable branching, early returns, or replacing complex if/else chains."
 ---
 
 # Kotlin control flow
@@ -27,7 +27,9 @@ branch, and let the compiler prove closed-domain coverage.
 
 3. Use a guard only on a subject `when`, after a primary condition, when the
    extra predicate belongs to that branch and an unguarded branch still handles
-   the primary condition. Put the guarded branch first. Split comma-separated
+   the primary condition. To flatten a nested predicate inside one supported
+   `when` branch, use the guarded subtype followed by its unguarded subtype.
+   Keep both outcomes and the smart casts in those branches. Split comma-separated
    conditions instead of guarding one of them. Guards are stable from Kotlin
    2.2. Honor an explicit `languageVersion` setting; otherwise the project's
    Kotlin version in its build file or version catalog is enough to confirm
@@ -36,7 +38,8 @@ branch, and let the compiler prove closed-domain coverage.
    case and omit `else`. Match objects by value and class/data-class subtypes
    with `is`. If the input is an open server/platform value or needs real
    fallback/logging, keep `else`. Give each data-bearing subtype, including one
-   a catch-all collapses, its own `is` branch. When its data affects the
+   a catch-all collapses, its own `is` branch. Name that branch explicitly
+   in a review and account for its payload. When its data affects the
    mapping or its safe handling, the finding or change must show the
    smart-cast member access, even if the public value stays constant:
 
@@ -47,8 +50,9 @@ branch, and let the compiler prove closed-domain coverage.
    The `is` check smart-casts `outcome`, so the branch uses `reason` without a
    cast; the helper name is illustrative. Naming cases alone, or sending callers
    to inspect the original value, is not complete branch guidance. When the
-   data does not affect the result, keep the current value in that `is` branch;
-   do not invent a use of the data.
+   data does not affect the result, keep the current value in that `is` branch.
+   State which member is available by smart cast and why the mapping leaves it
+   unused.
 5. Use an early return only when it removes invalid or nullable state from the
    main path. Keep nesting that expresses cleanup, transaction, or error
    handling.

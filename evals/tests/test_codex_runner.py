@@ -314,13 +314,28 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertIn("[`implement-with-subagents`]", forced[-1])
         self.assertIn("[`implement`]", forced[-1])
         self.assertIn("standalone command", forced[-1])
-        self.assertIn("before any repository inspection", forced[-1])
+        self.assertIn("Before any repository inspection", forced[-1])
         self.assertIn("Exclusions are exact names, not prefixes", forced[-1])
         self.assertTrue(forced[-1].endswith("Exclusions are exact names, not prefixes.\n"))
         self.assertNotIn("Exclusions are exact names", none[-1])
         self.assertNotIn("Exclusions are exact names", automatic[-1])
         self.assertNotIn("standalone command", none[-1])
         self.assertNotIn("standalone command", automatic[-1])
+
+    def test_forced_prompt_lists_all_targets_in_one_cat_command(self):
+        case = replace(
+            sample_case(self.root),
+            target_skills=("kotlin-control-flow", "gradle-run"),
+        )
+        command = build_subject_command(
+            case, "forced", self.root, self.root / "workspace", self.config, skill_paths=()
+        )
+
+        self.assertIn(
+            "```sh\ncat -- .agents/skills/kotlin-control-flow/SKILL.md "
+            ".agents/skills/gradle-run/SKILL.md\n```",
+            command[-1],
+        )
 
     def test_forced_catalog_prefers_one_enabled_staged_canonical_name(self):
         case = sample_case(self.root)
@@ -352,8 +367,10 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertIn(
             ".agents/skills/compose-state-and-effects/SKILL.md", command[-1]
         )
+        self.assertIn("Before any repository inspection", command[-1])
         self.assertIn(
-            "SKILL.md` completely before any repository inspection", command[-1]
+            "```sh\ncat -- .agents/skills/compose-state-and-effects/SKILL.md\n```",
+            command[-1],
         )
 
     def test_forced_preflight_rejects_missing_mismatched_and_duplicate_targets(self):
@@ -567,7 +584,7 @@ class CodexRunnerTest(unittest.TestCase):
         self.assertIn("+# Local plan", result.diff)
 
     def test_codex_command_lines_and_prompts_are_byte_identical(self):
-        # Golden command/prompt digest, refreshed for intentional public skill catalog changes.
+        # Golden digest for intentional catalog and prompt changes.
         from evals.harness.judge import JudgeConfig, build_judge_command
 
         catalog = discover_skill_paths(self.root, roots=(self.root / "skills",))
@@ -596,7 +613,7 @@ class CodexRunnerTest(unittest.TestCase):
             rendered = rendered.replace(root, "<root>")
 
         self.assertEqual(
-            "ec6198789b1f4ce9e56ffe5bd24ad84f79362c893212b783324a6e805555e8e9",
+            "c52ac49b74ced3f2403537450ec39799b57fd6128d3b770c9d932d5872c9c398",
             hashlib.sha256(rendered.encode()).hexdigest(),
         )
 

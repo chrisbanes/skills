@@ -35,7 +35,7 @@
     },
     {
       "id": "brief",
-      "text": "D has self-contained scope, file ownership, constraints, acceptance criteria, context/revision, Sol/medium category, fork_turns=none, and explicit unpinned settings; warns worker to preserve others edits, reserves remote writes to root and forbids unauthorized further delegation."
+      "text": "D's dispatch proposal gives worker, gpt-6.2-sol/medium, and fork_turns=none with explicitly supplied unpinned settings. Its self-contained brief names the supplied checkout and revision, ui/banner.ts ownership, the false and true canRetry behaviors and npm test -- banner, tells the worker to preserve others' edits, reserves remote writes to root, and forbids unauthorized further delegation."
     }
   ],
   "provenance": {

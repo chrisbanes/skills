@@ -22,6 +22,10 @@
         "compose-state-deferred-reads-direct"
       ],
       "timeout_seconds": 30
+    },
+    {
+      "argv": ["./gradlew", "--offline", "--no-scan", "compileKotlin"],
+      "timeout_seconds": 180
     }
   ],
   "rubric": [

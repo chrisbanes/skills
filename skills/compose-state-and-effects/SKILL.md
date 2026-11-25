@@ -47,8 +47,13 @@ from app wiring and composition-owned runtime objects.
    `@ReadOnlyComposable` contracts to [Compose performance](../compose-performance/SKILL.md).
    For that contract, distinguish a read of snapshot `State.value` from an
    operation that changes the composer; the state read alone is not a violation.
-8. Before responding to a screen-ownership review, verify all three screen
-   seams in step 4 when visible code needs them.
+8. In an ownership review, name the owner and boundary for each concrete
+   concern. Keep durable screen data in its state holder and say how the
+   composable observes and renders it. Keep UI runtime objects such as
+   `LazyListState` with the composition coordinating them. When moving one
+   of those objects out of a model, distinguish it from the durable screen
+   data that belongs in the model. Apply the
+   previewable rendering seam in step 4 where the screen needs that split.
 9. Finish when every state value has one owner, every effect has a justified
    lifecycle and key, and the UI can be previewed and tested without app
    dependencies. For review-only work, report no change when no evidence-backed

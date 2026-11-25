@@ -10,7 +10,9 @@ Use this reference when Codex is the active runtime.
    do not invent an unavailable role or install one implicitly.
 2. Inspect the role's exposed settings and applicable installed agent TOML.
    Installed pins take precedence over this table. Recheck when the role or
-   configuration changes. Use `fork_turns="none"` for a fresh assignment and
+   configuration changes. When presenting a proposal, state the pins you
+   found or cite the supplied evidence that the role is unpinned.
+   Use `fork_turns="none"` for a fresh assignment and
    explicitly set each unpinned `model` and `reasoning_effort`.
 3. Choose the row by the judgment still required, including on reassignment.
    Luna means `gpt-6-luna`; Sol means `gpt-6.2-sol`; Terra means

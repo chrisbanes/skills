@@ -94,12 +94,17 @@ mark a non-applicable field `n/a`. Do not create a new plan, packet, or other
 document solely to avoid a short inline detail when no suitable record exists.
 
 - Objective or question.
-- Exact checkout path and state: branch and base SHA, or repository state.
+- **Workspace.** Exact checkout path and state, including branch and base
+  SHA when applicable. In an editing brief, include “Preserve others' edits,
+  including concurrent changes in your owned files.”
 - Relevant instructions and evidence.
 - Allowed actions and forbidden actions.
 - Acceptance criteria and expected result.
 - Blocker to report if it cannot proceed.
-- Further delegation: allowed or forbidden.
+- **Remote writes.** Include “Remote writes are reserved to the root task
+  and require user authorization.” State the current grant separately.
+- **Further delegation.** State the lead's explicit grant or include
+  “Further delegation is forbidden.”
 - Implementation only: owned files, focused validation, and escalation
   triggers. Stop and return to the lead, keeping ownership, when the plan or
   requirements are ambiguous, an unowned file needs changing, an interface

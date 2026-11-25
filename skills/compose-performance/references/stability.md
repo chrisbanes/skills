@@ -25,7 +25,7 @@ if (providers.gradleProperty("composeReports").orNull == "true") {
 | Evidence | Repair |
 |---|---|
 | UI state exposes `List`/`Set` that must be immutable | Use `ImmutableList`/`ImmutableSet`, converting once at the boundary |
-| `@Immutable`/`@Stable` describes mutable non-snapshot state | First make it immutable or snapshot-observable; only then retain/add an annotation if truthful |
+| `@Immutable`/`@Stable` describes mutable non-snapshot state | Make the model immutable or snapshot-observable before claiming stability. If the repair spans changes, withdraw the unsupported promise until the data contract is truthful. |
 | Third-party type is genuinely immutable | Add only that type to `stabilityConfigurationFiles` |
 | Lazy item gets a new lambda or derived object each parent recomposition | Hoist/remember it for the item's stable inputs |
 

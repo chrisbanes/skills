@@ -22,9 +22,14 @@ Box(Modifier.offset { IntOffset(offsetX.value.roundToPx(), 0) })
 |---|---|
 | `Modifier.offset(x = animatedX)` | `Modifier.offset { IntOffset(animatedX.value.roundToPx(), 0) }` |
 | `Modifier.graphicsLayer(translationY = y)` | `Modifier.graphicsLayer { translationY = yProvider() }` |
+| `Modifier.graphicsLayer(alpha = animatedAlpha.value)` | `Modifier.graphicsLayer { alpha = animatedAlpha.value }` |
 | `Child(scrollOffset = listState.firstVisibleItemScrollOffset)` | `Child(scrollOffsetProvider = { listState.firstVisibleItemScrollOffset })` |
 
-Suffix a cross-boundary lambda with `Provider` when that makes its deferred-read contract clear. `drawBehind`, `drawWithContent`, `layout`, `offset {}`, and `graphicsLayer {}` are suitable consumers.
+Use distinct names for captured state and receiver properties. If a caller-facing
+parameter must keep a name such as `alpha`, qualify the assignment with
+`this.alpha`. Suffix a cross-boundary lambda with `Provider` when that makes its
+deferred-read contract clear. `drawBehind`, `drawWithContent`, `layout`,
+`offset {}`, and `graphicsLayer {}` are suitable consumers.
 
 ```kotlin
 val merged = parent + overlay
