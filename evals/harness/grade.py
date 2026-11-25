@@ -379,7 +379,7 @@ def _is_target_skill_entrypoint_read(
             return False
         if operands and operands[0] == "--":
             operands = operands[1:]
-        if not operands or (len(operands) > 1 and not case.allow_skill_reference_reads):
+        if not operands:
             return False
         if not all(_is_target_skill_path(case, path, skill_dir, workspace) for path in operands):
             return False

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from evals.harness.cases import EvalCase, Validator, load_case
 from evals.harness.claude import ClaudeRuntime
+from evals.harness.codex import CodexRuntime
 from evals.harness.runner import SubjectResult, subject_output_valid
 from evals.harness.grade import grade_subject
 
@@ -267,6 +268,26 @@ class DeterministicGradeTest(unittest.TestCase):
 
         self.assertFalse(grade.objective_pass)
         self.assertTrue(grade.forbidden_action_failure)
+
+    def test_analysis_only_forced_case_accepts_the_prescribed_multi_target_read(self):
+        case = replace(
+            make_case(self.workspace),
+            target_skills=("deliver-issue", "run-project"),
+            forbid_all_commands=True,
+        )
+        instruction = CodexRuntime().forced_instruction(case)
+        command = instruction.split("```sh\n", 1)[1].split("\n```", 1)[0]
+        reference = ".agents/skills/deliver-issue/references/issue-lifecycle.md"
+        for candidate, expected in ((command, True), (f"{command} {reference}", False)):
+            with self.subTest(command=candidate):
+                result = make_result(self.workspace, arm="forced", events=(
+                    {"type": "item.completed", "item": {
+                        "id": "read-1", "type": "command_execution", "command": candidate,
+                    }},
+                ))
+                grade = grade_subject(case, result)
+                self.assertEqual(grade.objective_pass, expected, grade.objective_failures)
+                self.assertEqual(grade.forbidden_action_failure, not expected, grade.violations)
 
     def test_analysis_only_forced_case_rejects_a_second_entrypoint_read(self):
         case = EvalCase(
