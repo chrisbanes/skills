@@ -289,6 +289,26 @@ class DeterministicGradeTest(unittest.TestCase):
                 self.assertEqual(grade.objective_pass, expected, grade.objective_failures)
                 self.assertEqual(grade.forbidden_action_failure, not expected, grade.violations)
 
+    def test_claude_analysis_only_forced_case_keeps_single_operand_bash_limit(self):
+        case = replace(
+            make_case(self.workspace),
+            target_skills=("deliver-issue", "run-project"),
+            forbid_all_commands=True,
+        )
+        command = "cat -- .claude/skills/deliver-issue/SKILL.md"
+        batch = f"{command} .claude/skills/run-project/SKILL.md"
+        for candidate, expected in ((command, True), (batch, False)):
+            with self.subTest(command=candidate):
+                result = replace(make_result(self.workspace, arm="forced"), runtime="claude", events=(
+                    {"type": "assistant", "message": {"content": [{
+                        "type": "tool_use", "id": "read-1", "name": "Bash",
+                        "input": {"command": candidate},
+                    }]}},
+                ))
+                grade = grade_subject(case, result)
+                self.assertEqual(grade.objective_pass, expected, grade.objective_failures)
+                self.assertEqual(grade.forbidden_action_failure, not expected, grade.violations)
+
     def test_analysis_only_forced_case_rejects_a_second_entrypoint_read(self):
         case = EvalCase(
             **{**make_case(self.workspace).__dict__, "forbid_all_commands": True}

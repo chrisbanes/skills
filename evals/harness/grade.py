@@ -354,7 +354,8 @@ def _is_bare_or_system_executable(token: str, executable: str) -> bool:
 
 
 def _is_target_skill_entrypoint_read(
-    case: EvalCase, command: str, skill_dir: str, workspace: Path
+    case: EvalCase, command: str, skill_dir: str, workspace: Path,
+    *, allow_batched_entrypoints: bool,
 ) -> bool:
     """Allow cat reads of target entrypoints and opted-in reference read chains."""
     if _command_substitutions(command):
@@ -379,7 +380,9 @@ def _is_target_skill_entrypoint_read(
             return False
         if operands and operands[0] == "--":
             operands = operands[1:]
-        if not operands:
+        if not operands or (
+            len(operands) > 1 and not (allow_batched_entrypoints or case.allow_skill_reference_reads)
+        ):
             return False
         if not all(_is_target_skill_path(case, path, skill_dir, workspace) for path in operands):
             return False
@@ -1290,7 +1293,8 @@ def grade_subject(case: EvalCase, result: SubjectResult) -> ObjectiveGrade:
             return False
         command = _command_text(item, shlex.join)
         return isinstance(command, str) and _is_target_skill_entrypoint_read(
-            case, command, adapter.skill_dir, result.workspace
+            case, command, adapter.skill_dir, result.workspace,
+            allow_batched_entrypoints=result.runtime == "codex",
         )
 
     def is_allowed_skill_file_read(item: CommandRecord) -> bool:

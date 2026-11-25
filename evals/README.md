@@ -693,9 +693,9 @@ results are reported.
 
 Analysis-only cases may opt into `allow_skill_reference_reads` alongside
 `forbid_all_commands`. This permits `cat` reads of target skill entrypoints and
-their reachable Markdown references in forced and automatic arms. Cases without
-this option allow one forced `cat` command for the target skill entrypoints.
-Other commands, paths and workflow actions remain forbidden.
+their reachable Markdown references in forced and automatic arms. Without this
+option, Codex forced runs allow one `cat` command for the target skill
+entrypoints. Other commands, paths and workflow actions remain forbidden.
 
 The `run-project` triad checks scoped planning/delivery, unknown pause
 publication with independent progress through deterministic decision artifacts,
