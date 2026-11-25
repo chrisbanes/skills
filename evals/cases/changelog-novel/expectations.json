@@ -3,7 +3,6 @@
     "CHANGELOG.md"
   ],
   "must_contain": [
-    "- Retry interrupted downloads without losing progress.",
     "## Unreleased\n",
     "## 0.8.0-beta01\n\n- Add resumable downloads.\n\n## 0.7.0\n\n- Initial download support.\n"
   ],

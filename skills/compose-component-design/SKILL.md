@@ -32,9 +32,11 @@ policy choices that vary by use.
 5. Keep simple conditional structure inline; extract only a coherent reusable
    contract.
 6. Read the relevant focused reference below before editing public signatures.
-7. In a review, decide explicitly whether each requested variable visual region
-   should remain a semantic primitive or become a caller slot; naming a content
-   limitation alone does not make that API decision. Finish with no edit when
+7. In a review, give a separate finding for each requested concern. For
+   variable content, name the region and its current input, choose a semantic
+   value or caller slot, and explain which caller variation supports that
+   choice. For an optional slot, account for what omission does to layout.
+   Finish with no edit when
    the existing API already satisfies the requested concern. Otherwise finish
    when callers can position the component, supply variable content, and
    understand ownership without hidden switches.

@@ -22,10 +22,12 @@ follow-up inspection invalidate lifecycle evidence even when Gradle succeeds.
 
 ## Procedure
 
-1. Classify the request. Reuse a current successful result when unchanged
-   source and inputs already answer the question. A focused task that validates
-   another change is incidental; build/check/warning/failure work is a
-   Gradle-centered workflow.
+1. Classify the request before running a wrapper command. For command-only
+   guidance or review of supplied evidence, use the relevant reference to
+   write the command or interpret the evidence, then finish with the answer.
+   For authorized execution, reuse a current successful result when unchanged
+   inputs already answer the question. A focused task that validates another
+   change is incidental; build/check/warning/failure work is Gradle-centered.
 2. Resolve this skill directory. If `python3` or `scripts/gradle_run.py` is
    unavailable (a failing standalone `create` shows this), stop and report that
    prerequisite; never run Gradle directly as a fallback. Invoke the project's

@@ -12,7 +12,41 @@ compatibility: "Requires a supported tracker/code-host binding and the installed
 Deliver the named issue's outcome within its verified scope and invocation
 permissions; one controller retains ownership from clarification through closure.
 
-## Procedure
+## Assess supplied state
+
+When asked to assess supplied state, take capabilities, approval and authority
+from the supplied facts. Use this checklist to answer. Leave cited plan files
+and installed executor entrypoints unopened. Consult a delivery reference only
+for an unresolved decision within the permitted read scope.
+
+1. **Implementation handoff.** Name `implement-with-subagents` as the executor
+   for the entire approved graph and its single PR. Reuse accepted plan
+   evidence and preserve dependencies and testing policy. Assign tightly
+   coupled serial edits and repairs to the lead by default. Use workers when
+   independence, isolation or an explicit implementation requirement
+   justifies them.
+2. **Candidate decision.** For a changed candidate, require one fresh
+   independent read-only reviewer to check the approved source, repository
+   standards, validation evidence and exact clean candidate HEAD. Use the
+   available runtime reviewer. Apply CI and external-review gates only when
+   the supplied policy requires them. Verify the draft PR points to the
+   reviewed head. For no-change, require verified acceptance and an empty
+   final diff after implementation and verification.
+3. **Repair and publication.** Name `shepherd` for CI, PR feedback and the
+   verified repair push. Resume the same `implement-with-subagents` executor
+   and original implementation owner for edits. Renew affected checks and
+   review on the repaired head before `shepherd` pushes it. Reuse unaffected
+   evidence.
+4. **Authority.** State which merge and closure grants are present. Keep
+   work pending when a necessary grant or current-head evidence is missing.
+   For a separate plan awaiting approval, request it with the outcome,
+   approach and validation from the supplied plan details. Cite the supplied
+   plan pointer as given.
+
+Finish with these decisions and any gaps in the supplied evidence. Stop here
+for a supplied-state assessment.
+
+## Live delivery procedure
 
 1. For a local spec with no tracker item, return the route through `to-plan`
    in conversation mode for one plan, then `implement-with-subagents` for one MR.
@@ -40,12 +74,12 @@ permissions; one controller retains ownership from clarification through closure
    [Bug diagnosis](references/bug-diagnosis.md) for a bug with clear expected
    behavior and no current plan when the evidence leaves the fix speculative.
    Do this before choosing the fast path or drafting an implementation plan.
-5. For each approved outcome use the [delivery lifecycle](references/delivery-lifecycle.md)
-   to hand implementation and repair to `implement-with-subagents`. Apply
-   [evidence and review](references/evidence-and-review.md).
-   Preserve existing plans and use the PR boundaries in the
-   [tree delivery procedure](references/issue-lifecycle.md#deliver-the-tree).
-   Keep repairs with their owner.
+5. Preserve existing plans and the
+   [tree's PR boundaries](references/issue-lifecycle.md#deliver-the-tree).
+   Use the [delivery lifecycle](references/delivery-lifecycle.md) to hand off
+   implementation, qualify the candidate, publish and route repairs. Apply
+   [evidence and review](references/evidence-and-review.md) at the candidate
+   and repair gates.
 6. Reconcile exact-head checks/reviews and explicit merge/closure grants through
    the binding. Follow the issue lifecycle's bounded waiting and resume procedure;
    board handoffs follow their controller's cadence instead.

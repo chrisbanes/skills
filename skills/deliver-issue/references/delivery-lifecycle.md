@@ -50,11 +50,15 @@ evidence. Board-owned planning uses the board controller's checkout procedure.
    checks, to the executor. Recheck applicability when the candidate or its CI
    inputs change, including on repair.
 4. Invoke `implement-with-subagents` in implement mode with the checkout,
-   branch, fixed base, graph, check requirements and record. Where direct
-   invocation is unavailable, follow its installed entrypoint.
-5. Record the returned commits, owners, clean head, validation, independent
-   review and named pending CI checks. Require applicable review coverage and
-   passing pre-push checks on that head. Return missing coverage to the executor.
+   branch, fixed base, complete approved graph, check requirements and record
+   for the PR. The executor chooses ownership for that graph under its
+   implementation procedure. Where direct invocation is unavailable, follow
+   its installed entrypoint.
+5. Record the returned commits, owners, clean head, validation, fresh
+   independent read-only review and named pending CI checks. Require review
+   of the approved source, repository standards and validation evidence on
+   the exact clean head, along with passing pre-push checks on that head.
+   Return missing coverage to the executor.
    For an empty final diff, verify full acceptance and follow
    [no-change closure](provider-bindings.md#verified-no-change-closure) before any PR operation.
 
@@ -64,10 +68,12 @@ evidence. Board-owned planning uses the board controller's checkout procedure.
    links and closure intent through the [provider bindings](provider-bindings.md).
    Apply [PR review timing](../../shepherd/references/pr-review-timing.md) to start external review while CI runs.
 2. Use `shepherd` for CI and PR feedback. For an in-scope repair, resume the
-   executor with the finding, current head and delivery record. Verify the
-   returned repair before pushing. Route changes to scope, qualification or
-   permissions back to planning. Board tickets use their controller’s waiting
-   policy. Standalone runs use [wait and resume](issue-lifecycle.md#wait-and-resume).
+   same executor and original implementation owner with the finding, current
+   head and delivery record. Use `shepherd` to push the repaired head after
+   affected pre-push checks and review qualify it. Return changes to scope,
+   qualification or permissions to planning. Board tickets use their
+   controller’s waiting policy. Standalone runs use
+   [wait and resume](issue-lifecycle.md#wait-and-resume).
 3. Merge or close only with the applicable grant and provider readback.
    For board tickets, return the outcome to the controller for both operations.
 

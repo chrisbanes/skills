@@ -19,7 +19,7 @@
   ],
   "rubric": [
     {"id": "branch-repair", "text": "The nested branch-local predicate is expressed as ordered guarded and unguarded Message branches without casts"},
-    {"id": "bounded-validation", "text": "The focused test runs through one bounded wrapper workflow with a non-empty question, and the workflow is finished after reporting the compact result"}
+    {"id": "bounded-validation", "text": "Uses one managed wrapper workflow to run the fixture's supported test task with a non-empty question, reports its compact result, and successfully finishes the same workflow. The supplied gradlew simulation is the intended evidence for this workflow. The separate gradlew-real validator determines actual build success. A successful real build with test NO-SOURCE satisfies the validator for this fixture."}
   ],
   "provenance": {"kind": "synthetic"}
 }

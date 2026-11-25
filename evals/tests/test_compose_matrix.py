@@ -241,8 +241,9 @@ class ComposeMatrixTest(unittest.TestCase):
             for criterion in case.rubric
             if criterion["id"] == "criterion-2"
         )
-        self.assertIn("recommends first", repair_criterion["text"].lower())
-        self.assertIn("then deciding", repair_criterion["text"].lower())
+        repair_contract = repair_criterion["text"].lower()
+        self.assertIn("before retaining, restoring, or adding", repair_contract)
+        self.assertIn("withdrawing the unsupported annotation immediately is valid", repair_contract)
 
     def test_ui_testing_novel_grades_findings_without_recommending_reinspection(self):
         report = validate_corpus(REPO_ROOT, suite="compose")

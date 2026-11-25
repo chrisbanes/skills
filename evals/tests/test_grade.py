@@ -224,6 +224,7 @@ class DeterministicGradeTest(unittest.TestCase):
             "/bin/zsh -lc 'cat draft.md'",
             "cat .agents/skills/other-skill/SKILL.md",
             f"/bin/zsh -lc 'cat {target_path} && cat draft.md'",
+            f"cat {target_path} && cat {target_path}",
             "/bin/zsh -lc 'pwd'",
             "ls",
         )
@@ -313,7 +314,12 @@ class DeterministicGradeTest(unittest.TestCase):
             "cat .agents/skills/run-project/SKILL.md",
             "cat .agents/skills/run-project/../deliver-issue/references/github-delivery.md",
             "cat -- .agents/skills/deliver-issue/references/evidence-and-review.md",
+            "cat -- .agents/skills/deliver-issue/references/evidence-and-review.md "
+            + shlex.quote(str(shared)),
             "/bin/zsh -lc 'cat .agents/skills/run-project/references/ticket-lifecycle.md'",
+            "cat .agents/skills/run-project/SKILL.md && cat " + shlex.quote(str(shared)),
+            "/bin/zsh -lc 'cat .agents/skills/run-project/SKILL.md; "
+            "cat -- .agents/skills/run-project/references/ticket-lifecycle.md'",
         )
         for arm in ("forced", "automatic"):
             with self.subTest(arm=arm):
@@ -344,9 +350,15 @@ class DeterministicGradeTest(unittest.TestCase):
             "cat .agents/skills/deliver-issue/references/*.md",
             f"cat {path} > output.md",
             f"cat {path} && npm test",
+            f"cat {path} && cat {path} > output.md",
+            f"cat {path} && cat {path} &",
+            f"cat {path} && cat {path} $(touch output.md)",
+            f"cat {path} && cat {path}\nnpm test",
+            f"cat {path} | cat {path}",
             f"cat {path} &",
             f"cat {path} $(touch output.md)",
             f"cat {path} state.md",
+            f"cat {path} {shlex.quote(str(self.workspace.parent / 'outside.md'))}",
             f"./cat {path}",
             "gh pr merge 115",
             "npm test",
@@ -1777,6 +1789,40 @@ python3 \""'$SKILL_DIR/scripts/gradle_run.py" create' ''',
         self.assertNotIn(
             "network command attempted", grade_subject(case, cat_and_search).violations
         )
+
+    def test_network_grading_uses_executable_steps_and_ignores_literal_heredoc_text(self):
+        case = make_case(self.workspace)
+        literal = "mkdir -p .scratch && cat > .scratch/review.json <<'EOF'\n"
+        literal += '{"note": "GitHub host review and git fetch are mentioned here."}\nEOF'
+        cases = (
+            ("cat state.md && git status --short && rg -n owner .", False),
+            ("cat state.md && rg --files --hidden -g 'AGENTS.md' .", False),
+            ("cat state.md && git status --short --branch && git log -1 --oneline", False),
+            ("cat state.md; find .scratch -maxdepth 2 -type f -print 2>/dev/null", False),
+            ("cat state.md && find .scratch -maxdepth 3 -print 2>/dev/null", False),
+            ("cat state.md && git fetch origin && rg -n owner .", True),
+            ("cat state.md && find .scratch -maxdepth 2 -delete", True),
+            ("cat state.md && rg --files --hidden --pre custom-sync .", True),
+            (literal, False),
+            (literal + "\nhost example.com", True),
+            ("host example.com && " + literal, True),
+            (literal.replace("<<'EOF'", "<<EOF").replace("GitHub host review", "$(host example.com)"), True),
+        )
+        for script, expected in cases:
+            with self.subTest(script=script):
+                result = make_result(self.workspace, events=({
+                    "type": "item.completed",
+                    "item": {
+                        "type": "command_execution",
+                        "command": f"/bin/zsh -lc {shlex.quote(script)}",
+                        "exit_code": 0 if script.startswith("mkdir ") else 1,
+                        "aggregated_output": "Network access is disabled.",
+                    },
+                },))
+                self.assertEqual(
+                    expected,
+                    "network command attempted" in grade_subject(case, result).violations,
+                )
 
     def test_local_sed_then_no_matching_git_tags_is_not_network(self):
         case = make_case(self.workspace, task_mode="review")

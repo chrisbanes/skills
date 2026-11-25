@@ -34,6 +34,15 @@ Test the smallest UI contract that proves the behavior. Prefer plain state-drive
 | Navigation, lifecycle, DI integration | Integration test |
 | Critical flow that depends on the installed build or crosses an app, process, or OS boundary | Focused device smoke test or end-to-end test, outside this skill |
 
+Keep an existing cheaper regression for the contract it already proves.
+For a real permission flow, retain the `createComposeRule` denied-state
+assertion and add a device check for the Android dialog and the result the
+OS delivers to the app. For R8-sensitive startup, retain the debug integration
+test and add startup on the optimized artifact. `StateRestorationTester`
+proves the local Compose save-and-restore round trip. Use an installed test
+when actual activity callbacks, process death, or OS restoration are part
+of the required behavior.
+
 ## Plain UI and callback tests
 
 Render the plain composable with controlled state and callbacks. Find nodes by
@@ -86,8 +95,9 @@ update its baseline. Keep an explicit fixed value when that geometry is the
 contract. Preserve assertions and tolerances unless a separate change justifies
 altering them.
 
-Report comparison and recording separately. State what passed, read the exact
-output path from the test, verify the file exists and inspect the intentional
-baseline diff. Name the literal path and any missing evidence. For a
-findings-only review, stop at the evidence gap. Keep tool-specific commands
-in the repository runbook.
+For a recording claim, report three checks separately: the actual comparison
+result, whether recording wrote the exact output path declared by the test,
+and the observed baseline diff. Quote the reported comparison status and
+name the literal output path even when absent. A passing comparison can
+leave the artifact and baseline untouched. For a findings-only review, stop
+at missing evidence. Keep tool-specific commands in the repository runbook.

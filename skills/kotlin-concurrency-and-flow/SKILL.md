@@ -19,8 +19,10 @@ the product contract.
    the required owner and lifetime. If a suspend API already gives its caller
    cancellation, result, and failure ownership, finish with no change; do not
    add a scope, `launch`, callback, or deferred wrapper merely for convenience.
-3. Select a scope whose lifecycle owns the work; do not retain arbitrary scopes
-   or hide unstructured launches behind non-suspending APIs.
+3. When work belongs to a repository caller, expose a suspending function that
+   returns the result directly and remove the stored scope. A `Deferred` from
+   `scope.async` is still a child of that scope, even when the caller awaits it.
+   Retain a scope only for work owned by a separate, explicit lifecycle.
 4. Model renderable, current data as state and imperative one-shot work as an
    event only when its loss and replay behavior are explicitly acceptable.
    Ask whether one consumer handles each event or every active consumer must
@@ -35,8 +37,9 @@ the product contract.
 5. Choose Flow sharing and buffering semantics from the producer and consumer
    lifetimes rather than from a default.
 6. Read the focused reference for the material concern below.
-7. Finish when cancellation, restart, replay, and failure behavior are all
-   observable from the public API and no caller must guess who owns the work.
+7. Before finishing a review, state the behavior at the boundary under
+   discussion. Identify the owner, the trigger, and the result for the caller
+   or replacement collector. Include this evidence when recommending no change.
 
 ## Topic router
 

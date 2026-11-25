@@ -77,5 +77,8 @@ only when its independent behavior changes the same work.
   because the accessor is public; add it when the same change also needs a
   separate function-ownership, domain-type, compatibility, or platform-boundary
   decision.
-- Load [`gradle-run`](../gradle-run/SKILL.md) only for planned Gradle execution
-  or an existing Gradle workflow, not incidental Kotlin or Compose advice.
+- For a Kotlin edit that requests Gradle validation, route the source decision
+  first. A nested predicate within one `when` branch is a
+  [`kotlin-control-flow`](../kotlin-control-flow/SKILL.md) decision. Add
+  [`gradle-run`](../gradle-run/SKILL.md) for the subsequent validation or for
+  an existing Gradle workflow.

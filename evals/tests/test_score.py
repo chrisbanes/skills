@@ -154,7 +154,7 @@ class ScorecardTest(unittest.TestCase):
                 }},
                 {"type": "item.completed", "item": {
                     "id": "read", "type": "command_execution", "status": "completed",
-                    "exit_code": 0, "command": f"cat {paths[0]} {paths[1]}",
+                    "exit_code": 0, "command": f"cat -- {paths[0]} {paths[1]}",
                 }},
             ],
             "captured_skill_files": [{
@@ -163,6 +163,8 @@ class ScorecardTest(unittest.TestCase):
             } for path in paths],
         }
         self.assertEqual("valid", forced_integrity_status(item))
+        item["subject"]["events"][1]["item"]["command"] = f"cat {paths[0]} && cat {paths[1]}"
+        self.assertEqual("invocation_failure", forced_integrity_status(item))
         item["subject"]["events"] = [
             {"type": "item.completed", "item": {
                 "id": "first", "type": "command_execution", "status": "completed",

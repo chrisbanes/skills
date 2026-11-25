@@ -17,6 +17,10 @@ Most repositories, managers, use cases, and data sources should expose
    Do not flag an executor merely because it backs a `CoroutineDispatcher` or
    required thread-affinity adapter; verify that an explicit owner closes or
    stops it and that completion and failure remain observable.
+   For a JVM executor service adapted with `asCoroutineDispatcher()`, show
+   both owners: `withContext(dispatcher)` keeps execution in the caller's
+   coroutine hierarchy while selecting its thread, and the resource owner's
+   `dispatcher.close()` shuts down the backing executor.
 3. Replace a stored, injected, lazily created, or function-local `CoroutineScope`
    on a non-UI class with suspending APIs. A cancelled stored scope can make
    future launches silently do nothing.
@@ -77,9 +81,11 @@ try {
 }
 ```
 
-Inspect the caught exception before handling an ordinary failure. A caller
-awaiting an independently cancelled `Deferred` can still be active, so
-`currentCoroutineContext().ensureActive()` alone can miss that cancellation.
+Trace cancellation from both jobs in the review. If an independently owned
+`Deferred` is cancelled while the caller is still active, its `await()`
+throws `CancellationException` to that active caller. The explicit rethrow
+propagates it, and the ordinary-failure fallback still handles other exceptions.
+`currentCoroutineContext().ensureActive()` alone can miss this path.
 With `runCatching`, rethrow a caught `CancellationException` before mapping a
 failure to a fallback, or propagate every failure with `getOrThrow()`.
 

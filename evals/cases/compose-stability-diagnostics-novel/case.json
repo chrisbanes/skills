@@ -29,7 +29,7 @@
     },
     {
       "id": "criterion-2",
-      "text": "Recommends first making mutable properties immutable or snapshot-observable, then deciding whether an annotation is needed"
+      "text": "Requires making mutable properties immutable or snapshot-observable before retaining, restoring, or adding a stability annotation. Withdrawing the unsupported annotation immediately is valid when the response also recommends repairing the data contract."
     }
   ],
   "provenance": {

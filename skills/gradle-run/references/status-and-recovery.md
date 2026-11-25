@@ -1,9 +1,9 @@
 # Workflow status and recovery
 
-1. For a lost session or unknown outcome, read status using the original
-   workflow ID and global `--root` if supplied. For a review limited to a
-   supplied snapshot, interpret it directly. Keep each wrapper invocation
-   in its own tool call.
+1. Match the action to the request. For an explanation, give the applicable
+   command and explain how to interpret its result. Review supplied snapshots
+   directly. For an authorized live status check, run the following in its
+   own tool call with the original workflow ID and global `--root` if supplied.
 
    ```sh
    python3 <skill-dir>/scripts/gradle_run.py status --workflow <id>

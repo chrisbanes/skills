@@ -263,16 +263,16 @@ def parse_codex_jsonl(
 
 def _forced_instruction(case: EvalCase) -> str:
     invocations = ", ".join(f"${skill}" for skill in case.target_skills)
-    paths = ", ".join(
-        f"`.agents/skills/{skill}/SKILL.md`" for skill in case.target_skills
-    )
+    read_command = shlex.join([
+        "cat", "--", *(f".agents/skills/{skill}/SKILL.md" for skill in case.target_skills)
+    ])
     targets = ", ".join(f"`{skill}`" for skill in case.target_skills)
     dependencies = ", ".join(f"`{skill}`" for skill in case.constant_skills)
     return (
         f"\n\nUse the following skill(s) explicitly: {invocations}. "
-        f"In a standalone command, use `cat` to print each of {paths} completely "
-        "before any repository inspection or other action. Do not combine "
-        "that read with other commands."
+        "Before any repository inspection or other action, run the following "
+        "as one standalone command from the workspace root. Copy it exactly.\n\n"
+        f"```sh\n{read_command}\n```"
         "\n\nIn the final `skills_used`, include each of these exact public "
         f"targets whose entrypoint you read and followed: [{targets}]. "
         "Omit only these exact evaluator-owned dependency names: "

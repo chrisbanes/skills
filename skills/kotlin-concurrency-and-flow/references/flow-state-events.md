@@ -19,8 +19,10 @@ Before choosing `SharedFlow`, ask whether an absent collector may lose an event
 and whether every observer must receive it. A channel distributes each event to
 at most one collector. Its buffer can hold events while no collector is active.
 Bounded `send` can suspend and `trySend` can fail, so handle failed sends.
-Cancellation after receipt can remove the event before the collector handles it,
-and a replacement collector cannot recover it from the channel. Choose
+Receiving dequeues the event before handling succeeds. If the handler is
+cancelled after receipt, a replacement collector has nothing to receive.
+When proposing acknowledgement, explain this failure for a channel even
+with exactly one consumer. Choose
 deliberate broadcast semantics when every active observer must see the event.
 
 ```kotlin
@@ -70,8 +72,13 @@ _state.update { current -> current.copy(details = details) }
 
 Expose `stateIn` as one shared property. Use `SharingStarted.Eagerly` when the
 cache should keep updating without active subscribers and callers can tolerate
-lag. Sharing runs in a separate coroutine, so reading its `.value` immediately
-after an upstream write can still return the previous cached value.
+lag. For a timing review, account for both guarantees:
+
+- **Subscriber gap.** Eager sharing keeps upstream collection active with zero
+  subscribers until the owning scope ends.
+- **Immediate read.** Sharing runs in a separate coroutine. Before it processes
+  an upstream write, reading the derived `.value` can still return the old cache.
+
 `WhileSubscribed` can also retain a stale value while collection is stopped.
 
 For an immediate read after a write, project the current upstream snapshot
