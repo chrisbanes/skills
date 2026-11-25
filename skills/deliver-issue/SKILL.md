@@ -20,12 +20,13 @@ and installed executor entrypoints unopened. Consult a delivery reference only
 for an unresolved decision within the permitted read scope.
 
 1. **Implementation handoff.** Name `implement-with-subagents` as the executor
-   for the entire approved graph and its single PR. Reuse accepted plan
-   evidence and preserve dependencies and testing policy. Assign tightly
+   for each approved outcome. Use one PR for a single cohesive outcome. For
+   an issue tree, preserve the supplied PR boundaries and dependency order.
+   Reuse accepted plan evidence and preserve testing policy. Assign tightly
    coupled serial edits and repairs to the lead by default. Use workers when
    independence, isolation or an explicit implementation requirement
    justifies them.
-2. **Candidate decision.** For a changed candidate, require one fresh
+2. **Candidate decision.** For each changed candidate, require one fresh
    independent read-only reviewer to check the approved source, repository
    standards, validation evidence and exact clean candidate HEAD. Use the
    available runtime reviewer. Apply CI and external-review gates only when
