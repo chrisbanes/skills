@@ -68,6 +68,10 @@
       "dispatch": false,
       "preserve_hold": true,
       "reset_budget": false
+    },
+    "released-on-refresh": {
+      "released": ["I5"],
+      "held": ["I1"]
     }
   }
 }

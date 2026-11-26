@@ -59,7 +59,8 @@ Assess these additional independent snapshots under the same no-provider and no-
 - **resume-unknown:** After activation, the I1 pause condition is satisfied, but the original budget checkpoint cannot be verified and no valid migration-resume record exists.
 - **resume-verified:** I1's original resume condition, new scoped authority, exact lease and remaining budget are verified, both resume records are read back, and the existing owner acknowledges the new lease. I5 remains held.
 - **resume-migration-only:** Identical to resume-verified except the authority-resume publication timed out and its outcome could not be reconciled. Assess eligibility now, before any further publication or dispatch.
+- **released-on-refresh:** In a separate run after activation, I5's scoped continuation, migration-resume record, and acknowledgement of the new lease are all verified. I5 then moves from Todo to In Progress through normal implementation claim. Its current-binding checks pass. I1's original pause condition remains unmet. On refresh, identify which retained item follows normal current-binding checks and which stays held.
 
 Add these keys to the decision artifact: retained: action, moves_verified, retained_claims (item IDs in inventory order), eligible_after_activation (retained item IDs only), preserve_owners, preserve_budgets, rewrite_historical_markers; writer-returned: action, writes; parked: action, writes; resume-unknown: dispatch, preserve_hold, reset_budget (booleans); resume-verified: releasable (retained item IDs), same_owner, reset_budget. For writer-returned, return the disposition for a changed approved precondition.
 
-For resume-migration-only, return the same fields as resume-unknown.
+For resume-migration-only, return the same fields as resume-unknown. For released-on-refresh, return `released` and `held` as retained item ID arrays in inventory order.

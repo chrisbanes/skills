@@ -18,10 +18,10 @@ Claude Code's native Agent tool.
    Claude Code 2.1.292 or later and a non-fork invocation. Check provider and
    organization restrictions and global overrides; if they prevent a required
    choice, return the mismatch to the lead instead of silently substituting.
-3. Route by the assignment's remaining judgment. Use supported Agent aliases
-   (`haiku`, `sonnet`, `opus`, `fable`), not full model IDs or Codex names.
-   Aliases resolve through the active provider, so verify effective settings
-   rather than assuming a fixed version or account entitlement.
+3. Route by the assignment's remaining judgment. For native Agent calls, use
+   the supported aliases (`haiku`, `sonnet`, `opus`, `fable`). For host
+   dispatch, use the host catalog's identifier for the selected model. Verify
+   effective settings and account entitlement on the selected route.
 
 | Assignment | Model / effort |
 |---|---|

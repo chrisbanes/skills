@@ -189,8 +189,8 @@ resume condition, or preserved evidence changes.
    drift or a recorded stakeholder decision establishing a new accepted source
    contract; never infer that decision from merge approval. Never reuse
    earlier-head evidence for changed code.
-5. For a retained GitHub migration pause, first publish or reuse the verified
-   migration-resume record for the new lease under the retained-claim procedure.
+5. For a retained GitHub migration pause, first
+   [publish or reuse the migration-resume record](github-binding.md#publish-a-migration-resume-record).
    Publish and verify one runner-authored
    [authority-resume payload](github-binding.md#authority-resume-format) through
    the selected tracker's marker operations, referencing the
@@ -198,7 +198,9 @@ resume condition, or preserved evidence changes.
    current lease/artifact identities. For completed terminal reconciliation,
    record the verified external-merge evidence instead of a new merge grant;
    retire the obsolete pause without restoring an implementation slot.
-   An unknown resume write leaves the ticket paused. Return unfinished unclaimed
+   An unknown resume write leaves the ticket paused. For a retained migration
+   pause, verify the existing owner's acknowledgement of the new lease before
+   releasing it. Return unfinished unclaimed
    work to its original eligible lane; epics and
    Wayfinder children never enter an implementation slot. Restore an unfinished claimed
    implementation ticket's same owner and artifacts in the next free slot

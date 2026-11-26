@@ -365,11 +365,12 @@ alone authorizes discovery and a dry run, not migration or execution.
 5. **Rollback safely when requested.** Use the journal in reverse operation
    order, reconciling every unknown attempt first, including a write whose
    success was not journaled. If the journal has retained claims, fence writers
-   and verify before any inverse operation that each retained claim is unchanged,
-   none has resumed or acquired a lease under the new binding, and activation
-   admitted no other work. If any check fails or is unverified, return
-   `migration-blocked`, preserve the affected work, and reconcile the binding
-   and ownership before proceeding. Restore each item's original Status only
+   and verify before any inverse operation that each retained claim matches its
+   expected state in the reconciled journal, including verified inverse writes.
+   Verify that no retained claim has resumed or acquired a lease under the new
+   binding and activation admitted no other work. If any check fails or is
+   unverified, return `migration-blocked`, preserve affected work, and reconcile
+   the binding and ownership before proceeding. Restore each item's original Status only
    if it still has the migration's verified target Status and unchanged
    membership, labels, assignments and archive state. Otherwise preserve current
    state and report a rollback conflict for human reconciliation. Restore original config/
@@ -426,8 +427,10 @@ require zero In Progress items and no old leases.
    replacement containing the approved table is committed on verified base,
    and fresh reads confirm the migration and its retained items. Before
    ranking and on refresh, use the controller's current complete snapshot to
-   match table entries by stable IDs and check the current owner, marker and
-   Status. Reuse the activation readback when it meets the
+   match table entries by stable IDs and verify release under step 4. Use
+   ordinary current-binding checks for released claims. For claims still held,
+   compare the current owner, marker and Status to the cutover entry. Reuse
+   the activation readback when it meets the
    [Refresh Gate](drain-scheduler.md#refresh-gate) and remains current. Fetch
    missing evidence before dispatch. Keep unresolved entries in the frontier
    outside ranking and capacity, with their dependency edges, even when a
@@ -435,24 +438,27 @@ require zero In Progress items and no old leases.
    stay excluded. An incomplete or ambiguous table blocks dispatch until all
    its protected identities are known. An old binding cannot issue a new
    grant after activation.
-4. **Resume under the current binding.** For an authority pause, perform the
-   authority checks and lease revalidation in
+4. **Resume under the current binding.** Route authority pauses through
    [Recover And Resume](authority-and-pauses.md#recover-and-resume). For a Todo
    handoff, obtain an explicit scoped continuation, apply label-stop and
    revalidate ownership, source/plan, worktree, PR/head, base, and applicable
-   checks, reviews and grants. In either case, verify the original budget and
-   reconcile the preserved artifacts. Publish and refetch one runner-authored
-   `<!-- run-github-project:migration-resume:v1 -->`
-   record linking the committed table entry and original marker permalink and
-   digest, old/new binding digests, verified resume evidence, and the new
-   lease identity. For paused work, ordinary recovery then publishes and
-   verifies the authority-resume record for that lease. On later runs, verify
-   the transition from the table and migration-resume record, plus the
-   authority-resume record for a pause. Reconcile unknown publication and reuse
-   verified records. Require owner acknowledgement before ticket writes and
-   preserve the owner, artifacts and counters. Missing or ambiguous required
-   evidence preserves the hold. Neither migration nor the table supplies
+   checks, reviews and grants. Then
+   [publish the migration-resume record](#publish-a-migration-resume-record).
+   Reconstruct release from the committed table, verified migration-resume
+   record, and the existing owner's acknowledgement of the new lease. For a
+   pause, also require the verified authority-resume record for that lease.
+   Missing or ambiguous required evidence preserves the hold. Preserve the
+   owner, artifacts and counters. Neither migration nor the table supplies
    execution authority or qualification.
+
+#### Publish a migration-resume record
+
+After the calling recovery checks pass, verify the original budget and reconcile
+the preserved artifacts. Publish and refetch one runner-authored
+`<!-- run-github-project:migration-resume:v1 -->` record linking the committed
+table entry and original marker permalink and digest, old/new binding digests,
+verified resume evidence, and new lease identity. Reconcile unknown publication
+before retrying and reuse an exact verified record.
 
 ## GitHub Project Configuration
 
