@@ -31,6 +31,16 @@
       "I2": "rollback-conflict",
       "create_option": false,
       "delete_options": false
+    },
+    "rollback-after-release": {
+      "action": "migration-blocked",
+      "inverse_writes": 0,
+      "preserve_journal": true
+    },
+    "retained-rollback-retry": {
+      "I1": "already-original-no-op",
+      "I2": "restore-B-with-readback",
+      "migration_blocked": false
     }
   }
 }

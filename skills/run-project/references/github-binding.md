@@ -44,8 +44,10 @@ resolved values and pinned identities against complete live reads. Record the
 and live merge-policy fingerprint. Missing, ambiguous, unknown or drifted state
 returns `configuration-blocked`, naming the lookup, candidate identities and
 required correction; preserve all work. Execution never enters setup repair.
-Only an already trusted, committed display-name-only edit may use
-[presentation-only renewal](#renew-presentation-only-configuration).
+Use [presentation-only renewal](#renew-presentation-only-configuration) for
+a verified, trusted and committed display-name-only edit. Validate an approved
+legacy replacement with retained claims under the
+[retained-claim activation rules](#retain-claims-across-legacy-migration).
 
 ### Resolve defaults and overrides
 
@@ -238,9 +240,11 @@ that result. Report `configuration-valid` only after the committed
 configuration and trusted reference on verified base pass fresh validation. Pause new claims while the edit is pending; existing claims may
 continue on their unchanged binding.
 
-Changing the effective binding fingerprint while a ticket still holds an old
-lease invalidates it unless execution has verified the narrow
-[presentation-only renewal](#renew-presentation-only-configuration).
+Use the existing lease while its effective binding fingerprint matches. A
+changed fingerprint invalidates the old lease. Execution can renew it for a
+verified [presentation-only change](#renew-presentation-only-configuration),
+or establish a new lease for an approved
+[retained legacy claim](#retain-claims-across-legacy-migration).
 Setup does not perform that renewal or assume it will succeed. While old-digest claims exist, prepare the
 edit only in an already separate configuration checkout. Keep the controller
 and ticket checkouts used to resume those claims clean and on the old committed
@@ -360,10 +364,16 @@ alone authorizes discovery and a dry run, not migration or execution.
    each write, and journal partial rename/reference outcomes the same way.
 5. **Rollback safely when requested.** Use the journal in reverse operation
    order, reconciling every unknown attempt first, including a write whose
-   success was not journaled. Restore each item's original Status only if it
-   still has the migration's verified target Status and unchanged membership,
-   labels, assignments and archive state; otherwise preserve current state and
-   report a rollback conflict for human reconciliation. Restore original config/
+   success was not journaled. If the journal has retained claims, fence writers
+   and verify before any inverse operation that each retained claim matches its
+   expected state in the reconciled journal, including verified inverse writes.
+   Verify that no retained claim has resumed or acquired a lease under the new
+   binding and activation admitted no other work. If any check fails or is
+   unverified, return `migration-blocked`, preserve affected work, and reconcile
+   the binding and ownership before proceeding. Restore each item's original Status only
+   if it still has the migration's verified target Status and unchanged
+   membership, labels, assignments and archive state. Otherwise preserve current
+   state and report a rollback conflict for human reconciliation. Restore original config/
    instruction bytes and legacy path, removing a migration-created destination
    only when its current bytes still equal the recorded migration output. For
    partial file writes use each operation's recorded before/after state. Preserve
@@ -416,30 +426,39 @@ require zero In Progress items and no old leases.
    activation. Activate only once the complete journal reconciles, the trusted
    replacement containing the approved table is committed on verified base,
    and fresh reads confirm the migration and its retained items. Before
-   ranking and on refresh, match table entries by stable IDs and check the
-   current owner, marker and Status. Keep unresolved entries in the frontier
+   ranking and on refresh, use the controller's current complete snapshot to
+   match table entries by stable IDs and verify release under step 4. Use
+   ordinary current-binding checks for released claims. For claims still held,
+   compare the current owner, marker and Status to the cutover entry. Reuse
+   the activation readback when it meets the
+   [Refresh Gate](drain-scheduler.md#refresh-gate) and remains current. Fetch
+   missing evidence before dispatch. Keep unresolved entries in the frontier
    outside ranking and capacity, with their dependency edges, even when a
    checkpoint is unavailable. Mismatched entries block their own writes and
    stay excluded. An incomplete or ambiguous table blocks dispatch until all
    its protected identities are known. An old binding cannot issue a new
    grant after activation.
-4. **Resume under the current binding.** Observe the original pause's resume
-   condition or obtain an explicit scoped continuation for a Todo handoff.
-   Apply label-stop and revalidate ownership, source/plan, worktree, PR/head,
-   base, budget, and applicable checks, reviews and grants. Publish and refetch
-   one runner-authored `<!-- run-github-project:migration-resume:v1 -->`
-   record linking the committed table entry and original marker permalink and
-   digest, old/new binding digests, verified resume evidence, and the new
-   lease identity. Apply the normal authority-resume protocol for paused
-   work. Reconstruct the transition from both records on later runs. Require
-   owner acknowledgement before writes and keep the same owner, artifacts and
-   counters. A missing or ambiguous record preserves the hold. Neither
-   migration nor the table supplies execution authority or qualification.
-5. **Rollback before release.** Apply the ordinary journal rollback only
-   after fencing writers and checking that no retained claim changed or
-   acquired a lease under the new binding. If a claim resumed or activation
-   admitted other work, preserve it and reconcile the affected binding and
-   ownership before any inverse operation.
+4. **Resume under the current binding.** Route authority pauses through
+   [Recover And Resume](authority-and-pauses.md#recover-and-resume). For a Todo
+   handoff, obtain an explicit scoped continuation, apply label-stop and
+   revalidate ownership, source/plan, worktree, PR/head, base, and applicable
+   checks, reviews and grants. Then
+   [publish the migration-resume record](#publish-a-migration-resume-record).
+   Reconstruct release from the committed table, verified migration-resume
+   record, and the existing owner's acknowledgement of the new lease. For a
+   pause, also require the verified authority-resume record for that lease.
+   Missing or ambiguous required evidence preserves the hold. Preserve the
+   owner, artifacts and counters. Neither migration nor the table supplies
+   execution authority or qualification.
+
+#### Publish a migration-resume record
+
+After the calling recovery checks pass, verify the original budget and reconcile
+the preserved artifacts. Publish and refetch one runner-authored
+`<!-- run-github-project:migration-resume:v1 -->` record linking the committed
+table entry and original marker permalink and digest, old/new binding digests,
+verified resume evidence, and new lease identity. Reconcile unknown publication
+before retrying and reuse an exact verified record.
 
 ## GitHub Project Configuration
 

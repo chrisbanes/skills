@@ -1,6 +1,7 @@
 # Codex delegation
 
-Use this reference when Codex is the active runtime.
+Use this model and effort policy for a Codex worker on any route. Apply the
+role names and invocation fields below when using Codex-native delegation.
 
 1. Map the assignment to roles the runtime actually exposes. Use `explorer`
    for specific codebase discovery and `worker` for implementation and repairs

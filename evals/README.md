@@ -363,9 +363,11 @@ routing, parallel briefs, installed custom-role precedence, fresh independent
 audits, runtime-specific result delivery and workspace lifecycle, task-wide
 invocation, and solo-work restraint with evidence reuse. Each prompt supplies
 the user-level opt-in, and a calibration-only automatic control checks that the
-skill stays inactive without it. These are supplied-state, read-only cases with
-deterministic fixture-integrity checks and semantic rubrics; no live model
-results are claimed.
+skill stays inactive without it. A calibration case checks host route
+preference, explicit route requirements, provider-native fallback, and model
+routing for a worker on a different provider from the lead. These are
+supplied-state, read-only cases with deterministic fixture-integrity checks
+and semantic rubrics.
 The changelog triad checks stable-cycle coverage, incremental Unreleased
 maintenance and missing-file restraint across non-Kotlin repositories. The
 three `simplify-changes` cases cover a verified cleanup, a report on local changes
