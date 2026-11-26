@@ -57,7 +57,9 @@ Assess these additional independent snapshots under the same no-provider and no-
 - **writer-returned:** Identical to retained except the I5 writer resumed after approval and can still write under the old binding.
 - **parked:** The proposed retained inventory includes I5 as CI-parked. The state is stable, but its unchanged old lease and PR cannot be reconciled by this migration.
 - **resume-unknown:** After activation, the I1 pause condition is satisfied, but the original budget checkpoint cannot be verified and no valid migration-resume record exists.
-
 - **resume-verified:** I1's original resume condition, new scoped authority, exact lease and remaining budget are verified, both resume records are read back, and the existing owner acknowledges the new lease. I5 remains held.
+- **resume-migration-only:** Identical to resume-verified except the authority-resume publication timed out and its outcome could not be reconciled. Assess eligibility now, before any further publication or dispatch.
 
 Add these keys to the decision artifact: retained: action, moves_verified, retained_claims (item IDs in inventory order), eligible_after_activation (retained item IDs only), preserve_owners, preserve_budgets, rewrite_historical_markers; writer-returned: action, writes; parked: action, writes; resume-unknown: dispatch, preserve_hold, reset_budget (booleans); resume-verified: releasable (retained item IDs), same_owner, reset_budget. For writer-returned, return the disposition for a changed approved precondition.
+
+For resume-migration-only, return the same fields as resume-unknown.

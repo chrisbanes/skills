@@ -63,6 +63,11 @@
       ],
       "same_owner": true,
       "reset_budget": false
+    },
+    "resume-migration-only": {
+      "dispatch": false,
+      "preserve_hold": true,
+      "reset_budget": false
     }
   }
 }
