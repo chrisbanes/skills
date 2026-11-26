@@ -1,0 +1,49 @@
+{
+  "id": "subagent-delegation-host-routing-novel",
+  "title": "Choose a delegation route from host and provider capabilities",
+  "family": "workflow",
+  "target_skills": [
+    "subagent-delegation"
+  ],
+  "expected_skills": [
+    "subagent-delegation"
+  ],
+  "task_mode": "review",
+  "kind": "novel",
+  "fixture": "workflow-delegation",
+  "allowed_write_paths": [],
+  "forbid_all_commands": true,
+  "allow_skill_reference_reads": true,
+  "validators": [
+    {
+      "argv": [
+        "python3",
+        "@validators/text_case.py",
+        "subagent-delegation-host-routing-novel"
+      ],
+      "timeout_seconds": 30
+    }
+  ],
+  "rubric": [
+    {
+      "id": "host-preference",
+      "text": "Chooses the host for A based on the supplied capabilities, keeps the required model and effort, and retains the host session handle for results and repairs by the same owner. Uses the host's own tool contract."
+    },
+    {
+      "id": "fallback",
+      "text": "Chooses the native route for B to enforce read-only access and preserve fresh review context at the exact candidate. Reports that same access mismatch as a blocker for C without switching routes or treating a brief as access enforcement."
+    },
+    {
+      "id": "restraint",
+      "text": "Honors the explicit native route for D despite a compatible host. Keeps E solo. Makes recommendations only and performs no dispatch, edits, or settings changes."
+    },
+    {
+      "id": "worker-provider-policy",
+      "text": "For F, uses the Claude Code policy for the unpinned worker despite the Codex lead. Resolves Sonnet and medium effort for ordinary bounded implementation, then selects the host with its supplied claude-sonnet ID and medium effort. Uses host controls for dispatch."
+    }
+  ],
+  "provenance": {
+    "kind": "synthetic"
+  },
+  "calibration": true
+}

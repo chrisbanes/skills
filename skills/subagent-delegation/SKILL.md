@@ -28,8 +28,15 @@ the lead. Installed agent definitions are authoritative for pinned settings.
    repair ownership, or independent read-only analysis. For analysis, state
    the mode: review against requirements, or investigation of a concrete
    unresolved question. Establish concrete evidence before an investigation.
-4. Follow reference links relative to this loaded `SKILL.md` in its actual
-   skill directory. Use the active runtime's reference:
+4. If a route is explicitly required, consider that route alone. Otherwise,
+   discover the host's delegation tools from the current session and consider
+   the host route first, then the provider-native route when allowed. For each
+   candidate route, identify the worker's provider and resolve model and effort
+   using its policy below and any applicable pins. Select the first route
+   that can deliver those settings and meets the assignment's workspace,
+   isolation, permissions, result delivery, and same-owner follow-up needs.
+   Use the selected route's own dispatch controls. Follow reference links
+   relative to this loaded `SKILL.md` in its actual skill directory.
    - [Codex](references/codex.md): exposed roles, installed TOML pins, model
      and effort routing, and fresh-context calls.
    - [Claude Code](references/claude-code.md): agent definitions, model and
@@ -37,10 +44,8 @@ the lead. Installed agent definitions are authoritative for pinned settings.
    - [Antigravity](references/antigravity.md): exposed `invoke_subagent` tiers,
      concrete Gemini slugs (`agy` / `swarm`), installed agent pins, and
      reactive/workspace lifecycle.
-   - Other runtimes: inspect their exposed capabilities and installed policy;
-     preserve configured choices rather than translating any provider's
-     model identifiers or effort values. Resolve missing required settings
-     before dispatch.
+   - Other runtimes: use their exposed capabilities, installed policy, and
+     provider-specific model identifiers and effort values.
 5. Reassess capability and judgment for every new assignment, including
    reassignment, independently of the parent task's size or model. Keep the
    lead's model unchanged. File count, component count, or a sensitive area

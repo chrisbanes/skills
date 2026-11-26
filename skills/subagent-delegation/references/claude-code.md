@@ -1,7 +1,8 @@
 # Claude Code delegation
 
-Use this reference when Claude Code is the active runtime. The table is the user's routing policy,
-not a claim that Claude and Codex models are equivalent.
+Use this model and effort policy for a Claude Code worker on any route. Apply
+the agent types, invocation fields, and lifecycle below when using
+Claude Code's native Agent tool.
 
 1. Inspect available agent types, their installed Markdown definitions,
    allowed tools, and model/effort settings. Use a read-only discovery type
