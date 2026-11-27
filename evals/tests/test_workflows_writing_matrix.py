@@ -237,6 +237,13 @@ class WorkflowsWritingMatrixTest(unittest.TestCase):
                 source = directory / caller
                 self.assertIn(os.path.relpath(shared, source.parent), source.read_text())
 
+    def test_handoff_brief_requires_unique_scratch_files(self):
+        # Parallel owners once overwrote each other's fixed `$TMPDIR/delegate.bak`.
+        text = (REPO_ROOT / "skills/subagent-delegation/references/subagent-selection.md").read_text()
+        brief = " ".join(text.split("## Handoff brief", 1)[1].split("## Return", 1)[0].split())
+        self.assertIn("In every brief, include “Create scratch files, logs and backups with `mktemp`", brief)
+        self.assertIn("never use a fixed name in a shared temp directory", brief)
+
     def test_project_execution_routes_mandatory_scheduler_and_review_contracts(self):
         entrypoint = (REPO_ROOT / "skills/run-project/SKILL.md").read_text(
             encoding="utf-8"

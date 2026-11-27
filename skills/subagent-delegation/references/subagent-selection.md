@@ -96,7 +96,10 @@ document solely to avoid a short inline detail when no suitable record exists.
 - Objective or question.
 - **Workspace.** Exact checkout path and state, including branch and base
   SHA when applicable. In an editing brief, include “Preserve others' edits,
-  including concurrent changes in your owned files.”
+  including concurrent changes in your owned files.” In every brief, include
+  “Create scratch files, logs and backups with `mktemp`, or restore from Git
+  (`HEAD` or a WIP commit); never use a fixed name in a shared temp directory,
+  because parallel agents share `/tmp` when the sandbox is off.”
 - Relevant instructions and evidence.
 - Allowed actions and forbidden actions.
 - Acceptance criteria and expected result.
